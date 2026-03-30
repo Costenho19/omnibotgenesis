@@ -632,7 +632,7 @@ export default function CreditLiveDashboard() {
                           (app.checkpoints_passed || 0) >= 7 ? 'text-emerald-400' :
                           (app.checkpoints_passed || 0) >= 5 ? 'text-amber-400' : 'text-red-400'
                         }`}>
-                          {app.checkpoints_passed ?? '—'}/{app.checkpoints_total ?? 8}
+                          {app.checkpoints_passed ?? '—'}/{app.checkpoints_total ?? 11}
                         </span>
                       </td>
                       <td className="py-3 pr-4 text-center">

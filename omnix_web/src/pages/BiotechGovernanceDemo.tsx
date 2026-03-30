@@ -716,12 +716,17 @@ export default function BiotechGovernanceDemo() {
               <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">11-Checkpoint Signal Mapping</h3>
               <div className="space-y-3">
                 {[
+                  { cp: 'CP-0', trading: 'Signal integrity pre-validation', biotech: 'Input signal completeness and consistency check' },
                   { cp: 'CP-1', trading: 'Expected win probability', biotech: 'Trial success probability (phase + area historical rate)' },
                   { cp: 'CP-2', trading: 'Risk exposure limits', biotech: 'Adverse event severity (lower is safer, threshold ≤65)' },
                   { cp: 'CP-3', trading: 'Multi-model signal coherence', biotech: 'Preclinical-to-clinical alignment score' },
                   { cp: 'CP-4', trading: 'Trend temporal persistence', biotech: 'Patient enrollment momentum trajectory' },
                   { cp: 'CP-5', trading: 'Stress scenario resilience', biotech: 'Regulatory pathway strength (FDA designation)' },
                   { cp: 'CP-6', trading: 'Internal signal contradiction', biotech: 'Cross-signal contradiction index (DCI equivalent)' },
+                  { cp: 'CP-7', trading: 'Temporal regime coherence', biotech: 'Enrollment + regulatory trend convergence over time' },
+                  { cp: 'CP-8', trading: 'Edge Confirmation (ECW)', biotech: 'Statistical boundary — probability + logic convergence' },
+                  { cp: 'CP-9', trading: 'AML Gate', biotech: 'Institutional compliance — funding & regulatory conflict screening' },
+                  { cp: 'CP-10', trading: 'Fraud Detection Gate', biotech: 'Data integrity — preclinical/clinical signal anomaly check' },
                 ].map(row => (
                   <div key={row.cp} className="grid grid-cols-3 gap-3 text-xs">
                     <span className="font-mono text-[#C9A227] font-semibold">{row.cp}</span>
@@ -734,10 +739,10 @@ export default function BiotechGovernanceDemo() {
             <div>
               <h3 className="text-sm font-semibold text-[#C9A227] uppercase tracking-wider mb-4">Architecture — Domain Adapter Pattern</h3>
               <p className="text-sm text-muted leading-relaxed mb-4">
-                The core governance engine is domain-agnostic. It accepts 8 normalized signals (0–100)
+                The core governance engine is domain-agnostic. It accepts 11 normalized signals (0–100)
                 and applies the same fail-closed 11-checkpoint evaluation, regardless of domain.
                 The <strong className="text-white">Domain Adapter</strong> translates domain-specific data
-                (clinical signals, AE reports, enrollment data) into those 8 normalized inputs.
+                (clinical signals, AE reports, enrollment data) into those 11 normalized inputs.
               </p>
               <p className="text-sm text-muted leading-relaxed">
                 The 3 scenarios above are real ClinicalTrials.gov trials with real NCT IDs. Their signals
@@ -747,7 +752,7 @@ export default function BiotechGovernanceDemo() {
               <div className="mt-4 grid grid-cols-3 gap-3 text-center">
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <p className="text-lg font-bold text-emerald-400">ADVANCE</p>
-                  <p className="text-xs text-muted">All 6 passed</p>
+                  <p className="text-xs text-muted">All 11 passed</p>
                 </div>
                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                   <p className="text-lg font-bold text-amber-400">REVIEW</p>

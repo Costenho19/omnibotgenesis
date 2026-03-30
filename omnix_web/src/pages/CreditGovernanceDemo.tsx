@@ -339,7 +339,7 @@ export default function CreditGovernanceDemo() {
           </h1>
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's 11-checkpoint governance architecture
-            applies to credit/lending decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}
+            applies to credit/lending decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}{' '}
             evaluation cycles in digital asset trading (internal dataset).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
@@ -600,7 +600,10 @@ export default function CreditGovernanceDemo() {
         <section className="mb-16">
           <div className="text-center mb-12">
             <p className="section-title">Architecture Comparison</p>
-            <h2 className="text-3xl font-bold text-white">Same 8 Checkpoints. Every Domain.</h2>
+            <h2 className="text-3xl font-bold text-white">Same 11 Checkpoints. Every Domain.</h2>
+            <p className="text-muted text-sm mt-3 max-w-2xl mx-auto">
+              Each domain maps to <span className="text-white">CP-0 (Signal Integrity) + CP-1–CP-6 (domain signals) + CP-7 (Temporal) + CP-8 (ECW) + CP-9 (AML) + CP-10 (Fraud Detection)</span>. The cards below show each domain's CP-1–CP-6 signal mapping — the universal checkpoints are identical across all verticals.
+            </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="glass-card p-6">
@@ -714,7 +717,7 @@ export default function CreditGovernanceDemo() {
               <div className="text-xs text-muted">Capital Preserved*</div>
             </div>
             <div>
-              <div className="text-2xl font-bold gold-text">8</div>
+              <div className="text-2xl font-bold gold-text">11</div>
               <div className="text-xs text-muted">Independent Checkpoints</div>
             </div>
             <div>
