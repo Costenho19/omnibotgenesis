@@ -456,10 +456,10 @@ export default function CommercialLanding() {
               <div className="mb-4">
                 <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest">Enterprise</span>
                 <div className="mt-3 flex items-end gap-1">
-                  <span className="text-4xl font-bold text-white">$20K</span>
+                  <span className="text-4xl font-bold text-white">$20K–$35K</span>
                   <span className="text-muted text-sm mb-1">/month</span>
                 </div>
-                <p className="text-xs text-muted mt-1">Annual contract · From $20,000/mo</p>
+                <p className="text-xs text-muted mt-1">Annual contract · Based on scope</p>
               </div>
               <ul className="space-y-2 flex-1 mb-6">
                 {['Full veto authority — fail-closed by default', 'Unlimited decisions governed', 'All verticals included', 'Complete audit trail for regulators', 'API integration + dedicated onboarding', 'SLA 99.9% uptime guarantee'].map(f => (
