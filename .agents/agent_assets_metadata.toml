@@ -78,3 +78,9 @@ id = "nf3HUrrAleHPP0KNwhWbB"
 uri = "file://OMNIX_System_Performance_Report_REAL.pdf"
 type = "pdf"
 title = "OMNIX — System Performance Report (Datos REALES)"
+
+[[outputs]]
+id = "KY3-m_XBhzcHIJJ1xEge2"
+uri = "file://OMNIX_Propuesta_Isimo_2026.pdf"
+type = "pdf"
+title = "OMNIX — Propuesta Comercial para Tiendas Ísimo 2026"
