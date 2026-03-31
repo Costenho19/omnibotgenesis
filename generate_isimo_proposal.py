@@ -496,7 +496,7 @@ def build():
     cta_data = [[
         Paragraph(
             '<b><font color="#C9A227" size="12">¿Conversamos esta semana?</font></b><br/><br/>'
-            '<font color="#94a3b8">contacto@omnixquantum.net  ·  wa.me/16505078293  ·  +1 (650) 507-8293</font>',
+            '<font color="#94a3b8">contacto@omnixquantum.net  ·  WhatsApp +1 (650) 507-8293  ·  omnixquantum.net</font>',
             ParagraphStyle(
                 'cta', fontName='Helvetica', fontSize=10,
                 textColor=WHITE, alignment=TA_CENTER, leading=18
