@@ -455,9 +455,13 @@ export default function CommercialLanding() {
               </div>
               <div className="mb-4">
                 <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest">Enterprise</span>
-                <div className="mt-3 flex items-end gap-1">
-                  <span className="text-4xl font-bold text-white">$20K–$35K</span>
-                  <span className="text-muted text-sm mb-1">/month</span>
+                <div className="mt-3">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-white">$20K</span>
+                    <span className="text-[#C9A227] font-bold text-xl">–</span>
+                    <span className="text-3xl font-bold text-white">$35K</span>
+                    <span className="text-muted text-sm ml-1">/mo</span>
+                  </div>
                 </div>
                 <p className="text-xs text-muted mt-1">Annual contract · Based on scope</p>
               </div>
@@ -476,9 +480,9 @@ export default function CommercialLanding() {
             </div>
 
             {/* Tier 4 — Custom */}
-            <div className="flex flex-col bg-[#0A1628]/80 border border-[#334155] rounded-2xl p-6">
+            <div className="flex flex-col bg-[#0A1628]/80 border border-[#3b82f6]/50 rounded-2xl p-6">
               <div className="mb-4">
-                <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-widest">Custom</span>
+                <span className="text-xs font-bold text-[#3b82f6] uppercase tracking-widest">Custom</span>
                 <div className="mt-3 flex items-end gap-1">
                   <span className="text-4xl font-bold text-white">Custom</span>
                 </div>
@@ -487,13 +491,13 @@ export default function CommercialLanding() {
               <ul className="space-y-2 flex-1 mb-6">
                 {['Multi-tenant infrastructure', 'White-label options', 'Revenue share model available', 'Custom vertical development', 'On-premise deployment', 'Dedicated governance architect'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-muted">
-                    <CheckCircle className="w-4 h-4 text-[#94a3b8] flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-4 h-4 text-[#3b82f6] flex-shrink-0 mt-0.5" />
                     {f}
                   </li>
                 ))}
               </ul>
               <a href="mailto:contacto@omnixquantum.net?subject=Custom%20Deployment%20Inquiry"
-                className="block text-center py-2.5 rounded-xl border border-[#334155] text-muted text-sm font-semibold hover:border-[#C9A227]/50 hover:text-white transition-colors">
+                className="block text-center py-2.5 rounded-xl border border-[#3b82f6]/60 text-[#3b82f6] text-sm font-semibold hover:bg-[#3b82f6]/10 hover:text-white transition-colors">
                 Contact Us
               </a>
             </div>
