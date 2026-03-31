@@ -393,6 +393,117 @@ export default function CommercialLanding() {
           </div>
         </section>
 
+        {/* ── PRICING ── */}
+        <section className="mb-24" id="pricing">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-4">Simple, Transparent Pricing</h2>
+            <p className="text-muted max-w-xl mx-auto">Start free. Scale when you see the value. All prices in USD.</p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-5">
+            {/* Tier 1 — Shadow */}
+            <div className="flex flex-col bg-[#0A1628]/80 border border-[#334155] rounded-2xl p-6">
+              <div className="mb-4">
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Shadow Mode</span>
+                <div className="mt-3 flex items-end gap-1">
+                  <span className="text-4xl font-bold text-white">Free</span>
+                </div>
+                <p className="text-xs text-muted mt-1">4-week pilot · No commitment</p>
+              </div>
+              <ul className="space-y-2 flex-1 mb-6">
+                {['OMNIX runs alongside your system', 'No interventions — zero operational risk', 'Full report: what would have been blocked', 'Post-quantum signed receipts included'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-muted">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="https://wa.me/16505078293?text=I%27d%20like%20to%20start%20the%20Shadow%20Mode%20pilot" target="_blank" rel="noopener noreferrer"
+                className="block text-center py-2.5 rounded-xl border border-emerald-500/50 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/10 transition-colors">
+                Start Free Pilot
+              </a>
+            </div>
+
+            {/* Tier 2 — Advisory */}
+            <div className="flex flex-col bg-[#0A1628]/80 border border-[#334155] rounded-2xl p-6">
+              <div className="mb-4">
+                <span className="text-xs font-bold text-[#06b6d4] uppercase tracking-widest">Advisory</span>
+                <div className="mt-3 flex items-end gap-1">
+                  <span className="text-4xl font-bold text-white">$8K</span>
+                  <span className="text-muted text-sm mb-1">/month</span>
+                </div>
+                <p className="text-xs text-muted mt-1">Billed monthly · Cancel anytime</p>
+              </div>
+              <ul className="space-y-2 flex-1 mb-6">
+                {['Pre-decision recommendations in real time', 'Your team decides — OMNIX advises', 'PQC-signed receipt per recommendation', 'Up to 100K decisions governed / month', '1 vertical (trading, credit, insurance, or supply chain)'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-muted">
+                    <CheckCircle className="w-4 h-4 text-[#06b6d4] flex-shrink-0 mt-0.5" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="https://wa.me/16505078293?text=I%27m%20interested%20in%20the%20Advisory%20plan" target="_blank" rel="noopener noreferrer"
+                className="block text-center py-2.5 rounded-xl border border-[#06b6d4]/50 text-[#06b6d4] text-sm font-semibold hover:bg-[#06b6d4]/10 transition-colors">
+                Talk to Us
+              </a>
+            </div>
+
+            {/* Tier 3 — Enterprise */}
+            <div className="flex flex-col bg-[#0A1628]/80 border-2 border-[#C9A227] rounded-2xl p-6 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-[#C9A227] text-[#0a0f1a] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Most Popular</span>
+              </div>
+              <div className="mb-4">
+                <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest">Enterprise</span>
+                <div className="mt-3 flex items-end gap-1">
+                  <span className="text-4xl font-bold text-white">$20K</span>
+                  <span className="text-muted text-sm mb-1">/month</span>
+                </div>
+                <p className="text-xs text-muted mt-1">Annual contract · From $20,000/mo</p>
+              </div>
+              <ul className="space-y-2 flex-1 mb-6">
+                {['Full veto authority — fail-closed by default', 'Unlimited decisions governed', 'All verticals included', 'Complete audit trail for regulators', 'API integration + dedicated onboarding', 'SLA 99.9% uptime guarantee'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-muted">
+                    <CheckCircle className="w-4 h-4 text-[#C9A227] flex-shrink-0 mt-0.5" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="https://wa.me/16505078293?text=I%27m%20interested%20in%20the%20Enterprise%20plan" target="_blank" rel="noopener noreferrer"
+                className="block text-center py-2.5 rounded-xl bg-[#C9A227] text-[#0a0f1a] text-sm font-bold hover:bg-[#F5D97A] transition-colors">
+                Talk to Us
+              </a>
+            </div>
+
+            {/* Tier 4 — Custom */}
+            <div className="flex flex-col bg-[#0A1628]/80 border border-[#334155] rounded-2xl p-6">
+              <div className="mb-4">
+                <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-widest">Custom</span>
+                <div className="mt-3 flex items-end gap-1">
+                  <span className="text-4xl font-bold text-white">Custom</span>
+                </div>
+                <p className="text-xs text-muted mt-1">For large-scale deployments</p>
+              </div>
+              <ul className="space-y-2 flex-1 mb-6">
+                {['Multi-tenant infrastructure', 'White-label options', 'Revenue share model available', 'Custom vertical development', 'On-premise deployment', 'Dedicated governance architect'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-muted">
+                    <CheckCircle className="w-4 h-4 text-[#94a3b8] flex-shrink-0 mt-0.5" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="mailto:contacto@omnixquantum.net?subject=Custom%20Deployment%20Inquiry"
+                className="block text-center py-2.5 rounded-xl border border-[#334155] text-muted text-sm font-semibold hover:border-[#C9A227]/50 hover:text-white transition-colors">
+                Contact Us
+              </a>
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-muted mt-8">
+            All plans include post-quantum cryptographic receipts (NIST-standardized) · No hidden fees · Start with the free pilot, no card required
+          </p>
+        </section>
+
         <section className="glass-card p-12 gold-glow">
           <h2 className="text-3xl font-bold text-white text-center mb-4">Ready to Govern Your Decisions?</h2>
           <p className="text-xl text-muted max-w-2xl mx-auto mb-10 text-center">
