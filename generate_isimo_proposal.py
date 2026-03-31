@@ -4,7 +4,9 @@ PDF profesional con fondo oscuro, estilo OMNIX oficial.
 """
 
 import os
+import tempfile
 from datetime import datetime, timezone
+from PIL import Image as PILImage
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor, white, black
@@ -36,6 +38,17 @@ BORDER     = HexColor('#334155')
 W, H = letter
 LOGO = '/home/runner/workspace/omnix_web/public/omnix_logo.png'
 OUTPUT = '/home/runner/workspace/OMNIX_Propuesta_Isimo_2026.pdf'
+
+def prepare_logo(bg=(10, 15, 26)):
+    """Convierte el logo RGBA a RGB con fondo oscuro para fondo oscuro de PDF."""
+    img = PILImage.open(LOGO).convert('RGBA')
+    background = PILImage.new('RGB', img.size, bg)
+    background.paste(img, mask=img.split()[3])
+    tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+    background.save(tmp.name)
+    return tmp.name
+
+LOGO_DARK = prepare_logo() if os.path.exists(LOGO) else None
 
 # ── Página oscura (callback) ──────────────────────────────────────────────────
 def dark_page(c, doc):
@@ -136,30 +149,32 @@ def build():
     # ── PORTADA ───────────────────────────────────────────────────────────────
     E.append(Spacer(1, 0.3*inch))
 
-    if os.path.exists(LOGO):
+    if LOGO_DARK:
         logo_row = Table(
-            [[Image(LOGO, width=1.0*inch, height=0.82*inch),
+            [[Image(LOGO_DARK, width=0.9*inch, height=0.74*inch),
               Paragraph(
-                  '<font color="#C9A227"><b>OMNIX</b></font> '
+                  '<font color="#C9A227"><b>OMNIX</b></font>  '
                   '<font color="#94a3b8">Decision Governance Infrastructure</font>',
-                  ParagraphStyle('lh', fontName='Helvetica-Bold', fontSize=14, textColor=WHITE, spaceBefore=12)
+                  ParagraphStyle('lh', fontName='Helvetica-Bold', fontSize=13, textColor=WHITE, leading=18)
               )]],
-            colWidths=[1.15*inch, 5.95*inch]
+            colWidths=[1.05*inch, 6.05*inch]
         )
         logo_row.setStyle(TableStyle([
             ('VALIGN',      (0,0), (-1,-1), 'MIDDLE'),
             ('LEFTPADDING', (0,0), (-1,-1), 0),
+            ('RIGHTPADDING',(0,0), (-1,-1), 0),
         ]))
         E.append(logo_row)
 
-    E.append(Spacer(1, 0.35*inch))
-    E.append(HRFlowable(width='100%', thickness=1, color=GOLD))
-    E.append(Spacer(1, 0.25*inch))
+    E.append(Spacer(1, 0.3*inch))
+    E.append(HRFlowable(width='100%', thickness=1.5, color=GOLD))
+    E.append(Spacer(1, 0.22*inch))
 
-    E.append(Paragraph('PROPUESTA DE GOBERNANZA', ST['CoverTitle']))
     E.append(Paragraph(
-        'DE DECISIONES AUTOMATIZADAS',
-        ParagraphStyle('ct2', fontName='Helvetica-Bold', fontSize=22, textColor=WHITE, spaceAfter=10)
+        '<font color="#C9A227">PROPUESTA DE GOBERNANZA</font><br/>'
+        '<font color="#ffffff">DE DECISIONES AUTOMATIZADAS</font>',
+        ParagraphStyle('MainTitle', fontName='Helvetica-Bold', fontSize=22,
+                       textColor=GOLD, spaceAfter=10, leading=32)
     ))
     E.append(Spacer(1, 0.1*inch))
     E.append(Paragraph(
