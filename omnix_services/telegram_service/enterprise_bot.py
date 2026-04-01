@@ -1014,9 +1014,9 @@ class EnterpriseTelegramBot:
             
             user = update.effective_user
             
-            welcome_message = f"""🚀 **OMNIX {VERSION_BANNER}**
+            welcome_message = f"""⚡ **OMNIX Decision Governance**
 
-¡Hola {user.first_name}! Soy OMNIX, tu asistente de trading profesional.
+¡Hola {user.first_name}! Soy OMNIX, tu sistema de gobernanza de decisiones.
 
 ✅ **SISTEMA OPERATIVO:**
 🪙 Cripto 24/7 (Kraken) - REAL
