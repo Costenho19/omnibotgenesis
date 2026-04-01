@@ -84,3 +84,9 @@ id = "KY3-m_XBhzcHIJJ1xEge2"
 uri = "file://OMNIX_Propuesta_Isimo_2026.pdf"
 type = "pdf"
 title = "OMNIX — Propuesta Ísimo (Final)"
+
+[[outputs]]
+id = "mUdscati1sRnFsjxT345a"
+uri = "file://OMNIX_Technical_Whitepaper_2026.pdf"
+type = "pdf"
+title = "OMNIX Technical Whitepaper 2026"
