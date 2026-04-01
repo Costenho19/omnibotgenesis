@@ -654,6 +654,74 @@ export default function CommercialLanding() {
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
+
+        <section className="mt-20 max-w-4xl mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-white mb-2">Research & Publications</h2>
+            <p className="text-muted text-sm">Peer-indexed technical documentation available on independent academic repositories</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a
+              href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6507559"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-5 rounded-2xl border border-[#C9A227]/20 bg-[#0A1628]/60 hover:border-[#C9A227]/50 hover:bg-[#0A1628]/80 transition-all group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#C9A227]/10 text-[#C9A227] border border-[#C9A227]/20">SSRN</span>
+                <ArrowRight className="w-4 h-4 text-muted group-hover:text-[#C9A227] transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold text-sm mb-2 leading-snug">OMNIX Quantum: Decision Governance Infrastructure for Automated Systems — Technical Whitepaper</h3>
+              <p className="text-muted text-xs">Harold Nunes · OMNIX Quantum · 2026</p>
+              <p className="text-[#C9A227]/60 text-xs mt-2">Abstract ID: 6507559</p>
+            </a>
+
+            <a
+              href="https://doi.org/10.5281/zenodo.19375792"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-5 rounded-2xl border border-[#C9A227]/20 bg-[#0A1628]/60 hover:border-[#C9A227]/50 hover:bg-[#0A1628]/80 transition-all group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Zenodo</span>
+                <ArrowRight className="w-4 h-4 text-muted group-hover:text-emerald-400 transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold text-sm mb-2 leading-snug">OMNIX Quantum: Decision Governance Infrastructure for Automated Systems — Technical Whitepaper</h3>
+              <p className="text-muted text-xs">Harold Nunes · OMNIX Quantum · 2026</p>
+              <p className="text-emerald-400/60 text-xs mt-2">DOI: 10.5281/zenodo.19375792</p>
+            </a>
+
+            <a
+              href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6321298"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-5 rounded-2xl border border-[#C9A227]/20 bg-[#0A1628]/60 hover:border-[#C9A227]/50 hover:bg-[#0A1628]/80 transition-all group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#C9A227]/10 text-[#C9A227] border border-[#C9A227]/20">SSRN</span>
+                <ArrowRight className="w-4 h-4 text-muted group-hover:text-[#C9A227] transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold text-sm mb-2 leading-snug">Post-Quantum Cryptographic Architecture for Decision Governance Systems — ADR-022</h3>
+              <p className="text-muted text-xs">Harold Nunes · OMNIX Quantum · 2025</p>
+              <p className="text-[#C9A227]/60 text-xs mt-2">Abstract ID: 6321298</p>
+            </a>
+
+            <a
+              href="https://doi.org/10.5281/zenodo.19056919"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-5 rounded-2xl border border-[#C9A227]/20 bg-[#0A1628]/60 hover:border-[#C9A227]/50 hover:bg-[#0A1628]/80 transition-all group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Zenodo</span>
+                <ArrowRight className="w-4 h-4 text-muted group-hover:text-emerald-400 transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold text-sm mb-2 leading-snug">Post-Quantum Cryptographic Architecture for Decision Governance Systems — ADR-022</h3>
+              <p className="text-muted text-xs">Harold Nunes · OMNIX Quantum · 2025</p>
+              <p className="text-emerald-400/60 text-xs mt-2">DOI: 10.5281/zenodo.19056919</p>
+            </a>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-[#C9A227]/10 py-12 px-6">
