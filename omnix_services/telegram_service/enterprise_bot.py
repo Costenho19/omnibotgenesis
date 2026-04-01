@@ -1090,7 +1090,7 @@ Sistema operando en fase de validación."""
         """Comando /help"""
         try:
             help_text = f"""
-**OMNIX {VERSION_BANNER} - COMANDOS COMPLETOS**
+**OMNIX Decision Governance - COMANDOS COMPLETOS**
 
 **INFORMACION DE MERCADO:**
 /precio [crypto] - Precio actual (ej: /precio BTC)
@@ -2141,7 +2141,7 @@ Sistema OMNIX - Harold Nunes
 🟢 **Bot Telegram:** FUNCIONANDO
 
 ⚡ **Uptime:** {datetime.now().strftime('%H:%M:%S')}
-🚀 **Versión:** {VERSION_BANNER}
+⚡ **Sistema:** OMNIX Decision Governance
 👨‍💻 **Desarrollador:** Harold Nunes
 🔧 **Plataforma:** Replit Production
 
@@ -2262,7 +2262,7 @@ Sistema OMNIX - Harold Nunes
                     qrng_stats = stats.get('qrng', {})
                     qaoa_stats = stats.get('qaoa', {})
                     
-                    msg = f"⚛️ **QUANTUM ENHANCEMENTS {VERSION_BANNER}**\n\n"
+                    msg = f"⚛️ **QUANTUM ENHANCEMENTS — OMNIX Decision Governance**\n\n"
                     msg += "🎲 **QRNG (Quantum Random Number Generator)**\n"
                     msg += f"• Total requests: {qrng_stats.get('total_requests', 0):,}\n"
                     msg += f"• Quantum numbers: {qrng_stats.get('quantum_numbers_generated', 0):,}\n"
@@ -3622,7 +3622,7 @@ Usa: `/autotrading activar ACEPTO`"""
                     await self.auto_status_command(update, context)
                 else:
                     # Mostrar ayuda
-                    await update.message.reply_text(f"""🤖 AUTO-TRADING BOT {VERSION_BANNER}
+                    await update.message.reply_text(f"""🤖 AUTO-TRADING BOT — OMNIX Decision Governance
                     
 📋 COMANDOS:
 /autotrading start → Iniciar bot 24/7
@@ -3874,7 +3874,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 
             except Exception as ai_error:
                 logger.error(f"❌ Error IA superinteligencia: {ai_error}")
-                fallback_response = f"🧠 OMNIX IA {VERSION_BANNER} operativo, {user_name}. Tu mensaje '{user_message}' recibido correctamente."
+                fallback_response = f"🧠 OMNIX Decision Governance operativo, {user_name}. Tu mensaje '{user_message}' recibido correctamente."
                 await update.message.reply_text(fallback_response)
             
         except Exception as e:
@@ -4400,7 +4400,7 @@ Usa: `/autotrading activar ACEPTO`"""
                 final_response_text = response_text  # HAROLD FIX: Guardar en memoria
             
             elif text.startswith('/help'):
-                response_text += f"""❓ **AYUDA - COMANDOS OMNIX {VERSION_BANNER}**
+                response_text += f"""❓ **AYUDA - COMANDOS OMNIX Decision Governance**
 
 🔧 **COMANDOS BÁSICOS:**
 /start - Inicializar sistema
@@ -4447,7 +4447,7 @@ Pregúntame cualquier cosa sobre:
                         qrng_stats = stats.get('qrng', {})
                         qaoa_stats = stats.get('qaoa', {})
                         
-                        response_text += f"""⚛️ **QUANTUM ENHANCEMENTS {VERSION_BANNER}**
+                        response_text += f"""⚛️ **QUANTUM ENHANCEMENTS — OMNIX Decision Governance**
 
 🎲 **QRNG (Quantum Random Number Generator)**
 """
@@ -4843,7 +4843,7 @@ Perdedores: {stats.get('losing_trades', 0)}
                             else:
                                 pairs_display = result.get('trading_pair', 'BTC/USD')
                             
-                            response_text = f"""🤖 **AUTO-TRADING BOT {VERSION_BANNER} STATUS**
+                            response_text = f"""🤖 **AUTO-TRADING BOT — OMNIX Decision Governance STATUS**
 
 Estado: {status}
 Modo: {result.get('mode', 'PAPER TRADING')}
@@ -4862,7 +4862,7 @@ Win rate: {stats.get('win_rate', 0)*100:.1f}%
 Usa /autotrading start para activar
 Usa /autotrading stop para detener"""
                 else:
-                    response_text = f"""🤖 AUTO-TRADING BOT {VERSION_BANNER}
+                    response_text = f"""🤖 AUTO-TRADING BOT — OMNIX Decision Governance
                     
 📋 COMANDOS:
 /autotrading start → Iniciar bot 24/7
@@ -5406,7 +5406,7 @@ Usa `/share_signal BTC LONG 95000` para empezar."""
                                 except NameError:
                                     dynamic_user_name = "Usuario"  # Default sin DB lookup
                                 web_context_fallback = web_search_context if web_search_context else ""
-                                gemini_prompt = f"""Soy OMNIX {VERSION_BANNER}, tu asistente de trading institucional.
+                                gemini_prompt = f"""Soy OMNIX Decision Governance, tu sistema de gobernanza de decisiones institucional.
 
 IMPORTANTE: Responde en ESPAÑOL de forma natural y conversacional.
 
@@ -8112,7 +8112,7 @@ Las operaciones ahora se procesarán normalmente.
             if not args:
                 active = settings.active_strategies
                 
-                strategies_text = f"""📈 **ESTRATEGIAS OMNIX {VERSION_BANNER}**
+                strategies_text = f"""📈 **ESTRATEGIAS — OMNIX Decision Governance**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **🟢 TUS ESTRATEGIAS ACTIVAS:**
