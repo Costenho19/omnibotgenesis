@@ -562,33 +562,84 @@ export default function CreditGovernanceDemo() {
                 ))}
 
                 {decision && evaluationComplete && (
-                  <div className={`glass-card p-8 border ${decision.bg} gold-glow mt-6`}>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${decision.bg}`}>
-                          {decision.decision === 'APPROVE' ? <CheckCircle className={`w-6 h-6 ${decision.color}`} /> :
-                           decision.decision === 'HOLD' ? <Clock className={`w-6 h-6 ${decision.color}`} /> :
-                           <XCircle className={`w-6 h-6 ${decision.color}`} />}
+                  <>
+                    <div className={`glass-card p-8 border ${decision.bg} gold-glow mt-6`}>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${decision.bg}`}>
+                            {decision.decision === 'APPROVE' ? <CheckCircle className={`w-6 h-6 ${decision.color}`} /> :
+                             decision.decision === 'HOLD' ? <Clock className={`w-6 h-6 ${decision.color}`} /> :
+                             <XCircle className={`w-6 h-6 ${decision.color}`} />}
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted uppercase tracking-wider">Governance Decision</p>
+                            <h3 className={`text-2xl font-bold ${decision.color}`}>{decision.decision}</h3>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted uppercase tracking-wider">Governance Decision</p>
-                          <h3 className={`text-2xl font-bold ${decision.color}`}>{decision.decision}</h3>
+                        <div className="text-right">
+                          <p className="text-xs text-muted">Checkpoints Passed</p>
+                          <p className="text-white font-semibold">
+                            {decision.passed}/11
+                          </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted">Checkpoints Passed</p>
-                        <p className="text-white font-semibold">
-                          {decision.passed}/11
+                      <p className="text-muted text-sm">{decision.reason}</p>
+                      <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
+                        <p className="text-xs text-[#64748B]">
+                          Decision Trace ID: GOV-CREDIT-{Date.now().toString(36).toUpperCase()} | Architecture: 11-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
                         </p>
                       </div>
                     </div>
-                    <p className="text-muted text-sm">{decision.reason}</p>
-                    <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                      <p className="text-xs text-[#64748B]">
-                        Decision Trace ID: GOV-CREDIT-{Date.now().toString(36).toUpperCase()} | Architecture: 11-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
-                      </p>
-                    </div>
-                  </div>
+
+                    {decision.decision === 'APPROVE' && (() => {
+                      const principal = application.loanAmount
+                      const annualRate = 0.045
+                      const tenorYears = 20
+                      const totalRepayable = Math.round(principal * (1 + annualRate * tenorYears))
+                      const profitAmount = totalRepayable - principal
+                      const monthly = Math.round(totalRepayable / (tenorYears * 12))
+                      const fmt = (n: number) => n >= 1000 ? `$${(n / 1000).toFixed(0)}K` : `$${n}`
+                      return (
+                        <div className="glass-card p-6 border border-[#C9A227]/30 mt-4 animate-fade-in-up">
+                          <div className="mb-5 border-l-2 border-[#C9A227] pl-4">
+                            <p className="text-[#C9A227] text-xs uppercase tracking-widest font-semibold mb-1">Quran 2:275</p>
+                            <p className="text-white/80 text-sm italic leading-relaxed">
+                              "Allah has permitted trade and forbidden usury (Riba)."
+                            </p>
+                            <p className="text-muted text-xs mt-1">— Al-Baqarah · Sharia CP-6 basis</p>
+                          </div>
+                          <div className="border-t border-[#C9A227]/10 pt-5">
+                            <p className="text-xs font-semibold text-[#C9A227] uppercase tracking-widest mb-4">Murabaha Financing Structure</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="bg-[#0A1628]/60 rounded-xl p-3">
+                                <p className="text-xs text-muted mb-1">Purchase Price (Principal)</p>
+                                <p className="text-white font-bold text-lg">{fmt(principal)}</p>
+                              </div>
+                              <div className="bg-[#0A1628]/60 rounded-xl p-3">
+                                <p className="text-xs text-muted mb-1">Profit Rate (p.a.)</p>
+                                <p className="text-[#C9A227] font-bold text-lg">{(annualRate * 100).toFixed(1)}%</p>
+                              </div>
+                              <div className="bg-[#0A1628]/60 rounded-xl p-3">
+                                <p className="text-xs text-muted mb-1">Profit Amount ({tenorYears} yrs)</p>
+                                <p className="text-white font-bold text-lg">{fmt(profitAmount)}</p>
+                              </div>
+                              <div className="bg-[#0A1628]/60 rounded-xl p-3">
+                                <p className="text-xs text-muted mb-1">Total Sale Price</p>
+                                <p className="text-white font-bold text-lg">{fmt(totalRepayable)}</p>
+                              </div>
+                            </div>
+                            <div className="mt-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between">
+                              <div>
+                                <p className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Monthly Installment</p>
+                                <p className="text-xs text-muted mt-0.5">Fixed · {tenorYears} years · No Riba</p>
+                              </div>
+                              <p className="text-emerald-400 font-bold text-2xl">${monthly.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </>
                 )}
               </>
             )}

@@ -430,11 +430,11 @@ export default function InsuranceDashboard() {
                     </td>
                     <td className="px-4 py-3 text-white/70 font-mono">{fmt(c.claim_amount_usd)}</td>
                     <td className="px-4 py-3">
-                      <span className={c.fraud_indicators > 50 ? 'text-red-400' : c.fraud_indicators > 25 ? 'text-amber-400' : 'text-emerald-400'}>
-                        {c.fraud_indicators?.toFixed(1) ?? '—'}
+                      <span className={Number(c.fraud_indicators) > 50 ? 'text-red-400' : Number(c.fraud_indicators) > 25 ? 'text-amber-400' : 'text-emerald-400'}>
+                        {c.fraud_indicators != null ? Number(c.fraud_indicators).toFixed(1) : '—'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-white/60">{c.decision_score?.toFixed(1) ?? '—'}</td>
+                    <td className="px-4 py-3 text-white/60">{c.decision_score != null ? Number(c.decision_score).toFixed(1) : '—'}</td>
                     <td className="px-4 py-3"><DecisionBadge decision={c.decision} /></td>
                     <td className="px-4 py-3 font-mono text-[10px] text-white/30">{c.receipt_id?.slice(0, 16) ?? '—'}</td>
                   </tr>
