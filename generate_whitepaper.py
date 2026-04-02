@@ -270,10 +270,10 @@ def build():
         Paragraph('Eureka GCC Dubai 2026\nSemifinalist',
                   ParagraphStyle('b1', fontName='Helvetica-Bold', fontSize=8,
                                  textColor=GOLD, alignment=TA_CENTER, leading=12)),
-        Paragraph('SSRN Published\nabstract_id=6321298',
+        Paragraph('SSRN · 2 Papers\n6321298  ·  6507559',
                   ParagraphStyle('b2', fontName='Helvetica-Bold', fontSize=8,
                                  textColor=GREEN_OK, alignment=TA_CENTER, leading=12)),
-        Paragraph('Zenodo DOI\n10.5281/zenodo.19056919',
+        Paragraph('Zenodo · 2 DOIs\n19056919  ·  19375792',
                   ParagraphStyle('b3', fontName='Helvetica-Bold', fontSize=8,
                                  textColor=CYAN, alignment=TA_CENTER, leading=12)),
         Paragraph('Pre-Seed Round\n$500K at $3M pre-money',
@@ -436,6 +436,64 @@ def build():
                                   textColor=GOLD_LIGHT, leading=13))],
     ]
     E.append(card(three_outcomes, [1.3 * inch, 3.8 * inch, 2.0 * inch]))
+
+    E.append(PageBreak())
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 11 CHECKPOINTS
+    # ═══════════════════════════════════════════════════════════════════════════
+    E.extend(section('The 11 Governance Checkpoints'))
+    E.append(Paragraph(
+        'Each decision submitted to OMNIX passes through 11 independent checkpoints in sequence. '
+        'Every checkpoint operates autonomously — a failure at any stage halts the pipeline '
+        'immediately and issues a signed rejection receipt. No checkpoint can be bypassed or overridden.',
+        ST['Body']
+    ))
+    E.append(Spacer(1, 0.10 * inch))
+
+    cp_data = [
+        [th('CP'), th('Checkpoint'), th('What It Evaluates'), th('If It Fails')],
+        [tdc('CP-1'), tdgold('Signal Integrity\nValidator (SIV)'),
+         td('Verifies data quality, completeness, and input integrity before any evaluation begins.'),
+         tdred('Rejected at entry.\nPipeline never opens.')],
+        [tdc('CP-2'), tdgold('Probability\nAssessment'),
+         td('Evaluates statistical confidence in the proposed decision outcome against authorized thresholds.'),
+         tdred('Blocked.\nInsufficient confidence.')],
+        [tdc('CP-3'), tdgold('Risk\nEvaluation'),
+         td('Quantifies downside exposure and compares against the authorized risk envelope for the domain.'),
+         tdred('Blocked.\nRisk limit exceeded.')],
+        [tdc('CP-4'), tdgold('Coherence\nEngine'),
+         td('Detects internal contradictions across all active signals. Decision Contradiction Index (DCI) ≥ 70 mandates escalation.'),
+         tdred('HOLD.\nHuman review required.')],
+        [tdc('CP-5'), tdgold('Trend\nValidator'),
+         td('Confirms alignment between the proposed decision and the prevailing operational or market regime.'),
+         tdred('Blocked.\nRegime contradiction.')],
+        [tdc('CP-6'), tdgold('Stress\nTesting'),
+         td('Simulates adverse conditions (liquidity shocks, volatility spikes) to validate decision robustness.'),
+         tdred('Blocked.\nFails under stress.')],
+        [tdc('CP-7'), tdgold('Ethics &\nDomain Gate'),
+         td('Enforces domain-specific ethical constraints: Sharia compliance (riba, gharar), safety limits for robotics, bias controls for credit.'),
+         tdred('Blocked.\nEthics violation recorded.')],
+        [tdc('CP-8'), tdgold('Threshold &\nContext Validator'),
+         td('Validates all decision parameters against authorized operational boundaries and contextual constraints.'),
+         tdred('Blocked.\nParameter out of range.')],
+        [tdc('CP-9'), tdgold('AML\nScreening'),
+         td('Screens for anti-money laundering indicators, suspicious transaction patterns, and sanctioned entity exposure.'),
+         tdred('Blocked.\nSuspicious activity flagged.')],
+        [tdc('CP-10'), tdgold('Fraud\nDetection'),
+         td('Multi-layer fraud signal analysis across behavioral, transactional, and systemic patterns.'),
+         tdred('Blocked.\nFraud flag escalated.')],
+        [tdc('CP-11'), tdgold('Jurisdiction\nCompliance'),
+         td('Verifies regulatory jurisdiction eligibility before any cross-border or regulated decision executes.'),
+         tdred('Blocked.\nJurisdiction violation.')],
+    ]
+    E.append(card(cp_data, [0.45 * inch, 1.25 * inch, 3.3 * inch, 2.1 * inch]))
+    E.append(Spacer(1, 0.10 * inch))
+    E.append(Paragraph(
+        '"Every checkpoint is independent. The system cannot approve a decision because 10 out of 11 passed. '
+        'All 11 must pass. This is what fail-closed governance means."',
+        ST['Quote']
+    ))
 
     E.append(PageBreak())
 
@@ -653,6 +711,52 @@ def build():
     E.append(PageBreak())
 
     # ═══════════════════════════════════════════════════════════════════════════
+    # COMPETITIVE DIFFERENTIATION
+    # ═══════════════════════════════════════════════════════════════════════════
+    E.extend(section('Why Not Just Use What You Already Have?'))
+    E.append(Paragraph(
+        'Every organization already has some form of logging, monitoring, or compliance tooling. '
+        'The question is not whether those tools exist — it is whether they provide '
+        'pre-execution governance with cryptographic accountability. They do not.',
+        ST['Body']
+    ))
+    E.append(Spacer(1, 0.10 * inch))
+
+    diff_data = [
+        [th('Alternative'), th('What It Does'), th("What's Missing"), th('OMNIX Difference')],
+        [tdgold('Audit Logs'),
+         td('Record what happened after execution has already occurred.'),
+         tdred('Evidence created after the fact. Cannot prevent a bad decision.'),
+         tdgreen('OMNIX governs BEFORE execution. The receipt proves authorization, not reconstruction.')],
+        [tdgold('SIEM /\nMonitoring'),
+         td('Alert teams to anomalies once they are detected.'),
+         tdred('Cannot halt execution. Cannot produce signed proof of evaluation. Observation only.'),
+         tdgreen('OMNIX halts. Fail-closed by design. No signed receipt = no execution. Ever.')],
+        [tdgold('Compliance\nPlatforms'),
+         td('Report policy adherence and flag violations after the fact.'),
+         tdred('Policy check ≠ governance gate. No cryptographic seal. Cannot be independently verified.'),
+         tdgreen('OMNIX enforces. Every decision carries a tamper-evident, publicly verifiable signed receipt.')],
+        [tdgold('Custom Internal\nValidation'),
+         td('Domain-specific code checks written by internal engineering teams.'),
+         tdred('Non-standardized. No independent verification. Cannot audit externally. Breaks across domains.'),
+         tdgreen('OMNIX is domain-agnostic infrastructure. Same pipeline, same receipt standard, across every vertical.')],
+        [tdgold('Human Review\nCommittees'),
+         td('Manual oversight for high-stakes decisions by designated reviewers.'),
+         tdred('Does not scale. Inconsistent. No cryptographic record of what was reviewed and why.'),
+         tdgreen('OMNIX escalates to human review only when the Coherence Engine detects contradiction (CP-4 HOLD).')],
+    ]
+    E.append(card(diff_data, [1.1 * inch, 1.6 * inch, 2.1 * inch, 2.3 * inch]))
+    E.append(Spacer(1, 0.10 * inch))
+    E.append(Paragraph(
+        '"The difference between an audit trail and governance infrastructure is the same as '
+        'the difference between a black box recorder and a pilot. '
+        'One tells you what happened. The other determines whether it should happen at all."',
+        ST['Quote']
+    ))
+
+    E.append(PageBreak())
+
+    # ═══════════════════════════════════════════════════════════════════════════
     # PRICING
     # ═══════════════════════════════════════════════════════════════════════════
     E.extend(section('How to Start'))
@@ -713,10 +817,79 @@ def build():
         [tdgreen('PQC implementation'),        td('November 2025'), td('Post-quantum cryptographic signature deployed. All receipts carry NIST-standardized PQC signatures.')],
         [tdgreen('Multi-domain expansion'),    td('March 2026'),    td('Islamic credit, insurance, and robotics domains activated in validation environment. Same pipeline across all four sectors.')],
         [tdgreen('Track Record phase'),        td('January 2026'),  td('Recalibrated pipeline activated. Official governance performance measurement period begins.')],
-        [tdgreen('Academic publication'),      td('March 2026'),    td('Architecture published on SSRN (abstract_id=6321298) and Zenodo (DOI 10.5281/zenodo.19056919).')],
+        [tdgreen('Academic publications'),     td('March 2026'),    td('4 peer-indexed publications: SSRN abstract_id=6321298 (PQC architecture) and 6507559 (governance whitepaper); Zenodo DOI 10.5281/zenodo.19056919 and 10.5281/zenodo.19375792.')],
         [tdgreen('Eureka GCC Semifinalist'),   td('2026'),          td('Selected as Semifinalist for Eureka GCC Dubai 2026 — competitive pan-GCC innovation program.')],
     ]
     E.append(card(track_data, [1.8 * inch, 1.1 * inch, 4.2 * inch]))
+
+    E.append(PageBreak())
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # WHY NOW + FOUNDER
+    # ═══════════════════════════════════════════════════════════════════════════
+    E.extend(section('Why Now: The Regulatory Window Is Closing'))
+    E.append(Paragraph(
+        'For the first time, AI governance is not a recommendation — it is a legal mandate. '
+        'Organizations that acquire governance infrastructure now will be compliant '
+        'by default. Those that wait will face retrofit costs that dwarf the investment.',
+        ST['Body']
+    ))
+    E.append(Spacer(1, 0.08 * inch))
+
+    timing_data = [
+        [th('Framework / Event'), th('Deadline / Status'), th('Implication for Automated Systems')],
+        [tdgold('EU AI Act — High-Risk AI'),
+         tdc('August 2026'),
+         td('Mandatory audit trails, human oversight mechanisms, and explainability for all high-risk AI systems.')],
+        [tdgold('NIST AI RMF'),
+         tdc('Adopted — 2023'),
+         td('De facto standard for US federal agencies and regulated industries. Measurability and governance controls required.')],
+        [tdgold('UAE AI Governance Framework'),
+         tdc('Active — 2025'),
+         td('UAE mandates AI accountability standards across financial services, healthcare, and public sector.')],
+        [tdgold('SEC / FCA / MAS Guidance'),
+         tdc('Published — 2024–2025'),
+         td('Financial regulators across US, UK, and Singapore have published AI governance expectations for trading and credit systems.')],
+        [tdgold('ISO/IEC 42001'),
+         tdc('Published — 2023'),
+         td('International AI management system standard. Requires documented risk controls and incident traceability.')],
+    ]
+    E.append(card(timing_data, [1.9 * inch, 1.3 * inch, 3.9 * inch]))
+    E.append(Spacer(1, 0.12 * inch))
+
+    E.extend(section('The Founder'))
+    E.append(Spacer(1, 0.06 * inch))
+
+    founder_box = Table(
+        [[Paragraph(
+            '<b>Harold Nunes</b><br/>'
+            '<font color="#C9A227">Solo Founder &amp; CEO — OMNIX</font><br/><br/>'
+            'Self-taught engineer. While building automated trading systems, Harold identified '
+            'a gap that no existing product addressed: the absence of pre-execution governance '
+            'with cryptographic accountability across any domain.<br/><br/>'
+            'Rather than wait for someone else to build it, he built it himself — '
+            'from architecture to production deployment, without a corporate engineering team.<br/><br/>'
+            '<font color="#10b981">What he built:</font> An 11-checkpoint governance pipeline, '
+            'post-quantum cryptographic signatures (NIST-standardized), multi-domain deployment across '
+            'trading, Islamic credit, insurance, and robotics — and 4 peer-indexed academic publications '
+            'documenting the architecture.<br/><br/>'
+            '<font color="#06b6d4">"I couldn\'t find infrastructure that governed automated decisions '
+            'with cryptographic accountability. So I built it."</font><br/><br/>'
+            'Currently seeking: <b>$500K pre-seed · Strategic co-founder · First enterprise clients</b>',
+            ParagraphStyle('founder', fontName='Helvetica', fontSize=9.5,
+                           textColor=WHITE, leading=16, alignment=TA_LEFT)
+        )]],
+        colWidths=[7.1 * inch]
+    )
+    founder_box.setStyle(TableStyle([
+        ('BACKGROUND',    (0, 0), (-1, -1), CARD_BG),
+        ('BOX',           (0, 0), (-1, -1), 2, GOLD),
+        ('TOPPADDING',    (0, 0), (-1, -1), 16),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 16),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 18),
+        ('RIGHTPADDING',  (0, 0), (-1, -1), 18),
+    ]))
+    E.append(founder_box)
 
     E.append(PageBreak())
 
