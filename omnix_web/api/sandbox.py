@@ -86,7 +86,7 @@ CHECKPOINT_DEFAULTS = [
         "signal": "signal_coherence",
         "operator": "gte",
         "threshold": 55,
-        "description": "Detects internal contradictions across all active signals. Decision Contradiction Index (DCI) ≥ 70 mandates escalation to human review.",
+        "description": "Detects internal contradictions across all active signals. DCI score of 70 or higher mandates escalation to human review.",
     },
     {
         "id": "CP-5",

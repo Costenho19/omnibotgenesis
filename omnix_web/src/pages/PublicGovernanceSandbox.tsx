@@ -370,7 +370,7 @@ export default function PublicGovernanceSandbox() {
     sectionHeader(isEs ? 'INTEGRIDAD CRIPTOGRÁFICA' : 'CRYPTOGRAPHIC INTEGRITY')
     const cryptoRows: [string, string][] = [
       [isEs ? 'Algoritmo de firma' : 'Signature algorithm', publicAlgorithmLabel(result.receipt?.signature_algorithm)],
-      [isEs ? 'Firmado PQC' : 'PQC signed', result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : 'No'],
+      [isEs ? 'Firmado PQC' : 'PQC signed', result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : (isEs ? 'Modo sandbox — activo en producción' : 'Sandbox mode — active in production')],
       [isEs ? 'Hash del contenido' : 'Content hash', (result.receipt?.content_hash || '').slice(0, 32) + '...'],
     ]
     cryptoRows.forEach(([label, value]) => {
@@ -491,7 +491,7 @@ export default function PublicGovernanceSandbox() {
       ``,
       `  ${isEs ? 'Algoritmo de firma' : 'Signature algorithm'}:  ${publicAlgorithmLabel(result.receipt?.signature_algorithm)}`,
       `  ${isEs ? 'Hash del contenido' : 'Content hash'}:         ${result.receipt?.content_hash?.slice(0, 24)}...`,
-      `  ${isEs ? 'Firmado PQC' : 'PQC signed'}:            ${result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : 'No'}`,
+      `  ${isEs ? 'Firmado PQC' : 'PQC signed'}:            ${result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : (isEs ? 'Modo sandbox — activo en producción' : 'Sandbox mode — active in production')}`,
       ``,
       isEs
         ? `  Este recibo está almacenado en PostgreSQL y es verificable públicamente:`
