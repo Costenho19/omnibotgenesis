@@ -1,11 +1,19 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure that governs high-stakes automated decisions across multiple domains. As of March 29, 2026, OMNIX operates four simultaneous governance engines 24/7: digital asset trading, Islamic credit (UAE/GCC), global insurance claims, and robotics pre-execution safety. The same 11-checkpoint pipeline + CAG + TIE governs every domain. Every decision receives a post-quantum cryptographically signed receipt (Dilithium-3 + Merkle chain). 57 Architecture Decision Records. TAM $137B+. Seeking $500K pre-seed at $3M pre-money.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across diverse sectors such as digital asset trading, Islamic credit, global insurance claims, and robotics pre-execution safety. It employs a consistent 11-checkpoint pipeline, including a Context Admission Gate (CAG) and Trajectory Invariant Enforcement (TIE), and issues a post-quantum cryptographically signed receipt for every decision. The project targets a significant market potential (TAM $137B+) and is currently seeking pre-seed funding.
 
 ## User Preferences
 ### Communication
 Simple, everyday language (Spanish primary).
+
+### REGLAS CRÍTICAS DE AGENTE (OBLIGATORIO — SIEMPRE)
+
+> **REGLA 1 — IDIOMA**: TODO lo que esté en inglés debe traducirse al español antes de presentarlo al usuario. Interfaces, mensajes, opciones, formularios, instrucciones — TODO en español. Si algo aparece en inglés en pantalla o en un documento y el usuario lo tiene que leer, traducirlo ANTES de que lo vea.
+
+> **REGLA 2 — AVISAR ANTES DE ACCIONES IRREVERSIBLES**: Antes de que el usuario realice cualquier acción irreversible (publicar en Zenodo, SSRN, subir a Railway, enviar emails, compartir en LinkedIn, hacer deploy), revisar proactivamente TODO lo que pueda afectar esa acción y avisar ANTES. No después. Nunca después.
+
+> **REGLA 3 — REVISIÓN PROACTIVA**: Antes de dar por terminada cualquier tarea, revisar si hay errores, inconsistencias o cosas pendientes que el usuario deba saber. No esperar a que el usuario lo descubra. Si algo puede causar un problema futuro, decirlo ahora.
 
 ### Deployment Policy (CRITICAL)
 | Environment | Purpose | Status |
@@ -145,43 +153,40 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX uses a hexagonal architecture, incorporating an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). It features AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter. Key decision-making components include an AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL). A Multi-Agent Governance System achieves weighted consensus. The system implements Hybrid Cryptography (X25519 + Kyber-768 via HKDF), a Crypto-Agility Layer, and Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root.
+OMNIX utilizes a hexagonal architecture featuring an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). It integrates AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter. Key decision-making components include an AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL). A Multi-Agent Governance System achieves weighted consensus, supported by Hybrid Cryptography (X25519 + Kyber-768 via HKDF), a Crypto-Agility Layer, and Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root.
 
 ### Key Gates and Vertical Controls
-OMNIX implements several critical gates and vertical controls, including: Context Admission Gate (CAG), Trajectory Invariant Enforcement (TIE), AML Governance Gate (CP-9), Fraud Detection Gate (CP-10), Jurisdiction Compliance Gate (CP-11), and Islamic Credit Governance Vertical.
-
-### Hierarchical Veto Flow
-Entry decisions flow through CAG → EBIP·ACV → an 11-checkpoint pipeline (SIV, Probability, Risk, Coherence, Trend, Stress, Sharia, TCV, FTI, ECW, AML, Fraud, Jurisdiction) → TIE → PQC Receipt. Exit decisions utilize a 3-gate EGL pipeline. All checkpoints generate PQC-signed receipts and operate in a fail-closed manner.
+The system incorporates a Context Admission Gate (CAG), Trajectory Invariant Enforcement (TIE), AML Governance Gate (CP-9), Fraud Detection Gate (CP-10), Jurisdiction Compliance Gate (CP-11), and Islamic Credit Governance Vertical. Decisions traverse CAG, EBIP·ACV, an 11-checkpoint pipeline (SIV, Probability, Risk, Coherence, Trend, Stress, Sharia, TCV, FTI, ECW, AML, Fraud, Jurisdiction), and TIE, culminating in a PQC Receipt. All checkpoints are fail-closed and generate PQC-signed receipts.
 
 ### Scoring Logic
-Decision scoring integrates EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, augmented by veto/penalty layers from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
+Decision scoring combines EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, augmented by veto/penalty layers from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
 
 ### Shadow Portfolio + Learning Engine
-A counterfactual analysis system monitors vetoed trades to calibrate filters.
+A counterfactual analysis system continuously monitors vetoed trades to calibrate internal filters.
 
 ### Decision Contradiction Index (DCI)
 The DCI quantifies internal signal divergence; a value of 70 or higher mandates a HOLD decision.
 
 ### Dashboard Features
-The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Calibration Progress, and Recommended Actions. It is built using Flask and Streamlit.
+The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Calibration Progress, and Recommended Actions, built with Flask and Streamlit.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-A B2B endpoint for external systems to submit signals for processing through OMNIX's 6-checkpoint governance pipeline. It returns a PQC-signed governance receipt, features RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner.
+A B2B Flask endpoint allows external systems to submit signals to OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It features RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner.
 
 ### Governance Compliance Modules
 Five additive governance modules extend the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting.
 
 ### Public Verification Server (Railway — Port 8000)
-A standalone `aiohttp` web server provides public receipt verification endpoints, ensuring zero internal data exposure through SHA-256 hash chains and Dilithium-3 PQC signatures.
+A standalone `aiohttp` web server offers public receipt verification endpoints, ensuring zero internal data exposure through SHA-256 hash chains and Dilithium-3 PQC signatures.
 
 ### Public Governance Sandbox (/try)
 A public, no-authentication sandbox (React + Flask) allows Gemini AI to interpret free-form scenarios into governance signals, run them through the REAL 11-checkpoint pipeline, and store a PQC-signed receipt.
 
 ### Public Decision Verification Page (/verify/:receiptId)
-A human-readable React page displays governance decisions in plain English and Spanish, showing: decision status banner (APPROVED/BLOCKED/HOLD), 11-checkpoint pipeline visualization, cryptographic integrity block, and independent verification CTA. It is powered by a Flask API (`GET /api/public/verify/<receipt_id>`) and is rate-limited (30 req/min) without authentication.
+A human-readable React page displays governance decisions in English and Spanish, showing: decision status, 11-checkpoint pipeline visualization, cryptographic integrity block, and independent verification CTA. It is powered by a Flask API (`GET /api/public/verify/<receipt_id>`) and is rate-limited without authentication.
 
 ### Web Infrastructure
-Uses a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demonstrations and public API, and the Verification Server (Port 8000) for independent receipt validation.
+The web infrastructure employs a multi-port architecture: OMNIX Web (Port 3000) for public landing pages (React + Vite), Flask Dashboard (Port 5000) for internal demonstrations and public API, and the Verification Server (Port 8000) for independent receipt validation.
 
 ## External Dependencies
 
