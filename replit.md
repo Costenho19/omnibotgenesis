@@ -1,19 +1,19 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors like digital asset trading, Islamic credit, global insurance claims, and robotics pre-execution safety. It utilizes a consistent 11-checkpoint pipeline, including a Context Admission Gate (CAG) and Trajectory Invariant Enforcement (TIE), and issues a post-quantum cryptographically signed receipt for every decision. The project aims to capture a significant market share ($137B+ TAM) by providing a robust and auditable framework for automated decision-making.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors like digital asset trading, Islamic credit, global insurance claims, and robotics pre-execution safety. It employs a consistent 11-checkpoint pipeline, including a Context Admission Gate (CAG) and Trajectory Invariant Enforcement (TIE), issuing a post-quantum cryptographically signed receipt for every decision. The project aims to establish a robust and auditable framework for automated decision-making.
 
 ## User Preferences
 ### Communication
 Simple, everyday language (Spanish primary).
 
-### REGLAS CRÍTICAS DE AGENTE (OBLIGATORIO — SIEMPRE)
+### CRITICAL AGENT RULES (MANDATORY — ALWAYS)
 
-> **REGLA 1 — IDIOMA**: TODO lo que esté en inglés debe traducirse al español antes de presentarlo al usuario. Interfaces, mensajes, opciones, formularios, instrucciones — TODO en español. Si algo aparece en inglés en pantalla o en un documento y el usuario lo tiene que leer, traducirlo ANTES de que lo vea.
+> **RULE 1 — LANGUAGE**: EVERYTHING in English must be translated into Spanish before being presented to the user. Interfaces, messages, options, forms, instructions — EVERYTHING in Spanish. If something appears in English on screen or in a document and the user has to read it, translate it BEFORE they see it.
 
-> **REGLA 2 — AVISAR ANTES DE ACCIONES IRREVERSIBLES**: Antes de que el usuario realice cualquier acción irreversible (publicar en Zenodo, SSRN, subir a Railway, enviar emails, compartir en LinkedIn, hacer deploy), revisar proactivamente TODO lo que pueda afectar esa acción y avisar ANTES. No después. Nunca después.
+> **RULE 2 — WARN BEFORE IRREVERSIBLE ACTIONS**: Before the user performs any irreversible action (publishing to Zenodo, SSRN, uploading to Railway, sending emails, sharing on LinkedIn, deploying), proactively review EVERYTHING that might affect that action and warn BEFORE. Not after. Never after.
 
-> **REGLA 3 — REVISIÓN PROACTIVA**: Antes de dar por terminada cualquier tarea, revisar si hay errores, inconsistencias o cosas pendientes que el usuario deba saber. No esperar a que el usuario lo descubra. Si algo puede causar un problema futuro, decirlo ahora.
+> **RULE 3 — PROACTIVE REVIEW**: Before considering any task finished, check for errors, inconsistencies, or pending items the user should know about. Do not wait for the user to discover them. If something could cause a future problem, say it now.
 
 ### Deployment Policy (CRITICAL)
 | Environment | Purpose | Status |
@@ -30,78 +30,78 @@ Simple, everyday language (Spanish primary).
 4.  **After testing on Replit**: ALWAYS stop workflow before ending session
 
 ### Bot Testing Protocol (MANDATORY)
-> **REGLA OBLIGATORIA**: Cada vez que se active el bot en Replit para testing:
-> 1. Realizar las pruebas necesarias
-> 2. **APAGAR el workflow del bot ANTES de terminar la sesion**
-> 3. Verificar que el workflow este detenido
+> **MANDATORY RULE**: Every time the bot is activated on Replit for testing:
+> 1. Perform the necessary tests
+> 2. **STOP the bot workflow BEFORE ending the session**
+> 3. Verify that the workflow is stopped
 >
-> **Razon**: Telegram solo permite UNA conexion activa por token. Si el bot corre en Replit y Railway al mismo tiempo, habra conflictos y errores de conexion.
+> **Reason**: Telegram only allows ONE active connection per token. If the bot runs on Replit and Railway at the same time, there will be conflicts and connection errors.
 
-### Protocolo de Contexto (OBLIGATORIO)
+### Context Protocol (MANDATORY)
 
-**Antes de ejecutar cualquier cambio**, revisar la documentación en `docs/` para enriquecer el contexto:
+**Before executing any changes**, review the documentation in `docs/` to enrich the context:
 
-| Prioridad | Archivos | Propósito |
+| Priority | Files | Purpose |
 |-----------|----------|-----------|
-| **1. Crítico** | `docs/README.md` | Índice principal de documentación |
-| **2. Crítico** | `docs/MIGRATION_STATUS.md` | Estado consolidado V7.0 |
-| **3. Crítico** | `docs/REAL_SYSTEM_STATUS.md` | Estado real del sistema |
-| **4. Arquitectura** | `docs/current/` | ARCHITECTURE.md, HEXAGONAL_MIGRATION_STATUS.md, TECHNICAL_DEBT.md |
-| **5. Auditorías** | `docs/compliance/audits/` | DATABASE_AUDIT_REPORT.md, INTERNAL_AUDIT_TRANSPARENCY.md, OMNIX_Security_Audit_v1.0_INTERNAL.md |
-| **5b. Seguridad** | `docs/compliance/` | SECURITY_OVERVIEW.md (público/pitch), CRYPTOGRAPHIC_ARCHITECTURE_OVERVIEW.md (institucional) |
-| **5c. Data Integrity** | `docs/compliance/REAL_DATA_POLICY.md` | "Todo real, nada inventado" — prohibited patterns, JS helpers, anti-regression tests |
-| **6. Historial** | `docs/history/` | Decisiones previas, migraciones, contexto histórico |
-| **7. Referencia** | `docs/reference/` | TRACEABILITY_MATRIX.ADR.md, ADRs (incl. ADR-027 Decision Governance Infrastructure) |
-| **8. Seguridad** | `docs/reference/adr/ADR-022-post-quantum-cryptography.md` | PQC implementado Nov 2025 (Kyber-768/Dilithium-3) |
+| **1. Critical** | `docs/README.md` | Main documentation index |
+| **2. Critical** | `docs/MIGRATION_STATUS.md` | Consolidated V7.0 status |
+| **3. Critical** | `docs/REAL_SYSTEM_STATUS.md` | Real system status |
+| **4. Architecture** | `docs/current/` | ARCHITECTURE.md, HEXAGONAL_MIGRATION_STATUS.md, TECHNICAL_DEBT.md |
+| **5. Audits** | `docs/compliance/audits/` | DATABASE_AUDIT_REPORT.md, INTERNAL_AUDIT_TRANSPARENCY.md, OMNIX_Security_Audit_v1.0_INTERNAL.md |
+| **5b. Security** | `docs/compliance/` | SECURITY_OVERVIEW.md (public/pitch), CRYPTOGRAPHIC_ARCHITECTURE_OVERVIEW.md (institutional) |
+| **5c. Data Integrity** | `docs/compliance/REAL_DATA_POLICY.md` | "All real, nothing invented" — prohibited patterns, JS helpers, anti-regression tests |
+| **6. History** | `docs/history/` | Previous decisions, migrations, historical context |
+| **7. Reference** | `docs/reference/` | TRACEABILITY_MATRIX.ADR.md, ADRs (incl. ADR-027 Decision Governance Infrastructure) |
+| **8. Security** | `docs/reference/adr/ADR-022-post-quantum-cryptography.md` | PQC implemented Nov 2025 (Kyber-768/Dilithium-3) |
 
-**Después de cambios significativos**, actualizar la documentación relevante.
+**After significant changes**, update the relevant documentation.
 
-> **CRÍTICO PQC**: Post-Quantum Cryptography YA ESTÁ IMPLEMENTADO desde Nov 2025. La IA NO debe decir "PQC planificado para Q3 2026". Las órdenes de trading se firman con Dilithium-3. Ver ADR-022.
+> **CRITICAL PQC**: Post-Quantum Cryptography IS ALREADY IMPLEMENTED since Nov 2025. The AI MUST NOT say "PQC planned for Q3 2026". Trading orders are signed with Dilithium-3. See ADR-022.
 
 ### Investor Challenge Response Framework (ADR-024)
 
-Cuando un inversor pregunte sobre trade-offs comparativos (opportunity cost, risk avoided, buy & hold vs, justify), el bot DEBE responder con estructura:
+When an investor asks about comparative trade-offs (opportunity cost, risk avoided, buy & hold vs, justify), the bot MUST respond with structure:
 
-1.  **NUMBER FIRST**: Abrir con cuantificación (ej: "Opportunity Cost: $847. Risk Avoided: $2,340. Net EV: +$1,493")
-2.  **FRAMEWORK SECOND**: Explicar cómo se calculó (fórmulas ADR-020, data freshness)
-3.  **POSITIONING THIRD**: Clarificar qué es OMNIX ("governance infrastructure, not BTC hold competitor")
+1.  **NUMBER FIRST**: Open with quantification (e.g., "Opportunity Cost: $847. Risk Avoided: $2,340. Net EV: +$1,493")
+2.  **FRAMEWORK SECOND**: Explain how it was calculated (ADR-020 formulas, data freshness)
+3.  **POSITIONING THIRD**: Clarify what OMNIX is ("governance infrastructure, not BTC hold competitor")
 
-**PROHIBIDO en investor_challenge:**
-- "Estamos en fase de aprendizaje" (suena a "confía sin datos")
-- "Es difícil cuantificar" sin dar fórmula
-- "No es una comparación justa" sin explicar por qué
+**PROHIBITED in investor_challenge:**
+- "We are in a learning phase" (sounds like "trust without data")
+- "It's difficult to quantify" without giving a formula
+- "It's not a fair comparison" without explaining why
 
-Ver ADR-024 para keywords de detección y ejemplos.
+See ADR-024 for detection keywords and examples.
 
-### Track Record Period Disclosure (OBLIGATORIO)
+### Track Record Period Disclosure (MANDATORY)
 
-| Período | Tipo de dinero | Fechas | Trades | P&L | Propósito |
+| Period | Money Type | Dates | Trades | P&L | Purpose |
 |---------|---------------|--------|--------|-----|-----------|
-| **Phase 0 — Real Capital** | **REAL** (Kraken) | Jul 6 – Ago 18, 2025 | 1,115 | -$1,167 (-28.6%) | Capital real sin gobernanza |
-| **Learning Baseline** | Paper (simulado) | Nov 2025 - 14 Ene 2026 | 119 | -$15,198.73 | Calibración del motor |
-| **Track Record Oficial** | Paper (simulado) | 15 Ene 2026 - presente | 0 | $0 | Validación recalibrada |
+| **Phase 0 — Real Capital** | **REAL** (Kraken) | Jul 6 – Aug 18, 2025 | 1,115 | -$1,167 (-28.6%) | Real capital without governance |
+| **Learning Baseline** | Paper (simulated) | Nov 2025 - Jan 14, 2026 | 119 | -$15,198.73 | Engine calibration |
+| **Official Track Record** | Paper (simulated) | Jan 15, 2026 - present | 0 | $0 | Recalibrated validation |
 
-> **REGLA CRÍTICA**: Phase 0 = dinero real Kraken. Learning Baseline y Track Record = dinero simulado/paper. NUNCA mezclar en reportes o respuestas al inversor.
+> **CRITICAL RULE**: Phase 0 = real Kraken money. Learning Baseline and Track Record = simulated/paper money. NEVER mix in reports or investor responses.
 
 ### Dashboard Investor Credibility
 
-| Métrica | Comportamiento |
+| Metric | Behavior |
 |---------|----------------|
-| **Max DD** | Siempre ≤ 0% (normalizado) |
-| **Win Rate** | N/A cuando 0 trades en Track Record |
-| **Header P&L** | Etiquetado "(Baseline)" para evitar confusión |
-| **Est. Loss Avoided** | Capped a $100K con footnote explicativo |
+| **Max DD** | Always ≤ 0% (normalized) |
+| **Win Rate** | N/A when 0 trades in Track Record |
+| **Header P&L** | Labeled "(Baseline)" to avoid confusion |
+| **Est. Loss Avoided** | Capped at $100K with explanatory footnote |
 
-**Fórmula Est. Loss Avoided:**
+**Est. Loss Avoided Formula:**
 ```
 Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ```
 
-> **REGLA**: Cuando la IA reporte métricas (P&L, win rate, trades, losses), DEBE agregar al final:
+> **RULE**: When the AI reports metrics (P&L, win rate, trades, losses), it MUST add at the end:
 >
-> **Nota de Período**: Estos datos corresponden al Learning Baseline (Nov-Dic 2025), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial.
+> **Period Note**: This data corresponds to the Learning Baseline (Nov-Dec 2025), calibration phase. Since January 15, 2026, the system operates with recalibrated parameters in the Official Track Record.
 
-**NO aplica para**: saludos, comandos, preguntas técnicas sin métricas. Ver ADR-023.
+**Does NOT apply to**: greetings, commands, technical questions without metrics. See ADR-023.
 
 ### Security Documentation Strategy
 **3-Tier Documentation Architecture:**
@@ -120,13 +120,13 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 - Footer/copyright: "Abu Dhabi, UAE" — no ADGM affiliation implied
 
 **PQC Communication Tier Rules (CRITICAL — updated Feb 2026):**
-| Tier | Audiencia | Lenguaje permitido | Prohibido |
+| Tier | Audience | Allowed Language | Prohibited |
 |------|-----------|-------------------|-----------|
-| External | Bot, Telegram, web | "NIST-standardized algorithms", "post-quantum cryptography" | FIPS 203/204, "NIST Level 3", nombres de algoritmos |
-| Institutional | Inversores, partners | Nombres (Dilithium-3, Kyber-768), "NIST-standardized" | FIPS 203/204, "NIST Level 3 security equivalent" |
-| Internal | ADRs, audits, código | Todo, incluyendo FIPS y NIST Level 3 | N/A |
+| External | Bot, Telegram, web | "NIST-standardized algorithms", "post-quantum cryptography" | FIPS 203/204, "NIST Level 3", algorithm names |
+| Institutional | Investors, partners | Names (Dilithium-3, Kyber-768), "NIST-standardized" | FIPS 203/204, "NIST Level 3 security equivalent" |
+| Internal | ADRs, audits, code | All, including FIPS and NIST Level 3 | N/A |
 
-**Kyber-768 es un KEM (Key Encapsulation Mechanism), NO un algoritmo de cifrado de datos.** Decir "Kyber-768 for data encryption" es un error técnico que daña la credibilidad institucional. El cifrado de datos lo hace AES/Fernet. Ver ADR-022.
+**Kyber-768 is a KEM (Key Encapsulation Mechanism), NOT a data encryption algorithm.** Saying "Kyber-768 for data encryption" is a technical error that damages institutional credibility. Data encryption is done by AES/Fernet. See ADR-022.
 
 ### Team Narrative
 -   **Harold Nunes**: Solo Founder & CEO — only name visible in all surfaces
@@ -137,7 +137,7 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 **Strategy**: Invisible internal versioning, stable external identity (like Stripe).
 
 | Surface | Branding | Version |
-|-------------------|---------|
+|-------------------|---------|---------|
 | **Dashboard UI** | "OMNIX Decision Governance" | None visible |
 | **Bot AI Responses** | "OMNIX Decision Governance" | None visible |
 | **Telegram Messages** | "OMNIX Decision Governance" | None visible |
@@ -152,7 +152,7 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key capabilities include AI-first command detection, Multilingual Prompt Architecture, Anti-Servile Post-Processing Filter, AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL). A Multi-Agent Governance System ensures weighted consensus, supported by Hybrid Cryptography (X25519 + Kyber-768 via HKDF), a Crypto-Agility Layer, and Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root. All checkpoints are fail-closed.
+OMNIX utilizes a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key capabilities include AI-first command detection, Multilingual Prompt Architecture, Anti-Servile Post-Processing Filter, AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL). A Multi-Agent Governance System ensures weighted consensus, supported by Hybrid Cryptography (X25519 + Kyber-768 via HKDF), a Crypto-Agility Layer, and Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root. All checkpoints are fail-closed.
 
 ### Key Gates and Vertical Controls
 The system integrates a Context Admission Gate (CAG), Trajectory Invariant Enforcement (TIE), AML Governance Gate (CP-9), Fraud Detection Gate (CP-10), Jurisdiction Compliance Gate (CP-11), and Islamic Credit Governance Vertical. Decisions follow an 11-checkpoint pipeline and are PQC-signed.
