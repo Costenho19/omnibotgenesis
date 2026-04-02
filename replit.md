@@ -1,9 +1,11 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors such as digital asset trading, Islamic credit, global insurance claims, and robotics pre-execution safety. It employs a consistent 11-checkpoint pipeline, including a Context Admission Gate (CAG) and Trajectory Invariant Enforcement (TIE), issuing a post-quantum cryptographically signed receipt for every decision. The project aims to establish a robust and auditable framework for automated decision-making.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors such as digital asset trading, Islamic credit, global insurance claims, and robotics pre-execution safety. It employs a consistent 11-checkpoint pipeline (CP-1 to CP-11), issuing a post-quantum cryptographically signed receipt for every decision.
 
-Harold Nunes is the Solo Founder & CEO. The project is raising $500K pre-seed at a $3M pre-money valuation.
+Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raising $500K pre-seed at $3M pre-money valuation.
+
+---
 
 ## User Preferences
 ### Communication
@@ -17,10 +19,15 @@ Simple, everyday language (Spanish primary).
 
 > **RULE 3 — PROACTIVE REVIEW**: Before considering any task finished, check for errors, inconsistencies, or pending items the user should know about. Do not wait for the user to discover them. If something could cause a future problem, say it now.
 
-### Deployment Policy (CRITICAL)
-- **Railway**: PRODUCTION (24/7) for bot + web.
-- **Replit**: DEVELOPMENT for code editing and tests only.
-- NEVER run the bot on Replit and Railway simultaneously due to Telegram's single active connection per token policy.
+---
+
+## Deployment Policy (CRITICAL)
+| Environment | Purpose |
+|-------------|---------|
+| **Railway** | PRODUCTION (24/7) — bot + web live permanently |
+| **Replit** | DEVELOPMENT — code editing and tests only |
+
+**NEVER run the bot on Replit and Railway simultaneously** — Telegram allows only ONE active connection per token.
 
 ### Bot Testing Protocol (MANDATORY)
 Every time the bot is activated on Replit for testing:
@@ -28,73 +35,150 @@ Every time the bot is activated on Replit for testing:
 2. **STOP the bot workflow BEFORE ending the session.**
 3. Verify that the workflow is stopped.
 
+---
+
+## Railway Production Architecture (CRITICAL — confirmed Apr 2026)
+
+Railway project has **4 services**:
+
+| Service | URL | What it runs |
+|---------|-----|-------------|
+| **stellar-hope** | omnixquantum.net | React frontend + Flask API |
+| **omnibotgenesis** | omnibotgenesis-production… | Telegram bot |
+| **Redis** | internal | Cache / state |
+| **Postgres** | internal | Main DB |
+
+### stellar-hope — How it works
+- **Root Directory in Railway**: `/omnix_web`
+- **Config**: `omnix_web/nixpacks.toml`
+- **Start command**: `gunicorn api.server:app --bind 0.0.0.0:$PORT`
+- **Flask entry point**: `omnix_web/api/server.py` (imports `api.sandbox`)
+
+> **⚠ CRITICAL**: When fixing web API bugs, edit `omnix_web/api/` — NOT `omnix_dashboard/`. The `omnix_dashboard/` folder is NOT used in Railway production web.
+
+### Key web API files
+| File | Purpose |
+|------|---------|
+| `omnix_web/api/server.py` | Main Flask app — all `/api/*` routes |
+| `omnix_web/api/sandbox.py` | 11-checkpoint public governance sandbox |
+| `omnix_web/nixpacks.toml` | Railway build + start config |
+| `omnix_web/public/whitepaper.pdf` | Whitepaper — persists across builds |
+
+---
+
 ## System Architecture
 
-### Core Components and Design Patterns
-OMNIX employs a hexagonal architecture featuring an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key capabilities include AI-first command detection, Multilingual Prompt Architecture, Anti-Servile Post-Processing Filter, AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL). It uses a Multi-Agent Governance System for weighted consensus, supported by Hybrid Cryptography (X25519 + Kyber-768 via HKDF), a Crypto-Agility Layer, and Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root. All checkpoints are designed to be fail-closed.
+### Core Components
+OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key capabilities: AI-first command detection, Multilingual Prompt Architecture, Anti-Servile Post-Processing Filter, AI Risk Guardian, CAES, Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, SIV, FTI, RCK, EGL. Multi-Agent Governance System with Hybrid Cryptography (X25519 + Kyber-768 via HKDF), Crypto-Agility Layer, and Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and rolling Merkle root. All checkpoints are fail-closed.
 
-### Key Gates and Vertical Controls
-The system integrates a Context Admission Gate (CAG), Trajectory Invariant Enforcement (TIE), AML Governance Gate (CP-9), Fraud Detection Gate (CP-10), and Islamic Credit Governance Vertical. Decisions follow an 11-checkpoint pipeline (CP-0 to CP-10) and are PQC-signed.
+### 11-Checkpoint Pipeline — matches Zenodo/SSRN published paper exactly (CP-1 to CP-11)
 
-### Public Sandbox — 11-Checkpoint Pipeline (`omnix_web/api/sandbox.py`)
-This sandbox executes decisions through an 11-checkpoint pipeline, each with specific signal thresholds:
-- CP-0: Signal Integrity Validation (≥ 60)
-- CP-1: Probability Check (≥ 50)
-- CP-2: Risk Limits (≤ 65)
-- CP-3: Signal Coherence (≥ 55)
-- CP-4: Trend Persistence (≥ 50)
-- CP-5: Stress Resilience (≥ 35)
-- CP-6: Logic Consistency (≥ 40)
-- CP-7: Temporal Coherence (≥ 45)
-- CP-8: Edge Confirmation (≥ 40)
-- CP-9: AML Gate (≥ 15)
-- CP-10: Fraud Detection Gate (≥ 30)
+| CP | Name | Signal | Threshold | If Fails |
+|----|------|--------|-----------|---------|
+| CP-1 | Signal Integrity Validator (SIV) | signal_integrity | ≥ 60 | Rejected at entry — pipeline never opens |
+| CP-2 | Probability Assessment | probability_score | ≥ 50 | Blocked — insufficient confidence |
+| CP-3 | Risk Evaluation | risk_exposure | ≤ 65 | Blocked — risk limit exceeded |
+| CP-4 | Coherence Engine | signal_coherence | ≥ 55 | HOLD — human review (DCI ≥ 70) |
+| CP-5 | Trend Validator | trend_persistence | ≥ 50 | Blocked — regime contradiction |
+| CP-6 | Stress Testing | stress_resilience | ≥ 35 | Blocked — fails under stress |
+| CP-7 | Ethics & Domain Gate | logic_consistency | ≥ 40 | Blocked — ethics violation recorded |
+| CP-8 | Threshold & Context Validator | temporal_coherence | ≥ 45 | Blocked — parameter out of range |
+| CP-9 | AML Screening | probability_score | ≥ 15 | Blocked — suspicious activity flagged |
+| CP-10 | Fraud Detection | logic_consistency | ≥ 30 | Blocked — fraud flag escalated |
+| CP-11 | Jurisdiction Compliance | signal_integrity | ≥ 35 | Blocked — jurisdiction violation |
 
-### Scoring Logic
-Decision scoring combines EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, enhanced by veto/penalty layers from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
+### Published Research (permanent DOIs)
+- **Zenodo v2**: https://doi.org/10.5281/zenodo.19378059
+- **SSRN**: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6507559
+- (First papers: Zenodo 10.5281/zenodo.19056919, SSRN 6321298)
 
-### Shadow Portfolio + Learning Engine
-A counterfactual analysis system continuously monitors vetoed trades to calibrate internal filters.
+### External Governance API (Flask Dashboard — B2B, Port 5000)
+`omnix_dashboard/blueprints/governance.py` — 6-checkpoint B2B pipeline (separate from the 11-checkpoint public sandbox). RBAC auth, PQC-signed receipts, NIST AI RMF / ISO 42001 / EU AI Act aligned.
 
-### Decision Contradiction Index (DCI)
-The DCI quantifies internal signal divergence; a value of 70 or higher mandates a HOLD decision.
+### Public Verification Server (Railway — Port 8000)
+Standalone `aiohttp` server. Public receipt verification. Zero internal data exposure. SHA-256 hash chains + Dilithium-3 PQC signatures.
 
-### Dashboard Features
-The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Calibration Progress, and Recommended Actions.
+### Web Infrastructure
+| Port | Environment | Purpose |
+|------|-------------|---------|
+| `$PORT` Railway | Production | gunicorn: Flask + React dist |
+| 3000 | Replit dev | Vite dev server |
+| 5000 | Replit dev | Flask Dashboard (local/internal) |
+| 8000 | Railway | Public verification server |
 
-### External Governance API (Flask Dashboard — B2B)
-A B2B Flask endpoint (`omnix_dashboard/blueprints/governance.py`) allows external systems to submit signals to OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It features RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner. It is extended by five additive governance modules aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. This is a separate pipeline from the public sandbox.
+---
 
-### Public Verification Server (Railway)
-A standalone `aiohttp` web server offers public receipt verification endpoints, ensuring zero internal data exposure through SHA-256 hash chains and Dilithium-3 PQC signatures.
+## Security / PQC Rules
 
-### Public Governance Sandbox (`/try`)
-This React page (`PublicGovernanceSandbox.tsx`) with a Flask backend (`omnix_web/api/sandbox.py`) allows users to interpret free-form scenarios into governance signals via Gemini AI, run them through the 11-checkpoint pipeline, and receive a PQC-signed receipt. It is rate-limited and requires no authentication.
+**PQC Communication Tier Rules (CRITICAL):**
+| Tier | Audience | Allowed | Prohibited |
+|------|-----------|---------|-----------|
+| External | Bot, web | "NIST-standardized algorithms", "post-quantum cryptography" | FIPS 203/204, algorithm names |
+| Institutional | Investors | Dilithium-3, Kyber-768, "NIST-standardized" | FIPS 203/204 |
+| Internal | ADRs, code | Everything | N/A |
 
-### Public Decision Verification Page (`/verify/:receiptId`)
-This React page (`PublicDecisionVerify.tsx`) displays governance decisions in English and Spanish, including decision status, a visual representation of the 11-checkpoint pipeline, a cryptographic integrity block, and an independent verification call to action. It's powered by Flask (`GET /api/public/verify/<receipt_id>`) and is rate-limited.
+**Kyber-768 is a KEM, NOT a data encryption algorithm.** Data encryption = AES/Fernet.
 
-### Web Infrastructure (Production — Railway stellar-hope)
-- **Railway's `$PORT`**: gunicorn serves Flask backend and React distribution.
-- **Port 8000 on Railway**: Public verification `aiohttp` server.
+**Legal Language:**
+- "NIST-standardized algorithms" — NEVER "FIPS 204/203"
+- "Aligned with core SOC 2 security control principles" — NEVER "SOC 2 compliant"
+- "Designed for ADGM/SEC regulatory frameworks" — NEVER "ADGM compliance ready"
+- Footer: "Abu Dhabi, UAE" — no ADGM affiliation implied
+
+---
+
+## Investor / Business Rules
+
+### Track Record Disclosure (MANDATORY)
+| Period | Money | Dates | Trades | P&L |
+|--------|-------|-------|--------|-----|
+| Phase 0 — Real Capital | **REAL** (Kraken) | Jul 6 – Aug 18, 2025 | 1,115 | -$1,167 |
+| Learning Baseline | Paper | Nov 2025 – Jan 14, 2026 | 119 | -$15,198.73 |
+| Official Track Record | Paper | Jan 15, 2026 – present | 0 | $0 |
+
+> NEVER mix real and simulated money in reports or investor responses.
+
+### Pricing
+- Shadow Mode: Free
+- Advisory: $8K/month
+- Enterprise: $20K–$35K/month
+- Custom: Contact us
+- Burn rate: $34,500/month = 14.5 months runway. Break-even = 2 enterprise clients.
+
+### Contact
+- WhatsApp: +1 (650) 507-8293
+- Email: contacto@omnixquantum.net
+
+### Branding Policy
+- **Never show version** (V6.5.4e INSTITUTIONAL+) in any user/investor-facing surface
+- External identity: "OMNIX Decision Governance" — no version numbers
+- Harold Nunes: only name visible. If asked about technical help: "I've worked with contract developers and infrastructure consultants"
+
+---
 
 ## External Dependencies
+- **Kraken**: Crypto data and order execution
+- **Alpaca**: Stock data and historical bars
+- **Google Gemini (Flash)**: Primary AI model
+- **OpenAI (GPT-4o, Whisper)**: AI services
+- **Anthropic Claude**: AI fallback
+- **ElevenLabs**: Text-to-speech
+- **CoinGecko**: Backup crypto prices
+- **Alternative.me**: Fear and Greed Index
+- **Finnhub**: Market news and sentiment
+- **Alpha Vantage**: Technical indicators
+- **Tavily**: Real-time web search
+- **Stripe**: Payment processing
+- **ANU QRNG**: Quantum random numbers
+- **PostgreSQL (Railway)**: Main persistence
+- **Redis (Railway)**: Caching, state management, rate limiting
 
-### APIs and Services
-- **Kraken Exchange**: Crypto data and order execution.
-- **Alpaca**: Stock data and historical bars.
-- **Google Gemini (Flash)**: Primary AI model.
-- **OpenAI (GPT-4o, Whisper)**: AI services.
-- **Anthropic Claude**: AI fallback.
-- **ElevenLabs**: Text-to-speech.
-- **CoinGecko**: Backup crypto prices.
-- **Alternative.me**: Fear and Greed Index.
-- **Finnhub**: Market news and sentiment.
-- **Alpha Vantage**: Technical indicators.
-- **Tavily**: Real-time web search for AI responses.
-- **Stripe**: Payment processing.
-- **ANU QRNG**: Quantum random numbers.
+---
 
-### Databases
-- **PostgreSQL (Railway)**: Main persistence layer.
-- **Redis (Railway)**: Caching, state management, and rate limiting.
+## Recent Fixes (Apr 2026)
+| Commit | Fix |
+|--------|-----|
+| `b9d6606f` | Aligned all checkpoints to CP-1→CP-11 matching published Zenodo/SSRN paper. Added CP-11 Jurisdiction Compliance. Renamed CP-7 Ethics & Domain Gate, CP-8 Threshold & Context Validator. |
+| `cb826eca` | Removed CP-11/CP-7b from InstitutionalPage (cleanup before full alignment) |
+| `039d00f5` | Fixed production backend from 8 to 11 checkpoints (root cause: `omnix_web/api/sandbox.py`) |
+| `d93d1adb` | React: removed opacity-30, dynamic title, whitepaper moved to `public/` |
