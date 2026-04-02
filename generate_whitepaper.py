@@ -166,12 +166,13 @@ def impact_box(num, label, color=RED_ALERT, bg=None):
     lbl_style = ParagraphStyle('l', fontName='Helvetica', fontSize=8,
                                textColor=GRAY, alignment=TA_CENTER, leading=12)
     t = Table([[Paragraph(num, num_style)], [Paragraph(label, lbl_style)]],
-              colWidths=[2.3 * inch])
+              colWidths=[2.3 * inch],
+              rowHeights=[44, 38])
     t.setStyle(TableStyle([
         ('BACKGROUND',    (0, 0), (-1, -1), bg),
         ('BOX',           (0, 0), (-1, -1), 1, color),
-        ('TOPPADDING',    (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING',    (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ('LEFTPADDING',   (0, 0), (-1, -1), 6),
         ('RIGHTPADDING',  (0, 0), (-1, -1), 6),
         ('ALIGN',         (0, 0), (-1, -1), 'CENTER'),
