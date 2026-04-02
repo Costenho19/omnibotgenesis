@@ -732,9 +732,10 @@ export default function PublicGovernanceSandbox() {
                     <div
                       key={index}
                       className={`glass-card p-5 transition-all duration-500 ${
-                        status === 'pending' ? 'opacity-30' :
                         status === 'animating' ? 'border-blue-500/60 shadow-lg shadow-blue-500/10' :
-                        isPassed ? 'border-emerald-500/30' : 'border-red-500/30'
+                        status === 'done' && isPassed ? 'border-emerald-500/30' :
+                        status === 'done' && !isPassed ? 'border-red-500/30' :
+                        'border-white/5'
                       }`}
                     >
                       <div className="flex items-start justify-between">
