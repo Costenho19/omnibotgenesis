@@ -90,3 +90,9 @@ id = "mUdscati1sRnFsjxT345a"
 uri = "file://OMNIX_Technical_Whitepaper_2026.pdf"
 type = "pdf"
 title = "OMNIX Whitepaper — v8 números verificables"
+
+[[outputs]]
+id = "dIhpzsXMgF0Y6aeTacFJD"
+uri = "file://OMNIX_Velos_Partner_Agreement_v2.pdf"
+type = "pdf"
+title = "OMNIX × Velos — Channel Partner Agreement v2.0"
