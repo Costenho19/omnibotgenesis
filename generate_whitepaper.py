@@ -688,12 +688,21 @@ def build():
     # ═══════════════════════════════════════════════════════════════════════════
     # TRACK RECORD
     # ═══════════════════════════════════════════════════════════════════════════
+    E.append(PageBreak())
     E.extend(section('Operational Track Record'))
     E.append(Paragraph(
         'OMNIX has been in continuous production operation since July 2025, '
         'with the governance pipeline actively evaluating decisions across all four domains. '
         'The system has maintained 24/7 uptime with zero infrastructure failures.',
         ST['Body']
+    ))
+    E.append(Spacer(1, 0.06 * inch))
+    E.append(Paragraph(
+        '<i>Note: Digital asset trading operates with real capital on Kraken exchange. '
+        'Islamic credit, insurance, and robotics domains operate in a controlled validation environment — '
+        'governance logic is identical; domain-specific parameters are under calibration for production deployment.</i>',
+        ParagraphStyle('note', fontName='Helvetica-Oblique', fontSize=8.5,
+                       textColor=GRAY, leading=13, leftIndent=6)
     ))
     E.append(Spacer(1, 0.08 * inch))
 
