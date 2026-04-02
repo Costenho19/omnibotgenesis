@@ -1552,6 +1552,100 @@ def register_sandbox_routes(app):
                 'description': gate.get('description', ''),
             })
 
+        # ── EXPLANATION QUALITY GUARD ──────────────────────────────────────
+        # If checkpoints were blocked, ensure the explanation is specific and
+        # informative — never generic. Override if the AI gave a vague fallback.
+        final_explanation = ai_result.get('explanation', '')
+        is_es = ai_result.get('language') == 'es'
+        blocked_gates = [g for g in governance_result.get('gate_results', []) if g['result'] == 'BLOCKED']
+
+        GENERIC_PHRASES = [
+            'no se identificaron indicadores',
+            'no risk indicators',
+            'no se detectaron',
+            'no risks detected',
+            'se ajusta a los parámetros',
+            'fits governance parameters',
+            'no significant risk',
+        ]
+        is_generic = any(phrase in final_explanation.lower() for phrase in GENERIC_PHRASES)
+
+        if blocked_gates and (is_generic or not final_explanation.strip()):
+            _cp_name_map_en = {
+                'CP-1':  'Signal Integrity Validator (SIV)',
+                'CP-2':  'Probability Assessment',
+                'CP-3':  'Risk Evaluation',
+                'CP-4':  'Coherence Engine',
+                'CP-5':  'Trend Validator',
+                'CP-6':  'Stress Testing',
+                'CP-7':  'Ethics & Domain Gate',
+                'CP-8':  'Threshold & Context Validator',
+                'CP-9':  'AML Screening',
+                'CP-10': 'Fraud Detection',
+                'CP-11': 'Jurisdiction Compliance',
+            }
+            _cp_name_map_es = {
+                'CP-1':  'Validador de Integridad de Señal (SIV)',
+                'CP-2':  'Evaluación de Probabilidad',
+                'CP-3':  'Evaluación de Riesgo',
+                'CP-4':  'Motor de Coherencia',
+                'CP-5':  'Validador de Tendencias',
+                'CP-6':  'Pruebas de Estrés',
+                'CP-7':  'Ética y Puerta de Dominio',
+                'CP-8':  'Umbral y Contexto',
+                'CP-9':  'Detección AML',
+                'CP-10': 'Detección de Fraude',
+                'CP-11': 'Cumplimiento Jurisdiccional',
+            }
+            _cp_why_en = {
+                'CP-1':  'The scenario lacks sufficient data completeness or contains unverifiable elements that prevent reliable evaluation. OMNIX requires a minimum signal integrity score before opening the pipeline.',
+                'CP-2':  'The probability of a positive outcome is below the authorized minimum threshold. Insufficient confidence in the projected result.',
+                'CP-3':  'The risk exposure exceeds authorized limits for this domain. The downside risk is too high to proceed.',
+                'CP-4':  'Internal signals are contradicting each other, indicating incoherence in the decision context. The Decision Contradiction Index (DCI) is too high.',
+                'CP-5':  'The trend or regime does not support the proposed decision. Proceeding against the prevailing trend introduces excessive regime contradiction risk.',
+                'CP-6':  'The decision fails stress simulation under adverse conditions such as liquidity shocks or volatility spikes. It is not resilient enough to proceed.',
+                'CP-7':  'The scenario conflicts with domain-specific ethical constraints — such as Sharia compliance, robotics safety limits, or credit bias controls.',
+                'CP-8':  'One or more decision parameters fall outside the authorized operational boundaries or contextual constraints for this domain.',
+                'CP-9':  'Anti-money laundering indicators or suspicious transaction patterns were detected. Mandatory escalation is required.',
+                'CP-10': 'Multi-layer fraud signal analysis detected behavioral, transactional, or systemic fraud patterns. The decision is blocked and escalated.',
+                'CP-11': 'The scenario involves a jurisdiction where regulatory eligibility cannot be confirmed. Cross-border execution is blocked pending compliance review.',
+            }
+            _cp_why_es = {
+                'CP-1':  'El escenario no tiene suficiente completitud de datos o contiene elementos no verificables que impiden una evaluación confiable. OMNIX requiere una puntuación mínima de integridad de señal antes de abrir el pipeline.',
+                'CP-2':  'La probabilidad de un resultado positivo está por debajo del umbral mínimo autorizado. La confianza en el resultado proyectado es insuficiente.',
+                'CP-3':  'La exposición al riesgo supera los límites autorizados para este dominio. El riesgo a la baja es demasiado alto para continuar.',
+                'CP-4':  'Las señales internas se contradicen entre sí, indicando incoherencia en el contexto de decisión. El Índice de Contradicción de Decisión (DCI) es demasiado alto.',
+                'CP-5':  'La tendencia o el régimen no respalda la decisión propuesta. Proceder contra la tendencia predominante introduce un riesgo excesivo de contradicción de régimen.',
+                'CP-6':  'La decisión falla las simulaciones de estrés bajo condiciones adversas como choques de liquidez o picos de volatilidad. No es suficientemente resiliente para continuar.',
+                'CP-7':  'El escenario entra en conflicto con restricciones éticas específicas del dominio, como cumplimiento Sharia, límites de seguridad en robótica, o controles de sesgo crediticio.',
+                'CP-8':  'Uno o más parámetros de decisión están fuera de los límites operativos autorizados o las restricciones contextuales para este dominio.',
+                'CP-9':  'Se detectaron indicadores de lavado de dinero o patrones de transacciones sospechosas. Se requiere escalamiento obligatorio.',
+                'CP-10': 'El análisis multicapa de señales de fraude detectó patrones conductuales, transaccionales o sistémicos de fraude. La decisión es bloqueada y escalada.',
+                'CP-11': 'El escenario involucra una jurisdicción donde no se puede confirmar la elegibilidad regulatoria. La ejecución transfronteriza está bloqueada hasta que se complete la revisión de cumplimiento.',
+            }
+            blocked_cp_ids = [g['checkpoint'] for g in blocked_gates]
+            cp_names_map = _cp_name_map_es if is_es else _cp_name_map_en
+            cp_why_map = _cp_why_es if is_es else _cp_why_en
+            blocked_names = ', '.join(cp_names_map.get(cp, cp) for cp in blocked_cp_ids)
+            reasons = ' '.join(cp_why_map.get(cp, '') for cp in blocked_cp_ids)
+            n = len(blocked_gates)
+            total = governance_result['checkpoints_total']
+            passed = governance_result['checkpoints_passed']
+            if is_es:
+                final_explanation = (
+                    f"El escenario fue evaluado a través del pipeline de {total} checkpoints de OMNIX. "
+                    f"{passed} de {total} checkpoints fueron aprobados, pero {n} {'fue bloqueado' if n == 1 else 'fueron bloqueados'}: "
+                    f"{blocked_names}. {reasons} "
+                    f"La decisión es BLOQUEADA hasta que se resuelvan las condiciones que activaron {'este' if n == 1 else 'estos'} checkpoint{'s' if n > 1 else ''}."
+                )
+            else:
+                final_explanation = (
+                    f"The scenario was evaluated across OMNIX's {total}-checkpoint pipeline. "
+                    f"{passed} of {total} checkpoints passed, but {n} {'was' if n == 1 else 'were'} blocked: "
+                    f"{blocked_names}. {reasons} "
+                    f"The decision is BLOCKED until the conditions triggering {'this' if n == 1 else 'these'} checkpoint{'s' if n > 1 else ''} are resolved."
+                )
+
         if db_url:
             _log_sandbox_interaction(
                 db_url=db_url,
@@ -1572,7 +1666,7 @@ def register_sandbox_routes(app):
         return flask_jsonify({
             'success': True,
             'scenario_summary': ai_result['summary'],
-            'explanation': ai_result.get('explanation', ''),
+            'explanation': final_explanation,
             'language': ai_result['language'],
             'signals': ai_result['signals'],
             'decision': governance_result['decision'],
