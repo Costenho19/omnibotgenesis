@@ -428,11 +428,11 @@ def build():
          tdred('Yes — signed proof of rejection and reason')],
         [Paragraph('<b>HOLD</b>',
                    ParagraphStyle('hold', fontName='Helvetica-Bold', fontSize=8.5,
-                                  textColor=YELLOW, leading=13)),
+                                  textColor=GOLD_LIGHT, leading=13)),
          td('Internal signal contradiction detected. Human review required before proceeding.'),
          Paragraph('<b>Yes — signed escalation record</b>',
                    ParagraphStyle('holdy', fontName='Helvetica-Bold', fontSize=8.5,
-                                  textColor=YELLOW, leading=13))],
+                                  textColor=GOLD_LIGHT, leading=13))],
     ]
     E.append(card(three_outcomes, [1.3 * inch, 3.8 * inch, 2.0 * inch]))
 
@@ -536,7 +536,7 @@ def build():
          td('Every trade entry and exit decision. Real capital on Kraken exchange.'),
          tdred('Unauthorized execution\nunder adverse conditions'),
          tdgreen('LIVE 24/7')],
-        [tdgold('Islamic Credit\nUAE / GCC'),
+        [tdgold('Islamic Credit\nGCC / MENA'),
          td('Murabaha financing decisions. Sharia compliance enforced at CP-6.'),
          tdred('Riba violation and\nnon-compliant structuring'),
          tdgreen('OPERATIONAL')],
@@ -722,8 +722,7 @@ def build():
             'Founder &amp; CEO — OMNIX<br/><br/>'
             '<font color="#06b6d4">contacto@omnixquantum.net</font><br/>'
             '<font color="#06b6d4">omnixquantum.net</font><br/>'
-            'WhatsApp: +1 (650) 507-8293<br/>'
-            'Abu Dhabi, UAE',
+            'WhatsApp: +1 (650) 507-8293',
             ParagraphStyle('contact', fontName='Helvetica', fontSize=10.5,
                            textColor=WHITE, leading=18, alignment=TA_LEFT)
         ),
