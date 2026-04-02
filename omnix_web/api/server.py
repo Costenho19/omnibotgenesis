@@ -583,11 +583,13 @@ def send_receipt_email():
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 
-  <tr><td style="background:#050D18;padding:20px 28px;">
+  <tr><td style="background:#050D18;padding:18px 28px;">
     <table width="100%"><tr>
-      <td><span style="font-size:22px;font-weight:bold;color:#C9A227;">OMNIX</span>
-        <span style="font-size:11px;color:#888;margin-left:8px;">DECISION GOVERNANCE INFRASTRUCTURE</span></td>
-      <td align="right"><span style="font-size:10px;color:#555;font-family:monospace;">{receipt_id}</span></td>
+      <td style="vertical-align:middle;">
+        <img src="https://omnixquantum.net/omnix_logo.png" alt="OMNIX" width="40" height="27" style="display:inline-block;vertical-align:middle;margin-right:10px;" />
+        <span style="font-size:11px;color:#888;vertical-align:middle;">DECISION GOVERNANCE INFRASTRUCTURE</span>
+      </td>
+      <td align="right" style="vertical-align:middle;"><span style="font-size:10px;color:#555;font-family:monospace;">{receipt_id}</span></td>
     </tr></table>
   </td></tr>
 
