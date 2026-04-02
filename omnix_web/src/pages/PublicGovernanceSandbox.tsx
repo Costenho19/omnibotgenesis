@@ -69,9 +69,17 @@ const publicAlgorithmLabel = (alg?: string): string => {
 }
 
 const CHECKPOINT_ICONS: Record<string, string> = {
-  'CP-0': '🔍', 'CP-1': '📊', 'CP-2': '⚠️', 'CP-3': '🔗',
-  'CP-4': '📈', 'CP-5': '🛡️', 'CP-6': '🧠', 'CP-7': '⏳',
-  'CP-8': '🎯', 'CP-9': '🏦', 'CP-10': '🕵️',
+  'CP-0':  '🔍',
+  'CP-1':  '📊',
+  'CP-2':  '⚠️',
+  'CP-3':  '🔗',
+  'CP-4':  '📈',
+  'CP-5':  '🛡️',
+  'CP-6':  '🧠',
+  'CP-7':  '⏳',
+  'CP-8':  '🎯',
+  'CP-9':  '🏦',
+  'CP-10': '🕵️',
 }
 
 export default function PublicGovernanceSandbox() {
@@ -714,7 +722,7 @@ export default function PublicGovernanceSandbox() {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-[#C9A227]" />
-                11-Checkpoint Pipeline
+                {result.gate_results.length}-Checkpoint Pipeline
               </h3>
               <div className="space-y-3">
                 {result.gate_results.map((gate, index) => {
