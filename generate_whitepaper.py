@@ -864,7 +864,7 @@ def build():
         [[Paragraph(
             '<b>Harold Nunes</b><br/>'
             '<font color="#C9A227">Solo Founder &amp; CEO — OMNIX</font><br/><br/>'
-            'Independent systems architect. While building automated trading systems, Harold identified '
+            'While building automated trading systems, Harold identified '
             'a gap that no existing product addressed: the absence of pre-execution governance '
             'with cryptographic accountability across any domain.<br/><br/>'
             'Rather than wait for someone else to build it, he built it himself — '
