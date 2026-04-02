@@ -316,8 +316,8 @@ def build():
 
     cost_row = Table(
         [[impact_box('€35M', 'Maximum fine under\nEU AI Act per incident', RED_ALERT, DARK_RED),
-          impact_box('$50M+', 'Average regulatory fine\nfor AML violations', RED_ALERT, DARK_RED),
-          impact_box('78%', 'Of AI incidents leave\nno recoverable audit trail', RED_ALERT, DARK_RED)]],
+          impact_box('$50M+', 'Regulatory fine per\nAML enforcement action', RED_ALERT, DARK_RED),
+          impact_box('3+', 'Regulatory frameworks\nrequiring AI audit trails', RED_ALERT, DARK_RED)]],
         colWidths=[2.37 * inch, 2.37 * inch, 2.37 * inch]
     )
     cost_row.setStyle(TableStyle([
@@ -513,7 +513,7 @@ def build():
     roi_row = Table(
         [[impact_box('$500K+', 'Minimum regulatory fine\navoided per incident', GREEN_OK, DARK_GREEN),
           impact_box('100%', 'Audit trail coverage\nfor every decision', GREEN_OK, DARK_GREEN),
-          impact_box('<1ms', 'Governance evaluation\ntime per decision', GREEN_OK, DARK_GREEN)]],
+          impact_box('Always', 'Fail-closed — no receipt\nmeans no execution', GREEN_OK, DARK_GREEN)]],
         colWidths=[2.37 * inch, 2.37 * inch, 2.37 * inch]
     )
     roi_row.setStyle(TableStyle([
