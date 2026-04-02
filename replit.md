@@ -1,7 +1,7 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across diverse sectors such as digital asset trading, Islamic credit, global insurance claims, and robotics pre-execution safety. It employs a consistent 11-checkpoint pipeline, including a Context Admission Gate (CAG) and Trajectory Invariant Enforcement (TIE), and issues a post-quantum cryptographically signed receipt for every decision. The project targets a significant market potential (TAM $137B+) and is currently seeking pre-seed funding.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors like digital asset trading, Islamic credit, global insurance claims, and robotics pre-execution safety. It utilizes a consistent 11-checkpoint pipeline, including a Context Admission Gate (CAG) and Trajectory Invariant Enforcement (TIE), and issues a post-quantum cryptographically signed receipt for every decision. The project aims to capture a significant market share ($137B+ TAM) by providing a robust and auditable framework for automated decision-making.
 
 ## User Preferences
 ### Communication
@@ -132,7 +132,6 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 -   **Harold Nunes**: Solo Founder & CEO — only name visible in all surfaces
 -   **Ivan/Iván Guzman**: Removed from ALL files (code, docs, web, reports, audit)
 -   If asked about technical help: "I've worked with contract developers and infrastructure consultants"
--   `institutional_report.py` team section: generic "contract developers" line, no individual names
 
 ### Branding Policy
 **Strategy**: Invisible internal versioning, stable external identity (like Stripe).
@@ -153,13 +152,13 @@ Est. Loss = Cycles × $20K × 2.5% = capped at $100K
 ## System Architecture
 
 ### Core Components and Design Patterns
-OMNIX utilizes a hexagonal architecture featuring an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). It integrates AI-first command detection, a Multilingual Prompt Architecture, and an Anti-Servile Post-Processing Filter. Key decision-making components include an AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL). A Multi-Agent Governance System achieves weighted consensus, supported by Hybrid Cryptography (X25519 + Kyber-768 via HKDF), a Crypto-Agility Layer, and Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root.
+OMNIX employs a hexagonal architecture with an AutoTradingBot, Non-Markovian Memory Kernel, and a 6-Tier Veto System (Coherence Engine). Key capabilities include AI-first command detection, Multilingual Prompt Architecture, Anti-Servile Post-Processing Filter, AI Risk Guardian, Confidence-Adaptive Entry System (CAES), Decision Engine, Monte Carlo VETO Engine, RMS Enforcement, Signal Integrity Validator (SIV), Forward Trajectory Implicator (FTI), Regime-Conditioned Kelly (RCK), and an Exit Governance Layer (EGL). A Multi-Agent Governance System ensures weighted consensus, supported by Hybrid Cryptography (X25519 + Kyber-768 via HKDF), a Crypto-Agility Layer, and Quantum-Secure Decision Receipts with RFC 3161-style internal timestamps and a rolling Merkle root. All checkpoints are fail-closed.
 
 ### Key Gates and Vertical Controls
-The system incorporates a Context Admission Gate (CAG), Trajectory Invariant Enforcement (TIE), AML Governance Gate (CP-9), Fraud Detection Gate (CP-10), Jurisdiction Compliance Gate (CP-11), and Islamic Credit Governance Vertical. Decisions traverse CAG, EBIP·ACV, an 11-checkpoint pipeline (SIV, Probability, Risk, Coherence, Trend, Stress, Sharia, TCV, FTI, ECW, AML, Fraud, Jurisdiction), and TIE, culminating in a PQC Receipt. All checkpoints are fail-closed and generate PQC-signed receipts.
+The system integrates a Context Admission Gate (CAG), Trajectory Invariant Enforcement (TIE), AML Governance Gate (CP-9), Fraud Detection Gate (CP-10), Jurisdiction Compliance Gate (CP-11), and Islamic Credit Governance Vertical. Decisions follow an 11-checkpoint pipeline and are PQC-signed.
 
 ### Scoring Logic
-Decision scoring combines EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, augmented by veto/penalty layers from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
+Decision scoring combines EMA Regime Signal, HMM Regime, Kalman Filter, Non-Markovian Memory, and Kelly Criterion, enhanced by veto/penalty layers from Monte Carlo, Black Swan, Sentiment, and Quantum Momentum analyses.
 
 ### Shadow Portfolio + Learning Engine
 A counterfactual analysis system continuously monitors vetoed trades to calibrate internal filters.
@@ -171,10 +170,7 @@ The DCI quantifies internal signal divergence; a value of 70 or higher mandates 
 The dashboard provides a Dual Win Rate Framework, enriched AI context, System Health Score, Live Status, Calibration Progress, and Recommended Actions, built with Flask and Streamlit.
 
 ### External Governance API (Flask Dashboard — Port 5000)
-A B2B Flask endpoint allows external systems to submit signals to OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It features RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner.
-
-### Governance Compliance Modules
-Five additive governance modules extend the External Governance API, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act. These modules introduce new PostgreSQL tables and REST endpoints for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting.
+A B2B Flask endpoint allows external systems to submit signals to OMNIX's 6-checkpoint governance pipeline, returning a PQC-signed governance receipt. It features RBAC authentication, supports 6 normalized signals, and operates in a fail-closed manner. This API is extended by five additive governance modules for Risk Mapping, Measurement & Monitoring, Human Oversight, Incident Management, and Governance Reporting, aligning with NIST AI RMF, ISO/IEC 42001, and the EU AI Act.
 
 ### Public Verification Server (Railway — Port 8000)
 A standalone `aiohttp` web server offers public receipt verification endpoints, ensuring zero internal data exposure through SHA-256 hash chains and Dilithium-3 PQC signatures.
