@@ -5,6 +5,10 @@ Also serves the built React frontend (dist/) as static files for Railway deploym
 """
 import os
 import json
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 import psycopg2
@@ -522,6 +526,147 @@ def public_verify_receipt(receipt_id):
         'engine_version':      engine_ver or '',
         'independent_verify_url': None,
     })
+
+
+@app.route('/api/public/send-receipt', methods=['POST'])
+def send_receipt_email():
+    data = request.get_json(silent=True) or {}
+    recipient = (data.get('recipient_email') or '').strip()
+    if not recipient or not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', recipient):
+        return jsonify({'success': False, 'error': 'Invalid email address'}), 400
+
+    gmail_sender   = os.environ.get('GMAIL_SENDER', '')
+    gmail_password = os.environ.get('GMAIL_APP_PASSWORD', '')
+    if not gmail_sender or not gmail_password:
+        return jsonify({'success': False, 'error': 'Email service not configured'}), 500
+
+    receipt_id  = data.get('receipt_id', '')
+    decision    = data.get('decision', '')
+    explanation = data.get('explanation', '')
+    scenario    = data.get('scenario', '')
+    language    = data.get('language', 'en')
+    gates       = data.get('gate_results', [])
+    receipt     = data.get('receipt', {})
+    cp_passed   = data.get('checkpoints_passed', 0)
+    cp_total    = data.get('checkpoints_total', 11)
+    cp_blocked  = data.get('checkpoints_blocked', 0)
+    verify_url  = data.get('verification_url') or f'https://omnixquantum.net/verify/{receipt_id}'
+    is_es       = language == 'es'
+    is_approved = decision == 'APPROVED'
+
+    banner_color = '#064E3B' if is_approved else '#450A0A'
+    decision_color = '#34D399' if is_approved else '#FC6464'
+    decision_label = ('APROBADO' if is_es else 'APPROVED') if is_approved else ('BLOQUEADO' if is_es else 'BLOCKED')
+
+    gate_rows_html = ''
+    for g in gates:
+        passed    = g.get('result') == 'PASS'
+        row_bg    = '#F0FDF4' if passed else '#FFF2F2'
+        tag_color = '#166534' if passed else '#991B1B'
+        tag_bg    = '#DCFCE7' if passed else '#FEE2E2'
+        tag_text  = 'PASS' if passed else 'FAIL'
+        gate_rows_html += f"""
+        <tr style="background:{row_bg};">
+          <td style="padding:6px 10px;font-size:12px;font-weight:bold;color:{tag_color};background:{tag_bg};border-radius:4px;white-space:nowrap;">{tag_text}</td>
+          <td style="padding:6px 10px;font-size:12px;font-weight:bold;color:#1E1E3F;">{g.get('checkpoint','')}</td>
+          <td style="padding:6px 10px;font-size:12px;color:#333;">{g.get('name_en') or g.get('name','')}</td>
+        </tr>"""
+
+    subject = f"OMNIX Governance Report — {decision_label} | {receipt_id}"
+
+    html = f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#F4F5F7;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;padding:30px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+  <tr><td style="background:#050D18;padding:20px 28px;">
+    <table width="100%"><tr>
+      <td><span style="font-size:22px;font-weight:bold;color:#C9A227;">OMNIX</span>
+        <span style="font-size:11px;color:#888;margin-left:8px;">DECISION GOVERNANCE INFRASTRUCTURE</span></td>
+      <td align="right"><span style="font-size:10px;color:#555;font-family:monospace;">{receipt_id}</span></td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="background:{banner_color};padding:18px 28px;text-align:center;">
+    <div style="font-size:28px;font-weight:bold;color:{decision_color};">{decision_label}</div>
+    <div style="font-size:12px;color:{'#86EFAC' if is_approved else '#FCA5A5'};margin-top:4px;">
+      {cp_passed}/{cp_total} {'checkpoints aprobados' if is_es else 'checkpoints passed'}
+      {'  —  ' + str(cp_blocked) + (' bloqueados' if is_es else ' blocked') if cp_blocked > 0 else ''}
+    </div>
+  </td></tr>
+
+  <tr><td style="padding:24px 28px;">
+    <div style="font-size:11px;font-weight:bold;color:#1E1E3F;background:#EBEDF5;padding:6px 10px;border-radius:4px;margin-bottom:10px;">
+      {'ANÁLISIS DE GOBERNANZA' if is_es else 'GOVERNANCE ANALYSIS'}
+    </div>
+    <p style="font-size:13px;color:#333;line-height:1.6;margin:0 0 20px 0;">{explanation}</p>
+
+    {'<div style="font-size:11px;font-weight:bold;color:#1E1E3F;background:#EBEDF5;padding:6px 10px;border-radius:4px;margin-bottom:10px;">' + ('ESCENARIO EVALUADO' if is_es else 'EVALUATED SCENARIO') + '</div><p style="font-size:12px;color:#555;font-style:italic;margin:0 0 20px 4px;">&ldquo;' + scenario[:400] + '&rdquo;</p>' if scenario else ''}
+
+    <div style="font-size:11px;font-weight:bold;color:#1E1E3F;background:#EBEDF5;padding:6px 10px;border-radius:4px;margin-bottom:10px;">
+      {'PIPELINE DE 11 CHECKPOINTS' if is_es else '11-CHECKPOINT PIPELINE'}
+    </div>
+    <table width="100%" cellpadding="0" cellspacing="2" style="border-collapse:separate;border-spacing:0 2px;margin-bottom:20px;">
+      {gate_rows_html}
+    </table>
+
+    <div style="font-size:11px;font-weight:bold;color:#1E1E3F;background:#EBEDF5;padding:6px 10px;border-radius:4px;margin-bottom:10px;">
+      {'INTEGRIDAD CRIPTOGRÁFICA' if is_es else 'CRYPTOGRAPHIC INTEGRITY'}
+    </div>
+    <table width="100%" cellpadding="4" cellspacing="0" style="font-size:12px;margin-bottom:20px;">
+      <tr><td style="color:#555;width:180px;">{'Algoritmo de firma' if is_es else 'Signature algorithm'}:</td>
+          <td style="font-family:monospace;color:#333;">{receipt.get('signature_algorithm','SHA-256 (sandbox)')}</td></tr>
+      <tr><td style="color:#555;">{'Hash del contenido' if is_es else 'Content hash'}:</td>
+          <td style="font-family:monospace;color:#333;">{(receipt.get('content_hash') or '')[:32]}...</td></tr>
+      <tr><td style="color:#555;">{'Firmado PQC' if is_es else 'PQC signed'}:</td>
+          <td style="color:#333;">{'Modo sandbox — activo en producción' if is_es else 'Sandbox mode — active in production'}</td></tr>
+    </table>
+
+    <div style="background:#050D18;border-radius:6px;padding:14px 18px;margin-bottom:8px;">
+      <div style="font-size:11px;font-weight:bold;color:#C9A227;margin-bottom:6px;">
+        {'Verificar este recibo de forma independiente:' if is_es else 'Verify this receipt independently:'}
+      </div>
+      <a href="{verify_url}" style="font-size:11px;color:#A0AABF;font-family:monospace;word-break:break-all;">{verify_url}</a>
+    </div>
+  </td></tr>
+
+  <tr><td style="background:#F8F8F8;border-top:1px solid #E5E7EB;padding:14px 28px;text-align:center;">
+    <p style="font-size:11px;color:#888;margin:0;">
+      OMNIX Decision Governance Infrastructure &nbsp;|&nbsp; omnixquantum.net &nbsp;|&nbsp; contacto@omnixquantum.net
+    </p>
+    <p style="font-size:10px;color:#AAA;margin:4px 0 0 0;">
+      {'Generado:' if is_es else 'Generated:'} {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
+    </p>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body>
+</html>"""
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From']    = f'OMNIX Decision Governance <{gmail_sender}>'
+        msg['To']      = recipient
+        msg['Reply-To'] = 'contacto@omnixquantum.net'
+        msg.attach(MIMEText(html, 'html'))
+
+        ctx = ssl.create_default_context()
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.ehlo()
+            server.starttls(context=ctx)
+            server.login(gmail_sender, gmail_password)
+            server.sendmail(gmail_sender, recipient, msg.as_string())
+
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f'[EMAIL ERROR] {e}')
+        return jsonify({'success': False, 'error': 'Failed to send email. Please try again.'}), 500
 
 
 @app.route('/', defaults={'path': ''})

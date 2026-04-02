@@ -96,6 +96,11 @@ export default function PublicGovernanceSandbox() {
   const [copied, setCopied] = useState(false)
   const [examples, setExamples] = useState<ExampleScenario[]>([])
   const [showExamples, setShowExamples] = useState(false)
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
+  const [modalEmail, setModalEmail] = useState('')
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -401,123 +406,48 @@ export default function PublicGovernanceSandbox() {
     doc.save(`OMNIX-Receipt-${result.receipt_id}.pdf`)
   }
 
-  const emailReceipt = () => {
+  const openEmailModal = () => {
     if (!result) return
-    const verifyUrl = result.verification_url || `https://omnixquantum.net/verify/${result.receipt_id}`
-    const isEs = result.language === 'es'
-    const isApproved = result.decision === 'APPROVED'
-    const decisionIcon = isApproved ? '✅' : '🚫'
-    const subject = `${decisionIcon} OMNIX Governance Report — ${result.decision} | ${result.receipt_id}`
+    setModalEmail(email.trim())
+    setEmailSent(false)
+    setEmailError(null)
+    setEmailModalOpen(true)
+  }
 
-    const passed = result.gate_results?.filter((g: GateResult) => g.result === 'PASS') || []
-    const blocked = result.gate_results?.filter((g: GateResult) => g.result !== 'PASS') || []
-
-    const checkpointLines = result.gate_results?.map((g: GateResult) => {
-      const icon = g.result === 'PASS' ? '✅ PASS' : '❌ FAIL'
-      const name = g.name_en || g.name
-      const desc = g.description ? `\n       → ${g.description}` : ''
-      return `  ${icon}  ${g.checkpoint}  ${name}${desc}`
-    }).join('\n') || ''
-
-    const impactSection = result.real_world_impact ? (() => {
-      const rwi = result.real_world_impact
-      const lines = [
-        ``,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        isEs ? `⚠️  IMPACTO ILUSTRATIVO — ESCENARIO HIPOTÉTICO` : `⚠️  ILLUSTRATIVE IMPACT — HYPOTHETICAL SCENARIO`,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        ``,
-        isEs
-          ? `  ⚠️ Estimación ilustrativa — cifras generadas del texto hipotético, no de datos reales de mercado.`
-          : `  ⚠️ Illustrative only — figures derived from hypothetical scenario text, not live market data or real capital.`,
-        ``,
-        `  📉 ${isEs ? 'Pérdida potencial de capital' : 'Potential capital loss'}:  ${rwi.potential_loss_pct_low}% – ${rwi.potential_loss_pct_high}%`,
-        `  💧 ${isEs ? 'Riesgo de trampa de liquidez' : 'Liquidity trap risk'}:     ${rwi.liquidity_trap_risk}`,
-        `  📊 ${isEs ? 'Amplificación por apalancamiento' : 'Leverage amplification'}:  ${rwi.leverage_amplification_low}x – ${rwi.leverage_amplification_high}x downside`,
-        `  ⚖️  ${isEs ? 'Incumplimiento regulatorio' : 'Regulatory breach'}:       ${rwi.regulatory_breach ? (isEs ? 'SÍ — límites internos violados' : 'YES — internal limits violated') : (isEs ? 'No' : 'No')}`,
-      ]
-      if (rwi.execution_prevented && rwi.estimated_loss_avoided > 0) {
-        lines.push(``)
-        lines.push(`  🛡️  ${isEs ? 'El pipeline de gobernanza hubiera bloqueado la ejecución.' : 'Governance pipeline would block execution before market exposure.'}`)
-        lines.push(`  💰 ${isEs ? 'Pérdida ilustrativa evitada' : 'Illustrative loss avoided'}:  $${rwi.estimated_loss_avoided.toLocaleString('en-US')}`)
-        lines.push(`  ⚠️  ${isEs ? 'Estimación ilustrativa. No es una proyección financiera.' : 'Illustrative estimate based on hypothetical scenario inputs. Not a financial projection.'}`)
-      } else if (!rwi.execution_prevented) {
-        lines.push(``)
-        lines.push(`  ✅ ${isEs ? 'La decisión fue aprobada dentro de los parámetros de riesgo.' : 'Decision approved within risk parameters.'}`)
+  const sendReceiptEmail = async () => {
+    if (!result || !modalEmail.trim()) return
+    setEmailSending(true)
+    setEmailError(null)
+    try {
+      const res = await fetch(`${API_BASE}/api/public/send-receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient_email: modalEmail.trim(),
+          receipt_id: result.receipt_id,
+          decision: result.decision,
+          explanation: result.explanation,
+          scenario: scenario,
+          language: result.language,
+          gate_results: result.gate_results,
+          receipt: result.receipt,
+          checkpoints_passed: result.checkpoints_passed,
+          checkpoints_total: result.checkpoints_total,
+          checkpoints_blocked: result.checkpoints_blocked,
+          verification_url: result.verification_url,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setEmailSent(true)
+      } else {
+        setEmailError(data.error || 'Error sending email. Please try again.')
       }
-      return lines.join('\n')
-    })() : ''
-
-    const scenarioText = scenario?.trim()
-      ? `\n${isEs ? 'ESCENARIO EVALUADO' : 'EVALUATED SCENARIO'}\n${'─'.repeat(40)}\n${scenario.trim()}\n`
-      : ''
-
-    const summaryText = result.scenario_summary
-      ? `\n${isEs ? 'RESUMEN DEL ESCENARIO (por IA)' : 'SCENARIO SUMMARY (by AI)'}\n${'─'.repeat(40)}\n${result.scenario_summary}\n`
-      : ''
-
-    const body = [
-      `╔══════════════════════════════════════════╗`,
-      `║     OMNIX GOVERNANCE DECISION REPORT     ║`,
-      `╚══════════════════════════════════════════╝`,
-      ``,
-      `  ${isEs ? 'DECISIÓN' : 'DECISION'}:    ${decisionIcon} ${result.decision}`,
-      `  ${isEs ? 'ID DE RECIBO' : 'RECEIPT ID'}:  ${result.receipt_id}`,
-      `  ${isEs ? 'CHECKPOINTS' : 'CHECKPOINTS'}: ${result.checkpoints_passed}/${result.checkpoints_total} ${isEs ? 'aprobados' : 'passed'}${result.checkpoints_blocked > 0 ? `, ${result.checkpoints_blocked} ${isEs ? 'bloqueados' : 'blocked'}` : ''}`,
-      `  ${isEs ? 'DOMINIO' : 'DOMAIN'}:      ${result.domain || '—'}`,
-      ``,
-      scenarioText,
-      summaryText,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      isEs ? `🔍  ANÁLISIS DE GOBERNANZA` : `🔍  GOVERNANCE ANALYSIS`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      ``,
-      result.explanation || '',
-      ``,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      isEs ? `🔒  PIPELINE DE 11 CHECKPOINTS` : `🔒  11-CHECKPOINT PIPELINE`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      ``,
-      isEs
-        ? `  ${passed.length} de ${result.checkpoints_total} checkpoints aprobados — ${blocked.length > 0 ? `${blocked.length} detectaron riesgos` : 'ningún riesgo detectado'}`
-        : `  ${passed.length} of ${result.checkpoints_total} checkpoints passed — ${blocked.length > 0 ? `${blocked.length} detected risks` : 'no risks detected'}`,
-      ``,
-      checkpointLines,
-      impactSection,
-      ``,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      isEs ? `🔐  INTEGRIDAD CRIPTOGRÁFICA` : `🔐  CRYPTOGRAPHIC INTEGRITY`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      ``,
-      `  ${isEs ? 'Algoritmo de firma' : 'Signature algorithm'}:  ${publicAlgorithmLabel(result.receipt?.signature_algorithm)}`,
-      `  ${isEs ? 'Hash del contenido' : 'Content hash'}:         ${result.receipt?.content_hash?.slice(0, 24)}...`,
-      `  ${isEs ? 'Firmado PQC' : 'PQC signed'}:            ${result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : (isEs ? 'Modo sandbox — activo en producción' : 'Sandbox mode — active in production')}`,
-      ``,
-      isEs
-        ? `  Este recibo está almacenado en PostgreSQL y es verificable públicamente:`
-        : `  This receipt is stored in PostgreSQL and publicly verifiable:`,
-      `  ${verifyUrl}`,
-      ``,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      isEs ? `ℹ️  ¿QUÉ ES OMNIX?` : `ℹ️  WHAT IS OMNIX?`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      ``,
-      isEs
-        ? `  OMNIX es una infraestructura de gobernanza de decisiones diseñada para\n  prevenir errores en sistemas automatizados de alto riesgo.\n\n  Cada decisión pasa por 11 checkpoints independientes antes de ejecutarse\n  — incluyendo validación AML, detección de fraude y cumplimiento jurisdiccional —\n  generando un recibo criptográfico verificable públicamente.\n\n  Más de 775,000 ciclos de evaluación en producción.`
-        : `  OMNIX is a decision governance infrastructure designed to prevent errors\n  in high-stakes automated systems.\n\n  Every decision passes through 11 independent checkpoints before execution\n  — including AML screening, fraud detection and jurisdiction compliance —\n  generating a cryptographically signed, publicly verifiable receipt.\n\n  Over 775,000 evaluation cycles in production.`,
-      ``,
-      `  🌐 omnixquantum.net`,
-      `  📧 contacto@omnixquantum.net`,
-      `  🔬 ${isEs ? 'Prueba el sandbox en' : 'Try the sandbox at'}: omnixquantum.net/try`,
-      ``,
-      `──────────────────────────────────────────`,
-      `  OMNIX Decision Governance Infrastructure`,
-      isEs ? `  Este reporte fue generado automáticamente.` : `  This report was generated automatically.`,
-      `──────────────────────────────────────────`,
-    ].join('\n')
-
-    const to = email.trim() ? email.trim() : ''
-    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    } catch {
+      setEmailError('Connection error. Please try again.')
+    } finally {
+      setEmailSending(false)
+    }
   }
 
   const useExample = (ex: ExampleScenario) => {
@@ -976,12 +906,12 @@ export default function PublicGovernanceSandbox() {
                       Download PDF
                     </button>
                     <button
-                      onClick={emailReceipt}
+                      onClick={openEmailModal}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-colors text-sm border border-violet-500/20"
-                      title={email.trim() ? `Send to ${email}` : 'Send receipt to your email'}
+                      title="Send receipt to your email"
                     >
                       <Mail className="w-4 h-4" />
-                      {email.trim() ? `Email to ${email.split('@')[0]}` : 'Email Receipt'}
+                      Email Receipt
                     </button>
                     <button
                       onClick={shareOnLinkedIn}
@@ -1057,6 +987,89 @@ export default function PublicGovernanceSandbox() {
           </div>
         </div>
       </footer>
+
+      {emailModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div className="bg-[#0D1B2E] border border-[#C9A227]/30 rounded-xl w-full max-w-md p-6 shadow-2xl">
+            {!emailSent ? (
+              <>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-9 h-9 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-base">
+                      {result?.language === 'es' ? 'Enviar recibo por correo' : 'Send Receipt by Email'}
+                    </h3>
+                    <p className="text-muted text-xs mt-0.5">
+                      {result?.language === 'es' ? 'Se enviará el reporte completo de gobernanza' : 'Full governance report will be sent'}
+                    </p>
+                  </div>
+                </div>
+
+                <label className="block text-sm text-[#A0AEC0] mb-1.5">
+                  {result?.language === 'es' ? 'Dirección de correo electrónico' : 'Email address'}
+                </label>
+                <input
+                  type="email"
+                  value={modalEmail}
+                  onChange={e => { setModalEmail(e.target.value); setEmailError(null) }}
+                  placeholder="you@example.com"
+                  className="w-full bg-[#0A1628] border border-[#1E3A5F] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#C9A227] mb-4"
+                  onKeyDown={e => { if (e.key === 'Enter' && !emailSending) sendReceiptEmail() }}
+                  autoFocus
+                />
+
+                {emailError && (
+                  <p className="text-red-400 text-xs mb-3 flex items-center gap-1">
+                    <XCircle className="w-3.5 h-3.5" /> {emailError}
+                  </p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setEmailModalOpen(false)}
+                    className="flex-1 px-4 py-2.5 rounded-lg border border-[#1E3A5F] text-[#A0AEC0] hover:text-white text-sm transition-colors"
+                  >
+                    {result?.language === 'es' ? 'Cancelar' : 'Cancel'}
+                  </button>
+                  <button
+                    onClick={sendReceiptEmail}
+                    disabled={emailSending || !modalEmail.trim()}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {emailSending ? (
+                      <><RefreshCw className="w-4 h-4 animate-spin" /> {result?.language === 'es' ? 'Enviando...' : 'Sending...'}</>
+                    ) : (
+                      <><Mail className="w-4 h-4" /> {result?.language === 'es' ? 'Enviar' : 'Send'}</>
+                    )}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-emerald-400" />
+                </div>
+                <h3 className="text-white font-semibold text-lg mb-2">
+                  {result?.language === 'es' ? '¡Enviado!' : 'Sent!'}
+                </h3>
+                <p className="text-[#A0AEC0] text-sm mb-5">
+                  {result?.language === 'es'
+                    ? `El reporte fue enviado a ${modalEmail}`
+                    : `Report sent to ${modalEmail}`}
+                </p>
+                <button
+                  onClick={() => setEmailModalOpen(false)}
+                  className="px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
+                >
+                  {result?.language === 'es' ? 'Cerrar' : 'Close'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
