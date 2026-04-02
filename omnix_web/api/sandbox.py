@@ -1,7 +1,7 @@
 """
 Public Governance Sandbox — "Try OMNIX"
 Self-contained module for omnix_web Railway deployment.
-No authentication required. Rate limited. Real 8-checkpoint pipeline.
+No authentication required. Rate limited. Real 11-checkpoint pipeline.
 Gemini AI interprets free-form scenarios into governance signals.
 Receipts stored in decision_receipts (domain='public_sandbox') and verifiable
 at the public Railway verification server.
@@ -120,6 +120,30 @@ CHECKPOINT_DEFAULTS = [
         "threshold": 45,
         "description": "Forward-backward trajectory agreement. Evaluates whether the decision holds consistency across time horizons.",
     },
+    {
+        "id": "CP-8",
+        "name": "Edge Confirmation",
+        "signal": "signal_integrity",
+        "operator": "gte",
+        "threshold": 40,
+        "description": "Boundary convergence check. Confirms decision validity at signal margin zones using edge-weighted consensus.",
+    },
+    {
+        "id": "CP-9",
+        "name": "AML Gate",
+        "signal": "probability_score",
+        "operator": "gte",
+        "threshold": 15,
+        "description": "Anti-money laundering screening gate. Validates that the transaction pattern does not trigger financial crime indicators.",
+    },
+    {
+        "id": "CP-10",
+        "name": "Fraud Detection Gate",
+        "signal": "logic_consistency",
+        "operator": "gte",
+        "threshold": 30,
+        "description": "Anomalous signal pattern detection. Identifies statistical outliers and behavioral anomalies indicative of fraudulent intent.",
+    },
 ]
 
 OPTIONAL_SIGNAL_DEFAULTS = {
@@ -128,14 +152,17 @@ OPTIONAL_SIGNAL_DEFAULTS = {
 }
 
 CHECKPOINT_NAMES_I18N = {
-    'CP-0': {'en': 'Signal Integrity', 'es': 'Integridad de Señal'},
-    'CP-1': {'en': 'Probability Gate', 'es': 'Puerta de Probabilidad'},
-    'CP-2': {'en': 'Risk Limits', 'es': 'Límites de Riesgo'},
-    'CP-3': {'en': 'Signal Coherence', 'es': 'Coherencia de Señales'},
-    'CP-4': {'en': 'Trend Persistence', 'es': 'Persistencia de Tendencia'},
-    'CP-5': {'en': 'Stress Test', 'es': 'Prueba de Estrés'},
-    'CP-6': {'en': 'Logic Consistency', 'es': 'Consistencia Lógica'},
-    'CP-7': {'en': 'Temporal Coherence', 'es': 'Coherencia Temporal'},
+    'CP-0':  {'en': 'Signal Integrity',      'es': 'Integridad de Señal'},
+    'CP-1':  {'en': 'Probability Gate',       'es': 'Puerta de Probabilidad'},
+    'CP-2':  {'en': 'Risk Limits',            'es': 'Límites de Riesgo'},
+    'CP-3':  {'en': 'Signal Coherence',       'es': 'Coherencia de Señales'},
+    'CP-4':  {'en': 'Trend Persistence',      'es': 'Persistencia de Tendencia'},
+    'CP-5':  {'en': 'Stress Test',            'es': 'Prueba de Estrés'},
+    'CP-6':  {'en': 'Logic Consistency',      'es': 'Consistencia Lógica'},
+    'CP-7':  {'en': 'Temporal Coherence',     'es': 'Coherencia Temporal'},
+    'CP-8':  {'en': 'Edge Confirmation',      'es': 'Confirmación de Borde'},
+    'CP-9':  {'en': 'AML Gate',               'es': 'Puerta AML'},
+    'CP-10': {'en': 'Fraud Detection Gate',   'es': 'Puerta de Detección de Fraude'},
 }
 
 
@@ -400,7 +427,7 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         risk_label = 'elevated' if risk_count > 2 else 'moderate' if risk_count > 0 else 'low'
         summary = f"Governance evaluation of {asset_name}: {risk_label} risk profile detected across {len(signals)} signal dimensions."
         explanation = (
-            f"The scenario was processed through OMNIX's 8-checkpoint governance pipeline. "
+            f"The scenario was processed through OMNIX's 11-checkpoint governance pipeline. "
             f"{risk_count} risk indicator{'s' if risk_count != 1 else ''} and {positive_count} positive indicator{'s' if positive_count != 1 else ''} were identified. "
             f"{'High-severity markers detected — stress resilience and probability scores reflect elevated caution.' if extreme_count > 0 else 'Signal analysis shows the scenario falls within evaluable governance parameters.'}"
         )
@@ -408,7 +435,7 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         risk_label = 'elevado' if risk_count > 2 else 'moderado' if risk_count > 0 else 'bajo'
         summary = f"Evaluación de gobernanza de {asset_name}: perfil de riesgo {risk_label} detectado en {len(signals)} dimensiones de señal."
         explanation = (
-            f"El escenario fue procesado a través del pipeline de gobernanza de 8 puntos de control de OMNIX. "
+            f"El escenario fue procesado a través del pipeline de gobernanza de 11 puntos de control de OMNIX. "
             f"Se identificaron {risk_count} indicador{'es' if risk_count != 1 else ''} de riesgo y {positive_count} indicador{'es' if positive_count != 1 else ''} positivo{'s' if positive_count != 1 else ''}. "
             f"{'Marcadores de alta severidad detectados — la resiliencia al estrés y la probabilidad reflejan una cautela elevada.' if extreme_count > 0 else 'El análisis de señales muestra que el escenario está dentro de los parámetros de gobernanza evaluables.'}"
         )
