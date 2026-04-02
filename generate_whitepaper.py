@@ -316,7 +316,7 @@ def build():
     cost_row = Table(
         [[impact_box('€35M', 'Maximum fine under\nEU AI Act per incident', RED_ALERT, DARK_RED),
           impact_box('$50M+', 'Average regulatory fine\nfor AML violations', RED_ALERT, DARK_RED),
-          impact_box('78%', 'Of AI incidents result\nin no recoverable audit trail', RED_ALERT, DARK_RED)]],
+          impact_box('78%', 'Of AI incidents leave\nno recoverable audit trail', RED_ALERT, DARK_RED)]],
         colWidths=[2.37 * inch, 2.37 * inch, 2.37 * inch]
     )
     cost_row.setStyle(TableStyle([
