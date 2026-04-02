@@ -219,7 +219,7 @@ export default function InstitutionalPage() {
               </h1>
               <p className="text-xl text-muted max-w-3xl mx-auto mb-10 leading-relaxed">
                 A governance control architecture for automated decision systems. Our 11-checkpoint fail-closed engine 
-                validates every decision before execution, ensuring capital preservation across high-stakes domains. First vertical validated: digital asset trading (CP-0 Signal Integrity + CP-1 Probability + CP-2 Risk Limits + CP-3 Signal Coherence + CP-4 Trend Persistence + CP-5 Stress Resilience + CP-6 Logic Consistency + CP-7 Temporal Coherence + CP-8 Edge Confirmation + CP-9 AML + CP-10 Fraud Detection). Future verticals (Year 2-3+): robotics/autonomous systems, biotech / clinical trials, supply chain, lending, and insurance.
+                validates every decision before execution, ensuring capital preservation across high-stakes domains. First vertical validated: digital asset trading (CP-1 SIV + CP-2 Probability + CP-3 Risk + CP-4 Coherence + CP-5 Trend + CP-6 Stress + CP-7 Ethics Gate + CP-8 Threshold + CP-9 AML + CP-10 Fraud Detection + CP-11 Jurisdiction). Future verticals (Year 2-3+): robotics/autonomous systems, biotech / clinical trials, supply chain, lending, and insurance.
               </p>
               <div className="flex justify-center gap-4">
                 <button className="btn-primary flex items-center gap-2">

@@ -85,7 +85,7 @@ function evaluateCheckpoints(app: LoanApplication): CheckpointResult[] {
   return [
     {
       name: 'Signal Integrity Validation',
-      genericName: 'CP-0: Are all input signals valid?',
+      genericName: 'CP-1: Are all input signals valid?',
       icon: <Shield className="w-5 h-5" />,
       status: 'pending',
       score: sivScore,
@@ -653,7 +653,7 @@ export default function CreditGovernanceDemo() {
             <p className="section-title">Architecture Comparison</p>
             <h2 className="text-3xl font-bold text-white">Same 11 Checkpoints. Every Domain.</h2>
             <p className="text-muted text-sm mt-3 max-w-2xl mx-auto">
-              Each domain maps to <span className="text-white">CP-0 (Signal Integrity) + CP-1–CP-6 (domain signals) + CP-7 (Temporal) + CP-8 (ECW) + CP-9 (AML) + CP-10 (Fraud Detection)</span>. The cards below show each domain's CP-1–CP-6 signal mapping — the universal checkpoints are identical across all verticals.
+              Each domain maps to <span className="text-white">CP-1 (Signal Integrity Validator) + CP-2–CP-7 (domain-specific signals) + CP-8 (Threshold &amp; Context) + CP-9 (AML Screening) + CP-10 (Fraud Detection) + CP-11 (Jurisdiction Compliance)</span>. The cards below show each domain's CP-2–CP-7 signal mapping — the universal checkpoints are identical across all verticals.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
