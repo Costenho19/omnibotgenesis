@@ -496,7 +496,7 @@ def build():
     roi_box = Table(
         [[Paragraph(
             '<b>Simple ROI Calculation</b><br/><br/>'
-            'OMNIX Enterprise cost: <font color="#C9A227">$20,000 / month</font><br/>'
+            'OMNIX Enterprise cost: <font color="#C9A227">$20,000 – $35,000 / month</font><br/>'
             'One avoided EU AI Act fine: <font color="#10b981">€35,000,000</font><br/>'
             'Break-even point: <font color="#10b981">1 avoided incident = 145 years of OMNIX cost</font><br/><br/>'
             'The question is not whether OMNIX is expensive.<br/>'
@@ -710,7 +710,7 @@ def build():
         [th('Milestone'), th('Date'), th('Significance')],
         [tdgreen('Production deployment'),     td('July 2025'),     td('Live operation with real capital on Kraken exchange. Governance pipeline validated under live market conditions.')],
         [tdgreen('PQC implementation'),        td('November 2025'), td('Post-quantum cryptographic signature deployed. All receipts carry NIST-standardized PQC signatures.')],
-        [tdgreen('Multi-domain expansion'),    td('November 2025'), td('Islamic credit, insurance, and robotics domains activated. Same pipeline across all four sectors.')],
+        [tdgreen('Multi-domain expansion'),    td('March 2026'),    td('Islamic credit, insurance, and robotics domains activated in validation environment. Same pipeline across all four sectors.')],
         [tdgreen('Track Record phase'),        td('January 2026'),  td('Recalibrated pipeline activated. Official governance performance measurement period begins.')],
         [tdgreen('Academic publication'),      td('March 2026'),    td('Architecture published on SSRN (abstract_id=6321298) and Zenodo (DOI 10.5281/zenodo.19056919).')],
         [tdgreen('Eureka GCC Semifinalist'),   td('2026'),          td('Selected as Semifinalist for Eureka GCC Dubai 2026 — competitive pan-GCC innovation program.')],
