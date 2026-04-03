@@ -68,8 +68,6 @@
     "timestamp_unix":   1743663600
   },
 
-  "policy_version":  "6.5.4e",
-  "engine_version":  "6.5.4e",
   "issuer":          "OMNIX Decision Governance Infrastructure",
   "issuer_domain":   "omnixquantum.net",
 

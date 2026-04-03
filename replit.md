@@ -9,11 +9,11 @@ Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raisin
 
 ## User Preferences
 ### Communication
-Simple, everyday language (English primary).
+Simple, everyday language (Spanish primary — English only for external drafts).
 
 ### CRITICAL AGENT RULES (MANDATORY — ALWAYS)
 
-> **RULE 1 — LANGUAGE**: Communicate in English. The user has switched primary language to English.
+> **RULE 1 — LANGUAGE**: Comunicar siempre en español con el usuario. Redactar en inglés solo cuando el usuario pida borradores para terceros (ej. emails a partners, inversores).
 
 > **RULE 2 — WARN BEFORE IRREVERSIBLE ACTIONS**: Before the user performs any irreversible action (publishing to Zenodo, SSRN, uploading to Railway, sending emails, sharing on LinkedIn, deploying), proactively review EVERYTHING that might affect that action and warn BEFORE. Not after. Never after.
 
