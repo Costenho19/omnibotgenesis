@@ -353,11 +353,11 @@ The 8 signals are:
 8. temporal_coherence (0-100): Do past and future projections align? Higher = more alignment.
 
 Also provide:
-- "domain": one of "trading", "credit", "insurance", "energy", "biotech", "supply_chain", "generic"
+- "domain": one of "trading", "credit", "insurance", "energy", "biotech", "supply_chain", "compliance", "generic". Use "compliance" for scenarios involving regulatory violations, sanctions (OFAC, EU, UN), AML/KYC failures, anti-corruption, or any scenario where the primary risk is legal/regulatory non-compliance rather than market or financial risk.
 - "asset": a short identifier for what's being evaluated (e.g. "PHASE-II-DRUG", "SOLAR-FARM-50M", "CYBER-POL-500K")
 - "language": "en" or "es" (detected from the input)
 - "summary": A one-sentence summary of the scenario (in the SAME language as the input)
-- "explanation": A 2-3 sentence overall decision rationale explaining the key risks and why this scenario would likely be blocked or approved (in the SAME language as the input)
+- "explanation": A concise 2-3 sentence business-level causal narrative explaining WHY the decision was reached. DO NOT list checkpoint names. DO NOT repeat what the individual checkpoints already say. Instead, identify the ROOT CAUSE in plain business language — e.g. "A 40% surge in 24 hours with declining on-chain metrics is a classic pump pattern. The pipeline detected signal incoherence between price action and fundamentals, excessive risk exposure for a $5M position, and failure under liquidity shock scenarios." Focus on the underlying market, operational, or governance reason — not the pipeline mechanism. (in the SAME language as the input)
 - "reasoning": For each signal, a brief explanation of WHY you assigned that score (in the SAME language as the input)
 
 CRITICAL FRAMING: You are evaluating the QUALITY of the automated decision itself, NOT the creditworthiness of the entity. If an AI system auto-approves a high-risk action without proper oversight, the DECISION PROCESS is the risk — even if the underlying entity seems healthy. Bank runs, mass withdrawals, insolvency events, and panic-driven scenarios always have HIGH risk_exposure (80+) and LOW probability_score (under 30) because automated approval in those contexts IS the failure mode.

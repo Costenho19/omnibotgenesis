@@ -492,7 +492,7 @@ The 8 signals are:
 8. temporal_coherence (0-100): Do past and future projections align? Higher = more alignment.
 
 Also provide:
-- "domain": one of "trading", "credit", "insurance", "energy", "biotech", "supply_chain", "generic"
+- "domain": one of "trading", "credit", "insurance", "energy", "biotech", "supply_chain", "compliance", "generic". Use "compliance" for scenarios involving regulatory violations, sanctions (OFAC, EU, UN), AML/KYC failures, anti-corruption, or any scenario where the primary risk is legal/regulatory non-compliance rather than market or financial risk.
 - "asset": a short identifier for what's being evaluated (e.g. "PHASE-II-DRUG", "SOLAR-FARM-50M", "CYBER-POL-500K")
 - "language": "en" or "es" (detected from the input)
 - "summary": A one-sentence summary of the scenario (in the SAME language as the input)
