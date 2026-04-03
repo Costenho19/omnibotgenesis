@@ -1760,9 +1760,37 @@ def register_sandbox_routes(app):
                 user_email=user_email,
             )
 
+        # Summary quality guard — prevent contradictory summaries on BLOCKED decisions
+        _summary_raw = ai_result['summary']
+        if governance_result['decision'] == 'BLOCKED':
+            _contradictory_phrases = [
+                'low risk', 'riesgo bajo', 'no risk indicator', 'sin indicadores de riesgo',
+                'within governance', 'dentro de los parámetros', 'falls within',
+                'no significant issue', 'sin problemas significativos',
+                'satisfactoriamente', 'satisfactorily', 'meets governance', 'cumple con',
+                'all parameters', 'todos los parámetros', 'favorable', 'cleared',
+                'approved', 'aprobado', 'accepted', 'aceptado', 'compliant', 'cumple',
+            ]
+            if any(ph in _summary_raw.lower() for ph in _contradictory_phrases) or len(_summary_raw) < 20:
+                _n_blocked = governance_result['checkpoints_blocked']
+                _asset = ai_result.get('asset', 'Entity Under Review')
+                _lang = ai_result.get('language', 'en')
+                if _lang == 'es':
+                    _summary_raw = (
+                        f"Evaluación de gobernanza de {_asset}: "
+                        f"{_n_blocked} punto(s) de control generó una condición de bloqueo — "
+                        f"decisión detenida antes de ejecución."
+                    )
+                else:
+                    _summary_raw = (
+                        f"Governance evaluation of {_asset}: "
+                        f"{_n_blocked} checkpoint(s) raised a blocking condition — "
+                        f"decision stopped before execution."
+                    )
+
         return flask_jsonify({
             'success': True,
-            'scenario_summary': ai_result['summary'],
+            'scenario_summary': _summary_raw,
             'explanation': final_explanation,
             'language': ai_result['language'],
             'signals': ai_result['signals'],
