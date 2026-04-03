@@ -388,15 +388,17 @@ export default function PublicGovernanceSandbox() {
     })
     y += 4
 
-    // QR CODE — generate from verifyUrl
+    // QR CODE — generate from verifyUrl using canvas (browser-safe)
     const QR_SIZE = 32  // mm in the PDF
     const TEXT_W = CW - QR_SIZE - 6  // text block width
     let qrDataUrl: string | null = null
     try {
-      qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+      const canvas = document.createElement('canvas')
+      await QRCode.toCanvas(canvas, verifyUrl, {
         width: 256, margin: 1,
         color: { dark: '#050D18', light: '#FFFFFF' }
       })
+      qrDataUrl = canvas.toDataURL('image/png')
     } catch { /* fallback: no QR */ }
 
     // Dark verify box (left portion)
