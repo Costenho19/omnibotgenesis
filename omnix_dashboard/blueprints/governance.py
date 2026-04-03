@@ -11,9 +11,12 @@ POST /api/governance/admin/clients/<client_id>/rotate            — Rotate API 
 GET  /api/governance/admin/clients/<client_id>/thresholds        — Get effective thresholds for client (admin only).
 PUT  /api/governance/admin/clients/<client_id>/thresholds        — Set per-client checkpoint thresholds (admin only).
 DELETE /api/governance/admin/clients/<client_id>/thresholds      — Revert client thresholds to defaults (admin only).
+GET  /api/governance/admin/usage                                 — Monthly usage summary for all clients (admin only).
+GET  /api/governance/admin/usage/<client_id>                     — Monthly usage detail for one client (admin only).
 
 ADR-028: External Signal Evaluation API
 ADR-037: Per-Client Configurable Thresholds
+ADR-051: Client Usage Reporting & Billing Audit Trail
 """
 
 import json
@@ -752,6 +755,208 @@ def admin_delete_thresholds(target_client_id: str):
         'deleted_overrides': deleted,
         'message': 'All custom thresholds removed. Client will now use system defaults.',
     }), 200
+
+
+# ===========================================================================
+# CLIENT USAGE REPORTING — ADR-051
+# ===========================================================================
+
+@governance_bp.route('/api/governance/admin/usage', methods=['GET'])
+def admin_usage_summary():
+    """
+    GET /api/governance/admin/usage
+    Monthly usage summary for ALL clients — for billing and audit.
+    Admin only. ADR-051.
+
+    Query params:
+      - months: int (default 3) — how many trailing months to show
+      - client_id: str (optional) — filter to a specific client
+
+    Returns per-client, per-month counts of evaluations broken down by
+    APPROVED / BLOCKED / HOLD decisions. Excludes 'PUBLIC' sandbox traffic.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    try:
+        months = max(1, min(int(request.args.get('months', 3)), 24))
+    except (TypeError, ValueError):
+        months = 3
+
+    filter_client_id = request.args.get('client_id')
+
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        params = [months]
+        client_filter_sql = ""
+        if filter_client_id:
+            client_filter_sql = "AND dr.client_id = %s"
+            params.append(filter_client_id)
+
+        cur.execute(f"""
+            SELECT
+                dr.client_id,
+                bc.name AS client_name,
+                bc.email AS client_email,
+                bc.is_active,
+                TO_CHAR(DATE_TRUNC('month', dr.created_at), 'YYYY-MM') AS month,
+                COUNT(*) AS total_evaluations,
+                SUM(CASE WHEN dr.decision = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+                SUM(CASE WHEN dr.decision = 'BLOCKED' THEN 1 ELSE 0 END) AS blocked,
+                SUM(CASE WHEN dr.decision = 'HOLD' THEN 1 ELSE 0 END) AS hold,
+                MIN(dr.created_at) AS first_evaluation,
+                MAX(dr.created_at) AS last_evaluation
+            FROM decision_receipts dr
+            LEFT JOIN b2b_clients bc ON bc.client_id = dr.client_id
+            WHERE dr.client_id != 'PUBLIC'
+              AND dr.created_at >= DATE_TRUNC('month', NOW()) - (INTERVAL '1 month' * %s)
+              {client_filter_sql}
+            GROUP BY dr.client_id, bc.name, bc.email, bc.is_active,
+                     DATE_TRUNC('month', dr.created_at)
+            ORDER BY dr.client_id, month DESC
+        """, params)
+
+        rows = cur.fetchall()
+        conn.close()
+
+        structured = {}
+        for row in rows:
+            cid = row['client_id']
+            if cid not in structured:
+                structured[cid] = {
+                    'client_id': cid,
+                    'client_name': row['client_name'] or cid,
+                    'client_email': row['client_email'],
+                    'is_active': row['is_active'],
+                    'months': [],
+                    'total_all_time_in_range': 0,
+                }
+            month_entry = {
+                'month': row['month'],
+                'total_evaluations': int(row['total_evaluations']),
+                'approved': int(row['approved'] or 0),
+                'blocked': int(row['blocked'] or 0),
+                'hold': int(row['hold'] or 0),
+                'first_evaluation': row['first_evaluation'].isoformat() if row['first_evaluation'] else None,
+                'last_evaluation': row['last_evaluation'].isoformat() if row['last_evaluation'] else None,
+            }
+            structured[cid]['months'].append(month_entry)
+            structured[cid]['total_all_time_in_range'] += int(row['total_evaluations'])
+
+        clients_list = list(structured.values())
+        grand_total = sum(c['total_all_time_in_range'] for c in clients_list)
+
+        logger.info(
+            f"[ADMIN] usage_summary: queried by admin={client['client_id']} "
+            f"months={months} clients={len(clients_list)} total={grand_total}"
+        )
+
+        return jsonify({
+            'report_generated_at': __import__('datetime').datetime.utcnow().isoformat() + 'Z',
+            'trailing_months': months,
+            'clients': clients_list,
+            'grand_total_evaluations': grand_total,
+            'client_count': len(clients_list),
+            'note': 'PUBLIC sandbox traffic excluded. Counts are for B2B API calls only.',
+        }), 200
+
+    except Exception as e:
+        logger.error(f"admin_usage_summary DB error: {e}")
+        return jsonify({'error': 'Database error generating usage report', 'status': 500}), 500
+
+
+@governance_bp.route('/api/governance/admin/usage/<string:target_client_id>', methods=['GET'])
+def admin_usage_client(target_client_id: str):
+    """
+    GET /api/governance/admin/usage/<client_id>
+    Detailed monthly usage for a specific client — all decisions, monthly breakdown.
+    Admin only. ADR-051.
+
+    Query params:
+      - months: int (default 12) — how many trailing months to show
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    try:
+        months = max(1, min(int(request.args.get('months', 12)), 36))
+    except (TypeError, ValueError):
+        months = 12
+
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute("""
+            SELECT client_id, name, email, role, is_active, created_at, last_seen_at
+            FROM b2b_clients WHERE client_id = %s
+        """, (target_client_id,))
+        client_row = cur.fetchone()
+
+        cur.execute("""
+            SELECT
+                TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS month,
+                COUNT(*) AS total_evaluations,
+                SUM(CASE WHEN decision = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+                SUM(CASE WHEN decision = 'BLOCKED' THEN 1 ELSE 0 END) AS blocked,
+                SUM(CASE WHEN decision = 'HOLD' THEN 1 ELSE 0 END) AS hold,
+                COUNT(DISTINCT asset) AS distinct_assets,
+                MIN(created_at) AS first_evaluation,
+                MAX(created_at) AS last_evaluation
+            FROM decision_receipts
+            WHERE client_id = %s
+              AND created_at >= DATE_TRUNC('month', NOW()) - (INTERVAL '1 month' * %s)
+            GROUP BY DATE_TRUNC('month', created_at)
+            ORDER BY month DESC
+        """, (target_client_id, months))
+
+        monthly_rows = cur.fetchall()
+
+        cur.execute("""
+            SELECT COUNT(*) AS total FROM decision_receipts WHERE client_id = %s
+        """, (target_client_id,))
+        lifetime_row = cur.fetchone()
+
+        conn.close()
+
+        monthly = []
+        total_in_range = 0
+        for row in monthly_rows:
+            entry = {
+                'month': row['month'],
+                'total_evaluations': int(row['total_evaluations']),
+                'approved': int(row['approved'] or 0),
+                'blocked': int(row['blocked'] or 0),
+                'hold': int(row['hold'] or 0),
+                'distinct_assets': int(row['distinct_assets'] or 0),
+                'first_evaluation': row['first_evaluation'].isoformat() if row['first_evaluation'] else None,
+                'last_evaluation': row['last_evaluation'].isoformat() if row['last_evaluation'] else None,
+            }
+            total_in_range += entry['total_evaluations']
+            monthly.append(entry)
+
+        logger.info(
+            f"[ADMIN] usage_client: queried by admin={client['client_id']} "
+            f"target={target_client_id} months={months} total_in_range={total_in_range}"
+        )
+
+        return jsonify({
+            'report_generated_at': __import__('datetime').datetime.utcnow().isoformat() + 'Z',
+            'client_id': target_client_id,
+            'client_info': dict(client_row) if client_row else None,
+            'trailing_months': months,
+            'total_evaluations_in_range': total_in_range,
+            'lifetime_evaluations': int(lifetime_row['total'] if lifetime_row else 0),
+            'monthly_breakdown': monthly,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"admin_usage_client DB error for {target_client_id}: {e}")
+        return jsonify({'error': 'Database error generating client usage report', 'status': 500}), 500
 
 
 # ===========================================================================

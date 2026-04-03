@@ -175,9 +175,85 @@ Standalone `aiohttp` server. Public receipt verification. Zero internal data exp
 
 ---
 
+## B2B API Key System (ADR-051)
+
+### Overview
+Every B2B client (e.g. Velos) gets a unique API key. All their evaluations are tagged with their `client_id` in `decision_receipts`. Harold can query usage at any time for billing.
+
+### Database Tables
+| Table | Purpose |
+|-------|---------|
+| `b2b_clients` | One row per client: `client_id`, `api_key_hash` (SHA-256, never plaintext), `name`, `email`, `role`, `is_active`, `last_seen_at` |
+| `decision_receipts` | Every evaluation: `client_id` column links to the client. Public sandbox uses `'PUBLIC'`. |
+| `client_thresholds` | Per-client override of the 11 checkpoint thresholds (ADR-037). |
+
+### API Key Rules
+- Format: `OMNIX-<40 random alphanumeric chars>`
+- Storage: ONLY the SHA-256 hash is stored — plaintext is shown once and never again
+- Role: `standard` (B2B evaluation) or `admin` (Harold — can create/manage clients)
+- Revocation: `is_active = FALSE` — instant, no code change needed
+- Header to use: `X-API-Key: <api_key>`
+
+### Creating a New Client (Railway Production)
+```bash
+# Create the Velos partner client
+railway run python scripts/provision_b2b_client.py \
+    --client-id  velos-partner \
+    --name       "Velos Capital" \
+    --email      naimat@veloscapital.com \
+    --role       standard
+
+# Create Harold's admin key (first time only)
+railway run python scripts/provision_b2b_client.py \
+    --client-id  omnix-admin \
+    --name       "OMNIX Admin" \
+    --email      contacto@omnixquantum.net \
+    --role       admin
+
+# List all clients
+railway run python scripts/provision_b2b_client.py --client-id any --list
+
+# Rotate a key (old key instantly invalid)
+railway run python scripts/provision_b2b_client.py --client-id velos-partner --rotate
+
+# Deactivate a client (revoke access)
+railway run python scripts/provision_b2b_client.py --client-id velos-partner --deactivate
+```
+
+### Admin API Endpoints (require admin API key)
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/governance/admin/usage` | Monthly usage all clients — for billing |
+| `GET` | `/api/governance/admin/usage/<client_id>` | Detailed usage for one client |
+| `GET` | `/api/governance/admin/clients` | List all clients |
+| `POST` | `/api/governance/admin/clients` | Create client via API |
+| `DELETE` | `/api/governance/admin/clients/<id>` | Deactivate client |
+| `POST` | `/api/governance/admin/clients/<id>/rotate` | Rotate API key |
+
+### Usage Report Example (how Harold checks Velos billing)
+```bash
+curl -H "X-API-Key: <harold-admin-key>" \
+     "https://omnixquantum.net/api/governance/admin/usage/velos-partner?months=3"
+# Returns: monthly breakdown of APPROVED/BLOCKED/HOLD evaluations tagged client_id='velos-partner'
+```
+
+### Velos Integration Flow
+```
+Naimat's system
+    → POST /api/governance/evaluate  (header: X-API-Key: OMNIX-<velos-key>)
+    → OMNIX runs 11-checkpoint pipeline
+    → Receipt generated, saved to decision_receipts (client_id='velos-partner')
+    → JSON response returned to Naimat
+    → Naimat pushes receipt to velos-gateway for 60s Auth_Hash window
+Monthly: Harold queries usage endpoint → sees exact count → emits invoice
+```
+
+---
+
 ## Recent Fixes (Apr 2026)
 | Commit | Fix |
 |--------|-----|
+| ADR-051 | Added B2B client usage reporting endpoints (`/api/governance/admin/usage`). Added `scripts/provision_b2b_client.py` to create Velos API key on Railway. Documented full billing flow in replit.md. |
 | `b9d6606f` | Aligned all checkpoints to CP-1→CP-11 matching published Zenodo/SSRN paper. Added CP-11 Jurisdiction Compliance. Renamed CP-7 Ethics & Domain Gate, CP-8 Threshold & Context Validator. |
 | `cb826eca` | Removed CP-11/CP-7b from InstitutionalPage (cleanup before full alignment) |
 | `039d00f5` | Fixed production backend from 8 to 11 checkpoints (root cause: `omnix_web/api/sandbox.py`) |
