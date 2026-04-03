@@ -159,6 +159,15 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'mass withdrawal', 'retiro masivo', 'contagion', 'contagio',
         'systemic collapse', 'colapso sistémico', 'bank panic',
         'systemic risk', 'riesgo sistémico',
+        # crypto / trading risk signals
+        'surge', 'surged', 'pump', 'pumped', 'spike', 'spiked',
+        'unusual volume', 'volumen inusual', 'declining', 'declinando',
+        'on-chain', 'off-chain', 'unhedged', 'sin cobertura',
+        'momentum trade', 'chasing price', 'price spike', 'rally',
+        'overbought', 'sobrecomprado', 'bubble', 'burbuja',
+        'declining metrics', 'divergence', 'divergencia',
+        'abnormal', 'anormal', 'anomaly', 'anomalía',
+        'manipulation', 'manipulación', 'wash trading', 'spoofing',
     ]
     positive_terms = [
         'audit', 'auditado', 'compliant', 'cumplimiento', 'regulated', 'regulado',
@@ -1147,10 +1156,93 @@ def public_sandbox_evaluate():
         user_agent=request.headers.get('User-Agent', '')[:500],
     )
 
+    # ── EXPLANATION QUALITY GUARD ──────────────────────────────────────
+    # If the pipeline blocked but the explanation is generic/misleading, replace it.
+    final_explanation = ai_result.get('explanation', '')
+    is_es = ai_result.get('language') == 'es'
+    blocked_gates = [g for g in pipeline_result.get('gate_results', []) if g.get('result') == 'BLOCKED']
+
+    GENERIC_PHRASES = [
+        'no se identificaron indicadores', 'no risk indicators',
+        'no se detectaron', 'no risks detected',
+        'se ajusta a los parámetros', 'fits governance parameters',
+        'no significant risk',
+        'falls within evaluable governance parameters',
+        'está dentro de los parámetros de gobernanza evaluables',
+        '0 risk indicators', '0 indicadores de riesgo', '0 indicadores',
+        'low risk profile', 'perfil de riesgo bajo',
+        'within evaluable governance',
+    ]
+    is_generic = any(phrase in final_explanation.lower() for phrase in GENERIC_PHRASES)
+
+    if blocked_gates and (is_generic or not final_explanation.strip()):
+        _cp_name_map_en = {
+            'CP-1': 'Signal Integrity Validator (SIV)', 'CP-2': 'Probability Assessment',
+            'CP-3': 'Risk Evaluation', 'CP-4': 'Coherence Engine',
+            'CP-5': 'Trend Validator', 'CP-6': 'Stress Testing',
+            'CP-7': 'Ethics & Domain Gate', 'CP-8': 'Threshold & Context Validator',
+            'CP-9': 'AML Screening', 'CP-10': 'Fraud Detection', 'CP-11': 'Jurisdiction Compliance',
+        }
+        _cp_name_map_es = {
+            'CP-1': 'Validador de Integridad de Señal (SIV)', 'CP-2': 'Evaluación de Probabilidad',
+            'CP-3': 'Evaluación de Riesgo', 'CP-4': 'Motor de Coherencia',
+            'CP-5': 'Validador de Tendencias', 'CP-6': 'Pruebas de Estrés',
+            'CP-7': 'Ética y Puerta de Dominio', 'CP-8': 'Umbral y Contexto',
+            'CP-9': 'Detección AML', 'CP-10': 'Detección de Fraude', 'CP-11': 'Cumplimiento Jurisdiccional',
+        }
+        _cp_why_en = {
+            'CP-1': 'The scenario lacks sufficient data completeness or contains unverifiable elements that prevent reliable evaluation. OMNIX requires a minimum signal integrity score before opening the pipeline.',
+            'CP-2': 'The probability of a positive outcome is below the authorized minimum threshold.',
+            'CP-3': 'The risk exposure exceeds authorized limits for this domain.',
+            'CP-4': 'Internal signals are contradicting each other — Decision Contradiction Index (DCI) too high.',
+            'CP-5': 'The trend or regime does not support the proposed decision.',
+            'CP-6': 'The decision fails stress simulation under adverse conditions.',
+            'CP-7': 'The scenario conflicts with domain-specific ethical constraints.',
+            'CP-8': 'One or more parameters fall outside authorized operational boundaries.',
+            'CP-9': 'Anti-money laundering indicators or suspicious patterns detected.',
+            'CP-10': 'Multi-layer fraud signal analysis detected behavioral or transactional fraud patterns.',
+            'CP-11': 'Regulatory eligibility cannot be confirmed for the involved jurisdiction.',
+        }
+        _cp_why_es = {
+            'CP-1': 'El escenario no tiene suficiente completitud de datos o contiene elementos no verificables. OMNIX requiere una puntuación mínima de integridad de señal antes de abrir el pipeline.',
+            'CP-2': 'La probabilidad de un resultado positivo está por debajo del umbral mínimo autorizado.',
+            'CP-3': 'La exposición al riesgo supera los límites autorizados para este dominio.',
+            'CP-4': 'Las señales internas se contradicen entre sí — el Índice de Contradicción de Decisión (DCI) es demasiado alto.',
+            'CP-5': 'La tendencia o el régimen no respalda la decisión propuesta.',
+            'CP-6': 'La decisión falla las simulaciones de estrés bajo condiciones adversas.',
+            'CP-7': 'El escenario entra en conflicto con restricciones éticas específicas del dominio.',
+            'CP-8': 'Uno o más parámetros están fuera de los límites operativos autorizados.',
+            'CP-9': 'Se detectaron indicadores de lavado de dinero o patrones sospechosos.',
+            'CP-10': 'Análisis multicapa detectó patrones de fraude conductuales o transaccionales.',
+            'CP-11': 'No se puede confirmar elegibilidad regulatoria para la jurisdicción involucrada.',
+        }
+        blocked_cp_ids = [g.get('checkpoint', '') for g in blocked_gates]
+        cp_names_map = _cp_name_map_es if is_es else _cp_name_map_en
+        cp_why_map = _cp_why_es if is_es else _cp_why_en
+        blocked_names = ', '.join(cp_names_map.get(cp, cp) for cp in blocked_cp_ids)
+        reasons = ' '.join(cp_why_map.get(cp, '') for cp in blocked_cp_ids)
+        n = len(blocked_gates)
+        total = pipeline_result.get('checkpoints_total', 11)
+        passed = pipeline_result.get('checkpoints_passed', 0)
+        if is_es:
+            final_explanation = (
+                f"El escenario fue evaluado a través del pipeline de {total} checkpoints de OMNIX. "
+                f"{passed} de {total} checkpoints fueron aprobados, pero {n} {'fue bloqueado' if n == 1 else 'fueron bloqueados'}: "
+                f"{blocked_names}. {reasons} "
+                f"La decisión es BLOQUEADA hasta que se resuelvan las condiciones que activaron {'este' if n == 1 else 'estos'} checkpoint{'s' if n > 1 else ''}."
+            )
+        else:
+            final_explanation = (
+                f"The scenario was evaluated across OMNIX's {total}-checkpoint pipeline. "
+                f"{passed} of {total} checkpoints passed, but {n} {'was' if n == 1 else 'were'} blocked: "
+                f"{blocked_names}. {reasons} "
+                f"The decision is BLOCKED until the conditions triggering {'this' if n == 1 else 'these'} checkpoint{'s' if n > 1 else ''} are resolved."
+            )
+
     return jsonify({
         'success': True,
         'scenario_summary': ai_result['summary'],
-        'explanation': ai_result.get('explanation', ''),
+        'explanation': final_explanation,
         'language': ai_result['language'],
         'signals': ai_result['signals'],
         **pipeline_result,

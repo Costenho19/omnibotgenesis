@@ -252,6 +252,15 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'mass withdrawal', 'retiro masivo', 'contagion', 'contagio',
         'systemic collapse', 'colapso sistémico', 'bank panic',
         'systemic risk', 'riesgo sistémico',
+        # crypto / trading risk signals
+        'surge', 'surged', 'pump', 'pumped', 'spike', 'spiked',
+        'unusual volume', 'volumen inusual', 'declining', 'declinando',
+        'on-chain', 'off-chain', 'unhedged', 'sin cobertura',
+        'momentum trade', 'chasing price', 'price spike', 'rally',
+        'overbought', 'sobrecomprado', 'bubble', 'burbuja',
+        'declining metrics', 'divergence', 'divergencia',
+        'abnormal', 'anormal', 'anomaly', 'anomalía',
+        'manipulation', 'manipulación', 'wash trading', 'spoofing',
     ]
     positive_terms = [
         'audit', 'auditado', 'compliant', 'cumplimiento', 'regulated', 'regulado',
@@ -1567,6 +1576,15 @@ def register_sandbox_routes(app):
             'se ajusta a los parámetros',
             'fits governance parameters',
             'no significant risk',
+            # Exact phrases from rule-based fallback (must match to trigger guard)
+            'falls within evaluable governance parameters',
+            'está dentro de los parámetros de gobernanza evaluables',
+            '0 risk indicators',
+            '0 indicadores de riesgo',
+            '0 indicadores',
+            'low risk profile',
+            'perfil de riesgo bajo',
+            'within evaluable governance',
         ]
         is_generic = any(phrase in final_explanation.lower() for phrase in GENERIC_PHRASES)
 
