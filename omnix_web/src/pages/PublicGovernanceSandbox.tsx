@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import QRCode from 'qrcode'
 import { Link } from 'react-router-dom'
 import { Shield, ArrowRight, CheckCircle, XCircle, Clock, Zap, Brain, Copy, ExternalLink, Sparkles, AlertTriangle, RefreshCw, ChevronDown, Download, Mail } from 'lucide-react'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
@@ -388,17 +387,21 @@ export default function PublicGovernanceSandbox() {
     })
     y += 4
 
-    // QR CODE — generate from verifyUrl using canvas (browser-safe)
+    // QR CODE — generate from verifyUrl via QR API (guaranteed browser-safe)
     const QR_SIZE = 32  // mm in the PDF
     const TEXT_W = CW - QR_SIZE - 6  // text block width
     let qrDataUrl: string | null = null
     try {
-      const canvas = document.createElement('canvas')
-      await QRCode.toCanvas(canvas, verifyUrl, {
-        width: 256, margin: 1,
-        color: { dark: '#050D18', light: '#FFFFFF' }
-      })
-      qrDataUrl = canvas.toDataURL('image/png')
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&margin=4&data=${encodeURIComponent(verifyUrl)}`
+      const qrResp = await fetch(qrApiUrl)
+      if (qrResp.ok) {
+        const qrBlob = await qrResp.blob()
+        qrDataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(qrBlob)
+        })
+      }
     } catch { /* fallback: no QR */ }
 
     // Dark verify box (left portion)
