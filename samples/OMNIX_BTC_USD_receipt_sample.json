@@ -1,0 +1,89 @@
+{
+  "_schema": "OMNIX-RECEIPT-v2.1",
+  "_note": "Sample receipt — BTC/USD governance evaluation. Mirrors exact production format. Signature field truncated for readability (full Dilithium-3 output = 2,420 bytes base64).",
+
+  "receipt_id": "OMNIX-A3F829C14E72",
+  "timestamp": "2026-04-03T07:00:00.000000+00:00",
+  "asset": "BTC/USD",
+  "domain": "trading",
+
+  "decision": "APPROVED",
+  "checkpoints_total": 11,
+  "checkpoints_passed": 11,
+  "checkpoints_blocked": 0,
+
+  "veto_chain": [
+    "CP-1 Signal Integrity Validator (SIV): signal_integrity=74 >= 60 -> PASS",
+    "CP-2 Probability Assessment: probability_score=68 >= 50 -> PASS",
+    "CP-3 Risk Evaluation: risk_exposure=48 <= 65 -> PASS",
+    "CP-4 Coherence Engine: signal_coherence=71 >= 55 -> PASS",
+    "CP-5 Trend Validator: trend_persistence=69 >= 50 -> PASS",
+    "CP-6 Stress Testing: stress_resilience=52 >= 35 -> PASS",
+    "CP-7 Ethics & Domain Gate: logic_consistency=63 >= 40 -> PASS",
+    "CP-8 Threshold & Context Validator: temporal_coherence=58 >= 45 -> PASS",
+    "CP-9 AML Screening: probability_score=68 >= 15 -> PASS",
+    "CP-10 Fraud Detection: logic_consistency=63 >= 30 -> PASS",
+    "CP-11 Jurisdiction Compliance: signal_integrity=74 >= 35 -> PASS"
+  ],
+
+  "gate_results": [
+    { "checkpoint": "CP-1",  "name_en": "Signal Integrity Validator (SIV)",  "signal": "signal_integrity",  "score": 74, "threshold": 60, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-2",  "name_en": "Probability Assessment",             "signal": "probability_score", "score": 68, "threshold": 50, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-3",  "name_en": "Risk Evaluation",                   "signal": "risk_exposure",     "score": 48, "threshold": 65, "operator": "<=", "result": "PASS" },
+    { "checkpoint": "CP-4",  "name_en": "Coherence Engine",                  "signal": "signal_coherence",  "score": 71, "threshold": 55, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-5",  "name_en": "Trend Validator",                   "signal": "trend_persistence", "score": 69, "threshold": 50, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-6",  "name_en": "Stress Testing",                    "signal": "stress_resilience", "score": 52, "threshold": 35, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-7",  "name_en": "Ethics & Domain Gate",              "signal": "logic_consistency", "score": 63, "threshold": 40, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-8",  "name_en": "Threshold & Context Validator",     "signal": "temporal_coherence","score": 58, "threshold": 45, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-9",  "name_en": "AML Screening",                     "signal": "probability_score", "score": 68, "threshold": 15, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-10", "name_en": "Fraud Detection",                   "signal": "logic_consistency", "score": 63, "threshold": 30, "operator": ">=", "result": "PASS" },
+    { "checkpoint": "CP-11", "name_en": "Jurisdiction Compliance",           "signal": "signal_integrity",  "score": 74, "threshold": 35, "operator": ">=", "result": "PASS" }
+  ],
+
+  "signals": {
+    "signal_integrity":  74,
+    "probability_score": 68,
+    "risk_exposure":     48,
+    "signal_coherence":  71,
+    "trend_persistence": 69,
+    "stress_resilience": 52,
+    "logic_consistency": 63,
+    "temporal_coherence":58
+  },
+
+  "cryptographic": {
+    "signature_algorithm": "Dilithium-3 (ML-DSA-65, NIST-standardized post-quantum digital signature)",
+    "key_encapsulation":   "Kyber-768 (ML-KEM-768, NIST-standardized post-quantum KEM)",
+    "signing_level":       3,
+    "pqc_signed":          true,
+    "content_hash":        "sha256:a4f8b2c91e3d57f6a0b1c8d4e2f7a9c3b5d8e1f2a4c6b9d1e3f5a7c2b4d6e8f1",
+    "prev_hash":           "sha256:6b1a8d4c2f9e5b3a7c0d4e8f2a9b3c6d1e5f7a0b4c8d2e6f1a3b7c0d5e9f2a4",
+    "signature":           "308201930201...TRUNCATED[2420 bytes Dilithium-3 / ML-DSA-65]...a4f8c2b9"
+  },
+
+  "transparency_chain": {
+    "chain_entry_id":   "TL-A4C29F17B8E3",
+    "merkle_root":      "7a2b9c4d1e8f3a6b0c5d2e9f4a7b1c8d3e6f2a9b4c7d0e5f1a8b3c6d9e2f5a7",
+    "merkle_position":  10048,
+    "timestamp_unix":   1743663600
+  },
+
+  "policy_version":  "6.5.4e",
+  "engine_version":  "6.5.4e",
+  "issuer":          "OMNIX Decision Governance Infrastructure",
+  "issuer_domain":   "omnixquantum.net",
+
+  "verification_url": "https://omnixquantum.net/verify/OMNIX-A3F829C14E72",
+
+  "_blocked_example": {
+    "_note": "Same schema, decision=BLOCKED. CP-1 FAIL shown below as reference.",
+    "receipt_id": "OMNIX-F1C047B82D39",
+    "decision": "BLOCKED",
+    "checkpoints_passed": 10,
+    "checkpoints_blocked": 1,
+    "gate_results_delta": [
+      { "checkpoint": "CP-1", "name_en": "Signal Integrity Validator (SIV)", "signal": "signal_integrity", "score": 54, "threshold": 60, "operator": ">=", "result": "BLOCKED" }
+    ],
+    "_note2": "Pipeline is fail-closed — CP-1 block prevents all downstream processing regardless of downstream scores."
+  }
+}

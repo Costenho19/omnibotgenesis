@@ -96,3 +96,9 @@ id = "dIhpzsXMgF0Y6aeTacFJD"
 uri = "file://OMNIX_Velos_Partner_Agreement_v2.pdf"
 type = "pdf"
 title = "OMNIX × Velos — Channel Partner Agreement v2.0 (diseño final)"
+
+[[outputs]]
+id = "KtDTOaK5hn6r0E4wUQLSu"
+uri = "file://samples/OMNIX_BTC_USD_receipt_sample.json"
+type = "unspecified"
+title = "OMNIX BTC/USD — Receipt PQC (muestra para Velos)"
