@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import QRCode from 'qrcode'
 import { Link } from 'react-router-dom'
 import { Shield, ArrowRight, CheckCircle, XCircle, Clock, Zap, Brain, Copy, ExternalLink, Sparkles, AlertTriangle, RefreshCw, ChevronDown, Download, Mail } from 'lucide-react'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
@@ -371,7 +372,7 @@ export default function PublicGovernanceSandbox() {
     }
 
     // ── CRYPTOGRAPHIC INTEGRITY ──────────────────────────────
-    checkPage(35)
+    checkPage(55)
     sectionHeader(isEs ? 'INTEGRIDAD CRIPTOGRÁFICA' : 'CRYPTOGRAPHIC INTEGRITY')
     const cryptoRows: [string, string][] = [
       [isEs ? 'Algoritmo de firma' : 'Signature algorithm', publicAlgorithmLabel(result.receipt?.signature_algorithm)],
@@ -386,13 +387,38 @@ export default function PublicGovernanceSandbox() {
       y += 5.5
     })
     y += 4
+
+    // QR CODE — generate from verifyUrl
+    const QR_SIZE = 32  // mm in the PDF
+    const TEXT_W = CW - QR_SIZE - 6  // text block width
+    let qrDataUrl: string | null = null
+    try {
+      qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+        width: 256, margin: 1,
+        color: { dark: '#050D18', light: '#FFFFFF' }
+      })
+    } catch { /* fallback: no QR */ }
+
+    // Dark verify box (left portion)
     doc.setFillColor(5, 13, 24)
-    doc.rect(M, y, CW, 13, 'F')
+    doc.rect(M, y, TEXT_W, 30, 'F')
     doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(201, 162, 39)
-    doc.text(isEs ? 'Verificar este recibo de forma independiente:' : 'Verify this receipt independently:', M + 3, y + 5)
-    doc.setFont('courier', 'normal'); doc.setFontSize(7); doc.setTextColor(160, 170, 220)
-    doc.text(verifyUrl, M + 3, y + 10)
-    y += 17
+    doc.text(isEs ? 'Verificar este recibo:' : 'Verify this receipt:', M + 3, y + 6)
+    doc.setFont('courier', 'normal'); doc.setFontSize(6.5); doc.setTextColor(160, 170, 220)
+    const urlLines = doc.splitTextToSize(verifyUrl, TEXT_W - 6)
+    doc.text(urlLines, M + 3, y + 12)
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6); doc.setTextColor(100, 110, 140)
+    doc.text(isEs ? 'Escanea el QR o visita la URL para verificar' : 'Scan QR or visit URL to verify authenticity', M + 3, y + 25)
+
+    // QR image (right portion)
+    if (qrDataUrl) {
+      doc.addImage(qrDataUrl, 'PNG', M + TEXT_W + 3, y - 1, QR_SIZE, QR_SIZE)
+    }
+
+    // Gold border around QR
+    doc.setDrawColor(201, 162, 39); doc.setLineWidth(0.4)
+    doc.rect(M + TEXT_W + 2, y - 2, QR_SIZE + 2, QR_SIZE + 2)
+    y += QR_SIZE + 5
 
     // ── FOOTER ───────────────────────────────────────────────
     const footerY = 287

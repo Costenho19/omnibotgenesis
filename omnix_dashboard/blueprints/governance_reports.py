@@ -15,6 +15,7 @@ import io
 import logging
 import os
 import sys
+import tempfile
 from datetime import datetime, timezone
 
 import psycopg2
@@ -465,6 +466,50 @@ def _build_pdf_bytes(client: dict, period_label: str,
     ], colWidths=[(W-ML-MR)*x for x in [0.24,0.28,0.48]])
     sec.setStyle(TableStyle(BASE_TBL + [('ALIGN',(0,0),(-1,-1),'LEFT')]))
     story.append(sec)
+    story.append(Spacer(1, 4*mm))
+
+    # ── QR CODE — VERIFY RECEIPTS ──
+    verify_url = 'https://omnixquantum.net/verify'
+    try:
+        import qrcode as _qr
+        qr_img = _qr.make(verify_url)
+        qr_buf = io.BytesIO()
+        qr_img.save(qr_buf, format='PNG')
+        qr_buf.seek(0)
+        qr_tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
+        qr_tmp.write(qr_buf.read())
+        qr_tmp.flush()
+        qr_tmp_path = qr_tmp.name
+        qr_tmp.close()
+        QR_W = 28*mm
+
+        def _qr_row(verify_url=verify_url, qr_tmp_path=qr_tmp_path, QR_W=QR_W):
+            return Table([[
+                RLImage(qr_tmp_path, width=QR_W, height=QR_W),
+                Paragraph(
+                    f'<b>Scan to verify any decision receipt independently</b><br/>'
+                    f'<font size="7" color="#7080A0">{verify_url}</font><br/><br/>'
+                    f'<font size="6.5" color="#9090A8">Any receipt issued by OMNIX can be verified at this URL — '
+                    f'without contacting OMNIX. Enter the receipt ID shown on any signed PDF.</font>',
+                    S('qrl', fontName='Helvetica', fontSize=8, textColor=GRAY_DARK, leading=13)
+                )
+            ]], colWidths=[QR_W + 4*mm, W - ML - MR - QR_W - 4*mm])
+
+        qr_tbl = _qr_row()
+        qr_tbl.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8F8FC')),
+            ('BOX', (0, 0), (-1, -1), 0.6, colors.HexColor('#C9A227')),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(qr_tbl)
+    except Exception:
+        story.append(Paragraph(
+            f'Verify any receipt at: <b>{verify_url}</b>', sSmall))
+
     story.append(PageBreak())
 
     # ── REGULATORY ALIGNMENT + RECOMMENDATIONS ──
