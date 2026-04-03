@@ -376,7 +376,7 @@ export default function PublicGovernanceSandbox() {
     sectionHeader(isEs ? 'INTEGRIDAD CRIPTOGRÁFICA' : 'CRYPTOGRAPHIC INTEGRITY')
     const cryptoRows: [string, string][] = [
       [isEs ? 'Algoritmo de firma' : 'Signature algorithm', publicAlgorithmLabel(result.receipt?.signature_algorithm)],
-      [isEs ? 'Firmado PQC' : 'PQC signed', result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : (isEs ? 'Modo sandbox — activo en producción' : 'Sandbox mode — active in production')],
+      [isEs ? 'Firmado PQC' : 'PQC signed', result.receipt?.pqc_signed ? (isEs ? 'Sí — resistente a computación cuántica' : 'Yes — quantum-resistant') : (isEs ? 'No (Sandbox)' : 'No (Sandbox)')],
       [isEs ? 'Hash del contenido' : 'Content hash', (result.receipt?.content_hash || '').slice(0, 32) + '...'],
     ]
     cryptoRows.forEach(([label, value]) => {

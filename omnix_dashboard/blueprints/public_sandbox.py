@@ -1217,26 +1217,102 @@ def public_sandbox_evaluate():
             'CP-11': 'No se puede confirmar elegibilidad regulatoria para la jurisdicción involucrada.',
         }
         blocked_cp_ids = [g.get('checkpoint', '') for g in blocked_gates]
-        cp_names_map = _cp_name_map_es if is_es else _cp_name_map_en
-        cp_why_map = _cp_why_es if is_es else _cp_why_en
-        blocked_names = ', '.join(cp_names_map.get(cp, cp) for cp in blocked_cp_ids)
-        reasons = ' '.join(cp_why_map.get(cp, '') for cp in blocked_cp_ids)
-        n = len(blocked_gates)
-        total = pipeline_result.get('checkpoints_total', 11)
-        passed = pipeline_result.get('checkpoints_passed', 0)
+        _signals = ai_result.get('signals', {})
+        _risk = _signals.get('risk_exposure', 50)
+
+        def _causal_themes(cp_ids, lang):
+            themes = []
+            has_2 = 'CP-2' in cp_ids
+            has_3 = 'CP-3' in cp_ids
+            if has_2 and has_3:
+                themes.append(
+                    'baja confianza en el resultado combinada con exposición excesiva al riesgo' if lang == 'es'
+                    else 'insufficient outcome confidence combined with excessive risk exposure'
+                )
+            elif has_2:
+                themes.append(
+                    'probabilidad de resultado positivo por debajo del umbral mínimo autorizado' if lang == 'es'
+                    else 'probability of a positive outcome below the minimum authorized threshold'
+                )
+            elif has_3:
+                themes.append(
+                    'exposición al riesgo que supera los límites autorizados para este dominio' if lang == 'es'
+                    else 'risk exposure exceeding authorized limits for this domain'
+                )
+            has_4 = 'CP-4' in cp_ids
+            has_5 = 'CP-5' in cp_ids
+            if has_4 and has_5:
+                themes.append(
+                    'incoherencia de señales entre indicadores clave y contradicción de régimen de tendencia' if lang == 'es'
+                    else 'signal incoherence between key indicators and trend regime contradiction'
+                )
+            elif has_4:
+                themes.append(
+                    'incoherencia interna — los indicadores clave se contradicen entre sí' if lang == 'es'
+                    else 'internal signal incoherence — key indicators are contradicting each other'
+                )
+            elif has_5:
+                themes.append(
+                    'contradicción de régimen — la decisión va contra la dirección predominante del mercado' if lang == 'es'
+                    else 'regime contradiction — the decision opposes the prevailing market direction'
+                )
+            if 'CP-6' in cp_ids:
+                themes.append(
+                    'fallo bajo condiciones adversas de estrés, incluyendo choques de liquidez y escenarios de volatilidad' if lang == 'es'
+                    else 'failure under adverse stress conditions, including liquidity shocks and volatility scenarios'
+                )
+            if 'CP-1' in cp_ids:
+                themes.append(
+                    'calidad de datos de entrada insuficiente para una evaluación confiable' if lang == 'es'
+                    else 'insufficient input data quality for reliable evaluation'
+                )
+            if 'CP-9' in cp_ids or 'CP-10' in cp_ids:
+                themes.append(
+                    'indicadores de cumplimiento detectados — señales AML o de fraude requieren escalamiento obligatorio' if lang == 'es'
+                    else 'compliance flags detected — AML or fraud indicators require mandatory escalation'
+                )
+            if 'CP-11' in cp_ids:
+                themes.append(
+                    'elegibilidad regulatoria no confirmada para la jurisdicción involucrada' if lang == 'es'
+                    else 'regulatory eligibility unconfirmed for the involved jurisdiction'
+                )
+            if 'CP-7' in cp_ids and 'CP-9' not in cp_ids and 'CP-10' not in cp_ids:
+                themes.append(
+                    'conflicto con restricciones éticas o de dominio para este sector' if lang == 'es'
+                    else 'conflict with ethics or domain constraints for this sector'
+                )
+            if 'CP-8' in cp_ids:
+                themes.append(
+                    'parámetros operativos fuera de los límites autorizados para este contexto' if lang == 'es'
+                    else 'operational parameters outside authorized boundaries for this context'
+                )
+            return themes[:3]
+
         if is_es:
+            _context = (
+                'El escenario presenta un perfil de riesgo extremo' if _risk > 75
+                else 'El escenario supera los parámetros de riesgo autorizados' if _risk > 65
+                else 'El escenario presenta condiciones de gobernanza adversas'
+            )
+            _themes = _causal_themes(blocked_cp_ids, 'es')
+            _themes_str = '; '.join(_themes) if _themes else 'múltiples condiciones de gobernanza no cumplidas'
             final_explanation = (
-                f"El escenario fue evaluado a través del pipeline de {total} checkpoints de OMNIX. "
-                f"{passed} de {total} checkpoints fueron aprobados, pero {n} {'fue bloqueado' if n == 1 else 'fueron bloqueados'}: "
-                f"{blocked_names}. {reasons} "
-                f"La decisión es BLOQUEADA hasta que se resuelvan las condiciones que activaron {'este' if n == 1 else 'estos'} checkpoint{'s' if n > 1 else ''}."
+                f"{_context}: {_themes_str}. "
+                f"Ningún sistema automatizado puede aprobar esta operación sin intervención humana calificada — "
+                f"la decisión es BLOQUEADA por el pipeline de gobernanza de OMNIX."
             )
         else:
+            _context = (
+                'The scenario carries an extreme risk profile' if _risk > 75
+                else 'The scenario exceeds authorized risk parameters' if _risk > 65
+                else 'The scenario presents adverse governance conditions'
+            )
+            _themes = _causal_themes(blocked_cp_ids, 'en')
+            _themes_str = '; '.join(_themes) if _themes else 'multiple governance conditions not met'
             final_explanation = (
-                f"The scenario was evaluated across OMNIX's {total}-checkpoint pipeline. "
-                f"{passed} of {total} checkpoints passed, but {n} {'was' if n == 1 else 'were'} blocked: "
-                f"{blocked_names}. {reasons} "
-                f"The decision is BLOCKED until the conditions triggering {'this' if n == 1 else 'these'} checkpoint{'s' if n > 1 else ''} are resolved."
+                f"{_context}: {_themes_str}. "
+                f"No automated system may approve this operation without qualified human intervention — "
+                f"the decision is BLOCKED by OMNIX's governance pipeline."
             )
 
     return jsonify({
