@@ -321,7 +321,9 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         spread = pseudo % (hi - lo + 1) + lo
         return max(5, min(95, adjusted + offset + spread))
 
-    if any(t in text_lower for t in ['health', 'salud', 'medical', 'médico', 'hospital', 'patient', 'paciente', 'clinical', 'clínico', 'treatment', 'tratamiento']):
+    if any(t in text_lower for t in ['sanction', 'ofac', 'aml', 'anti-money', 'laundering', 'compliance', 'regulatory violation', 'violación regulatoria', 'shell compan', 'beneficial owner', 'propietario beneficiario', 'corrupción', 'corruption', 'bribery', 'soborno', 'kyc', 'fatf', 'gafi']):
+        domain = 'compliance'
+    elif any(t in text_lower for t in ['health', 'salud', 'medical', 'médico', 'hospital', 'patient', 'paciente', 'clinical', 'clínico', 'treatment', 'tratamiento']):
         domain = 'generic'
     elif any(t in text_lower for t in ['fund', 'fondo', 'hedge', 'trading', 'investment', 'inversión']):
         domain = 'trading'
