@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import qrcode from 'qrcode-generator'
 import { Link } from 'react-router-dom'
 import { Shield, ArrowRight, CheckCircle, XCircle, Clock, Zap, Brain, Copy, ExternalLink, Sparkles, AlertTriangle, RefreshCw, ChevronDown, Download, Mail } from 'lucide-react'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
@@ -387,21 +388,31 @@ export default function PublicGovernanceSandbox() {
     })
     y += 4
 
-    // QR CODE — generate from verifyUrl via QR API (guaranteed browser-safe)
+    // QR CODE — pure JS generation, no external requests, no Node.js deps
     const QR_SIZE = 32  // mm in the PDF
     const TEXT_W = CW - QR_SIZE - 6  // text block width
     let qrDataUrl: string | null = null
     try {
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&margin=4&data=${encodeURIComponent(verifyUrl)}`
-      const qrResp = await fetch(qrApiUrl)
-      if (qrResp.ok) {
-        const qrBlob = await qrResp.blob()
-        qrDataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.readAsDataURL(qrBlob)
-        })
+      const qr = qrcode(0, 'M')
+      qr.addData(verifyUrl)
+      qr.make()
+      const moduleCount = qr.getModuleCount()
+      const scale = Math.ceil(256 / moduleCount)
+      const canvas = document.createElement('canvas')
+      canvas.width = moduleCount * scale
+      canvas.height = moduleCount * scale
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = '#050D18'
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+          if (qr.isDark(row, col)) {
+            ctx.fillRect(col * scale, row * scale, scale, scale)
+          }
+        }
       }
+      qrDataUrl = canvas.toDataURL('image/png')
     } catch { /* fallback: no QR */ }
 
     // Dark verify box (left portion)
