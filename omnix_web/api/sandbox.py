@@ -1587,6 +1587,14 @@ def register_sandbox_routes(app):
             'low risk profile',
             'perfil de riesgo bajo',
             'within evaluable governance',
+            # Approval language contradictory in a BLOCKED outcome
+            'proceeds safely', 'may proceed', 'puede proceder',
+            'authorized for execution', 'autorizado para ejecución',
+            'cleared for execution', 'habilitado para ejecutar',
+            'decision is approved', 'la decisión es aprobada',
+            'decision may proceed', 'la decisión puede proceder',
+            'all checkpoints passed', 'todos los puntos de control superados',
+            'no blocking conditions', 'sin condiciones de bloqueo',
         ]
         is_generic = any(phrase in final_explanation.lower() for phrase in GENERIC_PHRASES)
 
@@ -1743,6 +1751,21 @@ def register_sandbox_routes(app):
                     f"the decision is BLOCKED by OMNIX's governance pipeline."
                 )
 
+        elif not final_explanation.strip():
+            # APPROVED with empty explanation — provide clean approved fallback
+            if is_es:
+                final_explanation = (
+                    f"El escenario fue evaluado a través de los 11 puntos de control del pipeline de gobernanza de OMNIX. "
+                    f"Todas las señales superaron los umbrales de gobernanza requeridos. "
+                    f"La decisión puede proceder bajo los parámetros operativos autorizados."
+                )
+            else:
+                final_explanation = (
+                    f"The scenario was evaluated through OMNIX's 11-checkpoint governance pipeline. "
+                    f"All signals met the required governance thresholds. "
+                    f"The decision may proceed under authorized operational parameters."
+                )
+
         if db_url:
             _log_sandbox_interaction(
                 db_url=db_url,
@@ -1760,8 +1783,10 @@ def register_sandbox_routes(app):
                 user_email=user_email,
             )
 
-        # Summary quality guard — prevent contradictory summaries on BLOCKED decisions
+        # Summary quality guard — prevent contradictory summaries regardless of outcome
         _summary_raw = ai_result['summary']
+        _asset = ai_result.get('asset', 'Entity Under Review')
+        _lang = ai_result.get('language', 'en')
         if governance_result['decision'] == 'BLOCKED':
             _contradictory_phrases = [
                 'low risk', 'riesgo bajo', 'no risk indicator', 'sin indicadores de riesgo',
@@ -1770,11 +1795,11 @@ def register_sandbox_routes(app):
                 'satisfactoriamente', 'satisfactorily', 'meets governance', 'cumple con',
                 'all parameters', 'todos los parámetros', 'favorable', 'cleared',
                 'approved', 'aprobado', 'accepted', 'aceptado', 'compliant', 'cumple',
+                'all checkpoints passed', 'todos los puntos superados',
+                'authorized to proceed', 'autorizado para proceder',
             ]
             if any(ph in _summary_raw.lower() for ph in _contradictory_phrases) or len(_summary_raw) < 20:
                 _n_blocked = governance_result['checkpoints_blocked']
-                _asset = ai_result.get('asset', 'Entity Under Review')
-                _lang = ai_result.get('language', 'en')
                 if _lang == 'es':
                     _summary_raw = (
                         f"Evaluación de gobernanza de {_asset}: "
@@ -1786,6 +1811,24 @@ def register_sandbox_routes(app):
                         f"Governance evaluation of {_asset}: "
                         f"{_n_blocked} checkpoint(s) raised a blocking condition — "
                         f"decision stopped before execution."
+                    )
+        elif governance_result['decision'] == 'APPROVED':
+            _blocking_in_approved = [
+                'blocked', 'bloqueado', 'stopped before', 'detenida', 'rejected', 'rechazado',
+                'cannot proceed', 'no puede proceder', 'flagged for', 'marcado por',
+                'escalated', 'escalado', 'intercepted', 'interceptado',
+                'blocking condition', 'condición de bloqueo',
+            ]
+            if any(ph in _summary_raw.lower() for ph in _blocking_in_approved) or len(_summary_raw) < 20:
+                if _lang == 'es':
+                    _summary_raw = (
+                        f"Evaluación de gobernanza de {_asset}: "
+                        f"todos los puntos de control superados — decisión autorizada para proceder."
+                    )
+                else:
+                    _summary_raw = (
+                        f"Governance evaluation of {_asset}: "
+                        f"all checkpoints passed — decision authorized to proceed."
                     )
 
         return flask_jsonify({
