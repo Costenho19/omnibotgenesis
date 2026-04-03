@@ -388,32 +388,20 @@ export default function PublicGovernanceSandbox() {
     })
     y += 4
 
-    // QR CODE — pure JS generation, no external requests, no Node.js deps
+    // QR CODE — using qrcode-generator built-in createDataURL (no canvas, pure JS)
     const QR_SIZE = 32  // mm in the PDF
     const TEXT_W = CW - QR_SIZE - 6  // text block width
     let qrDataUrl: string | null = null
+    let qrFormat: string = 'GIF'
     try {
       const qr = qrcode(0, 'M')
       qr.addData(verifyUrl)
       qr.make()
-      const moduleCount = qr.getModuleCount()
-      const scale = Math.ceil(256 / moduleCount)
-      const canvas = document.createElement('canvas')
-      canvas.width = moduleCount * scale
-      canvas.height = moduleCount * scale
-      const ctx = canvas.getContext('2d')!
-      ctx.fillStyle = '#FFFFFF'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.fillStyle = '#050D18'
-      for (let row = 0; row < moduleCount; row++) {
-        for (let col = 0; col < moduleCount; col++) {
-          if (qr.isDark(row, col)) {
-            ctx.fillRect(col * scale, row * scale, scale, scale)
-          }
-        }
-      }
-      qrDataUrl = canvas.toDataURL('image/png')
-    } catch { /* fallback: no QR */ }
+      qrDataUrl = qr.createDataURL(4, 4)
+      qrFormat = 'GIF'
+    } catch (err) {
+      console.error('[OMNIX PDF] QR generation failed:', err)
+    }
 
     // Dark verify box (left portion)
     doc.setFillColor(5, 13, 24)
@@ -428,7 +416,7 @@ export default function PublicGovernanceSandbox() {
 
     // QR image (right portion)
     if (qrDataUrl) {
-      doc.addImage(qrDataUrl, 'PNG', M + TEXT_W + 3, y - 1, QR_SIZE, QR_SIZE)
+      doc.addImage(qrDataUrl, qrFormat, M + TEXT_W + 3, y - 1, QR_SIZE, QR_SIZE)
     }
 
     // Gold border around QR
