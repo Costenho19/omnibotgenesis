@@ -6502,45 +6502,45 @@ Trades: {balance['total_trades']}"""
         """Comando /trading - Menú principal de trading"""
         try:
             response = f"""
-📈 **OMNIX TRADING CENTER**
+📈 *OMNIX TRADING CENTER*
 
-🎯 **Modos de Trading Disponibles:**
+🎯 *Modos de Trading Disponibles:*
 
-📄 **PAPER TRADING** (Recomendado para empezar)
+📄 *PAPER TRADING* (Recomendado para empezar)
    `/paper_start` - Iniciar con $1M virtual
    `/paper_balance` - Ver balance simulado
    `/paper_buy BTC 10000` - Comprar $10K en BTC
    `/paper_sell BTC` - Vender posición
 
-🤖 **AUTO-TRADING 24/7**
+🤖 *AUTO-TRADING 24/7*
    `/autotrading` - Configurar trading automático
    `/auto_start` - Activar bot automático
    `/auto_stop` - Pausar bot
    `/auto_status` - Ver estado
 
-📊 **ANÁLISIS DE MERCADO**
+📊 *ANÁLISIS DE MERCADO*
    `/analizar BTC` - Análisis completo
    `/quantum BTC` - Simulación Monte Carlo
    `/sentiment BTC` - Sentimiento de mercado
    `/blackswan BTC` - Detección de riesgos
 
-💱 **ARBITRAJE MULTI-EXCHANGE**
+💱 *ARBITRAJE MULTI-EXCHANGE*
    `/arbitraje` - Info del sistema
    `/arbitrage_scan BTC` - Buscar oportunidades
 
-🛡️ **GESTIÓN DE RIESGO**
+🛡️ *GESTIÓN DE RIESGO*
    `/rms` - Dashboard de riesgos
    `/risk_status` - Estado de protecciones
 
-📈 **BOLSA DE VALORES (NYSE/NASDAQ)**
+📈 *BOLSA DE VALORES (NYSE/NASDAQ)*
    `/stock_status` - Estado del módulo
    `/analizar AAPL` - Analizar acción
 
-⚙️ **CONFIGURACIÓN**
+⚙️ *CONFIGURACIÓN*
    `/miconfig` - Mi configuración
    `/perfil` - Mi perfil de trading
 
-💡 **Tip:** Empieza con /paper_start para practicar sin riesgo.
+💡 *Tip:* Empieza con /paper_start para practicar sin riesgo.
 """
             await update.message.reply_text(response, parse_mode='Markdown')
             
@@ -6552,22 +6552,22 @@ Trades: {balance['total_trades']}"""
         """Comando /arbitraje - Alias español para arbitrage"""
         if not self.arbitrage_scanner:
             response = """
-💱 **OMNIX ARBITRAJE MULTI-EXCHANGE**
+💱 *OMNIX ARBITRAJE MULTI-EXCHANGE*
 
-📊 **¿Qué es el Arbitraje?**
+📊 *¿Qué es el Arbitraje?*
 El arbitraje consiste en comprar un activo en un exchange 
 donde está más barato y venderlo en otro donde está más caro,
 capturando la diferencia como ganancia.
 
-🏦 **Exchanges Soportados (8):**
+🏦 *Exchanges Soportados (8):*
    • Kraken, Binance, Coinbase, Bybit
    • KuCoin, OKX, Gate.io, Bitfinex
 
-⚠️ **Estado Actual:**
+⚠️ *Estado Actual:*
 El módulo de arbitraje requiere configuración de API keys
 para cada exchange. Actualmente en modo paper trading.
 
-📋 **Comandos:**
+📋 *Comandos:*
    `/arbitrage_scan BTC/USD` - Buscar oportunidades
    `/arbitrage_stats` - Ver estadísticas
 
