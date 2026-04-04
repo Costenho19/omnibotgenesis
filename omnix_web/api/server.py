@@ -24,6 +24,17 @@ CORS(app)
 from api.sandbox import register_sandbox_routes
 register_sandbox_routes(app)
 
+# ── B2B Governance API (ADR-028, ADR-051, ADR-052) ────────────────────────────
+# Exposes /api/governance/* on omnixquantum.net (Railway stellar-hope service)
+# Authentication: X-API-Key header (RBAC — b2b_clients table)
+# Velos Gateway Push included (non-blocking, client_id='velos-partner' only)
+try:
+    from api.gov_blueprint import governance_bp
+    app.register_blueprint(governance_bp)
+    print("[server] governance_bp registered — /api/governance/* active")
+except Exception as _gov_err:
+    print(f"[server] WARNING: governance_bp not loaded: {_gov_err}")
+
 
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')

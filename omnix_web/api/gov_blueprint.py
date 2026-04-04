@@ -40,15 +40,28 @@ try:
 except ImportError:
     _FERNET_AVAILABLE = False
 
-from .auth_rbac import (
-    authenticate_client,
-    create_client,
-    deactivate_client,
-    list_clients,
-    reactivate_client,
-    rotate_api_key,
-    update_last_seen,
-)
+try:
+    # Standalone deployment (omnix_web/api/ on Railway)
+    from api.gov_auth_rbac import (
+        authenticate_client,
+        create_client,
+        deactivate_client,
+        list_clients,
+        reactivate_client,
+        rotate_api_key,
+        update_last_seen,
+    )
+except ImportError:
+    # Package deployment (omnix_dashboard/ on Flask Dashboard)
+    from .auth_rbac import (
+        authenticate_client,
+        create_client,
+        deactivate_client,
+        list_clients,
+        reactivate_client,
+        rotate_api_key,
+        update_last_seen,
+    )
 
 _alerts_trigger = None
 
@@ -165,8 +178,8 @@ def _ensure_thresholds_table() -> None:
 _THRESHOLDS_TABLE_ENSURED = False
 
 # ── VELOS GATEWAY CONFIG (ADR-052) ───────────────────────────────────────────
-# KEEP IN SYNC with omnix_web/api/gov_blueprint.py — both files must be identical
-# in this section. ADR-052.
+# KEEP IN SYNC with omnix_dashboard/blueprints/governance.py — both files must be
+# identical in this section. ADR-052.
 _VELOS_PUSH_LOG_ENSURED = False
 _VELOS_GATEWAY_URL      = "https://velos-gateway.onrender.com/api/v1/intercept"
 _VELOS_CLIENT_ID        = os.environ.get("VELOS_CLIENT_ID", "velos-partner")
