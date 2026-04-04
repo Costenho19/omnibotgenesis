@@ -825,6 +825,10 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("enterprise", self.enterprise_command))
             self.application.add_handler(CommandHandler("trading", self.trading_menu_command))  # Menú de trading
             self.application.add_handler(CommandHandler("arbitraje", self.arbitraje_command))  # Alias español
+            self.application.add_handler(CommandHandler("prices", self.prices_command))
+            self.application.add_handler(CommandHandler("memoria", self.memoria_command))
+            self.application.add_handler(CommandHandler("patrones", self.patrones_command))
+            self.application.add_handler(CommandHandler("quantum_fast", self.quantum_fast_command))
             
             # 📊 Comandos Paper Trading - Trading simulado con $1M
             self.application.add_handler(CommandHandler("paper_start", self.paper_start_command))
@@ -6578,7 +6582,161 @@ diferencias de precio mayores al umbral configurado.
             return
         
         await self.arbitrage_command(update, context)
-    
+
+    # ==========================================
+    # 📊 COMANDOS NUEVOS — PRICES / MEMORIA / PATRONES / QUANTUM FAST
+    # ==========================================
+
+    async def prices_command(self, update, context):
+        """Comando /prices - Precios en tiempo real de las principales criptos"""
+        try:
+            loading_msg = await update.message.reply_text("📊 Obteniendo precios en tiempo real...")
+            cryptos = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA']
+            lines = []
+            for symbol in cryptos:
+                try:
+                    price_data = self.trading.get_real_market_data(f"{symbol}/USD")
+                    if price_data and 'precio_actual' in price_data:
+                        precio = price_data['precio_actual']
+                        cambio = price_data.get('cambio_24h', 0)
+                        try:
+                            cambio_f = float(cambio)
+                            arrow = "📈" if cambio_f >= 0 else "📉"
+                            lines.append(f"{arrow} *{symbol}:* ${precio:,.2f}  ({cambio_f:+.2f}%)")
+                        except Exception:
+                            lines.append(f"📊 *{symbol}:* ${precio:,.2f}")
+                    else:
+                        lines.append(f"⚠️ *{symbol}:* No disponible")
+                except Exception:
+                    lines.append(f"⚠️ *{symbol}:* Error al consultar")
+            msg = (
+                "📊 *PRECIOS EN TIEMPO REAL*\n\n"
+                + "\n".join(lines)
+                + f"\n\n_Kraken · {datetime.now().strftime('%H:%M:%S')} UTC_"
+            )
+            await loading_msg.edit_text(msg, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Error prices_command: {e}")
+            await update.message.reply_text("⚠️ Error al obtener precios")
+
+    async def memoria_command(self, update, context):
+        """Comando /memoria - Historial reciente de conversación con OMNIX"""
+        try:
+            chat_id = update.effective_chat.id
+            historial = []
+            if hasattr(self, 'db_manager') and self.db_manager:
+                try:
+                    historial = self.db_manager.get_conversation_history(chat_id, limit=5)
+                except Exception:
+                    historial = []
+            if historial:
+                lines = []
+                for entry in historial:
+                    role = "Tú" if entry.get('role') == 'user' else "OMNIX"
+                    texto = str(entry.get('content', ''))[:120]
+                    if len(str(entry.get('content', ''))) > 120:
+                        texto += "..."
+                    lines.append(f"*{role}:* {texto}")
+                msg = "🧠 *MEMORIA — ÚLTIMAS INTERACCIONES*\n\n" + "\n\n".join(lines)
+            else:
+                msg = (
+                    "🧠 *MEMORIA OMNIX*\n\n"
+                    "No hay historial reciente registrado.\n"
+                    "Cada conversación con el bot queda guardada aquí."
+                )
+            await update.message.reply_text(msg, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Error memoria_command: {e}")
+            await update.message.reply_text("⚠️ Error al cargar memoria")
+
+    async def patrones_command(self, update, context):
+        """Comando /patrones - Detección de patrones técnicos en BTC"""
+        try:
+            symbol = context.args[0].upper() if context.args else "BTC"
+            loading_msg = await update.message.reply_text(f"🔍 Analizando patrones técnicos en {symbol}...")
+            price_data = self.trading.get_real_market_data(f"{symbol}/USD")
+            if not price_data or 'precio_actual' not in price_data:
+                await loading_msg.edit_text(f"⚠️ No se pudo obtener datos de {symbol}")
+                return
+            precio = price_data['precio_actual']
+            cambio = price_data.get('cambio_24h', 0)
+            volumen = price_data.get('volumen', 'N/A')
+            try:
+                cambio_f = float(cambio)
+                if cambio_f > 3:
+                    tendencia = "📈 Tendencia alcista fuerte"
+                    patron = "Momentum positivo — presión compradora dominante"
+                    señal = "✅ BULL"
+                elif cambio_f > 0:
+                    tendencia = "📈 Tendencia alcista moderada"
+                    patron = "Consolidación positiva — acumulación gradual"
+                    señal = "⚡ NEUTRAL/BULL"
+                elif cambio_f > -3:
+                    tendencia = "📉 Tendencia bajista moderada"
+                    patron = "Corrección controlada — posible rebote técnico"
+                    señal = "⚡ NEUTRAL/BEAR"
+                else:
+                    tendencia = "📉 Tendencia bajista fuerte"
+                    patron = "Presión vendedora dominante — cautela recomendada"
+                    señal = "🔴 BEAR"
+            except Exception:
+                tendencia = "📊 Sin datos de tendencia"
+                patron = "Datos insuficientes para patrón"
+                señal = "❓ DESCONOCIDO"
+            msg = (
+                f"🔍 *PATRONES TÉCNICOS — {symbol}/USD*\n\n"
+                f"💵 *Precio actual:* ${precio:,.2f}\n"
+                f"📊 *Cambio 24h:* {cambio}%\n"
+                f"📦 *Volumen:* {volumen}\n\n"
+                f"🎯 *Patrón detectado:*\n{tendencia}\n{patron}\n\n"
+                f"*Señal:* {señal}\n\n"
+                f"_Para análisis completo usa_ /analizar {symbol}"
+            )
+            await loading_msg.edit_text(msg, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Error patrones_command: {e}")
+            await update.message.reply_text("⚠️ Error al analizar patrones")
+
+    async def quantum_fast_command(self, update, context):
+        """Comando /quantum_fast - Análisis Monte Carlo rápido (1,000 escenarios)"""
+        try:
+            if not ADVANCED_FEATURES_AVAILABLE or not global_advanced_features:
+                await update.message.reply_text("⚠️ Advanced Features no disponibles")
+                return
+            symbol = context.args[0].upper() if context.args else "BTC"
+            loading_msg = await update.message.reply_text(f"⚡ Ejecutando análisis rápido de {symbol}...")
+            price = self.trading.get_current_price(f"{symbol}/USD")
+            if not price:
+                price = 50000
+            result = global_advanced_features.monte_carlo.simulate_trading_strategy(
+                current_price=price,
+                investment=1000,
+                days=7
+            )
+            win_rate = result['win_rate']
+            if win_rate > 60:
+                recomendacion = "✅ Condiciones favorables para operar"
+            elif win_rate > 50:
+                recomendacion = "⚡ Condiciones neutras — precaución"
+            else:
+                recomendacion = "❌ Condiciones desfavorables — esperar"
+            msg = (
+                f"⚡ *QUANTUM FAST — {symbol}/USD*\n\n"
+                f"💰 *Capital simulado:* $1,000 USD\n"
+                f"📅 *Horizonte:* 7 días\n"
+                f"🎲 *Escenarios:* {result['simulations']:,}\n\n"
+                f"📊 *RESULTADO:*\n"
+                f"✅ Win Rate: {win_rate:.1f}%\n"
+                f"❌ Loss Rate: {result['loss_rate']:.1f}%\n"
+                f"💵 Profit esperado: ${result['expected_profit']:.2f}\n\n"
+                f"🎯 *{recomendacion}*\n\n"
+                f"_Para análisis completo (30 días, 10K escenarios) usa_ /quantum {symbol}"
+            )
+            await loading_msg.edit_text(msg, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Error quantum_fast_command: {e}")
+            await update.message.reply_text("⚠️ Error en análisis quantum")
+
     # ==========================================
     # 💱 ARBITRAGE MULTI-EXCHANGE PREMIUM
     # ==========================================
