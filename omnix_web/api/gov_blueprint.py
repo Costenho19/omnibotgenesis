@@ -110,16 +110,27 @@ def _load_engine():
         return True
     try:
         import importlib.util
-        _root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
-        evaluator_path = os.path.join(_root, "omnix_core", "governance", "external_evaluator.py")
+        _api_dir = os.path.dirname(__file__)
+
+        # Path 1: bundled copy inside omnix_web/api/omnix_engine/ (Railway — only omnix_web is deployed)
+        _local_evaluator = os.path.join(_api_dir, "omnix_engine", "external_evaluator.py")
+        _local_receipt   = os.path.join(_api_dir, "omnix_engine", "decision_receipt.py")
+
+        # Path 2: full repo (local dev — omnix_core available 3 levels up)
+        _root = os.path.dirname(os.path.dirname(_api_dir))
+        _repo_evaluator = os.path.join(_root, "omnix_core", "governance", "external_evaluator.py")
+        _repo_receipt   = os.path.join(_root, "omnix_core", "evidence", "decision_receipt.py")
+
+        evaluator_path = _local_evaluator if os.path.exists(_local_evaluator) else _repo_evaluator
+        receipt_path   = _local_receipt   if os.path.exists(_local_receipt)   else _repo_receipt
+
         spec_ev = importlib.util.spec_from_file_location("_omnix_gov_evaluator", evaluator_path)
         mod_ev = importlib.util.module_from_spec(spec_ev)
         sys.modules['_omnix_gov_evaluator'] = mod_ev
         spec_ev.loader.exec_module(mod_ev)
         _GovernanceEvaluationEngine = mod_ev.GovernanceEvaluationEngine
 
-        receipt_path = os.path.join(_root, "omnix_core", "evidence", "decision_receipt.py")
         spec_rc = importlib.util.spec_from_file_location("_omnix_gov_receipt", receipt_path)
         mod_rc = importlib.util.module_from_spec(spec_rc)
         sys.modules['_omnix_gov_receipt'] = mod_rc
@@ -127,7 +138,9 @@ def _load_engine():
         _DecisionReceiptEngine = mod_rc.DecisionReceiptEngine
 
         _ENGINE_AVAILABLE = True
-        logger.info("GovernanceEvaluationEngine + DecisionReceiptEngine loaded via importlib")
+        logger.info(
+            f"GovernanceEvaluationEngine loaded from: {evaluator_path}"
+        )
         return True
     except Exception as e:
         logger.error(f"Failed to load governance engine: {e}")
