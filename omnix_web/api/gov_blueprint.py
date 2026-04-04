@@ -554,7 +554,7 @@ def api_governance_schema():
 @governance_bp.route('/api/governance/evaluate', methods=['POST'])
 def api_governance_evaluate():
     """
-    Evaluate external signals through OMNIX 6-checkpoint governance pipeline.
+    Evaluate external signals through the OMNIX 11-checkpoint governance pipeline.
     Returns a PQC-signed governance receipt.
     Requires valid X-API-Key (RBAC authenticated).
     """
