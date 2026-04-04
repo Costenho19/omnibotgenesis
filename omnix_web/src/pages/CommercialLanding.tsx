@@ -396,8 +396,8 @@ export default function CommercialLanding() {
         {/* ── PRICING ── */}
         <section className="mb-24" id="pricing">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-muted max-w-xl mx-auto">Start free. Scale when you see the value. All prices in USD.</p>
+            <h2 className="text-3xl font-bold text-white mb-4">Governance Access Plans</h2>
+            <p className="text-muted max-w-xl mx-auto">Start with the free pilot. Pricing is scoped to your organization's decision volume and risk profile.</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-5">
@@ -429,13 +429,12 @@ export default function CommercialLanding() {
               <div className="mb-4">
                 <span className="text-xs font-bold text-[#06b6d4] uppercase tracking-widest">Advisory</span>
                 <div className="mt-3 flex items-end gap-1">
-                  <span className="text-4xl font-bold text-white">$8K</span>
-                  <span className="text-muted text-sm mb-1">/month</span>
+                  <span className="text-4xl font-bold text-white">Contact Us</span>
                 </div>
-                <p className="text-xs text-muted mt-1">Billed monthly · Cancel anytime</p>
+                <p className="text-xs text-muted mt-1">Scoped to your decision volume</p>
               </div>
               <ul className="space-y-2 flex-1 mb-6">
-                {['Pre-decision recommendations in real time', 'Your team decides — OMNIX advises', 'PQC-signed receipt per recommendation', 'Up to 100K decisions governed / month', '1 vertical (trading, credit, insurance, or supply chain)'].map(f => (
+                {['Pre-decision recommendations in real time', 'Your team decides — OMNIX advises', 'PQC-signed receipt per recommendation', '1 vertical (trading, credit, insurance, or supply chain)'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-muted">
                     <CheckCircle className="w-4 h-4 text-[#06b6d4] flex-shrink-0 mt-0.5" />
                     {f}
@@ -455,18 +454,13 @@ export default function CommercialLanding() {
               </div>
               <div className="mb-4">
                 <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest">Enterprise</span>
-                <div className="mt-3">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-white">$20K</span>
-                    <span className="text-[#C9A227] font-bold text-xl">–</span>
-                    <span className="text-3xl font-bold text-white">$35K</span>
-                    <span className="text-muted text-sm ml-1">/mo</span>
-                  </div>
+                <div className="mt-3 flex items-end gap-1">
+                  <span className="text-4xl font-bold text-white">Contact Us</span>
                 </div>
                 <p className="text-xs text-muted mt-1">Annual contract · Based on scope</p>
               </div>
               <ul className="space-y-2 flex-1 mb-6">
-                {['Full veto authority — fail-closed by default', 'Unlimited decisions governed', 'All verticals included', 'Complete audit trail for regulators', 'API integration + dedicated onboarding', 'SLA 99.9% uptime guarantee'].map(f => (
+                {['Full veto authority — fail-closed by default', 'All verticals included', 'Complete audit trail for regulators', 'API integration + dedicated onboarding', 'SLA 99.9% uptime guarantee'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-muted">
                     <CheckCircle className="w-4 h-4 text-[#C9A227] flex-shrink-0 mt-0.5" />
                     {f}
@@ -484,7 +478,7 @@ export default function CommercialLanding() {
               <div className="mb-4">
                 <span className="text-xs font-bold text-[#3b82f6] uppercase tracking-widest">Custom</span>
                 <div className="mt-3 flex items-end gap-1">
-                  <span className="text-4xl font-bold text-white">Custom</span>
+                  <span className="text-4xl font-bold text-white">Contact Us</span>
                 </div>
                 <p className="text-xs text-muted mt-1">For large-scale deployments</p>
               </div>
