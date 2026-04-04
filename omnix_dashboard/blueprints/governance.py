@@ -24,6 +24,9 @@ import logging
 import os
 import sys
 import time
+import threading
+import urllib.request
+import urllib.error
 import uuid
 from collections import defaultdict
 
@@ -160,6 +163,148 @@ def _ensure_thresholds_table() -> None:
 
 
 _THRESHOLDS_TABLE_ENSURED = False
+
+# ── VELOS GATEWAY PUSH ────────────────────────────────────────────────────────
+
+_VELOS_PUSH_LOG_ENSURED = False
+_VELOS_GATEWAY_URL = "https://velos-gateway.onrender.com/api/v1/intercept"
+_VELOS_CLIENT_ID   = "velos-partner"
+
+
+def _ensure_velos_push_log_table() -> None:
+    """Create velos_push_log table if not exists. Called once on first push."""
+    global _VELOS_PUSH_LOG_ENSURED
+    if _VELOS_PUSH_LOG_ENSURED:
+        return
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS velos_push_log (
+                id           SERIAL PRIMARY KEY,
+                receipt_id   VARCHAR(64)  NOT NULL,
+                client_id    VARCHAR(64)  NOT NULL,
+                decision     VARCHAR(16)  NOT NULL,
+                pushed_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+                http_status  INTEGER,
+                success      BOOLEAN      NOT NULL DEFAULT FALSE,
+                response_body TEXT,
+                error_message TEXT
+            )
+        """)
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_velos_push_log_receipt ON velos_push_log(receipt_id)"
+        )
+        conn.commit()
+        conn.close()
+        _VELOS_PUSH_LOG_ENSURED = True
+    except Exception as e:
+        logger.warning(f"_ensure_velos_push_log_table: {e}")
+
+
+def _push_to_velos_gateway(receipt_id: str, client_id: str, decision: str, payload: dict) -> None:
+    """
+    Push a governance receipt to the Velos ingestion gateway.
+    Non-blocking — called in a daemon thread.
+    Logs every attempt (success or failure) to velos_push_log.
+    Only fires when VELOS_GATEWAY_TOKEN is configured and client_id == velos-partner.
+    ADR-051.
+    """
+    token = os.environ.get("VELOS_GATEWAY_TOKEN")
+    if not token:
+        logger.debug("_push_to_velos_gateway: VELOS_GATEWAY_TOKEN not set — skipping")
+        return
+    if client_id != _VELOS_CLIENT_ID:
+        return
+
+    _ensure_velos_push_log_table()
+
+    # Build safe payload — no internal secrets, no DB credentials, no infra details
+    safe_payload = {
+        "receipt_id":          payload.get("receipt_id"),
+        "timestamp":           payload.get("timestamp"),
+        "client_id":           client_id,
+        "asset":               payload.get("asset"),
+        "domain":              payload.get("domain"),
+        "decision":            decision,
+        "checkpoints_total":   payload.get("checkpoints_total"),
+        "checkpoints_passed":  payload.get("checkpoints_passed"),
+        "checkpoints_blocked": payload.get("checkpoints_blocked"),
+        "content_hash":        payload.get("content_hash"),
+        "signature":           payload.get("signature"),
+        "signature_algorithm": payload.get("signature_algorithm"),
+        "pqc_signed":          payload.get("pqc_signed"),
+        "policy_version":      payload.get("policy_version"),
+        "verifiable_at":       payload.get("verifiable_at"),
+        "gate_results":        payload.get("gate_results"),
+    }
+
+    http_status  = None
+    success      = False
+    response_body = None
+    error_message = None
+
+    try:
+        body_bytes = json.dumps(safe_payload, default=str).encode("utf-8")
+        req = urllib.request.Request(
+            _VELOS_GATEWAY_URL,
+            data=body_bytes,
+            headers={
+                "Content-Type":  "application/json",
+                "Authorization": f"Bearer {token}",
+                "X-Source":      "OMNIX-Governance",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            http_status   = resp.getcode()
+            response_body = resp.read(512).decode("utf-8", errors="replace")
+            success       = (200 <= http_status < 300)
+    except urllib.error.HTTPError as e:
+        http_status   = e.code
+        error_message = str(e)
+        try:
+            response_body = e.read(256).decode("utf-8", errors="replace")
+        except Exception:
+            pass
+    except Exception as e:
+        error_message = str(e)[:500]
+
+    if success:
+        logger.info(
+            f"[VELOS PUSH] receipt={receipt_id} decision={decision} "
+            f"status={http_status} — OK"
+        )
+    else:
+        logger.warning(
+            f"[VELOS PUSH] receipt={receipt_id} decision={decision} "
+            f"status={http_status} error={error_message}"
+        )
+
+    # Audit log — always written, success or failure
+    try:
+        conn = _get_db_conn()
+        cur  = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO velos_push_log
+                (receipt_id, client_id, decision, http_status, success, response_body, error_message)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                receipt_id,
+                client_id,
+                decision,
+                http_status,
+                success,
+                response_body[:512] if response_body else None,
+                error_message,
+            ),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as db_err:
+        logger.error(f"[VELOS PUSH] Failed to write audit log: {db_err}")
 
 
 def _load_client_checkpoint_overrides(client_id: str) -> list[dict]:
@@ -367,7 +512,6 @@ def api_governance_evaluate():
     try:
         _trigger = _get_alerts_trigger()
         if _trigger:
-            import threading
             alert_payload = dict(evaluation)
             alert_payload["asset"] = asset
             alert_payload["domain"] = domain
@@ -378,6 +522,32 @@ def api_governance_evaluate():
             ).start()
     except Exception as _ae:
         logger.debug(f"Alert trigger skipped: {_ae}")
+
+    # ── Velos Gateway Push (non-blocking, B2B Velos client only) ──────────────
+    try:
+        velos_payload = {
+            "receipt_id":          receipt.get("receipt_id"),
+            "timestamp":           receipt.get("timestamp"),
+            "asset":               asset,
+            "domain":              domain,
+            "checkpoints_total":   evaluation.get("checkpoints_total"),
+            "checkpoints_passed":  evaluation.get("checkpoints_passed"),
+            "checkpoints_blocked": evaluation.get("checkpoints_blocked"),
+            "content_hash":        receipt.get("content_hash"),
+            "signature":           receipt.get("signature"),
+            "signature_algorithm": receipt.get("signature_algorithm", "NONE"),
+            "pqc_signed":          receipt.get("signature") is not None,
+            "policy_version":      receipt.get("policy_version", os.environ.get("OMNIX_VERSION", "6.5.4e")),
+            "verifiable_at":       "https://omnibotgenesis-production.up.railway.app/verify",
+            "gate_results":        evaluation.get("gate_results"),
+        }
+        threading.Thread(
+            target=_push_to_velos_gateway,
+            args=(receipt.get("receipt_id"), client_id, evaluation["decision"], velos_payload),
+            daemon=True,
+        ).start()
+    except Exception as _ve:
+        logger.debug(f"Velos push thread skipped: {_ve}")
 
     response = {
         'receipt_id': receipt.get('receipt_id'),

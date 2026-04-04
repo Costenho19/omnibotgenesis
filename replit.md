@@ -253,6 +253,7 @@ Monthly: Harold queries usage endpoint → sees exact count → emits invoice
 ## Recent Fixes (Apr 2026)
 | Commit | Fix |
 |--------|-----|
+| ADR-052 | Velos Gateway Push — after every `POST /api/governance/evaluate` for `client_id='velos-partner'`, OMNIX pushes the receipt to `https://velos-gateway.onrender.com/api/v1/intercept` in a non-blocking daemon thread. Token: env var `VELOS_GATEWAY_TOKEN` (already set in Railway). Every push (success or failure) logged to `velos_push_log` table. APPROVED + BLOCKED both pushed. |
 | ADR-051 | Added B2B client usage reporting endpoints (`/api/governance/admin/usage`). Added `scripts/provision_b2b_client.py` to create Velos API key on Railway. Documented full billing flow in replit.md. |
 | `b9d6606f` | Aligned all checkpoints to CP-1→CP-11 matching published Zenodo/SSRN paper. Added CP-11 Jurisdiction Compliance. Renamed CP-7 Ethics & Domain Gate, CP-8 Threshold & Context Validator. |
 | `cb826eca` | Removed CP-11/CP-7b from InstitutionalPage (cleanup before full alignment) |
