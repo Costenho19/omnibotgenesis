@@ -84,6 +84,13 @@ _rate_limit_store: dict = defaultdict(list)
 _RATE_LIMIT_WINDOW = 60
 _RATE_LIMIT_MAX = 10
 
+_client_rate_limit_store: dict = defaultdict(list)
+_CLIENT_RATE_LIMIT_WINDOW = 60
+_CLIENT_RATE_LIMIT_MAX = 30
+
+_MONTHLY_ALERT_THRESHOLD = 500
+_monthly_alert_sent: dict = {}
+
 _ENGINE_AVAILABLE = False
 _GovernanceEvaluationEngine = None
 _DecisionReceiptEngine = None
@@ -155,6 +162,56 @@ def _is_rate_limited(client_ip: str) -> bool:
         return True
     _rate_limit_store[client_ip].append(now)
     return False
+
+
+def _is_client_rate_limited(client_id: str) -> bool:
+    """Per-client rate limit: max 30 calls per minute. Protects against accidental loops."""
+    now = time.time()
+    window_start = now - _CLIENT_RATE_LIMIT_WINDOW
+    _client_rate_limit_store[client_id] = [
+        ts for ts in _client_rate_limit_store[client_id] if ts > window_start
+    ]
+    if len(_client_rate_limit_store[client_id]) >= _CLIENT_RATE_LIMIT_MAX:
+        return True
+    _client_rate_limit_store[client_id].append(now)
+    return False
+
+
+def _check_monthly_alert(client_id: str) -> None:
+    """Check monthly usage and alert Harold via Telegram if threshold is crossed. Runs in background thread."""
+    def _run():
+        try:
+            import datetime
+            now = datetime.datetime.utcnow()
+            month_key = f"{client_id}:{now.year}:{now.month}"
+
+            if _monthly_alert_sent.get(month_key):
+                return
+
+            conn = _get_db_conn()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT COUNT(*) FROM decision_receipts
+                WHERE client_id = %s
+                AND created_at >= date_trunc('month', NOW())
+            """, (client_id,))
+            count = cur.fetchone()[0]
+            conn.close()
+
+            if count >= _MONTHLY_ALERT_THRESHOLD:
+                _monthly_alert_sent[month_key] = True
+                msg = (
+                    f"⚠️ OMNIX — Alerta de uso mensual\n\n"
+                    f"Cliente: {client_id}\n"
+                    f"Evaluaciones este mes: {count}\n"
+                    f"Umbral: {_MONTHLY_ALERT_THRESHOLD}\n\n"
+                    f"Revisar uso y facturación."
+                )
+                _notify_harold_telegram(msg)
+        except Exception as e:
+            logger.warning(f"_check_monthly_alert error: {e}")
+
+    threading.Thread(target=_run, daemon=True).start()
 
 
 def _get_db_conn():
@@ -589,6 +646,17 @@ def api_governance_evaluate():
             'retry_after_seconds': _RATE_LIMIT_WINDOW,
         }), 429
 
+    # Rate limit per client_id (protects against accidental loops in client code)
+    if _is_client_rate_limited(client_id):
+        ref_id = str(uuid.uuid4())[:8]
+        logger.warning(f"Client rate limit hit: client={client_id} ref={ref_id}")
+        return jsonify({
+            'error': f'Client rate limit exceeded — {_CLIENT_RATE_LIMIT_MAX} requests per minute per client',
+            'status': 429,
+            'reference': ref_id,
+            'retry_after_seconds': _CLIENT_RATE_LIMIT_WINDOW,
+        }), 429
+
     if not request.is_json:
         return jsonify({'error': 'Request must be Content-Type: application/json', 'status': 400}), 400
 
@@ -744,6 +812,10 @@ def api_governance_evaluate():
         f"thresholds={thresholds_source} "
         f"receipt={receipt.get('receipt_id')} encrypted={encrypted_payload is not None} ip={client_ip}"
     )
+
+    # Monthly usage alert (non-blocking)
+    _check_monthly_alert(client_id)
+
     return jsonify(response), 200
 
 
