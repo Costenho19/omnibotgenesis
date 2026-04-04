@@ -180,10 +180,11 @@ _THRESHOLDS_TABLE_ENSURED = False
 # ── VELOS GATEWAY CONFIG (ADR-052) ───────────────────────────────────────────
 # KEEP IN SYNC with omnix_dashboard/blueprints/governance.py — both files must be
 # identical in this section. ADR-052.
-_VELOS_PUSH_LOG_ENSURED = False
-_VELOS_GATEWAY_URL      = "https://velos-gateway.onrender.com/api/v1/intercept"
-_VELOS_CLIENT_ID        = os.environ.get("VELOS_CLIENT_ID", "velos-partner")
-_VELOS_PUSH_SEMAPHORE   = threading.Semaphore(10)   # Max 10 concurrent push threads
+_VELOS_PUSH_LOG_ENSURED  = False
+_VELOS_GATEWAY_URL       = "https://velos-gateway.onrender.com/api/v1/intercept"
+_VELOS_CLIENT_ID         = os.environ.get("VELOS_CLIENT_ID", "velos-partner")
+_VELOS_PUSH_SEMAPHORE    = threading.Semaphore(10)   # Max 10 concurrent push threads
+_HAROLD_TELEGRAM_CHAT_ID = os.environ.get("HAROLD_TELEGRAM_CHAT_ID", "7014748854")
 
 
 def _ensure_velos_push_log_table() -> None:
@@ -265,6 +266,69 @@ def _log_velos_disposition(
         conn.close()
     except Exception as db_err:
         logger.error(f"[VELOS LOG] Failed to write disposition: {db_err}")
+
+
+def _notify_harold_telegram(
+    receipt_id: str,
+    decision: str,
+    disposition: str,
+    *,
+    latency_ms: int | None = None,
+    http_status: int | None = None,
+    error_message: str | None = None,
+    asset: str | None = None,
+) -> None:
+    """
+    Send a Telegram message to Harold when a Velos push completes (SENT or ERROR).
+    Called inside the push daemon thread — synchronous HTTP call is intentional here.
+    Silent on any failure — notification errors never affect the governance pipeline.
+    Chat ID read from HAROLD_TELEGRAM_CHAT_ID env var (default: Harold's known ID).
+    ADR-052.
+    """
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not token:
+        return
+
+    chat_id   = _HAROLD_TELEGRAM_CHAT_ID
+    asset_str = f"\n📦 Asset: <b>{asset}</b>" if asset else ""
+
+    if disposition == "SENT":
+        text = (
+            f"🟢 <b>Velos Push — ENVIADO</b>\n"
+            f"📋 Receipt: <code>{receipt_id}</code>\n"
+            f"📊 Decision: <b>{decision}</b>"
+            f"{asset_str}\n"
+            f"✅ HTTP {http_status} · {latency_ms}ms"
+        )
+    else:  # ERROR
+        err = (error_message or "Sin detalle")[:120]
+        text = (
+            f"🔴 <b>Velos Push — ERROR</b>\n"
+            f"📋 Receipt: <code>{receipt_id}</code>\n"
+            f"📊 Decision: <b>{decision}</b>"
+            f"{asset_str}\n"
+            f"❌ HTTP {http_status} — {err}\n"
+            f"⏱ {latency_ms}ms"
+        )
+
+    try:
+        body = json.dumps({
+            "chat_id":    chat_id,
+            "text":       text,
+            "parse_mode": "HTML",
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5):
+            logger.debug(
+                f"[VELOS NOTIFY] Telegram OK receipt={receipt_id} disposition={disposition}"
+            )
+    except Exception as exc:
+        logger.warning(f"[VELOS NOTIFY] Telegram failed receipt={receipt_id}: {exc}")
 
 
 def _push_to_velos_gateway(receipt_id: str, client_id: str, decision: str, payload: dict) -> None:
@@ -382,6 +446,16 @@ def _push_to_velos_gateway(receipt_id: str, client_id: str, decision: str, paylo
         error_message=error_message,
         latency_ms=latency_ms,
     )
+
+    # Notify Harold on Telegram for every SENT or ERROR — SKIPPED omitted (not actionable)
+    if disposition in ("SENT", "ERROR"):
+        _notify_harold_telegram(
+            receipt_id, decision, disposition,
+            latency_ms=latency_ms,
+            http_status=http_status,
+            error_message=error_message,
+            asset=payload.get("asset"),
+        )
 
 
 def _load_client_checkpoint_overrides(client_id: str) -> list[dict]:
