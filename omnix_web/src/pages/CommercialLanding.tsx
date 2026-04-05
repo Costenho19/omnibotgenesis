@@ -10,11 +10,11 @@ function useTotalDecisions() {
   useEffect(() => {
     const fetch_ = async () => {
       try {
-        const res = await fetch(`/api/metrics/live?_t=${Date.now()}`, { cache: 'no-store' })
+        const res = await fetch(`/api/live-metrics?_t=${Date.now()}`, { cache: 'no-store' })
         if (!res.ok) return
         const d = await res.json()
-        if (ref.current && d.success && d.totals?.decisions_total > 0) {
-          setTotal(d.totals.decisions_total)
+        if (ref.current && d.success && d.metrics?.evaluation_cycles > 0) {
+          setTotal(d.metrics.evaluation_cycles)
           setLoaded(true)
         }
       } catch {}
