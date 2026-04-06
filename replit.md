@@ -284,9 +284,49 @@ When `BLOCKED` + contradictory phrase detected (`low risk`, `moderate risk`, `ac
 
 ---
 
+## Bot Governance Integration (ADR-058)
+
+**Fecha:** 2026-04-06 | **Status:** Accepted
+
+Los comandos de gobernanza del bot de Telegram están en un módulo separado `governance_commands.py`, enlazados mediante asignación post-clase a `EnterpriseTelegramBot`.
+
+### Comandos de gobernanza
+
+| Comando | Acceso | Descripción |
+|---------|--------|-------------|
+| `/evaluar [escenario]` | Público | Pipeline 11-checkpoint via HTTP → sandbox. Receipt ID en respuesta. Rate limit: 5/hora/user. |
+| `/evaluate [scenario]` | Público | Alias inglés |
+| `/gobernanza` | Público | Dashboard: Critical Override 7 grupos, posición OMNIX, health ping |
+| `/governance` | Público | Alias inglés |
+| `/velos` | Admin only | Log Velos gateway: disposition, HTTP status, latencia (query a `velos_push_log`) |
+| `/recibo [n]` | Admin only | Últimos N recibos PQC (default 3, max 10; query a `decision_receipts`) |
+| `/receipt [n]` | Admin only | Alias inglés |
+
+### Variables de entorno requeridas (bot en Railway)
+
+| Variable | Descripción |
+|----------|-------------|
+| `OMNIX_WEB_URL` | URL del servicio stellar-hope en Railway. En prod: `https://stellar-hope.railway.app`. Default dev: `http://localhost:5000`. **CRÍTICO: configurar antes del redeploy del bot.** |
+| `DATABASE_URL` | PostgreSQL — ya configurado. Para `/velos` y `/recibo`. |
+
+### Archivos afectados (ADR-058)
+
+```
+omnix_services/telegram_service/
+├── enterprise_bot.py          # Import + binding + handlers + /version, /start, /help actualizados
+└── commands/
+    ├── __init__.py
+    └── governance_commands.py # 4 handlers: evaluar, gobernanza, velos, recibo
+docs/reference/adr/
+└── ADR-058-bot-governance-integration.md
+```
+
+---
+
 ## Recent Fixes (Apr 2026)
 | Commit | Fix |
 |--------|-----|
+| ADR-058 | **Bot Governance Integration**: Módulo `governance_commands.py` separado con 4 handlers (`/evaluar`, `/gobernanza`, `/velos`, `/recibo`). Enlazados a `EnterpriseTelegramBot` post-clase. `/evaluar` usa HTTP POST a `OMNIX_WEB_URL`, rate limit 5/hora/user. `/velos` y `/recibo` son admin-only, query directo a PostgreSQL. Stubs de fallback si el módulo falla. `/version`, `/start`, `/help` actualizados con posicionamiento de governance platform. Arquitecto revisó patrón de integración. |
 | ADR-057 | **Critical Override Hybrid Expansion**: Added Group 5 (No Human Oversight) and Group 7 (Politically Exposed Persons/PEP) to `financial_crime_complex` branch of `_apply_critical_override`. Extended Summary Quality Guard to catch `"moderate risk"`, `"acceptable risk"`, `"low risk profile"` — replaces with spec-mandated override message when active override detected. 24/24 tests pass. Files: `omnix_web/api/sandbox.py`. |
 | Apr-2026c | **ADR-053 — Generic Webhook System + Receipt-by-ID + Key Expiry Warning**: (1) All B2B clients can register an HTTPS webhook URL via `PUT /api/governance/admin/clients/<id>/webhook`. Every decision evaluation pushes a PQC-signed payload signed with HMAC-SHA256 in `X-OMNIX-Signature` header. Delivery log in `webhook_delivery_log` table with per-client stats. SSRF guard rejects private/loopback CIDRs. Secrets encrypted at rest with Fernet (`WEBHOOK_ENCRYPTION_KEY` env var optional). (2) `GET /api/governance/receipts/<receipt_id>` — fetch a single receipt by ID with strict tenant isolation (IDOR-proof). (3) Key expiry warning: `key_expiry_warning.expires_in_days` appears in evaluate response when <14 days remain. Files: `omnix_web/api/gov_auth_rbac.py`, `omnix_web/api/gov_blueprint.py`. |
 | Apr-2026b | **ADR-052 — Security hardening (4 measures)**: (1) Brute force lockout: 5 failed auth attempts from same IP → 15 min lockout. (2) API key expiry: new/rotated keys expire in 90 days (`key_expires_at` column in `b2b_clients`). (3) Security headers on all responses: X-Content-Type-Options, X-Frame-Options, HSTS, XSS-Protection, Referrer-Policy, Permissions-Policy. (4) Admin IP allowlist: set `ADMIN_ALLOWED_IPS` env var in Railway (comma-separated IPs) to restrict `/api/governance/admin/*` to your IP only. Files: `omnix_web/api/gov_blueprint.py`, `omnix_web/api/gov_auth_rbac.py`, `omnix_web/api/server.py`. |

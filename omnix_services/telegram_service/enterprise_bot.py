@@ -20,6 +20,20 @@ from telegram.request import HTTPXRequest
 from omnix_config.settings import settings
 from omnix_config import VERSION_BANNER
 
+# ── Governance Commands — ADR-058 ──────────────────────────────────────────────
+try:
+    from omnix_services.telegram_service.commands.governance_commands import (
+        evaluar_command,
+        gobernanza_command,
+        velos_command,
+        recibo_command,
+    )
+    _GOVERNANCE_COMMANDS_AVAILABLE = True
+except ImportError as _gc_err:
+    _GOVERNANCE_COMMANDS_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning(f"[ADR-058] Governance commands no disponibles: {_gc_err}")
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -937,7 +951,17 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("reporte_diario", self.reporte_diario_command))
             self.application.add_handler(CommandHandler("daily_report", self.reporte_diario_command))  # Alias inglés
             logger.info(f"📊 Daily Report {VERSION_BANNER} registrado: /reporte_diario, /daily_report")
-            
+
+            # 🏛️ Comandos Governance Pipeline — ADR-028, ADR-052, ADR-057, ADR-058
+            self.application.add_handler(CommandHandler("evaluar", self.evaluar_command))
+            self.application.add_handler(CommandHandler("evaluate", self.evaluar_command))   # Alias inglés
+            self.application.add_handler(CommandHandler("gobernanza", self.gobernanza_command))
+            self.application.add_handler(CommandHandler("governance", self.gobernanza_command))  # Alias inglés
+            self.application.add_handler(CommandHandler("velos", self.velos_command))
+            self.application.add_handler(CommandHandler("recibo", self.recibo_command))
+            self.application.add_handler(CommandHandler("receipt", self.recibo_command))     # Alias inglés
+            logger.info(f"🏛️ Governance commands registrados (ADR-058): /evaluar, /gobernanza, /velos, /recibo")
+
             # Handler para mensajes de texto
             self.application.add_handler(
                 MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message)
@@ -1018,18 +1042,27 @@ class EnterpriseTelegramBot:
             
             user = update.effective_user
             
-            welcome_message = f"""⚡ **OMNIX Decision Governance**
+            welcome_message = f"""🏛️ **OMNIX Decision Governance**
 
-¡Hola {user.first_name}! Soy OMNIX, tu sistema de gobernanza de decisiones.
+¡Hola {user.first_name}! Soy OMNIX — infraestructura de gobernanza de decisiones de alto impacto.
 
-✅ **SISTEMA OPERATIVO:**
-🪙 Cripto 24/7 (Kraken) - REAL
-📊 Bolsa USA (Alpaca) - Paper
+**🏛️ GOVERNANCE PIPELINE:**
+✅ 11 checkpoints · Critical Override Layer (ADR-057)
+✅ Recibos PQC inmutables · Velos Gateway
+✅ Dominios: trading, crédito, seguros, robótica
+
+**📊 TRADING ENGINE:**
+🪙 Cripto 24/7 (Kraken) — REAL
+📈 Bolsa USA (Alpaca) — Paper
 🤖 IA Dual: Gemini 2.0 + GPT-4o
-🎲 Monte Carlo: 10,000 simulaciones
-🎤 Voz premium activada
 
-💬 **Pregúntame sobre trading o usa los botones:**
+**🏛️ GOVERNANCE COMMANDS:**
+/evaluar — Evalúa un escenario de decisión
+/gobernanza — Estado del sistema
+/recibo — Últimos recibos (admin)
+/velos — Log gateway Velos (admin)
+
+💬 **Envía cualquier escenario o usa los botones:**
 """
             
             # Enviar mensaje con botones interactivos
@@ -1067,22 +1100,29 @@ Sistema operando en fase de validación."""
             except Exception:
                 pass
             
-            version_text = f"""🔧 **OMNIX {VERSION_BANNER} - BUILD INFO**
+            version_text = f"""🔧 **OMNIX {VERSION_BANNER} — BUILD INFO**
 
-📌 **Version**: {VERSION_BANNER}
-🕐 **Build**: 2025-12-05T20:15:00Z
-🎯 **Build ID**: paper-mode-buy-bias-fix
+📌 **Versión**: {VERSION_BANNER}
+🕐 **Build**: 2026-04-06T00:00:00Z
+🎯 **Build ID**: governance-bot-integration-adr058
 
-**🪙 MULTI-CRIPTO:**
-✅ 50+ criptomonedas soportadas
-✅ BTC, ETH, ADA, SOL, XRP, DOT, DOGE...
-✅ Kraken + CoinGecko fallback
+**🏛️ GOVERNANCE PIPELINE:**
+✅ Pipeline 11-checkpoint activo (ADR-028)
+✅ Critical Override Layer — 7 Grupos (ADR-057)
+✅ Recibos PQC: NIST-standardized algorithms
+✅ Velos Gateway push (ADR-052)
+✅ Bot governance integration (ADR-058)
 
-**📊 SISTEMA:**
+**📊 TRADING ENGINE:**
 🔗 Trading: {'✅ Activo' if has_trading else '⚠️ Paper Mode'}
 📡 Kraken: {'✅ API Conectada' if has_kraken else '⚠️ API Pública'}
+🪙 50+ criptomonedas · NYSE/NASDAQ · Monte Carlo 10K
 
-✅ Build {VERSION_BANNER} confirmado."""
+**🏆 POSICIÓN:**
+Eureka GCC Dubai 2026 — Semifinalista
+Pre-seed $500K @ $3M · Harold Nunes
+
+✅ Build {VERSION_BANNER} confirmado — omnixquantum.net"""
             
             logger.info(f"🔧 /version responding: {VERSION_BANNER}")
             await update.message.reply_text(version_text, parse_mode='Markdown')
@@ -1094,80 +1134,73 @@ Sistema operando en fase de validación."""
         """Comando /help"""
         try:
             help_text = f"""
-**OMNIX Decision Governance - COMANDOS COMPLETOS**
+🏛️ **OMNIX Decision Governance — COMANDOS COMPLETOS**
+_Harold Nunes · Dubai 2026 · omnixquantum.net_
 
-**INFORMACION DE MERCADO:**
-/precio [crypto] - Precio actual (ej: /precio BTC)
-/market - 📊 Dashboard premium del mercado (datos reales Kraken)
-/balance - Tu balance real en Kraken
-/convertir [cantidad] [CRYPTO] - Convertir cantidad específica a USD (ej: /convertir 50 BTC)
-/convertir_usd - Convertir todas las cryptos a USD
-/performance [dias] - Ver evolución de tu balance
-/analisis [crypto] - Analisis tecnico completo
-/status - Estado del sistema
+━━━━━━━━━━━━━━━━━━━━━━
+**🏛️ GOVERNANCE PIPELINE (ADR-058):**
+/evaluar [escenario] — Ejecuta el pipeline de 11 checkpoints (BLOCKED/APPROVED + Receipt ID)
+/evaluate [scenario] — Alias inglés
+/gobernanza — Dashboard: Critical Override Layer, estado y posición
+/governance — Alias inglés
+/recibo [n] — Últimos N recibos PQC de gobernanza _(solo admin)_
+/receipt [n] — Alias inglés _(solo admin)_
+/velos — Log del gateway Velos: pushes, latencias, dispositions _(solo admin)_
 
-**📊 PAPER TRADING (Trading Simulado):**
-/paper_start - Iniciar con $1,000,000 virtual
-/paper_balance - Ver balance de paper trading
-/paper_buy BTC 10000 - Comprar $10,000 de BTC (simulado)
-/paper_sell BTC 5000 - Vender $5,000 de BTC (simulado)
-*Usa precios REALES de Kraken sin gastar dinero real*
+Ejemplo: `/evaluar Meridian Capital $180M Murabaha, beneficial owner no divulgado`
 
-**📈 BOLSA DE VALORES (NYSE/NASDAQ):**
-/balance_bolsa - Ver balance y posiciones en acciones
-/mercado - Estado del mercado (abierto/cerrado)
-/analizar AAPL - Análisis técnico + fundamental completo
-/comprar_bolsa TSLA 500 - Comprar $500 de Tesla (paper)
-/vender_bolsa TSLA - Vender posición en Tesla
-*Trading de acciones USA con análisis AI premium*
+━━━━━━━━━━━━━━━━━━━━━━
+**💹 INFORMACIÓN DE MERCADO:**
+/precio [crypto] — Precio actual en tiempo real (Kraken)
+/market — Dashboard premium del mercado
+/balance — Balance real en Kraken
+/convertir [cantidad] [CRYPTO] — Convertir a USD
+/performance [dias] — Evolución de balance
+/analisis [crypto] — Análisis técnico completo
+/status — Estado del sistema
 
-**🤖 AUTO-TRADING 24/7 (Trading REAL Automático):**
-/auto_start - Activar bot automático 24/7
-/auto_stop - Detener trading automático
-/auto_status - Ver estado y estadísticas
-*Trading REAL con estrategia inteligente (Monte Carlo + Black Swan + Sentiment)*
+**📊 PAPER TRADING:**
+/paper\_start — Iniciar con $1,000,000 virtual
+/paper\_balance — Ver balance de paper trading
+/paper\_buy BTC 10000 — Comprar $10,000 de BTC (simulado)
+/paper\_sell BTC 5000 — Vender $5,000 de BTC (simulado)
 
-**EDUCACION Y LEGAL:**
-/educacion - Guía completa de trading y riesgos
-/legal - Términos legales y disclaimer completo
+**📈 BOLSA USA (NYSE/NASDAQ):**
+/balance\_bolsa — Balance y posiciones en acciones
+/mercado — Estado del mercado (abierto/cerrado)
+/analizar AAPL — Análisis técnico + fundamental
+/comprar\_bolsa TSLA 500 — Comprar $500 de Tesla
+/vender\_bolsa TSLA — Vender posición
 
-**ADVANCED FEATURES ENTERPRISE:**
-/montecarlo [crypto] - Simulacion Monte Carlo (10,000 escenarios)
-/blackswan [crypto] - Deteccion de eventos extremos
-/sentiment [crypto] - Analisis de sentimiento del mercado
-/sharia [crypto] - Verificacion Sharia compliance
-/orderbook [crypto] - Analisis de ballenas y liquidez
-/enterprise [crypto] - Analisis completo multi-dimensional
+**🤖 AUTO-TRADING 24/7:**
+/auto\_start — Activar bot automático
+/auto\_stop — Detener trading automático
+/auto\_status — Estado y estadísticas
 
-**🔍 BÚSQUEDA EN INTERNET:**
-/buscar [tema] - Buscar información en internet
-Ejemplos: /buscar noticias bitcoin hoy
-También: "busca noticias de ethereum"
+**🔬 ADVANCED ENTERPRISE:**
+/montecarlo [crypto] — Monte Carlo 10,000 escenarios
+/blackswan [crypto] — Detección eventos extremos
+/sentiment [crypto] — Análisis de sentimiento
+/sharia [crypto] — Verificación Sharia compliance
+/orderbook [crypto] — Análisis de ballenas y liquidez
+/enterprise [crypto] — Análisis multi-dimensional
 
-**INTERACCION IA:**
-- Escribe cualquier pregunta sobre crypto
-- El sistema responde con analisis inteligente
-- Respuestas automaticas por voz
+**🔍 BÚSQUEDA & IA:**
+/buscar [tema] — Búsqueda en internet
+/educacion — Guía de trading y riesgos
+/legal — Términos y disclaimer
+/version — Build info y ADRs activos
+/resumen — Resumen diario premium
 
-**CARACTERISTICAS:**
-- Datos REALES de Kraken + APIs premium
-- IA Dual (Gemini + OpenAI)
-- Sistema transparente 100%
-- Monte Carlo + Black Swan Detection
-- Tracking de performance automático
-- Paper Trading con $1M virtual
-- Desarrollado por Harold Nunes
+━━━━━━━━━━━━━━━━━━━━━━
+**Ejemplos governance:**
+`/evaluar Subsidio estatal $50M sin transparencia pública`
+`/gobernanza`
 
-**Ejemplos de uso:**
-"Como esta Bitcoin hoy?"
-/paper_start (probar estrategias sin riesgo)
-/paper_buy BTC 50000
-/performance 7 (para ver últimos 7 días)
-/educacion (aprende estrategias)
-/montecarlo BTC
-/sentiment ethereum
+**Ejemplos trading:**
+`/precio BTC · /montecarlo ETH · /paper_start`
 
-**Empieza preguntando lo que necesites!**
+**¡Envía cualquier escenario o pregunta!** 🏛️
 """
             
             await update.message.reply_text(help_text, parse_mode='Markdown')
@@ -8721,6 +8754,25 @@ def activate_continuous_adaptation(trading_system):
         logger.error(f"Error activating adaptation: {e}")
         return {'status': 'ERROR', 'message': str(e)}
 
+
+
+# ── Bind governance commands as methods on EnterpriseTelegramBot — ADR-058 ──────
+# Pattern: monkeypatch post-class-definition para mantener modularidad
+# Referencia: arquitecto recomienda governance_commands.py separado (8729-línea bot)
+if _GOVERNANCE_COMMANDS_AVAILABLE:
+    EnterpriseTelegramBot.evaluar_command    = evaluar_command     # type: ignore[attr-defined]
+    EnterpriseTelegramBot.gobernanza_command = gobernanza_command  # type: ignore[attr-defined]
+    EnterpriseTelegramBot.velos_command      = velos_command       # type: ignore[attr-defined]
+    EnterpriseTelegramBot.recibo_command     = recibo_command      # type: ignore[attr-defined]
+    logger.info("🏛️ [ADR-058] Governance commands enlazados en EnterpriseTelegramBot")
+else:
+    # Stubs para que el bot no crashee si governance_commands falla al importar
+    async def _governance_stub(self, update, context):
+        await update.message.reply_text("⚠️ Módulo de gobernanza no disponible. Contacta al administrador.")
+    EnterpriseTelegramBot.evaluar_command    = _governance_stub    # type: ignore[attr-defined]
+    EnterpriseTelegramBot.gobernanza_command = _governance_stub    # type: ignore[attr-defined]
+    EnterpriseTelegramBot.velos_command      = _governance_stub    # type: ignore[attr-defined]
+    EnterpriseTelegramBot.recibo_command     = _governance_stub    # type: ignore[attr-defined]
 
 
 if __name__ == "__main__":
