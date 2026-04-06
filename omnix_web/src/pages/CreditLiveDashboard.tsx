@@ -465,6 +465,9 @@ export default function CreditLiveDashboard() {
                 { id: 'CP-5', name: 'Stress Resilience', icon: Zap, desc: 'Income shock test ≥ 35', credit: '-20% income scenario' },
                 { id: 'CP-6', name: 'Sharia Compliance', icon: Landmark, desc: 'Islamic finance principles', credit: 'Halal + no Riba + Gharar limit' },
                 { id: 'CP-7', name: 'Temporal Coherence', icon: Clock, desc: 'Macro freshness ≥ 45', credit: 'Data recency & consistency' },
+                { id: 'CP-8', name: 'Edge Confirmation', icon: Activity, desc: 'Secondary coherence boundary gate', credit: 'Signal agreement at decision boundary' },
+                { id: 'CP-9', name: 'AML Gate', icon: Globe, desc: 'Anti-money laundering screen', credit: 'Transaction pattern & origin validation' },
+                { id: 'CP-10', name: 'Fraud Detection Gate', icon: FileCheck, desc: 'Signal integrity under adversarial conditions', credit: 'Fraud pattern detection' },
               ].map((cp) => (
                 <div key={cp.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.05] hover:border-amber-400/20 transition-all group">
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 flex-shrink-0">

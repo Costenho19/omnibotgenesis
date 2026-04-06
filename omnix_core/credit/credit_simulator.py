@@ -3,7 +3,7 @@ OMNIX Islamic Credit Governance Simulator
 ADR-052: Islamic Credit Governance Vertical
 
 Runs 24/7 generating realistic Islamic finance credit applications and evaluating
-them through the OMNIX 8-checkpoint governance pipeline. Stores results in
+them through the OMNIX 11-checkpoint governance pipeline. Stores results in
 PostgreSQL with PQC-signed receipts — identical to the trading engine flow.
 
 Cycle interval: 300 seconds (5 minutes) — realistic credit review cadence.
@@ -212,7 +212,7 @@ async def evaluate_credit_application(app, macro) -> Optional[dict]:
         signals = adapter.adapt(app, macro)
         signal_dict = signals.to_dict()
 
-        # Step 2: Run through the 8-checkpoint governance pipeline
+        # Step 2: Run through the 11-checkpoint governance pipeline
         result = engine.evaluate(
             signals=signal_dict,
             asset=f"{app.financing_type}:{app.sector.upper()}:{app.currency}",
@@ -327,7 +327,7 @@ async def save_credit_result(result: dict, macro, conn) -> None:
             macro.stress_level, macro.fed_funds_rate,
             result["final_decision"], receipt_id,
             result.get("blocked_at"), result.get("block_reason"),
-            result.get("checkpoints_passed", 0), result.get("checkpoints_total", 8),
+            result.get("checkpoints_passed", 0), result.get("checkpoints_total", 11),
             result.get("decision_confidence", 0.0),
         ))
         conn.commit()
