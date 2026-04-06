@@ -485,7 +485,10 @@ _THRESHOLDS_TABLE_ENSURED = False
 # KEEP IN SYNC with omnix_dashboard/blueprints/governance.py — both files must be
 # identical in this section. ADR-052.
 _VELOS_PUSH_LOG_ENSURED  = False
-_VELOS_GATEWAY_URL       = "https://velos-gateway.onrender.com/api/v1/intercept"
+_VELOS_GATEWAY_URL       = os.environ.get(
+    "VELOS_GATEWAY_URL",
+    "https://velos-gateway.onrender.com/api/v1/intercept",
+)
 _VELOS_CLIENT_ID         = os.environ.get("VELOS_CLIENT_ID", "velos-partner")
 _VELOS_PUSH_SEMAPHORE    = threading.Semaphore(10)   # Max 10 concurrent push threads
 _HAROLD_TELEGRAM_CHAT_ID = os.environ.get("HAROLD_TELEGRAM_CHAT_ID", "7014748854")
@@ -820,7 +823,17 @@ def _load_client_checkpoint_overrides(client_id: str) -> list[dict]:
 
 
 def _get_client_ip() -> str:
-    return request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
+    """
+    Extract real client IP from X-Forwarded-For.
+    SECURITY: Takes the RIGHTMOST (last) entry, which is appended by Railway's
+    trusted reverse proxy and cannot be spoofed by the client.
+    A client that injects 'X-Forwarded-For: fake-ip' will produce
+    'fake-ip, real-ip' — we take 'real-ip'. ADR-052.
+    """
+    xff = request.headers.get('X-Forwarded-For', '').strip()
+    if xff:
+        return xff.split(',')[-1].strip()
+    return request.remote_addr or 'unknown'
 
 
 def _is_brute_force_locked(ip: str) -> bool:
@@ -1053,7 +1066,7 @@ def api_governance_evaluate():
         return err
 
     client_id = client["client_id"]
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
+    client_ip = _get_client_ip()
 
     # Rate limit per IP
     if _is_rate_limited(client_ip):
