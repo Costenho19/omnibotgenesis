@@ -242,6 +242,44 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         # apuestas / gambling de alto capital
         'bet', 'apuesta', 'betting', 'apuestas', 'gamble', 'gambling',
         'wager', 'sports bet', 'apuesta deportiva',
+        # === TRADING vertical ===
+        'unhedged', 'sin cobertura', 'no stop-loss', 'without stop-loss',
+        'concentrated position', 'posición concentrada', 'all-in',
+        'unverified price', 'precio no verificado', 'price feed unverified',
+        'no kill switch', 'sin kill switch', 'unlimited downside',
+        'pérdida ilimitada', 'margin call', 'liquidation risk',
+        # === CREDIT / ISLAMIC FINANCE vertical ===
+        'murabaha', 'sukuk', 'ijara', 'musharaka', 'tawarruq',
+        'riba', 'gharar', 'maysir', 'sharia', 'sharia board',
+        'beneficial owner', 'propietario beneficiario',
+        'undisclosed owner', 'propietario no revelado',
+        'offshore spv', 'mauritius spv', 'cayman spv', 'bvi spv',
+        'ultimate beneficial owner', 'beneficial ownership',
+        'leveraged buyout', 'lbo', 'acquisition financed',
+        'acquisition financing', 'adquisición financiada',
+        'syndicated loan', 'préstamo sindicado',
+        'without legal review', 'sin revisión legal',
+        'multiple jurisdictions', 'multijurisdicción',
+        'undisclosed', 'no revelado', 'no divulgado',
+        # === INSURANCE vertical ===
+        'undocumented claim', 'reclamación sin documentación',
+        'claim without', 'multiple claims', 'varias reclamaciones',
+        'múltiples reclamaciones', 'pre-existing condition',
+        'condición preexistente', 'no risk assessment',
+        'sin evaluación de riesgo', 'policy without', 'póliza sin',
+        'fraud indicator', 'indicador de fraude',
+        'inflated claim', 'reclamación inflada',
+        # === ROBOTICS vertical ===
+        'safety certification', 'certificación de seguridad',
+        'human override disabled', 'override disabled',
+        'outside validated', 'fuera de parámetros',
+        'sensor fusion', 'fusión de sensores',
+        'without safety', 'sin certificación',
+        'autonomous operation without', 'operación autónoma sin',
+        'not yet certified', 'aún no certificado',
+        'operating outside', 'operando fuera',
+        'untested environment', 'entorno no probado',
+        'fail-safe not', 'seguridad no activada',
     ]
     extreme_risk_terms = [
         'fraud', 'fraude', 'ponzi', 'scam', 'collapse', 'colapso',
@@ -261,6 +299,27 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'declining metrics', 'divergence', 'divergencia',
         'abnormal', 'anormal', 'anomaly', 'anomalía',
         'manipulation', 'manipulación', 'wash trading', 'spoofing',
+        # === EXTREME: AML / compliance / beneficial ownership ===
+        'beneficial owner is undisclosed', 'undisclosed beneficial owner',
+        'ultimate beneficial owner is', 'whose ultimate beneficial',
+        'without sharia board', 'no sharia board', 'sin junta de sharia',
+        'murabaha without', 'murabaha sin', 'islamic without sharia',
+        'export control list', 'lista de control de exportaciones',
+        'denied parties list', 'restricted party list', 'entity list',
+        'eu export control', 'export control violation',
+        '72 hours to close', '72 horas para cerrar', '72-hour deadline',
+        'presión artificial', 'artificial pressure to close',
+        'pressure to close within', 'close within 72',
+        'without local legal review', 'sin revisión legal local',
+        'no regulatory approval', 'sin aprobación regulatoria',
+        # === EXTREME: insurance fraud ===
+        'multiple claims same', 'multiple insurance claims same',
+        'varias reclamaciones del mismo', 'undisclosed pre-existing',
+        'condición preexistente no revelada', 'claim inflated',
+        # === EXTREME: robotics safety ===
+        'safety validation not', 'validación de seguridad no',
+        'human override mechanism disabled', 'override mechanism disabled',
+        'operating in critical environment without', 'critical infrastructure without',
     ]
     positive_terms = [
         'audit', 'auditado', 'compliant', 'cumplimiento', 'regulated', 'regulado',
@@ -517,6 +576,36 @@ CALIBRATION EXAMPLES (use these to anchor your scores):
 
 ADDITIONAL CRITICAL FRAMING: System integrity failures (cryptographic failures, database inconsistencies, simultaneous multi-region anomalies, AI monitoring contradicting diagnostics) are MAXIMUM RISK scenarios. The scenario does NOT need to be a "trading decision" to be dangerous — if a system is describing signs of compromise, attack, or internal contradiction between monitoring layers, any automated decision to continue is itself the governance failure. Assign risk_exposure: 90+, probability_score: under 10, signal_coherence: under 15, logic_consistency: under 15.
 
+CALIBRATION EXAMPLES FOR THE 4 LIVE VERTICALS (use these to anchor scores for domain-specific risks):
+
+VERTICAL: TRADING (Digital Asset / Crypto)
+- Hedge fund opening $5M long on crypto that surged 40% in 24h with unusual volume and declining on-chain metrics → risk_exposure: 81, probability_score: 22, stress_resilience: 20, signal_coherence: 28 → BLOCKED CP-2, CP-3
+- AI trading engine executing $50M in positions without stop-loss, without human oversight, fully automated in a volatile market → risk_exposure: 86, probability_score: 14, logic_consistency: 12, stress_resilience: 15, signal_integrity: 18 → BLOCKED multiple CPs
+- Oracle manipulation detected: price feed showing +30% divergence from exchange consensus, trading bot about to execute $10M on manipulated price → risk_exposure: 94, probability_score: 6, signal_coherence: 8, signal_integrity: 7, logic_consistency: 8 → BLOCKED all CPs
+- Concentrated all-in position: $20M in a single micro-cap token with no hedging strategy, no exit plan, no risk limits → risk_exposure: 80, probability_score: 18, stress_resilience: 14, trend_persistence: 22 → BLOCKED
+- Stable audited fund with diversified portfolio, stop-loss enabled, human review at $500K threshold → risk_exposure: 32, probability_score: 72, stress_resilience: 68 → APPROVED
+
+VERTICAL: CREDIT / ISLAMIC FINANCE (UAE/GCC)
+- Leveraged buyout of $200M telecom company financed through syndicated loan with junior tranche whose ultimate beneficial owner is undisclosed, domiciled in Mauritius SPV, Murabaha tranche structured without Sharia board review → risk_exposure: 88, probability_score: 9, logic_consistency: 18, signal_integrity: 30, signal_coherence: 35, stress_resilience: 22, temporal_coherence: 32 → BLOCKED CP-1, CP-2, CP-3, CP-4, CP-5, CP-6, CP-7, CP-8, CP-9, CP-10
+- Islamic credit facility using Murabaha structure but the Sharia supervisory board has not reviewed or approved the contract terms → risk_exposure: 78, probability_score: 18, logic_consistency: 22, signal_integrity: 38 → BLOCKED CP-7 (Ethics), CP-2, CP-1
+- Corporate loan to entity with 3 consecutive years of audited financials, strong collateral, Sharia-compliant structure reviewed by certified board, UAE-domiciled → risk_exposure: 30, probability_score: 71, logic_consistency: 75, signal_integrity: 80 → APPROVED
+- Acquisition financing where the target company has subsidiaries on the EU export control entity list, and the acquirer is domiciled in a non-cooperative jurisdiction (Cayman Islands) with no local legal review → risk_exposure: 88, probability_score: 11, signal_integrity: 28, logic_consistency: 20 → BLOCKED multiple CPs
+- 72-hour artificial deadline to close a $150M cross-border deal spanning Nigeria, Kenya, and Ethiopia with no local legal review in any jurisdiction → risk_exposure: 82, probability_score: 12, signal_coherence: 32, temporal_coherence: 28 → BLOCKED
+
+VERTICAL: INSURANCE (Global Claims)
+- Insurance claim for $2M fire damage with no police report, no independent adjuster report, and the same entity filed 3 claims in the last 12 months for similar amounts → risk_exposure: 85, probability_score: 12, logic_consistency: 18, signal_integrity: 22 → BLOCKED CP-10 (Fraud), CP-2, CP-9
+- Life insurance policy application for $5M with undisclosed pre-existing terminal illness diagnosis made 6 months prior → risk_exposure: 88, probability_score: 10, logic_consistency: 14, signal_integrity: 16 → BLOCKED
+- Cyber insurance policy for fintech with 3 data breaches in 2 years, policy issued without independent security risk assessment → risk_exposure: 72, probability_score: 28, stress_resilience: 30, signal_integrity: 42 → BLOCKED CP-2, CP-3
+- Small business property claim for $150K with police report, independent adjuster sign-off, no prior claims history, established 10-year relationship → risk_exposure: 28, probability_score: 74, signal_integrity: 80 → APPROVED
+- Staged accident claim: vehicle damaged in a location with no traffic cameras, claimant has 5 claims in 3 years across different insurance companies, repair shop linked to known fraud ring → risk_exposure: 92, probability_score: 7, logic_consistency: 8, signal_coherence: 12 → BLOCKED all CPs
+
+VERTICAL: ROBOTICS / AUTONOMOUS SYSTEMS
+- Autonomous warehouse robot deploying in a live facility with 200 workers before completing safety validation, human override mechanism disabled for efficiency, operating in conditions 40% outside tested parameters → risk_exposure: 90, probability_score: 8, logic_consistency: 10, signal_integrity: 14, stress_resilience: 8 → BLOCKED all CPs
+- Autonomous vehicle system requesting permission to operate on public roads in a new country without local certification, no fail-safe tested for local traffic conditions → risk_exposure: 84, probability_score: 12, logic_consistency: 16, temporal_coherence: 18 → BLOCKED
+- Robotic surgical assistant requesting clearance to operate without completing sensor fusion validation for the specific surgical procedure type → risk_exposure: 88, probability_score: 9, logic_consistency: 12 → BLOCKED — life-critical
+- Industrial robot arm with completed ISO 10218 safety certification, human override tested quarterly, operating within 100% validated parameters, safety validation signed off → risk_exposure: 22, probability_score: 78, logic_consistency: 82, signal_integrity: 85 → APPROVED
+- Drone delivery network expansion: FAA Part 107 compliant, geofencing validated, emergency human override available at all times, 6-month operational track record with zero incidents → risk_exposure: 26, probability_score: 76, stress_resilience: 72 → APPROVED
+
 Be realistic and conservative. High-risk scenarios should have LOW probability_score, HIGH risk_exposure, LOW stress_resilience.
 {lang_instruction}{company_instruction}
 CRITICAL: respond ONLY with valid JSON, no markdown, no code fences. You MUST include ALL 8 signals — do not omit any. The JSON must have this exact structure:
@@ -761,6 +850,80 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'ataque cuántico', 'fallo criptográfico', 'verificación criptográfica falla',
         'estados inconsistentes', 'anomalías simultáneas',
         'base de datos inconsistente', 'registros de transacciones fallan',
+        # === FINANCIAL CRIME COMPLEX — AML / BENEFICIAL OWNERSHIP / COMPLIANCE ===
+        'beneficial owner', 'beneficial ownership', 'propietario beneficiario',
+        'undisclosed beneficial', 'undisclosed owner', 'ultimate beneficial owner',
+        'propietario no revelado', 'propietario oculto', 'propietario no divulgado',
+        'whose ultimate beneficial', 'beneficial owner is undisclosed',
+        'beneficial owner unknown', 'beneficial owner not disclosed',
+        'offshore spv', 'mauritius spv', 'cayman spv', 'bvi spv',
+        'mauritius holding', 'cayman holding', 'cayman islands spv',
+        # Islamic finance compliance violations
+        'murabaha without', 'murabaha sin', 'murabaha structure without',
+        'without sharia board', 'no sharia board', 'sin junta de sharia',
+        'sin revisión de sharia', 'sharia board not', 'without sharia review',
+        'riba element', 'riba in', 'gharar element', 'maysir in',
+        'islamic finance without', 'finanzas islámicas sin',
+        # Export control + restricted parties
+        'export control list', 'eu export control', 'lista de control de exportaciones',
+        'denied parties list', 'entity list violation', 'restricted party list',
+        'debarment list', 'lista restringida', 'export control violation',
+        'subsidiaries on export', 'subsidiaries listed', 'subsidiarias en lista',
+        # Multi-jurisdiction compliance gaps
+        'without local legal review', 'sin revisión legal local',
+        'no local legal review', 'without regulatory approval in',
+        'sin aprobación regulatoria local', 'multiple jurisdictions without',
+        'multi-jurisdiction without legal', 'multijurisdicción sin revisión',
+        # Artificial time pressure on high-value deals
+        '72 hours to close', '72-hour window', '72 horas para cerrar',
+        'presión artificial para cerrar', 'artificial pressure to close',
+        'close within 72', 'deadline artificial', 'plazo artificial',
+        'pressure to close in', 'presión para cerrar en',
+        # LBO / PE / syndicated loan without KYC
+        'leveraged buyout without', 'lbo with undisclosed',
+        'syndicated loan undisclosed', 'tranche undisclosed',
+        'junior tranche whose', 'whose beneficial owner',
+        # === TRADING VERTICAL — critical patterns ===
+        'unhedged position', 'posición sin cobertura', 'no hedging strategy',
+        'no stop-loss', 'without stop-loss', 'sin stop-loss',
+        'concentrated position', 'posición concentrada en un solo',
+        'single asset all-in', 'all-in on single', 'todo en un solo activo',
+        'ai trading without human', 'trading automatizado sin supervisión',
+        'fully automated trade without review', 'trading without oversight',
+        'oracle manipulation', 'price feed manipulation', 'unverified price feed',
+        'liquidation cascade', 'cascada de liquidaciones',
+        # === INSURANCE VERTICAL — critical patterns ===
+        'undocumented claim', 'reclamación sin documentación',
+        'claim without police report', 'reclamación sin informe',
+        'multiple claims same period', 'varias reclamaciones mismo período',
+        'multiple claims', 'varias reclamaciones', 'múltiples reclamaciones',
+        'pre-existing condition not disclosed', 'pre-existing condition',
+        'condición preexistente no revelada', 'condición preexistente',
+        'undisclosed medical history', 'historial médico no revelado',
+        'policy issued without risk assessment', 'póliza sin evaluación de riesgo',
+        'no independent adjuster', 'sin ajustador independiente',
+        'inflated claim amount', 'monto de reclamación inflado',
+        'staged accident', 'accidente simulado', 'accidente fingido',
+        'claim without documentation', 'sin documentación de reclamación',
+        # === ROBOTICS VERTICAL — critical patterns (long + short aliases) ===
+        'safety certification not completed', 'certificación de seguridad incompleta',
+        'before completing safety certification', 'sin completar la certificación',
+        'human override mechanism disabled', 'mecanismo de override desactivado',
+        'override mechanism has been disabled', 'override has been disabled',
+        'override disabled', 'override desactivado', 'has been disabled',
+        'operating outside validated parameters', 'operando fuera de parámetros validados',
+        'outside validated parameters', 'fuera de parámetros validados',
+        'sensor fusion failure', 'sensor fusion module', 'fallo de fusión de sensores',
+        'sensor fusion', 'fusión de sensores',
+        'safety validation not completed', 'validación de seguridad no completada',
+        'safety validation has not', 'safety validation not',
+        'without safety certification', 'sin certificación de seguridad',
+        'autonomous operation without human', 'operación autónoma sin supervisión humana',
+        'fail-safe not activated', 'fail-safe not', 'sistema de seguridad no activado',
+        'critical infrastructure without redundancy', 'infraestructura crítica sin redundancia',
+        'operating in conditions not tested', 'operando en condiciones no probadas',
+        'outside validated', 'fuera de los parámetros', 'not completed validation',
+        'has not completed validation', 'no ha completado validación',
     ]
 
     critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
@@ -901,6 +1064,120 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
     ]
     is_system_integrity = any(t in text_lower for t in system_integrity_terms)
 
+    # === NEW: Financial Crime Complex detection ===
+    # Covers the 4 live verticals' specific critical compliance patterns:
+    # - Trading: unhedged AI trading, oracle manipulation, liquidation cascade
+    # - Credit/Islamic: undisclosed beneficial owner, Murabaha without Sharia board
+    # - Insurance: undocumented claims, pre-existing condition fraud, staged accidents
+    # - Robotics: safety certification missing, override disabled, untested environment
+    # - Cross-vertical: multi-jurisdiction without legal review, offshore SPV + undisclosed owner,
+    #   export control violations, artificial 72h time pressure, LBO with hidden tranche ownership
+    financial_crime_complex_terms = [
+        # AML / beneficial ownership
+        'beneficial owner', 'beneficial ownership', 'propietario beneficiario',
+        'undisclosed beneficial', 'ultimate beneficial owner',
+        'propietario no revelado', 'propietario oculto',
+        'whose ultimate beneficial', 'beneficial owner is undisclosed',
+        'offshore spv', 'mauritius spv', 'cayman spv', 'bvi spv',
+        # Islamic finance violations
+        'murabaha without', 'murabaha sin', 'without sharia board',
+        'no sharia board', 'sin junta de sharia', 'sin revisión de sharia',
+        'sharia board not', 'without sharia review',
+        'riba element', 'riba in', 'gharar element', 'maysir in',
+        # Export control
+        'export control list', 'eu export control',
+        'denied parties list', 'restricted party list',
+        'export control violation', 'subsidiaries on export',
+        'subsidiaries listed', 'subsidiarias en lista',
+        # Multi-jurisdiction compliance gaps
+        'without local legal review', 'sin revisión legal local',
+        'no local legal review', 'multiple jurisdictions without',
+        'multi-jurisdiction without legal',
+        # Artificial time pressure
+        '72 hours to close', '72-hour window', '72 horas para cerrar',
+        'presión artificial para cerrar', 'artificial pressure to close',
+        'close within 72', 'deadline artificial',
+        # LBO / PE undisclosed tranche
+        'whose beneficial owner', 'junior tranche whose',
+        'syndicated loan undisclosed', 'tranche undisclosed',
+        # Trading vertical critical
+        'unhedged position', 'no stop-loss', 'without stop-loss',
+        'concentrated position', 'posición concentrada en un solo',
+        'single asset all-in', 'oracle manipulation', 'price feed manipulation',
+        'liquidation cascade', 'ai trading without human',
+        'trading automatizado sin supervisión',
+        # Insurance vertical critical
+        'undocumented claim', 'reclamación sin documentación',
+        'multiple claims same period', 'varias reclamaciones mismo período',
+        'pre-existing condition not disclosed', 'condición preexistente no revelada',
+        'policy issued without risk assessment', 'póliza sin evaluación de riesgo',
+        'inflated claim amount', 'staged accident',
+        'accidente simulado', 'accidente fingido',
+        # Robotics vertical critical
+        'safety certification not completed', 'certificación de seguridad incompleta',
+        'human override mechanism disabled', 'mecanismo de override desactivado',
+        'operating outside validated parameters', 'operando fuera de parámetros validados',
+        'sensor fusion failure', 'fallo de fusión de sensores',
+        'without safety certification', 'sin certificación de seguridad',
+        'autonomous operation without human', 'operación autónoma sin supervisión humana',
+        'fail-safe not activated', 'sistema de seguridad no activado',
+    ]
+    is_financial_crime_complex = (
+        not is_governance_fraud
+        and not is_system_integrity
+        and any(t in text_lower for t in financial_crime_complex_terms)
+    )
+
+    # Detect compound patterns: e.g. "undisclosed" + SPV/offshore/Mauritius/Cayman
+    _undisclosed_compound = (
+        'undisclosed' in text_lower or 'no revelado' in text_lower or 'not disclosed' in text_lower
+    ) and any(t in text_lower for t in [
+        'spv', 'mauritius', 'cayman', 'bvi', 'offshore', 'beneficial', 'owner',
+        'tranche', 'syndicated', 'lbo', 'leveraged buyout',
+    ])
+    if _undisclosed_compound and not is_governance_fraud and not is_system_integrity:
+        is_financial_crime_complex = True
+
+    # Detect Murabaha/Islamic finance + missing oversight anywhere in text
+    _islamic_violation = 'murabaha' in text_lower or 'sukuk' in text_lower or 'ijara' in text_lower
+    _sharia_gap = any(t in text_lower for t in [
+        'without sharia', 'no sharia', 'sin sharia', 'sin junta', 'sin revisión de sharia',
+        'sharia board not', 'no board review', 'no review from sharia', 'not approved by sharia',
+    ])
+    if _islamic_violation and _sharia_gap and not is_governance_fraud and not is_system_integrity:
+        is_financial_crime_complex = True
+
+    # Detect insurance fraud compound: multiple claims + same entity/period/pattern
+    _multi_claim = any(t in text_lower for t in [
+        'multiple claims', 'varias reclamaciones', 'múltiples reclamaciones',
+        '3 claims', '4 claims', '5 claims', 'three claims', 'several claims',
+        'repeated claims', 'claims in the same',
+    ])
+    _fraud_signal = any(t in text_lower for t in [
+        'fraud', 'fraude', 'undisclosed', 'staged', 'simulado', 'falsified',
+        'pre-existing', 'no police report', 'sin informe policial',
+        'without documentation', 'sin documentación',
+    ])
+    if _multi_claim and _fraud_signal and not is_governance_fraud and not is_system_integrity:
+        is_financial_crime_complex = True
+
+    # Detect robotics safety gap: autonomous + no certification/validation
+    _autonomous_op = any(t in text_lower for t in [
+        'autonomous', 'autónomo', 'robot', 'robotic', 'self-driving',
+        'automated vehicle', 'vehículo autónomo', 'drone', 'dron',
+        'autonomous system', 'sistema autónomo',
+    ])
+    _safety_gap = any(t in text_lower for t in [
+        'not certified', 'no certificado', 'without certification', 'sin certificación',
+        'certification not', 'safety not validated', 'not validated',
+        'untested', 'no probado', 'outside validated', 'fuera de parámetros validados',
+        'override disabled', 'override not available', 'no override',
+        'fail-safe not', 'without human oversight', 'sin supervisión humana',
+        'no safety validation', 'safety gap', 'sin validación de seguridad',
+    ])
+    if _autonomous_op and _safety_gap and not is_governance_fraud and not is_system_integrity:
+        is_financial_crime_complex = True
+
     lang = ai_result.get('language', 'es')
     asset = ai_result.get('asset', 'Entity Under Review')
 
@@ -936,6 +1213,23 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         signals['logic_consistency']   = max(3,  min(12, 5  + (seed & 0xB) % 7))
         signals['signal_integrity']    = max(3,  min(12, 5  + (seed & 0xD) % 7))
         signals['temporal_coherence']  = max(3,  min(12, 5  + (seed & 0xF) % 7))
+    elif is_financial_crime_complex:
+        # Financial Crime Complex: multi-layer compliance failure across the 4 live verticals.
+        # Calibrated to block:
+        #   CP-1 (signal_integrity < 60),  CP-2 (probability_score < 50),
+        #   CP-3 (risk_exposure > 65),      CP-4 (signal_coherence < 55),
+        #   CP-5 (trend_persistence < 50),  CP-6 (stress_resilience < 35),
+        #   CP-7 (logic_consistency < 40),  CP-8 (temporal_coherence < 45),
+        #   CP-9 (probability_score < 15),  CP-10 (logic_consistency < 30),
+        #   CP-11 (signal_integrity < 35) — borderline, often fails too.
+        signals['probability_score']  = max(6,  min(13, 9  + (seed & 0x7) % 5))   # < 15 → CP-9 fails; < 50 → CP-2 fails
+        signals['risk_exposure']       = max(78, min(90, 83 + (seed & 0x5) % 7))   # > 65 → CP-3 fails
+        signals['signal_coherence']    = max(30, min(48, 37 + (seed & 0x9) % 10))  # < 55 → CP-4 fails
+        signals['trend_persistence']   = max(33, min(46, 39 + (seed & 0x3) % 8))   # < 50 → CP-5 fails
+        signals['stress_resilience']   = max(18, min(30, 23 + (seed & 0x3) % 7))   # < 35 → CP-6 fails
+        signals['logic_consistency']   = max(18, min(27, 22 + (seed & 0xB) % 7))   # < 30 → CP-10 fails; < 40 → CP-7 fails
+        signals['signal_integrity']    = max(28, min(40, 33 + (seed & 0xD) % 8))   # < 60 → CP-1 fails; < 35 borderline CP-11
+        signals['temporal_coherence']  = max(28, min(40, 33 + (seed & 0xF) % 8))   # < 45 → CP-8 fails
     else:
         signals['probability_score']  = max(5,  min(18, 10 + (seed & 0x7) % 9))
         signals['risk_exposure']       = max(88, min(97, 90 + (seed & 0x5) % 8))
@@ -1039,6 +1333,159 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
                 'logic_consistency': f"Consistencia lógica críticamente baja ({signals['logic_consistency']:.0f}/100). Aprobar una operación con indicadores confirmados de {_label_es} es internamente inconsistente con los principios de gobernanza.",
                 'signal_integrity': f"Integridad de señal críticamente baja ({signals['signal_integrity']:.0f}/100). {_label_es.capitalize()} implica manipulación deliberada de información o estructuras — todas las señales de este contexto son no confiables por definición.",
                 'temporal_coherence': f"Coherencia temporal casi nula ({signals['temporal_coherence']:.0f}/100). Las operaciones que involucran {_label_es} no pueden producir resultados de gobernanza temporalmente coherentes — la actividad subyacente es el fallo de gobernanza.",
+            }
+    elif is_financial_crime_complex:
+        # Build a sub-label identifying the specific violation type(s) found
+        _fcc_flags_en: list[str] = []
+        _fcc_flags_es: list[str] = []
+        if any(t in text_lower for t in ['beneficial owner', 'propietario beneficiario', 'undisclosed beneficial', 'ultimate beneficial owner', 'offshore spv', 'mauritius spv', 'cayman spv', 'bvi spv', 'whose beneficial owner', 'propietario no revelado', 'propietario oculto']):
+            _fcc_flags_en.append('undisclosed beneficial ownership / offshore SPV structure (AML red flag)')
+            _fcc_flags_es.append('propietario beneficiario no revelado / estructura SPV offshore (señal AML)')
+        if any(t in text_lower for t in ['murabaha', 'sukuk', 'ijara', 'musharaka']) and any(t in text_lower for t in ['without sharia', 'no sharia board', 'sin junta de sharia', 'sin revisión de sharia', 'sharia board not', 'without sharia review', 'sharia board', 'no sharia']):
+            _fcc_flags_en.append('Islamic finance instrument without Sharia board review (ethics violation — CP-7)')
+            _fcc_flags_es.append('instrumento de finanzas islámicas sin revisión de la junta de Sharia (violación ética — CP-7)')
+        if any(t in text_lower for t in ['export control list', 'eu export control', 'denied parties list', 'restricted party list', 'export control violation', 'subsidiaries on export', 'subsidiaries listed', 'subsidiarias en lista', 'lista de control de exportaciones']):
+            _fcc_flags_en.append('subsidiaries on EU/US export control or restricted parties list (regulatory block — CP-10, CP-11)')
+            _fcc_flags_es.append('subsidiarias en lista de control de exportaciones UE/EEUU o partes restringidas (bloqueo regulatorio — CP-10, CP-11)')
+        if any(t in text_lower for t in ['multiple jurisdictions without', 'multi-jurisdiction without legal', 'without local legal review', 'sin revisión legal local', 'no local legal review', 'multijurisdicción sin']):
+            _fcc_flags_en.append('multi-jurisdiction operation without local legal review (jurisdiction violation — CP-11)')
+            _fcc_flags_es.append('operación multijurisdiccional sin revisión legal local (violación de jurisdicción — CP-11)')
+        if any(t in text_lower for t in ['72 hours to close', '72-hour window', '72 horas para cerrar', 'presión artificial para cerrar', 'artificial pressure to close', 'close within 72', 'deadline artificial']):
+            _fcc_flags_en.append('artificial 72-hour time pressure on high-value transaction (coherence manipulation — CP-4)')
+            _fcc_flags_es.append('presión temporal artificial de 72 horas en transacción de alto valor (manipulación de coherencia — CP-4)')
+        if any(t in text_lower for t in ['unhedged position', 'no stop-loss', 'without stop-loss', 'concentrated position', 'single asset all-in', 'oracle manipulation', 'price feed manipulation', 'liquidation cascade', 'ai trading without human', 'trading automatizado sin supervisión']):
+            _fcc_flags_en.append('trading: unhedged/concentrated position or AI trading without human oversight (risk failure — CP-2, CP-3, CP-6)')
+            _fcc_flags_es.append('trading: posición sin cobertura/concentrada o trading automatizado sin supervisión humana (fallo de riesgo — CP-2, CP-3, CP-6)')
+        if any(t in text_lower for t in ['undocumented claim', 'reclamación sin documentación', 'multiple claims same period', 'varias reclamaciones mismo período', 'pre-existing condition not disclosed', 'condición preexistente no revelada', 'policy issued without risk assessment', 'póliza sin evaluación de riesgo', 'inflated claim amount', 'staged accident', 'accidente simulado', 'accidente fingido']):
+            _fcc_flags_en.append('insurance: undocumented or fraudulent claim pattern detected (fraud signal — CP-10)')
+            _fcc_flags_es.append('seguros: patrón de reclamación no documentada o fraudulenta detectado (señal de fraude — CP-10)')
+        if any(t in text_lower for t in ['safety certification not completed', 'certificación de seguridad incompleta', 'human override mechanism disabled', 'mecanismo de override desactivado', 'operating outside validated parameters', 'operando fuera de parámetros validados', 'sensor fusion failure', 'fallo de fusión de sensores', 'without safety certification', 'sin certificación de seguridad', 'autonomous operation without human', 'operación autónoma sin supervisión humana', 'fail-safe not activated', 'sistema de seguridad no activado']):
+            _fcc_flags_en.append('robotics: autonomous operation without completed safety certification or human override capability (ethics + jurisdiction — CP-7, CP-11)')
+            _fcc_flags_es.append('robótica: operación autónoma sin certificación de seguridad completada o sin capacidad de override humano (ética + jurisdicción — CP-7, CP-11)')
+        if not _fcc_flags_en:
+            _fcc_flags_en.append('complex multi-layer compliance failure detected')
+            _fcc_flags_es.append('fallo complejo de cumplimiento en múltiples capas detectado')
+
+        _flags_str_en = '; '.join(_fcc_flags_en)
+        _flags_str_es = '; '.join(_fcc_flags_es)
+        _flag_count = len(_fcc_flags_en)
+
+        if lang == 'en':
+            summary = (
+                f"⚠ FINANCIAL CRIME & COMPLIANCE OVERRIDE — Evaluation of {asset}: "
+                f"{_flag_count} critical compliance violation(s) identified. "
+                f"Decision BLOCKED — {_flag_count} governance layer(s) triggered. "
+                f"Mandatory independent review and regulatory disclosure required before any action."
+            )
+            explanation = (
+                f"OMNIX's Financial Crime & Compliance Override Layer detected {_flag_count} critical violation(s): "
+                f"{_flags_str_en}. "
+                f"These are not surface-level risk indicators — they represent structural governance failures that "
+                f"no automated system may approve without independent legal, compliance, and regulatory review. "
+                f"The combination of these factors across {critical_count} detected indicator(s) triggers "
+                f"mandatory BLOCK across multiple pipeline checkpoints. This scenario requires "
+                f"specialist human review before any decision proceeds."
+            )
+            reasoning = {
+                'probability_score': (
+                    f"Probability of legitimate positive outcome critically low ({signals['probability_score']:.0f}/100). "
+                    f"Undisclosed ownership, missing compliance approvals, and structural governance gaps "
+                    f"eliminate any legitimate path to automated approval."
+                ),
+                'risk_exposure': (
+                    f"MAXIMUM COMPLIANCE RISK ({signals['risk_exposure']:.0f}/100). "
+                    f"{_flag_count} critical compliance violation(s) confirmed: {_flags_str_en[:120]}. "
+                    f"Each violation alone justifies a block — in combination, risk exposure is non-negotiable."
+                ),
+                'signal_coherence': (
+                    f"Signal coherence severely degraded ({signals['signal_coherence']:.0f}/100). "
+                    f"Artificial time pressure, hidden ownership structures, and compliance gaps "
+                    f"create fundamental incoherence between the stated transaction purpose and its actual risk profile."
+                ),
+                'trend_persistence': (
+                    f"Trend persistence critically low ({signals['trend_persistence']:.0f}/100). "
+                    f"Compliance-deficient structures have no sustainable governance trajectory — "
+                    f"regulatory exposure makes any positive outcome trajectory non-persistent."
+                ),
+                'stress_resilience': (
+                    f"Stress resilience near-zero ({signals['stress_resilience']:.0f}/100). "
+                    f"Structures with undisclosed beneficial owners, missing Sharia oversight, or export control "
+                    f"violations collapse immediately under regulatory scrutiny — zero resilience by design."
+                ),
+                'logic_consistency': (
+                    f"Logic consistency critically low ({signals['logic_consistency']:.0f}/100). "
+                    f"Proceeding with a Murabaha without Sharia board, a robotics deployment without safety "
+                    f"certification, or an LBO with a hidden tranche owner is internally inconsistent with "
+                    f"any legitimate governance framework — OMNIX enforces mandatory block."
+                ),
+                'signal_integrity': (
+                    f"Signal integrity severely degraded ({signals['signal_integrity']:.0f}/100). "
+                    f"Undisclosed ownership, unverified compliance status, and missing documentation "
+                    f"make all signals from this scenario structurally unreliable."
+                ),
+                'temporal_coherence': (
+                    f"Temporal coherence critically low ({signals['temporal_coherence']:.0f}/100). "
+                    f"An artificial 72-hour deadline on a multi-jurisdiction transaction is not a legitimate "
+                    f"decision timeline — it is a pressure mechanism designed to bypass deliberation."
+                ),
+            }
+        else:
+            summary = (
+                f"⚠ OVERRIDE DE CRIMEN FINANCIERO Y CUMPLIMIENTO — Evaluación de {asset}: "
+                f"{_flag_count} violación(es) crítica(s) de cumplimiento identificada(s). "
+                f"Decisión BLOQUEADA — {_flag_count} capa(s) de gobernanza activada(s). "
+                f"Revisión independiente obligatoria y divulgación regulatoria requerida antes de cualquier acción."
+            )
+            explanation = (
+                f"La Capa de Override de Crimen Financiero y Cumplimiento de OMNIX detectó {_flag_count} violación(es) crítica(s): "
+                f"{_flags_str_es}. "
+                f"Estos no son indicadores de riesgo superficiales — representan fallos estructurales de gobernanza que "
+                f"ningún sistema automatizado puede aprobar sin revisión legal, de cumplimiento y regulatoria independiente. "
+                f"La combinación de estos factores en {critical_count} indicador(es) detectado(s) activa "
+                f"BLOQUEO obligatorio en múltiples puntos de control del pipeline. Este escenario requiere "
+                f"revisión humana especializada antes de que cualquier decisión avance."
+            )
+            reasoning = {
+                'probability_score': (
+                    f"Probabilidad de resultado positivo legítimo críticamente baja ({signals['probability_score']:.0f}/100). "
+                    f"Propiedad no revelada, aprobaciones de cumplimiento faltantes y brechas estructurales de gobernanza "
+                    f"eliminan cualquier ruta legítima hacia una aprobación automatizada."
+                ),
+                'risk_exposure': (
+                    f"RIESGO DE CUMPLIMIENTO MÁXIMO ({signals['risk_exposure']:.0f}/100). "
+                    f"{_flag_count} violación(es) crítica(s) de cumplimiento confirmada(s): {_flags_str_es[:120]}. "
+                    f"Cada violación por sí sola justifica un bloqueo — en combinación, la exposición al riesgo es innegociable."
+                ),
+                'signal_coherence': (
+                    f"Coherencia de señales severamente degradada ({signals['signal_coherence']:.0f}/100). "
+                    f"La presión temporal artificial, las estructuras de propiedad ocultas y las brechas de cumplimiento "
+                    f"crean incoherencia fundamental entre el propósito declarado de la transacción y su perfil de riesgo real."
+                ),
+                'trend_persistence': (
+                    f"Persistencia de tendencia críticamente baja ({signals['trend_persistence']:.0f}/100). "
+                    f"Las estructuras con deficiencias de cumplimiento no tienen trayectoria de gobernanza sostenible — "
+                    f"la exposición regulatoria hace que cualquier trayectoria de resultado positivo sea no persistente."
+                ),
+                'stress_resilience': (
+                    f"Resiliencia al estrés casi nula ({signals['stress_resilience']:.0f}/100). "
+                    f"Estructuras con propietarios beneficiarios no revelados, supervisión Sharia faltante, o "
+                    f"violaciones de control de exportaciones colapsan inmediatamente bajo escrutinio regulatorio."
+                ),
+                'logic_consistency': (
+                    f"Consistencia lógica críticamente baja ({signals['logic_consistency']:.0f}/100). "
+                    f"Proceder con una Murabaha sin junta de Sharia, un despliegue robótico sin certificación de seguridad, "
+                    f"o un LBO con propietario de tramo oculto es internamente inconsistente con cualquier marco de gobernanza legítimo."
+                ),
+                'signal_integrity': (
+                    f"Integridad de señal severamente degradada ({signals['signal_integrity']:.0f}/100). "
+                    f"Propiedad no revelada, estado de cumplimiento no verificado y documentación faltante "
+                    f"hacen que todas las señales de este escenario sean estructuralmente no confiables."
+                ),
+                'temporal_coherence': (
+                    f"Coherencia temporal críticamente baja ({signals['temporal_coherence']:.0f}/100). "
+                    f"Un plazo artificial de 72 horas en una transacción multijurisdiccional no es un "
+                    f"cronograma legítimo de decisión — es un mecanismo de presión para eludir la deliberación."
+                ),
             }
     elif is_system_integrity:
         if lang == 'en':
