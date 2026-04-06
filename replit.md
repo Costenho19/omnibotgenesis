@@ -250,9 +250,44 @@ Monthly: Harold queries usage endpoint → sees exact count → emits invoice
 
 ---
 
+## Critical Override Layer — Groups Reference (sandbox.py)
+
+`_apply_critical_override` in `omnix_web/api/sandbox.py` has 5 override branches in priority order:
+
+| Priority | Branch | Trigger | Signal Calibration |
+|----------|--------|---------|-------------------|
+| 1 | `is_governance_fraud` | Committee override, CEO bypass, anonymous wallets, conflict of interest | probability ~8, risk ~91, coherence ~12 |
+| 2 | `is_critical_violation` | Market manipulation, OFAC, Ponzi, ransomware, data breach, deepfake KYC | probability ~8, risk ~92, coherence ~11 |
+| 3 | `is_system_integrity` | Cryptographic failure, quantum attack, active cyberattack, DB inconsistency | probability ~6, risk ~92, coherence ~5 |
+| 4 | `is_financial_crime_complex` | AML, Sharia, export control, PEP, no oversight, 4 verticals | probability 6-13, risk 78-90, coherence 30-48 |
+| 5 | else (lethal/life-critical) | Death, emergency, lethal force, autonomous weapons | probability ~10, risk ~90, coherence ~12 |
+
+### `financial_crime_complex` — Covered Groups (ADR-056 + ADR-057)
+
+| Group | Terms (examples) | Receipt Flag |
+|-------|-----------------|-------------|
+| Beneficial Owner / AML | `undisclosed beneficial owner`, `offshore spv`, `mauritius spv` | AML red flag — CP-1, CP-9 |
+| Islamic Finance / Sharia | `murabaha without sharia`, `no sharia board`, `riba element` | Ethics violation — CP-7 |
+| Export Control / Watchlists | `export control list`, `denied parties list`, `eu export control` | Regulatory block — CP-10, CP-11 |
+| Multi-jurisdiction gap | `without local legal review`, `multi-jurisdiction without legal` | Jurisdiction violation — CP-11 |
+| Artificial time pressure | `72 hours to close`, `close within 72`, `deadline artificial` | Coherence manipulation — CP-4 |
+| Trading vertical | `unhedged position`, `no stop-loss`, `oracle manipulation`, `liquidation cascade` | Risk failure — CP-2, CP-3, CP-6 |
+| Insurance vertical | `multiple claims same period`, `staged accident`, `pre-existing condition not disclosed` | Fraud signal — CP-10 |
+| Robotics vertical | `safety certification not completed`, `human override mechanism disabled`, `sensor fusion failure` | Ethics + Jurisdiction — CP-7, CP-11 |
+| **Group 5 — No Oversight** *(ADR-057)* | `no aml officer`, `no compliance officer`, `no due diligence`, `automated approval`, `no oversight` | Governance failure — CP-1, CP-7, CP-9 |
+| **Group 7 — PEP** *(ADR-057)* | `politically exposed person`, `senior government official`, `politically connected beneficial` | AML/KYC — CP-9, CP-10 |
+
+### Summary Quality Guard (ADR-057)
+When `BLOCKED` + contradictory phrase detected (`low risk`, `moderate risk`, `acceptable risk`, `approved`, etc.):
+- **With active override** → `"Governance override activated. This scenario contains patterns that require mandatory human review..."`
+- **Without active override** → Generic: `"{n} checkpoint(s) raised a blocking condition — decision stopped before execution."`
+
+---
+
 ## Recent Fixes (Apr 2026)
 | Commit | Fix |
 |--------|-----|
+| ADR-057 | **Critical Override Hybrid Expansion**: Added Group 5 (No Human Oversight) and Group 7 (Politically Exposed Persons/PEP) to `financial_crime_complex` branch of `_apply_critical_override`. Extended Summary Quality Guard to catch `"moderate risk"`, `"acceptable risk"`, `"low risk profile"` — replaces with spec-mandated override message when active override detected. 24/24 tests pass. Files: `omnix_web/api/sandbox.py`. |
 | Apr-2026c | **ADR-053 — Generic Webhook System + Receipt-by-ID + Key Expiry Warning**: (1) All B2B clients can register an HTTPS webhook URL via `PUT /api/governance/admin/clients/<id>/webhook`. Every decision evaluation pushes a PQC-signed payload signed with HMAC-SHA256 in `X-OMNIX-Signature` header. Delivery log in `webhook_delivery_log` table with per-client stats. SSRF guard rejects private/loopback CIDRs. Secrets encrypted at rest with Fernet (`WEBHOOK_ENCRYPTION_KEY` env var optional). (2) `GET /api/governance/receipts/<receipt_id>` — fetch a single receipt by ID with strict tenant isolation (IDOR-proof). (3) Key expiry warning: `key_expiry_warning.expires_in_days` appears in evaluate response when <14 days remain. Files: `omnix_web/api/gov_auth_rbac.py`, `omnix_web/api/gov_blueprint.py`. |
 | Apr-2026b | **ADR-052 — Security hardening (4 measures)**: (1) Brute force lockout: 5 failed auth attempts from same IP → 15 min lockout. (2) API key expiry: new/rotated keys expire in 90 days (`key_expires_at` column in `b2b_clients`). (3) Security headers on all responses: X-Content-Type-Options, X-Frame-Options, HSTS, XSS-Protection, Referrer-Policy, Permissions-Policy. (4) Admin IP allowlist: set `ADMIN_ALLOWED_IPS` env var in Railway (comma-separated IPs) to restrict `/api/governance/admin/*` to your IP only. Files: `omnix_web/api/gov_blueprint.py`, `omnix_web/api/gov_auth_rbac.py`, `omnix_web/api/server.py`. |
 | Apr-2026 | **Competitive moat — 3 improvements**: (1) CP-11 Jurisdiction Gate now covers 13 jurisdictions: UAE, EU, US, GCC, **UK, SG, JP, AU, CA, BR, KR, CH**, GLOBAL. File: `omnix_core/governance/jurisdiction_gate.py` + bundled to `omnix_web/api/omnix_engine/jurisdiction_gate.py` for Railway. (2) Decision analytics endpoint added: `GET /api/analytics/decisions` — aggregated patterns (by domain, by checkpoint, 30-day trend, B2B clients). File: `omnix_web/api/server.py`. (3) Integration quickstart: `GET /api/governance/quickstart` — curl + Python examples for 5-step B2B onboarding. File: `omnix_web/api/gov_blueprint.py`. |

@@ -851,11 +851,13 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'estados inconsistentes', 'anomalías simultáneas',
         'base de datos inconsistente', 'registros de transacciones fallan',
         # === FINANCIAL CRIME COMPLEX — AML / BENEFICIAL OWNERSHIP / COMPLIANCE ===
-        'beneficial owner', 'beneficial ownership', 'propietario beneficiario',
+        # Only negative-context terms — bare 'beneficial owner' is NOT included
+        # because legitimate disclosures contain it and would cause false positives
         'undisclosed beneficial', 'undisclosed owner', 'ultimate beneficial owner',
         'propietario no revelado', 'propietario oculto', 'propietario no divulgado',
         'whose ultimate beneficial', 'beneficial owner is undisclosed',
         'beneficial owner unknown', 'beneficial owner not disclosed',
+        'beneficial owner not identified', 'anonymous beneficial owner',
         'offshore spv', 'mauritius spv', 'cayman spv', 'bvi spv',
         'mauritius holding', 'cayman holding', 'cayman islands spv',
         # Islamic finance compliance violations
@@ -924,6 +926,31 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'operating in conditions not tested', 'operando en condiciones no probadas',
         'outside validated', 'fuera de los parámetros', 'not completed validation',
         'has not completed validation', 'no ha completado validación',
+        # === GROUP 5 — No Human Oversight / Supervisión ausente ===
+        # Crítico: ningún sistema automatizado puede operar sin supervisión calificada
+        'no aml officer', 'no compliance officer', 'no compliance review',
+        'no legal review', 'no human review', 'no human oversight',
+        'without human oversight', 'without compliance oversight',
+        'auto-approve', 'auto approve', 'automated approval', 'automated approve',
+        'no due diligence', 'no enhanced due diligence', 'without due diligence',
+        'no kyc performed', 'kyc not performed', 'no kyc check',
+        'no legal counsel', 'without legal counsel', 'no oversight',
+        'without oversight', 'bypass all review', 'skip all review',
+        'sin supervisor de cumplimiento', 'sin oficial de aml',
+        'sin revisión legal', 'sin revisión de cumplimiento',
+        'sin due diligence', 'sin debida diligencia', 'sin supervisión',
+        'aprobación automatizada sin revisión', 'aprobar automáticamente sin',
+        # === GROUP 7 — Politically Exposed Persons (PEP) ===
+        # Crítico: PEP en cualquier rol de propiedad o control activa AML enhanced due diligence
+        'politically exposed person', 'politically exposed',
+        'pep beneficial owner', 'pep as beneficial', 'pep ownership',
+        'senior government official', 'state official beneficial',
+        'government official owner', 'government official beneficial',
+        'politically connected beneficial', 'politically connected owner',
+        'sanctioned individual', 'sanctioned person',
+        'persona políticamente expuesta', 'funcionario público vinculado',
+        'funcionario de gobierno como propietario', 'políticamente conectado',
+        'individuo sancionado', 'persona sancionada',
     ]
 
     critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
@@ -1073,11 +1100,14 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
     # - Cross-vertical: multi-jurisdiction without legal review, offshore SPV + undisclosed owner,
     #   export control violations, artificial 72h time pressure, LBO with hidden tranche ownership
     financial_crime_complex_terms = [
-        # AML / beneficial ownership
-        'beneficial owner', 'beneficial ownership', 'propietario beneficiario',
+        # AML / beneficial ownership — only NEGATIVE-context terms to avoid false positives
+        # ('beneficial owner' alone is not sufficient; requires undisclosed/unknown/offshore context)
         'undisclosed beneficial', 'ultimate beneficial owner',
-        'propietario no revelado', 'propietario oculto',
-        'whose ultimate beneficial', 'beneficial owner is undisclosed',
+        'beneficial owner is undisclosed', 'beneficial owner unknown',
+        'beneficial owner not identified', 'beneficial owner not disclosed',
+        'anonymous beneficial owner', 'offshore beneficial owner',
+        'propietario no revelado', 'propietario oculto', 'propietario no divulgado',
+        'whose ultimate beneficial',
         'offshore spv', 'mauritius spv', 'cayman spv', 'bvi spv',
         # Islamic finance violations
         'murabaha without', 'murabaha sin', 'without sharia board',
@@ -1121,6 +1151,24 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'without safety certification', 'sin certificación de seguridad',
         'autonomous operation without human', 'operación autónoma sin supervisión humana',
         'fail-safe not activated', 'sistema de seguridad no activado',
+        # Group 5 — No Human Oversight (CRÍTICO por spec)
+        'no aml officer', 'no compliance officer', 'no compliance review',
+        'no legal review', 'no human review', 'no human oversight',
+        'without human oversight', 'without compliance oversight',
+        'auto-approve', 'automated approval',
+        'no due diligence', 'no enhanced due diligence', 'without due diligence',
+        'no kyc performed', 'no legal counsel', 'no oversight', 'without oversight',
+        'sin supervisor de cumplimiento', 'sin oficial de aml',
+        'sin revisión legal', 'sin due diligence', 'sin supervisión',
+        # Group 7 — PEP / Politically Exposed (CRÍTICO por spec)
+        'politically exposed person', 'politically exposed',
+        'pep beneficial owner', 'pep as beneficial', 'pep ownership',
+        'senior government official', 'state official beneficial',
+        'government official owner', 'government official beneficial',
+        'politically connected beneficial', 'politically connected owner',
+        'sanctioned individual', 'sanctioned person',
+        'persona políticamente expuesta', 'funcionario público vinculado',
+        'políticamente conectado', 'individuo sancionado',
     ]
     is_financial_crime_complex = (
         not is_governance_fraud
@@ -1338,10 +1386,10 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         # Build a sub-label identifying the specific violation type(s) found
         _fcc_flags_en: list[str] = []
         _fcc_flags_es: list[str] = []
-        if any(t in text_lower for t in ['beneficial owner', 'propietario beneficiario', 'undisclosed beneficial', 'ultimate beneficial owner', 'offshore spv', 'mauritius spv', 'cayman spv', 'bvi spv', 'whose beneficial owner', 'propietario no revelado', 'propietario oculto']):
+        if any(t in text_lower for t in ['undisclosed beneficial', 'ultimate beneficial owner', 'beneficial owner unknown', 'beneficial owner not identified', 'beneficial owner not disclosed', 'anonymous beneficial owner', 'offshore beneficial owner', 'offshore spv', 'mauritius spv', 'cayman spv', 'bvi spv', 'whose beneficial owner', 'propietario no revelado', 'propietario oculto', 'propietario no divulgado']):
             _fcc_flags_en.append('undisclosed beneficial ownership / offshore SPV structure (AML red flag)')
             _fcc_flags_es.append('propietario beneficiario no revelado / estructura SPV offshore (señal AML)')
-        if any(t in text_lower for t in ['murabaha', 'sukuk', 'ijara', 'musharaka']) and any(t in text_lower for t in ['without sharia', 'no sharia board', 'sin junta de sharia', 'sin revisión de sharia', 'sharia board not', 'without sharia review', 'sharia board', 'no sharia']):
+        if any(t in text_lower for t in ['murabaha', 'sukuk', 'ijara', 'musharaka']) and any(t in text_lower for t in ['without sharia', 'no sharia board', 'sin junta de sharia', 'sin revisión de sharia', 'sharia board not', 'without sharia review', 'no sharia review', 'no sharia']):
             _fcc_flags_en.append('Islamic finance instrument without Sharia board review (ethics violation — CP-7)')
             _fcc_flags_es.append('instrumento de finanzas islámicas sin revisión de la junta de Sharia (violación ética — CP-7)')
         if any(t in text_lower for t in ['export control list', 'eu export control', 'denied parties list', 'restricted party list', 'export control violation', 'subsidiaries on export', 'subsidiaries listed', 'subsidiarias en lista', 'lista de control de exportaciones']):
@@ -1362,6 +1410,48 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         if any(t in text_lower for t in ['safety certification not completed', 'certificación de seguridad incompleta', 'human override mechanism disabled', 'mecanismo de override desactivado', 'operating outside validated parameters', 'operando fuera de parámetros validados', 'sensor fusion failure', 'fallo de fusión de sensores', 'without safety certification', 'sin certificación de seguridad', 'autonomous operation without human', 'operación autónoma sin supervisión humana', 'fail-safe not activated', 'sistema de seguridad no activado']):
             _fcc_flags_en.append('robotics: autonomous operation without completed safety certification or human override capability (ethics + jurisdiction — CP-7, CP-11)')
             _fcc_flags_es.append('robótica: operación autónoma sin certificación de seguridad completada o sin capacidad de override humano (ética + jurisdicción — CP-7, CP-11)')
+        # Group 5 — No Human Oversight
+        if any(t in text_lower for t in [
+            'no aml officer', 'no compliance officer', 'no compliance review',
+            'no legal review', 'no human review', 'no human oversight',
+            'without human oversight', 'without compliance oversight',
+            'auto-approve', 'automated approval',
+            'no due diligence', 'no enhanced due diligence', 'without due diligence',
+            'no kyc performed', 'no legal counsel', 'no oversight', 'without oversight',
+            'sin supervisor de cumplimiento', 'sin oficial de aml',
+            'sin revisión legal', 'sin due diligence', 'sin supervisión',
+        ]):
+            _fcc_flags_en.append(
+                'absence of mandatory human oversight: no AML officer, compliance officer, legal review, '
+                'or due diligence confirmed — automated approval without qualified oversight is prohibited '
+                '(governance failure — CP-1, CP-7, CP-9)'
+            )
+            _fcc_flags_es.append(
+                'ausencia de supervisión humana obligatoria: sin oficial AML, oficial de cumplimiento, '
+                'revisión legal o due diligence confirmada — aprobación automatizada sin supervisión calificada '
+                'está prohibida (fallo de gobernanza — CP-1, CP-7, CP-9)'
+            )
+        # Group 7 — Politically Exposed Person (PEP)
+        if any(t in text_lower for t in [
+            'politically exposed person', 'politically exposed',
+            'pep beneficial owner', 'pep as beneficial', 'pep ownership',
+            'senior government official', 'state official beneficial',
+            'government official owner', 'government official beneficial',
+            'politically connected beneficial', 'politically connected owner',
+            'sanctioned individual', 'sanctioned person',
+            'persona políticamente expuesta', 'funcionario público vinculado',
+            'políticamente conectado', 'individuo sancionado',
+        ]):
+            _fcc_flags_en.append(
+                'politically exposed person (PEP) identified as beneficial owner or controlling party — '
+                'Enhanced Due Diligence (EDD) and senior management approval mandatory before any '
+                'transaction proceeds (AML/KYC — CP-9, CP-10)'
+            )
+            _fcc_flags_es.append(
+                'persona políticamente expuesta (PEP) identificada como propietario beneficiario o parte controlante — '
+                'Debida Diligencia Reforzada (EDD) y aprobación de alta dirección obligatorias antes de '
+                'que cualquier transacción avance (AML/KYC — CP-9, CP-10)'
+            )
         if not _fcc_flags_en:
             _fcc_flags_en.append('complex multi-layer compliance failure detected')
             _fcc_flags_es.append('fallo complejo de cumplimiento en múltiples capas detectado')
@@ -2236,7 +2326,15 @@ def register_sandbox_routes(app):
         _lang = ai_result.get('language', 'en')
         if governance_result['decision'] == 'BLOCKED':
             _contradictory_phrases = [
-                'low risk', 'riesgo bajo', 'no risk indicator', 'sin indicadores de riesgo',
+                # Generic approval or low-risk language contradictory with a BLOCKED outcome
+                'low risk', 'riesgo bajo', 'low risk profile', 'perfil de riesgo bajo',
+                'low risk detected', 'riesgo bajo detectado',
+                # Spec-mandated additions: moderate / acceptable risk also contradictory when BLOCKED
+                'moderate risk', 'riesgo moderado', 'moderate risk detected',
+                'riesgo moderado detectado', 'acceptable risk', 'riesgo aceptable',
+                'acceptable risk profile', 'perfil de riesgo aceptable',
+                # Other contradictory positive phrases
+                'no risk indicator', 'sin indicadores de riesgo',
                 'within governance', 'dentro de los parámetros', 'falls within',
                 'no significant issue', 'sin problemas significativos',
                 'satisfactoriamente', 'satisfactorily', 'meets governance', 'cumple con',
@@ -2247,18 +2345,36 @@ def register_sandbox_routes(app):
             ]
             if any(ph in _summary_raw.lower() for ph in _contradictory_phrases) or len(_summary_raw) < 20:
                 _n_blocked = governance_result['checkpoints_blocked']
-                if _lang == 'es':
-                    _summary_raw = (
-                        f"Evaluación de gobernanza de {_asset}: "
-                        f"{_n_blocked} punto(s) de control generó una condición de bloqueo — "
-                        f"decisión detenida antes de ejecución."
-                    )
+                # Use spec-required override message when an active override was triggered
+                _has_active_override = (
+                    ai_result.get('_critical_override')
+                    or ai_result.get('_systemic_override')
+                )
+                if _has_active_override:
+                    if _lang == 'es':
+                        _summary_raw = (
+                            f"Override de gobernanza activado. Este escenario contiene patrones que requieren "
+                            f"revisión humana obligatoria antes de que cualquier sistema automatizado pueda proceder."
+                        )
+                    else:
+                        _summary_raw = (
+                            "Governance override activated. This scenario contains patterns that require "
+                            "mandatory human review before any automated system may proceed."
+                        )
                 else:
-                    _summary_raw = (
-                        f"Governance evaluation of {_asset}: "
-                        f"{_n_blocked} checkpoint(s) raised a blocking condition — "
-                        f"decision stopped before execution."
-                    )
+                    _n_blocked = governance_result['checkpoints_blocked']
+                    if _lang == 'es':
+                        _summary_raw = (
+                            f"Evaluación de gobernanza de {_asset}: "
+                            f"{_n_blocked} punto(s) de control generó una condición de bloqueo — "
+                            f"decisión detenida antes de ejecución."
+                        )
+                    else:
+                        _summary_raw = (
+                            f"Governance evaluation of {_asset}: "
+                            f"{_n_blocked} checkpoint(s) raised a blocking condition — "
+                            f"decision stopped before execution."
+                        )
         elif governance_result['decision'] == 'APPROVED':
             _blocking_in_approved = [
                 'blocked', 'bloqueado', 'stopped before', 'detenida', 'rejected', 'rechazado',
