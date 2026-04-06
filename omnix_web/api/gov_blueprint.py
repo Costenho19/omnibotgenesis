@@ -1,30 +1,42 @@
 """
 OMNIX Governance API — External Signal Evaluation Endpoint.
 
-POST /api/governance/evaluate                                    — Submit normalized signals, receive PQC-signed receipt.
-GET  /api/governance/schema                                      — Signal schema documentation (public).
-GET  /api/governance/receipts                                    — Client's own receipts (authenticated).
-POST /api/governance/admin/clients                               — Create B2B client (admin only).
-GET  /api/governance/admin/clients                               — List all B2B clients (admin only).
-DELETE /api/governance/admin/clients/<client_id>                 — Deactivate client (admin only).
-POST /api/governance/admin/clients/<client_id>/rotate            — Rotate API key (admin only).
-GET  /api/governance/admin/clients/<client_id>/thresholds        — Get effective thresholds for client (admin only).
-PUT  /api/governance/admin/clients/<client_id>/thresholds        — Set per-client checkpoint thresholds (admin only).
-DELETE /api/governance/admin/clients/<client_id>/thresholds      — Revert client thresholds to defaults (admin only).
-GET  /api/governance/admin/usage                                 — Monthly usage summary for all clients (admin only).
-GET  /api/governance/admin/usage/<client_id>                     — Monthly usage detail for one client (admin only).
+POST /api/governance/evaluate                                         — Submit normalized signals, receive PQC-signed receipt.
+GET  /api/governance/schema                                           — Signal schema documentation (public).
+GET  /api/governance/receipts                                         — Client's own receipt history (authenticated, paginated).
+GET  /api/governance/receipts/<receipt_id>                            — Fetch a single receipt by ID (authenticated, own only). ADR-053.
+POST /api/governance/admin/clients                                     — Create B2B client (admin only).
+GET  /api/governance/admin/clients                                     — List all B2B clients (admin only).
+DELETE /api/governance/admin/clients/<client_id>                      — Deactivate client (admin only).
+POST /api/governance/admin/clients/<client_id>/reactivate             — Reactivate client (admin only).
+POST /api/governance/admin/clients/<client_id>/rotate                 — Rotate API key (admin only).
+PUT  /api/governance/admin/clients/<client_id>/webhook                — Register/update webhook URL (admin only). ADR-053.
+DELETE /api/governance/admin/clients/<client_id>/webhook              — Remove webhook config (admin only). ADR-053.
+GET  /api/governance/admin/clients/<client_id>/webhook/deliveries     — Webhook delivery history (admin only). ADR-053.
+GET  /api/governance/admin/clients/<client_id>/thresholds             — Get effective thresholds for client (admin only).
+PUT  /api/governance/admin/clients/<client_id>/thresholds             — Set per-client checkpoint thresholds (admin only).
+DELETE /api/governance/admin/clients/<client_id>/thresholds           — Revert client thresholds to defaults (admin only).
+GET  /api/governance/admin/usage                                      — Monthly usage summary for all clients (admin only).
+GET  /api/governance/admin/usage/<client_id>                          — Monthly usage detail for one client (admin only).
 
 ADR-028: External Signal Evaluation API
 ADR-037: Per-Client Configurable Thresholds
 ADR-051: Client Usage Reporting & Billing Audit Trail
+ADR-052: API Key Expiry (90-day rolling window) + brute-force lockout
+ADR-053: Generic Webhook Push System — HMAC-SHA256 signed delivery to client-registered HTTPS endpoints
 """
 
+import hashlib
+import hmac
+import ipaddress
 import json
 import logging
 import os
+import secrets
 import sys
 import time
 import threading
+import urllib.parse
 import urllib.request
 import urllib.error
 import uuid
@@ -46,9 +58,12 @@ try:
         authenticate_client,
         create_client,
         deactivate_client,
+        delete_client_webhook,
+        get_client_webhook,
         list_clients,
         reactivate_client,
         rotate_api_key,
+        set_client_webhook,
         update_last_seen,
     )
 except ImportError:
@@ -62,6 +77,9 @@ except ImportError:
         rotate_api_key,
         update_last_seen,
     )
+    def get_client_webhook(client_id): return None
+    def set_client_webhook(client_id, url, secret): return False
+    def delete_client_webhook(client_id): return False
 
 _alerts_trigger = None
 
@@ -92,6 +110,21 @@ _brute_force_store: dict = {}
 _BRUTE_FORCE_MAX = 5
 _BRUTE_FORCE_WINDOW = 900
 _BRUTE_FORCE_LOCKOUT = 900
+
+_WEBHOOK_PUSH_SEMAPHORE = threading.Semaphore(10)
+_KEY_EXPIRY_WARNING_DAYS = 14
+
+_SSRF_BLOCKED_NETWORKS = [
+    ipaddress.ip_network('10.0.0.0/8'),
+    ipaddress.ip_network('172.16.0.0/12'),
+    ipaddress.ip_network('192.168.0.0/16'),
+    ipaddress.ip_network('127.0.0.0/8'),
+    ipaddress.ip_network('169.254.0.0/16'),
+    ipaddress.ip_network('0.0.0.0/8'),
+    ipaddress.ip_network('::1/128'),
+    ipaddress.ip_network('fc00::/7'),
+    ipaddress.ip_network('fe80::/10'),
+]
 
 _MONTHLY_ALERT_THRESHOLD = 500
 _monthly_alert_sent: dict = {}
@@ -221,6 +254,202 @@ def _check_monthly_alert(client_id: str) -> None:
 
 def _get_db_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
+
+
+# ── WEBHOOK UTILITIES (ADR-053) ────────────────────────────────────────────────
+
+def _validate_webhook_url(url: str) -> tuple:
+    """
+    SSRF-safe webhook URL validation.
+    Enforces HTTPS, rejects private/loopback/link-local CIDRs and non-443 ports.
+    Returns (is_valid: bool, error_message: str).
+    ADR-053.
+    """
+    try:
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme != 'https':
+            return False, "Webhook URL must use HTTPS"
+        hostname = parsed.hostname
+        if not hostname:
+            return False, "Webhook URL must have a valid hostname"
+        port = parsed.port
+        if port and port != 443:
+            return False, f"Webhook URL port must be 443 or omitted (got {port})"
+        try:
+            addr = ipaddress.ip_address(hostname)
+            for net in _SSRF_BLOCKED_NETWORKS:
+                if addr in net:
+                    return False, "Webhook URL cannot point to a private, loopback, or link-local address"
+        except ValueError:
+            pass
+        return True, ""
+    except Exception as exc:
+        return False, f"Invalid URL format: {exc}"
+
+
+def _ensure_webhook_delivery_log_table() -> None:
+    """
+    Create webhook_delivery_log table and indexes if they don't exist.
+    Called lazily on first webhook operation. ADR-053.
+    """
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS webhook_delivery_log (
+                delivery_id   BIGSERIAL PRIMARY KEY,
+                client_id     TEXT        NOT NULL,
+                receipt_id    TEXT        NOT NULL,
+                decision      TEXT,
+                webhook_url   TEXT,
+                disposition   TEXT        NOT NULL,
+                http_status   INTEGER,
+                latency_ms    INTEGER,
+                error_message TEXT,
+                attempted_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_wdl_client_attempted
+            ON webhook_delivery_log(client_id, attempted_at DESC)
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_wdl_receipt_id
+            ON webhook_delivery_log(receipt_id)
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"_ensure_webhook_delivery_log_table (non-fatal): {e}")
+
+
+def _log_webhook_delivery(
+    client_id: str,
+    receipt_id: str,
+    decision: str,
+    webhook_url: str,
+    disposition: str,
+    http_status: int = None,
+    latency_ms: int = None,
+    error_message: str = None,
+) -> None:
+    """Persist one webhook delivery attempt to webhook_delivery_log. Best-effort. ADR-053."""
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO webhook_delivery_log
+                (client_id, receipt_id, decision, webhook_url, disposition,
+                 http_status, latency_ms, error_message)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                client_id,
+                receipt_id,
+                decision,
+                (webhook_url or '')[:500],
+                disposition,
+                http_status,
+                latency_ms,
+                (error_message or '')[:1000] or None,
+            ),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"_log_webhook_delivery failed (non-fatal): {e}")
+
+
+def _push_receipt_webhook(
+    client_id: str,
+    receipt_id: str,
+    decision: str,
+    payload: dict,
+    webhook_url: str,
+    webhook_secret: str,
+) -> None:
+    """
+    Push a PQC-signed governance receipt to the client's registered webhook endpoint.
+    Non-blocking — called from a bounded daemon thread (semaphore: max 10 concurrent).
+
+    Transport security:
+      - HMAC-SHA256(webhook_secret, body_bytes) sent as X-OMNIX-Signature: sha256=<hex>
+      - The payload retains the full PQC content_hash + signature for independent verification
+      - Strict 10-second connect/read timeout to prevent resource exhaustion
+
+    All delivery outcomes (SENT/ERROR/SKIPPED) are persisted to webhook_delivery_log.
+    ADR-053.
+    """
+    _ensure_webhook_delivery_log_table()
+
+    acquired = _WEBHOOK_PUSH_SEMAPHORE.acquire(blocking=False)
+    if not acquired:
+        _log_webhook_delivery(
+            client_id, receipt_id, decision, webhook_url,
+            'SKIPPED', error_message='semaphore exhausted — too many concurrent webhook pushes',
+        )
+        logger.warning(f"[WEBHOOK] client={client_id} receipt={receipt_id} SKIPPED — semaphore full")
+        return
+
+    t_start = time.monotonic()
+    http_status = None
+    error_message = None
+    success = False
+
+    try:
+        body_bytes = json.dumps(payload, default=str).encode('utf-8')
+        sig_hex = hmac.new(
+            webhook_secret.encode('utf-8'),
+            body_bytes,
+            digestmod=hashlib.sha256,
+        ).hexdigest()
+
+        req = urllib.request.Request(
+            webhook_url,
+            data=body_bytes,
+            headers={
+                'Content-Type':        'application/json',
+                'X-OMNIX-Signature':   f'sha256={sig_hex}',
+                'X-OMNIX-Receipt-ID':  receipt_id,
+                'X-OMNIX-Event':       'decision.evaluated',
+                'X-OMNIX-Client-ID':   client_id,
+                'User-Agent':          'OMNIX-Webhook/1.0 (github.com/omnix)',
+            },
+            method='POST',
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            http_status = resp.getcode()
+            success = (200 <= http_status < 300)
+
+    except urllib.error.HTTPError as exc:
+        http_status = exc.code
+        error_message = str(exc)
+    except Exception as exc:
+        error_message = str(exc)[:500]
+    finally:
+        _WEBHOOK_PUSH_SEMAPHORE.release()
+
+    latency_ms = int((time.monotonic() - t_start) * 1000)
+    disposition = 'SENT' if success else 'ERROR'
+
+    if success:
+        logger.info(
+            f"[WEBHOOK] client={client_id} receipt={receipt_id} decision={decision} "
+            f"disposition=SENT http={http_status} latency={latency_ms}ms"
+        )
+    else:
+        logger.warning(
+            f"[WEBHOOK] client={client_id} receipt={receipt_id} decision={decision} "
+            f"disposition=ERROR http={http_status} latency={latency_ms}ms error={error_message}"
+        )
+
+    _log_webhook_delivery(
+        client_id, receipt_id, decision, webhook_url, disposition,
+        http_status=http_status, latency_ms=latency_ms, error_message=error_message,
+    )
 
 
 def _ensure_thresholds_table() -> None:
@@ -621,9 +850,15 @@ def _record_failed_auth(ip: str) -> None:
 def _require_auth(require_admin: bool = False):
     """
     Authenticate request via X-API-Key header.
-    Includes brute force lockout (#1) and admin IP allowlist (#4).
+    Includes:
+      - Brute force lockout: 5 failed attempts → 15 min block (ADR-052)
+      - Admin IP allowlist via ADMIN_ALLOWED_IPS env var (ADR-052)
+      - Key expiry check: expired keys rejected; near-expiry (<14d) flagged in client dict (ADR-052)
     Returns (client_dict, None) on success or (None, error_response) on failure.
+    client_dict includes key_expires_in_days (int | None) for downstream warning injection.
     """
+    import datetime as _dt
+
     client_ip = _get_client_ip()
 
     if _is_brute_force_locked(client_ip):
@@ -654,6 +889,17 @@ def _require_auth(require_admin: bool = False):
                     "error": "Forbidden — access restricted",
                     "status": 403,
                 }), 403)
+
+    key_expires_in_days = None
+    exp = client.get("key_expires_at")
+    if exp is not None:
+        if hasattr(exp, 'tzinfo') and exp.tzinfo is None:
+            exp = exp.replace(tzinfo=_dt.timezone.utc)
+        delta = exp - _dt.datetime.now(_dt.timezone.utc)
+        days_left = delta.days
+        if days_left <= _KEY_EXPIRY_WARNING_DAYS:
+            key_expires_in_days = max(days_left, 0)
+    client["key_expires_in_days"] = key_expires_in_days
 
     return client, None
 
@@ -979,6 +1225,17 @@ def api_governance_evaluate():
         'policy_version': receipt.get('policy_version', os.environ.get('OMNIX_VERSION', '6.5.4e')),
     }
 
+    # ── Key expiry warning (ADR-052) ──────────────────────────────────────────
+    key_expires_in_days = client.get("key_expires_in_days")
+    if key_expires_in_days is not None:
+        response['key_expiry_warning'] = {
+            'expires_in_days': key_expires_in_days,
+            'message': (
+                f"Your API key expires in {key_expires_in_days} day(s). "
+                "Rotate it via POST /api/governance/admin/clients/<id>/rotate to avoid service interruption."
+            ),
+        }
+
     logger.info(
         f"[GOVERNANCE] evaluate: client={client_id} asset={asset} domain={domain} "
         f"decision={evaluation['decision']} "
@@ -989,6 +1246,43 @@ def api_governance_evaluate():
 
     # Monthly usage alert (non-blocking)
     _check_monthly_alert(client_id)
+
+    # ── Generic Webhook Push (ADR-053) ────────────────────────────────────────
+    try:
+        webhook_cfg = get_client_webhook(client_id)
+        if webhook_cfg and webhook_cfg.get('webhook_url'):
+            webhook_payload = {
+                'event': 'decision.evaluated',
+                'receipt_id': response.get('receipt_id'),
+                'timestamp': response.get('timestamp'),
+                'client_id': client_id,
+                'asset': asset,
+                'domain': domain,
+                'decision': evaluation['decision'],
+                'checkpoints_total': evaluation['checkpoints_total'],
+                'checkpoints_passed': evaluation['checkpoints_passed'],
+                'checkpoints_blocked': evaluation['checkpoints_blocked'],
+                'content_hash': receipt.get('content_hash'),
+                'signature': receipt.get('signature'),
+                'signature_algorithm': receipt.get('signature_algorithm', 'NONE'),
+                'pqc_signed': receipt.get('signature') is not None,
+                'policy_version': response.get('policy_version'),
+                'verifiable_at': response.get('verifiable_at'),
+            }
+            threading.Thread(
+                target=_push_receipt_webhook,
+                args=(
+                    client_id,
+                    receipt.get('receipt_id', ''),
+                    evaluation['decision'],
+                    webhook_payload,
+                    webhook_cfg['webhook_url'],
+                    webhook_cfg['webhook_secret'],
+                ),
+                daemon=True,
+            ).start()
+    except Exception as _we:
+        logger.debug(f"Webhook push thread skipped: {_we}")
 
     return jsonify(response), 200
 
@@ -1056,6 +1350,70 @@ def api_governance_receipts():
     except Exception as e:
         logger.error(f"Error fetching receipts for client={client_id}: {e}")
         return jsonify({'error': 'Database error', 'status': 500}), 500
+
+
+# ── SINGLE RECEIPT BY ID (ADR-053) ────────────────────────────────────────────
+
+@governance_bp.route('/api/governance/receipts/<string:receipt_id>', methods=['GET'])
+def api_governance_receipt_by_id(receipt_id: str):
+    """
+    GET /api/governance/receipts/<receipt_id>
+    Returns the full governance receipt for the given ID.
+
+    Security: strict tenant isolation — only the receipt's owner can fetch it.
+    A missing or foreign receipt both return 404 (no information leakage).
+    ADR-053.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    client_id = client["client_id"]
+    sanitized_id = str(receipt_id).strip()[:64]
+
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            """
+            SELECT receipt_id, timestamp_utc, asset, domain, decision,
+                   veto_chain, content_hash, signature, signature_algorithm,
+                   public_key, policy_version, engine_version,
+                   prev_hash, created_at
+            FROM decision_receipts
+            WHERE receipt_id = %s AND client_id = %s
+            """,
+            (sanitized_id, client_id),
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if row is None:
+            return jsonify({
+                'error': f"Receipt '{sanitized_id}' not found",
+                'status': 404,
+            }), 404
+
+        receipt_data = dict(row)
+        for ts_field in ('timestamp_utc', 'created_at'):
+            if receipt_data.get(ts_field):
+                try:
+                    receipt_data[ts_field] = receipt_data[ts_field].isoformat()
+                except Exception:
+                    pass
+
+        return jsonify({
+            'client_id': client_id,
+            'receipt': receipt_data,
+            'pqc_signed': receipt_data.get('signature') is not None,
+            'verifiable_at': 'https://omnibotgenesis-production.up.railway.app/verify',
+        }), 200
+
+    except Exception as e:
+        ref_id = str(uuid.uuid4())[:8]
+        logger.error(f"receipt_by_id DB error ref={ref_id} client={client_id}: {e}")
+        return jsonify({'error': 'Database error', 'status': 500, 'reference': ref_id}), 500
 
 
 # ── ADMIN ENDPOINTS ───────────────────────────────────────────────────────────
@@ -1150,7 +1508,7 @@ def admin_reactivate_client(target_client_id: str):
 
 @governance_bp.route('/api/governance/admin/clients/<string:target_client_id>/rotate', methods=['POST'])
 def admin_rotate_key(target_client_id: str):
-    """Rotate API key for a client. Admin only. Returns new key — shown once."""
+    """Rotate API key for a client. Admin only. Returns new key — shown once. Resets expiry to 90 days."""
     client, err = _require_auth(require_admin=True)
     if err:
         return err
@@ -1161,10 +1519,186 @@ def admin_rotate_key(target_client_id: str):
         return jsonify({
             'client_id': target_client_id,
             'api_key': new_key,
+            'expires_in_days': 90,
             'message': 'New API key generated. Previous key is now invalid. Store this key securely — shown once only.',
         }), 200
     except ValueError as e:
         return jsonify({'error': str(e), 'status': 404}), 404
+
+
+# ── WEBHOOK MANAGEMENT ENDPOINTS (ADR-053) ────────────────────────────────────
+
+@governance_bp.route('/api/governance/admin/clients/<string:target_client_id>/webhook', methods=['PUT'])
+def admin_set_webhook(target_client_id: str):
+    """
+    PUT /api/governance/admin/clients/<client_id>/webhook
+    Register or update a webhook endpoint for a B2B client.
+    Auto-generates a cryptographically secure HMAC-SHA256 signing secret.
+    The secret is returned once — store it securely to verify webhook signatures.
+
+    Request body:
+      { "webhook_url": "https://your-server.example.com/omnix-webhook" }
+
+    The webhook secret is returned in the response (shown once only).
+    Clients verify incoming webhooks by checking:
+      X-OMNIX-Signature: sha256=<HMAC-SHA256(secret, request_body)>
+
+    Admin only. ADR-053.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    if not request.is_json:
+        return jsonify({'error': 'Request must be JSON', 'status': 400}), 400
+
+    body = request.get_json(force=True) or {}
+    webhook_url = str(body.get('webhook_url', '')).strip()
+
+    if not webhook_url:
+        return jsonify({'error': "'webhook_url' is required", 'status': 400}), 400
+
+    is_valid, url_error = _validate_webhook_url(webhook_url)
+    if not is_valid:
+        return jsonify({'error': url_error, 'status': 422}), 422
+
+    webhook_secret = secrets.token_hex(32)
+
+    updated = set_client_webhook(target_client_id, webhook_url, webhook_secret)
+    if not updated:
+        return jsonify({'error': f"client_id '{target_client_id}' not found", 'status': 404}), 404
+
+    logger.info(
+        f"[ADMIN] webhook set for client={target_client_id} "
+        f"url={webhook_url[:60]} by admin={client['client_id']}"
+    )
+    return jsonify({
+        'client_id': target_client_id,
+        'webhook_url': webhook_url,
+        'webhook_secret': webhook_secret,
+        'signature_header': 'X-OMNIX-Signature',
+        'signature_format': 'sha256=<HMAC-SHA256(secret, raw_request_body)>',
+        'event': 'decision.evaluated',
+        'message': (
+            'Webhook registered. Store the webhook_secret securely — it is shown only once. '
+            'Use it to verify the X-OMNIX-Signature header on incoming webhook deliveries.'
+        ),
+    }), 200
+
+
+@governance_bp.route('/api/governance/admin/clients/<string:target_client_id>/webhook', methods=['DELETE'])
+def admin_delete_webhook(target_client_id: str):
+    """
+    DELETE /api/governance/admin/clients/<client_id>/webhook
+    Remove webhook configuration for a B2B client. Future decisions will not be pushed.
+    Admin only. ADR-053.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    updated = delete_client_webhook(target_client_id)
+    if not updated:
+        return jsonify({'error': f"client_id '{target_client_id}' not found", 'status': 404}), 404
+
+    logger.info(f"[ADMIN] webhook removed for client={target_client_id} by admin={client['client_id']}")
+    return jsonify({
+        'client_id': target_client_id,
+        'webhook_configured': False,
+        'message': 'Webhook configuration removed. Decision push notifications disabled.',
+    }), 200
+
+
+@governance_bp.route(
+    '/api/governance/admin/clients/<string:target_client_id>/webhook/deliveries',
+    methods=['GET'],
+)
+def admin_webhook_deliveries(target_client_id: str):
+    """
+    GET /api/governance/admin/clients/<client_id>/webhook/deliveries
+    Returns the last N webhook delivery attempts for a client.
+
+    Query params:
+      - limit: int (default 50, max 200)
+      - disposition: SENT | ERROR | SKIPPED (optional filter)
+
+    Admin only. ADR-053.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    try:
+        limit = min(int(request.args.get('limit', 50)), 200)
+    except (TypeError, ValueError):
+        limit = 50
+
+    disposition_filter = request.args.get('disposition', '').upper() or None
+
+    try:
+        _ensure_webhook_delivery_log_table()
+        conn = _get_db_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        where = "WHERE client_id = %s"
+        params = [target_client_id]
+        if disposition_filter:
+            where += " AND disposition = %s"
+            params.append(disposition_filter)
+
+        cur.execute(
+            f"""
+            SELECT delivery_id, receipt_id, decision, webhook_url, disposition,
+                   http_status, latency_ms, error_message, attempted_at
+            FROM webhook_delivery_log
+            {where}
+            ORDER BY attempted_at DESC
+            LIMIT %s
+            """,
+            params + [limit],
+        )
+        rows = [dict(r) for r in cur.fetchall()]
+
+        cur.execute(f"SELECT COUNT(*) AS cnt FROM webhook_delivery_log {where}", params)
+        total = cur.fetchone()["cnt"]
+
+        cur.execute(
+            """
+            SELECT
+                SUM(CASE WHEN disposition = 'SENT'    THEN 1 ELSE 0 END) AS sent,
+                SUM(CASE WHEN disposition = 'ERROR'   THEN 1 ELSE 0 END) AS error,
+                SUM(CASE WHEN disposition = 'SKIPPED' THEN 1 ELSE 0 END) AS skipped,
+                ROUND(AVG(CASE WHEN disposition = 'SENT' THEN latency_ms END)) AS avg_latency_ms
+            FROM webhook_delivery_log
+            WHERE client_id = %s
+            """,
+            (target_client_id,),
+        )
+        stats_row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        for r in rows:
+            if r.get('attempted_at'):
+                r['attempted_at'] = r['attempted_at'].isoformat()
+
+        return jsonify({
+            'client_id': target_client_id,
+            'total_deliveries': int(total),
+            'shown': len(rows),
+            'stats': {
+                'sent': int(stats_row['sent'] or 0),
+                'error': int(stats_row['error'] or 0),
+                'skipped': int(stats_row['skipped'] or 0),
+                'avg_latency_ms': int(stats_row['avg_latency_ms'] or 0),
+            },
+            'deliveries': rows,
+        }), 200
+
+    except Exception as e:
+        ref_id = str(uuid.uuid4())[:8]
+        logger.error(f"admin_webhook_deliveries error ref={ref_id}: {e}")
+        return jsonify({'error': 'Database error', 'status': 500, 'reference': ref_id}), 500
 
 
 # ── THRESHOLD MANAGEMENT ENDPOINTS (ADR-037) ──────────────────────────────────

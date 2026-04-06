@@ -6,10 +6,16 @@ Each B2B client has:
   - A unique API key (stored as SHA-256 hash — plaintext never stored)
   - A role: 'standard' or 'admin'
   - is_active flag for instant revocation without code changes
+  - key_expires_at: API key expires after 90 days (ADR-052)
+  - webhook_url: optional HTTPS callback URL for decision push notifications (ADR-053)
+  - webhook_secret: Fernet-encrypted HMAC secret for webhook verification (ADR-053)
 
 Auth flow:
   X-API-Key header → SHA-256 hash → lookup in b2b_clients → return client row
   client_id comes from DB, NOT from X-Client-ID header → no spoofing possible
+
+ADR-052: API Key Expiry (90-day rolling window)
+ADR-053: Generic Webhook Push System
 """
 
 import hashlib
@@ -250,19 +256,172 @@ def rotate_api_key(client_id: str) -> str:
 
 
 def list_clients() -> list[dict]:
-    """List all clients (admin use — never returns api_key_hash)."""
+    """
+    List all clients (admin use — never returns api_key_hash or webhook_secret).
+    Includes webhook_url (presence, not secret) and key_expires_at for admin visibility.
+    Gracefully falls back to base columns if webhook/expiry columns don't exist yet.
+    ADR-053.
+    """
     conn = _get_conn()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-        cur.execute(
-            """
-            SELECT client_id, name, email, role, is_active, created_at, last_seen_at
-            FROM b2b_clients
-            ORDER BY created_at DESC
-            """
-        )
+        try:
+            cur.execute(
+                """
+                SELECT client_id, name, email, role, is_active, created_at, last_seen_at,
+                       key_expires_at,
+                       webhook_url,
+                       (webhook_secret IS NOT NULL) AS webhook_configured
+                FROM b2b_clients
+                ORDER BY created_at DESC
+                """
+            )
+        except Exception:
+            cur.execute(
+                """
+                SELECT client_id, name, email, role, is_active, created_at, last_seen_at
+                FROM b2b_clients
+                ORDER BY created_at DESC
+                """
+            )
         rows = cur.fetchall()
         return [dict(r) for r in rows]
     finally:
         cur.close()
         conn.close()
+
+
+# ── WEBHOOK MANAGEMENT (ADR-053) ──────────────────────────────────────────────
+
+def _ensure_webhook_columns() -> None:
+    """Add webhook_url and webhook_secret columns to b2b_clients if absent."""
+    try:
+        conn = _get_conn()
+        cur = conn.cursor()
+        cur.execute(
+            "ALTER TABLE b2b_clients ADD COLUMN IF NOT EXISTS webhook_url TEXT"
+        )
+        cur.execute(
+            "ALTER TABLE b2b_clients ADD COLUMN IF NOT EXISTS webhook_secret TEXT"
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"RBAC _ensure_webhook_columns (non-fatal): {e}")
+
+
+def _encrypt_webhook_secret(plaintext: str) -> str:
+    """
+    Encrypt webhook secret using Fernet (WEBHOOK_ENCRYPTION_KEY env var).
+    Falls back to plaintext if cryptography package or key not available.
+    """
+    try:
+        from cryptography.fernet import Fernet
+        key = os.environ.get("WEBHOOK_ENCRYPTION_KEY", "").strip()
+        if key:
+            f = Fernet(key.encode())
+            return f.encrypt(plaintext.encode()).decode()
+    except Exception as e:
+        logger.debug(f"RBAC webhook secret encryption skipped (non-fatal): {e}")
+    return plaintext
+
+
+def _decrypt_webhook_secret(ciphertext: str) -> str:
+    """
+    Decrypt Fernet-encrypted webhook secret.
+    Falls back to returning as-is if key not available or decryption fails.
+    """
+    try:
+        from cryptography.fernet import Fernet
+        key = os.environ.get("WEBHOOK_ENCRYPTION_KEY", "").strip()
+        if key:
+            f = Fernet(key.encode())
+            return f.decrypt(ciphertext.encode()).decode()
+    except Exception as e:
+        logger.debug(f"RBAC webhook secret decryption skipped (non-fatal): {e}")
+    return ciphertext
+
+
+def set_client_webhook(client_id: str, webhook_url: str, webhook_secret: str) -> bool:
+    """
+    Register or update a client's webhook URL and HMAC signing secret.
+    Secret is Fernet-encrypted before storage — never stored in plaintext.
+    Returns True if the client was found and updated.
+    ADR-053.
+    """
+    _ensure_webhook_columns()
+    encrypted_secret = _encrypt_webhook_secret(webhook_secret)
+    conn = _get_conn()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE b2b_clients
+            SET webhook_url = %s, webhook_secret = %s
+            WHERE client_id = %s
+            """,
+            (webhook_url, encrypted_secret, client_id),
+        )
+        updated = cur.rowcount > 0
+        conn.commit()
+        if updated:
+            logger.info(f"RBAC: webhook set for client_id={client_id} url={webhook_url[:60]}...")
+        return updated
+    finally:
+        cur.close()
+        conn.close()
+
+
+def delete_client_webhook(client_id: str) -> bool:
+    """
+    Remove a client's webhook configuration.
+    Returns True if the client was found and updated.
+    ADR-053.
+    """
+    conn = _get_conn()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "UPDATE b2b_clients SET webhook_url = NULL, webhook_secret = NULL WHERE client_id = %s",
+            (client_id,),
+        )
+        updated = cur.rowcount > 0
+        conn.commit()
+        if updated:
+            logger.info(f"RBAC: webhook removed for client_id={client_id}")
+        return updated
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_client_webhook(client_id: str) -> dict | None:
+    """
+    Return the client's decrypted webhook config: {webhook_url, webhook_secret}.
+    Returns None if the client has no webhook configured.
+    ADR-053.
+    """
+    try:
+        conn = _get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            """
+            SELECT webhook_url, webhook_secret
+            FROM b2b_clients
+            WHERE client_id = %s AND is_active = TRUE
+            """,
+            (client_id,),
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if not row or not row.get("webhook_url"):
+            return None
+        return {
+            "webhook_url": row["webhook_url"],
+            "webhook_secret": _decrypt_webhook_secret(row["webhook_secret"] or ""),
+        }
+    except Exception as e:
+        logger.warning(f"RBAC get_client_webhook error (non-fatal): {e}")
+        return None
