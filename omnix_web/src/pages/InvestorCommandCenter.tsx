@@ -488,6 +488,7 @@ export default function InvestorCommandCenter() {
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 180 }}>
             {[
+              { label: '2-Min Investor Demo', path: '/demo', color: '#f59e0b' },
               { label: 'Public Sandbox', path: '/try', color: '#6366f1' },
               { label: 'Verify a Receipt', path: '/verify', color: '#10B981' },
               { label: 'Executive Audit', path: '/audit', color: '#C9A227' },
