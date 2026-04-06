@@ -159,14 +159,15 @@ async def evaluar_command(self, update, context):
         )
 
         msg = (
-            f"🧪 *[DEMO — Sin validez legal ni contractual]*\n\n"
             f"{icon} *OMNIX GOVERNANCE — {decision}*\n\n"
             f"📊 *Pipeline 11 Checkpoints:*\n"
             f"{bar_ok}{bar_bad}\n"
             f"✅ Pasados: {cp_passed} · ❌ Bloqueados: {cp_blocked} · Total: {cp_total}\n"
             f"{receipt_line}\n\n"
             f"📝 *Evaluación:*\n{explanation}\n\n"
-            f"⚠️ _Esta evaluación es una demostración orientativa. No constituye asesoramiento legal, financiero ni regulatorio. Para evaluaciones con validez institucional, contacta a OMNIX._\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🧪 *Modo Demo — Análisis real, firma pendiente*\n"
+            f"_Este análisis ha sido ejecutado por el pipeline real de OMNIX con sus 11 checkpoints activos — no es simulado ni ficticio. Sin embargo, al ser una demostración pública, el recibo no lleva firma criptográfica institucional ni tiene validez legal o contractual. Para evaluaciones con plena validez institucional, firma PQC y soporte regulatorio, contacta a OMNIX._\n\n"
             f"_OMNIX Decision Governance · Harold Nunes · Dubai 2026_"
         )
 
