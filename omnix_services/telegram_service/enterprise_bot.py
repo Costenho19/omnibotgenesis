@@ -1075,9 +1075,8 @@ class EnterpriseTelegramBot:
             
             # Enviar nota informativa (lenguaje institucional)
             info_note = """📋 **NOTA INFORMATIVA:**
-OMNIX es una herramienta de análisis de mercado.
-Consulte /legal para términos completos de uso.
-Sistema operando en fase de validación."""
+OMNIX es una infraestructura de gobernanza de decisiones institucionales. Las evaluaciones públicas son demostrativas y no constituyen asesoramiento legal, financiero ni regulatorio.
+Consulta /legal para los términos completos de uso."""
             
             await update.message.reply_text(info_note, parse_mode='Markdown')
             
@@ -1310,11 +1309,11 @@ También puedes escribir naturalmente:
 Este servicio está disponible SOLO para usuarios mayores de 18 años. Al usar OMNIX confirmas que cumples este requisito legal.
 
 **NATURALEZA DEL SERVICIO:**
-OMNIX es una herramienta de ANÁLISIS EDUCATIVO e INFORMATIVO sobre criptomonedas. NO es:
+OMNIX es una infraestructura de gobernanza de decisiones institucionales con pipeline de 11 checkpoints, recibos criptográficos y motor de trading integrado. NO es:
 - ❌ Asesor financiero regulado
 - ❌ Gestor de inversiones
 - ❌ Entidad bancaria o financiera
-- ❌ Garantía de ganancias
+- ❌ Garantía de ganancias o resultados
 
 **RIESGOS DEL TRADING DE CRIPTOMONEDAS:**
 ⚠️ ADVERTENCIA CRÍTICA:
@@ -1371,9 +1370,10 @@ Las clasificaciones Halal/Haram se basan en investigación académica (Mufti Taq
 - Cumplimiento GDPR en proceso
 
 **CONTACTO:**
-Desarrollador: Harold Nunes
+Fundador: Harold Nunes
 Sistema: OMNIX Decision Governance
-Última actualización: Diciembre 2025
+Web: omnixquantum.net · contacto@omnixquantum.net
+Última actualización: Abril 2026
 
 ⚠️ **IMPORTANTE:** Si no aceptas estos términos, NO uses OMNIX para tomar decisiones financieras.
 
@@ -1522,7 +1522,7 @@ Sistema: OMNIX Decision Governance
 
 ⚠️ **RECORDATORIO FINAL:**
 
-OMNIX es una HERRAMIENTA EDUCATIVA. Te damos datos y análisis, pero TÚ tomas las decisiones. Si no entiendes algo, NO inviertas en ello.
+OMNIX es una infraestructura de gobernanza de decisiones con motor de trading integrado. Te damos datos, análisis y evaluaciones de gobernanza, pero TÚ tomas las decisiones finales. Si no entiendes algo, NO inviertas en ello.
 
 El mejor trade es el que NO haces si no estás seguro.
 
@@ -2362,8 +2362,8 @@ OMNIX utiliza principios de física cuántica real:
    `/quantum_demo qrng` - Física del QRNG
    `/quantum_test` - Test en vivo con ANU
 
-💡 OMNIX es el primer bot de trading retail
-con entropía cuántica verificable.
+💡 OMNIX es la primera infraestructura de gobernanza de decisiones
+con entropía cuántica verificable en sus recibos PQC.
 """
             await update.message.reply_text(response, parse_mode='Markdown')
             
