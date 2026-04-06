@@ -88,6 +88,11 @@ _client_rate_limit_store: dict = defaultdict(list)
 _CLIENT_RATE_LIMIT_WINDOW = 60
 _CLIENT_RATE_LIMIT_MAX = 30
 
+_brute_force_store: dict = {}
+_BRUTE_FORCE_MAX = 5
+_BRUTE_FORCE_WINDOW = 900
+_BRUTE_FORCE_LOCKOUT = 900
+
 _MONTHLY_ALERT_THRESHOLD = 500
 _monthly_alert_sent: dict = {}
 
@@ -585,18 +590,71 @@ def _load_client_checkpoint_overrides(client_id: str) -> list[dict]:
     return merged
 
 
+def _get_client_ip() -> str:
+    return request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
+
+
+def _is_brute_force_locked(ip: str) -> bool:
+    now = time.time()
+    entry = _brute_force_store.get(ip)
+    if not entry:
+        return False
+    if entry.get('locked_until') and now < entry['locked_until']:
+        return True
+    if entry.get('locked_until') and now >= entry['locked_until']:
+        del _brute_force_store[ip]
+    return False
+
+
+def _record_failed_auth(ip: str) -> None:
+    now = time.time()
+    entry = _brute_force_store.get(ip, {'count': 0, 'first_seen': now})
+    if now - entry['first_seen'] > _BRUTE_FORCE_WINDOW:
+        entry = {'count': 0, 'first_seen': now}
+    entry['count'] += 1
+    if entry['count'] >= _BRUTE_FORCE_MAX:
+        entry['locked_until'] = now + _BRUTE_FORCE_LOCKOUT
+        logger.warning(f"[SECURITY] Brute force lockout triggered for IP={ip} after {entry['count']} failed attempts")
+    _brute_force_store[ip] = entry
+
+
 def _require_auth(require_admin: bool = False):
     """
     Authenticate request via X-API-Key header.
+    Includes brute force lockout (#1) and admin IP allowlist (#4).
     Returns (client_dict, None) on success or (None, error_response) on failure.
     """
+    client_ip = _get_client_ip()
+
+    if _is_brute_force_locked(client_ip):
+        logger.warning(f"[SECURITY] Blocked locked IP={client_ip}")
+        return None, (jsonify({
+            "error": "Too many failed attempts — try again in 15 minutes",
+            "status": 429,
+        }), 429)
+
     api_key = request.headers.get("X-API-Key", "")
     client = authenticate_client(api_key)
+
     if client is None:
-        logger.warning(f"Unauthorized governance attempt from {request.remote_addr or 'unknown'}")
+        _record_failed_auth(client_ip)
+        logger.warning(f"[SECURITY] Unauthorized attempt from IP={client_ip}")
         return None, (jsonify({"error": "Unauthorized — provide a valid X-API-Key", "status": 401}), 401)
+
     if require_admin and client.get("role") != "admin":
         return None, (jsonify({"error": "Forbidden — admin role required", "status": 403}), 403)
+
+    if require_admin:
+        allowed_ips_raw = os.environ.get("ADMIN_ALLOWED_IPS", "")
+        if allowed_ips_raw.strip():
+            allowed_ips = {ip.strip() for ip in allowed_ips_raw.split(",") if ip.strip()}
+            if client_ip not in allowed_ips:
+                logger.warning(f"[SECURITY] Admin endpoint blocked for unlisted IP={client_ip}")
+                return None, (jsonify({
+                    "error": "Forbidden — access restricted",
+                    "status": 403,
+                }), 403)
+
     return client, None
 
 

@@ -40,10 +40,29 @@ def generate_api_key(prefix: str = "OMNIX") -> str:
     return f"{prefix}-{random_part}"
 
 
+def _ensure_key_expiry_column() -> None:
+    """Add key_expires_at column to b2b_clients if it doesn't exist yet."""
+    try:
+        conn = _get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            ALTER TABLE b2b_clients
+            ADD COLUMN IF NOT EXISTS key_expires_at TIMESTAMPTZ
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"RBAC _ensure_key_expiry_column (non-fatal): {e}")
+
+
+_KEY_EXPIRY_DAYS = 90
+
+
 def authenticate_client(api_key: str) -> dict | None:
     """
     Authenticate an API key against b2b_clients table.
-    Returns the client row as dict if active, None otherwise.
+    Returns the client row as dict if active and not expired, None otherwise.
     Falls back to B2B_API_KEY env var if b2b_clients table is empty (dev mode).
     """
     if not api_key:
@@ -53,12 +72,10 @@ def authenticate_client(api_key: str) -> dict | None:
         conn = _get_conn()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        # Check if any clients exist — if none, fall back to env var
         cur.execute("SELECT COUNT(*) as cnt FROM b2b_clients")
         count = cur.fetchone()["cnt"]
 
         if count == 0:
-            # Dev fallback: if b2b_clients is empty, use B2B_API_KEY env var
             env_key = os.environ.get("B2B_API_KEY", "")
             if env_key and api_key == env_key:
                 cur.close()
@@ -69,6 +86,7 @@ def authenticate_client(api_key: str) -> dict | None:
                     "role": "admin",
                     "is_active": True,
                     "email": None,
+                    "key_expires_at": None,
                 }
             cur.close()
             conn.close()
@@ -77,7 +95,7 @@ def authenticate_client(api_key: str) -> dict | None:
         key_hash = hash_api_key(api_key)
         cur.execute(
             """
-            SELECT client_id, name, email, role, is_active, created_at, last_seen_at
+            SELECT client_id, name, email, role, is_active, created_at, last_seen_at, key_expires_at
             FROM b2b_clients
             WHERE api_key_hash = %s AND is_active = TRUE
             """,
@@ -89,7 +107,19 @@ def authenticate_client(api_key: str) -> dict | None:
 
         if row is None:
             return None
-        return dict(row)
+
+        client = dict(row)
+
+        if client.get("key_expires_at") is not None:
+            import datetime as _dt
+            exp = client["key_expires_at"]
+            if hasattr(exp, 'tzinfo') and exp.tzinfo is None:
+                exp = exp.replace(tzinfo=_dt.timezone.utc)
+            if exp < _dt.datetime.now(_dt.timezone.utc):
+                logger.warning(f"RBAC: expired key used by client_id={client['client_id']}")
+                return None
+
+        return client
 
     except Exception as e:
         logger.error(f"RBAC authenticate_client error: {e}")
@@ -120,8 +150,9 @@ def create_client(
 ) -> str:
     """
     Create a new B2B client. Returns the plaintext API key — shown once only.
-    Raises ValueError if client_id already exists.
+    Key expires in 90 days. Raises ValueError if client_id already exists.
     """
+    _ensure_key_expiry_column()
     api_key = generate_api_key()
     key_hash = hash_api_key(api_key)
 
@@ -130,13 +161,13 @@ def create_client(
     try:
         cur.execute(
             """
-            INSERT INTO b2b_clients (client_id, api_key_hash, name, email, role, is_active)
-            VALUES (%s, %s, %s, %s, %s, TRUE)
+            INSERT INTO b2b_clients (client_id, api_key_hash, name, email, role, is_active, key_expires_at)
+            VALUES (%s, %s, %s, %s, %s, TRUE, NOW() + INTERVAL '90 days')
             """,
             (client_id, key_hash, name, email, role),
         )
         conn.commit()
-        logger.info(f"RBAC: created client client_id={client_id} role={role}")
+        logger.info(f"RBAC: created client client_id={client_id} role={role} expires_in=90d")
         return api_key
     except psycopg2.errors.UniqueViolation:
         conn.rollback()
@@ -189,9 +220,11 @@ def reactivate_client(client_id: str) -> bool:
 def rotate_api_key(client_id: str) -> str:
     """
     Generate and store a new API key for an existing client.
+    Resets key_expires_at to 90 days from now.
     Returns the new plaintext key — shown once only.
     Raises ValueError if client_id not found.
     """
+    _ensure_key_expiry_column()
     new_key = generate_api_key()
     key_hash = hash_api_key(new_key)
 
@@ -199,13 +232,17 @@ def rotate_api_key(client_id: str) -> str:
     cur = conn.cursor()
     try:
         cur.execute(
-            "UPDATE b2b_clients SET api_key_hash = %s WHERE client_id = %s",
+            """
+            UPDATE b2b_clients
+            SET api_key_hash = %s, key_expires_at = NOW() + INTERVAL '90 days'
+            WHERE client_id = %s
+            """,
             (key_hash, client_id),
         )
         if cur.rowcount == 0:
             raise ValueError(f"client_id '{client_id}' not found")
         conn.commit()
-        logger.info(f"RBAC: rotated API key for client_id={client_id}")
+        logger.info(f"RBAC: rotated API key for client_id={client_id} — new expiry in 90d")
         return new_key
     finally:
         cur.close()
