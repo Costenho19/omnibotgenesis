@@ -247,6 +247,153 @@ def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
 
+@app.route('/api/analytics/decisions', methods=['GET'])
+def analytics_decisions():
+    """
+    Decision analytics — aggregated patterns from all governance evaluations.
+    Public endpoint. No auth required. Returns aggregated data only, no PII.
+    """
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({
+            'live': False,
+            'note': 'Analytics unavailable — database not connected',
+            'sample': {
+                'total_decisions': 82518,
+                'approval_rate_pct': 61.2,
+                'block_rate_pct': 32.8,
+                'hold_rate_pct': 6.0,
+                'by_decision': {'APPROVED': 50502, 'BLOCKED': 27076, 'HOLD': 4940},
+                'by_domain': {'trading': 38400, 'credit': 18200, 'insurance': 14100, 'robotics': 7818, 'energy': 4000},
+                'top_blocking_checkpoints': [
+                    {'checkpoint': 'CP-3', 'name': 'Risk Evaluation', 'block_count': 9821},
+                    {'checkpoint': 'CP-2', 'name': 'Probability Assessment', 'block_count': 7340},
+                    {'checkpoint': 'CP-6', 'name': 'Stress Testing', 'block_count': 5910},
+                ],
+            }
+        })
+
+    try:
+        cur = conn.cursor()
+
+        cur.execute("SELECT COUNT(*) FROM decision_receipts")
+        total = cur.fetchone()[0] or 0
+
+        cur.execute("""
+            SELECT UPPER(decision), COUNT(*) FROM decision_receipts
+            GROUP BY UPPER(decision)
+        """)
+        by_decision = {}
+        for row in cur.fetchall():
+            key = row[0]
+            if key in ('BLOCK',):
+                key = 'BLOCKED'
+            elif key in ('APPROVE',):
+                key = 'APPROVED'
+            by_decision[key] = by_decision.get(key, 0) + row[1]
+
+        approved = by_decision.get('APPROVED', 0)
+        blocked = by_decision.get('BLOCKED', 0) + by_decision.get('BLOCK', 0)
+        hold = by_decision.get('HOLD', 0)
+
+        def _pct(n):
+            return round(n / total * 100, 1) if total > 0 else 0.0
+
+        cur.execute("""
+            SELECT domain, COUNT(*) FROM decision_receipts
+            WHERE domain IS NOT NULL
+            GROUP BY domain ORDER BY COUNT(*) DESC LIMIT 10
+        """)
+        by_domain = {row[0]: row[1] for row in cur.fetchall()}
+
+        cur.execute("""
+            SELECT veto_chain FROM decision_receipts
+            WHERE decision IN ('BLOCK','BLOCKED') AND veto_chain IS NOT NULL
+            ORDER BY created_at DESC LIMIT 2000
+        """)
+        import json as _json
+        cp_block_counts: dict = {}
+        for (vc_raw,) in cur.fetchall():
+            try:
+                entries = _json.loads(vc_raw) if isinstance(vc_raw, str) else (vc_raw or [])
+                for entry in entries:
+                    txt = str(entry)
+                    if 'BLOCKED' in txt.upper() or 'VETO' in txt.upper():
+                        import re as _re
+                        m = _re.search(r'CP-(\d+)', txt)
+                        if m:
+                            cp_key = f'CP-{m.group(1)}'
+                            cp_block_counts[cp_key] = cp_block_counts.get(cp_key, 0) + 1
+            except Exception:
+                pass
+
+        _cp_labels = {
+            'CP-1': 'Signal Integrity Validator',
+            'CP-2': 'Probability Assessment',
+            'CP-3': 'Risk Evaluation',
+            'CP-4': 'Coherence Engine',
+            'CP-5': 'Trend Validator',
+            'CP-6': 'Stress Testing',
+            'CP-7': 'Ethics & Domain Gate',
+            'CP-8': 'Threshold & Context Validator',
+            'CP-9': 'AML Screening',
+            'CP-10': 'Fraud Detection',
+            'CP-11': 'Jurisdiction Compliance',
+        }
+        top_blocking = sorted(cp_block_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        top_blocking_out = [
+            {'checkpoint': k, 'name': _cp_labels.get(k, k), 'block_count': v}
+            for k, v in top_blocking
+        ]
+
+        cur.execute("""
+            SELECT DATE_TRUNC('day', created_at)::date, UPPER(decision), COUNT(*)
+            FROM decision_receipts
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+            GROUP BY 1, 2
+            ORDER BY 1
+        """)
+        trend_raw = cur.fetchall()
+        trend: dict = {}
+        for (day, dec, cnt) in trend_raw:
+            day_str = str(day)
+            if day_str not in trend:
+                trend[day_str] = {'date': day_str, 'approved': 0, 'blocked': 0, 'hold': 0}
+            if dec in ('APPROVED', 'APPROVE'):
+                trend[day_str]['approved'] += cnt
+            elif dec in ('BLOCKED', 'BLOCK'):
+                trend[day_str]['blocked'] += cnt
+            elif dec == 'HOLD':
+                trend[day_str]['hold'] += cnt
+
+        cur.execute("""
+            SELECT COUNT(DISTINCT client_id) FROM decision_receipts
+            WHERE client_id IS NOT NULL AND client_id != 'PUBLIC'
+        """)
+        b2b_clients_active = cur.fetchone()[0] or 0
+
+        cur.close()
+        conn.close()
+
+        return jsonify({
+            'live': True,
+            'generated_at': datetime.now(timezone.utc).isoformat(),
+            'total_decisions': total,
+            'approval_rate_pct': _pct(approved),
+            'block_rate_pct': _pct(blocked),
+            'hold_rate_pct': _pct(hold),
+            'by_decision': by_decision,
+            'by_domain': by_domain,
+            'top_blocking_checkpoints': top_blocking_out,
+            'trend_30d': sorted(trend.values(), key=lambda x: x['date']),
+            'b2b_clients_active': b2b_clients_active,
+        })
+
+    except Exception as e:
+        print(f"Analytics error: {e}")
+        return jsonify({'error': str(e), 'live': False}), 500
+
+
 def init_contact_leads_table():
     try:
         conn = get_db_connection()

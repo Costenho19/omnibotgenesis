@@ -39,7 +39,10 @@ except Exception:
     _FRAUD_AVAILABLE = False
 
 try:
-    from omnix_core.governance.jurisdiction_gate import JurisdictionGate, load_jurisdiction_config_from_env
+    try:
+        from api.omnix_engine.jurisdiction_gate import JurisdictionGate, load_jurisdiction_config_from_env
+    except Exception:
+        from omnix_core.governance.jurisdiction_gate import JurisdictionGate, load_jurisdiction_config_from_env
     _JURISDICTION_AVAILABLE = True
 except Exception:
     _JURISDICTION_AVAILABLE = False

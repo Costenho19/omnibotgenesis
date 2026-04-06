@@ -615,7 +615,123 @@ def api_governance_schema():
         'auth': 'X-API-Key header required — contact OMNIX to obtain a client API key',
         'rate_limit': f'{_RATE_LIMIT_MAX} requests per {_RATE_LIMIT_WINDOW}s per IP',
         'documentation': 'docs/reference/adr/ADR-028-external-signal-evaluation-api.md',
-        'verifiable_at': 'https://omnibotgenesis-production.up.railway.app/verify',
+        'verifiable_at': 'https://omnixquantum.net/verify',
+        'quickstart': 'GET /api/governance/quickstart',
+    })
+
+
+@governance_bp.route('/api/governance/quickstart', methods=['GET'])
+def api_governance_quickstart():
+    """
+    Public endpoint — integration quickstart guide with ready-to-use examples.
+    No authentication required. Helps developers connect in minutes.
+    """
+    base_url = 'https://omnixquantum.net'
+    return jsonify({
+        'title': 'OMNIX Governance API — Integration Quickstart',
+        'version': 'ADR-028 / ADR-051',
+        'contact': 'contacto@omnixquantum.net',
+        'steps': [
+            {
+                'step': 1,
+                'title': 'Request an API key',
+                'description': 'Contact OMNIX to obtain a B2B client API key. Format: OMNIX-<40 chars>. Shown once — store it securely.',
+                'contact': 'contacto@omnixquantum.net',
+            },
+            {
+                'step': 2,
+                'title': 'Check the signal schema',
+                'description': 'Review which signals are required and their valid ranges.',
+                'curl': f'curl {base_url}/api/governance/schema',
+            },
+            {
+                'step': 3,
+                'title': 'Submit your first evaluation',
+                'description': 'POST normalized signals (0–100 scale). Receive a PQC-signed receipt instantly.',
+                'curl': (
+                    f'curl -X POST {base_url}/api/governance/evaluate \\\n'
+                    f'  -H "Content-Type: application/json" \\\n'
+                    f'  -H "X-API-Key: OMNIX-YOUR_API_KEY_HERE" \\\n'
+                    f'  -d \'{{\n'
+                    f'    "signals": {{\n'
+                    f'      "signal_integrity": 78,\n'
+                    f'      "probability_score": 65,\n'
+                    f'      "risk_exposure": 42,\n'
+                    f'      "signal_coherence": 71,\n'
+                    f'      "trend_persistence": 60,\n'
+                    f'      "stress_resilience": 55\n'
+                    f'    }},\n'
+                    f'    "asset": "BTC/USD",\n'
+                    f'    "domain": "trading"\n'
+                    f'  }}\''
+                ),
+                'python': (
+                    'import requests\n\n'
+                    'response = requests.post(\n'
+                    f'    "{base_url}/api/governance/evaluate",\n'
+                    '    headers={\n'
+                    '        "X-API-Key": "OMNIX-YOUR_API_KEY_HERE",\n'
+                    '        "Content-Type": "application/json",\n'
+                    '    },\n'
+                    '    json={\n'
+                    '        "signals": {\n'
+                    '            "signal_integrity": 78,\n'
+                    '            "probability_score": 65,\n'
+                    '            "risk_exposure": 42,\n'
+                    '            "signal_coherence": 71,\n'
+                    '            "trend_persistence": 60,\n'
+                    '            "stress_resilience": 55,\n'
+                    '        },\n'
+                    '        "asset": "BTC/USD",\n'
+                    '        "domain": "trading",\n'
+                    '    }\n'
+                    ')\n'
+                    'receipt = response.json()\n'
+                    'print(receipt["decision"])        # APPROVED / BLOCKED / HOLD\n'
+                    'print(receipt["receipt_id"])      # Unique verifiable ID\n'
+                    'print(receipt["verify_url"])      # Public verification link\n'
+                ),
+            },
+            {
+                'step': 4,
+                'title': 'Verify any receipt',
+                'description': 'Any receipt can be independently verified by anyone — no API key needed.',
+                'curl': f'curl {base_url}/api/public/verify/RECEIPT_ID_HERE',
+            },
+            {
+                'step': 5,
+                'title': 'Check your usage',
+                'description': 'Admin key holders can query monthly usage for billing review.',
+                'curl': (
+                    f'curl {base_url}/api/governance/admin/usage/YOUR_CLIENT_ID \\\n'
+                    f'  -H "X-API-Key: OMNIX-ADMIN_KEY_HERE"'
+                ),
+            },
+        ],
+        'supported_domains': [
+            'trading', 'credit', 'insurance', 'robotics', 'energy',
+            'biotech', 'real_estate', 'generic',
+        ],
+        'supported_jurisdictions': [
+            'UAE', 'EU', 'US', 'GCC', 'UK', 'SG', 'JP', 'AU', 'CA', 'BR', 'KR', 'CH', 'GLOBAL'
+        ],
+        'signal_ranges': 'All signals are 0–100 numeric values. See /api/governance/schema for full details.',
+        'response_fields': {
+            'decision': 'APPROVED | BLOCKED | HOLD',
+            'receipt_id': 'Unique ID for this evaluation — use for verification',
+            'verify_url': 'Public URL to verify this receipt — shareable with anyone',
+            'checkpoints': 'Array of 11 checkpoint results with individual pass/fail',
+            'signature_algorithm': 'Cryptographic algorithm used to sign this receipt',
+        },
+        'rate_limits': {
+            'per_ip': f'{_RATE_LIMIT_MAX} requests per {_RATE_LIMIT_WINDOW}s',
+            'per_client': f'{_CLIENT_RATE_LIMIT_MAX} requests per {_CLIENT_RATE_LIMIT_WINDOW}s',
+        },
+        'sla': {
+            'p95_latency_ms': 800,
+            'availability_target': '99.9%',
+            'receipt_retention': 'Permanent — all receipts stored indefinitely',
+        },
     })
 
 
