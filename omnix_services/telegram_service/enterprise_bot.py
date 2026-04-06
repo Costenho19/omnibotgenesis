@@ -1333,7 +1333,7 @@ Las proyecciones, simulaciones Monte Carlo, análisis de Black Swan y recomendac
 **USO BAJO TU PROPIO RIESGO:**
 Al usar OMNIX, aceptas que:
 - Operas completamente bajo tu responsabilidad
-- Harold Nunes (desarrollador) NO se hace responsable de pérdidas
+- Harold Nunes (Fundador) NO se hace responsable de pérdidas
 - OMNIX NO asume responsabilidad por decisiones de trading
 
 ⚠️ **CONSULTA PROFESIONAL OBLIGATORIA:**
@@ -1341,8 +1341,8 @@ Debes consultar SIEMPRE con un asesor financiero REGULADO y CERTIFICADO antes de
 
 **CUMPLIMIENTO REGULATORIO Y JURISDICCIÓN:**
 - OMNIX no está registrado ante la SEC (USA), FINRA (USA), FCA (UK), BaFin (Alemania) o entidades reguladoras similares
-- Este servicio es EXPERIMENTAL y en DESARROLLO activo
-- Operamos como software educativo bajo leyes internacionales de protección al consumidor
+- Este servicio opera en fase de validación institucional activa
+- Operamos como infraestructura de gobernanza bajo leyes internacionales aplicables
 - **JURISDICCIONES RESTRINGIDAS - NO DISPONIBLE EN:**
   • China (prohibición total trading crypto)
   • Corea del Norte (sanciones internacionales)
@@ -1377,7 +1377,7 @@ Web: omnixquantum.net · contacto@omnixquantum.net
 
 ⚠️ **IMPORTANTE:** Si no aceptas estos términos, NO uses OMNIX para tomar decisiones financieras.
 
-*Para soporte técnico, contacta al desarrollador.*
+*Para soporte técnico, contacta al Fundador.*
 """
             
             await update.message.reply_text(legal_text, parse_mode='Markdown')
