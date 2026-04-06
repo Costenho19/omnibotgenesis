@@ -159,12 +159,14 @@ async def evaluar_command(self, update, context):
         )
 
         msg = (
+            f"🧪 *[DEMO — Sin validez legal ni contractual]*\n\n"
             f"{icon} *OMNIX GOVERNANCE — {decision}*\n\n"
             f"📊 *Pipeline 11 Checkpoints:*\n"
             f"{bar_ok}{bar_bad}\n"
             f"✅ Pasados: {cp_passed} · ❌ Bloqueados: {cp_blocked} · Total: {cp_total}\n"
             f"{receipt_line}\n\n"
             f"📝 *Evaluación:*\n{explanation}\n\n"
+            f"⚠️ _Esta evaluación es una demostración orientativa. No constituye asesoramiento legal, financiero ni regulatorio. Para evaluaciones con validez institucional, contacta a OMNIX._\n\n"
             f"_OMNIX Decision Governance · Harold Nunes · Dubai 2026_"
         )
 
