@@ -200,20 +200,26 @@ def _evaluate_claim(claim_data: dict) -> dict:
 
     # Import governance engine
     try:
-        from omnix_core.governance.governance_engine import GovernanceEvaluationEngine
+        from omnix_core.governance.external_evaluator import GovernanceEvaluationEngine
         engine = GovernanceEvaluationEngine()
         result = engine.evaluate(
             signals=signals_dict,
-            client_id="INSURANCE_VERTICAL",
-            domain="insurance_governance",
             asset=claim_data["insurance_type"],
+            domain="insurance",
+            metadata={"claimant_type": claim_data["claimant_type"]},
         )
-        decision = result.get("decision", "HOLD")
-        receipt_id = result.get("receipt_id", "")
-        checkpoint_results = result.get("checkpoint_results", [])
-        trajectory_score = result.get("trajectory_analysis", {}).get("trajectory_score", 75.0)
-        decision_score = result.get("composite_score", 50.0)
-        block_reason = result.get("block_reason", None)
+        decision = result.get("decision", "BLOCKED")
+        receipt_id = f"INS-{uuid.uuid4().hex[:12].upper()}"
+        checkpoint_results = result.get("gate_results", [])
+        veto_chain = result.get("veto_chain", [])
+        cp_passed = result.get("checkpoints_passed", 0)
+        scores = result.get("scores", signals_dict)
+        composite = (scores.get("probability_score", 50) + (100 - scores.get("risk_exposure", 50)) +
+                     scores.get("signal_coherence", 50) + scores.get("trend_persistence", 50) +
+                     scores.get("stress_resilience", 50) + scores.get("logic_consistency", 50)) / 6.0
+        trajectory_score = composite
+        decision_score = composite
+        block_reason = veto_chain[0].get("checkpoint_name", "Governance threshold breach") if veto_chain else None
     except Exception as e:
         logger.warning(f"Governance engine error: {e} — using rule-based fallback")
         # Rule-based fallback

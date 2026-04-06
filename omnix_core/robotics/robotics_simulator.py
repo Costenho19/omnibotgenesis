@@ -228,20 +228,29 @@ def _evaluate_action(action_data: dict) -> dict:
     signals_dict = signals.to_omnix_dict()
 
     try:
-        from omnix_core.governance.governance_engine import GovernanceEvaluationEngine
+        from omnix_core.governance.external_evaluator import GovernanceEvaluationEngine
         engine = GovernanceEvaluationEngine()
         result = engine.evaluate(
             signals=signals_dict,
-            client_id="ROBOTICS_VERTICAL",
-            domain="robotics_governance",
             asset=f"{action_data['robot_type']}_{action_data['action_type']}",
+            domain="robotics",
+            metadata={
+                "industry": action_data["industry"],
+                "environment": action_data["environment"],
+            },
         )
-        decision = result.get("decision", "HOLD")
-        receipt_id = result.get("receipt_id", "")
-        checkpoint_results = result.get("checkpoint_results", [])
-        trajectory_score = result.get("trajectory_analysis", {}).get("trajectory_score", 75.0)
-        decision_score = result.get("composite_score", 50.0)
-        block_reason = result.get("block_reason", None)
+        decision = result.get("decision", "BLOCKED")
+        receipt_id = f"RBT-{uuid.uuid4().hex[:12].upper()}"
+        checkpoint_results = result.get("gate_results", [])
+        veto_chain = result.get("veto_chain", [])
+        cp_passed = result.get("checkpoints_passed", 0)
+        scores = result.get("scores", signals_dict)
+        composite = (scores.get("probability_score", 50) + (100 - scores.get("risk_exposure", 50)) +
+                     scores.get("signal_coherence", 50) + scores.get("trend_persistence", 50) +
+                     scores.get("stress_resilience", 50) + scores.get("logic_consistency", 50)) / 6.0
+        trajectory_score = composite
+        decision_score = composite
+        block_reason = veto_chain[0].get("checkpoint_name", "Governance threshold breach") if veto_chain else None
     except Exception as e:
         logger.warning(f"Governance engine error: {e} — using rule-based fallback")
         composite = (signals.probability_score + (100 - signals.risk_exposure) +
