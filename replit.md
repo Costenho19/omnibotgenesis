@@ -323,9 +323,47 @@ docs/reference/adr/
 
 ---
 
+## Executive Audit Dashboard (ADR-059)
+
+**Fecha:** 2026-04-06 | **Status:** Accepted
+
+Panel ejecutivo accesible en `/audit`. Traduce los recibos PQC técnicos a lenguaje de negocio para CFOs, reguladores y directivos — sin exponer scores internos, thresholds ni nombres de señales propietarias.
+
+### Arquitectura
+
+| Capa | Detalle |
+|------|---------|
+| **Ruta frontend** | `/audit` → `AuditDashboard.tsx` |
+| **Endpoint protegido** | `GET /api/governance/audit/decisions` (API key requerida) |
+| **Endpoint demo público** | `GET /api/public/audit-demo` (sin autenticación, datos sintéticos) |
+| **Traducción veto_chain** | `_parse_veto_chain_executive()` — extrae CP-id + status, mapea a label + executive_reason en inglés ejecutivo. **NUNCA expone scores, thresholds, operadores ni nombres de señales.** |
+| **Fuente de datos** | Tabla `decision_receipts` (receipt_id, asset, domain, decision, veto_chain, timestamp) |
+
+### Qué muestra el dashboard
+
+- **KPI bar**: Total decisiones, Aprobadas, Bloqueadas, % aprobación
+- **Domain breakdown**: Por vertical (Trading, Crédito Islámico, Seguros, Robótica) con barra de aprobación
+- **Tabla de decisiones**: receipt_id, timestamp, dominio, badge APPROVED/BLOCKED — clickeable
+- **Panel de detalle**: Resultados de cada checkpoint (CP-1 → CP-11 + CAG/TIE/PQC) en lenguaje ejecutivo + badge PQC SIGNED / CHAIN LINKED
+- **Filtros**: por dominio, por resultado (APPROVED / BLOCKED)
+- **Modo demo/live toggle**: Demo usa datos sintéticos sin API key; Live requiere API key
+
+### Archivos afectados (ADR-059)
+
+```
+omnix_web/src/pages/AuditDashboard.tsx   # Nueva página React (KPI, filtros, tabla, panel detalle)
+omnix_web/src/App.tsx                     # Ruta /audit añadida
+omnix_web/src/pages/InvestorCommandCenter.tsx  # Link "Executive Audit" → /audit añadido
+omnix_web/api/gov_blueprint.py            # 2 endpoints nuevos + traducción veto_chain
+docs/reference/adr/ADR-059-executive-audit-dashboard.md
+```
+
+---
+
 ## Recent Fixes (Apr 2026)
 | Commit | Fix |
 |--------|-----|
+| ADR-059 | **Executive Audit Dashboard**: Página `/audit` con KPIs, domain breakdown, tabla de decisiones filtrable y panel de detalle. Endpoint `/api/public/audit-demo` (público, sintético) + `/api/governance/audit/decisions` (API key). Traducción server-side de veto_chain a lenguaje ejecutivo — scores, thresholds y señales propietarias nunca expuestos en respuesta API. Badge PQC SIGNED + CHAIN LINKED por decisión. Link "Executive Audit" añadido al InvestorCommandCenter. ADR-059 escrito. |
 | ADR-058 | **Bot Governance Integration**: Módulo `governance_commands.py` separado con 4 handlers (`/evaluar`, `/gobernanza`, `/velos`, `/recibo`). Enlazados a `EnterpriseTelegramBot` post-clase. `/evaluar` usa HTTP POST a `OMNIX_WEB_URL`, rate limit 5/hora/user. `/velos` y `/recibo` son admin-only, query directo a PostgreSQL. Stubs de fallback si el módulo falla. `/version`, `/start`, `/help` actualizados con posicionamiento de governance platform. Arquitecto revisó patrón de integración. |
 | ADR-057 | **Critical Override Hybrid Expansion**: Added Group 5 (No Human Oversight) and Group 7 (Politically Exposed Persons/PEP) to `financial_crime_complex` branch of `_apply_critical_override`. Extended Summary Quality Guard to catch `"moderate risk"`, `"acceptable risk"`, `"low risk profile"` — replaces with spec-mandated override message when active override detected. 24/24 tests pass. Files: `omnix_web/api/sandbox.py`. |
 | Apr-2026c | **ADR-053 — Generic Webhook System + Receipt-by-ID + Key Expiry Warning**: (1) All B2B clients can register an HTTPS webhook URL via `PUT /api/governance/admin/clients/<id>/webhook`. Every decision evaluation pushes a PQC-signed payload signed with HMAC-SHA256 in `X-OMNIX-Signature` header. Delivery log in `webhook_delivery_log` table with per-client stats. SSRF guard rejects private/loopback CIDRs. Secrets encrypted at rest with Fernet (`WEBHOOK_ENCRYPTION_KEY` env var optional). (2) `GET /api/governance/receipts/<receipt_id>` — fetch a single receipt by ID with strict tenant isolation (IDOR-proof). (3) Key expiry warning: `key_expiry_warning.expires_in_days` appears in evaluate response when <14 days remain. Files: `omnix_web/api/gov_auth_rbac.py`, `omnix_web/api/gov_blueprint.py`. |

@@ -1305,3 +1305,111 @@ def api_execution_integrity_status():
                 'ebip_version': '1.0',
             }
         }), 200
+
+
+# ─── Executive Audit Dashboard — Demo Endpoint (ADR-059) ──────────────────────
+
+@governance_bp.route('/api/public/audit-demo', methods=['GET'])
+def public_audit_demo():
+    """Public demo endpoint for Executive Audit Dashboard. Returns synthetic data."""
+    import datetime, random
+    from flask import jsonify
+
+    DOMAIN_LABELS = {
+        'trading':   'Digital Asset Trading',
+        'credit':    'Islamic Credit',
+        'insurance': 'Insurance Governance',
+        'robotics':  'Industrial Robotics',
+    }
+    CP_MAP = {
+        'CP-1':  ('Data Integrity Validation', 'All required input data met quality and completeness standards.', 'Input data failed completeness requirements.'),
+        'CP-2':  ('Institutional Risk Limits', 'Risk exposure validated within institutional limits.', 'Risk exposure exceeded the institutional risk limits in force.'),
+        'CP-3':  ('Regulatory Compliance Screen', 'No regulatory restrictions identified for this asset or counterparty.', 'Regulatory restrictions identified — transaction cannot proceed.'),
+        'CP-4':  ('Liquidity & Market Depth', 'Liquidity conditions validated as sufficient for execution.', 'Insufficient liquidity detected — decision held pending review.'),
+        'CP-5':  ('Concentration Risk Monitor', 'Portfolio concentration within approved governance limits.', 'Position would breach approved concentration limits.'),
+        'CP-6':  ('Volatility Context Evaluator', 'Volatility environment within acceptable parameters.', 'Market volatility context exceeds approved thresholds.'),
+        'CP-7':  ('Ethics & Domain Gate', 'Ethical and domain governance requirements fully satisfied.', 'Ethical or domain governance constraint identified.'),
+        'CP-8':  ('Threshold & Context Validator', 'Decision context validated within operational parameters.', 'Operational context validation failed — decision blocked.'),
+        'CP-9':  ('Systemic Risk Assessment', 'No systemic risk patterns detected in this decision.', 'Systemic risk patterns identified — mandatory hold applied.'),
+        'CP-10': ('Counterparty Due Diligence', 'Counterparty governance validation completed successfully.', 'Counterparty due diligence flagged a blocking condition.'),
+        'CP-11': ('Jurisdiction Compliance Gate', 'Decision complies with all applicable jurisdictional requirements.', 'Jurisdictional restriction prevents execution.'),
+        'PQC':   ('Post-Quantum Integrity Seal', 'Cryptographic integrity seal applied using NIST-standardized algorithms.', 'Integrity seal could not be applied.'),
+    }
+
+    base_time = datetime.datetime.utcnow()
+    domains = ['trading', 'credit', 'insurance', 'robotics']
+    sample_assets = {
+        'trading':   ['BTC/USD', 'ETH/USD', 'XRP/AED', 'SOL/USD'],
+        'credit':    ['ICF-A1B2C3D4', 'ICF-E5F6G7H8', 'ICF-I9J0K1L2'],
+        'insurance': ['CLM-INS-001', 'CLM-INS-002', 'CLM-INS-003'],
+        'robotics':  ['ROB-ACT-7711', 'ROB-ACT-8822', 'ROB-ACT-9933'],
+    }
+
+    items = []
+    for i in range(12):
+        domain = domains[i % 4]
+        decision = 'APPROVED' if i % 3 != 1 else 'BLOCKED'
+        asset = random.choice(sample_assets[domain])
+        ts = (base_time - datetime.timedelta(hours=i*2, minutes=random.randint(0,59))).isoformat() + 'Z'
+        receipt_id = f"OMNIX-DEMO-{abs(hash(asset + ts)) % 10**12:012X}"
+
+        cp_keys = list(CP_MAP.keys())[:11] + ['PQC']
+        checkpoint_outcomes = []
+        for idx, cp in enumerate(cp_keys):
+            label, pass_reason, block_reason = CP_MAP[cp]
+            if decision == 'BLOCKED' and idx == 1:
+                status, reason = 'BLOCKED', block_reason
+            else:
+                status, reason = 'PASS', pass_reason
+            checkpoint_outcomes.append({'checkpoint_id': cp, 'label': label, 'status': status, 'executive_reason': reason})
+
+        items.append({
+            'receipt_id': receipt_id,
+            'timestamp_utc': ts,
+            'asset': asset,
+            'domain': domain,
+            'domain_label': DOMAIN_LABELS[domain],
+            'decision': decision,
+            'executive_summary': (
+                f"This decision was {decision} after {'passing all 11 institutional governance checkpoints' if decision == 'APPROVED' else 'a blocking condition was identified at the Institutional Risk Limits checkpoint'}. "
+                f"A NIST-standardized post-quantum cryptographic receipt was issued."
+            ),
+            'checkpoint_outcomes': checkpoint_outcomes,
+            'integrity': {
+                'signature_standard': 'NIST-standardized post-quantum algorithms',
+                'pqc_signed': True,
+                'chain_linked': True,
+                'policy_version': 'v2.1.0',
+                'engine_version': None,
+            }
+        })
+
+    approved = sum(1 for x in items if x['decision'] == 'APPROVED')
+    blocked = len(items) - approved
+
+    by_domain = []
+    for d in domains:
+        d_items = [x for x in items if x['domain'] == d]
+        d_approved = sum(1 for x in d_items if x['decision'] == 'APPROVED')
+        by_domain.append({
+            'domain': d, 'label': DOMAIN_LABELS[d],
+            'approved': d_approved, 'blocked': len(d_items) - d_approved,
+            'total': len(d_items),
+        })
+
+    return jsonify({
+        'success': True,
+        'demo': True,
+        'generated_at': base_time.isoformat() + 'Z',
+        'note': 'Demo data — anonymized synthetic records.',
+        'meta': {'limit': 12, 'offset': 0, 'total': 12, 'has_more': False},
+        'kpis': {
+            'total_decisions': len(items),
+            'approved': approved,
+            'blocked': blocked,
+            'approved_pct': round(approved / len(items) * 100, 1),
+            'blocked_pct': round(blocked / len(items) * 100, 1),
+            'by_domain': by_domain,
+        },
+        'items': items,
+    }), 200

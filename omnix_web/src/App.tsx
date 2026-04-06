@@ -13,6 +13,7 @@ import CreditLiveDashboard from './pages/CreditLiveDashboard'
 import InsuranceDashboard from './pages/InsuranceDashboard'
 import RoboticsDashboard from './pages/RoboticsDashboard'
 import InvestorCommandCenter from './pages/InvestorCommandCenter'
+import AuditDashboard from './pages/AuditDashboard'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import './index.css'
@@ -35,6 +36,7 @@ function App() {
           <Route path="/try" element={<PublicGovernanceSandbox />} />
           <Route path="/verify" element={<PublicDecisionVerify />} />
           <Route path="/verify/:receiptId" element={<PublicDecisionVerify />} />
+          <Route path="/audit" element={<AuditDashboard />} />
           <Route path="/my-report" element={<ClientReportDownload />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />

@@ -2090,6 +2090,371 @@ def admin_usage_client(target_client_id: str):
 # EXECUTION BOUNDARY INTEGRITY — ADR-045
 # ===========================================================================
 
+# ── EXECUTIVE AUDIT DASHBOARD (ADR-059) ───────────────────────────────────────
+# Translates technical veto_chain data to executive-language audit records
+# for CFOs and regulators. No raw scores, thresholds, or signal names exposed.
+
+_CHECKPOINT_LABELS = {
+    'CAG':   'Context Admissibility Gate',
+    'ACV':   'Admissibility Consistency Validator',
+    'CP-0':  'Signal Quality Assessment',
+    'CP-1':  'Statistical Probability Review',
+    'CP-2':  'Institutional Risk Limits',
+    'CP-3':  'Multi-Model Coherence Check',
+    'CP-4':  'Market Trend Confirmation',
+    'CP-5':  'Stress & Resilience Test',
+    'CP-6':  'Ethics & Governance Gate',
+    'CP-7':  'Temporal Coherence Review',
+    'CP-7b': 'Forward Trajectory Validation',
+    'CP-8':  'Contextual Threshold Review',
+    'CP-9':  'AML & Financial Crime Screening',
+    'CP-10': 'Fraud Detection & Pattern Analysis',
+    'CP-11': 'Jurisdictional Compliance Gate',
+    'TIE':   'Trajectory Invariant Enforcement',
+    'PQC':   'Post-Quantum Cryptographic Receipt',
+}
+
+_CHECKPOINT_PASS = {
+    'CAG':   'Decision context validated as institutionally admissible.',
+    'ACV':   'Internal governance signals validated for consistency.',
+    'CP-0':  'Signal quality validated within institutional parameters.',
+    'CP-1':  'Probability assessment validated above required confidence level.',
+    'CP-2':  'Risk exposure validated within institutional limits.',
+    'CP-3':  'Multi-model consensus validated across independent engines.',
+    'CP-4':  'Market trend confirmation validated.',
+    'CP-5':  'Stress resilience validated under adverse scenarios.',
+    'CP-6':  'Ethics and governance controls satisfied.',
+    'CP-7':  'Temporal coherence validated.',
+    'CP-7b': 'Forward trajectory within acceptable risk boundaries.',
+    'CP-8':  'Contextual thresholds validated.',
+    'CP-9':  'AML and financial crime screening cleared.',
+    'CP-10': 'Fraud detection patterns clear.',
+    'CP-11': 'Jurisdiction validated as operationally compliant.',
+    'TIE':   'Trajectory invariant conditions satisfied.',
+    'PQC':   'Post-quantum cryptographic receipt issued successfully.',
+}
+
+_CHECKPOINT_BLOCK = {
+    'CAG':   'Decision context did not meet institutional admissibility criteria.',
+    'ACV':   'Decision showed internal consistency violations across governance signals.',
+    'CP-0':  'Signal quality did not meet the minimum threshold for institutional processing.',
+    'CP-1':  'Probability assessment fell below the required confidence level.',
+    'CP-2':  'Risk exposure exceeded the institutional risk limits in force.',
+    'CP-3':  'Independent model outputs were not sufficiently aligned to proceed.',
+    'CP-4':  'Market trend indicators were insufficient to confirm the decision direction.',
+    'CP-5':  'Stress scenario analysis indicated excessive vulnerability.',
+    'CP-6':  'Decision did not pass ethics and governance controls.',
+    'CP-7':  'Temporal coherence could not be established.',
+    'CP-7b': 'Forward trajectory projections indicated unacceptable risk evolution.',
+    'CP-8':  'Contextual thresholds for this decision type were not met.',
+    'CP-9':  'AML and financial crime screening raised a compliance concern.',
+    'CP-10': 'Fraud detection patterns triggered a compliance hold.',
+    'CP-11': 'Decision involves a jurisdiction where this activity is restricted.',
+    'TIE':   'Decision trajectory violated the invariant boundary conditions.',
+    'PQC':   'Post-quantum signing could not be completed.',
+}
+
+_DOMAIN_LABELS = {
+    'trading':   'Digital Asset Trading',
+    'credit':    'Islamic Credit',
+    'insurance': 'Insurance Underwriting',
+    'robotics':  'Robotics & Autonomous Systems',
+}
+
+
+def _parse_veto_chain_executive(veto_chain_raw):
+    """
+    Parse raw veto_chain list/JSON into executive-language checkpoint outcomes.
+    Strips all scores, thresholds, operators, and internal signal names.
+    """
+    import re
+    outcomes = []
+
+    if not veto_chain_raw:
+        return outcomes
+
+    if isinstance(veto_chain_raw, str):
+        try:
+            import json
+            veto_chain_raw = json.loads(veto_chain_raw)
+        except Exception:
+            veto_chain_raw = [veto_chain_raw]
+
+    if not isinstance(veto_chain_raw, list):
+        return outcomes
+
+    pattern = re.compile(
+        r'^(CP-\d+[a-z]?|CAG|ACV|TIE|PQC)\s',
+        re.IGNORECASE
+    )
+
+    for entry in veto_chain_raw:
+        entry = str(entry).strip()
+        cp_match = pattern.match(entry)
+        cp_id = cp_match.group(1).upper() if cp_match else None
+
+        is_blocked = bool(re.search(r'->\s*(BLOCK|BLOCKED|FAIL)', entry, re.IGNORECASE))
+        status = 'BLOCKED' if is_blocked else 'PASS'
+
+        label = _CHECKPOINT_LABELS.get(cp_id, cp_id or 'Governance Control')
+        reason = (
+            _CHECKPOINT_BLOCK.get(cp_id, 'This control raised a governance concern.')
+            if is_blocked
+            else _CHECKPOINT_PASS.get(cp_id, 'Control validated within institutional parameters.')
+        )
+
+        outcomes.append({
+            'checkpoint_id': cp_id,
+            'label': label,
+            'status': status,
+            'executive_reason': reason,
+        })
+
+    return outcomes
+
+
+def _build_executive_summary(decision: str, outcomes: list) -> str:
+    blocked = [o for o in outcomes if o['status'] == 'BLOCKED']
+    if decision in ('BLOCKED', 'BLOCK') or blocked:
+        first = blocked[0]['executive_reason'] if blocked else 'A governance control raised a concern.'
+        return f"This decision was BLOCKED. {first}"
+    total = len(outcomes)
+    return f"This decision was APPROVED after passing all {total} institutional governance checkpoints."
+
+
+@governance_bp.route('/api/governance/audit/decisions', methods=['GET'])
+def api_audit_decisions():
+    """
+    GET /api/governance/audit/decisions
+    Executive audit view — translates governance receipts to plain business language.
+    No raw scores, thresholds, or internal signal names are exposed.
+    ADR-059: Executive Audit Dashboard.
+    Authentication: API key required (gov_auth_rbac RBAC).
+    Filters: domain, decision (APPROVED/BLOCKED), date_from, date_to, limit, offset
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    try:
+        limit = min(int(request.args.get('limit', 50)), 200)
+        offset = max(int(request.args.get('offset', 0)), 0)
+    except ValueError:
+        return jsonify({'error': 'limit and offset must be integers'}), 400
+
+    domain_filter   = (request.args.get('domain', '') or '').strip().lower()
+    decision_filter = (request.args.get('decision', '') or '').strip().upper()
+    date_from       = (request.args.get('date_from', '') or '').strip()
+    date_to         = (request.args.get('date_to', '') or '').strip()
+
+    if decision_filter and decision_filter not in ('APPROVED', 'BLOCKED', 'HOLD'):
+        return jsonify({'error': 'decision must be APPROVED, BLOCKED, or HOLD'}), 400
+
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        where_parts = []
+        params = []
+
+        if domain_filter:
+            where_parts.append("domain = %s")
+            params.append(domain_filter)
+        if decision_filter:
+            where_parts.append("decision = %s")
+            params.append(decision_filter)
+        if date_from:
+            where_parts.append("timestamp_utc >= %s")
+            params.append(date_from)
+        if date_to:
+            where_parts.append("timestamp_utc <= %s")
+            params.append(date_to)
+
+        where_sql = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+
+        cur.execute(
+            f"""
+            SELECT receipt_id, timestamp_utc, asset, domain, decision,
+                   veto_chain, policy_version, engine_version,
+                   signature_algorithm, content_hash, prev_hash
+            FROM decision_receipts
+            {where_sql}
+            ORDER BY timestamp_utc DESC
+            LIMIT %s OFFSET %s
+            """,
+            params + [limit, offset],
+        )
+        rows = [dict(r) for r in cur.fetchall()]
+
+        cur.execute(f"SELECT COUNT(*) as cnt FROM decision_receipts {where_sql}", params)
+        total = cur.fetchone()['cnt']
+
+        cur.execute("""
+            SELECT domain, decision, COUNT(*) as cnt
+            FROM decision_receipts
+            GROUP BY domain, decision
+        """)
+        kpi_raw = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+        domain_kpis: dict = {}
+        total_approved = 0
+        total_blocked  = 0
+        for row in kpi_raw:
+            d = row['domain'] or 'unknown'
+            dec = row['decision'] or ''
+            cnt = row['cnt']
+            if d not in domain_kpis:
+                domain_kpis[d] = {'domain': d, 'label': _DOMAIN_LABELS.get(d, d.title()), 'approved': 0, 'blocked': 0, 'total': 0}
+            if dec in ('APPROVED',):
+                domain_kpis[d]['approved'] += cnt
+                total_approved += cnt
+            elif dec in ('BLOCKED', 'HOLD'):
+                domain_kpis[d]['blocked'] += cnt
+                total_blocked += cnt
+            domain_kpis[d]['total'] += cnt
+
+        total_all = total_approved + total_blocked
+        items = []
+        for row in rows:
+            outcomes = _parse_veto_chain_executive(row.get('veto_chain'))
+            summary  = _build_executive_summary(row.get('decision', ''), outcomes)
+
+            sig_algo = row.get('signature_algorithm') or ''
+            has_pqc  = bool(sig_algo) and 'dilithium' in sig_algo.lower()
+
+            items.append({
+                'receipt_id':        row['receipt_id'],
+                'timestamp_utc':     str(row['timestamp_utc']) if row['timestamp_utc'] else None,
+                'asset':             row.get('asset'),
+                'domain':            row.get('domain'),
+                'domain_label':      _DOMAIN_LABELS.get((row.get('domain') or '').lower(), (row.get('domain') or '').title()),
+                'decision':          row.get('decision'),
+                'executive_summary': summary,
+                'checkpoint_outcomes': outcomes,
+                'integrity': {
+                    'signature_standard': 'NIST-standardized post-quantum algorithms',
+                    'pqc_signed':         has_pqc,
+                    'chain_linked':       bool(row.get('prev_hash')),
+                    'policy_version':     row.get('policy_version'),
+                    'engine_version':     row.get('engine_version'),
+                },
+            })
+
+        return jsonify({
+            'success':      True,
+            'generated_at': __import__('datetime').datetime.utcnow().isoformat() + 'Z',
+            'meta': {
+                'filters':  {'domain': domain_filter, 'decision': decision_filter, 'date_from': date_from, 'date_to': date_to},
+                'limit':    limit,
+                'offset':   offset,
+                'total':    total,
+                'has_more': (offset + limit) < total,
+            },
+            'kpis': {
+                'total_decisions': total_all,
+                'approved':        total_approved,
+                'blocked':         total_blocked,
+                'approved_pct':    round(total_approved / total_all * 100, 1) if total_all else 0,
+                'blocked_pct':     round(total_blocked  / total_all * 100, 1) if total_all else 0,
+                'by_domain':       list(domain_kpis.values()),
+            },
+            'items': items,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"api_audit_decisions error: {e}")
+        return jsonify({'error': 'Audit data temporarily unavailable', 'status': 500}), 500
+
+
+@governance_bp.route('/api/public/audit-demo', methods=['GET'])
+def api_public_audit_demo():
+    """
+    GET /api/public/audit-demo
+    Public demo endpoint — returns anonymized synthetic governance audit data.
+    No authentication required. No real client data exposed.
+    ADR-059: Executive Audit Dashboard — public demo tier.
+    """
+    import datetime, random, uuid
+
+    domains = [
+        ('trading',   'Digital Asset Trading',           'BTC/USD'),
+        ('credit',    'Islamic Credit',                  'CREDIT-APP'),
+        ('insurance', 'Insurance Underwriting',          'POLICY-INS'),
+        ('robotics',  'Robotics & Autonomous Systems',   'ROBOT-001'),
+    ]
+
+    demo_outcomes_approved = [
+        {'checkpoint_id': 'CP-1', 'label': 'Statistical Probability Review',   'status': 'PASS',    'executive_reason': 'Probability assessment validated above required confidence level.'},
+        {'checkpoint_id': 'CP-2', 'label': 'Institutional Risk Limits',        'status': 'PASS',    'executive_reason': 'Risk exposure validated within institutional limits.'},
+        {'checkpoint_id': 'CP-3', 'label': 'Multi-Model Coherence Check',      'status': 'PASS',    'executive_reason': 'Multi-model consensus validated across independent engines.'},
+        {'checkpoint_id': 'CP-9', 'label': 'AML & Financial Crime Screening',  'status': 'PASS',    'executive_reason': 'AML and financial crime screening cleared.'},
+        {'checkpoint_id': 'CP-11','label': 'Jurisdictional Compliance Gate',   'status': 'PASS',    'executive_reason': 'Jurisdiction validated as operationally compliant.'},
+    ]
+
+    demo_outcomes_blocked = [
+        {'checkpoint_id': 'CP-1', 'label': 'Statistical Probability Review',   'status': 'PASS',    'executive_reason': 'Probability assessment validated above required confidence level.'},
+        {'checkpoint_id': 'CP-2', 'label': 'Institutional Risk Limits',        'status': 'BLOCKED', 'executive_reason': 'Risk exposure exceeded the institutional risk limits in force.'},
+        {'checkpoint_id': 'CP-9', 'label': 'AML & Financial Crime Screening',  'status': 'PASS',    'executive_reason': 'AML and financial crime screening cleared.'},
+        {'checkpoint_id': 'CP-11','label': 'Jurisdictional Compliance Gate',   'status': 'PASS',    'executive_reason': 'Jurisdiction validated as operationally compliant.'},
+    ]
+
+    now = datetime.datetime.utcnow()
+    items = []
+    for i in range(12):
+        dom, dom_label, asset = random.choice(domains)
+        approved = random.random() > 0.35
+        decision = 'APPROVED' if approved else 'BLOCKED'
+        outcomes = demo_outcomes_approved if approved else demo_outcomes_blocked
+        summary  = _build_executive_summary(decision, outcomes)
+        ts = (now - datetime.timedelta(hours=i * 2 + random.randint(0, 3))).isoformat() + 'Z'
+        rid = f"DEMO-{uuid.uuid4().hex[:12].upper()}"
+        items.append({
+            'receipt_id':          rid,
+            'timestamp_utc':       ts,
+            'asset':               asset,
+            'domain':              dom,
+            'domain_label':        dom_label,
+            'decision':            decision,
+            'executive_summary':   summary,
+            'checkpoint_outcomes': outcomes,
+            'integrity': {
+                'signature_standard': 'NIST-standardized post-quantum algorithms',
+                'pqc_signed':         True,
+                'chain_linked':       True,
+                'policy_version':     'v6.5.4e',
+                'engine_version':     '6.5.4',
+            },
+        })
+
+    approved_count = sum(1 for x in items if x['decision'] == 'APPROVED')
+    blocked_count  = len(items) - approved_count
+
+    return jsonify({
+        'success':      True,
+        'demo':         True,
+        'generated_at': now.isoformat() + 'Z',
+        'note':         'Demo data — anonymized synthetic records. Real data requires API key.',
+        'meta':         {'limit': 12, 'offset': 0, 'total': 12, 'has_more': False, 'filters': {}},
+        'kpis': {
+            'total_decisions': len(items),
+            'approved':        approved_count,
+            'blocked':         blocked_count,
+            'approved_pct':    round(approved_count / len(items) * 100, 1),
+            'blocked_pct':     round(blocked_count  / len(items) * 100, 1),
+            'by_domain': [
+                {'domain': 'trading',   'label': 'Digital Asset Trading',        'approved': 3, 'blocked': 1, 'total': 4},
+                {'domain': 'credit',    'label': 'Islamic Credit',               'approved': 2, 'blocked': 1, 'total': 3},
+                {'domain': 'insurance', 'label': 'Insurance Underwriting',       'approved': 2, 'blocked': 1, 'total': 3},
+                {'domain': 'robotics',  'label': 'Robotics & Autonomous Systems','approved': 2, 'blocked': 0, 'total': 2},
+            ],
+        },
+        'items': items,
+    }), 200
+
+
 @governance_bp.route('/api/governance/execution-integrity', methods=['GET'])
 def api_execution_integrity_status():
     """
