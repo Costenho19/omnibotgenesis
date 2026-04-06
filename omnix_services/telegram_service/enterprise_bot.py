@@ -1309,47 +1309,46 @@ También puedes escribir naturalmente:
 Este servicio está disponible SOLO para usuarios mayores de 18 años. Al usar OMNIX confirmas que cumples este requisito legal.
 
 **NATURALEZA DEL SERVICIO:**
-OMNIX es una infraestructura de gobernanza de decisiones institucionales con pipeline de 11 checkpoints, recibos criptográficos y motor de trading integrado. NO es:
+OMNIX es una infraestructura de gobernanza de decisiones institucionales con pipeline de 11 checkpoints y recibos criptográficos post-cuánticos. NO es:
 - ❌ Asesor financiero regulado
 - ❌ Gestor de inversiones
 - ❌ Entidad bancaria o financiera
-- ❌ Garantía de ganancias o resultados
+- ❌ Garantía de resultados en ningún dominio
 
-**RIESGOS DEL TRADING DE CRIPTOMONEDAS:**
-⚠️ ADVERTENCIA CRÍTICA:
-- El trading de criptomonedas conlleva RIESGO EXTREMO
-- Puedes perder el 100% de tu capital invertido
-- Mercados altamente volátiles (variaciones +/- 50% diarias)
-- No regulado en muchas jurisdicciones
-- Riesgo de hackeos, fraudes, manipulación
+**RIESGOS DE DECISIONES DE ALTO IMPACTO:**
+⚠️ ADVERTENCIA:
+- Las decisiones en mercados financieros conllevan RIESGO SIGNIFICATIVO
+- En operaciones de trading puedes perder el 100% del capital
+- Los activos digitales son altamente volátiles
+- Las evaluaciones de OMNIX no garantizan resultados en ningún dominio
+- Los mercados pueden verse afectados por eventos externos imprevistos
 
 **LIMITACIONES DEL SISTEMA:**
-Las proyecciones, simulaciones Monte Carlo, análisis de Black Swan y recomendaciones de OMNIX:
+Las evaluaciones, simulaciones Monte Carlo y análisis de OMNIX:
 - NO garantizan resultados futuros
-- Se basan en modelos matemáticos con limitaciones
-- No consideran eventos impredecibles (guerras, regulaciones, hackeos)
+- Se basan en modelos matemáticos con limitaciones inherentes
+- No consideran eventos externos imprevistos (geopolíticos, regulatorios, sistémicos)
 - Pueden contener errores técnicos o de datos
 
 **USO BAJO TU PROPIO RIESGO:**
 Al usar OMNIX, aceptas que:
 - Operas completamente bajo tu responsabilidad
 - Harold Nunes (Fundador) NO se hace responsable de pérdidas
-- OMNIX NO asume responsabilidad por decisiones de trading
+- OMNIX NO asume responsabilidad por decisiones evaluadas a través del sistema
 
 ⚠️ **CONSULTA PROFESIONAL OBLIGATORIA:**
-Debes consultar SIEMPRE con un asesor financiero REGULADO y CERTIFICADO antes de realizar cualquier inversión. OMNIX NO sustituye asesoramiento profesional personalizado.
+Debes consultar SIEMPRE con un profesional regulado y certificado antes de tomar decisiones de alto impacto. OMNIX NO sustituye asesoramiento profesional personalizado.
 
 **CUMPLIMIENTO REGULATORIO Y JURISDICCIÓN:**
 - OMNIX no está registrado ante la SEC (USA), FINRA (USA), FCA (UK), BaFin (Alemania) o entidades reguladoras similares
 - Este servicio opera en fase de validación institucional activa
 - Operamos como infraestructura de gobernanza bajo leyes internacionales aplicables
 - **JURISDICCIONES RESTRINGIDAS - NO DISPONIBLE EN:**
-  • China (prohibición total trading crypto)
   • Corea del Norte (sanciones internacionales)
   • Irán, Siria (sanciones OFAC)
   • Crimea, Donetsk, Luhansk (sanciones)
-  • Países con prohibición explícita de criptomonedas
-- **JURISDICCIONES FAVORABLES (donde planeamos registro futuro):**
+  • Jurisdicciones con prohibición explícita aplicable al servicio
+- **JURISDICCIONES FAVORABLES (registro futuro):**
   • Suiza (FINMA - Crypto Valley Zug)
   • Singapur (MAS - Payment Services Act)
   • Dubai (VARA - Virtual Asset Regulatory Authority)
@@ -1357,15 +1356,15 @@ Debes consultar SIEMPRE con un asesor financiero REGULADO y CERTIFICADO antes de
 - Usuarios DEBEN verificar legalidad en su jurisdicción local antes de usar
 - Cumplimiento fiscal es responsabilidad del usuario
 
-**SHARIA COMPLIANCE:**
-Las clasificaciones Halal/Haram se basan en investigación académica (Mufti Taqi Usmani, AAOIFI) pero:
-- NO sustituyen consulta con erudito islámico
-- Interpretaciones pueden variar según madhab
-- Responsabilidad final del usuario
+**GOBERNANZA ÉTICA E ISLÁMICA:**
+Las evaluaciones de conformidad en el módulo de crédito islámico se basan en investigación académica (Mufti Taqi Usmani, AAOIFI) pero:
+- NO sustituyen consulta con un erudito islámico calificado
+- Las interpretaciones pueden variar según escuela jurídica (madhab)
+- La responsabilidad final es del usuario
 
 **PROTECCIÓN DE DATOS:**
-- Conversaciones almacenadas en base de datos segura
-- API keys y credenciales encriptadas (PQC Kyber-768)
+- Datos almacenados en base de datos segura con acceso restringido
+- Credenciales protegidas con algoritmos post-cuánticos estandarizados por NIST
 - NO compartimos datos con terceros
 - Cumplimiento GDPR en proceso
 
@@ -1375,7 +1374,7 @@ Sistema: OMNIX Decision Governance
 Web: omnixquantum.net · contacto@omnixquantum.net
 Última actualización: Abril 2026
 
-⚠️ **IMPORTANTE:** Si no aceptas estos términos, NO uses OMNIX para tomar decisiones financieras.
+⚠️ **IMPORTANTE:** Si no aceptas estos términos, NO uses OMNIX para tomar decisiones de alto impacto.
 
 *Para soporte técnico, contacta al Fundador.*
 """
