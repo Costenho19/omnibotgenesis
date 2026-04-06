@@ -252,7 +252,6 @@ export default function InvestorDemo() {
   const [stage, setStage] = useState<Stage>('intro')
   const [selected, setSelected] = useState<Scenario | null>(null)
   const [result, setResult] = useState<SandboxResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [cpVisible, setCpVisible] = useState<number>(0)
   const [cpStatuses, setCpStatuses] = useState<('pending' | 'pass' | 'blocked')[]>(
     Array(11).fill('pending')
@@ -288,7 +287,6 @@ export default function InvestorDemo() {
   const runDemo = async (scenario: Scenario) => {
     setSelected(scenario)
     setStage('processing')
-    setError(null)
     setCpVisible(0)
     setCpStatuses(Array(11).fill('pending'))
     setShowResult(false)
@@ -325,7 +323,6 @@ export default function InvestorDemo() {
     setStage('intro')
     setSelected(null)
     setResult(null)
-    setError(null)
   }
 
   return (

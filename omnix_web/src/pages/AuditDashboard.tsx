@@ -523,6 +523,7 @@ export default function AuditDashboard() {
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#C9A227', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                       Cryptographic Integrity
                     </span>
+                    <IntegrityBadge integrity={selectedItem.integrity} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {[
