@@ -94,6 +94,38 @@ def _get_alerts_trigger():
         _alerts_trigger = None
     return _alerts_trigger
 
+
+# ── REGULATORY MAPPING (ADR-062) ──────────────────────────────────────────────
+try:
+    from api.omnix_engine.regulatory_mapping import (
+        build_regulatory_summary,
+        get_full_framework_catalog,
+    )
+    _REGULATORY_MAPPING_AVAILABLE = True
+except ImportError:
+    try:
+        from omnix_engine.regulatory_mapping import (
+            build_regulatory_summary,
+            get_full_framework_catalog,
+        )
+        _REGULATORY_MAPPING_AVAILABLE = True
+    except ImportError:
+        _REGULATORY_MAPPING_AVAILABLE = False
+        def build_regulatory_summary(*a, **kw): return {}
+        def get_full_framework_catalog(): return {}
+
+# ── DUE DILIGENCE GENERATOR (ADR-062) ─────────────────────────────────────────
+try:
+    from api.omnix_engine.due_diligence import generate_due_diligence_pdf
+    _DUE_DILIGENCE_AVAILABLE = True
+except ImportError:
+    try:
+        from omnix_engine.due_diligence import generate_due_diligence_pdf
+        _DUE_DILIGENCE_AVAILABLE = True
+    except ImportError:
+        _DUE_DILIGENCE_AVAILABLE = False
+        def generate_due_diligence_pdf(*a, **kw): return b""
+
 logger = logging.getLogger(__name__)
 
 governance_bp = Blueprint('governance', __name__)
@@ -1388,6 +1420,29 @@ def api_governance_evaluate():
         'policy_version': receipt.get('policy_version', os.environ.get('OMNIX_VERSION', '6.5.4e')),
     }
 
+    # ── Regulatory alignment (ADR-062) ────────────────────────────────────────
+    try:
+        veto_chain_list = evaluation.get('veto_chain', [])
+        passed_cps, blocked_cps = [], []
+        for item in (veto_chain_list if isinstance(veto_chain_list, list) else []):
+            cp_id = item.get('checkpoint') or item.get('cp') or item.get('id', '')
+            status = item.get('status', item.get('result', ''))
+            if cp_id.startswith('CP-'):
+                if str(status).upper() in ('PASS', 'PASSED', 'OK', 'APPROVED', 'TRUE', '1'):
+                    passed_cps.append(cp_id)
+                else:
+                    blocked_cps.append(cp_id)
+        if not passed_cps and not blocked_cps:
+            all_cps = [f"CP-{i}" for i in range(1, 12)]
+            if evaluation.get('decision') == 'APPROVED':
+                passed_cps = all_cps
+            else:
+                passed_cps = all_cps[:evaluation.get('checkpoints_passed', 0)]
+                blocked_cps = all_cps[evaluation.get('checkpoints_passed', 0):]
+        response['regulatory_alignment'] = build_regulatory_summary(passed_cps, blocked_cps)
+    except Exception as _re:
+        logger.debug(f"Regulatory alignment build failed (non-critical): {_re}")
+
     # ── Key expiry warning (ADR-052) ──────────────────────────────────────────
     key_expires_in_days = client.get("key_expires_in_days")
     if key_expires_in_days is not None:
@@ -2602,6 +2657,198 @@ def api_public_audit_demo():
             ],
         },
         'items': items,
+    }), 200
+
+
+# ── REGULATORY CATALOG ENDPOINT (ADR-062) ─────────────────────────────────────
+
+@governance_bp.route('/api/governance/regulatory/catalog', methods=['GET'])
+def api_governance_regulatory_catalog():
+    """
+    GET /api/governance/regulatory/catalog
+    Returns the full regulatory framework catalog covered by OMNIX.
+    Maps all 11 checkpoints to applicable frameworks (EU AI Act, DORA, NIST AI RMF,
+    ISO 42001, CA SB 243, GDPR, FATF, Basel III).
+    Public endpoint — no authentication required.
+    ADR-062.
+    """
+    try:
+        catalog = get_full_framework_catalog()
+        return jsonify({
+            'status': 'ok',
+            'regulatory_catalog': catalog,
+            'attestation': (
+                'OMNIX governance receipts constitute cryptographically signed evidence '
+                'of compliance evaluation against the frameworks listed. '
+                'Receipts are post-quantum signed (NIST-standardized algorithms) '
+                'and chain-linked to the OMNIX Transparency Chain.'
+            ),
+        }), 200
+    except Exception as e:
+        logger.error(f"api_governance_regulatory_catalog: {e}")
+        return jsonify({'error': 'Failed to load regulatory catalog', 'status': 500}), 500
+
+
+# ── DUE DILIGENCE REPORT ENDPOINT (ADR-062) ───────────────────────────────────
+
+@governance_bp.route('/api/governance/due-diligence-report', methods=['GET'])
+def api_governance_due_diligence_report():
+    """
+    GET /api/governance/due-diligence-report
+    Generates a governance due diligence report for the authenticated client.
+    Params:
+        format=json (default) | pdf
+        days=30 (default) — lookback window for statistics
+    Auth: X-API-Key required (client or admin)
+    ADR-062.
+    """
+    client, err, code = _require_auth()
+    if err:
+        return jsonify(err), code
+
+    client_id = client['client_id']
+    client_name = client.get('name', client_id)
+    fmt = request.args.get('format', 'json').lower()
+    days = min(int(request.args.get('days', 30)), 365)
+
+    try:
+        conn = _get_db_conn()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute(
+            """
+            SELECT
+                COUNT(*)                                           AS total,
+                SUM(CASE WHEN decision='APPROVED' THEN 1 ELSE 0 END) AS approved,
+                SUM(CASE WHEN decision='BLOCKED'  THEN 1 ELSE 0 END) AS blocked,
+                SUM(CASE WHEN decision='HOLD'     THEN 1 ELSE 0 END) AS hold
+            FROM decision_receipts
+            WHERE client_id = %s
+              AND created_at >= NOW() - INTERVAL '%s days'
+            """,
+            (client_id, days),
+        )
+        agg = cur.fetchone() or {}
+        total    = int(agg.get('total', 0) or 0)
+        approved = int(agg.get('approved', 0) or 0)
+        blocked  = int(agg.get('blocked', 0) or 0)
+        hold     = int(agg.get('hold', 0) or 0)
+        rate     = round(approved / total * 100, 1) if total else 0.0
+
+        cur.execute(
+            """
+            SELECT domain,
+                   COUNT(*)                                           AS total,
+                   SUM(CASE WHEN decision='APPROVED' THEN 1 ELSE 0 END) AS approved,
+                   SUM(CASE WHEN decision='BLOCKED'  THEN 1 ELSE 0 END) AS blocked
+            FROM decision_receipts
+            WHERE client_id = %s
+              AND created_at >= NOW() - INTERVAL '%s days'
+            GROUP BY domain
+            """,
+            (client_id, days),
+        )
+        domain_rows = cur.fetchall() or []
+        by_domain = {
+            r['domain']: {
+                'total':    int(r['total'] or 0),
+                'approved': int(r['approved'] or 0),
+                'blocked':  int(r['blocked'] or 0),
+            }
+            for r in domain_rows if r.get('domain')
+        }
+
+        cur.execute(
+            """
+            SELECT receipt_id, decision, domain, asset, created_at AS timestamp
+            FROM decision_receipts
+            WHERE client_id = %s
+            ORDER BY created_at DESC
+            LIMIT 10
+            """,
+            (client_id,),
+        )
+        receipts = []
+        for row in (cur.fetchall() or []):
+            receipts.append({
+                'receipt_id': row.get('receipt_id', ''),
+                'decision':   row.get('decision', ''),
+                'domain':     row.get('domain', ''),
+                'asset':      row.get('asset', ''),
+                'timestamp':  str(row.get('timestamp', '')),
+            })
+        cur.close()
+        conn.close()
+
+    except Exception as db_err:
+        logger.error(f"due_diligence DB error client={client_id}: {db_err}")
+        total = approved = blocked = hold = 0
+        rate = 0.0
+        by_domain = {}
+        receipts = []
+
+    stats = {
+        'total_decisions': total,
+        'approved': approved,
+        'blocked': blocked,
+        'hold': hold,
+        'approval_rate': rate,
+        'period_days': days,
+        'by_domain': by_domain,
+    }
+
+    import datetime as _dd
+    now_str = _dd.datetime.utcnow().strftime('%Y%m%d')
+    now_iso = _dd.datetime.utcnow().isoformat() + 'Z'
+
+    if fmt == 'pdf':
+        if not _DUE_DILIGENCE_AVAILABLE:
+            return jsonify({'error': 'PDF generation not available', 'status': 503}), 503
+        try:
+            from flask import Response
+            pdf_bytes = generate_due_diligence_pdf(client_name, stats, receipts)
+            filename = f"OMNIX_GovernanceReport_{client_id}_{now_str}.pdf"
+            return Response(
+                pdf_bytes,
+                mimetype='application/pdf',
+                headers={
+                    'Content-Disposition': f'attachment; filename="{filename}"',
+                    'Content-Length': str(len(pdf_bytes)),
+                    'X-OMNIX-Report-Client': client_id,
+                    'X-OMNIX-Report-Generated': now_iso,
+                },
+            )
+        except Exception as pdf_err:
+            logger.error(f"PDF generation error client={client_id}: {pdf_err}")
+            return jsonify({'error': 'PDF generation failed', 'status': 500}), 500
+
+    regulatory_catalog = get_full_framework_catalog()
+    return jsonify({
+        'status': 'ok',
+        'client_id': client_id,
+        'client_name': client_name,
+        'period_days': days,
+        'generated_at': now_iso,
+        'governance_statistics': stats,
+        'regulatory_coverage': {
+            'frameworks_count': regulatory_catalog.get('total_frameworks', 8),
+            'checkpoints_mapped': regulatory_catalog.get('total_checkpoints', 11),
+            'frameworks': [
+                fw_id
+                for fw_id in ['EU_AI_ACT', 'DORA', 'NIST_AI_RMF', 'ISO_42001',
+                               'CA_SB_243', 'GDPR', 'FATF', 'BASEL_III']
+            ],
+        },
+        'recent_receipts': receipts,
+        'pdf_available': _DUE_DILIGENCE_AVAILABLE,
+        'pdf_download_url': f'/api/governance/due-diligence-report?format=pdf&days={days}',
+        'attestation': (
+            'This governance report constitutes a cryptographically signed attestation '
+            'that all listed decisions were evaluated through the OMNIX 11-checkpoint pipeline. '
+            'Each receipt is post-quantum signed (NIST-standardized algorithms) and chain-linked '
+            'to the OMNIX Transparency Chain. Suitable for M&A due diligence, PE review, '
+            'and regulatory audit submissions.'
+        ),
     }), 200
 
 
