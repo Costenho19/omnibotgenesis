@@ -230,17 +230,17 @@ def build_contract():
     y -= 0.15 * inch
 
     for title, body in CONTRACT_SECTIONS:
-        body_lines = wrap_text(body, "Helvetica", 8.5, TEXT_W - 0.1 * inch, c)
-        needed = 0.23 * inch + 0.1 * inch + len(body_lines) * 0.145 * inch + 0.12 * inch
+        body_lines = wrap_text(body, "Helvetica", 9, TEXT_W - 0.15 * inch, c)
+        needed = 0.23 * inch + 0.15 * inch + len(body_lines) * 0.175 * inch + 0.28 * inch
         y = maybe_new_page(c, y, needed, page_ref, "Governance Services Agreement")
 
-        y = section_bar(c, y, title) - 0.1 * inch
+        y = section_bar(c, y, title) - 0.15 * inch
         c.setFillColor(OMNIX_DARK)
-        c.setFont("Helvetica", 8.5)
+        c.setFont("Helvetica", 9)
         for line in body_lines:
-            c.drawString(MARGIN + 0.06 * inch, y, line)
-            y -= 0.145 * inch
-        y -= 0.07 * inch
+            c.drawString(MARGIN + 0.08 * inch, y, line)
+            y -= 0.175 * inch
+        y -= 0.22 * inch
 
     y = maybe_new_page(c, y, 1.8 * inch, page_ref, "Governance Services Agreement")
 
