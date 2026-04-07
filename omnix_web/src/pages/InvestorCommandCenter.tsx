@@ -493,6 +493,8 @@ export default function InvestorCommandCenter() {
               { label: 'Verify a Receipt', path: '/verify', color: '#10B981' },
               { label: 'Executive Audit', path: '/audit', color: '#C9A227' },
               { label: 'Client Portal', path: '/client', color: '#00C6FF' },
+              { label: 'Technical Stack', path: '/stack', color: '#A78BFA' },
+              { label: 'Integration Guide', path: '/integration', color: '#34D399' },
             ].map(link => (
               <Link
                 key={link.path}

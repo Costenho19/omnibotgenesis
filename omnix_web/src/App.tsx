@@ -16,6 +16,8 @@ import InvestorCommandCenter from './pages/InvestorCommandCenter'
 import AuditDashboard from './pages/AuditDashboard'
 import ClientDashboard from './pages/ClientDashboard'
 import InvestorDemo from './pages/InvestorDemo'
+import TechnicalStack from './pages/TechnicalStack'
+import IntegrationGuide from './pages/IntegrationGuide'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import './index.css'
@@ -41,6 +43,8 @@ function App() {
           <Route path="/audit" element={<AuditDashboard />} />
           <Route path="/client" element={<ClientDashboard />} />
           <Route path="/demo" element={<InvestorDemo />} />
+          <Route path="/stack" element={<TechnicalStack />} />
+          <Route path="/integration" element={<IntegrationGuide />} />
           <Route path="/my-report" element={<ClientReportDownload />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
