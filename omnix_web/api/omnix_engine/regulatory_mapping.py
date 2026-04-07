@@ -1,9 +1,10 @@
 """
-OMNIX Regulatory Mapping Engine
+OMNIX Regulatory Mapping Engine — ADR-062
 Maps each of the 11 governance checkpoints to specific regulatory frameworks.
-Frameworks: CA SB 243, EU AI Act, DORA, NIST AI RMF, ISO 42001, GDPR, Basel III.
+Frameworks (8): EU AI Act, NIST AI RMF, DORA, ISO 42001, CA SB 243, GDPR, FATF, Basel III.
 
 Returns structured regulatory_alignment metadata for each decision receipt.
+11 checkpoints × 8 frameworks — every checkpoint mapped to ≥3 regulatory references.
 """
 
 CHECKPOINT_REGULATORY_MAP = {

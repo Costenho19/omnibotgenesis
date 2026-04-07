@@ -128,6 +128,20 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Startup warnings if premium ADR-062 modules are unavailable
+if not _REGULATORY_MAPPING_AVAILABLE:
+    logger.warning(
+        "OMNIX STARTUP WARNING: regulatory_mapping module not loaded — "
+        "regulatory_alignment will return empty dicts. "
+        "Check omnix_engine/regulatory_mapping.py and dependencies."
+    )
+if not _DUE_DILIGENCE_AVAILABLE:
+    logger.warning(
+        "OMNIX STARTUP WARNING: due_diligence module not loaded — "
+        "PDF generation will return empty bytes. "
+        "Check omnix_engine/due_diligence.py and reportlab installation."
+    )
+
 governance_bp = Blueprint('governance', __name__)
 
 _rate_limit_store: dict = defaultdict(list)
