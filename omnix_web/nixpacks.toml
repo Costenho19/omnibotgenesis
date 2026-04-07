@@ -12,4 +12,4 @@ cmds = [
 cmds = ["npm run build"]
 
 [start]
-cmd = "/opt/venv/bin/gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60"
+cmd = "/opt/venv/bin/gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --worker-connections 1000 --keep-alive 5"

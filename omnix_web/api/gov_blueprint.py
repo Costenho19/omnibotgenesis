@@ -104,7 +104,7 @@ _RATE_LIMIT_MAX = 10
 
 _client_rate_limit_store: dict = defaultdict(list)
 _CLIENT_RATE_LIMIT_WINDOW = 60
-_CLIENT_RATE_LIMIT_MAX = 30
+_CLIENT_RATE_LIMIT_MAX = 120  # Authenticated B2B clients: 120/min (2/sec) — institutional burst capacity
 
 _brute_force_store: dict = {}
 _BRUTE_FORCE_MAX = 5
@@ -1217,30 +1217,27 @@ def api_governance_evaluate():
     client_ip = _get_client_ip()
 
     # Persistent IP blocklist check — ADR-061
+    # Applies to all requests including authenticated clients (a banned IP is banned)
     if _is_ip_blocked(client_ip):
         logger.warning(f"[SECURITY] Blocklisted IP rejected at evaluate: {client_ip}")
         return jsonify({"error": "Access denied — try again later", "status": 403}), 403
 
-    # Rate limit per IP
-    if _is_rate_limited(client_ip):
-        ref_id = str(uuid.uuid4())[:8]
-        logger.warning(f"Rate limit hit: governance/evaluate from {client_ip} client={client_id} ref={ref_id}")
-        return jsonify({
-            'error': f'Rate limit exceeded — {_RATE_LIMIT_MAX} requests per minute',
-            'status': 429,
-            'reference': ref_id,
-            'retry_after_seconds': _RATE_LIMIT_WINDOW,
-        }), 429
+    # Authenticated B2B clients bypass the per-IP rate limit — they are governed by
+    # the per-client limit below (120/min), which is designed for institutional burst traffic.
+    # The IP rate limit (10/min) is reserved for public/unauthenticated endpoints only.
+    # This also prevents auto-ban from triggering on legitimate authenticated traffic.
 
-    # Rate limit per client_id (protects against accidental loops in client code)
+    # Rate limit per client_id — sole throughput control for authenticated clients
     if _is_client_rate_limited(client_id):
         ref_id = str(uuid.uuid4())[:8]
         logger.warning(f"Client rate limit hit: client={client_id} ref={ref_id}")
         return jsonify({
-            'error': f'Client rate limit exceeded — {_CLIENT_RATE_LIMIT_MAX} requests per minute per client',
+            'error': f'Rate limit exceeded — {_CLIENT_RATE_LIMIT_MAX} requests per minute',
             'status': 429,
             'reference': ref_id,
             'retry_after_seconds': _CLIENT_RATE_LIMIT_WINDOW,
+            'limit': _CLIENT_RATE_LIMIT_MAX,
+            'window_seconds': _CLIENT_RATE_LIMIT_WINDOW,
         }), 429
 
     if not request.is_json:
