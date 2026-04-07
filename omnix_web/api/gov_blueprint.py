@@ -111,6 +111,17 @@ _BRUTE_FORCE_MAX = 5
 _BRUTE_FORCE_WINDOW = 900
 _BRUTE_FORCE_LOCKOUT = 900
 
+# ── PERSISTENT IP BLOCKLIST (ADR-061) ─────────────────────────────────────────
+_blocked_ip_cache: dict = {}                  # ip -> blocked_until (epoch float)
+_blocked_ip_cache_last_refresh: float = 0.0
+_blocked_ip_cache_lock = threading.Lock()
+_BLOCKLIST_CACHE_TTL     = 30                 # seconds between DB refreshes
+_IP_BAN_VIOLATION_MAX    = 3                  # rate-limit hits before auto-ban
+_IP_BAN_VIOLATION_WINDOW = 600               # 10-minute rolling window
+_IP_BAN_DURATION         = 3600              # 1-hour ban
+_ip_ban_violations: dict = defaultdict(list) # ip -> [timestamps of hits]
+_blocked_ips_table_ensured = False
+
 _WEBHOOK_PUSH_SEMAPHORE = threading.Semaphore(10)
 _KEY_EXPIRY_WARNING_DAYS = 14
 
@@ -197,6 +208,19 @@ def _is_rate_limited(client_ip: str) -> bool:
     window_start = now - _RATE_LIMIT_WINDOW
     _rate_limit_store[client_ip] = [ts for ts in _rate_limit_store[client_ip] if ts > window_start]
     if len(_rate_limit_store[client_ip]) >= _RATE_LIMIT_MAX:
+        # Track violation for auto-ban — ADR-061
+        viol_window = now - _IP_BAN_VIOLATION_WINDOW
+        _ip_ban_violations[client_ip] = [
+            ts for ts in _ip_ban_violations[client_ip] if ts > viol_window
+        ]
+        _ip_ban_violations[client_ip].append(now)
+        viol_count = len(_ip_ban_violations[client_ip])
+        if viol_count >= _IP_BAN_VIOLATION_MAX and not _is_ip_blocked(client_ip):
+            _auto_ban_ip(
+                client_ip,
+                f"Rate limit exceeded {viol_count}x in {_IP_BAN_VIOLATION_WINDOW}s",
+                viol_count,
+            )
         return True
     _rate_limit_store[client_ip].append(now)
     return False
@@ -213,6 +237,123 @@ def _is_client_rate_limited(client_id: str) -> bool:
         return True
     _client_rate_limit_store[client_id].append(now)
     return False
+
+
+# ── IP BLOCKLIST FUNCTIONS (ADR-061) ──────────────────────────────────────────
+
+def _ensure_blocked_ips_table() -> None:
+    """Create blocked_ips table and indexes lazily on first use. ADR-061."""
+    global _blocked_ips_table_ensured
+    if _blocked_ips_table_ensured:
+        return
+    try:
+        conn = _get_db_conn()
+        cur  = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS blocked_ips (
+                ip               VARCHAR(64)  PRIMARY KEY,
+                blocked_until    TIMESTAMPTZ  NOT NULL,
+                reason           TEXT,
+                violation_count  INTEGER      NOT NULL DEFAULT 1,
+                created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+                updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+            )
+        """)
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_blocked_ips_until "
+            "ON blocked_ips(blocked_until)"
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        _blocked_ips_table_ensured = True
+        logger.info("[IP BLOCK] blocked_ips table ready")
+    except Exception as e:
+        logger.warning(f"[IP BLOCK] Table ensure failed: {e}")
+
+
+def _refresh_blocked_ip_cache() -> None:
+    """Load active blocks from DB into memory cache. Called under _blocked_ip_cache_lock."""
+    try:
+        _ensure_blocked_ips_table()
+        conn = _get_db_conn()
+        cur  = conn.cursor()
+        cur.execute(
+            "SELECT ip, EXTRACT(EPOCH FROM blocked_until) "
+            "FROM blocked_ips WHERE blocked_until > NOW()"
+        )
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        _blocked_ip_cache.clear()
+        for ip, until_epoch in rows:
+            _blocked_ip_cache[ip] = float(until_epoch)
+    except Exception as e:
+        logger.warning(f"[IP BLOCK] Cache refresh failed: {e}")
+
+
+def _is_ip_blocked(ip: str) -> bool:
+    """
+    Return True if IP has an active block in the DB-backed blocklist.
+    Uses a 30-second in-memory cache to avoid DB hit on every request.
+    Thread-safe. ADR-061.
+    """
+    global _blocked_ip_cache_last_refresh
+    now = time.time()
+    with _blocked_ip_cache_lock:
+        if now - _blocked_ip_cache_last_refresh > _BLOCKLIST_CACHE_TTL:
+            _refresh_blocked_ip_cache()
+            _blocked_ip_cache_last_refresh = now
+        until = _blocked_ip_cache.get(ip)
+        if until:
+            if now < until:
+                return True
+            _blocked_ip_cache.pop(ip, None)
+    return False
+
+
+def _auto_ban_ip(ip: str, reason: str, violation_count: int = 3) -> None:
+    """
+    Persist a 1-hour IP ban to blocked_ips table, update memory cache,
+    and notify Harold via Telegram. Runs in a daemon thread — never blocks
+    the request pipeline. ADR-061.
+    """
+    def _run():
+        try:
+            _ensure_blocked_ips_table()
+            ban_until = time.time() + _IP_BAN_DURATION
+            conn = _get_db_conn()
+            cur  = conn.cursor()
+            cur.execute("""
+                INSERT INTO blocked_ips
+                    (ip, blocked_until, reason, violation_count, updated_at)
+                VALUES (%s, to_timestamp(%s), %s, %s, NOW())
+                ON CONFLICT (ip) DO UPDATE
+                    SET blocked_until   = EXCLUDED.blocked_until,
+                        reason          = EXCLUDED.reason,
+                        violation_count = blocked_ips.violation_count + 1,
+                        updated_at      = NOW()
+            """, (ip, ban_until, reason[:200], violation_count))
+            conn.commit()
+            cur.close()
+            conn.close()
+            with _blocked_ip_cache_lock:
+                _blocked_ip_cache[ip] = ban_until
+            logger.warning(
+                f"[IP BLOCK] Auto-banned {ip} for {_IP_BAN_DURATION}s "
+                f"— violations={violation_count} reason={reason}"
+            )
+            _notify_harold_telegram(
+                f"🚫 <b>OMNIX — IP Bloqueada</b>\n\n"
+                f"🔴 IP: <code>{ip}</code>\n"
+                f"📋 Razón: {reason[:120]}\n"
+                f"⚠️ Violaciones: {violation_count}\n"
+                f"⏱ Bloqueada por: 1 hora"
+            )
+        except Exception as e:
+            logger.error(f"[IP BLOCK] Auto-ban failed for {ip}: {e}")
+
+    threading.Thread(target=_run, daemon=True).start()
 
 
 def _check_monthly_alert(client_id: str) -> None:
@@ -874,6 +1015,13 @@ def _require_auth(require_admin: bool = False):
 
     client_ip = _get_client_ip()
 
+    if _is_ip_blocked(client_ip):
+        logger.warning(f"[SECURITY] Blocklisted IP rejected at auth: {client_ip}")
+        return None, (jsonify({
+            "error": "Access denied — try again later",
+            "status": 403,
+        }), 403)
+
     if _is_brute_force_locked(client_ip):
         logger.warning(f"[SECURITY] Blocked locked IP={client_ip}")
         return None, (jsonify({
@@ -1067,6 +1215,11 @@ def api_governance_evaluate():
 
     client_id = client["client_id"]
     client_ip = _get_client_ip()
+
+    # Persistent IP blocklist check — ADR-061
+    if _is_ip_blocked(client_ip):
+        logger.warning(f"[SECURITY] Blocklisted IP rejected at evaluate: {client_ip}")
+        return jsonify({"error": "Access denied — try again later", "status": 403}), 403
 
     # Rate limit per IP
     if _is_rate_limited(client_ip):
