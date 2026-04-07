@@ -9,13 +9,20 @@ from reportlab.platypus import (
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.pdfgen import canvas as pdfcanvas
 from reportlab.platypus import PageBreak
+import os
 
-
-OMNIX_DARK = colors.HexColor("#0D0D0D")
+OMNIX_DARK = colors.HexColor("#0A0A0F")
 OMNIX_ACCENT = colors.HexColor("#00C6FF")
-OMNIX_GRAY = colors.HexColor("#555555")
-OMNIX_LIGHT = colors.HexColor("#F5F5F5")
+OMNIX_ACCENT2 = colors.HexColor("#7B2FFF")
+OMNIX_GRAY = colors.HexColor("#666666")
+OMNIX_BORDER = colors.HexColor("#1E1E2E")
+OMNIX_LIGHT = colors.HexColor("#F7F9FC")
 WHITE = colors.white
+
+LOGO_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "omnix_web", "public", "omnix_logo.png"
+)
 
 
 def header_footer(canvas, doc):
@@ -23,21 +30,44 @@ def header_footer(canvas, doc):
     width, height = letter
 
     canvas.setFillColor(OMNIX_DARK)
-    canvas.rect(0, height - 0.65 * inch, width, 0.65 * inch, fill=1, stroke=0)
+    canvas.rect(0, height - 0.75 * inch, width, 0.75 * inch, fill=1, stroke=0)
 
     canvas.setFillColor(OMNIX_ACCENT)
-    canvas.setFont("Helvetica-Bold", 11)
-    canvas.drawString(0.5 * inch, height - 0.42 * inch, "OMNIX QUANTUM")
-    canvas.setFillColor(WHITE)
-    canvas.setFont("Helvetica", 8)
-    canvas.drawRightString(width - 0.5 * inch, height - 0.42 * inch, "Decision Governance Infrastructure")
+    canvas.rect(0, height - 0.75 * inch, width, 0.03 * inch, fill=1, stroke=0)
+
+    logo_h = 0.44 * inch
+    logo_w = logo_h * (569 / 379)
+    logo_y = height - 0.75 * inch + (0.75 * inch - logo_h) / 2
+    if os.path.exists(LOGO_PATH):
+        canvas.drawImage(
+            LOGO_PATH, 0.45 * inch, logo_y,
+            width=logo_w, height=logo_h,
+            preserveAspectRatio=True, mask="auto"
+        )
+
+    canvas.setFillColor(OMNIX_GRAY)
+    canvas.setFont("Helvetica", 7.5)
+    canvas.drawRightString(
+        width - 0.45 * inch,
+        height - 0.75 * inch + 0.3 * inch,
+        "Decision Governance Infrastructure"
+    )
+    canvas.setFillColor(colors.HexColor("#444455"))
+    canvas.setFont("Helvetica", 7)
+    canvas.drawRightString(
+        width - 0.45 * inch,
+        height - 0.75 * inch + 0.17 * inch,
+        "Confidential · omnibotgenesis.up.railway.app"
+    )
 
     canvas.setFillColor(OMNIX_DARK)
-    canvas.rect(0, 0, width, 0.45 * inch, fill=1, stroke=0)
-    canvas.setFillColor(colors.HexColor("#888888"))
+    canvas.rect(0, 0, width, 0.42 * inch, fill=1, stroke=0)
+    canvas.setFillColor(OMNIX_ACCENT)
+    canvas.rect(0, 0.39 * inch, width, 0.03 * inch, fill=1, stroke=0)
+    canvas.setFillColor(colors.HexColor("#555566"))
     canvas.setFont("Helvetica", 7.5)
-    canvas.drawString(0.5 * inch, 0.17 * inch, "OMNIX Quantum · Confidential · omnibotgenesis.up.railway.app")
-    canvas.drawRightString(width - 0.5 * inch, 0.17 * inch, f"Page {doc.page}")
+    canvas.drawString(0.45 * inch, 0.15 * inch, "OMNIX Quantum · Standard Client Agreement · England & Wales")
+    canvas.drawRightString(width - 0.45 * inch, 0.15 * inch, f"Page {doc.page}")
 
     canvas.restoreState()
 
@@ -49,7 +79,7 @@ def build_contract():
         pagesize=letter,
         rightMargin=0.75 * inch,
         leftMargin=0.75 * inch,
-        topMargin=1.1 * inch,
+        topMargin=1.2 * inch,
         bottomMargin=0.75 * inch,
     )
 
@@ -190,7 +220,7 @@ def build_order_form():
         pagesize=letter,
         rightMargin=0.75 * inch,
         leftMargin=0.75 * inch,
-        topMargin=1.1 * inch,
+        topMargin=1.2 * inch,
         bottomMargin=0.75 * inch,
     )
 
