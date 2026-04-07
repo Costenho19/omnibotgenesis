@@ -102,3 +102,15 @@ id = "KtDTOaK5hn6r0E4wUQLSu"
 uri = "file://samples/OMNIX_BTC_USD_receipt_sample.json"
 type = "unspecified"
 title = "OMNIX BTC/USD — Receipt PQC (muestra para Velos)"
+
+[[outputs]]
+id = "kf59ctKajedRrBDuxDwhL"
+uri = "file://omnix_contracts/OMNIX_Governance_Services_Agreement.pdf"
+type = "pdf"
+title = "OMNIX Governance Services Agreement"
+
+[[outputs]]
+id = "pFznMtZB_njO2CEJH7MFk"
+uri = "file://omnix_contracts/OMNIX_Order_Form.pdf"
+type = "pdf"
+title = "OMNIX Order Form"
