@@ -397,7 +397,7 @@ export default function CommercialLanding() {
         <section className="mb-24" id="pricing">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-white mb-4">Governance Access Plans</h2>
-            <p className="text-muted max-w-xl mx-auto">Start with the free pilot. Pricing is scoped to your organization's decision volume and risk profile.</p>
+            <p className="text-muted max-w-xl mx-auto">Start with the free pilot. The difference between plans is not volume — it's authority. Advisory plans observe. Only Enterprise can stop a decision.</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-5">
@@ -431,10 +431,10 @@ export default function CommercialLanding() {
                 <div className="mt-3 flex items-end gap-1">
                   <span className="text-4xl font-bold text-white">Contact Us</span>
                 </div>
-                <p className="text-xs text-muted mt-1">Scoped to your decision volume</p>
+                <p className="text-xs text-muted mt-1">Observation tier · Contact us</p>
               </div>
               <ul className="space-y-2 flex-1 mb-6">
-                {['Pre-decision recommendations in real time', 'Your team decides — OMNIX advises', 'PQC-signed receipt per recommendation', '1 vertical (trading, credit, insurance, or supply chain)'].map(f => (
+                {['OMNIX observes every decision in real time', 'Your team retains full authority — OMNIX advises', 'PQC-signed receipt per recommendation', '1 vertical (trading, credit, insurance, or supply chain)'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-muted">
                     <CheckCircle className="w-4 h-4 text-[#06b6d4] flex-shrink-0 mt-0.5" />
                     {f}
@@ -457,10 +457,10 @@ export default function CommercialLanding() {
                 <div className="mt-3 flex items-end gap-1">
                   <span className="text-4xl font-bold text-white">Contact Us</span>
                 </div>
-                <p className="text-xs text-muted mt-1">Annual contract · Based on scope</p>
+                <p className="text-xs text-muted mt-1">Governance authority tier · Early enterprise partners</p>
               </div>
               <ul className="space-y-2 flex-1 mb-6">
-                {['Full veto authority — fail-closed by default', 'All verticals included', 'Complete audit trail for regulators', 'API integration + dedicated onboarding', 'SLA 99.9% uptime guarantee'].map(f => (
+                {['Full veto authority — fail-closed by default', 'Unlimited governed decisions', 'All verticals included', 'Complete audit trail for regulators', 'API integration + dedicated onboarding', 'SLA 99.9% uptime guarantee'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-muted">
                     <CheckCircle className="w-4 h-4 text-[#C9A227] flex-shrink-0 mt-0.5" />
                     {f}
@@ -497,7 +497,10 @@ export default function CommercialLanding() {
             </div>
           </div>
 
-          <p className="text-center text-xs text-muted mt-8">
+          <p className="text-center text-sm text-white/70 mt-10 font-medium">
+            Advisory plans observe decisions. Only Enterprise has authority to stop them.
+          </p>
+          <p className="text-center text-xs text-muted mt-4">
             All plans include post-quantum cryptographic receipts (NIST-standardized) · No hidden fees · Start with the free pilot, no card required
           </p>
         </section>
