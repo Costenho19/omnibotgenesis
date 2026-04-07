@@ -699,7 +699,7 @@ export default function CommercialLanding() {
                 <ArrowRight className="w-4 h-4 text-muted group-hover:text-[#C9A227] transition-colors" />
               </div>
               <h3 className="text-white font-semibold text-sm mb-2 leading-snug">Post-Quantum Cryptographic Architecture for Decision Governance Systems — ADR-022</h3>
-              <p className="text-muted text-xs">Harold Nunes · OMNIX Quantum · 2025</p>
+              <p className="text-muted text-xs">Harold Nunes · OMNIX Quantum · 2026</p>
               <p className="text-[#C9A227]/60 text-xs mt-2">Abstract ID: 6321298</p>
             </a>
 
@@ -714,7 +714,7 @@ export default function CommercialLanding() {
                 <ArrowRight className="w-4 h-4 text-muted group-hover:text-emerald-400 transition-colors" />
               </div>
               <h3 className="text-white font-semibold text-sm mb-2 leading-snug">Post-Quantum Cryptographic Architecture for Decision Governance Systems — ADR-022</h3>
-              <p className="text-muted text-xs">Harold Nunes · OMNIX Quantum · 2025</p>
+              <p className="text-muted text-xs">Harold Nunes · OMNIX Quantum · 2026</p>
               <p className="text-emerald-400/60 text-xs mt-2">DOI: 10.5281/zenodo.19056919</p>
             </a>
           </div>
