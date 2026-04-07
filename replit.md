@@ -378,3 +378,14 @@ docs/reference/adr/ADR-059-executive-audit-dashboard.md
 | `cb826eca` | Removed CP-11/CP-7b from InstitutionalPage (cleanup before full alignment) |
 | `039d00f5` | Fixed production backend from 8 to 11 checkpoints (root cause: `omnix_web/api/sandbox.py`) |
 | `d93d1adb` | React: removed opacity-30, dynamic title, whitepaper moved to `public/` |
+
+---
+
+## 🗺️ ROADMAP — MEJORAS FUTURAS (no construir sin cliente confirmado)
+
+| ID | Idea | Origen | Prioridad |
+|----|------|---------|-----------|
+| ROAD-001 | **CP-0 Privacy Gate** — Checkpoint previo al pipeline que escanea el payload de entrada con regex/patrones buscando PII (SSN, DOB, pasaporte, tarjeta de crédito). Si detecta PII no esperado → BLOCKED con receipt. Para verticales EdTech / Salud Mental. Diferenciador vs. SASI: OMNIX bloquea la decisión, SASI redacta el dato en tránsito. Son complementarios, no competidores. | Conversación LinkedIn con Stephen Calhoun (SASI), Abr 2026 | Media — activar cuando haya cliente EdTech/HealthTech concreto |
+| ROAD-002 | **Webhook retry logic** — El sistema de webhooks actual hace 1 intento. Añadir retry con backoff exponencial (3 intentos: 5s, 30s, 5min) y dead-letter queue para payloads fallidos. | ADR-053 deuda técnica | Baja |
+| ROAD-003 | **SDK Java / Go** — Ampliar la cobertura de SDKs para equipos enterprise que usan Java (bancos) o Go (fintechs). Misma filosofía: un solo archivo, sin dependencias externas. | Observación comercial | Baja — post-ronda |
+| ROAD-004 | **Multi-tenant Client Portal** — El portal `/client` actual es single-tenant (1 API key). Versión multi-tenant donde un administrador ve todos sus sub-clientes bajo una sola sesión. Para enterprise con filiales. | Arquitectura futura | Baja — post-ronda |
