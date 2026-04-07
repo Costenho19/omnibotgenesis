@@ -150,7 +150,7 @@ def build_contract():
          "This Agreement begins on the Effective Date. Advisory plans may be cancelled with 30 days written notice. Enterprise plans are subject to the annual contract term specified in the Order Form. OMNIX may suspend or terminate access immediately for non-payment or material breach."),
 
         ("13. GOVERNING LAW",
-         "This Agreement is governed by the laws of the Emirate of Dubai, United Arab Emirates. Any disputes shall be resolved by binding arbitration under the rules of the Dubai International Arbitration Centre (DIAC)."),
+         "This Agreement is governed by the laws of England and Wales. Any disputes shall be resolved by binding arbitration under the rules of the London Court of International Arbitration (LCIA)."),
     ]
 
     for title, body in sections:
