@@ -1,4 +1,4 @@
-import { CheckCircle, Shield, Zap, Lock, FileText, Globe, ArrowRight, Cpu, Link } from 'lucide-react'
+import { CheckCircle, Shield, Lock, FileText, ArrowRight, Cpu, Link } from 'lucide-react'
 
 const GOLD = '#C9A227'
 const DARK = '#0A1628'

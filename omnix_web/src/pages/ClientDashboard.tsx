@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Shield, CheckCircle, XCircle, Lock, RefreshCw,
+  Shield, CheckCircle, Lock, RefreshCw,
   Download, Key, Activity, BarChart3, FileText,
   ChevronRight, AlertTriangle, Globe, Zap, Clock
 } from 'lucide-react'
@@ -109,7 +109,7 @@ export default function ClientDashboard() {
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState('')
   const [data, setData]             = useState<ReportData | null>(null)
-  const [fwData, setFwData]         = useState<Framework[]>([])
+  const [, setFwData]               = useState<Framework[]>([])
   const [pdfLoading, setPdfLoading] = useState(false)
   const [days, setDays]             = useState(30)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)

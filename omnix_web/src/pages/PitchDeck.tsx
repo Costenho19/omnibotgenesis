@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Shield, Activity, Lock, Zap, Globe, CheckCircle,
@@ -659,7 +659,7 @@ export default function PitchDeck() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="glass" style={{ padding: '1.25rem', borderColor: 'rgba(250,204,21,0.2)' }}>
-                <div style={{ display: 'flex', align: 'center', gap: 8, marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <Award size={16} color="#facc15" />
                   <span style={{ fontWeight: 700, color: '#F8FAFC', fontSize: 13 }}>Why solo is a strength here</span>
                 </div>
