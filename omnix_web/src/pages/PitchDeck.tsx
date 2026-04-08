@@ -226,9 +226,27 @@ export default function PitchDeck() {
           <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.2 }}>
             Block the mistake <span className="gold-bg">before it runs.</span>
           </h2>
-          <p style={{ fontSize: '1.05rem', color: '#94A3B8', maxWidth: 620, marginBottom: 40, lineHeight: 1.7 }}>
-            OMNIX is a fail-closed governance engine. Every automated decision must pass 11 independent checkpoints before execution is permitted. If any checkpoint vetoes — the decision is blocked, not delayed. A post-quantum cryptographic receipt is issued for every outcome.
+          <p style={{ fontSize: '1.05rem', color: '#94A3B8', maxWidth: 600, marginBottom: 24, lineHeight: 1.7 }}>
+            A fail-closed governance engine. Every automated decision passes 11 independent checkpoints before execution. Any veto — the decision is blocked instantly, not delayed. Every outcome gets a post-quantum cryptographic receipt.
           </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
+            <div className="glass" style={{ padding: '0.9rem 1.1rem', borderColor: 'rgba(239,68,68,0.2)' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 6px' }}>Traditional risk engines</p>
+              <p style={{ fontSize: 12, color: '#64748B', margin: 0, lineHeight: 1.5 }}>Post-trade analytics. Flag after execution. Audit trails that arrive too late.</p>
+            </div>
+            <div className="glass" style={{ padding: '0.9rem 1.1rem', borderColor: 'rgba(16,185,129,0.3)' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 6px' }}>OMNIX — pre-execution</p>
+              <p style={{ fontSize: 12, color: '#94A3B8', margin: 0, lineHeight: 1.5 }}>Intercepts before the action runs. No damage to reverse. Cryptographic proof of every decision.</p>
+            </div>
+          </div>
+
+          <div className="glass" style={{ padding: '0.9rem 1.25rem', borderColor: 'rgba(201,162,39,0.25)', marginBottom: 28, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <Zap size={15} color="#C9A227" style={{ flexShrink: 0, marginTop: 2 }} />
+            <p style={{ fontSize: 12, color: '#94A3B8', margin: 0, lineHeight: 1.6 }}>
+              <strong style={{ color: '#F8FAFC' }}>Example:</strong> A trading system attempts to execute a $2M position. OMNIX detects regime incoherence at CP-7. The trade is blocked in &lt;50ms. A signed receipt is issued. The system never touched the market.
+            </p>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 36 }}>
             {[
@@ -366,7 +384,7 @@ export default function PitchDeck() {
                 icon: <Users size={20} color="#a78bfa" />,
                 title: 'Commercial Momentum',
                 items: [
-                  'First paying client: imminent',
+                  'Enterprise deployment in final integration phase',
                   'Channel partner signed: Naimat Khan (Velos)',
                   '10% mutual commission structure active',
                   'Inbound from airline industry exec (IndiGo)',
@@ -640,7 +658,7 @@ export default function PitchDeck() {
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
                   { icon: <Star size={13} color="#facc15" />, text: 'Eureka GCC Dubai 2026 Semifinalist' },
-                  { icon: <Shield size={13} color="#10B981" />, text: '4 live governance engines, built alone' },
+                  { icon: <Shield size={13} color="#10B981" />, text: 'Founder-led architecture with focused execution across all layers' },
                   { icon: <Lock size={13} color="#a78bfa" />, text: 'Post-quantum cryptography researcher & implementer' },
                   { icon: <Activity size={13} color="#60a5fa" />, text: 'Published governance methodology with DOI' },
                   { icon: <Globe size={13} color="#C9A227" />, text: 'Decision governance architecture across 4 industries' },
@@ -724,7 +742,7 @@ export default function PitchDeck() {
           <div className="glass" style={{ padding: '1.5rem 2rem', maxWidth: 560, margin: '0 auto 32px', borderColor: 'rgba(201,162,39,0.3)' }}>
             <DollarSign size={20} color="#C9A227" style={{ margin: '0 auto 10px', display: 'block' }} />
             <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
-              At <strong style={{ color: '#F8FAFC' }}>$3M valuation</strong>, you're investing in a governance infrastructure with <strong style={{ color: '#C9A227' }}>{total.toLocaleString()}+ decisions already governed</strong> across 4 live domains, a signed channel partner, and an imminent first paying client — before the raise closes.
+              At <strong style={{ color: '#F8FAFC' }}>$3M valuation</strong>, you're investing in a governance infrastructure with <strong style={{ color: '#C9A227' }}>{total.toLocaleString()}+ decisions already governed</strong> across 4 live domains, a signed channel partner, and an enterprise deployment advancing to close — before the raise ends.
             </p>
           </div>
 
