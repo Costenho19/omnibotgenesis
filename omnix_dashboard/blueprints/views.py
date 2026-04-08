@@ -56,19 +56,30 @@ def download_zenodo_package():
 
 @views_bp.route('/')
 def index():
-    """Root: serve React SPA landing page. JSON for automated health checks."""
+    """Root route.
+
+    - Production (Railway): serve React SPA so omnixquantum.net shows the
+      commercial landing page.
+    - Development (Replit): redirect to /terminal so the Flask dashboard is
+      immediately visible when accessing port 5000 — avoids confusion with
+      the Vite dev server on port 3000 which already serves the React SPA.
+    - Automated health checks (non-browser): return JSON status.
+    """
     accept = request.headers.get('Accept', '')
     ua = request.headers.get('User-Agent', '')
     is_browser = 'text/html' in accept or 'Mozilla' in ua
-    if is_browser:
-        react_index = os.path.join(REACT_DIST, 'index.html')
-        if os.path.isfile(react_index):
-            return send_from_directory(REACT_DIST, 'index.html')
+
+    if not is_browser:
+        return jsonify({'service': 'OMNIX Decision Governance', 'status': 'operational'})
+
+    env = os.environ.get('ENVIRONMENT', 'development').lower()
+    if env != 'production':
         return redirect('/terminal')
-    return jsonify({
-        'service': 'OMNIX Decision Governance',
-        'status': 'operational',
-    })
+
+    react_index = os.path.join(REACT_DIST, 'index.html')
+    if os.path.isfile(react_index):
+        return send_from_directory(REACT_DIST, 'index.html')
+    return redirect('/terminal')
 
 
 @views_bp.route('/<path:path>')
