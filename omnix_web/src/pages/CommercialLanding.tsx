@@ -107,7 +107,7 @@ export default function CommercialLanding() {
             <span className="gold-gradient">Before They Happen</span>
           </h1>
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
-            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage. Currently operating in digital asset trading governance. Next verticals: credit, insurance, biotech, and supply chain.
+            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage — with cryptographic proof. Live across 4 domains: digital asset trading, Islamic credit, insurance, and autonomous robotics.
           </p>
           <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-8 pl-4 border-l-2 border-[#C9A227]/40">
             "OMNIX doesn't just follow rules. It understands when and why they should apply."
@@ -292,8 +292,8 @@ export default function CommercialLanding() {
 
         <section className="mb-24">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-white mb-3">Two Verticals. Running Now.</h2>
-            <p className="text-muted max-w-2xl mx-auto">Same governance pipeline. Different industries. Both operating 24/7.</p>
+            <h2 className="text-3xl font-bold text-white mb-3">Four Verticals. Running Now.</h2>
+            <p className="text-muted max-w-2xl mx-auto">Same governance pipeline. Four industries. All four operating 24/7.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="glass-card p-8 border border-emerald-400/20">
@@ -323,8 +323,8 @@ export default function CommercialLanding() {
               </div>
               <p className="text-muted text-sm mb-5">Governance engine for Islamic finance credit decisions. Sharia compliance gate + 11 checkpoints evaluating SME, individual, and corporate applications 24/7.</p>
               <div className="grid grid-cols-2 gap-4 mb-5">
-                <div><div className="text-xl font-bold text-violet-400">3,700+</div><div className="text-xs text-muted">Applications evaluated</div></div>
-                <div><div className="text-xl font-bold text-violet-400">AED 15B+</div><div className="text-xs text-muted">Financing governed</div></div>
+                <div><div className="text-xl font-bold text-violet-400">18,811+</div><div className="text-xs text-muted">Applications evaluated</div></div>
+                <div><div className="text-xl font-bold text-violet-400">AED 77.4B+</div><div className="text-xs text-muted">Financing governed</div></div>
               </div>
               <Link to="/credit" className="text-violet-400 text-sm hover:text-white transition-colors flex items-center gap-1">
                 View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
@@ -434,7 +434,7 @@ export default function CommercialLanding() {
                 <p className="text-xs text-muted mt-1">Observation tier · Contact us</p>
               </div>
               <ul className="space-y-2 flex-1 mb-6">
-                {['OMNIX observes every decision in real time', 'Your team retains full authority — OMNIX advises', 'PQC-signed receipt per recommendation', '1 vertical (trading, credit, insurance, or supply chain)'].map(f => (
+                {['OMNIX observes every decision in real time', 'Your team retains full authority — OMNIX advises', 'PQC-signed receipt per recommendation', '1 vertical (trading, credit, insurance, or robotics)'].map(f => (
                   <li key={f} className="flex items-start gap-2 text-sm text-muted">
                     <CheckCircle className="w-4 h-4 text-[#06b6d4] flex-shrink-0 mt-0.5" />
                     {f}

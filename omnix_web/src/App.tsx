@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import ClientReportDownload from './pages/ClientReportDownload'
 import CommercialLanding from './pages/CommercialLanding'
+import PitchDeck from './pages/PitchDeck'
 import InstitutionalPage from './pages/InstitutionalPage'
 import CreditGovernanceDemo from './pages/CreditGovernanceDemo'
 import InsuranceGovernanceDemo from './pages/InsuranceGovernanceDemo'
@@ -43,6 +44,7 @@ function App() {
           <Route path="/audit" element={<AuditDashboard />} />
           <Route path="/client" element={<ClientDashboard />} />
           <Route path="/demo" element={<InvestorDemo />} />
+          <Route path="/pitch" element={<PitchDeck />} />
           <Route path="/stack" element={<TechnicalStack />} />
           <Route path="/integration" element={<IntegrationGuide />} />
           <Route path="/my-report" element={<ClientReportDownload />} />
