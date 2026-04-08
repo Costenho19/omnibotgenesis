@@ -210,6 +210,17 @@ def verify_chain():
 
 @verification_bp.route('/api/verify/recent')
 def recent_receipts():
+    """Return recently signed governance receipts for the public ledger view.
+
+    Filters applied (ADR-063):
+    - signature_algorithm must be present and not 'NONE' — unsigned/test receipts excluded.
+    - asset must match the canonical trading-pair pattern ^[A-Z0-9]+/[A-Z]+$ — internal
+      test assets (e.g. 'UNINTELLIGIBLE-SCENARIO') are excluded at the database layer.
+    - NULL guards on both columns ensure deterministic predicate evaluation.
+
+    These filters protect the public /verify page from displaying test data visible to
+    investors and auditors. Individual receipt lookup (/api/verify/<id>) is unaffected.
+    """
     limit = request.args.get('limit', 20, type=int)
     limit = min(limit, 100)
 
@@ -219,9 +230,13 @@ def recent_receipts():
                 return jsonify({'error': 'Database not available'}), 503
             cur = conn.cursor()
             cur.execute("""
-                SELECT receipt_id, timestamp_utc, asset, decision, 
+                SELECT receipt_id, timestamp_utc, asset, decision,
                        signature_algorithm, content_hash
                 FROM decision_receipts
+                WHERE signature_algorithm IS NOT NULL
+                  AND signature_algorithm <> 'NONE'
+                  AND asset IS NOT NULL
+                  AND asset ~ '^[A-Z0-9]+/[A-Z]+$'
                 ORDER BY created_at DESC
                 LIMIT %s
             """, (limit,))
@@ -231,11 +246,11 @@ def recent_receipts():
         receipts = [
             {
                 'receipt_id': r[0],
-                'timestamp': r[1],
+                'timestamp': r[1].isoformat() if hasattr(r[1], 'isoformat') else str(r[1]),
                 'asset': r[2],
                 'decision': r[3],
-                'signed': r[4] != 'NONE',
-                'hash_prefix': r[5][:16] + '...'
+                'signed': True,
+                'hash_prefix': (r[5] or '')[:16] + '...' if r[5] else ''
             }
             for r in rows
         ]

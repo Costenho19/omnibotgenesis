@@ -147,26 +147,39 @@ function renderCheck(val) {
 }
 
 async function loadRecent() {
+    /* ADR-063: client-side belt-and-suspenders filter.
+       The backend already excludes unsigned and non-standard assets,
+       but this layer provides an additional defence in case of a future
+       regression or a direct API call that bypasses the filter.         */
+    const VALID_ASSET = /^[A-Z0-9]+\/[A-Z]+$/;
+
     try {
         const res = await fetch('/api/verify/recent?limit=10');
         const data = await res.json();
         const list = document.getElementById('recentList');
-        
-        if (!data.receipts || data.receipts.length === 0) {
-            list.innerHTML = '<div style="color:#4b5563; font-style:italic;">No receipts recorded yet. Receipts are generated as the governance engine processes evaluation cycles.</div>';
+
+        const receipts = (data.receipts || []).filter(function(r) {
+            return r.signed === true && VALID_ASSET.test(r.asset);
+        });
+
+        if (receipts.length === 0) {
+            list.innerHTML = '<div style="color:#4b5563; font-style:italic;">No signed governance receipts recorded yet. Receipts are generated as the governance engine processes evaluation cycles.</div>';
             return;
         }
-        
+
         let html = '';
-        data.receipts.forEach(function(r) {
-            const decColor = r.decision==='APPROVE'?'#22c55e':r.decision==='BLOCK'?'#ef4444':'#eab308';
+        receipts.forEach(function(r) {
+            const dec = (r.decision || '').toUpperCase();
+            const decColor = dec === 'APPROVE' || dec === 'APPROVED' ? '#22c55e'
+                           : dec === 'BLOCK'   || dec === 'BLOCKED'  ? '#ef4444'
+                           : '#eab308';
             html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer;" onclick="searchInput.value='${r.receipt_id}'; verifyReceipt();">
                 <div>
                     <span style="font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:#60a5fa;">${r.receipt_id}</span>
-                    <span style="margin-left:8px; font-size:0.8rem; color:${decColor};">${r.decision}</span>
+                    <span style="margin-left:8px; font-size:0.8rem; color:${decColor};">${dec}</span>
                     <span style="margin-left:8px; font-size:0.78rem; color:#6b7280;">${r.asset}</span>
                 </div>
-                <span style="font-size:0.75rem; color:#4b5563;">${r.signed ? 'PQC Signed' : 'Unsigned'}</span>
+                <span style="font-size:0.75rem; color:#3b82f6;">PQC Signed</span>
             </div>`;
         });
         list.innerHTML = html;
