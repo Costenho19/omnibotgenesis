@@ -512,43 +512,15 @@ export default function PitchDeck() {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
             {[
-              {
-                tier: 'Shadow Mode',
-                price: 'Free',
-                sub: '4-week pilot',
-                features: ['OMNIX observes decisions', 'Zero operational risk', 'Report: what would have been blocked', 'PQC receipts included'],
-                color: '#10B981',
-                highlight: false,
-              },
-              {
-                tier: 'Advisory',
-                price: '$8K',
-                sub: '/ 2,000 evaluations',
-                features: ['Full observation mode', 'Real-time advisory signals', 'PQC-signed receipt per eval', '1 governance domain'],
-                color: '#06b6d4',
-                highlight: false,
-              },
-              {
-                tier: 'Enterprise Base',
-                price: '$20K',
-                sub: '/ 15,000 evaluations',
-                features: ['Full veto authority', 'Fail-closed enforcement', 'Complete audit trail', 'API integration included'],
-                color: '#C9A227',
-                highlight: true,
-              },
-              {
-                tier: 'Enterprise Full',
-                price: '$35K',
-                sub: '/ unlimited',
-                features: ['All domains included', 'Unlimited evaluations', 'Dedicated governance architect', 'SLA 99.9% uptime'],
-                color: '#a78bfa',
-                highlight: false,
-              },
+              { tier: 'Shadow Mode',    price: 'Free',  sub: '4-week pilot',         color: '#10B981', highlight: false },
+              { tier: 'Advisory',       price: '$8K',   sub: '/ 2,000 evaluations',  color: '#06b6d4', highlight: false },
+              { tier: 'Enterprise Base',price: '$20K',  sub: '/ 15,000 evaluations', color: '#C9A227', highlight: true  },
+              { tier: 'Enterprise Full',price: '$35K',  sub: '/ unlimited',           color: '#a78bfa', highlight: false },
             ].map(t => (
               <div key={t.tier} style={{
                 background: t.highlight ? 'rgba(201,162,39,0.08)' : 'rgba(15,33,64,0.6)',
                 border: `${t.highlight ? '2px' : '1px'} solid ${t.color}${t.highlight ? '60' : '22'}`,
-                borderRadius: 14, padding: '1.1rem',
+                borderRadius: 14, padding: '1.25rem 1.1rem',
                 position: 'relative',
               }}>
                 {t.highlight && (
@@ -558,14 +530,7 @@ export default function PitchDeck() {
                 )}
                 <div style={{ fontSize: 10, fontWeight: 700, color: t.color, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{t.tier}</div>
                 <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#F8FAFC', lineHeight: 1 }}>{t.price}</div>
-                <div style={{ fontSize: 11, color: '#64748b', marginBottom: 12 }}>{t.sub}</div>
-                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {t.features.map(f => (
-                    <li key={f} style={{ display: 'flex', gap: 6, fontSize: 11, color: '#94A3B8', alignItems: 'flex-start' }}>
-                      <CheckCircle size={11} color={t.color} style={{ flexShrink: 0, marginTop: 1 }} />{f}
-                    </li>
-                  ))}
-                </ul>
+                <div style={{ fontSize: 11, color: '#64748b' }}>{t.sub}</div>
               </div>
             ))}
           </div>
