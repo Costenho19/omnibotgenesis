@@ -350,13 +350,13 @@ def init_security(app: Flask) -> None:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.plot.ly; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.plot.ly https://www.googletagmanager.com https://www.google-analytics.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
             "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data: https:; "
             "connect-src 'self' https://api.coingecko.com https://api.alternative.me https://finnhub.io "
             "https://*.worf.replit.dev https://*.replit.dev https://*.replit.app https://*.railway.app "
-            "https://omnixquantum.net; "
+            "https://omnixquantum.net https://www.google-analytics.com https://analytics.google.com; "
             "frame-ancestors 'self'"
         )
         
