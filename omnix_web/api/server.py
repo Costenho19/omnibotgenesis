@@ -891,6 +891,48 @@ def _parse_veto_entry(raw: str):
     }
 
 
+@app.route('/api/verify/recent', methods=['GET'])
+def public_recent_receipts():
+    """Public ledger — returns recently signed governance receipts (ADR-063 filters)."""
+    limit = request.args.get('limit', 20, type=int)
+    limit = min(limit, 100)
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database unavailable', 'receipts': []}), 503
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT receipt_id, timestamp_utc, asset, decision,
+                   signature_algorithm, content_hash
+            FROM decision_receipts
+            WHERE signature_algorithm IS NOT NULL
+              AND signature_algorithm <> 'NONE'
+              AND asset IS NOT NULL
+              AND asset ~ '^[A-Z0-9]+/[A-Z]+$'
+            ORDER BY created_at DESC
+            LIMIT %s
+        """, (limit,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"[verify/recent] DB error: {e}")
+        return jsonify({'error': 'Failed to fetch receipts', 'receipts': []}), 500
+
+    receipts = [
+        {
+            'receipt_id': r[0],
+            'timestamp':  r[1].isoformat() if hasattr(r[1], 'isoformat') else str(r[1]),
+            'asset':      r[2],
+            'decision':   r[3],
+            'signed':     True,
+            'hash_prefix': (r[5] or '')[:16] + '...' if r[5] else '',
+        }
+        for r in rows
+    ]
+    return jsonify({'receipts': receipts, 'count': len(receipts)})
+
+
 @app.route('/api/public/verify/<path:receipt_id>', methods=['GET'])
 def public_verify_receipt(receipt_id):
     import json as _json
