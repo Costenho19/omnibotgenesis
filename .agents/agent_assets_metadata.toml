@@ -114,3 +114,9 @@ id = "pFznMtZB_njO2CEJH7MFk"
 uri = "file://omnix_contracts/OMNIX_Order_Form.pdf"
 type = "pdf"
 title = "OMNIX Order Form"
+
+[[outputs]]
+id = "-MOWMQbUgAU4OLhkOppbl"
+uri = "file://OMNIX_Velos_GTM_Positioning.pdf"
+type = "pdf"
+title = "OMNIX × VELOS — GTM Positioning Document"
