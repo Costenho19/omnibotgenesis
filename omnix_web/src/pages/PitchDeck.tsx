@@ -510,17 +510,18 @@ export default function PitchDeck() {
           <p style={{ fontSize: '1rem', color: '#94A3B8', maxWidth: 580, marginBottom: 36, lineHeight: 1.7 }}>
             The difference between tiers is not volume — it's authority. Advisory plans observe. Only Enterprise can stop a decision. Every plan includes cryptographic receipts.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))', gap: 12, minWidth: 640 }}>
             {[
-              { tier: 'Shadow Mode',    price: 'Free',  sub: '4-week pilot',         color: '#10B981', highlight: false },
-              { tier: 'Advisory',       price: '$8K',   sub: '/ 2,000 evaluations',  color: '#06b6d4', highlight: false },
-              { tier: 'Enterprise Base',price: '$20K',  sub: '/ 15,000 evaluations', color: '#C9A227', highlight: true  },
-              { tier: 'Enterprise Full',price: '$35K',  sub: '/ unlimited',           color: '#a78bfa', highlight: false },
+              { tier: 'Shadow Mode',    price: 'Free',  sub: '4-week pilot',          color: '#10B981', highlight: false },
+              { tier: 'Advisory',       price: '$8K',   sub: '/ 2,000 evaluations',   color: '#06b6d4', highlight: false },
+              { tier: 'Enterprise Base',price: '$20K',  sub: '/ 15,000 evaluations',  color: '#C9A227', highlight: true  },
+              { tier: 'Enterprise Full',price: '$35K',  sub: '/ unlimited',            color: '#a78bfa', highlight: false },
             ].map(t => (
               <div key={t.tier} style={{
                 background: t.highlight ? 'rgba(201,162,39,0.08)' : 'rgba(15,33,64,0.6)',
-                border: `${t.highlight ? '2px' : '1px'} solid ${t.color}${t.highlight ? '60' : '22'}`,
-                borderRadius: 14, padding: '1.25rem 1.1rem',
+                border: `${t.highlight ? '2px' : '1px'} solid ${t.color}${t.highlight ? '60' : '25'}`,
+                borderRadius: 14, padding: '1.4rem 1.1rem',
                 position: 'relative',
               }}>
                 {t.highlight && (
@@ -528,11 +529,12 @@ export default function PitchDeck() {
                     Most Popular
                   </div>
                 )}
-                <div style={{ fontSize: 10, fontWeight: 700, color: t.color, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{t.tier}</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#F8FAFC', lineHeight: 1 }}>{t.price}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: t.color, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>{t.tier}</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#F8FAFC', lineHeight: 1, marginBottom: 4 }}>{t.price}</div>
                 <div style={{ fontSize: 11, color: '#64748b' }}>{t.sub}</div>
               </div>
             ))}
+          </div>
           </div>
           <div className="glass" style={{ padding: '0.75rem 1.25rem', textAlign: 'center', fontSize: 12, color: '#64748b', borderColor: 'rgba(201,162,39,0.15)' }}>
             Advisory plans observe decisions. Only Enterprise has authority to stop them. · All plans include post-quantum cryptographic receipts.
