@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import {
   Shield, Activity, Lock, Zap, Globe, CheckCircle,
   ArrowRight, DollarSign, Users, TrendingUp, Target,
-  Award, Star, ExternalLink
+  Award, Star
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
 
@@ -126,7 +125,7 @@ export default function PitchDeck() {
             }}>{SLIDE_LABELS[s]}</button>
           ))}
         </div>
-        <Link to="/" style={{ fontSize: 12, color: '#475569', textDecoration: 'none' }}>← Back to site</Link>
+        <span style={{ fontSize: 12, color: '#1E293B' }}>CONFIDENTIAL</span>
       </nav>
 
       {/* ── SLIDE 1: COVER ── */}
@@ -285,9 +284,6 @@ export default function PitchDeck() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
             <span className="live-dot" />
             <span style={{ fontSize: 13, color: '#10B981', fontWeight: 600 }}>LIVE NOW — updated every 10 seconds</span>
-            <Link to="/command" style={{ fontSize: 12, color: '#475569', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <ExternalLink size={12} /> View live data
-            </Link>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
@@ -325,8 +321,7 @@ export default function PitchDeck() {
           <div className="glass" style={{ padding: '1rem 1.5rem', borderColor: 'rgba(201,162,39,0.25)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <Lock size={16} color="#C9A227" style={{ flexShrink: 0 }} />
             <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>
-              Every decision above has an independently verifiable post-quantum cryptographic receipt. Receipts include decision context, all 11 checkpoint scores, final verdict, and a CRYSTALS-Dilithium signature. 
-              {' '}<Link to="/verify" style={{ color: '#C9A227', textDecoration: 'none' }}>Verify any receipt →</Link>
+              Every decision above has an independently verifiable post-quantum cryptographic receipt. Receipts include decision context, all 11 checkpoint scores, final verdict, and a CRYSTALS-Dilithium signature.
             </p>
           </div>
         </div>
@@ -757,19 +752,6 @@ export default function PitchDeck() {
             >
               <span>✉️</span> contacto@omnixquantum.net
             </a>
-          </div>
-
-          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
-            {[
-              { label: 'Live System', path: '/command', color: '#10B981' },
-              { label: 'Try OMNIX', path: '/try', color: '#6366f1' },
-              { label: 'Verify a Receipt', path: '/verify', color: '#C9A227' },
-              { label: 'Technical Details', path: '/institutional', color: '#94A3B8' },
-            ].map(l => (
-              <Link key={l.path} to={l.path} style={{ fontSize: 12, color: l.color, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <ExternalLink size={11} /> {l.label}
-              </Link>
-            ))}
           </div>
 
           <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 11, color: '#334155' }}>
