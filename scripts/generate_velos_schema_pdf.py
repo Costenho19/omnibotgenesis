@@ -38,6 +38,13 @@ class NumberedCanvas(pdf_canvas.Canvas):
         pdf_canvas.Canvas.__init__(self, *args, **kwargs)
         self._saved_page_states = []
 
+    def _startPage(self):
+        pdf_canvas.Canvas._startPage(self)
+        self.saveState()
+        self.setFillColor(DARK_BG)
+        self.rect(0, 0, A4[0], A4[1], fill=1, stroke=0)
+        self.restoreState()
+
     def showPage(self):
         self._saved_page_states.append(dict(self.__dict__))
         self._startPage()
@@ -46,8 +53,6 @@ class NumberedCanvas(pdf_canvas.Canvas):
         num_pages = len(self._saved_page_states)
         for state in self._saved_page_states:
             self.__dict__.update(state)
-            self.setFillColor(DARK_BG)
-            self.rect(0, 0, A4[0], A4[1], fill=1, stroke=0)
             self.setFont("Helvetica", 7)
             self.setFillColor(LIGHT_GRAY)
             self.drawCentredString(
