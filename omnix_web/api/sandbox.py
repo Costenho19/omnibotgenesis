@@ -1836,7 +1836,11 @@ def _evaluate_governance(signals: dict) -> dict:
 def _generate_receipt(decision: str, asset: str, decision_trace: list, db_url: str) -> dict | None:
     import psycopg2
 
-    receipt_id = f"OMNIX-{uuid.uuid4().hex[:12].upper()}"
+    try:
+        from omnix_core.evidence.decision_receipt import DecisionReceiptEngine
+        receipt_id = DecisionReceiptEngine.build_receipt_id("public_sandbox")
+    except Exception:
+        receipt_id = f"OMNIX-PUB-{uuid.uuid4().hex[:12].upper()}"
     timestamp = datetime.now(timezone.utc).isoformat()
 
     veto_chain = []

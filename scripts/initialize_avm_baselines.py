@@ -70,103 +70,143 @@ DOMAIN_BASELINES = {
 }
 
 
-def initialize_avm_baselines(force: bool = False) -> dict[str, bool]:
+def initialize_avm_baselines(
+    force: bool = False,
+    reason: str = "",
+    actor: str = "system",
+) -> dict[str, bool]:
     """
     Seed AVM calibration snapshots — enterprise persistence strategy:
 
-    1. Ensure PostgreSQL table exists.
-    2. Restore existing snapshots from DB → local JSON files.
+    1. Ensure PostgreSQL tables exist (snapshots + change_log).
+    2. Restore existing snapshots from DB → local JSON files (integrity-checked).
     3. Seed only missing domains (first-time-only seeding).
-    4. Persist new seeds to DB immediately.
+    4. Persist new seeds to DB with hash + change log entry.
 
     Args:
-        force: If True, overwrite existing DB baselines (use only for manual recalibration).
-               WARNING: force=True resets the drift detection baseline — use with intent.
+        force:  If True, overwrite existing DB baselines (recalibration).
+                WARNING: force=True resets drift detection baseline — use with intent.
+        reason: Required when force=True. Documented reason for recalibration.
+        actor:  Who triggered this change (for audit log).
 
     Returns:
         dict of {domain: seeded (True/False)}
+
+    Raises:
+        ValueError: If force=True and reason is empty.
     """
+    if force and not reason.strip():
+        raise ValueError(
+            "reason is required when force=True. "
+            "Document why you are resetting the drift detection baseline. "
+            "Example: initialize_avm_baselines(force=True, reason='Market regime change Q2 2026')"
+        )
+
     bridge = AVMDatabaseBridge()
     avm = AssumptionValidityMonitor()
     results = {}
+    degraded_domains: list[str] = []
 
-    # Step 1: Ensure DB table exists
+    # Step 1: Ensure DB tables exist
     if bridge.is_available():
         bridge.ensure_table()
 
-        # Step 2: Restore DB snapshots to local JSON (no-op if DB empty)
-        restored = bridge.restore_to_json()
+        # Step 2: Restore DB snapshots → local JSON (integrity-checked)
+        restored, tampered = bridge.restore_to_json()
         if restored > 0:
             logger.info(f"[AVM.Init] Restored {restored} snapshots from PostgreSQL → local JSON")
+        if tampered > 0:
+            logger.error(
+                f"[AVM.Init] ⚠️ DEGRADED_MODE: {tampered} tampered snapshots rejected — "
+                "those domains will operate in AVM pass-through until recalibrated"
+            )
+            degraded_domains.append(f"{tampered}_tampered_domains")
     else:
-        logger.warning("[AVM.Init] No DATABASE_URL — using JSON-only persistence (not recommended for production)")
+        logger.warning(
+            "[AVM.Init] DEGRADED_MODE: No DATABASE_URL — "
+            "using JSON-only persistence (not recommended for production). "
+            "Drift baselines will not survive container restarts."
+        )
 
-    # Step 3: Seed only missing domains
+    # Step 3: Load DB state once for efficiency
+    all_db: dict = {}
+    if bridge.is_available():
+        all_db = bridge.load_all_snapshots()
+
+    # Step 4: Seed only missing domains (or all if force=True)
     for domain, cfg in DOMAIN_BASELINES.items():
-        existing_in_db = False
-        if bridge.is_available() and not force:
-            all_db = bridge.load_all_snapshots()
-            existing_in_db = domain in all_db
+        existing_in_db = domain in all_db and all_db[domain].get("integrity_status") == "OK"
 
-        if existing_in_db:
-            logger.info(f"[AVM.Init] Domain '{domain}' exists in DB — no recalibration (drift baseline preserved)")
+        if existing_in_db and not force:
+            logger.info(
+                f"[AVM.Init] Domain '{domain}' exists in DB (integrity=OK) — "
+                "no recalibration (drift baseline preserved)"
+            )
             results[domain] = False
             continue
 
         existing_local = avm.load_snapshot(domain)
-        if existing_local and not force:
-            # Has local JSON but not in DB — persist it to DB now
+
+        if existing_local and not force and not existing_in_db:
+            # Has valid local JSON but missing from DB — migrate it
             if bridge.is_available():
-                snap_dict = {
-                    "domain":             domain,
-                    "snapshot_id":        existing_local.snapshot_id,
-                    "parameter_version":  existing_local.parameter_version,
-                    "baseline_signals":   existing_local.baseline_signals,
-                    "checkpoint_thresholds": existing_local.checkpoint_thresholds,
-                    "drift_threshold":    existing_local.drift_threshold,
-                    "max_age_hours":      existing_local.max_age_hours,
-                    "description":        existing_local.description,
-                    "tags":               existing_local.tags,
-                    "calibrated_at":      existing_local.calibrated_at,
-                    "calibrated_at_epoch": existing_local.calibrated_at_epoch,
-                }
-                bridge.save_snapshot(snap_dict)
+                snap_dict = _snapshot_to_dict(domain, existing_local)
+                bridge.save_snapshot(
+                    snap_dict,
+                    reason="Migrated from local JSON to PostgreSQL",
+                    actor=actor,
+                    action="MIGRATE",
+                )
                 logger.info(f"[AVM.Init] Domain '{domain}' migrated from JSON → PostgreSQL")
             results[domain] = False
             continue
 
-        # New seed (domain not found anywhere)
+        # New seed or forced recalibration
+        action = "RECALIBRATE" if force else "SEED"
+        seed_reason = reason if force else f"Initial calibration — {cfg['description']}"
+
         avm.save_calibration_snapshot(
             domain=domain,
             baseline_signals=cfg["signals"],
             description=cfg["description"],
             tags=cfg["tags"],
         )
-        # Persist new seed to DB
+
         if bridge.is_available():
             new_snap = avm.load_snapshot(domain)
             if new_snap:
-                snap_dict = {
-                    "domain":             domain,
-                    "snapshot_id":        new_snap.snapshot_id,
-                    "parameter_version":  new_snap.parameter_version,
-                    "baseline_signals":   new_snap.baseline_signals,
-                    "checkpoint_thresholds": new_snap.checkpoint_thresholds,
-                    "drift_threshold":    new_snap.drift_threshold,
-                    "max_age_hours":      new_snap.max_age_hours,
-                    "description":        new_snap.description,
-                    "tags":               new_snap.tags,
-                    "calibrated_at":      new_snap.calibrated_at,
-                    "calibrated_at_epoch": new_snap.calibrated_at_epoch,
-                }
-                bridge.save_snapshot(snap_dict)
+                snap_dict = _snapshot_to_dict(domain, new_snap)
+                bridge.save_snapshot(
+                    snap_dict,
+                    reason=seed_reason,
+                    actor=actor,
+                    action=action,
+                )
 
         results[domain] = True
-        logger.info(f"[AVM.Init] ✅ Domain '{domain}' calibrated and persisted to PostgreSQL")
+        logger.info(f"[AVM.Init] ✅ Domain '{domain}' calibrated — action={action}")
 
     seeded = sum(results.values())
     logger.info(f"[AVM.Init] Initialization complete — {seeded}/{len(DOMAIN_BASELINES)} domains seeded")
+    if degraded_domains:
+        logger.warning(f"[AVM.Init] DEGRADED_MODE active — {degraded_domains}")
     return results
+
+
+def _snapshot_to_dict(domain: str, snap) -> dict:
+    return {
+        "domain":             domain,
+        "snapshot_id":        snap.snapshot_id,
+        "parameter_version":  snap.parameter_version,
+        "baseline_signals":   snap.baseline_signals,
+        "checkpoint_thresholds": snap.checkpoint_thresholds,
+        "drift_threshold":    snap.drift_threshold,
+        "max_age_hours":      snap.max_age_hours,
+        "description":        snap.description,
+        "tags":               snap.tags,
+        "calibrated_at":      snap.calibrated_at,
+        "calibrated_at_epoch": snap.calibrated_at_epoch,
+    }
 
 
 if __name__ == "__main__":

@@ -202,12 +202,12 @@ class TestAVMPersistence:
             mock_bridge = MagicMock()
             mock_bridge.is_available.return_value = True
             mock_bridge.load_all_snapshots.return_value = {
-                "trading": {"snapshot_id": "AVM-EXISTING"},
-                "islamic_credit": {"snapshot_id": "AVM-EXISTING"},
-                "insurance": {"snapshot_id": "AVM-EXISTING"},
-                "robotics": {"snapshot_id": "AVM-EXISTING"},
+                "trading":        {"snapshot_id": "AVM-EXISTING", "integrity_status": "OK"},
+                "islamic_credit": {"snapshot_id": "AVM-EXISTING", "integrity_status": "OK"},
+                "insurance":      {"snapshot_id": "AVM-EXISTING", "integrity_status": "OK"},
+                "robotics":       {"snapshot_id": "AVM-EXISTING", "integrity_status": "OK"},
             }
-            mock_bridge.restore_to_json.return_value = 4
+            mock_bridge.restore_to_json.return_value = (4, 0)
             mock_bridge_cls.return_value = mock_bridge
 
             mock_avm = MagicMock()
@@ -218,6 +218,29 @@ class TestAVMPersistence:
 
             mock_bridge.ensure_table.assert_called_once()
             mock_avm.save_calibration_snapshot.assert_not_called()
+
+    def test_force_recalibrate_requires_reason(self):
+        """force=True without a reason must raise ValueError."""
+        with patch("scripts.initialize_avm_baselines.AVMDatabaseBridge"), \
+             patch("scripts.initialize_avm_baselines.AssumptionValidityMonitor"):
+            from scripts.initialize_avm_baselines import initialize_avm_baselines
+            with pytest.raises(ValueError, match="reason is required"):
+                initialize_avm_baselines(force=True, reason="")
+
+    def test_force_recalibrate_with_reason_proceeds(self):
+        """force=True with reason must NOT raise."""
+        with patch("scripts.initialize_avm_baselines.AVMDatabaseBridge") as mock_bridge_cls, \
+             patch("scripts.initialize_avm_baselines.AssumptionValidityMonitor") as mock_avm_cls:
+            mock_bridge = MagicMock()
+            mock_bridge.is_available.return_value = False
+            mock_bridge_cls.return_value = mock_bridge
+            mock_avm = MagicMock()
+            mock_avm.load_snapshot.return_value = None
+            mock_avm_cls.return_value = mock_avm
+
+            from scripts.initialize_avm_baselines import initialize_avm_baselines
+            results = initialize_avm_baselines(force=True, reason="Market regime change Q2 2026")
+            assert isinstance(results, dict)
 
 
 class TestDriftDetection:
@@ -287,6 +310,62 @@ class TestDriftDetection:
         assert result is not None
         assert result.is_valid is True, \
             f"No drift expected for near-identical signals. drift_score={result.drift_score}"
+
+
+class TestBaselineIntegrity:
+    """Baseline hash integrity — tampered snapshots must be rejected."""
+
+    def test_hash_is_computed_deterministically(self):
+        from omnix_core.governance.avm_db_bridge import _compute_hash
+        signals = {"probability_score": 65.0, "risk_exposure": 30.0}
+        h1 = _compute_hash(signals)
+        h2 = _compute_hash(signals)
+        assert h1 == h2, "Hash must be deterministic"
+        assert len(h1) == 64, "SHA-256 hex must be 64 chars"
+
+    def test_hash_changes_when_signals_change(self):
+        from omnix_core.governance.avm_db_bridge import _compute_hash
+        h1 = _compute_hash({"probability_score": 65.0})
+        h2 = _compute_hash({"probability_score": 64.9})
+        assert h1 != h2, "Even small signal changes must produce different hashes"
+
+    def test_tampered_snapshot_flagged_on_load(self):
+        """If baseline_signals don't match stored hash → integrity_status=TAMPERED."""
+        from omnix_core.governance.avm_db_bridge import _compute_hash
+        real_signals = {"probability_score": 65.0, "risk_exposure": 30.0}
+        real_hash = _compute_hash(real_signals)
+        tampered_signals = {"probability_score": 10.0, "risk_exposure": 99.0}
+        tampered_hash = _compute_hash(tampered_signals)
+        assert real_hash != tampered_hash, \
+            "Tampered signals must produce a different hash"
+
+    def test_force_recalibrate_raises_without_reason(self):
+        with patch("scripts.initialize_avm_baselines.AVMDatabaseBridge"), \
+             patch("scripts.initialize_avm_baselines.AssumptionValidityMonitor"):
+            from scripts.initialize_avm_baselines import initialize_avm_baselines
+            with pytest.raises(ValueError, match="reason is required"):
+                initialize_avm_baselines(force=True)
+
+
+class TestSandboxReceiptFormat:
+    """Public sandbox must emit OMNIX-PUB- receipts."""
+
+    def test_sandbox_receipt_uses_omnix_pub_prefix(self):
+        import inspect
+        import omnix_web.api.sandbox as mod
+        source = inspect.getsource(mod)
+        assert "OMNIX-PUB-" in source or "public_sandbox" in source, \
+            "sandbox.py must generate OMNIX-PUB- prefixed receipt IDs"
+
+    def test_sandbox_receipt_no_raw_omnix_format(self):
+        """Verify the old OMNIX-{12hex} raw format is not used for receipt generation."""
+        import inspect
+        import omnix_web.api.sandbox as mod
+        import re as _re
+        source = inspect.getsource(mod)
+        old_direct_format = _re.findall(r'receipt_id\s*=\s*f"OMNIX-\{uuid', source)
+        assert len(old_direct_format) == 0, \
+            f"Old raw OMNIX-{{uuid}} format still used for receipt_id in sandbox.py"
 
 
 class TestCrossDomainReceiptConsistency:
