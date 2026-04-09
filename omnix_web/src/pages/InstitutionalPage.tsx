@@ -548,7 +548,7 @@ export default function InstitutionalPage() {
               <div className="text-center mb-12">
                 <p className="section-title">Integration Partners</p>
                 <h2 className="text-3xl font-bold text-white">Built for Your Decision Infrastructure</h2>
-                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing decision systems via REST API or webhooks. Currently governing decisions across 4 live domains: digital asset trading, Islamic credit, insurance claims, and autonomous robotics. Next: biotech and supply chain.</p>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing decision systems via REST API or webhooks. Currently governing decisions across 4 live domains: digital asset trading, Islamic credit, insurance claims, and autonomous robotics.</p>
               </div>
               
               <div className="grid md:grid-cols-3 gap-8">

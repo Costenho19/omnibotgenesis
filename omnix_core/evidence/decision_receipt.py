@@ -105,6 +105,20 @@ class DecisionReceiptEngine:
             if isinstance(ca, dict) and ca.get('veto_type'):
                 public_payload['veto_type'] = ca['veto_type']
 
+        if 'avm_result' in decision:
+            avm = decision['avm_result']
+            if isinstance(avm, dict):
+                public_payload['avm_result'] = {
+                    'is_valid': avm.get('is_valid'),
+                    'snapshot_id': avm.get('snapshot_id'),
+                    'parameter_version': avm.get('parameter_version'),
+                    'drift_score': avm.get('drift_score'),
+                    'age_hours': avm.get('age_hours'),
+                    'pass_through': avm.get('pass_through', False),
+                }
+                if avm.get('block_reason'):
+                    public_payload['avm_result']['block_reason'] = avm['block_reason']
+
         content_hash = self._compute_hash(public_payload)
         public_payload['content_hash'] = content_hash
 
@@ -269,7 +283,7 @@ class ReceiptVerifier:
 
         for optional_block in (
             'sharia_compliance', 'aml_compliance', 'fraud_compliance',
-            'jurisdiction_compliance', 'context_admission',
+            'jurisdiction_compliance', 'context_admission', 'avm_result',
         ):
             if optional_block in receipt:
                 payload_for_hash[optional_block] = receipt[optional_block]

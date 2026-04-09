@@ -50,6 +50,12 @@ try:
 except Exception:
     _CAG_AVAILABLE = False
 
+try:
+    from omnix_core.governance.assumption_validity_monitor import get_avm_instance
+    _AVM_AVAILABLE = True
+except Exception:
+    _AVM_AVAILABLE = False
+
 # Safety floors: absolute min/max each client is allowed to set per checkpoint.
 # Prevents clients from disabling governance by setting trivially permissive thresholds.
 # operator 'gte' checkpoints: threshold cannot be below min (would make it too easy to pass)
@@ -260,6 +266,79 @@ class GovernanceEvaluationEngine:
         decision_trace = []
         overall_blocked = False
         cfg = compliance_config or {}
+
+        # ── AVM: Assumption Validity Monitor — pre-pipeline drift gate ─────────
+        # Runs FIRST — before CAG, before any checkpoint.
+        # If calibration assumptions have drifted beyond tolerance, no evaluation
+        # is performed and no receipt can be certified. ADR-064.
+        avm_block: dict[str, Any] | None = None
+        if _AVM_AVAILABLE:
+            try:
+                avm_enabled = cfg.get("avm_enabled",
+                    os.environ.get("AVM_ENABLED", "true").lower() != "false")
+                if avm_enabled:
+                    _avm = get_avm_instance()
+                    _resolved_for_avm = {**signals, **{
+                        k: v for k, v in OPTIONAL_SIGNAL_DEFAULTS.items()
+                        if k not in signals
+                    }}
+                    avm_result = _avm.evaluate(
+                        signals=_resolved_for_avm,
+                        domain=domain,
+                    )
+                    avm_block = avm_result.to_dict()
+                    if not avm_result.is_valid and not avm_result.pass_through:
+                        decision_trace.append(
+                            f"AVM STALE_BLOCK: drift={avm_result.drift_score:.1f} > "
+                            f"threshold={avm_result.drift_threshold:.1f} | "
+                            f"snapshot={avm_result.snapshot_id} | "
+                            f"age={avm_result.age_hours:.1f}h"
+                        )
+                        veto_chain.append({
+                            "checkpoint_id": "AVM",
+                            "checkpoint_name": "Assumption Validity Monitor",
+                            "result": "STALE_BLOCK",
+                            "drift_score": avm_result.drift_score,
+                            "drift_threshold": avm_result.drift_threshold,
+                            "snapshot_id": avm_result.snapshot_id,
+                            "parameter_version": avm_result.parameter_version,
+                            "block_reason": avm_result.block_reason,
+                        })
+                        logger.warning(
+                            f"🔍 [AVM] STALE_BLOCK: drift={avm_result.drift_score:.1f} | "
+                            f"threshold={avm_result.drift_threshold:.1f} | "
+                            f"domain={domain} | asset={asset} | "
+                            f"snapshot={avm_result.snapshot_id} | age={avm_result.age_hours:.1f}h"
+                        )
+                        all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
+                        return {
+                            "decision": "BLOCKED",
+                            "asset": asset,
+                            "domain": domain,
+                            "gate_results": [],
+                            "veto_chain": veto_chain,
+                            "scores": {s: signals.get(s, 0.0) for s in all_signals},
+                            "decision_trace": decision_trace,
+                            "metadata": metadata,
+                            "checkpoints_total": len(self.checkpoints),
+                            "checkpoints_passed": 0,
+                            "checkpoints_blocked": 0,
+                            "avm_result": avm_block,
+                        }
+                    else:
+                        if avm_result.warnings:
+                            for w in avm_result.warnings:
+                                decision_trace.append(f"AVM WARNING: {w}")
+                        if not avm_result.pass_through:
+                            decision_trace.append(
+                                f"AVM VALID: drift={avm_result.drift_score:.1f} ≤ "
+                                f"{avm_result.drift_threshold:.1f} | "
+                                f"snapshot={avm_result.snapshot_id} | "
+                                f"version={avm_result.parameter_version}"
+                            )
+            except Exception as _avm_exc:
+                logger.debug(f"[AVM] Pass-through for {asset} ({domain}): {_avm_exc}")
+        # ─────────────────────────────────────────────────────────────────────
 
         # ── CAG: Context Admission Gate — session-level pre-admission ──────────
         # Runs BEFORE any signal enters the checkpoint pipeline.
@@ -555,6 +634,8 @@ class GovernanceEvaluationEngine:
             result["context_admission"] = context_admission_block
         if tie_block is not None:
             result["trajectory_analysis"] = tie_block
+        if avm_block is not None:
+            result["avm_result"] = avm_block
         return result
 
     @staticmethod
