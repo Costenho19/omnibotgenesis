@@ -31,6 +31,8 @@ import time
 import uuid
 from collections import defaultdict
 
+from omnix_core.evidence.decision_receipt import DecisionReceiptEngine as _ReceiptEngine
+
 import psycopg2
 import psycopg2.extras
 from flask import Blueprint, jsonify, request
@@ -517,7 +519,7 @@ def sandbox_evaluate():
         return jsonify({"error": "Evaluation engine error", "reference": ref, "status": 500}), 500
 
     evaluation_id = f"SBE-{uuid.uuid4().hex[:12].upper()}"
-    sandbox_receipt_id = f"OMNIX-SB-{uuid.uuid4().hex[:8].upper()}"
+    sandbox_receipt_id = _ReceiptEngine.build_receipt_id("public_sandbox")
     decision_score = evaluation.get("decision_score") or evaluation.get("score")
 
     try:

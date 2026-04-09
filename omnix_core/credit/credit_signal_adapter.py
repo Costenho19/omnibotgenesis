@@ -274,7 +274,7 @@ class CreditSignalAdapter:
         """
         # Create a list of normalized sub-scores
         cs_norm = (app.credit_score - 300.0) / 5.5           # 0-100
-        dsr_norm = (1.0 - app.debt_service_ratio / 0.5) * 100  # 0-100 (lower DSR = better)
+        dsr_norm = (1.0 - app.debt_service_ratio / ISLAMIC_DSR_MAX) * 100  # 0-100 (lower DSR = better); uses same ceiling as dsr_score (ADR-074)
         coll_norm = min(100.0, app.asset_backing_ratio * 60.0)  # 0-100
         macro_norm = 100.0 - macro.credit_conditions_index      # 0-100
 
