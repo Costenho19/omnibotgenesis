@@ -96,12 +96,14 @@ class TestInsuranceSimulatorReceiptFormat:
     """Insurance simulator uses OMNIX-INS-{hex} format."""
 
     def test_insurance_receipt_id_format_in_source(self):
-        """Verify the insurance simulator source contains OMNIX-INS- prefix."""
+        """Verify the insurance simulator uses DecisionReceiptEngine.build_receipt_id."""
         import inspect
         import omnix_core.insurance.insurance_simulator as mod
         source = inspect.getsource(mod)
-        assert 'OMNIX-INS-' in source, \
-            "insurance_simulator.py must generate OMNIX-INS- prefixed receipt IDs"
+        assert 'DecisionReceiptEngine' in source, \
+            "insurance_simulator.py must use DecisionReceiptEngine.build_receipt_id('insurance')"
+        assert "build_receipt_id" in source, \
+            "insurance_simulator.py must call build_receipt_id — not hardcode the format"
 
     def test_insurance_receipt_id_format_matches_pattern(self):
         """Generated receipt IDs match the canonical OMNIX-INS-{12hex} pattern."""
@@ -123,12 +125,14 @@ class TestRoboticsSimulatorReceiptFormat:
     """Robotics simulator uses OMNIX-RBT-{hex} format."""
 
     def test_robotics_receipt_id_format_in_source(self):
-        """Verify the robotics simulator source contains OMNIX-RBT- prefix."""
+        """Verify the robotics simulator uses DecisionReceiptEngine.build_receipt_id."""
         import inspect
         import omnix_core.robotics.robotics_simulator as mod
         source = inspect.getsource(mod)
-        assert 'OMNIX-RBT-' in source, \
-            "robotics_simulator.py must generate OMNIX-RBT- prefixed receipt IDs"
+        assert 'DecisionReceiptEngine' in source, \
+            "robotics_simulator.py must use DecisionReceiptEngine.build_receipt_id('robotics')"
+        assert "build_receipt_id" in source, \
+            "robotics_simulator.py must call build_receipt_id — not hardcode the format"
 
     def test_robotics_receipt_id_format_matches_pattern(self):
         """Generated receipt IDs match the canonical OMNIX-RBT-{12hex} pattern."""

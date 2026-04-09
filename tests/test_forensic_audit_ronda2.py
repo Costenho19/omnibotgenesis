@@ -325,26 +325,38 @@ class TestCrossDomainConsistency:
         r3 = avm.evaluate({"unknown_signal": 99.0}, domain="empty_domain")
         assert isinstance(r3, AVMResult)
 
-    def test_B7_insurance_receipt_format_canonical(self):
-        """insurance_simulator genera OMNIX-INS-{12hex} sin pasar por build_receipt_id."""
-        import omnix_core.insurance.insurance_simulator as ins_mod
-        pattern = _canonical_receipt_pattern("INS")
-        generated = [
-            f"OMNIX-INS-{uuid.uuid4().hex[:12].upper()}"
-            for _ in range(5)
-        ]
-        for rid in generated:
-            assert pattern.match(rid), f"Insurance receipt inválido: {rid}"
+    def test_B7_insurance_uses_build_receipt_id(self):
+        """insurance_simulator usa DecisionReceiptEngine.build_receipt_id("insurance")."""
+        import ast, pathlib
+        src = pathlib.Path("omnix_core/insurance/insurance_simulator.py").read_text()
+        # Verifica import del engine
+        assert "DecisionReceiptEngine" in src, (
+            "insurance_simulator debe importar DecisionReceiptEngine"
+        )
+        # Verifica que NO quedan strings crudas del estilo f"OMNIX-INS-..."
+        assert 'f"OMNIX-INS-' not in src, (
+            "insurance_simulator no debe generar receipt_id con string literal — "
+            "debe usar DecisionReceiptEngine.build_receipt_id('insurance')"
+        )
+        # Verifica el formato via el engine
+        from omnix_core.evidence.decision_receipt import DecisionReceiptEngine
+        rid = DecisionReceiptEngine.build_receipt_id("insurance")
+        assert _canonical_receipt_pattern("INS").match(rid), f"Insurance receipt inválido: {rid}"
 
-    def test_B8_robotics_receipt_format_canonical(self):
-        """robotics_simulator genera OMNIX-RBT-{12hex} sin pasar por build_receipt_id."""
-        pattern = _canonical_receipt_pattern("RBT")
-        generated = [
-            f"OMNIX-RBT-{uuid.uuid4().hex[:12].upper()}"
-            for _ in range(5)
-        ]
-        for rid in generated:
-            assert pattern.match(rid), f"Robotics receipt inválido: {rid}"
+    def test_B8_robotics_uses_build_receipt_id(self):
+        """robotics_simulator usa DecisionReceiptEngine.build_receipt_id("robotics")."""
+        import pathlib
+        src = pathlib.Path("omnix_core/robotics/robotics_simulator.py").read_text()
+        assert "DecisionReceiptEngine" in src, (
+            "robotics_simulator debe importar DecisionReceiptEngine"
+        )
+        assert 'f"OMNIX-RBT-' not in src, (
+            "robotics_simulator no debe generar receipt_id con string literal — "
+            "debe usar DecisionReceiptEngine.build_receipt_id('robotics')"
+        )
+        from omnix_core.evidence.decision_receipt import DecisionReceiptEngine
+        rid = DecisionReceiptEngine.build_receipt_id("robotics")
+        assert _canonical_receipt_pattern("RBT").match(rid), f"Robotics receipt inválido: {rid}"
 
     def test_B9_all_domain_receipt_ids_are_unique(self):
         """100 receipt_ids generados no tienen duplicados."""

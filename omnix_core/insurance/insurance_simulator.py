@@ -28,6 +28,8 @@ import time
 import uuid
 from typing import Optional
 
+from omnix_core.evidence.decision_receipt import DecisionReceiptEngine
+
 logger = logging.getLogger("OMNIX.Insurance.Simulator")
 
 CYCLE_INTERVAL = 300.0       # 5 minutes between cycles
@@ -209,7 +211,7 @@ def _evaluate_claim(claim_data: dict) -> dict:
             metadata={"claimant_type": claim_data["claimant_type"]},
         )
         decision = result.get("decision", "BLOCKED")
-        receipt_id = f"OMNIX-INS-{uuid.uuid4().hex[:12].upper()}"
+        receipt_id = DecisionReceiptEngine.build_receipt_id("insurance")
         checkpoint_results = result.get("gate_results", [])
         veto_chain = result.get("veto_chain", [])
         cp_passed = result.get("checkpoints_passed", 0)
@@ -232,7 +234,7 @@ def _evaluate_claim(claim_data: dict) -> dict:
             decision = "HOLD"
         else:
             decision = "BLOCKED"
-        receipt_id = f"OMNIX-INS-{uuid.uuid4().hex[:12].upper()}"
+        receipt_id = DecisionReceiptEngine.build_receipt_id("insurance")
         checkpoint_results = []
         trajectory_score = composite
         decision_score = composite
