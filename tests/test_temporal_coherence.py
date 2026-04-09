@@ -287,9 +287,10 @@ class TestTCVDirectionCoherence:
         score = self.validator._score_direction_coherence(events, {})
         assert score < 20.0
 
-    def test_single_event_returns_default(self):
+    def test_single_event_returns_zero_no_evidence(self):
+        # ADR-065: insufficient data → score=0, not assumed coherence
         score = self.validator._score_direction_coherence(make_shadow_events(1), {})
-        assert score == 75.0
+        assert score == 0.0
 
 
 class TestTCVRegimeAlignment:
@@ -354,9 +355,10 @@ class TestTCVSignalStability:
         score = self.validator._score_signal_stability(events)
         assert score < 15.0
 
-    def test_single_event_returns_default(self):
+    def test_single_event_returns_zero_no_evidence(self):
+        # ADR-065: insufficient data → score=0, not assumed stability
         score = self.validator._score_signal_stability(make_shadow_events(1))
-        assert score == 80.0
+        assert score == 0.0
 
     def test_long_short_taxonomy_normalized_correctly(self):
         events = make_mixed_events(["LONG", "LONG", "LONG", "LONG"])

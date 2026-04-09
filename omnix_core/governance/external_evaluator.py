@@ -387,6 +387,24 @@ class GovernanceEvaluationEngine:
                         },
                         "gate_checks": cag_result.gate_checks,
                     }
+                    # ── Epistemic Transparency: warn on assumed market conditions (ADR-065) ──
+                    # If no real context values were supplied, CAG ran on optimistic defaults
+                    # (vol=0, corr=0, liq=100, macro=0). Document this in the audit trail.
+                    _cag_keys_provided = {
+                        k for k in ("cag_global_volatility", "cag_cross_pair_correlation",
+                                    "cag_liquidity_score", "cag_macro_risk")
+                        if k in cfg
+                    }
+                    if not _cag_keys_provided:
+                        _cag_warn = (
+                            "CAG_WARNING: all context parameters are defaults "
+                            "(vol=0.0, corr=0.0, liq=100.0, macro=0.0) — "
+                            "no real market data provided. Session admitted on assumed calm conditions."
+                        )
+                        decision_trace.append(_cag_warn)
+                        context_admission_block["epistemic_warning"] = _cag_warn
+                        logger.warning(f"⚠️ [CAG][EPISTEMIC] {_cag_warn} | asset={asset}")
+                    # ─────────────────────────────────────────────────────────────────────
                     if not cag_result.admitted and not cag_result.pass_through:
                         decision_trace.append(f"CAG SESSION_BLOCKED: {cag_result.violation}")
                         veto_chain.append({
@@ -424,9 +442,24 @@ class GovernanceEvaluationEngine:
         # ─────────────────────────────────────────────────────────────────────
 
         resolved_signals = dict(signals)
+        applied_defaults: dict[str, float] = {}
         for opt_signal, default_val in OPTIONAL_SIGNAL_DEFAULTS.items():
             if opt_signal not in resolved_signals:
                 resolved_signals[opt_signal] = default_val
+                applied_defaults[opt_signal] = default_val
+
+        # ── Epistemic Transparency: log every default substitution (ADR-065) ──
+        # A default is not evidence. Downstream audit must know which signals
+        # were provided by the caller vs. filled by the system.
+        for sig, val in applied_defaults.items():
+            cp_refs = [cp["id"] for cp in self.checkpoints if cp.get("signal") == sig]
+            cp_str = f" (affects gates: {', '.join(cp_refs)})" if cp_refs else ""
+            decision_trace.append(
+                f"SIGNAL_DEFAULT_APPLIED: {sig}={val:.1f} — not provided by caller, "
+                f"conservative default substituted{cp_str}"
+            )
+            logger.debug(f"[EPISTEMIC] SIGNAL_DEFAULT_APPLIED: {sig}={val:.1f}{cp_str}")
+        # ─────────────────────────────────────────────────────────────────────
 
         for cp in self.checkpoints:
             signal_name = cp["signal"]
@@ -511,6 +544,19 @@ class GovernanceEvaluationEngine:
                     fraud_cfg.enabled = True
                     dci = resolved_signals.get("logic_consistency", 50.0)
                     fraud_dci = max(0.0, 100.0 - dci)
+                    # ── Epistemic Transparency: Fraud Gate proxy mode (ADR-065) ──
+                    # CP-10 inputs are derived from pipeline-approved signals, not
+                    # independent fraud data. This is a structural limitation:
+                    # signals that passed CP-1, CP-3, CP-6 are likely to pass CP-10 too.
+                    # Document this in every audit trail for regulatory honesty.
+                    _fraud_proxy_note = (
+                        "FRAUD_PROXY_MODE: CP-10 inputs derived from pipeline-approved signals "
+                        "(dci←logic_consistency/CP-6, technical←probability_score/CP-1, "
+                        "sentiment←signal_coherence/CP-3) — not independent fraud data. "
+                        "Structural limitation: independent fraud signal source not yet available."
+                    )
+                    decision_trace.append(_fraud_proxy_note)
+                    # ─────────────────────────────────────────────────────────
                     fraud_result = FraudGate(fraud_cfg).evaluate(
                         asset, action_for_gates,
                         dci_score=fraud_dci,
@@ -523,6 +569,12 @@ class GovernanceEvaluationEngine:
                         "integrity_score": fraud_result.integrity_score,
                         "violation": fraud_result.violation,
                         "asset": asset,
+                        "proxy_mode": True,
+                        "proxy_source_signals": {
+                            "dci": "logic_consistency (inverted)",
+                            "technical": "probability_score",
+                            "sentiment": "signal_coherence",
+                        },
                     }
                     if not fraud_result.admissible:
                         decision = "BLOCKED"
@@ -627,6 +679,8 @@ class GovernanceEvaluationEngine:
             "checkpoints_total": len(self.checkpoints),
             "checkpoints_passed": sum(1 for g in gate_results if g["result"] == "PASS"),
             "checkpoints_blocked": sum(1 for g in gate_results if g["result"] == "BLOCKED"),
+            # ADR-065: Epistemic transparency — signals that were not provided by the caller
+            "applied_signal_defaults": applied_defaults if applied_defaults else {},
         }
         if compliance_blocks:
             result["compliance"] = compliance_blocks

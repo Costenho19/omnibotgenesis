@@ -190,8 +190,8 @@ class TemporalCoherenceValidator:
             )
             return TCVResult(
                 admissible=True,
-                trajectory_score=100.0,
-                reason="TCV_FAILSAFE: module error — pass-through",
+                trajectory_score=0.0,
+                reason="TCV_FAILSAFE: module error — pass-through (score=0 reflects absence of evidence, not trajectory failure)",
                 events_analyzed=0,
                 threshold_used=self.threshold,
                 pass_through=True,
@@ -212,10 +212,11 @@ class TemporalCoherenceValidator:
             )
             return TCVResult(
                 admissible=True,
-                trajectory_score=100.0,
+                trajectory_score=0.0,
                 reason=(
                     f"INSUFFICIENT_TRAJECTORY_DATA: {len(events)} events "
-                    f"< {self.min_events} required — pass-through"
+                    f"< {self.min_events} required — pass-through "
+                    f"(score=0 reflects absence of evidence, not trajectory failure)"
                 ),
                 events_analyzed=len(events),
                 threshold_used=self.threshold,
@@ -469,11 +470,11 @@ class TemporalCoherenceValidator:
                 scores.append(v)
 
         if len(scores) < 2:
-            return 75.0
+            return 0.0  # No evidence → score 0, not assumed coherence
 
         deltas = [scores[i] - scores[i + 1] for i in range(len(scores) - 1)]
         if len(deltas) < 2:
-            return 75.0
+            return 0.0  # Single delta → cannot assess monotonicity
 
         signs = [1 if d > 0 else (-1 if d < 0 else 0) for d in deltas]
         sign_changes = sum(
@@ -482,7 +483,7 @@ class TemporalCoherenceValidator:
         )
         max_changes = len(signs) - 1
         if max_changes == 0:
-            return 75.0
+            return 0.0  # Cannot compute sign-change rate with a single delta
 
         change_rate = sign_changes / max_changes
         return round((1.0 - change_rate) * 100.0, 2)
@@ -547,7 +548,7 @@ class TemporalCoherenceValidator:
         ]
 
         if len(directions) < 2:
-            return 80.0
+            return 0.0  # No evidence → score 0, not assumed stability
 
         flips = sum(
             1 for i in range(len(directions) - 1)
