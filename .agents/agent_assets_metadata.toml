@@ -120,3 +120,9 @@ id = "-MOWMQbUgAU4OLhkOppbl"
 uri = "file://OMNIX_Velos_GTM_Positioning.pdf"
 type = "pdf"
 title = "OMNIX × VELOS — GTM Positioning (final)"
+
+[[outputs]]
+id = "Sln9maVEZpA9QyVzijeor"
+uri = "file://docs/integration/OMNIX_Velos_Schema_PQC_Receipt.pdf"
+type = "pdf"
+title = "OMNIX — Post-Quantum Receipt Schema para Velos"
