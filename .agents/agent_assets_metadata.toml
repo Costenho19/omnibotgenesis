@@ -126,3 +126,9 @@ id = "Sln9maVEZpA9QyVzijeor"
 uri = "file://docs/integration/OMNIX_Velos_Schema_PQC_Receipt.pdf"
 type = "pdf"
 title = "OMNIX — PQC Receipt Schema para Velos (4 páginas)"
+
+[[outputs]]
+id = "YbiMDaVzT4FpNp2oFGsp2"
+uri = "file://docs/OMNIX-Forensic-Technical-Report-2026.md"
+type = "text"
+title = "OMNIX Quantum — Forensic Technical Report 2026"
