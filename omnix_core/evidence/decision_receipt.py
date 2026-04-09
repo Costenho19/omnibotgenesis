@@ -70,8 +70,30 @@ class DecisionReceiptEngine:
 
     _DEFAULT_TTL_MS: int = 30_000
 
+    _DOMAIN_CODES: Dict[str, str] = {
+        "trading":        "TRD",
+        "islamic_credit": "CRD",
+        "insurance":      "INS",
+        "robotics":       "RBT",
+        "public_sandbox": "PUB",
+    }
+
+    @classmethod
+    def build_receipt_id(cls, domain: str = "") -> str:
+        """
+        Canonical receipt ID format: OMNIX-{DOMAIN}-{12 hex} when domain is known,
+        OMNIX-{12 hex} for legacy/unknown domains.
+        ADR-074 — universal governance layer consistency.
+        """
+        code = cls._DOMAIN_CODES.get(domain, "")
+        hex_part = uuid.uuid4().hex[:12].upper()
+        if code:
+            return f"OMNIX-{code}-{hex_part}"
+        return f"OMNIX-{hex_part}"
+
     def generate_receipt(self, decision: Dict[str, Any], prev_hash: str = "") -> Dict[str, Any]:
-        receipt_id = f"OMNIX-{uuid.uuid4().hex[:12].upper()}"
+        domain = decision.get("domain", "")
+        receipt_id = self.build_receipt_id(domain)
         now_dt     = datetime.now(timezone.utc)
         timestamp  = now_dt.isoformat()
 

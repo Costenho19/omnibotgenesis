@@ -240,7 +240,7 @@ def _evaluate_action(action_data: dict) -> dict:
             },
         )
         decision = result.get("decision", "BLOCKED")
-        receipt_id = f"RBT-{uuid.uuid4().hex[:12].upper()}"
+        receipt_id = f"OMNIX-RBT-{uuid.uuid4().hex[:12].upper()}"
         checkpoint_results = result.get("gate_results", [])
         veto_chain = result.get("veto_chain", [])
         cp_passed = result.get("checkpoints_passed", 0)
@@ -262,7 +262,7 @@ def _evaluate_action(action_data: dict) -> dict:
             decision = "HOLD"
         else:
             decision = "BLOCKED"
-        receipt_id = f"RBT-{uuid.uuid4().hex[:12].upper()}"
+        receipt_id = f"OMNIX-RBT-{uuid.uuid4().hex[:12].upper()}"
         checkpoint_results = []
         trajectory_score = composite
         decision_score = composite
