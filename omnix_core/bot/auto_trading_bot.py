@@ -1086,7 +1086,32 @@ class AutoTradingBot:
         except Exception:
             pass
         return 0.0
-    
+
+    def _get_trade_frequency_24h(self) -> tuple:
+        """
+        ADR-067: Return (trade_count_24h, source) for AML structuring detection.
+
+        Attempts to read today's executed trade count from the database service.
+        If unavailable, returns (0, "PROXY") so the AML call site can emit
+        AML_FREQUENCY_PROXY_MODE in the decision trace — making the limitation
+        explicit rather than silently passing trade_frequency=0.
+
+        Returns:
+            (int, str): (trade_count, source) where source is "DB" or "PROXY"
+        """
+        try:
+            if self.database_service and hasattr(self.database_service, 'get_today_trade_stats'):
+                stats = self.database_service.get_today_trade_stats()
+                if isinstance(stats, dict) and 'count' in stats and not stats.get('error'):
+                    return (int(stats['count']), "DB")
+            elif self.database_service and hasattr(self.database_service, 'get_paper_trades_stats'):
+                stats = self.database_service.get_paper_trades_stats()
+                if isinstance(stats, dict) and 'today_count' in stats:
+                    return (int(stats['today_count']), "DB")
+        except Exception:
+            pass
+        return (0, "PROXY")
+
     def _build_shadow_context(
         self,
         symbol: str,
@@ -4022,17 +4047,29 @@ class AutoTradingBot:
             # Fail-safe: exceptions → pass-through. Default: DISABLED.
             if AML_GATE_AVAILABLE and AMLGate is not None:
                 try:
+                    # ADR-067: Get real trade frequency; emit trace if proxy/unavailable
+                    _trade_freq_24h, _freq_source = self._get_trade_frequency_24h()
                     _aml_cfg = load_aml_config_from_env()
                     _aml_gate = AMLGate(_aml_cfg)
                     _aml_result = _aml_gate.evaluate(
                         symbol=symbol,
                         proposed_action=decision.get('action', 'HOLD'),
                         volume_usd=decision.get('estimated_value_usd', 0.0),
-                        trade_frequency_24h=0,
+                        trade_frequency_24h=_trade_freq_24h,
                     )
                     decision['aml_admissible'] = _aml_result.admissible
                     decision['aml_score'] = _aml_result.aml_score
                     decision['aml_pass_through'] = _aml_result.pass_through
+                    if _freq_source == "PROXY":
+                        decision['decision_trace'].append(
+                            "AML_FREQUENCY_PROXY_MODE: trade_frequency_24h=0 — real 24h count "
+                            "unavailable from database. Structuring detection (FATF R.16) may "
+                            "not fire even if frequency exceeds threshold. Source: proxy_zero"
+                        )
+                        logger.warning(
+                            "⚠️ [CP-9 AML] AML_FREQUENCY_PROXY_MODE for %s — "
+                            "structuring detection degraded (no DB count available)", symbol
+                        )
                     decision['decision_trace'].append(f"CP-9 AML: {_aml_result.reason}")
 
                     if not _aml_result.admissible and not _aml_result.pass_through:

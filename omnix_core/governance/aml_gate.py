@@ -53,6 +53,7 @@ class AMLVetoResult:
     violation: str = ""
     risk_score: float = 0.0
     aml_score: float = 100.0
+    evaluation_state: str = "EVALUATED"   # ADR-066: "DISABLED" | "FAILSAFE" | "EVALUATED"
 
 
 @dataclass
@@ -114,9 +115,10 @@ class AMLGate:
             return AMLVetoResult(
                 admissible=True,
                 pass_through=True,
-                reason="CP-9 AML Gate: disabled",
+                reason="CP-9 AML Gate: disabled — aml_score=0 reflects gate not evaluated, not AML risk",
                 asset=symbol,
-                aml_score=100.0,
+                aml_score=0.0,
+                evaluation_state="DISABLED",
             )
 
         try:
@@ -126,8 +128,10 @@ class AMLGate:
             return AMLVetoResult(
                 admissible=True,
                 pass_through=True,
-                reason=f"CP-9 AML exception → pass-through: {exc}",
+                reason=f"CP-9 AML_FAILSAFE: score=0 reflects module error, not AML compliance — {exc}",
                 asset=symbol,
+                aml_score=0.0,
+                evaluation_state="FAILSAFE",
             )
 
     def _run_checks(

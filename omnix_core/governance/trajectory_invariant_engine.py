@@ -91,6 +91,7 @@ class TIEResult:
     window_size: int                      # Actual history entries used
     asset: str
     domain: str
+    pass_through_reason: str = ""         # ADR-066: populated when pass_through path taken
 
 
 # ── Core engine ────────────────────────────────────────────────────────────────
@@ -137,11 +138,11 @@ class TrajectoryInvariantEngine:
             trajectory_decision will be 'HOLD'.
         """
         if not self._enabled:
-            return self._pass_through(asset, domain)
+            return self._pass_through(asset, domain, reason="TIE_DISABLED")
 
         # TIE only operates on APPROVED decisions
         if current_decision == "BLOCKED":
-            return self._pass_through(asset, domain)
+            return self._pass_through(asset, domain, reason="TIE_BLOCKED_BYPASS")
 
         try:
             history = self._load_history(asset, domain)
@@ -169,7 +170,10 @@ class TrajectoryInvariantEngine:
 
         except Exception as exc:
             logger.warning(f"[TIE] Exception for {asset} — pass-through: {exc}")
-            return self._pass_through(asset, domain)
+            return self._pass_through(
+                asset, domain,
+                reason=f"TIE_FAILSAFE: score=0 reflects module error, not trajectory health — {exc}"
+            )
 
     def get_trajectory_summary(self, asset: str, domain: str = "generic") -> dict[str, Any]:
         """Return a human-readable trajectory health summary for an asset."""
@@ -548,22 +552,28 @@ class TrajectoryInvariantEngine:
     # ── Helpers ─────────────────────────────────────────────────────────────────
 
     @staticmethod
-    def _pass_through(asset: str, domain: str) -> TIEResult:
+    def _pass_through(asset: str, domain: str, reason: str = "") -> TIEResult:
+        """
+        ADR-066: trajectory_score=0.0 (not 100.0) on any pass-through path.
+        score=0 reflects absence of trajectory evaluation, not trajectory failure.
+        pass_through_reason distinguishes disabled / blocked-bypass / failsafe.
+        """
         return TIEResult(
             passed=True,
             trajectory_decision="APPROVED",
             violations=[],
             warnings=[],
-            trajectory_score=100.0,
+            trajectory_score=0.0,
             window_size=0,
             asset=asset,
             domain=domain,
+            pass_through_reason=reason or "TIE_PASS_THROUGH: score=0 reflects absence of trajectory evaluation, not trajectory health",
         )
 
     @staticmethod
     def result_to_dict(result: TIEResult) -> dict[str, Any]:
         """Serialize TIEResult to dict for inclusion in governance response."""
-        return {
+        d: dict[str, Any] = {
             "enabled": True,
             "trajectory_decision": result.trajectory_decision,
             "trajectory_score": result.trajectory_score,
@@ -590,3 +600,6 @@ class TrajectoryInvariantEngine:
                 for w in result.warnings
             ],
         }
+        if result.pass_through_reason:
+            d["pass_through_reason"] = result.pass_through_reason
+        return d

@@ -97,10 +97,13 @@ class TestSIVFailSafe:
         assert result.passed is True
         assert result.pass_through is True
 
-    def test_pass_through_has_max_score(self):
+    def test_pass_through_has_zero_score_adr066(self):
         siv = make_siv()
         result = siv.validate(SYMBOL, None)
-        assert result.score == 100.0
+        assert result.score == 0.0, (
+            "ADR-066: SIV failsafe must return score=0.0, not score=100. "
+            "score=100 fabricates data quality confidence without evidence."
+        )
 
     def test_pass_through_no_violations(self):
         siv = make_siv()
@@ -418,3 +421,55 @@ class TestSIVPriceHistory:
         assert "XBTUSD" in siv._price_history
         assert "ETHUSD" in siv._price_history
         assert siv._price_history["XBTUSD"] != siv._price_history["ETHUSD"]
+
+
+# ───────────────────── TestSIVEpistemicTransparency (ADR-066) ─────────────────
+
+class TestSIVEpistemicTransparency:
+    """ADR-066: SIV failsafe must emit score=0 not score=100 — absence of evaluation
+    is not perfect data quality."""
+
+    def test_failsafe_score_is_zero_not_hundred(self):
+        """On module error, score=0 reflects absence of evaluation, not perfect integrity."""
+        siv = make_siv()
+        siv._validate_internal = lambda **kw: (_ for _ in ()).throw(RuntimeError("injected"))
+        result = siv.validate(SYMBOL, {}, {})
+        assert result.pass_through is True
+        assert result.passed is True
+        assert result.score == 0.0, (
+            f"ADR-066 violation: SIV failsafe returned score={result.score}, expected 0.0. "
+            "score=100 on failsafe fabricates data quality confidence without evidence."
+        )
+
+    def test_failsafe_reason_explains_score_zero(self):
+        """Failsafe result must include a reason explaining why score=0."""
+        siv = make_siv()
+        siv._validate_internal = lambda **kw: (_ for _ in ()).throw(RuntimeError("test error"))
+        result = siv.validate(SYMBOL, {}, {})
+        assert result.reason, "ADR-066: reason must be populated on failsafe path"
+        assert "SIV_FAILSAFE" in result.reason
+        assert "score=0" in result.reason
+
+    def test_failsafe_reason_in_to_dict(self):
+        """Failsafe reason must appear in serialized result for audit trail."""
+        siv = make_siv()
+        siv._validate_internal = lambda **kw: (_ for _ in ()).throw(RuntimeError("audit test"))
+        result = siv.validate(SYMBOL, {}, {})
+        d = result.to_dict()
+        assert "reason" in d
+        assert "SIV_FAILSAFE" in d["reason"]
+
+    def test_normal_result_has_no_reason_key(self):
+        """Non-failsafe results should not include reason key to avoid clutter."""
+        siv = make_siv()
+        result = siv.validate(SYMBOL, good_market_data(), fresh_timestamps())
+        d = result.to_dict()
+        assert "reason" not in d or not d["reason"]
+
+    def test_failsafe_does_not_block_pipeline(self):
+        """Even with score=0, pass_through=True must keep pipeline running."""
+        siv = make_siv()
+        siv._validate_internal = lambda **kw: (_ for _ in ()).throw(RuntimeError("crash"))
+        result = siv.validate(SYMBOL, {}, {})
+        assert result.passed is True
+        assert result.pass_through is True

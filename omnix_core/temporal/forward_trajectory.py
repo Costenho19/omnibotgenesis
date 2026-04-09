@@ -95,12 +95,13 @@ class FTIResult:
     current_regime: str = "NEUTRAL"
     threshold_used: float = FTI_THRESHOLD_DEFAULT
     pass_through: bool = False
+    reason: str = ""          # ADR-066: populated on failsafe path to explain score=0
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d: Dict[str, Any] = {
             "passed": self.passed,
             "implied_score": round(self.implied_score, 2),
             "regime_transition_risk": round(self.regime_transition_risk, 4),
@@ -112,6 +113,9 @@ class FTIResult:
             "pass_through": self.pass_through,
             "timestamp": self.timestamp,
         }
+        if self.reason:
+            d["reason"] = self.reason
+        return d
 
 
 class ForwardTrajectoryImplicator:
@@ -165,11 +169,12 @@ class ForwardTrajectoryImplicator:
             )
             return FTIResult(
                 passed=True,
-                implied_score=100.0,
+                implied_score=0.0,
                 pass_through=True,
                 proposed_action=proposed_action,
                 threshold_used=self.threshold,
                 horizon_cycles=self.horizon,
+                reason=f"FTI_FAILSAFE: score=0 reflects module error, not trajectory health — {exc}",
             )
 
     def _evaluate_internal(

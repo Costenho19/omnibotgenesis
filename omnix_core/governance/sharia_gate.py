@@ -55,6 +55,7 @@ class ShariaVetoResult:
     violation: str = ""
     gharar_score: float = 0.0
     sharia_score: float = 100.0
+    evaluation_state: str = "EVALUATED"   # ADR-066: "DISABLED" | "FAILSAFE" | "EVALUATED"
 
 
 @dataclass
@@ -110,9 +111,10 @@ class ShariaGate:
             return ShariaVetoResult(
                 admissible=True,
                 pass_through=True,
-                reason="CP-6 Sharia Gate: disabled for this client",
+                reason="CP-6 Sharia Gate: disabled for this client — sharia_score=0 reflects gate not evaluated, not Sharia risk",
                 asset=symbol,
-                sharia_score=100.0,
+                sharia_score=0.0,
+                evaluation_state="DISABLED",
             )
 
         try:
@@ -122,8 +124,10 @@ class ShariaGate:
             return ShariaVetoResult(
                 admissible=True,
                 pass_through=True,
-                reason=f"CP-6 exception → pass-through: {exc}",
+                reason=f"CP-6 SHARIA_FAILSAFE: score=0 reflects module error, not Sharia compliance — {exc}",
                 asset=symbol,
+                sharia_score=0.0,
+                evaluation_state="FAILSAFE",
             )
 
     def _run_checks(

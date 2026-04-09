@@ -268,3 +268,240 @@ class TestComplianceGatesIntegration:
                'trend_persistence': 10, 'stress_resilience': 10, 'logic_consistency': 10}
         r = self._engine().evaluate(bad, asset="BTC/USD")
         assert r["decision"] == "BLOCKED"
+
+
+# ───────────── TestEpistemicTransparencyGates (ADR-066) ──────────────────────
+
+class TestAMLGateEpistemicTransparency:
+    """ADR-066: Disabled/failsafe gate paths must emit score=0, not score=100.
+    evaluation_state field distinguishes 'DISABLED' from genuine 'EVALUATED' scores."""
+
+    def test_disabled_aml_score_is_zero_not_hundred(self):
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+        gate = AMLGate(AMLGateConfig(enabled=False))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.aml_score == 0.0, (
+            f"ADR-066: disabled AML gate returned aml_score={r.aml_score}, expected 0.0. "
+            "score=100 when disabled fabricates AML compliance without evidence."
+        )
+
+    def test_disabled_aml_evaluation_state(self):
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+        gate = AMLGate(AMLGateConfig(enabled=False))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.evaluation_state == "DISABLED"
+
+    def test_disabled_aml_still_admissible(self):
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+        gate = AMLGate(AMLGateConfig(enabled=False))
+        r = gate.evaluate("XMR/USD", "BUY")
+        assert r.admissible is True
+        assert r.pass_through is True
+
+    def test_evaluated_aml_state_is_evaluated(self):
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+        gate = AMLGate(AMLGateConfig(enabled=True))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.evaluation_state == "EVALUATED"
+
+    def test_disabled_aml_reason_explains_score(self):
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+        gate = AMLGate(AMLGateConfig(enabled=False))
+        r = gate.evaluate("ETH/USD", "BUY")
+        assert "disabled" in r.reason.lower() or "not evaluated" in r.reason.lower()
+
+
+class TestShariaGateEpistemicTransparency:
+    """ADR-066: Disabled/failsafe Sharia gate must emit score=0, not score=100."""
+
+    def test_disabled_sharia_score_is_zero_not_hundred(self):
+        from omnix_core.governance.sharia_gate import ShariaGate, ShariaGateConfig
+        gate = ShariaGate(ShariaGateConfig(enabled=False))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.sharia_score == 0.0, (
+            f"ADR-066: disabled Sharia gate returned sharia_score={r.sharia_score}, expected 0.0."
+        )
+
+    def test_disabled_sharia_evaluation_state(self):
+        from omnix_core.governance.sharia_gate import ShariaGate, ShariaGateConfig
+        gate = ShariaGate(ShariaGateConfig(enabled=False))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.evaluation_state == "DISABLED"
+
+    def test_disabled_sharia_still_admissible(self):
+        from omnix_core.governance.sharia_gate import ShariaGate, ShariaGateConfig
+        gate = ShariaGate(ShariaGateConfig(enabled=False))
+        r = gate.evaluate("WBTC/USD", "BUY")
+        assert r.admissible is True
+        assert r.pass_through is True
+
+    def test_evaluated_sharia_state_is_evaluated(self):
+        from omnix_core.governance.sharia_gate import ShariaGate, ShariaGateConfig
+        gate = ShariaGate(ShariaGateConfig(enabled=True))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.evaluation_state == "EVALUATED"
+
+
+class TestJurisdictionGateEpistemicTransparency:
+    """ADR-066: Disabled/failsafe Jurisdiction gate must emit score=0, not score=100.
+    ADR-068: OFAC list must include metadata and detect staleness."""
+
+    def test_disabled_jurisdiction_score_is_zero_not_hundred(self):
+        from omnix_core.governance.jurisdiction_gate import JurisdictionGate, JurisdictionGateConfig
+        gate = JurisdictionGate(JurisdictionGateConfig(enabled=False))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.compliance_score == 0.0, (
+            f"ADR-066: disabled Jurisdiction gate returned compliance_score={r.compliance_score}, "
+            "expected 0.0."
+        )
+
+    def test_disabled_jurisdiction_evaluation_state(self):
+        from omnix_core.governance.jurisdiction_gate import JurisdictionGate, JurisdictionGateConfig
+        gate = JurisdictionGate(JurisdictionGateConfig(enabled=False))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.evaluation_state == "DISABLED"
+
+    def test_disabled_jurisdiction_still_admissible(self):
+        from omnix_core.governance.jurisdiction_gate import JurisdictionGate, JurisdictionGateConfig
+        gate = JurisdictionGate(JurisdictionGateConfig(enabled=False, jurisdiction="UAE"))
+        r = gate.evaluate("XMR/USD", "BUY")
+        assert r.admissible is True
+        assert r.pass_through is True
+
+    def test_evaluated_jurisdiction_state_is_evaluated(self):
+        from omnix_core.governance.jurisdiction_gate import JurisdictionGate, JurisdictionGateConfig
+        gate = JurisdictionGate(JurisdictionGateConfig(enabled=True, jurisdiction="GLOBAL"))
+        r = gate.evaluate("BTC/USD", "BUY")
+        assert r.evaluation_state == "EVALUATED"
+
+    def test_ofac_list_version_exists(self):
+        """ADR-068: OFAC list must carry version metadata."""
+        from omnix_core.governance.jurisdiction_gate import OFAC_LIST_VERSION, OFAC_LIST_DATE
+        assert OFAC_LIST_VERSION, "OFAC_LIST_VERSION must be set"
+        assert OFAC_LIST_DATE is not None, "OFAC_LIST_DATE must be set"
+
+    def test_ofac_list_has_meaningful_entries(self):
+        """ADR-068: OFAC list must contain more than 2 entries — original was critically sparse."""
+        from omnix_core.governance.jurisdiction_gate import OFAC_SANCTIONED_ASSETS
+        assert len(OFAC_SANCTIONED_ASSETS) > 5, (
+            f"OFAC list has only {len(OFAC_SANCTIONED_ASSETS)} entries — critically sparse. "
+            "ADR-068 requires a materially representative sanctions list."
+        )
+
+    def test_ofac_tornado_cash_in_list(self):
+        """OFAC SDN-designated Tornado Cash must be in the sanctions list."""
+        from omnix_core.governance.jurisdiction_gate import OFAC_SANCTIONED_ASSETS
+        assert "TORNADO" in OFAC_SANCTIONED_ASSETS or "TORNADO_CASH" in OFAC_SANCTIONED_ASSETS
+
+    def test_ofac_sinbad_in_list(self):
+        """OFAC SDN-designated Sinbad mixer (Nov 2023) must be in the list."""
+        from omnix_core.governance.jurisdiction_gate import OFAC_SANCTIONED_ASSETS
+        assert "SINBAD" in OFAC_SANCTIONED_ASSETS
+
+
+class TestTIEEpistemicTransparency:
+    """ADR-066: TIE pass-through paths must emit trajectory_score=0, not 100.
+    pass_through_reason must distinguish disabled / blocked-bypass / failsafe."""
+
+    def test_disabled_tie_score_is_zero_not_hundred(self):
+        """TIE disabled → trajectory_score=0, not 100."""
+        import os
+        from omnix_core.governance.trajectory_invariant_engine import TrajectoryInvariantEngine
+        os.environ["TIE_ENABLED"] = "false"
+        try:
+            tie = TrajectoryInvariantEngine(db_conn=None)
+            signals = {'probability_score': 70, 'risk_exposure': 30, 'signal_coherence': 65,
+                       'trend_persistence': 60, 'stress_resilience': 55, 'logic_consistency': 60}
+            result = tie.evaluate(signals, "BTC/USD", "trading", "APPROVED")
+            assert result.trajectory_score == 0.0, (
+                f"ADR-066: TIE disabled returned trajectory_score={result.trajectory_score}. "
+                "Expected 0.0 — score=100 fabricates trajectory health without evaluation."
+            )
+        finally:
+            os.environ["TIE_ENABLED"] = "true"
+
+    def test_disabled_tie_pass_through_reason_populated(self):
+        """Disabled TIE must explain why score=0 in pass_through_reason."""
+        import os
+        from omnix_core.governance.trajectory_invariant_engine import TrajectoryInvariantEngine
+        os.environ["TIE_ENABLED"] = "false"
+        try:
+            tie = TrajectoryInvariantEngine(db_conn=None)
+            signals = {'probability_score': 70, 'risk_exposure': 30, 'signal_coherence': 65,
+                       'trend_persistence': 60, 'stress_resilience': 55, 'logic_consistency': 60}
+            result = tie.evaluate(signals, "BTC/USD", "trading", "APPROVED")
+            assert result.pass_through_reason, "ADR-066: pass_through_reason must be populated"
+            assert "TIE_DISABLED" in result.pass_through_reason
+        finally:
+            os.environ["TIE_ENABLED"] = "true"
+
+    def test_blocked_decision_tie_score_is_zero(self):
+        """TIE bypassed for BLOCKED decisions → score=0, not 100."""
+        import os
+        from omnix_core.governance.trajectory_invariant_engine import TrajectoryInvariantEngine
+        os.environ["TIE_ENABLED"] = "true"
+        tie = TrajectoryInvariantEngine(db_conn=None)
+        signals = {'probability_score': 70, 'risk_exposure': 30, 'signal_coherence': 65,
+                   'trend_persistence': 60, 'stress_resilience': 55, 'logic_consistency': 60}
+        result = tie.evaluate(signals, "BTC/USD", "trading", "BLOCKED")
+        assert result.trajectory_score == 0.0, (
+            f"ADR-066: TIE BLOCKED bypass returned trajectory_score={result.trajectory_score}. "
+            "Expected 0.0."
+        )
+
+    def test_blocked_bypass_reason_distinct_from_disabled(self):
+        """BLOCKED bypass and disabled reasons must be distinct for auditability."""
+        import os
+        from omnix_core.governance.trajectory_invariant_engine import TrajectoryInvariantEngine
+        tie = TrajectoryInvariantEngine(db_conn=None)
+        signals = {'probability_score': 70, 'risk_exposure': 30, 'signal_coherence': 65,
+                   'trend_persistence': 60, 'stress_resilience': 55, 'logic_consistency': 60}
+        result = tie.evaluate(signals, "BTC/USD", "trading", "BLOCKED")
+        assert "TIE_BLOCKED_BYPASS" in result.pass_through_reason
+
+    def test_pass_through_reason_in_result_to_dict(self):
+        """pass_through_reason must appear in result_to_dict for PQC receipt inclusion."""
+        import os
+        from omnix_core.governance.trajectory_invariant_engine import TrajectoryInvariantEngine
+        os.environ["TIE_ENABLED"] = "false"
+        try:
+            tie = TrajectoryInvariantEngine(db_conn=None)
+            signals = {'probability_score': 70, 'risk_exposure': 30, 'signal_coherence': 65,
+                       'trend_persistence': 60, 'stress_resilience': 55, 'logic_consistency': 60}
+            result = tie.evaluate(signals, "BTC/USD", "trading", "APPROVED")
+            d = TrajectoryInvariantEngine.result_to_dict(result)
+            assert "pass_through_reason" in d
+            assert d["pass_through_reason"]
+        finally:
+            os.environ["TIE_ENABLED"] = "true"
+
+
+class TestAMLFrequencyTransparency:
+    """ADR-067: AML trade_frequency must not be hardcoded to 0.
+    When real count unavailable, AML_FREQUENCY_PROXY_MODE must appear in trace."""
+
+    def test_aml_frequency_default_evaluates_at_zero(self):
+        """When AML enabled and no frequency provided, evaluates with 0 (known proxy)."""
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+        gate = AMLGate(AMLGateConfig(enabled=True, frequency_threshold=5))
+        r = gate.evaluate("BTC/USD", "BUY", volume_usd=0.0, trade_frequency_24h=0)
+        assert r.admissible is True
+        assert r.aml_score >= 100.0
+
+    def test_aml_frequency_above_threshold_triggers_reduction(self):
+        """When real frequency > threshold, AML score must be reduced."""
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+        gate = AMLGate(AMLGateConfig(enabled=True, frequency_threshold=5))
+        r = gate.evaluate("BTC/USD", "BUY", volume_usd=0.0, trade_frequency_24h=15)
+        assert r.aml_score < 100.0
+
+    def test_aml_frequency_and_volume_combined_may_veto(self):
+        """Both volume and frequency violations together must potentially trigger veto."""
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+        gate = AMLGate(AMLGateConfig(
+            enabled=True,
+            volume_threshold_usd=100_000.0,
+            frequency_threshold=5,
+        ))
+        r = gate.evaluate("BTC/USD", "BUY", volume_usd=200_000.0, trade_frequency_24h=15)
+        assert r.aml_score < 50.0 or not r.admissible

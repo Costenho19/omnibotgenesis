@@ -99,6 +99,7 @@ class SIVResult:
         sources_checked:      How many data categories were evaluated.
         threshold_used:       SIV threshold at evaluation time.
         pass_through:         True if SIV returned passed due to module error.
+        reason:               ADR-066: populated on pass-through paths to explain score=0.
         timestamp:            ISO-8601 UTC timestamp.
     """
     passed: bool
@@ -107,12 +108,13 @@ class SIVResult:
     sources_checked: int = 0
     threshold_used: float = SIV_THRESHOLD_DEFAULT
     pass_through: bool = False
+    reason: str = ""
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d: Dict[str, Any] = {
             "passed": self.passed,
             "score": round(self.score, 2),
             "violations": [v.to_dict() for v in self.violations],
@@ -122,6 +124,9 @@ class SIVResult:
             "pass_through": self.pass_through,
             "timestamp": self.timestamp,
         }
+        if self.reason:
+            d["reason"] = self.reason
+        return d
 
 
 class SignalIntegrityValidator:
@@ -196,11 +201,12 @@ class SignalIntegrityValidator:
             )
             return SIVResult(
                 passed=True,
-                score=100.0,
+                score=0.0,
                 violations=[],
                 sources_checked=0,
                 threshold_used=self.threshold,
                 pass_through=True,
+                reason=f"SIV_FAILSAFE: score=0 reflects module error, not data quality — {exc}",
             )
 
     def _validate_internal(

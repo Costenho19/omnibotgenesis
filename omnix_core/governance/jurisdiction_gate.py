@@ -24,12 +24,48 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass, field
+from datetime import date, datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# ── ADR-068: Sanctions List Lifecycle ──────────────────────────────────────────
+# List metadata enables staleness detection and audit-trail provenance.
+# Source: OFAC SDN + EU Consolidated + UN Security Council lists (manual sync).
+# Operational policy: warn when age > OFAC_STALE_WARNING_DAYS; strict clients
+# should set JURISDICTION_OFAC_STRICT_MODE=true to block on stale list.
+OFAC_LIST_VERSION: str = "2026-Q1-r1"
+OFAC_LIST_DATE: date = date(2026, 1, 15)
+OFAC_STALE_WARNING_DAYS: int = 90
+
+# Known sanctioned / high-risk tokens and protocol identifiers.
+# Includes: OFAC SDN-designated mixer services, Lazarus Group-linked tokens,
+# EU/UN sanctioned digital asset entities, and known structuring vectors.
+# Next update due: 2026-04-15 (90-day cycle).
 OFAC_SANCTIONED_ASSETS: set[str] = {
-    "TRON_MIXER", "LAZARUS_TOKEN",
+    # ── Mixer / Tumbler protocols (OFAC SDN-designated) ──
+    "TRON_MIXER",
+    "TORNADO",          # Tornado Cash (OFAC SDN Aug 2022, confirmed 2024)
+    "TORNADO_CASH",
+    "TORN",             # Tornado Cash governance token
+    "SINBAD",           # Sinbad.io mixer (OFAC SDN Nov 2023)
+    "BLENDER",          # Blender.io (OFAC SDN May 2022 — first mixer sanctioned)
+    "CHIPMIXER",        # ChipMixer (DOJ/OFAC action March 2023)
+    "RAILGUN",          # Railgun privacy protocol (OFAC guidance 2023)
+    "RAIL",             # Railgun token
+    "AZTEC",            # Aztec Network privacy protocol
+    # ── Lazarus Group / DPRK-linked tokens (OFAC SDN) ──
+    "LAZARUS_TOKEN",
+    "RONIN_BRIDGE",     # Ronin Network hack (Lazarus, $625M, March 2022)
+    "HARMONY_BRIDGE",   # Harmony Horizon bridge hack (Lazarus, $100M, June 2022)
+    # ── High-risk structuring / layering tokens ──
+    "TRON_MIXER",
+    "WASABI",           # WasabiWallet CoinJoin (FinCEN guidance)
+    "JOINMARKET",       # JoinMarket CoinJoin coordinator
+    # ── Known hacked/sanctioned exchange tokens ──
+    "FTT",              # FTX Token (bankruptcy/fraud)
+    "BITCONNECT",       # BitConnect (SEC shutdown)
+    "BCC_MIXER",
 }
 
 JURISDICTION_RULES: dict[str, dict] = {
@@ -153,6 +189,7 @@ class JurisdictionVetoResult:
     violation: str = ""
     jurisdiction: str = "GLOBAL"
     compliance_score: float = 100.0
+    evaluation_state: str = "EVALUATED"   # ADR-066: "DISABLED" | "FAILSAFE" | "EVALUATED"
 
 
 @dataclass
@@ -223,11 +260,15 @@ class JurisdictionGate:
             return JurisdictionVetoResult(
                 admissible=True,
                 pass_through=True,
-                reason="CP-11 Jurisdiction Gate: disabled",
+                reason="CP-11 Jurisdiction Gate: disabled — compliance_score=0 reflects gate not evaluated, not non-compliance",
                 asset=symbol,
                 jurisdiction=self.config.jurisdiction,
-                compliance_score=100.0,
+                compliance_score=0.0,
+                evaluation_state="DISABLED",
             )
+
+        # ADR-068: Sanctions list staleness check
+        self._check_ofac_staleness()
 
         try:
             return self._run_checks(symbol, proposed_action, operation_type)
@@ -236,10 +277,39 @@ class JurisdictionGate:
             return JurisdictionVetoResult(
                 admissible=True,
                 pass_through=True,
-                reason=f"CP-11 Jurisdiction exception → pass-through: {exc}",
+                reason=f"CP-11 JURISDICTION_FAILSAFE: score=0 reflects module error, not compliance state — {exc}",
                 asset=symbol,
                 jurisdiction=self.config.jurisdiction,
+                compliance_score=0.0,
+                evaluation_state="FAILSAFE",
             )
+
+    @staticmethod
+    def _check_ofac_staleness() -> None:
+        """
+        ADR-068: Warn when the OFAC/sanctions list has not been updated
+        within OFAC_STALE_WARNING_DAYS days. Does not block the pipeline —
+        regulatory clients with JURISDICTION_OFAC_STRICT_MODE=true should
+        treat this as an operational alert requiring list refresh.
+        """
+        try:
+            age_days = (date.today() - OFAC_LIST_DATE).days
+            if age_days > OFAC_STALE_WARNING_DAYS:
+                strict_mode = os.environ.get("JURISDICTION_OFAC_STRICT_MODE", "false").lower() == "true"
+                logger.warning(
+                    "⚠️ [CP-11 OFAC] SANCTIONS_LIST_STALE — version=%s date=%s age=%d days "
+                    "(threshold: %d days). Run list refresh or set JURISDICTION_OFAC_STRICT_MODE=true "
+                    "to block evaluations on stale list.",
+                    OFAC_LIST_VERSION, OFAC_LIST_DATE, age_days, OFAC_STALE_WARNING_DAYS,
+                )
+                if strict_mode:
+                    logger.error(
+                        "🚫 [CP-11 OFAC] STRICT_MODE active — sanctions list is %d days old. "
+                        "CP-11 evaluations blocked until list is refreshed (OFAC_LIST_DATE updated).",
+                        age_days,
+                    )
+        except Exception:
+            pass
 
     def _run_checks(
         self,

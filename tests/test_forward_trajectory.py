@@ -85,11 +85,14 @@ class TestFTIFailSafe:
         assert result.passed is True
         assert result.pass_through is True
 
-    def test_pass_through_score_is_100(self):
+    def test_pass_through_score_is_zero_adr066(self):
         fti = make_fti()
         fti.threshold = "BROKEN"
         result = fti.evaluate("BUY", SYMBOL, {})
-        assert result.implied_score == 100.0
+        assert result.implied_score == 0.0, (
+            "ADR-066: FTI failsafe must return implied_score=0.0, not 100. "
+            "score=100 fabricates trajectory confidence without evidence."
+        )
 
     def test_pass_through_no_dimension_scores(self):
         fti = make_fti()
@@ -404,3 +407,55 @@ class TestFTILinearSlope:
     def test_slope_bounded(self):
         slope = ForwardTrajectoryImplicator._linear_slope([0.0] * 4 + [1000.0])
         assert -1.0 <= slope <= 1.0
+
+
+# ───────────────────── TestFTIEpistemicTransparency (ADR-066) ─────────────────
+
+class TestFTIEpistemicTransparency:
+    """ADR-066: FTI failsafe must emit implied_score=0 not 100 — absence of evaluation
+    is not perfect forward trajectory health."""
+
+    def test_failsafe_implied_score_is_zero_not_hundred(self):
+        """On module error, implied_score=0 reflects absence of evaluation, not perfect health."""
+        fti = make_fti()
+        fti._evaluate_internal = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("injected"))
+        result = fti.evaluate("BUY", SYMBOL, {})
+        assert result.pass_through is True
+        assert result.passed is True
+        assert result.implied_score == 0.0, (
+            f"ADR-066 violation: FTI failsafe returned implied_score={result.implied_score}, "
+            "expected 0.0. score=100 fabricates trajectory confidence without evidence."
+        )
+
+    def test_failsafe_reason_explains_score_zero(self):
+        """Failsafe result must include reason explaining score=0."""
+        fti = make_fti()
+        fti._evaluate_internal = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("test err"))
+        result = fti.evaluate("BUY", SYMBOL, {})
+        assert result.reason, "ADR-066: reason must be populated on failsafe path"
+        assert "FTI_FAILSAFE" in result.reason
+        assert "score=0" in result.reason
+
+    def test_failsafe_reason_in_to_dict(self):
+        """Failsafe reason must appear in serialized result for audit trail."""
+        fti = make_fti()
+        fti._evaluate_internal = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("dict test"))
+        result = fti.evaluate("SELL", SYMBOL, {})
+        d = result.to_dict()
+        assert "reason" in d
+        assert "FTI_FAILSAFE" in d["reason"]
+
+    def test_normal_result_has_no_reason_key(self):
+        """Successful evaluations should not pollute to_dict with a reason key."""
+        fti = make_fti()
+        result = fti.evaluate("BUY", SYMBOL, trending_up_context())
+        d = result.to_dict()
+        assert "reason" not in d or not d["reason"]
+
+    def test_failsafe_does_not_block_pipeline(self):
+        """score=0 with pass_through=True must keep pipeline running (not veto)."""
+        fti = make_fti()
+        fti._evaluate_internal = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("crash"))
+        result = fti.evaluate("BUY", SYMBOL, {})
+        assert result.passed is True
+        assert result.pass_through is True
