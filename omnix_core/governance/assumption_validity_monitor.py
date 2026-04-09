@@ -1,6 +1,7 @@
 """
 OMNIX Assumption Validity Monitor (AVM)
 ADR-064: Assumption Validity Monitor — Calibration Drift Detection
+ADR-075: Non-Finite Signal Guard — Fail-Closed under NaN/Inf inputs
 
 Solves the core critique of governance under Knightian uncertainty:
 OMNIX can certify a decision correctly given its calibrated parameters,
@@ -11,13 +12,29 @@ certification issued by the pipeline.
 
 Architecture position:
     Signals → AVM (ADR-064) → CAG (ADR-050) → 11 Checkpoints → TIE (ADR-053) → Decision
-              [STALE_BLOCK]
+              [STALE_BLOCK / NON_FINITE_BLOCK / DRIFT_BLOCK]
 
 Key principle:
     A governance receipt is only as valid as the assumptions it was
     certified under. If those assumptions have drifted beyond a tolerance
     threshold, the pipeline must refuse to certify — regardless of whether
     the incoming signals would otherwise pass all checkpoints.
+
+Blocking policy (strictest wins, evaluated in this order):
+    1. NON_FINITE_SIGNAL  — Any NaN/Inf in input signals → is_valid=False
+                            Reason: Python NaN > threshold = False → silent PASS.
+                            OMNIX blocks explicitly instead. (ADR-075 §4.3)
+    2. CRITICAL_STALE     — Snapshot age > critical_age_hours → is_valid=False
+                            Reason: stale assumptions invalidate any certification.
+    3. DRIFT_BLOCK        — Weighted drift > effective_threshold → is_valid=False
+                            Reason: live conditions diverged from calibration baseline.
+    4. PASS               — All checks pass → is_valid=True, pass_through=False (certified)
+
+pass_through=True semantics (IMPORTANT for integrators):
+    pass_through=True means the AVM had NO BASELINE to compare against.
+    It does NOT mean the decision is certified. Downstream code MUST treat
+    pass_through=True as NON_CERTIFIED — not as APPROVED.
+    Valid pass_through states: AVM_DISABLED, NO_BASELINE.
 
 Parameter Versioning:
     Every calibration snapshot receives a unique version ID embedded in
@@ -26,7 +43,12 @@ Parameter Versioning:
 
 Storage: JSON snapshots in `avm_snapshots/` directory (one per domain).
          Falls back to in-memory storage when filesystem unavailable.
-Fail-safe: AVM exceptions → pass-through (pipeline availability preserved).
+
+Fail-safe policy (ADR-075 §4.4):
+    Internal AVM exceptions propagate to the caller. The pipeline-level
+    exception handler must treat any AVM exception as BLOCK (fail-closed),
+    never as PASS. Exceptions do NOT produce pass_through=True.
+
 Enabled via: AVM_ENABLED env var (default: true).
 
 Responds directly to:
@@ -34,15 +56,17 @@ Responds directly to:
       conditions change?"
     - Jennifer's Knightian uncertainty critique: "What happens when OMNIX
       certifies under assumptions that are no longer valid?"
+    - Forensic Audit Ronda 3 (2026-04-09): NaN bypass confirmed and closed.
 
 Harold Nunes — OMNIX Decision Governance Infrastructure
-Build 6.5.5 | ADR-064 | April 2026
+Build 6.6.0 | ADR-064 + ADR-075 | April 2026
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -331,6 +355,20 @@ class AssumptionValidityMonitor:
             if baseline_val is None or current_val is None:
                 continue
 
+            # ── Non-finite barrier (second layer, fail-closed) ──────────────────
+            # If either value is NaN or Inf, treat as maximum drift to ensure
+            # the governance engine blocks rather than silently passes.
+            if not math.isfinite(baseline_val) or not math.isfinite(current_val):
+                components[signal] = 100.0
+                weighted_drift += weight * 100.0
+                total_weight += weight
+                logger.warning(
+                    f"[AVM] NON_FINITE_SIGNAL in _compute_drift — "
+                    f"signal={signal} baseline={baseline_val} current={current_val} "
+                    f"→ clamped to max drift"
+                )
+                continue
+
             raw_drift = abs(current_val - baseline_val)
 
             # For risk_exposure: drift direction matters more.
@@ -439,6 +477,38 @@ class AssumptionValidityMonitor:
             effective_threshold = self.drift_threshold * (1.0 - 0.3 * age_overage_ratio)
         else:
             effective_threshold = self.drift_threshold
+
+        # ── Non-finite signal guard (first layer, fail-closed) ─────────────────
+        # NaN or Inf in any signal makes drift computation semantically undefined.
+        # Python: NaN > threshold = False → would silently PASS. We BLOCK instead.
+        # ADR-074 §4.3: any non-finite signal → is_valid=False, reason NON_FINITE_SIGNAL.
+        non_finite_signals = [
+            f"{k}={v}"
+            for k, v in signals.items()
+            if isinstance(v, (int, float)) and not math.isfinite(v)
+        ]
+        if non_finite_signals:
+            reason = (
+                f"NON_FINITE_SIGNAL — governance cannot certify under non-finite inputs: "
+                f"{', '.join(non_finite_signals[:4])}. "
+                "All governance signals must be finite floats in [0, 100]."
+            )
+            logger.error(
+                f"[AVM] NON_FINITE_BLOCK — domain={domain} | "
+                f"non_finite={non_finite_signals[:4]}"
+            )
+            return AVMResult(
+                is_valid=False,
+                snapshot_id=snapshot.snapshot_id,
+                parameter_version=snapshot.parameter_version,
+                drift_score=100.0,
+                drift_components={},
+                age_hours=round(age_hours, 1),
+                drift_threshold=self.drift_threshold,
+                block_reason=reason,
+                warnings=[],
+                pass_through=False,
+            )
 
         # ── Drift computation ───────────────────────────────────────────────────
         drift_score, drift_components = self._compute_drift(
