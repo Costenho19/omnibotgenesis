@@ -1,6 +1,7 @@
 """
 OMNIX — Fraud Detection Gate (CP-10)
 ADR-048: Anomalous Behavior & Market Manipulation Detection Gate
+ADR-069: Epistemic Transparency — score=0 on disabled/failsafe; evaluation_state field
 
 Purpose:
     CP-10 detects patterns of market manipulation and anomalous behavior
@@ -15,6 +16,12 @@ Design:
     - Activatable via FRAUD_GATE_ENABLED env var
     - Default: DISABLED (zero impact on existing Railway operation)
     - Regulatory alignment: EU AI Act Art. 6 (high-risk AI systems)
+
+ADR-069 (2026-04-09):
+    Disabled path: integrity_score=0.0 (was 100.0) + evaluation_state="DISABLED"
+    Failsafe path: integrity_score=0.0 (was 100.0 via dataclass default) + evaluation_state="FAILSAFE"
+    All evaluated paths: evaluation_state="EVALUATED"
+    Principle: score=100 on disabled/error fabricates fraud-detection confidence without evidence.
 
 Implemented: March 2026
 """
@@ -35,13 +42,22 @@ REVERSAL_WINDOW_DEFAULT: int = 3
 
 @dataclass
 class FraudVetoResult:
+    """
+    Result from the Fraud Detection Gate (CP-10).
+
+    ADR-069: integrity_score defaults to 0.0.
+    Disabled/failsafe paths set integrity_score=0.0 explicitly — absence of
+    fraud evaluation is NOT equivalent to perfect integrity.
+    evaluation_state distinguishes DISABLED / FAILSAFE / EVALUATED for audit dashboards.
+    """
     admissible: bool
     pass_through: bool = False
     reason: str = ""
     asset: str = ""
     violation: str = ""
     fraud_score: float = 0.0
-    integrity_score: float = 100.0
+    integrity_score: float = 0.0
+    evaluation_state: str = ""
 
 
 @dataclass
@@ -76,6 +92,9 @@ class FraudGate:
         result = gate.evaluate(symbol, proposed_action, dci, technical_score, sentiment_score)
         if not result.admissible and not result.pass_through:
             # VETO — block the decision
+
+    ADR-069: result.evaluation_state distinguishes "DISABLED" / "FAILSAFE" / "EVALUATED".
+    integrity_score=0.0 on disabled/failsafe — absence of evaluation ≠ perfect integrity.
     """
 
     def __init__(self, config: Optional[FraudGateConfig] = None):
@@ -102,15 +121,23 @@ class FraudGate:
             recent_reversals: Number of BUY→SELL or SELL→BUY reversals in last N cycles
 
         Returns:
-            FraudVetoResult
+            FraudVetoResult. On disabled or error → pass-through, integrity_score=0.0.
+
+        ADR-069: disabled/failsafe paths return integrity_score=0.0, not 100.0.
+            score=100 when disabled fabricates fraud-detection confidence without evidence.
         """
         if not self.config.enabled:
+            logger.debug(f"[CP-10 FRAUD] disabled — pass-through for {symbol}")
             return FraudVetoResult(
                 admissible=True,
                 pass_through=True,
-                reason="CP-10 Fraud Gate: disabled",
+                reason=(
+                    "CP-10 FRAUD_GATE_DISABLED: score=0 reflects absence of evaluation, "
+                    "not absence of fraud. Enable with FRAUD_GATE_ENABLED=true."
+                ),
                 asset=symbol,
-                integrity_score=100.0,
+                integrity_score=0.0,
+                evaluation_state="DISABLED",
             )
 
         try:
@@ -123,8 +150,13 @@ class FraudGate:
             return FraudVetoResult(
                 admissible=True,
                 pass_through=True,
-                reason=f"CP-10 Fraud exception → pass-through: {exc}",
+                reason=(
+                    f"FRAUD_FAILSAFE: score=0 reflects module error, not absence of fraud — {exc}. "
+                    "Pass-through preserves pipeline flow. Investigate exception for reliability."
+                ),
                 asset=symbol,
+                integrity_score=0.0,
+                evaluation_state="FAILSAFE",
             )
 
     def _run_checks(
@@ -151,6 +183,7 @@ class FraudGate:
                 violation="EXTREME_DCI",
                 fraud_score=dci_score,
                 integrity_score=0.0,
+                evaluation_state="EVALUATED",
             )
 
         if self.config.block_signal_divergence and proposed_action.upper() != "HOLD":
@@ -167,6 +200,7 @@ class FraudGate:
                     violation="SIGNAL_DIVERGENCE",
                     fraud_score=divergence,
                     integrity_score=0.0,
+                    evaluation_state="EVALUATED",
                 )
 
         if recent_reversals >= self.config.reversal_window:
@@ -189,6 +223,7 @@ class FraudGate:
                 violation=", ".join(violations),
                 fraud_score=100.0 - integrity_score,
                 integrity_score=max(0.0, integrity_score),
+                evaluation_state="EVALUATED",
             )
 
         return FraudVetoResult(
@@ -197,6 +232,7 @@ class FraudGate:
             reason=f"CP-10 FRAUD PASS: {symbol} — no manipulation patterns | integrity {integrity_score:.0f}/100",
             asset=symbol,
             integrity_score=integrity_score,
+            evaluation_state="EVALUATED",
         )
 
 

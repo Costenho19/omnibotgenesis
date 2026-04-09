@@ -1,6 +1,7 @@
 """
 OMNIX — Context Admission Gate (CAG)
 ADR-050: Session-Level Pre-Admission Gate for Global Market Conditions
+ADR-070: Epistemic Transparency — score=0 on disabled/failsafe; evaluation_state field
 
 Purpose:
     The Context Admission Gate evaluates GLOBAL market conditions BEFORE any
@@ -28,6 +29,13 @@ Regulatory alignment:
 
 Implemented: March 2026
 ADR-050
+
+ADR-070 (2026-04-09):
+    Disabled path: admission_score=0.0 (was 100.0) + evaluation_state="DISABLED"
+    Failsafe path: admission_score=0.0 (was 100.0) + evaluation_state="FAILSAFE"
+    All evaluated paths: evaluation_state="EVALUATED"
+    Principle: score=100 when gate is not evaluated fabricates session-admission
+    confidence without evidence — same pattern as ADR-066 for compliance gates.
 """
 
 from __future__ import annotations
@@ -47,17 +55,27 @@ CAG_DEFAULT_MACRO_RISK_CEILING: float = 85.0
 
 @dataclass
 class CAGResult:
-    """Result from the Context Admission Gate evaluation."""
+    """
+    Result from the Context Admission Gate evaluation.
+
+    ADR-070: admission_score=0.0 default. Disabled/failsafe paths set it
+    explicitly to 0.0 — absence of session evaluation is NOT equivalent to
+    perfect market conditions. evaluation_state distinguishes:
+      "DISABLED"  — gate not active; score=0 means not evaluated
+      "FAILSAFE"  — module error; score=0 means not evaluated
+      "EVALUATED" — gate ran; score reflects actual market conditions checked
+    """
     admitted: bool
     pass_through: bool = False
     reason: str = ""
-    admission_score: float = 100.0
+    admission_score: float = 0.0
     violation: str = ""
     global_volatility: float = 0.0
     cross_pair_correlation: float = 0.0
-    liquidity_score: float = 100.0
+    liquidity_score: float = 0.0
     macro_risk: float = 0.0
     gate_checks: list = field(default_factory=list)
+    evaluation_state: str = ""
 
 
 @dataclass
@@ -123,15 +141,20 @@ class ContextAdmissionGate:
             CAGResult with admitted=True if session is admitted, False if blocked.
         """
         if not self.config.enabled:
+            logger.debug("[CAG] disabled — session admitted by pass-through")
             return CAGResult(
                 admitted=True,
                 pass_through=True,
-                reason="CAG: disabled — session admitted by default",
-                admission_score=100.0,
+                reason=(
+                    "CAG_DISABLED: score=0 reflects absence of evaluation, not perfect market conditions. "
+                    "Enable with CAG_ENABLED=true to perform real session admission checks."
+                ),
+                admission_score=0.0,
                 global_volatility=global_volatility,
                 cross_pair_correlation=cross_pair_correlation,
                 liquidity_score=liquidity_score,
                 macro_risk=macro_risk,
+                evaluation_state="DISABLED",
             )
 
         try:
@@ -146,8 +169,12 @@ class ContextAdmissionGate:
             return CAGResult(
                 admitted=True,
                 pass_through=True,
-                reason=f"CAG exception → pass-through: {exc}",
-                admission_score=100.0,
+                reason=(
+                    f"CAG_FAILSAFE: score=0 reflects module error, not perfect market conditions — {exc}. "
+                    "Pass-through preserves pipeline flow."
+                ),
+                admission_score=0.0,
+                evaluation_state="FAILSAFE",
             )
 
     def _run_admission_checks(
@@ -267,6 +294,7 @@ class ContextAdmissionGate:
                     liquidity_score=liquidity_score,
                     macro_risk=macro_risk,
                     gate_checks=gate_checks,
+                    evaluation_state="EVALUATED",
                 )
             else:
                 logger.warning(
@@ -284,6 +312,7 @@ class ContextAdmissionGate:
                     liquidity_score=liquidity_score,
                     macro_risk=macro_risk,
                     gate_checks=gate_checks,
+                    evaluation_state="EVALUATED",
                 )
 
         logger.info(
@@ -302,6 +331,7 @@ class ContextAdmissionGate:
             liquidity_score=liquidity_score,
             macro_risk=macro_risk,
             gate_checks=gate_checks,
+            evaluation_state="EVALUATED",
         )
 
 
@@ -337,8 +367,11 @@ def evaluate_session(
         return SessionAdmissionResult(
             admitted=True,
             pass_through=True,
-            reason=f"CAG exception → pass-through: {exc}",
-            admission_score=100.0,
+            reason=(
+                f"CAG_FAILSAFE: score=0 reflects session-level error, not perfect market conditions — {exc}."
+            ),
+            admission_score=0.0,
+            evaluation_state="FAILSAFE",
         )
 
 

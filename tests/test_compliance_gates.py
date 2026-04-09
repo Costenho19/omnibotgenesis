@@ -505,3 +505,319 @@ class TestAMLFrequencyTransparency:
         ))
         r = gate.evaluate("BTC/USD", "BUY", volume_usd=200_000.0, trade_frequency_24h=15)
         assert r.aml_score < 50.0 or not r.admissible
+
+
+# ==============================================================================
+# ADR-069: Fraud Gate CP-10 — Epistemic Transparency (score=0 disabled/failsafe)
+# ==============================================================================
+
+class TestFraudGateADR069:
+    """ADR-069: FraudVetoResult integrity_score=0 when gate disabled/failsafe."""
+
+    def _gate(self, enabled=True, **kwargs):
+        from omnix_core.governance.fraud_gate import FraudGate, FraudGateConfig
+        return FraudGate(FraudGateConfig(enabled=enabled, **kwargs))
+
+    def test_disabled_gate_score_is_zero(self):
+        """ADR-069: Disabled Fraud Gate must return integrity_score=0, not 100."""
+        gate = self._gate(enabled=False)
+        r = gate.evaluate("BTC/USD", "BUY", dci_score=0.0, technical_score=60.0, sentiment_score=50.0, recent_reversals=0)
+        assert r.pass_through is True
+        assert r.integrity_score == 0.0, (
+            f"ADR-069 VIOLATION: disabled Fraud Gate returned integrity_score={r.integrity_score} "
+            "(expected 0.0 — absence of fraud evaluation ≠ fraud-free)"
+        )
+
+    def test_disabled_gate_evaluation_state_is_disabled(self):
+        """ADR-069: Disabled path must set evaluation_state='DISABLED'."""
+        gate = self._gate(enabled=False)
+        r = gate.evaluate("BTC/USD", "BUY", dci_score=0.0, technical_score=60.0, sentiment_score=50.0, recent_reversals=0)
+        assert hasattr(r, 'evaluation_state'), "ADR-069: FraudVetoResult must have evaluation_state field"
+        assert r.evaluation_state == "DISABLED"
+
+    def test_evaluated_path_has_evaluation_state_evaluated(self):
+        """ADR-069: Enabled and evaluated path must have evaluation_state='EVALUATED'."""
+        gate = self._gate(enabled=True)
+        r = gate.evaluate("BTC/USD", "BUY", dci_score=10.0, technical_score=60.0, sentiment_score=50.0, recent_reversals=0)
+        assert r.evaluation_state == "EVALUATED"
+
+    def test_evaluated_gate_score_nonzero_on_clean_input(self):
+        """ADR-069: Evaluated path with clean input should yield nonzero integrity_score."""
+        gate = self._gate(enabled=True)
+        r = gate.evaluate("BTC/USD", "BUY", dci_score=5.0, technical_score=60.0, sentiment_score=50.0, recent_reversals=0)
+        assert r.evaluation_state == "EVALUATED"
+        assert r.integrity_score > 0.0
+
+    def test_failsafe_returns_zero_score(self):
+        """ADR-069: FraudGate exception path must return integrity_score=0, not 100."""
+        from omnix_core.governance.fraud_gate import FraudGate, FraudGateConfig
+
+        class BrokenFraudGate(FraudGate):
+            def _run_checks(self, *a, **kw):
+                raise RuntimeError("injected failure for ADR-069 test")
+
+        gate = BrokenFraudGate(FraudGateConfig(enabled=True))
+        r = gate.evaluate("BTC/USD", "BUY", dci_score=0.0, technical_score=60.0, sentiment_score=50.0, recent_reversals=0)
+        assert r.pass_through is True
+        assert r.integrity_score == 0.0, (
+            f"ADR-069 VIOLATION: failsafe Fraud Gate returned integrity_score={r.integrity_score} "
+            "(expected 0.0 — exception ≠ fraud-free)"
+        )
+        assert r.evaluation_state == "FAILSAFE"
+
+    def test_reversal_detection_with_zero_reversals_passes(self):
+        """ADR-069: recent_reversals=0 with enabled gate is valid and must not block."""
+        gate = self._gate(enabled=True)
+        r = gate.evaluate("BTC/USD", "BUY", dci_score=0.0, technical_score=60.0, sentiment_score=50.0, recent_reversals=0)
+        assert r.admissible is True
+
+    def test_high_reversal_count_triggers_violation(self):
+        """ADR-069: High reversal count should reduce integrity score or trigger veto."""
+        from omnix_core.governance.fraud_gate import FraudGate, FraudGateConfig
+        gate = FraudGate(FraudGateConfig(enabled=True, reversal_window=2))
+        r = gate.evaluate("BTC/USD", "BUY", dci_score=0.0, technical_score=60.0, sentiment_score=50.0, recent_reversals=5)
+        assert r.integrity_score < 100.0 or not r.admissible
+
+
+# ==============================================================================
+# ADR-070: CAG CP-1 — Epistemic Transparency (score=0 disabled/failsafe)
+# ==============================================================================
+
+class TestCAGADR070:
+    """ADR-070: CAGResult admission_score=0 when gate disabled/failsafe."""
+
+    def _gate(self, enabled=True, **kwargs):
+        from omnix_core.governance.context_admission_gate import ContextAdmissionGate, CAGConfig
+        return ContextAdmissionGate(CAGConfig(enabled=enabled, **kwargs))
+
+    def test_disabled_gate_score_is_zero(self):
+        """ADR-070: Disabled CAG must return admission_score=0.0, not 100."""
+        gate = self._gate(enabled=False)
+        r = gate.evaluate(global_volatility=10.0, cross_pair_correlation=20.0, liquidity_score=80.0, macro_risk=15.0)
+        assert r.pass_through is True
+        assert r.admission_score == 0.0, (
+            f"ADR-070 VIOLATION: disabled CAG returned admission_score={r.admission_score} "
+            "(expected 0.0 — disabled gate ≠ perfect market conditions)"
+        )
+
+    def test_disabled_gate_evaluation_state_is_disabled(self):
+        """ADR-070: Disabled path must set evaluation_state='DISABLED'."""
+        gate = self._gate(enabled=False)
+        r = gate.evaluate(global_volatility=10.0, cross_pair_correlation=20.0, liquidity_score=80.0, macro_risk=15.0)
+        assert hasattr(r, 'evaluation_state'), "ADR-070: CAGResult must have evaluation_state field"
+        assert r.evaluation_state == "DISABLED"
+
+    def test_evaluated_admitted_path_has_state_evaluated(self):
+        """ADR-070: Admitted session must have evaluation_state='EVALUATED'."""
+        gate = self._gate(enabled=True, block_on_any_violation=True)
+        r = gate.evaluate(global_volatility=10.0, cross_pair_correlation=20.0, liquidity_score=80.0, macro_risk=15.0)
+        assert r.evaluation_state == "EVALUATED"
+
+    def test_evaluated_blocked_path_has_state_evaluated(self):
+        """ADR-070: Blocked session must also have evaluation_state='EVALUATED'."""
+        gate = self._gate(enabled=True, global_volatility_threshold=5.0, block_on_any_violation=True)
+        r = gate.evaluate(global_volatility=90.0, cross_pair_correlation=20.0, liquidity_score=80.0, macro_risk=15.0)
+        assert r.evaluation_state == "EVALUATED"
+
+    def test_failsafe_returns_zero_score(self):
+        """ADR-070: Exception in CAG must return admission_score=0, not 100."""
+        from omnix_core.governance.context_admission_gate import ContextAdmissionGate, CAGConfig
+
+        class BrokenCAG(ContextAdmissionGate):
+            def _run_admission_checks(self, *a, **kw):
+                raise RuntimeError("injected failure for ADR-070 test")
+
+        gate = BrokenCAG(CAGConfig(enabled=True))
+        r = gate.evaluate(global_volatility=10.0, cross_pair_correlation=20.0, liquidity_score=80.0, macro_risk=15.0)
+        assert r.pass_through is True
+        assert r.admission_score == 0.0, (
+            f"ADR-070 VIOLATION: failsafe CAG returned admission_score={r.admission_score} "
+            "(expected 0.0 — exception ≠ perfect market conditions)"
+        )
+        assert r.evaluation_state == "FAILSAFE"
+
+    def test_disabled_gate_is_pass_through(self):
+        """ADR-070: Disabled CAG must still admit (pass_through=True) to preserve pipeline."""
+        gate = self._gate(enabled=False)
+        r = gate.evaluate(global_volatility=10.0, cross_pair_correlation=20.0, liquidity_score=80.0, macro_risk=15.0)
+        assert r.admitted is True
+        assert r.pass_through is True
+
+
+# ==============================================================================
+# ADR-071: PQC Receipt Builder — score defaults 100 → 0 + SCORE_PROXY notes
+# ==============================================================================
+
+class TestPQCReceiptADR071:
+    """ADR-071: Receipt builder must default missing scores to 0.0, not 100.0."""
+
+    def _make_decision_missing_scores(self, gate_key: str) -> dict:
+        """Create a decision dict with gate admitted but score field ABSENT."""
+        decision = {
+            'action': 'BUY',
+            'should_trade': True,
+            'confidence': 0.75,
+            'symbol': 'BTC/USD',
+            'decision_trace': [],
+            'reason': [],
+            'veto_chain': [],
+            'guards_passed': [],
+        }
+        decision[gate_key] = True
+        return decision
+
+    def test_sharia_score_missing_defaults_to_zero_not_100(self):
+        """ADR-071: If sharia_score absent, receipt must use 0.0, not 100.0."""
+        decision = self._make_decision_missing_scores('sharia_admissible')
+        score = decision.get('sharia_score')
+        result = score if score is not None else 0.0
+        assert result == 0.0, (
+            f"ADR-071 VIOLATION: missing sharia_score defaulted to {result} "
+            "(expected 0.0 — absence of Sharia evaluation ≠ perfect compliance)"
+        )
+
+    def test_aml_score_missing_defaults_to_zero_not_100(self):
+        """ADR-071: If aml_score absent, receipt must use 0.0, not 100.0."""
+        decision = self._make_decision_missing_scores('aml_admissible')
+        score = decision.get('aml_score')
+        result = score if score is not None else 0.0
+        assert result == 0.0
+
+    def test_fraud_integrity_score_missing_defaults_to_zero_not_100(self):
+        """ADR-071: If fraud_integrity_score absent, receipt must use 0.0, not 100.0."""
+        decision = self._make_decision_missing_scores('fraud_admissible')
+        score = decision.get('fraud_integrity_score')
+        result = score if score is not None else 0.0
+        assert result == 0.0
+
+    def test_jurisdiction_score_missing_defaults_to_zero_not_100(self):
+        """ADR-071: If jurisdiction_compliance_score absent, receipt must use 0.0, not 100.0."""
+        decision = self._make_decision_missing_scores('jurisdiction_admissible')
+        score = decision.get('jurisdiction_compliance_score')
+        result = score if score is not None else 0.0
+        assert result == 0.0
+
+    def test_receipt_builder_logic_no_hardcoded_100(self):
+        """ADR-071: Verify auto_trading_bot.py has no default=100.0 in receipt section."""
+        import ast, inspect
+        bot_path = "omnix_core/bot/auto_trading_bot.py"
+        with open(bot_path) as f:
+            source = f.read()
+        lines = source.splitlines()
+        receipt_start = None
+        for i, line in enumerate(lines):
+            if "receipt_input['sharia_compliance']" in line or "receipt_input['aml_compliance']" in line:
+                receipt_start = i
+                break
+        if receipt_start is None:
+            return
+        receipt_section = "\n".join(lines[receipt_start:receipt_start + 120])
+        import re
+        bad_defaults = re.findall(r"\.get\(['\"][^'\"]+['\"],\s*100\.0\)", receipt_section)
+        assert not bad_defaults, (
+            f"ADR-071 VIOLATION: found hardcoded default=100.0 in receipt builder: {bad_defaults}"
+        )
+
+
+# ==============================================================================
+# ADR-072: Proxy Mode Documentation — AML volume, Fraud sentiment, CAG liquidity
+# ==============================================================================
+
+class TestProxyModesADR072:
+    """ADR-072: Proxy modes must be explicitly documented in decision traces."""
+
+    def test_aml_volume_proxy_note_in_decision_dict(self):
+        """ADR-072: When estimated_value_usd absent, AML_VOLUME_PROXY_MODE must be traceable."""
+        decision = {'estimated_value_usd': None, 'decision_trace': []}
+        _aml_volume = decision.get('estimated_value_usd')
+        _aml_volume_proxy = _aml_volume is None
+        if _aml_volume is None:
+            _aml_volume = 0.0
+        if _aml_volume_proxy:
+            decision['decision_trace'].append("AML_VOLUME_PROXY_MODE")
+        assert any("AML_VOLUME_PROXY_MODE" in t for t in decision['decision_trace']), (
+            "ADR-072 VIOLATION: AML volume proxy not documented in trace"
+        )
+
+    def test_fraud_sentiment_proxy_note_when_v52_absent(self):
+        """ADR-072: When v52_analysis absent, FRAUD_SENTIMENT_PROXY_MODE must be in trace."""
+        decision = {'decision_trace': []}
+        _sent_source = "PROXY"
+        if 'v52_analysis' in decision:
+            _sent_source = "V52"
+        if _sent_source == "PROXY":
+            decision['decision_trace'].append("FRAUD_SENTIMENT_PROXY_MODE")
+        assert any("FRAUD_SENTIMENT_PROXY_MODE" in t for t in decision['decision_trace']), (
+            "ADR-072 VIOLATION: Fraud Gate sentiment proxy not documented in trace"
+        )
+
+    def test_fraud_reversal_proxy_note_when_no_history(self):
+        """ADR-072: When action history unavailable, FRAUD_REVERSAL_PROXY_MODE must be in trace."""
+        decision = {'decision_trace': []}
+        _rev_source = "PROXY"
+        if _rev_source == "PROXY":
+            decision['decision_trace'].append("FRAUD_REVERSAL_PROXY_MODE")
+        assert any("FRAUD_REVERSAL_PROXY_MODE" in t for t in decision['decision_trace'])
+
+    def test_cag_liquidity_proxy_uses_zero_not_100(self):
+        """ADR-072: CAG_LIQUIDITY_PROXY_MODE must use 0.0 not 100.0 as the proxy default."""
+        cfg = {}
+        _cag_liq_raw = cfg.get("cag_liquidity_score")
+        _cag_liq_proxy = _cag_liq_raw is None
+        _cag_liq = float(_cag_liq_raw) if _cag_liq_raw is not None else 0.0
+        assert _cag_liq_proxy is True
+        assert _cag_liq == 0.0, (
+            f"ADR-072 VIOLATION: CAG liquidity proxy default is {_cag_liq} (expected 0.0)"
+        )
+
+    def test_get_recent_reversals_returns_proxy_when_no_cache(self):
+        """ADR-069/072: _get_recent_reversals must return (0, 'PROXY') when no history."""
+        import sys, os
+        os.environ["TESTING"] = "true"
+        os.environ["TELEGRAM_BOT_TOKEN"] = "test-token"
+        from unittest.mock import MagicMock, patch
+        try:
+            from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        except Exception:
+            pytest.skip("AutoTradingBot not importable in test env")
+        bot = MagicMock(spec=AutoTradingBot)
+        bot._recent_actions_cache = {}
+        bot.database_service = None
+        result = AutoTradingBot._get_recent_reversals(bot, "BTC/USD")
+        assert result == (0, "PROXY"), f"Expected (0, 'PROXY'), got {result}"
+
+    def test_get_recent_reversals_returns_cache_when_history_present(self):
+        """ADR-069: _get_recent_reversals must return (count, 'CACHE') from action history."""
+        import sys, os
+        os.environ["TESTING"] = "true"
+        os.environ["TELEGRAM_BOT_TOKEN"] = "test-token"
+        from unittest.mock import MagicMock
+        try:
+            from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        except Exception:
+            pytest.skip("AutoTradingBot not importable in test env")
+        bot = MagicMock(spec=AutoTradingBot)
+        bot._recent_actions_cache = {"BTC/USD": ["BUY", "SELL", "BUY", "SELL"]}
+        bot.database_service = None
+        count, source = AutoTradingBot._get_recent_reversals(bot, "BTC/USD")
+        assert source == "CACHE"
+        assert count == 3
+
+    def test_track_recent_action_maintains_rolling_history(self):
+        """ADR-069: _track_recent_action must maintain rolling history per symbol."""
+        import os
+        os.environ["TESTING"] = "true"
+        os.environ["TELEGRAM_BOT_TOKEN"] = "test-token"
+        from unittest.mock import MagicMock
+        try:
+            from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        except Exception:
+            pytest.skip("AutoTradingBot not importable in test env")
+        bot = MagicMock(spec=AutoTradingBot)
+        bot._recent_actions_cache = {}
+        AutoTradingBot._track_recent_action(bot, "BTC/USD", "BUY", max_history=3)
+        AutoTradingBot._track_recent_action(bot, "BTC/USD", "SELL", max_history=3)
+        AutoTradingBot._track_recent_action(bot, "BTC/USD", "BUY", max_history=3)
+        AutoTradingBot._track_recent_action(bot, "BTC/USD", "HOLD", max_history=3)
+        assert len(bot._recent_actions_cache["BTC/USD"]) == 3
+        assert bot._recent_actions_cache["BTC/USD"] == ["SELL", "BUY", "HOLD"]

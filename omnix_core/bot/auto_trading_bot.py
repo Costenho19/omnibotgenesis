@@ -784,47 +784,80 @@ class AutoTradingBot:
                 _sharia_check = 'skipped' if decision.get('sharia_pass_through') else (
                     'passed' if decision.get('sharia_admissible') else 'failed'
                 )
+                # ADR-071: default=0.0 (not 100.0) — absence of Sharia evaluation ≠ perfect compliance.
+                # If sharia_score is missing, use 0.0 and mark as SCORE_PROXY in receipt.
+                _sharia_score = decision.get('sharia_score')
+                _sharia_score_note = None
+                if _sharia_score is None:
+                    _sharia_score = 0.0
+                    _sharia_score_note = "SCORE_PROXY: sharia_score absent from decision; 0.0 means not evaluated."
                 receipt_input['sharia_compliance'] = {
                     'check': 'enabled' if not decision.get('sharia_pass_through') else 'skipped',
                     'result': _sharia_check,
-                    'score': decision.get('sharia_score', 100.0),
+                    'score': _sharia_score,
                     'violation': decision.get('veto_reason', '') if not decision.get('sharia_admissible') else '',
                     'threshold': float(os.environ.get('SHARIA_GHARAR_THRESHOLD', '70.0')),
                     'asset': decision.get('symbol', 'UNKNOWN'),
+                    'evaluation_state': decision.get('sharia_evaluation_state', ''),
+                    **({"score_note": _sharia_score_note} if _sharia_score_note else {}),
                 }
 
             if 'aml_admissible' in decision:
+                # ADR-071: default=0.0 (not 100.0) — absence of AML evaluation ≠ clean record.
+                _aml_score = decision.get('aml_score')
+                _aml_score_note = None
+                if _aml_score is None:
+                    _aml_score = 0.0
+                    _aml_score_note = "SCORE_PROXY: aml_score absent from decision; 0.0 means not evaluated."
                 receipt_input['aml_compliance'] = {
                     'check': 'enabled' if not decision.get('aml_pass_through') else 'skipped',
                     'result': 'skipped' if decision.get('aml_pass_through') else (
                         'passed' if decision.get('aml_admissible') else 'failed'
                     ),
-                    'score': decision.get('aml_score', 100.0),
+                    'score': _aml_score,
                     'violation': decision.get('veto_reason', '') if not decision.get('aml_admissible') else '',
                     'asset': decision.get('symbol', 'UNKNOWN'),
+                    'evaluation_state': decision.get('aml_evaluation_state', ''),
+                    **({"score_note": _aml_score_note} if _aml_score_note else {}),
                 }
 
             if 'fraud_admissible' in decision:
+                # ADR-071: default=0.0 (not 100.0) — absence of fraud evaluation ≠ fraud-free.
+                _fraud_integrity = decision.get('fraud_integrity_score')
+                _fraud_score_note = None
+                if _fraud_integrity is None:
+                    _fraud_integrity = 0.0
+                    _fraud_score_note = "SCORE_PROXY: fraud_integrity_score absent from decision; 0.0 means not evaluated."
                 receipt_input['fraud_compliance'] = {
                     'check': 'enabled' if not decision.get('fraud_pass_through') else 'skipped',
                     'result': 'skipped' if decision.get('fraud_pass_through') else (
                         'passed' if decision.get('fraud_admissible') else 'failed'
                     ),
-                    'integrity_score': decision.get('fraud_integrity_score', 100.0),
+                    'integrity_score': _fraud_integrity,
                     'violation': decision.get('veto_reason', '') if not decision.get('fraud_admissible') else '',
                     'asset': decision.get('symbol', 'UNKNOWN'),
+                    'evaluation_state': decision.get('fraud_evaluation_state', ''),
+                    **({"score_note": _fraud_score_note} if _fraud_score_note else {}),
                 }
 
             if 'jurisdiction_admissible' in decision:
+                # ADR-071: default=0.0 (not 100.0) — absence of jurisdiction check ≠ full compliance.
+                _juris_score = decision.get('jurisdiction_compliance_score')
+                _juris_score_note = None
+                if _juris_score is None:
+                    _juris_score = 0.0
+                    _juris_score_note = "SCORE_PROXY: jurisdiction_compliance_score absent; 0.0 means not evaluated."
                 receipt_input['jurisdiction_compliance'] = {
                     'check': 'enabled' if not decision.get('jurisdiction_pass_through') else 'skipped',
                     'result': 'skipped' if decision.get('jurisdiction_pass_through') else (
                         'passed' if decision.get('jurisdiction_admissible') else 'failed'
                     ),
                     'jurisdiction': decision.get('jurisdiction', os.environ.get('JURISDICTION', 'GLOBAL')),
-                    'compliance_score': decision.get('jurisdiction_compliance_score', 100.0),
+                    'compliance_score': _juris_score,
                     'violation': decision.get('veto_reason', '') if not decision.get('jurisdiction_admissible') else '',
                     'asset': decision.get('symbol', 'UNKNOWN'),
+                    'evaluation_state': decision.get('jurisdiction_evaluation_state', ''),
+                    **({"score_note": _juris_score_note} if _juris_score_note else {}),
                 }
 
             prev_hash = self.receipt_engine.get_last_hash()
@@ -1111,6 +1144,66 @@ class AutoTradingBot:
         except Exception:
             pass
         return (0, "PROXY")
+
+    def _get_recent_reversals(self, symbol: str, window: int = 4) -> tuple:
+        """
+        ADR-069: Return (reversal_count, source) for Fraud Gate reversal detection.
+
+        A reversal is a consecutive BUY→SELL or SELL→BUY in recent decisions
+        for the given symbol. Reads from in-memory action cache first (populated
+        each cycle by _track_recent_action), then falls back to DB query.
+
+        If no history is available → returns (0, "PROXY") so the Fraud Gate
+        call site can emit FRAUD_REVERSAL_PROXY_MODE in the decision trace —
+        making the limitation explicit rather than silently passing reversals=0.
+
+        Returns:
+            (int, str): (reversal_count, source) where source is "CACHE", "DB", or "PROXY"
+        """
+        try:
+            cache = getattr(self, '_recent_actions_cache', {})
+            actions = list(cache.get(symbol, []))
+            if len(actions) >= 2:
+                reversals = sum(
+                    1 for i in range(1, len(actions))
+                    if actions[i] != actions[i - 1]
+                    and actions[i] in ("BUY", "SELL")
+                    and actions[i - 1] in ("BUY", "SELL")
+                )
+                return (reversals, "CACHE")
+        except Exception:
+            pass
+
+        try:
+            if self.database_service and hasattr(self.database_service, 'get_recent_trades'):
+                trades = self.database_service.get_recent_trades(symbol=symbol, limit=window + 1)
+                if trades and isinstance(trades, list) and len(trades) >= 2:
+                    actions = [t.get('action', 'HOLD') for t in trades[:window + 1]]
+                    reversals = sum(
+                        1 for i in range(1, len(actions))
+                        if actions[i] != actions[i - 1]
+                        and actions[i] in ("BUY", "SELL")
+                        and actions[i - 1] in ("BUY", "SELL")
+                    )
+                    return (reversals, "DB")
+        except Exception:
+            pass
+
+        return (0, "PROXY")
+
+    def _track_recent_action(self, symbol: str, action: str, max_history: int = 6) -> None:
+        """
+        ADR-069: Maintain a rolling in-memory action history per symbol.
+        Called after each finalized decision to keep _get_recent_reversals accurate.
+        """
+        try:
+            if not hasattr(self, '_recent_actions_cache'):
+                self._recent_actions_cache = {}
+            history = self._recent_actions_cache.get(symbol, [])
+            history.append(action)
+            self._recent_actions_cache[symbol] = history[-max_history:]
+        except Exception:
+            pass
 
     def _build_shadow_context(
         self,
@@ -3646,6 +3739,7 @@ class AutoTradingBot:
                     decision['sharia_admissible'] = _sharia_result.admissible
                     decision['sharia_score'] = _sharia_result.sharia_score
                     decision['sharia_pass_through'] = _sharia_result.pass_through
+                    decision['sharia_evaluation_state'] = getattr(_sharia_result, 'evaluation_state', '')
                     decision['decision_trace'].append(
                         f"CP-6 SHARIA: {_sharia_result.reason}"
                     )
@@ -4051,15 +4145,33 @@ class AutoTradingBot:
                     _trade_freq_24h, _freq_source = self._get_trade_frequency_24h()
                     _aml_cfg = load_aml_config_from_env()
                     _aml_gate = AMLGate(_aml_cfg)
+
+                    # ADR-072: AML volume proxy mode — explicit trace when estimated_value_usd absent
+                    _aml_volume = decision.get('estimated_value_usd')
+                    _aml_volume_proxy = _aml_volume is None
+                    if _aml_volume is None:
+                        _aml_volume = 0.0
+
                     _aml_result = _aml_gate.evaluate(
                         symbol=symbol,
                         proposed_action=decision.get('action', 'HOLD'),
-                        volume_usd=decision.get('estimated_value_usd', 0.0),
+                        volume_usd=_aml_volume,
                         trade_frequency_24h=_trade_freq_24h,
                     )
                     decision['aml_admissible'] = _aml_result.admissible
                     decision['aml_score'] = _aml_result.aml_score
                     decision['aml_pass_through'] = _aml_result.pass_through
+                    decision['aml_evaluation_state'] = getattr(_aml_result, 'evaluation_state', '')
+                    if _aml_volume_proxy:
+                        decision['decision_trace'].append(
+                            "AML_VOLUME_PROXY_MODE: estimated_value_usd absent from decision; "
+                            "volume_usd=0.0 (undercount). Large-volume AML thresholds (FATF R.7) "
+                            "may not fire. Source: proxy_zero"
+                        )
+                        logger.warning(
+                            "⚠️ [CP-9 AML] AML_VOLUME_PROXY_MODE for %s — "
+                            "anomalous volume detection degraded (no estimated_value_usd)", symbol
+                        )
                     if _freq_source == "PROXY":
                         decision['decision_trace'].append(
                             "AML_FREQUENCY_PROXY_MODE: trade_frequency_24h=0 — real 24h count "
@@ -4116,20 +4228,39 @@ class AutoTradingBot:
                     _fraud_gate = FraudGate(_fraud_cfg)
                     _dci = decision.get('decision_contradiction_index', 0.0)
                     _tech_score = decision.get('score', 50.0)
+
+                    # ADR-072: sentiment proxy mode — explicit trace when v52 absent
                     _sent_score = 50.0
+                    _sent_source = "PROXY"
                     if 'v52_analysis' in decision:
                         _sent_score = decision['v52_analysis'].get('sentiment_score', 50.0)
+                        _sent_source = "V52"
+                    if _sent_source == "PROXY":
+                        decision['decision_trace'].append(
+                            "FRAUD_SENTIMENT_PROXY_MODE: v52_analysis absent; "
+                            "sentiment_score=50.0 (neutral stub). Fraud Gate DCI check still active."
+                        )
+
+                    # ADR-069: real reversal count from action history
+                    _reversals, _rev_source = self._get_recent_reversals(symbol)
+                    if _rev_source == "PROXY":
+                        decision['decision_trace'].append(
+                            "FRAUD_REVERSAL_PROXY_MODE: no action history for symbol; "
+                            "recent_reversals=0 (undercount possible). Reversal detection limited."
+                        )
+
                     _fraud_result = _fraud_gate.evaluate(
                         symbol=symbol,
                         proposed_action=decision.get('action', 'HOLD'),
                         dci_score=_dci,
                         technical_score=_tech_score,
                         sentiment_score=_sent_score,
-                        recent_reversals=0,
+                        recent_reversals=_reversals,
                     )
                     decision['fraud_admissible'] = _fraud_result.admissible
                     decision['fraud_integrity_score'] = _fraud_result.integrity_score
                     decision['fraud_pass_through'] = _fraud_result.pass_through
+                    decision['fraud_evaluation_state'] = getattr(_fraud_result, 'evaluation_state', '')
                     decision['decision_trace'].append(f"CP-10 FRAUD: {_fraud_result.reason}")
 
                     if not _fraud_result.admissible and not _fraud_result.pass_through:
@@ -4183,6 +4314,7 @@ class AutoTradingBot:
                     decision['jurisdiction_admissible'] = _juris_result.admissible
                     decision['jurisdiction_compliance_score'] = _juris_result.compliance_score
                     decision['jurisdiction_pass_through'] = _juris_result.pass_through
+                    decision['jurisdiction_evaluation_state'] = getattr(_juris_result, 'evaluation_state', '')
                     decision['decision_trace'].append(
                         f"CP-11 JURISDICTION [{_juris_result.jurisdiction}]: {_juris_result.reason}"
                     )

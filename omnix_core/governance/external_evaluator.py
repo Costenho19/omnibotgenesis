@@ -368,16 +368,23 @@ class GovernanceEvaluationEngine:
                             "cag_block_on_any_violation",
                             os.environ.get("CAG_BLOCK_ON_ANY_VIOLATION", "true"))).lower() == "true",
                     )
+                    # ADR-072: CAG liquidity proxy — explicit detection and trace
+                    # liquidity_score=100.0 was a silent optimistic default; use 0.0 if not provided.
+                    _cag_liq_raw = cfg.get("cag_liquidity_score")
+                    _cag_liq_proxy = _cag_liq_raw is None
+                    _cag_liq = float(_cag_liq_raw) if _cag_liq_raw is not None else 0.0
+
                     cag_result = ContextAdmissionGate(cag_cfg).evaluate(
                         global_volatility=float(cfg.get("cag_global_volatility", 0.0)),
                         cross_pair_correlation=float(cfg.get("cag_cross_pair_correlation", 0.0)),
-                        liquidity_score=float(cfg.get("cag_liquidity_score", 100.0)),
+                        liquidity_score=_cag_liq,
                         macro_risk=float(cfg.get("cag_macro_risk", 0.0)),
                     )
                     context_admission_block = {
                         "check": "enabled",
                         "result": "admitted" if cag_result.admitted else "blocked",
                         "admission_score": cag_result.admission_score,
+                        "evaluation_state": getattr(cag_result, 'evaluation_state', ''),
                         "violation": cag_result.violation,
                         "parameters": {
                             "global_volatility": cag_result.global_volatility,
@@ -387,9 +394,20 @@ class GovernanceEvaluationEngine:
                         },
                         "gate_checks": cag_result.gate_checks,
                     }
+                    # ADR-072: emit CAG_LIQUIDITY_PROXY_MODE when liquidity not supplied
+                    if _cag_liq_proxy:
+                        _liq_warn = (
+                            "CAG_LIQUIDITY_PROXY_MODE: cag_liquidity_score not provided by caller; "
+                            "liquidity_score=0.0 used (conservative). Real web/order-book liquidity "
+                            "data unavailable. Liquidity gate checks may block even healthy sessions."
+                        )
+                        decision_trace.append(_liq_warn)
+                        context_admission_block["liquidity_proxy_warning"] = _liq_warn
+                        logger.warning(f"⚠️ [CAG][LIQUIDITY_PROXY] {_liq_warn} | asset={asset}")
+
                     # ── Epistemic Transparency: warn on assumed market conditions (ADR-065) ──
-                    # If no real context values were supplied, CAG ran on optimistic defaults
-                    # (vol=0, corr=0, liq=100, macro=0). Document this in the audit trail.
+                    # If no real context values were supplied, CAG ran on proxy defaults.
+                    # Document this in the audit trail.
                     _cag_keys_provided = {
                         k for k in ("cag_global_volatility", "cag_cross_pair_correlation",
                                     "cag_liquidity_score", "cag_macro_risk")
@@ -397,9 +415,9 @@ class GovernanceEvaluationEngine:
                     }
                     if not _cag_keys_provided:
                         _cag_warn = (
-                            "CAG_WARNING: all context parameters are defaults "
-                            "(vol=0.0, corr=0.0, liq=100.0, macro=0.0) — "
-                            "no real market data provided. Session admitted on assumed calm conditions."
+                            "CAG_WARNING: all context parameters are proxy defaults "
+                            "(vol=0.0, corr=0.0, liq=0.0, macro=0.0) — "
+                            "no real market data provided. Session admitted on conservative defaults."
                         )
                         decision_trace.append(_cag_warn)
                         context_admission_block["epistemic_warning"] = _cag_warn
