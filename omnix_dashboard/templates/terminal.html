@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/comparativemetrics.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/pnlbreakdown.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/regimedetection.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/avmgovernance.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/timeheatmap.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/correlationheatmap.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components/learninginsights.css') }}">
@@ -251,6 +252,8 @@
         <div style="color: var(--text-muted); font-size: 11px;">Loading P&L Breakdown...</div>
     </div>
     
+    <div class="panel" id="avm-governance-widget"></div>
+
     <div class="panel" id="regime-detection-widget">
         <div style="color: var(--text-muted); font-size: 11px;">Loading Regime Detection...</div>
     </div>
@@ -354,6 +357,7 @@
 <script src="{{ url_for('static', filename='js/components/recommendedactions.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/comparativemetrics.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/pnlbreakdown.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/avmgovernance.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/regimedetection.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/timeheatmap.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/correlationheatmap.js') }}"></script>

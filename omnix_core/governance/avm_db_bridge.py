@@ -51,6 +51,13 @@ ALTER TABLE avm_calibration_snapshots
 ADD COLUMN IF NOT EXISTS baseline_hash VARCHAR(64) NOT NULL DEFAULT '';
 """
 
+DDL_ALTER_VERSIONING = """
+ALTER TABLE avm_calibration_snapshots
+ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE avm_calibration_snapshots
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
+"""
+
 DDL_CHANGE_LOG = """
 CREATE TABLE IF NOT EXISTS avm_baseline_change_log (
     id          SERIAL       PRIMARY KEY,
@@ -71,13 +78,15 @@ UPSERT = """
 INSERT INTO avm_calibration_snapshots (
     domain, snapshot_id, parameter_version, baseline_signals,
     baseline_hash, checkpoint_thresholds, drift_threshold, max_age_hours,
-    description, tags, calibrated_at, calibrated_at_epoch, updated_at
+    description, tags, calibrated_at, calibrated_at_epoch,
+    version, is_active, updated_at
 ) VALUES (
     %(domain)s, %(snapshot_id)s, %(parameter_version)s,
     %(baseline_signals)s::jsonb, %(baseline_hash)s,
     %(checkpoint_thresholds)s::jsonb,
     %(drift_threshold)s, %(max_age_hours)s, %(description)s,
-    %(tags)s::jsonb, %(calibrated_at)s, %(calibrated_at_epoch)s, NOW()
+    %(tags)s::jsonb, %(calibrated_at)s, %(calibrated_at_epoch)s,
+    %(version)s, TRUE, NOW()
 )
 ON CONFLICT (domain) DO UPDATE SET
     snapshot_id         = EXCLUDED.snapshot_id,
@@ -91,7 +100,13 @@ ON CONFLICT (domain) DO UPDATE SET
     tags                = EXCLUDED.tags,
     calibrated_at       = EXCLUDED.calibrated_at,
     calibrated_at_epoch = EXCLUDED.calibrated_at_epoch,
+    version             = EXCLUDED.version,
+    is_active           = TRUE,
     updated_at          = NOW();
+"""
+
+SELECT_VERSION = """
+SELECT version FROM avm_calibration_snapshots WHERE domain = %s;
 """
 
 INSERT_CHANGE_LOG = """
@@ -141,6 +156,7 @@ class AVMDatabaseBridge:
                 with conn.cursor() as cur:
                     cur.execute(DDL_SNAPSHOTS)
                     cur.execute(DDL_ALTER_HASH)
+                    cur.execute(DDL_ALTER_VERSIONING)
                     cur.execute(DDL_CHANGE_LOG)
                 conn.commit()
             logger.info("[AVM.DB] Tables ready: avm_calibration_snapshots, avm_baseline_change_log")
@@ -177,12 +193,26 @@ class AVMDatabaseBridge:
         baseline_signals = snapshot_dict.get("baseline_signals", {})
         baseline_hash = _compute_hash(baseline_signals)
         host = socket.gethostname()
+        domain = snapshot_dict["domain"]
+
+        # Determine version: increment on RECALIBRATE, keep 1 for SEED/MIGRATE
+        new_version = 1
+        try:
+            with self._get_conn() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(SELECT_VERSION, (domain,))
+                    row = cur.fetchone()
+                    if row:
+                        current_version = int(row[0]) if row[0] else 1
+                        new_version = current_version + 1 if action == "RECALIBRATE" else current_version
+        except Exception:
+            pass
 
         try:
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
                     cur.execute(UPSERT, {
-                        "domain":               snapshot_dict["domain"],
+                        "domain":               domain,
                         "snapshot_id":          snapshot_dict["snapshot_id"],
                         "parameter_version":    snapshot_dict["parameter_version"],
                         "baseline_signals":     json.dumps(baseline_signals),
@@ -194,6 +224,7 @@ class AVMDatabaseBridge:
                         "tags":                 json.dumps(snapshot_dict.get("tags", [])),
                         "calibrated_at":        snapshot_dict.get("calibrated_at", datetime.now(timezone.utc).isoformat()),
                         "calibrated_at_epoch":  snapshot_dict.get("calibrated_at_epoch", 0.0),
+                        "version":              new_version,
                     })
                     cur.execute(INSERT_CHANGE_LOG, {
                         "domain":         snapshot_dict["domain"],
@@ -266,6 +297,8 @@ class AVMDatabaseBridge:
                     "tags":                 d["tags"] if isinstance(d["tags"], list) else [],
                     "calibrated_at":        str(d["calibrated_at"]),
                     "calibrated_at_epoch":  float(d["calibrated_at_epoch"]),
+                    "version":              int(d.get("version", 1)) if d.get("version") is not None else 1,
+                    "is_active":            bool(d.get("is_active", True)),
                 }
 
             ok_count = sum(1 for v in result.values() if v["integrity_status"] == "OK")
@@ -299,7 +332,7 @@ class AVMDatabaseBridge:
         p.mkdir(parents=True, exist_ok=True)
 
         # Fields that exist in DB/bridge but NOT in CalibrationSnapshot dataclass
-        _BRIDGE_ONLY_FIELDS = {"baseline_hash", "integrity_status"}
+        _BRIDGE_ONLY_FIELDS = {"baseline_hash", "integrity_status", "version", "is_active"}
 
         restored = 0
         tampered = 0

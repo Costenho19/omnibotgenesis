@@ -5,6 +5,29 @@ OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern
 
 Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raising $500K pre-seed at $3M pre-money valuation.
 
+## ADR-074 — Enterprise Governance Baseline (COMPLETED)
+- **AVM PostgreSQL persistence**: `avm_calibration_snapshots` + `avm_baseline_change_log` tables
+- **SHA-256 hash integrity**: `baseline_hash` stored per snapshot; verified on every load; TAMPERED → snapshot rejected
+- **Baseline versioning**: `version INT` + `is_active BOOLEAN`; RECALIBRATE increments version
+- **Fail-closed configurable**: `AVM_FAIL_CLOSED=true` env var → halts on DB failure or tampered snapshot
+- **Audit trail**: `avm_baseline_change_log` records every change with reason, actor, host, hash
+- **force=True requires reason**: `initialize_avm_baselines(force=True, reason="...")` or ValueError
+- **DEGRADED_MODE**: logged clearly when DB unavailable or tampered snapshots detected
+- **receipt_id canónico**: `OMNIX-TRD/INS/RBT/CRD/PUB-{12hex}` via `DecisionReceiptEngine.build_receipt_id(domain)`
+
+## Dashboard AVM Governance Panel (COMPLETED)
+- **Endpoint**: `GET /api/governance/avm-status` — live status de todos los dominios
+- **Panel investor-facing**: OMNIX GOVERNANCE STATUS header, last blocked decision con datos reales
+- **4-domain grid**: integrity=OK/TAMPERED, SHA-256 hash visible, drift=STABLE/DRIFTING/STALE
+- **Fail mode indicator**: MODE: FAIL-CLOSED | PASS-THROUGH visible en el panel
+- **Last decision real**: query a `credit_applications` → dominio, sector, AED amount, razón de bloqueo
+- **Files**: `static/js/components/avmgovernance.js` + `static/css/components/avmgovernance.css`
+
+## Test Suite: 42+ tests passing
+- `tests/test_enterprise_audit.py`: 35 tests (receipt format, AVM persistence, hash integrity, versioning)
+- `tests/test_code_verification.py`: 14 tests
+- `tests/test_critical_audit.py`: 10 tests (coherence, MC veto, payload audit)
+
 ---
 
 ## User Preferences

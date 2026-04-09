@@ -12,6 +12,7 @@ Strategy (enterprise-grade):
 Called automatically by the Flask dashboard on startup.
 """
 import logging
+import os
 from omnix_core.governance.assumption_validity_monitor import AssumptionValidityMonitor
 from omnix_core.governance.avm_db_bridge import AVMDatabaseBridge
 
@@ -102,6 +103,10 @@ def initialize_avm_baselines(
             "Example: initialize_avm_baselines(force=True, reason='Market regime change Q2 2026')"
         )
 
+    # Fail-closed policy: AVM_FAIL_CLOSED=true means halt if DB/tamper issues
+    # Default: false (pass-through warning) for resilience in production trading
+    fail_closed = os.environ.get("AVM_FAIL_CLOSED", "false").lower() == "true"
+
     bridge = AVMDatabaseBridge()
     avm = AssumptionValidityMonitor()
     results = {}
@@ -121,12 +126,24 @@ def initialize_avm_baselines(
                 "those domains will operate in AVM pass-through until recalibrated"
             )
             degraded_domains.append(f"{tampered}_tampered_domains")
+            if fail_closed:
+                raise RuntimeError(
+                    f"[AVM.Init] FAIL-CLOSED: {tampered} tampered baseline(s) detected. "
+                    "Execution halted — recalibrate with initialize_avm_baselines(force=True, reason=...) "
+                    "to restore governance integrity."
+                )
     else:
         logger.warning(
             "[AVM.Init] DEGRADED_MODE: No DATABASE_URL — "
             "using JSON-only persistence (not recommended for production). "
             "Drift baselines will not survive container restarts."
         )
+        if fail_closed:
+            raise RuntimeError(
+                "[AVM.Init] FAIL-CLOSED: DATABASE_URL not set. "
+                "AVM cannot verify baseline integrity without PostgreSQL. "
+                "Set DATABASE_URL or set AVM_FAIL_CLOSED=false to allow pass-through."
+            )
 
     # Step 3: Load DB state once for efficiency
     all_db: dict = {}

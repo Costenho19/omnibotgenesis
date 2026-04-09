@@ -1082,3 +1082,202 @@ def api_shadow_portfolio():
         },
         'timestamp': datetime.now().isoformat()
     })
+
+
+@system_bp.route('/api/governance/avm-status')
+@require_api_key
+def api_avm_status():
+    """
+    AVM Governance Status — live baseline integrity + drift per domain.
+
+    Returns per-domain:
+    - integrity_status: OK | TAMPERED | LEGACY_NO_HASH
+    - baseline_hash (first 12 chars)
+    - drift_status: STABLE | DRIFTING | STALE
+    - is_valid
+    - last_calibrated
+    - version + is_active (if versioning enabled)
+    - decisions_blocked (from DB if available)
+    """
+    try:
+        from omnix_core.governance.avm_db_bridge import AVMDatabaseBridge
+        from omnix_core.governance.assumption_validity_monitor import AssumptionValidityMonitor
+
+        bridge = AVMDatabaseBridge()
+        avm = AssumptionValidityMonitor()
+
+        snapshots = bridge.load_all_snapshots() if bridge.is_available() else {}
+
+        DOMAIN_ORDER = ["trading", "islamic_credit", "insurance", "robotics"]
+        DOMAIN_LABELS = {
+            "trading":        "Trading",
+            "islamic_credit": "Islamic Credit",
+            "insurance":      "Insurance",
+            "robotics":       "Robotics",
+        }
+
+        domains = []
+        decisions_blocked_total = 0
+
+        with get_db_connection() as conn:
+            blocked_by_domain = {}
+            if conn:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT domain, COUNT(*) as blocked
+                        FROM avm_baseline_change_log
+                        WHERE action = 'STALE_BLOCK'
+                          AND logged_at > NOW() - INTERVAL '24 hours'
+                        GROUP BY domain
+                    """)
+                    for row in cursor.fetchall():
+                        blocked_by_domain[row[0]] = row[1]
+                    cursor.close()
+                except Exception:
+                    pass
+
+        for domain in DOMAIN_ORDER:
+            snap_db = snapshots.get(domain, {})
+            snap_local = avm.load_snapshot(domain)
+
+            integrity = snap_db.get("integrity_status", "NO_SNAPSHOT")
+            raw_hash = snap_db.get("baseline_hash", "")
+            short_hash = raw_hash[:12] + "..." if raw_hash else "—"
+
+            drift_score = None
+            drift_status = "UNKNOWN"
+            is_valid = False
+
+            if snap_local:
+                try:
+                    age_h = snap_local.age_hours()
+                    if integrity == "TAMPERED":
+                        drift_status = "STALE"
+                        is_valid = False
+                    elif age_h > snap_local.max_age_hours:
+                        drift_status = "STALE"
+                        drift_score = 100.0
+                        is_valid = False
+                    else:
+                        drift_status = "STABLE"
+                        # drift_threshold is on 0-100 scale; show age as % of threshold
+                        pct = (age_h / max(snap_local.max_age_hours, 1)) * snap_local.drift_threshold
+                        drift_score = round(pct, 1)
+                        is_valid = True
+                except Exception as _exc:
+                    logger.debug(f"AVM drift calc error for {domain}: {_exc}")
+                    drift_status = "UNKNOWN"
+
+            version = snap_db.get("version", 1)
+            is_active = snap_db.get("is_active", True)
+            calibrated_at = snap_db.get("calibrated_at", "—")
+            if calibrated_at and calibrated_at != "—":
+                try:
+                    dt = datetime.fromisoformat(calibrated_at.replace("Z", "+00:00"))
+                    calibrated_at = dt.strftime("%Y-%m-%d %H:%M UTC")
+                except Exception:
+                    pass
+
+            blocked_24h = blocked_by_domain.get(domain, 0)
+            decisions_blocked_total += blocked_24h
+
+            domains.append({
+                "domain":          domain,
+                "label":           DOMAIN_LABELS[domain],
+                "integrity":       integrity,
+                "hash":            short_hash,
+                "drift_score":     drift_score,
+                "drift_status":    drift_status,
+                "is_valid":        is_valid,
+                "is_active":       is_active,
+                "version":         version,
+                "calibrated_at":   calibrated_at,
+                "blocked_24h":     blocked_24h,
+            })
+
+        db_available = bridge.is_available()
+        degraded = not db_available or any(
+            d["integrity"] == "TAMPERED" for d in domains
+        )
+
+        # Fail-closed mode status
+        import os as _os
+        fail_closed = _os.environ.get("AVM_FAIL_CLOSED", "false").lower() == "true"
+
+        # Last blocked decision — pull from credit_applications or shadow_trade_events
+        last_decision = None
+        with get_db_connection() as conn:
+            if conn:
+                try:
+                    cursor = conn.cursor()
+                    # Try credit applications first (most recent blocked)
+                    cursor.execute("""
+                        SELECT application_id, decision, sector, applicant_type,
+                               requested_amount, submitted_at,
+                               block_reason, blocked_at_checkpoint
+                        FROM credit_applications
+                        WHERE decision = 'BLOCKED'
+                        ORDER BY submitted_at DESC
+                        LIMIT 1
+                    """)
+                    row = cursor.fetchone()
+                    if row:
+                        amount_fmt = f"AED {row[4]:,.0f}" if row[4] else "—"
+                        ts = row[5].strftime("%H:%M UTC") if row[5] else "—"
+                        reason = row[6] or (f"Failed at checkpoint {row[7]}" if row[7] else "Governance threshold exceeded")
+                        last_decision = {
+                            "domain":  "Islamic Credit",
+                            "input":   f"{(row[2] or '').replace('_', ' ').title()} · {row[3] or '—'}",
+                            "result":  "BLOCKED",
+                            "reason":  reason[:60] if reason else "Governance threshold exceeded",
+                            "amount":  amount_fmt,
+                            "ref":     (row[0] or "")[:20] or "—",
+                            "time":    ts,
+                        }
+                    else:
+                        # Fall back to shadow_trade_events
+                        cursor.execute("""
+                            SELECT symbol, veto_type, blocked_capital, created_at
+                            FROM shadow_trade_events
+                            WHERE veto_type IS NOT NULL
+                            ORDER BY created_at DESC
+                            LIMIT 1
+                        """)
+                        row = cursor.fetchone()
+                        if row:
+                            cap = f"${row[2]:,.0f}" if row[2] else "—"
+                            ts = row[3].strftime("%H:%M UTC") if row[3] else "—"
+                            last_decision = {
+                                "domain":  "Trading",
+                                "input":   row[0] or "—",
+                                "result":  "BLOCKED",
+                                "reason":  (row[1] or "VETO").replace("_", " "),
+                                "amount":  cap,
+                                "ref":     "SHADOW",
+                                "time":    ts,
+                            }
+                    cursor.close()
+                except Exception:
+                    pass
+
+        return jsonify({
+            "success":                  True,
+            "db_available":             db_available,
+            "degraded_mode":            degraded,
+            "fail_closed":              fail_closed,
+            "domains":                  domains,
+            "decisions_blocked_total":  decisions_blocked_total,
+            "last_decision":            last_decision,
+            "timestamp":                datetime.now().isoformat(),
+        })
+
+    except Exception as e:
+        logger.error(f"AVM status error: {e}")
+        return jsonify({
+            "success":       False,
+            "error":         str(e),
+            "domains":       [],
+            "degraded_mode": True,
+            "timestamp":     datetime.now().isoformat(),
+        })
