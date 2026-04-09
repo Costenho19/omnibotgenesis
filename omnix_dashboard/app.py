@@ -124,9 +124,15 @@ def create_app():
     except Exception as _rbt_err:
         logger.warning(f"[Robotics] Simulation engine startup skipped: {_rbt_err}")
 
+    try:
+        from scripts.initialize_avm_baselines import initialize_avm_baselines
+        initialize_avm_baselines()
+    except Exception as _avm_err:
+        logger.warning(f"[AVM.Init] Baseline initialization skipped: {_avm_err}")
+
     from omnix_dashboard.utils.database import shutdown_pool
     atexit.register(shutdown_pool)
-    
+
     from omnix_dashboard.utils.auth import init_security
     init_security(app)
     

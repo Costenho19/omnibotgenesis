@@ -1,0 +1,24 @@
+{
+  "snapshot_id": "AVM-C3F4E9F875",
+  "parameter_version": "1.c3f4e9f875",
+  "domain": "trading",
+  "calibrated_at": "2026-04-09T20:06:17.943265+00:00",
+  "calibrated_at_epoch": 1775765177.943265,
+  "baseline_signals": {
+    "momentum_score": 65.0,
+    "volume_score": 70.0,
+    "volatility_score": 55.0,
+    "macro_risk_score": 40.0,
+    "liquidity_score": 72.0,
+    "coherence_score": 78.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "Baseline calibration \u2014 Q1 2026 moderate market conditions",
+  "tags": [
+    "initial",
+    "q1-2026",
+    "trading"
+  ]
+}

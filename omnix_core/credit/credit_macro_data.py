@@ -92,7 +92,7 @@ class CreditMacroDataProvider:
         try:
             return self._fetch_from_alpha_vantage()
         except Exception as e:
-            logger.warning(f"Alpha Vantage fetch failed: {e} — using calibrated defaults")
+            logger.warning(f"Alpha Vantage fetch failed: {e} — trying FRED fallback")
 
         try:
             return self._fetch_from_fred()

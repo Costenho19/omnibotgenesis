@@ -1,0 +1,24 @@
+{
+  "snapshot_id": "AVM-2E65EE6D2E",
+  "parameter_version": "1.2e65ee6d2e",
+  "domain": "islamic_credit",
+  "calibrated_at": "2026-04-09T20:04:41.762880+00:00",
+  "calibrated_at_epoch": 1775765081.76288,
+  "baseline_signals": {
+    "debt_coverage_ratio": 65.0,
+    "gharar_score": 20.0,
+    "liquidity_score": 68.0,
+    "sectoral_risk": 40.0,
+    "borrower_quality": 70.0,
+    "macro_exposure": 38.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "Baseline calibration \u2014 GCC Islamic credit market Q1 2026",
+  "tags": [
+    "initial",
+    "q1-2026",
+    "islamic-credit"
+  ]
+}
