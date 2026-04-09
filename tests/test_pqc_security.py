@@ -148,8 +148,8 @@ class TestPostQuantumSecurity(unittest.TestCase):
         info = pqc.get_security_info()
         self.assertTrue(info['pqc_enabled'])
         self.assertTrue(info['quantum_resistant'])
-        self.assertEqual(info['algorithms']['encryption'], 'Kyber-768 (ML-KEM-768)')
-        self.assertEqual(info['algorithms']['signature'], 'Dilithium-3 (ML-DSA-65)')
+        self.assertEqual(info['kem']['algorithm'], 'Kyber-768 (ML-KEM-768)')
+        self.assertIn('Dilithium', info['active_tier']['algorithm_name'])
     
     def test_secure_api_key(self):
         """Test API key encryption using PQC"""

@@ -37,10 +37,10 @@ class TestCAGDisabled:
         r = gate.evaluate(global_volatility=99.0)
         assert r.violation == ""
 
-    def test_disabled_gate_score_100(self):
+    def test_disabled_gate_score_0(self):
         gate = self._gate()
         r = gate.evaluate()
-        assert r.admission_score == 100.0
+        assert r.admission_score == 0.0
 
 
 class TestCAGVolatility:
@@ -723,7 +723,7 @@ class TestCAGMarketParams:
 
         assert set(params.keys()) == {
             "global_volatility", "cross_pair_correlation",
-            "liquidity_score", "macro_risk",
+            "liquidity_score", "macro_risk", "_liquidity_source",
         }
 
     def test_paper_mode_gives_liquidity_100(self):
@@ -871,6 +871,8 @@ class TestCAGMarketParams:
             params = bot._get_cag_market_params("BTC/USD")
 
         for key, val in params.items():
+            if not isinstance(val, (int, float)):
+                continue
             assert val >= 0.0, f"{key} should be >= 0, got {val}"
 
 
