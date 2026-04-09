@@ -315,7 +315,11 @@ def build_pdf():
          P("Base64 public key for PQC verification. null when signature_format=hex_sha256_fallback", fontSize=6.5, textColor=WHITE, fontName='Helvetica', leading=9)],
     ]
     grid_table(fh, fr, [1.5*inch, 0.7*inch, 4.86*inch], story)
+    story.append(PageBreak())
 
+    # ══════════════════════════════════════════════════════════
+    # PAGE 3 — SIGNATURE FORMAT + VERIFICATION ALGORITHM
+    # ══════════════════════════════════════════════════════════
     sec("3.  signature_format — Dispatch Table", story)
     sh = hdr_cells(["signature_format", "Signature encoding", "How Velos verifies"])
     sr = [
@@ -343,11 +347,8 @@ def build_pdf():
         ('VALIGN',        (0,0),(-1,-1), 'TOP'),
     ]))
     story.append(t)
-    story.append(PageBreak())
+    story.append(Spacer(1, 0.1*inch))
 
-    # ══════════════════════════════════════════════════════════
-    # PAGE 3 — ALGORITHM + TIERS + HASH CONTRACT + CHECKLIST
-    # ══════════════════════════════════════════════════════════
     sec("4.  Verification Algorithm (drop-in Python  |  pip install pypqc)", story)
     code_block([
         "import json, hashlib, base64, time",
@@ -385,8 +386,12 @@ def build_pdf():
         "    else: return {'valid': False, 'reason': f'UNKNOWN_FORMAT:{fmt}'}",
         "    return {'valid': True}",
     ], story)
+    story.append(PageBreak())
 
-    # Tiers + Hash side by side
+    # ══════════════════════════════════════════════════════════
+    # PAGE 4 — TIERS + HASH CONTRACT + CHECKLIST
+    # ══════════════════════════════════════════════════════════
+    sec("5.  Cryptographic Assurance Tiers", story)
     tier_hdr = hdr_cells(["Tier", "signing_provider", "Algorithm", "Standard", "Security", "PK / Sig"])
     tier_rows = [
         [P("Enterprise (default)", fontSize=6.5, textColor=WHITE,  fontName='Helvetica'),
@@ -412,7 +417,7 @@ def build_pdf():
                [1.2*inch, 0.85*inch, 1.55*inch, 0.6*inch, 0.56*inch, 1.0*inch],
                story, row_bgs=[GREEN_DIM, BLUE_DIM, RED_DIM])
 
-    sec("5.  content_hash — Fields Included / Excluded", story)
+    sec("6.  content_hash — Fields Included / Excluded", story)
     lp = "\n".join([
         "IN HASH (mandatory): asset, decision, engine_version,",
         "issued_at_ms, policy_version, prev_hash, receipt_id,",
@@ -445,7 +450,7 @@ def build_pdf():
     story.append(hash_t)
     story.append(Spacer(1, 0.06*inch))
 
-    sec("6.  Integration Checklist", story)
+    sec("7.  Integration Checklist", story)
     ch = hdr_cells(["#", "Check", "Rule"])
     cr = [
         ["1", "now_ms > ttl_epoch_ms?",     "Reject with RECEIPT_EXPIRED"],
