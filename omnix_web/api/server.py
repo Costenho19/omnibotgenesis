@@ -7,10 +7,13 @@ import os
 import json
 import smtplib
 import ssl
+import html
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import psycopg2
 from datetime import datetime, timezone
 import re
@@ -19,7 +22,20 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
 app = Flask(__name__)
-CORS(app)
+
+CORS(app, origins=[
+    "https://omnixquantum.net",
+    "https://www.omnixquantum.net",
+    "http://localhost:5173",
+    "http://localhost:3000",
+])
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://",
+)
 
 
 @app.after_request
@@ -726,6 +742,7 @@ VALID_REFERRAL_SOURCES = {
 
 
 @app.route('/api/contact', methods=['POST'])
+@limiter.limit("5 per minute; 20 per hour")
 def contact_lead():
     data = request.get_json()
     if not data:
@@ -1027,6 +1044,7 @@ def public_verify_receipt(receipt_id):
 
 
 @app.route('/api/public/send-receipt', methods=['POST'])
+@limiter.limit("3 per minute; 10 per hour")
 def send_receipt_email():
     data = request.get_json(silent=True) or {}
     recipient = (data.get('recipient_email') or '').strip()
@@ -1038,17 +1056,18 @@ def send_receipt_email():
     if not gmail_sender or not gmail_password:
         return jsonify({'success': False, 'error': 'Email service not configured'}), 500
 
-    receipt_id  = data.get('receipt_id', '')
-    decision    = data.get('decision', '')
-    explanation = data.get('explanation', '')
-    scenario    = data.get('scenario', '')
+    receipt_id  = html.escape(str(data.get('receipt_id', '')))
+    decision    = html.escape(str(data.get('decision', '')))
+    explanation = html.escape(str(data.get('explanation', '')))
+    scenario    = html.escape(str(data.get('scenario', '')))
     language    = data.get('language', 'en')
     gates       = data.get('gate_results', [])
     receipt     = data.get('receipt', {})
-    cp_passed   = data.get('checkpoints_passed', 0)
-    cp_total    = data.get('checkpoints_total', 11)
-    cp_blocked  = data.get('checkpoints_blocked', 0)
-    verify_url  = data.get('verification_url') or f'https://omnixquantum.net/verify/{receipt_id}'
+    cp_passed   = int(data.get('checkpoints_passed', 0))
+    cp_total    = int(data.get('checkpoints_total', 11))
+    cp_blocked  = int(data.get('checkpoints_blocked', 0))
+    raw_verify  = data.get('verification_url') or f'https://omnixquantum.net/verify/{receipt_id}'
+    verify_url  = html.escape(str(raw_verify))
     is_es       = language == 'es'
     is_approved = decision == 'APPROVED'
 
@@ -1066,13 +1085,13 @@ def send_receipt_email():
         gate_rows_html += f"""
         <tr style="background:{row_bg};">
           <td style="padding:6px 10px;font-size:12px;font-weight:bold;color:{tag_color};background:{tag_bg};border-radius:4px;white-space:nowrap;">{tag_text}</td>
-          <td style="padding:6px 10px;font-size:12px;font-weight:bold;color:#1E1E3F;">{g.get('checkpoint','')}</td>
-          <td style="padding:6px 10px;font-size:12px;color:#333;">{g.get('name_en') or g.get('name','')}</td>
+          <td style="padding:6px 10px;font-size:12px;font-weight:bold;color:#1E1E3F;">{html.escape(str(g.get('checkpoint','')))}</td>
+          <td style="padding:6px 10px;font-size:12px;color:#333;">{html.escape(str(g.get('name_en') or g.get('name','')))}</td>
         </tr>"""
 
     subject = f"OMNIX Governance Report — {decision_label} | {receipt_id}"
 
-    html = f"""
+    email_html = f"""
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"></head>
@@ -1154,7 +1173,7 @@ def send_receipt_email():
         msg['From']    = f'OMNIX Decision Governance <{gmail_sender}>'
         msg['To']      = recipient
         msg['Reply-To'] = 'contacto@omnixquantum.net'
-        msg.attach(MIMEText(html, 'html'))
+        msg.attach(MIMEText(email_html, 'html'))
 
         ctx = ssl.create_default_context()
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
