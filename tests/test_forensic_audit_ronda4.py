@@ -391,6 +391,33 @@ class TestAntiReplayGuard:
         msg = str(exc_info.value)
         assert "expires_in" in msg or "REPLAY" in msg
 
+    def test_K21_effective_window_is_min_window_when_ttl_shorter(self):
+        """
+        ADR-076 §TTL Floor: when ttl_ms < MIN_WINDOW_MS, the effective window
+        is MIN_WINDOW_MS, not ttl_ms. This prevents de-facto replay windows
+        from malformed or adversarially short TTLs.
+
+        Proof: register with ttl_ms=1, entry must still be present immediately.
+        """
+        from omnix_core.evidence.anti_replay import AntiReplayStore, ReplayDetected, MIN_WINDOW_MS
+        store = AntiReplayStore()
+        rid = "OMNIX-TRD-MINTESTFLOOR"
+
+        store.check_and_register(rid, ttl_ms=1)   # 1ms — well below MIN_WINDOW_MS
+
+        # Immediately after, the entry must still block (window = MIN_WINDOW_MS, not 1ms)
+        with pytest.raises(ReplayDetected):
+            store.check_and_register(rid, ttl_ms=30_000)
+
+        # Confirm the effective expiry is approximately MIN_WINDOW_MS from now
+        expiry_ms = store._store[rid]
+        now_ms = int(time.time() * 1000)
+        effective_window_ms = expiry_ms - now_ms
+        assert effective_window_ms > MIN_WINDOW_MS * 0.9, (
+            f"Effective window {effective_window_ms}ms should be ~{MIN_WINDOW_MS}ms "
+            f"(MIN_WINDOW_MS), not 1ms"
+        )
+
     def test_K20_purge_expired_reduces_store_size(self):
         """Expired entries are purged on next check_and_register call."""
         from omnix_core.evidence.anti_replay import AntiReplayStore

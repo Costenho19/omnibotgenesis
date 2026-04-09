@@ -234,6 +234,27 @@ Never hardcode `f"OMNIX-{CODE}-{uuid.uuid4()...}"` directly. Enforced by tests
 
 ---
 
+## 8b. Anti-Replay Guard — Scope and Limits (ADR-076)
+
+> **Anti-replay enforcement is currently scoped to a single running instance
+> and in-memory nonce store. Protection is effective for same-instance replay
+> attempts within the configured TTL window, but does not yet survive process
+> restarts or multi-instance routing.**
+
+| Scenario | Protected |
+|----------|-----------|
+| Same receipt twice — same running instance | ✅ `ReplayDetected` raised |
+| Same receipt after process restart (within TTL) | ⚠️ Not protected — store cleared |
+| Same receipt to a different worker | ❌ Not protected — each worker has own store |
+| TTL shorter than 30s minimum floor | ✅ Effective window always ≥ 30s |
+
+**Phase 2 trigger:** Railway scaling to > 1 dyno → swap store to Redis `SET NX PX`. Interface unchanged.
+
+Contract language for external integrators (Velos):
+> OMNIX anti-replay (Phase 1) prevents same-instance receipt reuse within a minimum 30-second window, effective for the current single-dyno deployment. Phase 2 extends this to persistent multi-instance coverage via Redis.
+
+---
+
 ## 9. Cryptographic Notes
 
 - **Kyber-768:** KEM (Key Encapsulation Mechanism), NOT encryption. Ver `docs/reference/OMNIX-Kyber-IP-Notice.md`
