@@ -152,10 +152,17 @@ def build_pdf():
     # ══════════════════════════════════════════════════════════
     story.append(Spacer(1, 0.15*inch))
 
-    logo_path = "docs/omnix_quantum_logo.png"
+    logo_path = "omnix_web/public/logo_nobg.png"
+    if not os.path.exists(logo_path):
+        logo_path = "docs/omnix_quantum_logo.png"
     if os.path.exists(logo_path):
-        logo_tbl = Table([[Image(logo_path, 1.3*inch, 1.3*inch)]], colWidths=[7.06*inch])
-        logo_tbl.setStyle(TableStyle([('ALIGN',(0,0),(-1,-1),'CENTER')]))
+        logo_tbl = Table([[Image(logo_path, 1.2*inch, 1.2*inch)]], colWidths=[7.06*inch])
+        logo_tbl.setStyle(TableStyle([
+            ('ALIGN',         (0,0),(-1,-1), 'CENTER'),
+            ('BACKGROUND',    (0,0),(-1,-1), DARK_BG),
+            ('TOPPADDING',    (0,0),(-1,-1), 0),
+            ('BOTTOMPADDING', (0,0),(-1,-1), 0),
+        ]))
         story.append(logo_tbl)
         story.append(Spacer(1, 0.14*inch))
 
