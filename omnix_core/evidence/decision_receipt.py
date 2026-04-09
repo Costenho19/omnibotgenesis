@@ -68,9 +68,16 @@ class DecisionReceiptEngine:
             return self._provider.serialize_public_key(self._signing_keys[0])
         return None
 
+    _DEFAULT_TTL_MS: int = 30_000
+
     def generate_receipt(self, decision: Dict[str, Any], prev_hash: str = "") -> Dict[str, Any]:
         receipt_id = f"OMNIX-{uuid.uuid4().hex[:12].upper()}"
-        timestamp = datetime.now(timezone.utc).isoformat()
+        now_dt     = datetime.now(timezone.utc)
+        timestamp  = now_dt.isoformat()
+
+        issued_at_ms = int(now_dt.timestamp() * 1000)
+        ttl_ms       = int(os.environ.get('OMNIX_RECEIPT_TTL_MS', self._DEFAULT_TTL_MS))
+        ttl_epoch_ms = issued_at_ms + ttl_ms
 
         provider_id = self._provider.provider_id() if self._provider else "sha256"
         alg_name    = self._provider.algorithm_name() if self._provider else "SHA-256"
@@ -78,6 +85,9 @@ class DecisionReceiptEngine:
         public_payload = {
             'receipt_id':       receipt_id,
             'timestamp':        timestamp,
+            'issued_at_ms':     issued_at_ms,
+            'ttl_epoch_ms':     ttl_epoch_ms,
+            'ttl_ms':           ttl_ms,
             'asset':            decision.get('symbol', decision.get('asset', 'UNKNOWN')),
             'decision':         decision.get('decision', 'UNKNOWN').upper(),
             'veto_chain':       self._extract_veto_chain(decision),
@@ -122,21 +132,26 @@ class DecisionReceiptEngine:
         content_hash = self._compute_hash(public_payload)
         public_payload['content_hash'] = content_hash
 
-        signature_b64 = None
+        signature_b64    = None
+        signature_format = 'NONE'
+
         if self._signing_keys and self._provider:
             try:
-                message   = content_hash.encode('utf-8')
-                raw_sig   = self._provider.sign(message, self._signing_keys[1])
+                message = content_hash.encode('utf-8')
+                raw_sig = self._provider.sign(message, self._signing_keys[1])
                 if raw_sig:
-                    signature_b64 = base64.b64encode(raw_sig).decode('utf-8')
+                    signature_b64    = base64.b64encode(raw_sig).decode('utf-8')
+                    signature_format = 'base64_pqc'
             except Exception as e:
                 logger.error(f"Failed to sign receipt: {e}")
 
         if signature_b64 is None and not (self._signing_keys and self._provider):
-            signature_b64 = hashlib.sha256(content_hash.encode('utf-8')).hexdigest()
+            signature_b64    = hashlib.sha256(content_hash.encode('utf-8')).hexdigest()
+            signature_format = 'hex_sha256_fallback'
 
         public_payload['signature']           = signature_b64
         public_payload['signature_algorithm'] = alg_name if signature_b64 else 'NONE'
+        public_payload['signature_format']    = signature_format
         public_payload['public_key']          = self.public_key_b64
 
         self._append_to_transparency_chain(receipt_id, public_payload)
@@ -281,6 +296,10 @@ class ReceiptVerifier:
         if payload_for_hash['signing_provider'] is None:
             del payload_for_hash['signing_provider']
 
+        for timing_field in ('issued_at_ms', 'ttl_epoch_ms', 'ttl_ms'):
+            if timing_field in receipt:
+                payload_for_hash[timing_field] = receipt[timing_field]
+
         for optional_block in (
             'sharia_compliance', 'aml_compliance', 'fraud_compliance',
             'jurisdiction_compliance', 'context_admission', 'avm_result',
@@ -333,8 +352,20 @@ class ReceiptVerifier:
             result['signature_note']  = 'Receipt was not signed'
 
         result['overall_valid'] = result['hash_valid'] and (result['signature_valid'] is not False)
-        result['algorithm']     = receipt.get('signature_algorithm', 'UNKNOWN')
+        result['algorithm']        = receipt.get('signature_algorithm', 'UNKNOWN')
         result['signing_provider'] = receipt.get('signing_provider', 'dilithium3')
+        result['signature_format'] = receipt.get('signature_format', 'UNKNOWN')
+
+        ttl_epoch_ms = receipt.get('ttl_epoch_ms')
+        if ttl_epoch_ms is not None:
+            import time as _time
+            now_ms = int(_time.time() * 1000)
+            result['ttl_epoch_ms'] = ttl_epoch_ms
+            result['is_expired']   = now_ms > ttl_epoch_ms
+            result['age_ms']       = now_ms - receipt.get('issued_at_ms', now_ms)
+        else:
+            result['is_expired'] = None
+            result['age_ms']     = None
 
         return result
 
