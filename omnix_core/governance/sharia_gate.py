@@ -152,6 +152,7 @@ class ShariaGate:
                 asset=symbol,
                 violation="HARAM_ASSET",
                 sharia_score=0.0,
+                evaluation_state="EVALUATED",  # ADR-073E: explicit — gate ran and made a determination
             )
 
         # Check 2: Halal whitelist — if not in known halal list, flag as uncertain

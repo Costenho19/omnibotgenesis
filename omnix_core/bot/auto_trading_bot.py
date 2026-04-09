@@ -967,13 +967,22 @@ class AutoTradingBot:
             cross_pair_correlation = min(90.0, regime_base + (num_pairs - 1) * 4.0)
 
         # ── 3. liquidity_score ──────────────────────────────────────────────
-        # Paper mode → 100 (no real execution constraints).
-        # Real mode → 85 (Kraken major pairs are generally liquid; slight discount for spread).
-        # Env var overrides operator-injected liquidity data (e.g., exchange outage signal).
+        # ADR-073C: proxy mode — all paths documented for decision_trace.
+        # Paper mode → 100.0 (no real execution constraints; fills are simulated at any size).
+        # Real mode  → 85.0  (Kraken major pairs are generally liquid; slight discount for spread).
+        # Env var    → operator-injected real-time liquidity data (e.g., exchange outage signal).
         liquidity_score = float(os.environ.get("CAG_LIQUIDITY_SCORE", "-1"))
-        if liquidity_score < 0:
+        _liquidity_source: str
+        if liquidity_score >= 0:
+            _liquidity_source = "ENV_OVERRIDE"
+        else:
             paper_mode = getattr(self, 'config', {}).get('paper_mode', True)
-            liquidity_score = 100.0 if paper_mode else 85.0
+            if paper_mode:
+                liquidity_score = 100.0
+                _liquidity_source = "PAPER_MODE_PROXY"
+            else:
+                liquidity_score = 85.0
+                _liquidity_source = "LIVE_MODE_PROXY"
 
         # ── 4. macro_risk ────────────────────────────────────────────────────
         # Primary: black_swan crash probability from Monte Carlo engine, scaled 0–100.
@@ -994,6 +1003,7 @@ class AutoTradingBot:
             "cross_pair_correlation": round(cross_pair_correlation, 2),
             "liquidity_score": round(liquidity_score, 2),
             "macro_risk": round(macro_risk, 2),
+            "_liquidity_source": _liquidity_source,  # ADR-073C: internal trace key
         }
 
     def _run_cag_session_check(self, user_id: str = "", session_id: str = "") -> bool:
@@ -1020,6 +1030,14 @@ class AutoTradingBot:
 
             market_params = self._get_cag_market_params(
                 symbol=self.config.get('trading_pair', 'MULTI') if hasattr(self, 'config') else 'MULTI'
+            )
+            _liq_src = market_params.get("_liquidity_source", "UNKNOWN")
+            logger.info(
+                f"[CAG] liquidity_score={market_params['liquidity_score']} "
+                f"source={_liq_src} | "
+                f"volatility={market_params['global_volatility']} | "
+                f"correlation={market_params['cross_pair_correlation']} | "
+                f"macro_risk={market_params['macro_risk']}"
             )
             cag_result = cag_evaluate_session(
                 global_volatility=market_params["global_volatility"],
@@ -1190,6 +1208,80 @@ class AutoTradingBot:
             pass
 
         return (0, "PROXY")
+
+    def _get_sharia_gharar_score(self, decision: dict) -> tuple:
+        """
+        ADR-073A: Return (gharar_score, source) for the CP-6 Sharia Gate.
+
+        Gharar (Arabic: غرر) is the Sharia concept of uncertainty, ambiguity, or
+        speculative risk in a transaction. It is NOT equivalent to signal contradiction
+        (DCI). Using DCI as a proxy for gharar is a semantic mismatch:
+          - DCI measures: do pipeline signals agree? (internal coherence)
+          - Gharar measures: is the transaction itself speculative/uncertain? (Islamic finance)
+
+        Available proxies (in priority order):
+          1. v52_analysis.gharar_score — if AML/Sharia module explicitly computed it
+          2. v52_analysis.black_swan_prob × 100 — crash probability as uncertainty proxy
+          3. decision_contradiction_index — DCI used as last-resort proxy, explicitly flagged
+          4. 0.0 + "PROXY_ZERO" — no usable signal, returns zero with full trace
+
+        Returns:
+            (float, str): (gharar_score, source) where source is:
+              "EXPLICIT" — a real gharar score was provided
+              "BLACK_SWAN_PROXY" — crash probability used as speculative risk proxy
+              "DCI_PROXY" — DCI used as semantic proxy (limitation documented in trace)
+              "PROXY_ZERO" — no signal available; gharar=0 (underestimation possible)
+        """
+        # Priority 1: explicit gharar_score from analysis pipeline
+        v52 = decision.get('v52_analysis') or {}
+        explicit_gharar = v52.get('gharar_score')
+        if explicit_gharar is not None:
+            return (float(explicit_gharar), "EXPLICIT")
+
+        # Priority 2: black_swan crash probability as speculative risk proxy
+        # High crash probability → asset in stress → high speculative uncertainty
+        bsp = v52.get('black_swan_prob')
+        if bsp is not None:
+            gharar_from_bsp = min(100.0, float(bsp) * 100.0)
+            return (gharar_from_bsp, "BLACK_SWAN_PROXY")
+
+        # Priority 3: DCI as last-resort proxy (semantic mismatch — explicitly flagged)
+        dci = decision.get('decision_contradiction_index')
+        if dci is not None:
+            return (float(dci), "DCI_PROXY")
+
+        # Priority 4: no usable signal → return 0 with PROXY_ZERO flag
+        return (0.0, "PROXY_ZERO")
+
+    def _get_sharia_debt_ratio(self, decision: dict) -> tuple:
+        """
+        ADR-073A: Return (debt_ratio, source) for the CP-6 Sharia Gate debt check.
+
+        Debt ratio (AAOIFI standard): issuer debt-to-assets ratio (0.0–1.0).
+        Islamic finance prohibits investing in entities with excessive debt (>33% of assets).
+
+        In the trading context (spot crypto pairs), issuers are typically crypto protocols,
+        not companies with balance sheets. A true debt ratio is not computable from market
+        data alone. This method:
+          1. Checks if v52_analysis provides a debt_ratio (future integration point)
+          2. Returns (0.0, "PROXY_ZERO") with explicit trace — acknowledging the limitation
+
+        This is architecturally correct: the debt check is relevant for Islamic equity/sukuk
+        instruments (Islamic credit domain, not spot trading). For spot trading pairs, 0.0
+        is accurate (crypto protocols don't have conventional debt ratios) and the PROXY_ZERO
+        trace documents that the check was not evaluated against real financial statements.
+
+        Returns:
+            (float, str): (debt_ratio, source) where source is:
+              "EXPLICIT" — a real debt ratio was provided by the analysis pipeline
+              "PROXY_ZERO" — no debt ratio available; 0.0 used (check may not fire)
+        """
+        v52 = decision.get('v52_analysis') or {}
+        explicit_debt = v52.get('debt_ratio')
+        if explicit_debt is not None:
+            return (float(explicit_debt), "EXPLICIT")
+
+        return (0.0, "PROXY_ZERO")
 
     def _track_recent_action(self, symbol: str, action: str, max_history: int = 6) -> None:
         """
@@ -3730,11 +3822,43 @@ class AutoTradingBot:
                         gharar_threshold=_sharia_gharar_threshold,
                     )
                     _sharia_gate = ShariaGate(_sharia_config)
-                    _gharar_score = decision.get('decision_contradiction_index', 0.0)
+
+                    # ADR-073A: use semantic gharar helpers — DCI ≠ gharar
+                    _gharar_score, _gharar_source = self._get_sharia_gharar_score(decision)
+                    _debt_ratio, _debt_source = self._get_sharia_debt_ratio(decision)
+
+                    if _gharar_source == "DCI_PROXY":
+                        decision['decision_trace'].append(
+                            "SHARIA_GHARAR_DCI_PROXY: gharar_score derived from decision_contradiction_index "
+                            "(internal signal agreement), NOT from Islamic speculative risk assessment. "
+                            "DCI and gharar are semantically distinct. "
+                            "Provide v52_analysis.gharar_score or v52_analysis.black_swan_prob for semantic accuracy."
+                        )
+                    elif _gharar_source == "BLACK_SWAN_PROXY":
+                        decision['decision_trace'].append(
+                            "SHARIA_GHARAR_BLACK_SWAN_PROXY: gharar_score derived from crash probability "
+                            "(black_swan_prob × 100). Best available proxy for speculative uncertainty."
+                        )
+                    elif _gharar_source == "PROXY_ZERO":
+                        decision['decision_trace'].append(
+                            "SHARIA_GHARAR_PROXY_ZERO: no gharar signal available; gharar_score=0.0 used. "
+                            "Gharar check may not fire even if asset has high speculative risk. "
+                            "Provide v52_analysis.gharar_score for real evaluation."
+                        )
+
+                    if _debt_source == "PROXY_ZERO":
+                        decision['decision_trace'].append(
+                            "SHARIA_DEBT_RATIO_PROXY_ZERO: debt_ratio=0.0 (crypto spot context — "
+                            "protocol-layer assets lack conventional debt-to-assets balance sheets). "
+                            "Debt ratio check (AAOIFI ≤33%) not evaluated against real financial statements. "
+                            "Relevant for Islamic equity/sukuk instruments only."
+                        )
+
                     _sharia_result = _sharia_gate.evaluate(
                         symbol=symbol,
                         proposed_action=decision.get('action', 'HOLD'),
                         gharar_score=_gharar_score,
+                        debt_ratio=_debt_ratio,
                     )
                     decision['sharia_admissible'] = _sharia_result.admissible
                     decision['sharia_score'] = _sharia_result.sharia_score

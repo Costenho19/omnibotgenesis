@@ -120,7 +120,7 @@ class ContextAdmissionGate:
         self,
         global_volatility: float = 0.0,
         cross_pair_correlation: float = 0.0,
-        liquidity_score: float = 100.0,
+        liquidity_score: float = 0.0,
         macro_risk: float = 0.0,
     ) -> CAGResult:
         """
@@ -134,6 +134,10 @@ class ContextAdmissionGate:
                                     Threshold: must be BELOW config max.
             liquidity_score:        Market liquidity score (0–100).
                                     Higher = more liquid. Threshold: must be ABOVE config min.
+                                    ADR-073B: Default is 0.0 (illiquid) — callers MUST supply a
+                                    real or proxy value. The previous default of 100.0 silently
+                                    fabricated perfect liquidity for any caller that omitted this
+                                    parameter.
             macro_risk:             Composite macro risk score (0–100).
                                     Higher = more macro risk. Threshold: must be BELOW config ceiling.
 
@@ -341,7 +345,7 @@ SessionAdmissionResult = CAGResult
 def evaluate_session(
     global_volatility: float = 0.0,
     cross_pair_correlation: float = 0.0,
-    liquidity_score: float = 100.0,
+    liquidity_score: float = 0.0,
     macro_risk: float = 0.0,
     session_id: str = "",
     config: Optional[CAGConfig] = None,
@@ -350,6 +354,10 @@ def evaluate_session(
     ADR-050: Session-level admission check. One call per evaluation cycle,
     covers ALL symbols in that cycle. Returns a SessionAdmissionResult (alias
     of CAGResult) tagged with the session_id for traceability.
+
+    ADR-073B: liquidity_score default changed 100.0 → 0.0 (fail-safe direction).
+    Callers MUST supply a real or proxy value. See _get_cag_market_params() in the
+    bot for the paper/live mode proxy mapping with ADR-073C trace documentation.
 
     Fail-safe: any exception returns admitted=True, pass_through=True.
     """

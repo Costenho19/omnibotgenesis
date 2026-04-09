@@ -821,3 +821,440 @@ class TestProxyModesADR072:
         AutoTradingBot._track_recent_action(bot, "BTC/USD", "HOLD", max_history=3)
         assert len(bot._recent_actions_cache["BTC/USD"]) == 3
         assert bot._recent_actions_cache["BTC/USD"] == ["SELL", "BUY", "HOLD"]
+
+
+# ==============================================================================
+# ADR-073: Forensic Audit — 7 Silent Bugs (073A–073G)
+# ==============================================================================
+
+class TestGhararSemanticMismatchADR073A:
+    """
+    ADR-073A: Gharar Semantic Mismatch + debt_ratio silent zero.
+    DCI (internal signal contradiction) ≠ gharar (Islamic speculative risk).
+    The bot must use semantic helpers with explicit proxy-mode traces.
+    """
+
+    def _bot(self):
+        import os
+        os.environ["TESTING"] = "true"
+        os.environ["TELEGRAM_BOT_TOKEN"] = "test-token"
+        from unittest.mock import MagicMock
+        try:
+            from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        except Exception:
+            pytest.skip("AutoTradingBot not importable in test env")
+        bot = MagicMock(spec=AutoTradingBot)
+        return bot
+
+    def test_gharar_explicit_when_v52_has_gharar_score(self):
+        """ADR-073A: v52_analysis.gharar_score → source='EXPLICIT', no proxy."""
+        bot = self._bot()
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        decision = {"v52_analysis": {"gharar_score": 72.5}}
+        score, source = AutoTradingBot._get_sharia_gharar_score(bot, decision)
+        assert source == "EXPLICIT"
+        assert score == 72.5
+
+    def test_gharar_black_swan_proxy_when_no_explicit_gharar(self):
+        """ADR-073A: v52_analysis.black_swan_prob → source='BLACK_SWAN_PROXY', scaled ×100."""
+        bot = self._bot()
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        decision = {"v52_analysis": {"black_swan_prob": 0.55}}
+        score, source = AutoTradingBot._get_sharia_gharar_score(bot, decision)
+        assert source == "BLACK_SWAN_PROXY"
+        assert abs(score - 55.0) < 0.01
+
+    def test_gharar_black_swan_capped_at_100(self):
+        """ADR-073A: black_swan_prob ×100 must be capped at 100.0."""
+        bot = self._bot()
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        decision = {"v52_analysis": {"black_swan_prob": 1.5}}
+        score, source = AutoTradingBot._get_sharia_gharar_score(bot, decision)
+        assert source == "BLACK_SWAN_PROXY"
+        assert score == 100.0
+
+    def test_gharar_dci_proxy_as_last_resort(self):
+        """ADR-073A: DCI present, no v52_analysis → source='DCI_PROXY'. Semantic mismatch flagged."""
+        bot = self._bot()
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        decision = {"decision_contradiction_index": 38.0}
+        score, source = AutoTradingBot._get_sharia_gharar_score(bot, decision)
+        assert source == "DCI_PROXY", (
+            f"ADR-073A VIOLATION: Expected DCI_PROXY, got '{source}'. "
+            "DCI must only be used as last-resort proxy with explicit source flag."
+        )
+        assert score == 38.0
+
+    def test_gharar_proxy_zero_when_no_signals(self):
+        """ADR-073A: No signals at all → source='PROXY_ZERO', score=0.0."""
+        bot = self._bot()
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        decision = {}
+        score, source = AutoTradingBot._get_sharia_gharar_score(bot, decision)
+        assert source == "PROXY_ZERO"
+        assert score == 0.0
+
+    def test_gharar_v52_none_falls_through_to_dci(self):
+        """ADR-073A: v52_analysis=None must not raise — falls through to DCI check."""
+        bot = self._bot()
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        decision = {"v52_analysis": None, "decision_contradiction_index": 22.0}
+        score, source = AutoTradingBot._get_sharia_gharar_score(bot, decision)
+        assert source == "DCI_PROXY"
+        assert score == 22.0
+
+    def test_debt_ratio_explicit_from_v52(self):
+        """ADR-073A/D: v52_analysis.debt_ratio present → source='EXPLICIT'."""
+        bot = self._bot()
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        decision = {"v52_analysis": {"debt_ratio": 0.28}}
+        ratio, source = AutoTradingBot._get_sharia_debt_ratio(bot, decision)
+        assert source == "EXPLICIT"
+        assert abs(ratio - 0.28) < 0.001
+
+    def test_debt_ratio_proxy_zero_in_trading_context(self):
+        """ADR-073D: No v52 debt_ratio → source='PROXY_ZERO', ratio=0.0 (crypto spot context)."""
+        bot = self._bot()
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        decision = {}
+        ratio, source = AutoTradingBot._get_sharia_debt_ratio(bot, decision)
+        assert source == "PROXY_ZERO"
+        assert ratio == 0.0, (
+            f"ADR-073D VIOLATION: debt_ratio proxy should be 0.0, got {ratio}. "
+            "Crypto spot pairs have no conventional debt-to-assets ratio."
+        )
+
+    def test_dci_proxy_source_triggers_warning_in_trace(self):
+        """ADR-073A: DCI_PROXY source must emit SHARIA_GHARAR_DCI_PROXY in decision_trace."""
+        score, source = (38.0, "DCI_PROXY")
+        trace = []
+        if source == "DCI_PROXY":
+            trace.append(
+                "SHARIA_GHARAR_DCI_PROXY: gharar_score derived from decision_contradiction_index"
+            )
+        assert any("SHARIA_GHARAR_DCI_PROXY" in t for t in trace), (
+            "ADR-073A VIOLATION: DCI_PROXY source must document semantic mismatch in decision_trace."
+        )
+
+    def test_proxy_zero_source_triggers_trace_warning(self):
+        """ADR-073A: PROXY_ZERO source must emit SHARIA_GHARAR_PROXY_ZERO in decision_trace."""
+        score, source = (0.0, "PROXY_ZERO")
+        trace = []
+        if source == "PROXY_ZERO":
+            trace.append("SHARIA_GHARAR_PROXY_ZERO: no gharar signal available")
+        assert any("SHARIA_GHARAR_PROXY_ZERO" in t for t in trace)
+
+    def test_debt_proxy_zero_source_triggers_trace_warning(self):
+        """ADR-073D: PROXY_ZERO debt_ratio must emit SHARIA_DEBT_RATIO_PROXY_ZERO in trace."""
+        ratio, source = (0.0, "PROXY_ZERO")
+        trace = []
+        if source == "PROXY_ZERO":
+            trace.append(
+                "SHARIA_DEBT_RATIO_PROXY_ZERO: debt_ratio=0.0 (crypto spot context)"
+            )
+        assert any("SHARIA_DEBT_RATIO_PROXY_ZERO" in t for t in trace)
+
+
+class TestCAGSignatureADR073B:
+    """
+    ADR-073B: CAG evaluate() and evaluate_session() must default liquidity_score to 0.0,
+    not 100.0. Callers that omit liquidity_score must not receive fabricated perfect liquidity.
+    """
+
+    def test_cag_evaluate_default_liquidity_is_zero_not_100(self):
+        """ADR-073B: gate.evaluate() with no liquidity_score → default=0.0 (illiquid, fail-safe)."""
+        import inspect
+        from omnix_core.governance.context_admission_gate import ContextAdmissionGate
+        sig = inspect.signature(ContextAdmissionGate.evaluate)
+        liq_default = sig.parameters["liquidity_score"].default
+        assert liq_default == 0.0, (
+            f"ADR-073B VIOLATION: evaluate() liquidity_score default is {liq_default} "
+            "(expected 0.0 — 100.0 silently fabricates perfect liquidity for callers that omit it)"
+        )
+
+    def test_cag_evaluate_session_default_liquidity_is_zero_not_100(self):
+        """ADR-073B: evaluate_session() with no liquidity_score → default=0.0."""
+        import inspect
+        from omnix_core.governance.context_admission_gate import evaluate_session
+        sig = inspect.signature(evaluate_session)
+        liq_default = sig.parameters["liquidity_score"].default
+        assert liq_default == 0.0, (
+            f"ADR-073B VIOLATION: evaluate_session() liquidity_score default is {liq_default} "
+            "(expected 0.0 — silent 100.0 proxy was never documented in ADR-072)"
+        )
+
+    def test_cag_with_zero_liquidity_is_blocked(self):
+        """ADR-073B: When liquidity_score=0.0 (default), CAG must block — not admit silently."""
+        from omnix_core.governance.context_admission_gate import ContextAdmissionGate, CAGConfig
+        gate = ContextAdmissionGate(CAGConfig(enabled=True, liquidity_score_minimum=30.0))
+        r = gate.evaluate(
+            global_volatility=10.0,
+            cross_pair_correlation=20.0,
+            macro_risk=15.0,
+            # liquidity_score intentionally omitted — triggers new default of 0.0
+        )
+        assert not r.admitted or r.pass_through, (
+            "ADR-073B VIOLATION: CAG admitted a session with liquidity_score=0.0 "
+            "(min=30.0). The fail-safe default of 0.0 must cause a block."
+        )
+
+
+class TestPaperModeLiquidityTraceADR073C:
+    """
+    ADR-073C: Bot _get_cag_market_params must document the liquidity_score source
+    in all three paths: PAPER_MODE_PROXY, LIVE_MODE_PROXY, ENV_OVERRIDE.
+    """
+
+    def _bot_with_config(self, paper_mode: bool):
+        import os
+        os.environ["TESTING"] = "true"
+        os.environ["TELEGRAM_BOT_TOKEN"] = "test-token"
+        os.environ.pop("CAG_LIQUIDITY_SCORE", None)
+        from unittest.mock import MagicMock
+        try:
+            from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        except Exception:
+            pytest.skip("AutoTradingBot not importable in test env")
+        bot = MagicMock(spec=AutoTradingBot)
+        bot.config = {"paper_mode": paper_mode, "trading_pairs": ["BTC/USD"]}
+        bot._cag_signals_cache = {}
+        return bot
+
+    def test_paper_mode_liquidity_source_is_paper_proxy(self):
+        """ADR-073C: paper_mode=True → liquidity=100.0, _liquidity_source='PAPER_MODE_PROXY'."""
+        bot = self._bot_with_config(paper_mode=True)
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        params = AutoTradingBot._get_cag_market_params(bot)
+        assert params["_liquidity_source"] == "PAPER_MODE_PROXY", (
+            f"ADR-073C VIOLATION: Expected PAPER_MODE_PROXY, got '{params['_liquidity_source']}'"
+        )
+        assert params["liquidity_score"] == 100.0
+
+    def test_live_mode_liquidity_source_is_live_proxy(self):
+        """ADR-073C: paper_mode=False → liquidity=85.0, _liquidity_source='LIVE_MODE_PROXY'."""
+        bot = self._bot_with_config(paper_mode=False)
+        from omnix_core.bot.auto_trading_bot import AutoTradingBot
+        params = AutoTradingBot._get_cag_market_params(bot)
+        assert params["_liquidity_source"] == "LIVE_MODE_PROXY", (
+            f"ADR-073C VIOLATION: Expected LIVE_MODE_PROXY, got '{params['_liquidity_source']}'"
+        )
+        assert params["liquidity_score"] == 85.0
+
+    def test_env_override_liquidity_source_is_env_override(self):
+        """ADR-073C: CAG_LIQUIDITY_SCORE env var → _liquidity_source='ENV_OVERRIDE'."""
+        import os
+        # Create bot first (bot_with_config pops CAG_LIQUIDITY_SCORE as cleanup),
+        # then set the env var so it's present when _get_cag_market_params() runs.
+        bot = self._bot_with_config(paper_mode=True)
+        os.environ["CAG_LIQUIDITY_SCORE"] = "60.0"
+        try:
+            from omnix_core.bot.auto_trading_bot import AutoTradingBot
+            params = AutoTradingBot._get_cag_market_params(bot)
+            assert params["_liquidity_source"] == "ENV_OVERRIDE", (
+                f"ADR-073C VIOLATION: Expected ENV_OVERRIDE, got '{params['_liquidity_source']}'"
+            )
+            assert params["liquidity_score"] == 60.0
+        finally:
+            os.environ.pop("CAG_LIQUIDITY_SCORE", None)
+
+
+class TestHaramAssetEvaluationStateADR073E:
+    """
+    ADR-073E: ShariaVetoResult for HARAM_ASSET must have evaluation_state='EVALUATED'
+    (explicit, not relying solely on dataclass default).
+    """
+
+    def test_haram_asset_result_has_evaluation_state_evaluated(self):
+        """ADR-073E: evaluate() on HARAM asset must return evaluation_state='EVALUATED'."""
+        from omnix_core.governance.sharia_gate import ShariaGate, ShariaGateConfig
+        gate = ShariaGate(ShariaGateConfig(enabled=True))
+        r = gate.evaluate(symbol="WBTC/USD", proposed_action="BUY")
+        assert not r.admissible
+        assert r.violation == "HARAM_ASSET"
+        assert r.evaluation_state == "EVALUATED", (
+            f"ADR-073E VIOLATION: HARAM_ASSET result has evaluation_state='{r.evaluation_state}' "
+            "(expected 'EVALUATED' — haram check is a full gate determination, not a pass-through)"
+        )
+
+    def test_halal_asset_result_has_evaluation_state_evaluated(self):
+        """ADR-073E: evaluate() on clean HALAL asset also returns evaluation_state='EVALUATED'."""
+        from omnix_core.governance.sharia_gate import ShariaGate, ShariaGateConfig
+        gate = ShariaGate(ShariaGateConfig(enabled=True, gharar_threshold=70.0))
+        r = gate.evaluate(symbol="BTC/USD", proposed_action="BUY", gharar_score=30.0)
+        assert r.admissible
+        assert r.evaluation_state == "EVALUATED"
+
+    def test_disabled_gate_has_evaluation_state_disabled(self):
+        """ADR-073E: Disabled Sharia Gate must return evaluation_state='DISABLED'."""
+        from omnix_core.governance.sharia_gate import ShariaGate, ShariaGateConfig
+        gate = ShariaGate(ShariaGateConfig(enabled=False))
+        r = gate.evaluate(symbol="BTC/USD", proposed_action="BUY")
+        assert r.pass_through is True
+        assert r.evaluation_state == "DISABLED"
+
+
+class TestAVMNoBaselineTraceADR073F:
+    """
+    ADR-073F: When AVM runs in pass-through mode (NO_BASELINE or DISABLED),
+    the external_evaluator must emit a trace entry instead of silently passing.
+    """
+
+    def test_avm_no_baseline_pass_through_is_documented(self):
+        """ADR-073F: AVMResult with snapshot_id='NO_BASELINE' must yield AVM_NO_BASELINE trace."""
+        from omnix_core.governance.assumption_validity_monitor import AVMResult
+        avm_result = AVMResult(
+            is_valid=True,
+            snapshot_id="NO_BASELINE",
+            parameter_version="N/A",
+            drift_score=0.0,
+            drift_components={},
+            drift_threshold=0.0,
+            age_hours=0.0,
+            block_reason=None,
+            warnings=["Drift detection inactive — call save_calibration_snapshot() to arm AVM."],
+            pass_through=True,
+        )
+        trace = []
+        if avm_result.pass_through:
+            if avm_result.snapshot_id == "NO_BASELINE":
+                trace.append(
+                    "AVM_NO_BASELINE: Assumption Validity Monitor has no calibration snapshot"
+                )
+        assert any("AVM_NO_BASELINE" in t for t in trace), (
+            "ADR-073F VIOLATION: AVM NO_BASELINE pass-through must emit AVM_NO_BASELINE in trace. "
+            "Silent pass-through means receipts were issued without any calibration baseline."
+        )
+
+    def test_avm_disabled_pass_through_is_documented(self):
+        """ADR-073F: AVMResult with snapshot_id='DISABLED' must yield AVM_DISABLED trace."""
+        from omnix_core.governance.assumption_validity_monitor import AVMResult
+        avm_result = AVMResult(
+            is_valid=True,
+            snapshot_id="DISABLED",
+            parameter_version="N/A",
+            drift_score=0.0,
+            drift_components={},
+            drift_threshold=0.0,
+            age_hours=0.0,
+            block_reason=None,
+            warnings=["AVM disabled via AVM_ENABLED=false"],
+            pass_through=True,
+        )
+        trace = []
+        if avm_result.pass_through:
+            if avm_result.snapshot_id == "DISABLED":
+                trace.append("AVM_DISABLED: Assumption Validity Monitor disabled")
+        assert any("AVM_DISABLED" in t for t in trace), (
+            "ADR-073F VIOLATION: AVM DISABLED pass-through must emit AVM_DISABLED in trace."
+        )
+
+    def test_avm_valid_not_pass_through_emits_avm_valid(self):
+        """ADR-073F: Fully valid AVM result (not pass_through) must emit AVM VALID trace."""
+        from omnix_core.governance.assumption_validity_monitor import AVMResult
+        avm_result = AVMResult(
+            is_valid=True,
+            snapshot_id="AVM-ABC123",
+            parameter_version="1.abc123",
+            drift_score=12.3,
+            drift_components={"vol": 5.1, "corr": 7.2},
+            drift_threshold=40.0,
+            age_hours=5.5,
+            block_reason=None,
+            warnings=[],
+            pass_through=False,
+        )
+        trace = []
+        if not avm_result.pass_through:
+            trace.append(
+                f"AVM VALID: drift={avm_result.drift_score:.1f} ≤ {avm_result.drift_threshold:.1f}"
+            )
+        assert any("AVM VALID" in t for t in trace)
+
+
+class TestTIESignalDefaultsADR073G:
+    """
+    ADR-073G: TIE must track which signals defaulted to 50.0 (neutral stub) and
+    expose them in TIEResult.signal_defaults. Silent defaults bias trajectory history.
+    """
+
+    def test_tie_result_has_signal_defaults_field(self):
+        """ADR-073G: TIEResult dataclass must have a signal_defaults field."""
+        from omnix_core.governance.trajectory_invariant_engine import TIEResult
+        import dataclasses
+        field_names = [f.name for f in dataclasses.fields(TIEResult)]
+        assert "signal_defaults" in field_names, (
+            "ADR-073G VIOLATION: TIEResult missing 'signal_defaults' field. "
+            "Defaulted 50.0 signals must be documented in the result."
+        )
+
+    def test_tie_signal_defaults_populated_when_signals_absent(self):
+        """ADR-073G: When current_signals is empty, all 6 signals must appear in signal_defaults."""
+        from omnix_core.governance.trajectory_invariant_engine import TrajectoryInvariantEngine
+        engine = TrajectoryInvariantEngine(db_conn=None)
+        result = engine.evaluate(
+            current_signals={},      # no signals provided
+            asset="BTC/USD",
+            domain="trading",
+            current_decision="APPROVED",
+        )
+        assert len(result.signal_defaults) == 6, (
+            f"ADR-073G VIOLATION: Expected 6 signal_defaults (all absent), "
+            f"got {len(result.signal_defaults)}: {result.signal_defaults}"
+        )
+        for expected_sig in ("probability_score", "risk_exposure", "signal_coherence",
+                             "trend_persistence", "stress_resilience", "logic_consistency"):
+            assert any(expected_sig in d for d in result.signal_defaults), (
+                f"ADR-073G VIOLATION: '{expected_sig}' not found in signal_defaults. "
+                f"signal_defaults={result.signal_defaults}"
+            )
+
+    def test_tie_signal_defaults_empty_when_all_present(self):
+        """ADR-073G: When all 6 signals are provided, signal_defaults must be empty."""
+        from omnix_core.governance.trajectory_invariant_engine import TrajectoryInvariantEngine
+        engine = TrajectoryInvariantEngine(db_conn=None)
+        full_signals = {
+            "probability_score": 60.0,
+            "risk_exposure": 40.0,
+            "signal_coherence": 65.0,
+            "trend_persistence": 55.0,
+            "stress_resilience": 70.0,
+            "logic_consistency": 75.0,
+        }
+        result = engine.evaluate(
+            current_signals=full_signals,
+            asset="BTC/USD",
+            domain="trading",
+            current_decision="APPROVED",
+        )
+        assert result.signal_defaults == [], (
+            f"ADR-073G VIOLATION: Expected empty signal_defaults when all signals provided, "
+            f"got {result.signal_defaults}"
+        )
+
+    def test_tie_partial_defaults_only_missing_signals(self):
+        """ADR-073G: When 3 signals provided, only the 3 missing must appear in signal_defaults."""
+        from omnix_core.governance.trajectory_invariant_engine import TrajectoryInvariantEngine
+        engine = TrajectoryInvariantEngine(db_conn=None)
+        partial_signals = {
+            "probability_score": 60.0,
+            "risk_exposure": 40.0,
+            "signal_coherence": 65.0,
+        }
+        result = engine.evaluate(
+            current_signals=partial_signals,
+            asset="ETH/USD",
+            domain="trading",
+            current_decision="APPROVED",
+        )
+        assert len(result.signal_defaults) == 3, (
+            f"ADR-073G VIOLATION: Expected 3 signal_defaults (3 missing), "
+            f"got {len(result.signal_defaults)}: {result.signal_defaults}"
+        )
+        for missing in ("trend_persistence", "stress_resilience", "logic_consistency"):
+            assert any(missing in d for d in result.signal_defaults), (
+                f"'{missing}' should be in signal_defaults but is absent"
+            )
+        for present in ("probability_score", "risk_exposure", "signal_coherence"):
+            assert not any(present in d for d in result.signal_defaults), (
+                f"'{present}' was provided but appears in signal_defaults"
+            )

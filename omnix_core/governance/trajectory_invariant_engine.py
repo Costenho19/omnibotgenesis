@@ -35,7 +35,7 @@ from __future__ import annotations
 import logging
 import os
 import statistics
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 logger = logging.getLogger("OMNIX.TIE")
@@ -92,6 +92,9 @@ class TIEResult:
     asset: str
     domain: str
     pass_through_reason: str = ""         # ADR-066: populated when pass_through path taken
+    signal_defaults: list = field(        # ADR-073G: signals that defaulted to 50.0 neutral stub
+        default_factory=list
+    )
 
 
 # ── Core engine ────────────────────────────────────────────────────────────────
@@ -215,6 +218,26 @@ class TrajectoryInvariantEngine:
         violations: list[InvariantViolation] = []
         warnings: list[InvariantViolation] = []
 
+        # ADR-073G: Track which signals are absent from `current` and defaulted to 50.0.
+        # 50.0 is a neutral stub — it won't trigger any invariant threshold (all are
+        # well above or below 50.0), but it silently biases trajectory history toward
+        # a "healthy neutral" state. Documenting defaults allows operators to distinguish
+        # "genuinely 50" from "signal missing at evaluation time".
+        _TIE_SIGNALS = (
+            "probability_score", "risk_exposure", "signal_coherence",
+            "trend_persistence", "stress_resilience", "logic_consistency",
+        )
+        signal_defaults = [
+            f"TIE_SIGNAL_DEFAULT_APPLIED:{s}=50.0 (signal absent from caller)"
+            for s in _TIE_SIGNALS
+            if s not in current
+        ]
+        if signal_defaults:
+            logger.debug(
+                f"[TIE] {asset} ({domain}) — {len(signal_defaults)} signal(s) defaulted to 50.0: "
+                f"{[s.split(':')[1] for s in signal_defaults]}"
+            )
+
         # Build working window: history (oldest first) + current point
         window = history[-HISTORY_WINDOW:] + [{
             "decision": "PENDING",
@@ -263,6 +286,7 @@ class TrajectoryInvariantEngine:
             window_size=len(window) - 1,  # exclude the current (pending) point
             asset=asset,
             domain=domain,
+            signal_defaults=signal_defaults,  # ADR-073G: signals that defaulted to 50.0
         )
 
     def _check_risk_monotonic_ascent(self, window: list[dict]) -> InvariantViolation | None:

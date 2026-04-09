@@ -329,7 +329,31 @@ class GovernanceEvaluationEngine:
                         if avm_result.warnings:
                             for w in avm_result.warnings:
                                 decision_trace.append(f"AVM WARNING: {w}")
-                        if not avm_result.pass_through:
+                        if avm_result.pass_through:
+                            # ADR-073F: Document WHY AVM is running in pass-through mode.
+                            # Silent pass-through meant receipts were issued without any
+                            # calibration baseline — an important limitation to surface.
+                            if avm_result.snapshot_id == "NO_BASELINE":
+                                decision_trace.append(
+                                    "AVM_NO_BASELINE: Assumption Validity Monitor has no calibration "
+                                    "snapshot saved for this domain. Drift detection is INACTIVE — "
+                                    "the pipeline cannot detect when its assumptions have become "
+                                    "stale. Call AssumptionValidityMonitor.save_calibration_snapshot() "
+                                    "to arm AVM. All receipts issued in this state are unvalidated "
+                                    "against calibration drift."
+                                )
+                            elif avm_result.snapshot_id == "DISABLED":
+                                decision_trace.append(
+                                    "AVM_DISABLED: Assumption Validity Monitor disabled via "
+                                    "AVM_ENABLED=false. Calibration drift detection is OFF. "
+                                    "Receipts issued without drift validation."
+                                )
+                            else:
+                                decision_trace.append(
+                                    f"AVM_PASS_THROUGH: snapshot={avm_result.snapshot_id} — "
+                                    "running in pass-through mode (no blocking)."
+                                )
+                        else:
                             decision_trace.append(
                                 f"AVM VALID: drift={avm_result.drift_score:.1f} ≤ "
                                 f"{avm_result.drift_threshold:.1f} | "
