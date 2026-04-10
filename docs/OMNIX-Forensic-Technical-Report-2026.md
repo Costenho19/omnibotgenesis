@@ -195,35 +195,34 @@ OMNIX-{DOMAIN_CODE}-{12 hex chars}
 
 ### 3.4 Anti-Replay Module
 **File:** `omnix_core/evidence/anti_replay.py`  
-**ADR:** ADR-076
+**ADR:** ADR-076 (Phase 1) · ADR-077 (Phase 2 — ✅ IMPLEMENTED April 2026)
 
 **Purpose:** Prevent a governance receipt from being submitted for execution more than once within its TTL window.
 
-**Implementation:**
-- `AntiReplayStore`: thread-safe in-process dict `{receipt_id: expiry_epoch_ms}`
-- Single `threading.Lock` for atomic check-and-register
-- Process-level singleton: `_STORE = AntiReplayStore()`
-- `MIN_WINDOW_MS = 30,000` (30 seconds) — floor applied to all TTLs
-- `MAX_STORE_SIZE = 100,000` — hard cap against unbounded memory growth
+**Phase 2 Architecture (current):**
+- `AntiReplayStore`: unified store, auto-selects backend at startup
+- **Redis backend** (when `REDIS_URL` is set): `SET key 1 NX PX ttl_ms` — atomic, cross-process, restart-safe
+- **In-memory fallback** (when Redis absent): `threading.Lock` + dict — ADR-076 Phase 1 semantics
+- **Mode**: `OMNIX_ANTI_REPLAY_MODE=strict|best_effort` (default: `best_effort`)
+  - `strict`: Redis down → fail-closed (replay rejected)
+  - `best_effort`: Redis down → in-memory fallback + WARNING
+- Redis key prefix: `omnix:ar:{receipt_id}`
+- Public interface unchanged: `check_and_register`, `is_replay`, `get_store`
 
-**`check_and_register(receipt_id, ttl_ms)` logic:**
-1. Acquire lock
-2. Purge expired entries (lazy cleanup)
-3. If `receipt_id` found in store → raise `ReplayDetected`
-4. If store at capacity → raise `AntiReplayStore` capacity error
-5. Register with `expiry = now + max(ttl_ms, MIN_WINDOW_MS)`
-6. Release lock
+**`check_and_register(receipt_id, ttl_ms)` logic (Redis backend):**
+1. `redis.set(key, "1", nx=True, px=max(ttl_ms, MIN_WINDOW_MS))`
+2. Return value `None` → key existed → raise `ReplayDetected`
+3. Return value `True` → first registration → proceed
 
-**Scope (documented limits — see §12):**
+**Scope (as of April 2026):**
 
 | Scenario | Protected |
 |----------|-----------|
 | Same receipt, same running instance, within TTL | ✅ |
-| Same receipt, after process restart | ⚠️ Not protected |
-| Same receipt, different worker instance | ❌ Not protected |
+| Same receipt, after process restart (with Redis) | ✅ Redis persists entries |
+| Same receipt, different worker instance (with Redis) | ✅ Same Redis key space |
+| Same receipt, after process restart (no Redis) | ⚠️ In-memory only |
 | TTL shorter than 30 seconds | ✅ Floor applied |
-
-**Phase 2 roadmap:** Redis `SET key NX PX ttl_ms` — same interface, no caller changes required.
 
 ---
 
@@ -486,16 +485,25 @@ class AntiReplayStore:
 
 **Current deployment:** Single Railway dyno = single process = single store. Phase 1 protection is effective for the current infrastructure.
 
-### 8.3 Phase 2 Redis Upgrade
+### 8.3 Phase 2 Redis Upgrade — ✅ IMPLEMENTED
 
-**ADR-076** documents the upgrade path:
+**ADR-077** (April 2026) — Phase 2 is now deployed:
 ```python
-# Phase 2 — same interface, distributed enforcement
-redis.set(receipt_id, "1", nx=True, px=max(ttl_ms, MIN_WINDOW_MS))
-# nx=True → only set if not exists (atomic check-and-set)
+# Actual implementation in omnix_core/evidence/anti_replay.py
+registered = redis_client.set(
+    f"omnix:ar:{receipt_id}", "1",
+    nx=True,
+    px=max(ttl_ms, MIN_WINDOW_MS)
+)
+if not registered:
+    raise ReplayDetected(...)
 ```
 
-The caller interface (`check_and_register`, `is_replay`, `get_store`) does not change. Redis `SET NX PX` is atomic by design. No architectural rewrite required.
+Runtime policy controls degradation behaviour when Redis is unavailable:
+- `OMNIX_ANTI_REPLAY_MODE=strict` → fail-closed; receipt rejected on Redis failure
+- `OMNIX_ANTI_REPLAY_MODE=best_effort` (default) → in-memory fallback with WARNING
+
+The caller interface (`check_and_register`, `is_replay`, `get_store`) did not change. Existing call sites required no modification. 21 new tests in `tests/test_anti_replay_phase2.py` validate both backends and both modes.
 
 ---
 
@@ -527,11 +535,37 @@ Every decision receipt is:
 - Searchable by `receipt_id`, `asset`, `decision`, `timestamp`
 - Verifiable independently: any party with the public key can verify the Dilithium-3 signature
 
-### 9.4 Public Key Distribution
+### 9.4 Public Key Distribution — ✅ PKI ENDPOINT IMPLEMENTED
 
-**Current state:** Public key is available via `receipt_engine.public_key_b64`. No PKI infrastructure exists. Third-party verification requires manual key exchange.
+**ADR-078** (key persistence) + **ADR-079** (PKI verification endpoints) — both implemented April 2026.
 
-**Gap:** No public endpoint for key discovery. Enterprise clients must receive the public key out-of-band.
+**Signing Key Persistence (ADR-078):**
+- Keys now loaded from `OMNIX_SIGNING_SECRET_KEY_B64` + `OMNIX_SIGNING_PUBLIC_KEY_B64` env vars
+- Key mode: `OMNIX_KEY_MODE=required|ephemeral_dev` (default: `ephemeral_dev`)
+- Mandatory sign/verify self-test on startup validates keypair coherence
+- `key_id` (SHA-256 fingerprint, first 16 hex chars) added to every receipt and endpoint
+- Private key material **never** written to logs
+
+**PKI Verification API (ADR-079):**
+
+`GET /api/receipts/public-key` — returns current signing key metadata (public):
+```json
+{
+  "algorithm": "Dilithium-3 (ML-DSA-65)",
+  "public_key_b64": "<base64>",
+  "key_id": "<16 hex chars>",
+  "key_mode": "persisted | ephemeral_dev",
+  "active_since": "2026-04-09T00:00:00+00:00"
+}
+```
+
+`POST /api/receipts/verify` — verifies a receipt's Dilithium-3 signature:
+- Input: `{ receipt_id, content_hash, signature_b64 }`
+- Process: offline crypto verification + PostgreSQL cross-reference (content_hash match)
+- Rate limited: 60 req/min per IP (`OMNIX_VERIFY_RATE_LIMIT`)
+- Input validation: receipt_id format, 64-char hex hash, signature max 8 KB
+
+23 new tests in `tests/test_receipt_verification_endpoint.py` validate both endpoints.
 
 ---
 
@@ -567,21 +601,21 @@ After Ronda 4 DSR fix: all signals in the credit adapter use the same ceiling co
 ### What is complete and tested:
 - Governance pipeline (11 checkpoints) — domain-agnostic, fail-closed ✅
 - Post-quantum receipt engine (Dilithium-3) — functional with SHA-256 fallback ✅
-- Anti-replay enforcement — in-process, Phase 1 ✅
+- Anti-replay enforcement — Redis backend (Phase 2 ADR-077) ✅
 - NaN/Inf protection — double barrier ✅
 - Transparency chain — append-only, hash-linked ✅
 - Domain adapters (trading, credit, insurance, robotics) — operational ✅
 - AVM drift detection — calibration snapshot comparison ✅
 - Flask governance dashboard — live data, 4 domains ✅
-- Test suite (48 files, ~330+ confirmed passing) ✅
-- ADR documentation (ADR-073 through ADR-076) ✅
+- Test suite (50+ files, ~390+ confirmed passing) ✅
+- ADR documentation (ADR-073 through ADR-079) ✅
 - Velos gateway integration (3 gate outcomes verified via HTTP) ✅
+- Signing key persistence (ADR-078) — env var load + self-test ✅
+- PKI verification endpoints (ADR-079) — `/api/receipts/public-key` + `/api/receipts/verify` ✅
 
 ### What is not yet production-grade:
-- Anti-replay: in-process only (Phase 2 Redis documented, not deployed)
-- Public key infrastructure: no PKI for third-party receipt verification
-- Multi-instance deployment: not tested; anti-replay would be ineffective
-- HSM / secure key storage: keys in memory, not in hardware
+- Multi-instance deployment: not tested; Redis anti-replay will protect across instances once configured
+- HSM / secure key storage: keys in env vars, not in hardware security module
 - `core.py` endpoint authorization: not formally audited
 - Frontend: no automated UI tests
 
@@ -591,10 +625,11 @@ After Ronda 4 DSR fix: all signals in the credit adapter use the same ceiling co
 
 | Limitation | Impact | Mitigation |
 |-----------|--------|------------|
-| Anti-replay: in-process only | Replay possible after restart or across instances | Single-dyno deployment; Phase 2 Redis documented in ADR-076 |
-| No persistent signing key storage | Key regenerated on restart; past receipts cannot be re-verified with new key | Phase 2: HSM or persisted key pair |
+| ~~Anti-replay: in-process only~~ | ~~Replay possible after restart or across instances~~ | ✅ **RESOLVED**: Redis backend deployed (ADR-077, April 2026) |
+| ~~No persistent signing key storage~~ | ~~Key regenerated on restart; past receipts unverifiable after restart~~ | ✅ **RESOLVED**: Env var persistence + self-test (ADR-078, April 2026) |
+| ~~No public PKI endpoint~~ | ~~Third parties cannot verify receipts without manual key exchange~~ | ✅ **RESOLVED**: `/api/receipts/public-key` + `/api/receipts/verify` (ADR-079, April 2026) |
 | Alpha Vantage → FRED fallback for macro data | Credit pipeline continues with fallback; flagged in logs | FRED data is reliable; acceptable for pre-production |
-| No public PKI endpoint | Third parties cannot verify receipts without manual key exchange | Enterprise clients receive key out-of-band |
+| HSM / secure key storage | Signing keys in env vars, not in hardware security module | Planned: HSM integration for production enterprise tier |
 | `trading_system.py` / `auto_trading_bot.py` not formally audited | Unknown bugs in trading logic paths | Governance pipeline is independent; bad trading logic is blocked by governance |
 | `core.py` endpoint authorization | Dashboard endpoints may be accessible without proper authorization | Requires dedicated security audit before public deployment |
 | Frontend not formally tested | UI may display incorrect data in edge cases | Requires E2E test coverage before investor-facing demos |

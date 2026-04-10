@@ -64,6 +64,7 @@ def create_app():
     )
     from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp
     from omnix_dashboard.blueprints.live_metrics import live_metrics_bp
+    from omnix_dashboard.blueprints.receipt_verification import receipt_pki_bp
 
     # domain vertical blueprints FIRST — ensure /api/* routes take priority over views_bp catch-all
     app.register_blueprint(live_metrics_bp)
@@ -87,6 +88,7 @@ def create_app():
     app.register_blueprint(governance_alerts_bp)
     app.register_blueprint(public_sandbox_bp)
     app.register_blueprint(public_verify_bp)
+    app.register_blueprint(receipt_pki_bp)
 
     # Ensure credit tables exist BEFORE any request arrives (Railway fresh DB fix)
     try:

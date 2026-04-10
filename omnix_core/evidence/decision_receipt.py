@@ -50,23 +50,120 @@ class DecisionReceiptEngine:
         self.db_url = db_url or os.environ.get('DATABASE_URL')
         self._signing_keys: Optional[Tuple[bytes, bytes]] = None
         self._provider = _active_provider
+        self._key_mode: str = "uninitialized"
+        self._active_since: Optional[str] = None
         self._init_keys()
 
-    def _init_keys(self):
+    # ── ADR-078: Signing Key Persistence ──────────────────────────────────────
+
+    def _init_keys(self) -> None:
+        """
+        Load or generate Dilithium-3 signing keys per ADR-078.
+
+        Priority:
+          1. OMNIX_SIGNING_SECRET_KEY_B64 + OMNIX_SIGNING_PUBLIC_KEY_B64 env vars (persisted)
+          2. Generate ephemeral keys if OMNIX_KEY_MODE=ephemeral_dev (default)
+          3. Refuse to generate if OMNIX_KEY_MODE=required
+
+        Security: private key material is NEVER written to logs.
+        Only the public key (base64) and fingerprint (key_id) are logged.
+        """
         if not PQC_AVAILABLE or self._provider is None:
-            logger.warning("Crypto provider not available - receipts will use SHA-256 only")
+            logger.warning("Crypto provider not available — receipts will use SHA-256 only")
+            self._key_mode = "sha256_only"
             return
+
+        key_mode_env = os.environ.get("OMNIX_KEY_MODE", "ephemeral_dev").strip().lower()
+        sk_b64 = os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64", "").strip()
+        pk_b64 = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "").strip()
+
+        if sk_b64 and pk_b64:
+            try:
+                sk_bytes = base64.b64decode(sk_b64)
+                pk_bytes = base64.b64decode(pk_b64)
+
+                # Mandatory self-test — validates keypair coherence
+                test_msg = b"OMNIX-KEY-SELFTEST"
+                sig = self._provider.sign(test_msg, sk_bytes)
+                if sig is None or not self._provider.verify(sig, test_msg, pk_bytes):
+                    raise ValueError("Key self-test failed — keypair is invalid or mismatched")
+
+                self._signing_keys = (pk_bytes, sk_bytes)
+                self._key_mode = "persisted"
+                self._active_since = datetime.now(timezone.utc).isoformat()
+                kid = self._compute_key_id(pk_bytes)
+                logger.info(
+                    f"[ADR-078] Signing keys loaded from environment. "
+                    f"key_id={kid} algorithm={self._provider.algorithm_name()} mode=persisted"
+                )
+                return
+            except Exception as exc:
+                logger.error(
+                    f"[ADR-078] Failed to load signing keys from environment: {exc}. "
+                    f"Falling back to ephemeral key generation."
+                )
+
+        # Keys not in env — honour OMNIX_KEY_MODE
+        if key_mode_env == "required":
+            logger.error(
+                "[ADR-078] OMNIX_KEY_MODE=required but OMNIX_SIGNING_SECRET_KEY_B64 / "
+                "OMNIX_SIGNING_PUBLIC_KEY_B64 are not set or failed self-test. "
+                "Receipt engine running without PQC signatures. "
+                "Set env vars and restart to enable persisted signing."
+            )
+            self._key_mode = "required_missing"
+            return
+
+        # ephemeral_dev mode — generate keys, never log secret material
         try:
             self._signing_keys = self._provider.generate_keypair()
-            logger.info(f"Receipt signing keys generated ({self._provider.algorithm_name()})")
-        except Exception as e:
-            logger.error(f"Failed to generate signing keys: {e}")
+            pk_bytes = self._signing_keys[0]
+            self._key_mode = "ephemeral_dev"
+            self._active_since = datetime.now(timezone.utc).isoformat()
+            kid = self._compute_key_id(pk_bytes)
+            pk_b64_out = self._provider.serialize_public_key(pk_bytes)
+            logger.warning(
+                f"[ADR-078] EPHEMERAL signing keys generated. "
+                f"Receipts signed now will NOT be re-verifiable after process restart.\n"
+                f"key_id={kid}  algorithm={self._provider.algorithm_name()}\n"
+                f"Public key (safe to share): {pk_b64_out}\n"
+                f"To persist keys across restarts, run:\n"
+                f"  python -m omnix_core.tools.key_gen\n"
+                f"and set OMNIX_SIGNING_SECRET_KEY_B64 + OMNIX_SIGNING_PUBLIC_KEY_B64."
+            )
+        except Exception as exc:
+            logger.error(f"[ADR-078] Failed to generate signing keys: {exc}")
+            self._key_mode = "failed"
+
+    @staticmethod
+    def _compute_key_id(public_key: bytes) -> str:
+        """SHA-256 fingerprint of the public key, first 16 hex chars (key_id)."""
+        return hashlib.sha256(public_key).hexdigest()[:16]
+
+    # ── Key properties (ADR-078 / ADR-079) ────────────────────────────────────
 
     @property
     def public_key_b64(self) -> Optional[str]:
         if self._signing_keys and self._provider:
             return self._provider.serialize_public_key(self._signing_keys[0])
         return None
+
+    @property
+    def key_id(self) -> Optional[str]:
+        """Short fingerprint (16 hex chars) uniquely identifying the active public key."""
+        if self._signing_keys:
+            return self._compute_key_id(self._signing_keys[0])
+        return None
+
+    @property
+    def key_mode(self) -> str:
+        """persisted | ephemeral_dev | required_missing | sha256_only | failed"""
+        return self._key_mode
+
+    @property
+    def active_since(self) -> Optional[str]:
+        """ISO-8601 UTC timestamp when the current keys became active."""
+        return self._active_since
 
     _DEFAULT_TTL_MS: int = 30_000
 
@@ -117,6 +214,7 @@ class DecisionReceiptEngine:
             'engine_version':   os.environ.get('OMNIX_VERSION', '6.5.4e'),
             'prev_hash':        prev_hash,
             'signing_provider': provider_id,
+            'signing_key_id':   self.key_id,
         }
 
         if 'sharia_compliance' in decision:

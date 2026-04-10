@@ -23,10 +23,41 @@ Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raisin
 - **Last decision real**: query a `credit_applications` → dominio, sector, AED amount, razón de bloqueo
 - **Files**: `static/js/components/avmgovernance.js` + `static/css/components/avmgovernance.css`
 
-## Test Suite: 42+ tests passing
+## ADR-077 — Redis Anti-Replay Phase 2 (COMPLETED April 2026)
+- **Backend Redis**: `SET key 1 NX PX ttl_ms` — atómico, cross-process, restart-safe
+- **Modo `best_effort`** (default): Redis falla → in-memory fallback + WARNING
+- **Modo `strict`**: Redis falla → fail-closed (replay rechazado)
+- **Env var**: `OMNIX_ANTI_REPLAY_MODE=strict|best_effort`
+- **Clave Redis**: `omnix:ar:{receipt_id}`
+- **Interface pública sin cambios**: `check_and_register`, `is_replay`, `get_store`
+- **Tests**: `tests/test_anti_replay_phase2.py` (21 tests — R1 a R21)
+
+## ADR-078 — Signing Key Persistence (COMPLETED April 2026)
+- **Carga desde env vars**: `OMNIX_SIGNING_SECRET_KEY_B64` + `OMNIX_SIGNING_PUBLIC_KEY_B64`
+- **Modo `ephemeral_dev`** (default): genera efímeras, log WARNING + fingerprint de public key
+- **Modo `required`**: falla si env vars no están
+- **Self-test obligatorio**: sign/verify en cada startup
+- **key_id**: SHA-256 fingerprint (16 hex chars) en cada receipt y endpoint
+- **NUNCA** se loguea la clave privada
+- **Key gen util**: `python -m omnix_core.tools.key_gen`
+- **Tests**: `tests/test_key_persistence.py` (18 tests — K1 a K18)
+
+## ADR-079 — PKI Verification Endpoint (COMPLETED April 2026)
+- **`GET /api/receipts/public-key`**: key metadata pública (algorithm, public_key_b64, key_id, active_since)
+- **`POST /api/receipts/verify`**: verifica signature Dilithium-3 + cross-reference DB
+- **Input validation**: receipt_id format, 64-char hex hash, signature max 8 KB
+- **Rate limiting**: 60 req/min per IP (`OMNIX_VERIFY_RATE_LIMIT`)
+- **Blueprint**: `omnix_dashboard/blueprints/receipt_verification.py` (receipt_pki_bp)
+- **Tests**: `tests/test_receipt_verification_endpoint.py` (23 tests — E1 a E23)
+
+## Test Suite: ~392+ tests passing
 - `tests/test_enterprise_audit.py`: 35 tests (receipt format, AVM persistence, hash integrity, versioning)
 - `tests/test_code_verification.py`: 14 tests
 - `tests/test_critical_audit.py`: 10 tests (coherence, MC veto, payload audit)
+- `tests/test_anti_replay_phase2.py`: 21 tests (Redis backend, modes, thread safety)
+- `tests/test_key_persistence.py`: 18 tests (load from env, ephemeral, required, self-test)
+- `tests/test_receipt_verification_endpoint.py`: 23 tests (PKI endpoints, crypto, DB cross-ref)
+- (+ 270+ tests en otros archivos de la suite)
 
 ---
 

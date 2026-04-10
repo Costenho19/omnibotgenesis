@@ -20,6 +20,7 @@ from .governance_sandbox import governance_sandbox_bp
 from .governance_alerts import governance_alerts_bp
 from .public_sandbox import public_sandbox_bp
 from .public_verify import public_verify_bp
+from .receipt_verification import receipt_pki_bp
 from .credit_governance import credit_bp
 from .insurance_governance import insurance_bp
 from .robotics_governance import robotics_bp
@@ -42,6 +43,7 @@ __all__ = [
     'governance_alerts_bp',
     'public_sandbox_bp',
     'public_verify_bp',
+    'receipt_pki_bp',
     'credit_bp',
     'insurance_bp',
     'robotics_bp',
