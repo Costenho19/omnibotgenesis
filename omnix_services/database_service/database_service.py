@@ -3183,6 +3183,132 @@ class DatabaseServiceEnterprise:
             logger.error(f"Error guardando evaluación: {e}")
             return None
     
+    def get_trade_reasoning_by_uuid(self, reasoning_uuid: str) -> Optional[Dict]:
+        """
+        Recuperar razonamiento pre-trade completo por su UUID.
+
+        Permite al motor de auto-evaluación reconstruir el contexto original
+        de la decisión para compararlo con el resultado real del trade.
+
+        Args:
+            reasoning_uuid: UUID del razonamiento almacenado en trade_reasonings
+
+        Returns:
+            Dict con todos los campos del razonamiento, o None si no existe o hay error
+        """
+        if not self.connected or not reasoning_uuid:
+            return None
+
+        try:
+            import json
+            conn = self._get_connection()
+            if not conn:
+                return None
+
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT trade_uuid, user_id, action, pair, amount_usd, confidence,
+                       signals, reasons, summary, full_explanation, created_at
+                FROM trade_reasonings
+                WHERE trade_uuid = %s::UUID
+                LIMIT 1
+            ''', (str(reasoning_uuid),))
+
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+
+            if not row:
+                logger.debug(f"[DB] Razonamiento no encontrado: {reasoning_uuid}")
+                return None
+
+            return {
+                'trade_uuid':       str(row[0]),
+                'user_id':          row[1],
+                'action':           row[2],
+                'pair':             row[3],
+                'amount_usd':       float(row[4]) if row[4] else 0.0,
+                'confidence':       float(row[5]) if row[5] else 0.0,
+                'signals':          json.loads(row[6]) if row[6] else {},
+                'reasons':          json.loads(row[7]) if row[7] else [],
+                'summary':          row[8] or '',
+                'full_explanation': row[9] or '',
+                'created_at':       row[10].isoformat() if row[10] else None,
+            }
+
+        except Exception as e:
+            logger.error(f"[DB] Error obteniendo razonamiento {reasoning_uuid}: {e}")
+            return None
+
+    def get_trade_by_id(self, trade_id: str) -> Optional[Dict]:
+        """
+        Recuperar trade de paper_trading_trades por UUID o ID numérico.
+
+        Usado por el motor de evaluación post-trade para obtener el P/L real,
+        precio de entrada, precio de salida y duración del trade cerrado.
+
+        Args:
+            trade_id: UUID del trade (str) o ID numérico (str).
+                      Se intenta primero match por trade_uuid, luego por id.
+
+        Returns:
+            Dict con datos del trade incluyendo profit_loss neto, o None si
+            el trade no existe, aún está abierto (sin exit_price), o hay error.
+        """
+        if not self.connected or not trade_id:
+            return None
+
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return None
+
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT trade_uuid, symbol, side, status,
+                       entry_price, exit_price,
+                       net_realized_pnl_usd, gross_pnl_usd,
+                       base_quantity, quote_notional_usd,
+                       opened_at, closed_at, duration_seconds
+                FROM paper_trading_trades
+                WHERE trade_uuid::TEXT = %s
+                   OR id::TEXT = %s
+                LIMIT 1
+            ''', (trade_id, trade_id))
+
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+
+            if not row:
+                logger.debug(f"[DB] Trade no encontrado: {trade_id}")
+                return None
+
+            entry_price = float(row[4]) if row[4] else 0.0
+            exit_price  = float(row[5]) if row[5] else 0.0
+            net_pnl     = float(row[6]) if row[6] else 0.0
+            gross_pnl   = float(row[7]) if row[7] else 0.0
+
+            return {
+                'trade_uuid':         str(row[0]),
+                'symbol':             row[1],
+                'side':               row[2],
+                'status':             row[3],
+                'entry_price':        entry_price,
+                'exit_price':         exit_price,
+                'profit_loss':        net_pnl,
+                'gross_pnl_usd':      gross_pnl,
+                'base_quantity':      float(row[8]) if row[8] else 0.0,
+                'quote_notional_usd': float(row[9]) if row[9] else 0.0,
+                'opened_at':          row[10].isoformat() if row[10] else None,
+                'closed_at':          row[11].isoformat() if row[11] else None,
+                'duration_seconds':   int(row[12]) if row[12] else 0,
+            }
+
+        except Exception as e:
+            logger.error(f"[DB] Error obteniendo trade {trade_id}: {e}")
+            return None
+
     def get_recent_reasonings(self, user_id: str, limit: int = 10) -> List[Dict]:
         """
         Obtener razonamientos recientes

@@ -7432,22 +7432,33 @@ class AutoTradingBot:
                     trade_id = eval_data['trade_id']
                     user_id = eval_data['user_id']
                     
-                    # Obtener razonamiento original (si existe)
+                    # Recuperar razonamiento original por UUID para análisis comparativo
                     original_reasoning = {}
                     if eval_data.get('reasoning_uuid'):
-                        # TODO: Obtener razonamiento de DB por UUID
-                        pass
-                    
-                    # Obtener resultado del trade (precio actual vs precio de entrada)
-                    # Por ahora usamos datos simulados, idealmente se obtiene de la DB
+                        original_reasoning = self.database_service.get_trade_reasoning_by_uuid(
+                            eval_data['reasoning_uuid']
+                        ) or {}
+                        if original_reasoning:
+                            logger.debug(
+                                f"[Eval] Razonamiento recuperado para trade {trade_id}: "
+                                f"acción={original_reasoning.get('action')} "
+                                f"confianza={original_reasoning.get('confidence', 0):.0%}"
+                            )
+
+                    # Recuperar datos reales del trade desde la DB para calcular P/L
+                    trade_data = self.database_service.get_trade_by_id(trade_id) or {}
                     trade_result = {
-                        'profit_loss': 0,  # Será calculado real
-                        'exit_price': 0,
-                        'entry_price': 0
+                        'profit_loss': trade_data.get('profit_loss', 0.0),
+                        'exit_price':  trade_data.get('exit_price', 0.0),
+                        'entry_price': trade_data.get('entry_price', 0.0),
                     }
-                    
-                    # TODO: Obtener trade real de la base de datos para calcular P/L
-                    # Por ahora marcamos como completado sin evaluación detallada
+                    if trade_data:
+                        logger.debug(
+                            f"[Eval] P/L real para trade {trade_id}: "
+                            f"${trade_result['profit_loss']:+.2f} | "
+                            f"entrada=${trade_result['entry_price']:.4f} "
+                            f"salida=${trade_result['exit_price']:.4f}"
+                        )
                     
                     # Generar auto-evaluación
                     evaluation = self.conversational_brain.generate_post_trade_evaluation(
@@ -7546,9 +7557,43 @@ class AutoTradingBot:
         return False
     
     def _update_stats(self, trade_result: Dict):
-        """Actualizar estadísticas del bot"""
+        """Actualizar estadísticas del bot en tiempo real desde trade_result.
+
+        Incrementa contadores de trades, ganadores, perdedores y P/L acumulado
+        inmediatamente después de cada trade ejecutado. La fuente de verdad
+        definitiva es la DB (ver _get_stats que consulta paper_trading_trades),
+        pero este método mantiene el state en memoria sincronizado trade a trade
+        para que el status log del bot refleje datos actualizados sin esperar
+        el ciclo de refresco de la DB.
+
+        Args:
+            trade_result: Dict retornado por _execute_smart_trade. Campos usados:
+                - profit_loss (float): P/L neto del trade en USD. 0 para BUY (posición abierta).
+                - type (str): 'BUY' o 'SELL'. Solo SELL genera P/L realizado.
+        """
         self.state['total_trades'] += 1
-        # TODO: Implementar tracking de ganancias/pérdidas
+
+        pnl = float(trade_result.get('profit_loss', 0.0) or 0.0)
+
+        if pnl > 0:
+            self.state['winning_trades'] += 1
+        elif pnl < 0:
+            self.state['losing_trades'] += 1
+
+        self.state['total_profit_loss'] = round(
+            self.state.get('total_profit_loss', 0.0) + pnl, 8
+        )
+        self.state['daily_profit_loss'] = round(
+            self.state.get('daily_profit_loss', 0.0) + pnl, 8
+        )
+
+        if pnl != 0:
+            logger.debug(
+                f"[Stats] Trade #{self.state['total_trades']} | "
+                f"P/L: ${pnl:+.2f} | "
+                f"Total P/L: ${self.state['total_profit_loss']:+.2f} | "
+                f"W/L: {self.state['winning_trades']}/{self.state['losing_trades']}"
+            )
     
     def _get_stats(self) -> Dict:
         """Obtener estadísticas del bot -  Lee directamente de la DB para datos precisos"""
