@@ -427,10 +427,19 @@ async def run_credit_simulation_cycle(cycle_num: int, conn) -> list:
             results.append(result)
             approved = result.get("final_decision", "BLOCKED")
             amount_aed = f"AED {app.requested_amount:,.0f}"
+            cp_passed = result.get('checkpoints_passed', 0)
+            cp_total = result.get('checkpoints_total', 11)
+            blocked_at = result.get('blocked_at', '')
+            if approved == "BLOCKED" and blocked_at == "CP-SHARIA":
+                decision_label = f"BLOCKED(sharia-gate) | CP_passed={cp_passed}/{cp_total}"
+            elif approved == "BLOCKED" and blocked_at:
+                decision_label = f"BLOCKED@{blocked_at} | CP_passed={cp_passed}/{cp_total}"
+            else:
+                decision_label = f"{approved} | CP_passed={cp_passed}/{cp_total}"
             logger.info(
                 f"[CreditSim] Cycle {cycle_num} | {app.application_id} | "
                 f"{app.applicant_type} | {app.sector} | {amount_aed} | "
-                f"{approved} | CP_passed={result.get('checkpoints_passed', 0)}/{result.get('checkpoints_total', 11)}"
+                f"{decision_label}"
             )
 
     await save_cycle_metrics(cycle_num, results, macro, conn)

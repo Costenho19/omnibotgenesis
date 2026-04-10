@@ -172,7 +172,45 @@ class EnvConfig:
             'example': 'your_redis_password'
         },
         
-        # SECURITY
+        # SECURITY — PQC Signing Keys (ADR-078)
+        'OMNIX_SIGNING_SECRET_KEY_B64': {
+            'category': EnvCategory.SECURITY,
+            'required': False,
+            'validator': lambda x: len(x) > 100,
+            'description': 'Dilithium-3 private signing key (base64) — ADR-078. Set via key_gen tool.',
+            'example': 'set via: python -m omnix_core.tools.key_gen'
+        },
+        'OMNIX_SIGNING_PUBLIC_KEY_B64': {
+            'category': EnvCategory.SECURITY,
+            'required': False,
+            'validator': lambda x: len(x) > 100,
+            'description': 'Dilithium-3 public verification key (base64) — ADR-078. Safe to distribute.',
+            'example': 'set via: python -m omnix_core.tools.key_gen'
+        },
+        'OMNIX_KEY_MODE': {
+            'category': EnvCategory.SECURITY,
+            'required': False,
+            'default': 'ephemeral_dev',
+            'validator': lambda x: x in ('ephemeral_dev', 'required'),
+            'description': 'Signing key mode — ephemeral_dev (default) or required (fails if keys missing)',
+            'example': 'required'
+        },
+        'OMNIX_ANTI_REPLAY_MODE': {
+            'category': EnvCategory.SECURITY,
+            'required': False,
+            'default': 'best_effort',
+            'validator': lambda x: x in ('best_effort', 'strict'),
+            'description': 'Anti-replay mode — best_effort (Redis fail → in-memory) or strict (fail-closed)',
+            'example': 'strict'
+        },
+        'OMNIX_VERIFY_RATE_LIMIT': {
+            'category': EnvCategory.SECURITY,
+            'required': False,
+            'default': '60',
+            'validator': lambda x: x.isdigit() and int(x) > 0,
+            'description': 'PKI verify endpoint rate limit (requests/min per IP) — ADR-079',
+            'example': '60'
+        },
         'SESSION_SECRET': {
             'category': EnvCategory.SECURITY,
             'required': False,
