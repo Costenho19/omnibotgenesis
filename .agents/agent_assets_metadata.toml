@@ -132,3 +132,9 @@ id = "YbiMDaVzT4FpNp2oFGsp2"
 uri = "file://docs/OMNIX-Forensic-Technical-Report-2026.md"
 type = "text"
 title = "OMNIX Quantum — Forensic Technical Report 2026"
+
+[[outputs]]
+id = "jkrKQGwkRkgOKOf6woi0o"
+uri = "file://OMNIX_Velos_Supplement_Clause10_1.pdf"
+type = "pdf"
+title = "Supplement to Clause 10.1 — OMNIX + Velos Joint Bundle Agreement"
