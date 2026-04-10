@@ -148,7 +148,7 @@ def build_pdf():
         ["Event Analyzed",    "Terra/LUNA Collapse — May 11, 2022 — $40B+ Destroyed"],
         ["Analysis Window",   "2022-05-08 → 2022-05-11 (72-hour pre-collapse window)"],
         ["Framework",         "OMNIX Decision Governance Infrastructure"],
-        ["Methodology",       "8-Checkpoint Fail-Closed Pipeline + VITT Forensic Alignment"],
+        ["Methodology",       "8-Checkpoint Fail-Closed Pipeline + 3-Phase OMNIX Forensic Reconstruction"],
         ["Generated",         today],
     ]
     meta_tbl = Table(meta_rows, colWidths=[1.9*inch, 4.1*inch])

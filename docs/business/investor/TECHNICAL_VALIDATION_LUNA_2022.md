@@ -5,7 +5,7 @@
 **Document Type**: Technical Validation — Historical Case Study
 **Audience**: Institutional Investors, Due Diligence Teams, Technical Advisors
 **Last Updated**: March 13, 2026
-**Methodology**: 8-Checkpoint Fail-Closed Pipeline + VITT Forensic Alignment
+**Methodology**: 8-Checkpoint Fail-Closed Pipeline + 3-Phase OMNIX Forensic Reconstruction
 
 ---
 

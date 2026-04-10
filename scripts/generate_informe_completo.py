@@ -642,7 +642,7 @@ def build_pdf():
     elements.append(Spacer(1, 10))
     elements.append(Paragraph("Framework Comparison — Probabilistic vs. Forensic Governance", h2))
     comparison_data = [
-        ['Dimension', 'Probabilistic Systems\n(Industry Standard)', 'OMNIX + VITT\n(Forensic Governance)'],
+        ['Dimension', 'Probabilistic Systems\n(Industry Standard)', 'OMNIX\n(Forensic Governance)'],
         ['Signal Validation', 'Checks if data is\nstatistically clean', 'Forces signal to prove\nLogical Authenticity'],
         ['Confidence Model', 'Inherits confidence from\nhistorical performance', 'Detects Manufactured Confidence;\nre-earned each cycle'],
         ['Regime Awareness', 'Static thresholds,\nregime-agnostic', 'HMM continuous estimation;\nthresholds adapt in real time'],

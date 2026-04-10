@@ -633,7 +633,7 @@ def build_pdf(main_chart_buf, decision_panel_buf, receipt, data, t72h_idx, t24h_
         ["Analysis Window", "2022-05-01 → 2022-05-15 (hourly resolution)"],
         ["Data Source",    data.get('data_source_label', 'Verified historical price data')],
         ["Framework",      "OMNIX Decision Governance Infrastructure"],
-        ["Methodology",    "8-Checkpoint Fail-Closed Pipeline + 3-Phase VITT Forensic Alignment"],
+        ["Methodology",    "8-Checkpoint Fail-Closed Pipeline + 3-Phase OMNIX Forensic Reconstruction"],
         ["Classification", "Institutional Research — Forensic Certainty Demonstration"],
         ["Generated",      datetime.now(timezone.utc).strftime('%B %d, %Y at %H:%M UTC')],
     ]
@@ -693,7 +693,7 @@ def build_pdf(main_chart_buf, decision_panel_buf, receipt, data, t72h_idx, t24h_
     story.append(Spacer(1, 0.08*inch))
     story.append(Paragraph(
         "This simulation demonstrates that OMNIX's 8-checkpoint fail-closed governance "
-        "pipeline, combined with the VITT framework's Forensic Invariance methodology, "
+        "pipeline and OMNIX Forensic Reconstruction methodology "
         "would have detected the anomaly and issued a <b>BLOCKED</b> governance decision "
         "at each of the three critical pre-collapse intervals.",
         s_body_j
@@ -948,7 +948,7 @@ def build_pdf(main_chart_buf, decision_panel_buf, receipt, data, t72h_idx, t24h_
     story.append(Spacer(1, 0.1*inch))
 
     comp_data = [
-        ["Dimension", "Probabilistic Systems\n(Industry Standard)", "OMNIX + VITT\n(Forensic Governance)"],
+        ["Dimension", "Probabilistic Systems\n(Industry Standard)", "OMNIX\n(Forensic Governance)"],
         ["Signal Validation",
          "Checks if data is statistically clean",
          "Forces signal to prove Logical Authenticity\nbefore influencing pipeline"],
@@ -1017,8 +1017,8 @@ def build_pdf(main_chart_buf, decision_panel_buf, receipt, data, t72h_idx, t24h_
     story.append(Spacer(1, 0.06*inch))
     story.append(Paragraph(
         "The distinction is fundamental: probabilistic governance measures whether a signal "
-        "is statistically likely. Forensic governance — as embodied in the OMNIX + VITT "
-        "framework alignment — forces the signal to <b>prove its Logical Authenticity</b> "
+        "is statistically likely. Forensic governance — as embodied in the OMNIX "
+        "governance framework — forces the signal to <b>prove its Logical Authenticity</b> "
         "against the live structural state of the system before any execution is permitted.",
         s_body_j
     ))
