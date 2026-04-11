@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Shield, AlertTriangle, CheckCircle, XCircle, Activity, BarChart3,
+  Shield, AlertTriangle, CheckCircle, XCircle, Activity,
   Clock, RefreshCw, Globe, Zap, Lock, Bot,
   Database, Server, TrendingUp, Brain
 } from 'lucide-react'

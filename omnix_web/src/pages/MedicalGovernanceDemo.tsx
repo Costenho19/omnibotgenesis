@@ -107,11 +107,10 @@ function evaluateMedicalCheckpoints(c: ClinicalCase): CheckpointResult[] {
   const cp8Pass = cp8Score >= 60
 
   // CP-9: Receipt Integrity (cryptographic — always passes in simulation)
-  const cp9Score = 97
   const cp9Pass = true
 
   // CP-10: Governance Audit Trail
-  const cp10Score = Math.round((cp1Score + cp4Score + cp7Score) / 3)
+  const cp10Score = Math.round((cp1Score + cp8Score + cp7Score) / 3)
   const cp10Pass = cp10Score >= 55
 
   // CP-11: Exit Gate (composite)
@@ -312,7 +311,6 @@ export default function MedicalGovernanceDemo() {
     })))
   }, [])
 
-  const decisionColor = finalDecision === 'APPROVED' ? 'emerald' : finalDecision === 'BLOCKED' ? 'red' : 'amber'
   const passCount = checkpoints.filter(c => c.status === 'pass').length
   const blockCount = checkpoints.filter(c => c.status === 'block').length
 

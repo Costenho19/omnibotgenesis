@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Shield, AlertTriangle, CheckCircle, XCircle, Activity, BarChart3,
-  Clock, RefreshCw, Globe, Zap, Lock, ArrowLeft,
+  Shield, AlertTriangle, CheckCircle, XCircle, Activity,
+  Clock, RefreshCw, Globe, Zap, Lock,
   Heart, Stethoscope, Brain, Monitor, Cpu, TrendingUp
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
@@ -101,15 +101,6 @@ function DecisionBadge({ decision }: { decision: string }) {
   )
 }
 
-function MetricPill({ label, value, color }: { label: string; value: string | number; color: string }) {
-  return (
-    <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
-      <span className="text-[11px] text-white/40">{label}</span>
-      <span className={`text-xs font-semibold ${color}`}>{value}</span>
-    </div>
-  )
-}
-
 function SignalBar({ label, value, invert = false }: { label: string; value: number; invert?: boolean }) {
   const pct = Math.max(0, Math.min(100, value))
   const displayPct = invert ? 100 - pct : pct
@@ -199,7 +190,6 @@ export default function MedicalDashboard() {
     }
   }, [fetchAll])
 
-  const maxTypeTotal = Math.max(...byType.map(t => t.total), 1)
   const maxDeviceTotal = Math.max(...byDevice.map(d => d.total), 1)
 
   return (

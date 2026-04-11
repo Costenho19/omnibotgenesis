@@ -122,7 +122,6 @@ function evaluateAgentCheckpoints(c: AgentCase): CheckpointResult[] {
   const cp8Pass = cp8Score >= 55
 
   // CP-9: PQC Receipt (always passes in demo)
-  const cp9Score = 97
 
   // CP-10: Audit Trail
   const cp10Score = Math.round((cp1Score + coherence + cp7Score) / 3)
