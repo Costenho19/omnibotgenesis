@@ -198,23 +198,6 @@ def make_pill_para(label, bg, fg=WHITE):
 PIPELINE = [
     {
         "id": "VX-001",
-        "prospect": "Apollo Medica",
-        "sector": "Medical AI / HealthTech",
-        "location": "Dubai / Lisbon",
-        "contact": "Founders — MITdesignX '26",
-        "track": "Track A",
-        "stage": "PROSPECT",
-        "stage_color": BLUE,
-        "stage_bg": BLUE_LIGHT,
-        "omnix_layer": "OMNIX-MED",
-        "velos_role": "Execution enforcement on wearable AI decisions",
-        "est_value": "$20,000 / mo",
-        "tier": "Professional",
-        "next_action": "OMNIX to send introduction message via Eureka / MITdesignX ecosystem",
-        "notes": "AI wearable for MSK rehab (LOM model). Pre-execution governance directly applicable. High regulatory pressure (FDA/MDR/DOH). Strong fit for joint stack.",
-    },
-    {
-        "id": "VX-002",
         "prospect": "Skilligen HDI",
         "sector": "Human Development / Enterprise AI",
         "location": "UAE / International",
@@ -231,7 +214,7 @@ PIPELINE = [
         "notes": "HDI = human formation upstream of OMNIX. Discussed Formation→Admissibility→Execution architecture. IP protected. Potential referral pipeline for enterprise agents.",
     },
     {
-        "id": "VX-003",
+        "id": "VX-002",
         "prospect": "TBD — Eureka GCC Cohort",
         "sector": "FinTech / Multi-sector",
         "location": "Dubai / GCC",
@@ -248,7 +231,7 @@ PIPELINE = [
         "notes": "Eureka GCC semifinal (Harold Nunes) activates network of GCC founders and investors. Joint stack pitch relevant to any autonomous decision system in region.",
     },
     {
-        "id": "VX-004",
+        "id": "VX-003",
         "prospect": "TBD — Velos Existing Client",
         "sector": "Open",
         "location": "Open",
