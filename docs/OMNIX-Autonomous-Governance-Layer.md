@@ -255,6 +255,107 @@ When in doubt, block. Always.
 
 ---
 
+## 8. Implementation Reference — OMNIX-MED (Live)
+
+The Medical AI vertical is fully implemented and running in the OMNIX platform.
+
+### 8.1 Core Modules
+
+| Module | Path | Purpose |
+|--------|------|---------|
+| Signal Adapter | `omnix_core/medical/medical_signal_adapter.py` | Maps clinical parameters to 6 OMNIX governance signals |
+| Simulator | `omnix_core/medical/medical_simulator.py` | 24/7 background simulation, DB persistence |
+| API Blueprint | `omnix_dashboard/blueprints/medical_governance.py` | Flask REST API `/api/medical/*` |
+| Demo Page | `omnix_web/src/pages/MedicalGovernanceDemo.tsx` | Interactive 11-checkpoint demo |
+| Dashboard | `omnix_web/src/pages/MedicalDashboard.tsx` | Live data dashboard |
+
+### 8.2 REST API Endpoints
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/medical/metrics` | Summary KPIs: total, approval rate, avg confidence |
+| GET | `/api/medical/decisions?limit=N` | Recent decisions with all signals |
+| GET | `/api/medical/by-type` | Breakdown by decision type |
+| GET | `/api/medical/by-device` | Breakdown by device type |
+| GET | `/api/medical/by-jurisdiction` | Breakdown by jurisdiction (UAE/EU/USA/UK) |
+| GET | `/api/medical/timeline` | 48h decision trend |
+| GET | `/api/medical/live-feed` | Last 10 decisions for real-time feed |
+| POST | `/api/medical/evaluate` | Manual decision evaluation |
+| GET | `/api/medical/health` | Engine health check |
+
+### 8.3 Database Schema
+
+```sql
+-- Primary decisions table
+medical_decisions (
+  decision_id VARCHAR(60) PRIMARY KEY,
+  device_type VARCHAR(50),           -- Wearable | Clinical_AI | Monitoring_System | Surgical_Robot
+  decision_type VARCHAR(60),         -- rehabilitation_guidance | diagnostic_alert | ...
+  patient_profile VARCHAR(50),       -- rehabilitation | chronic_condition | post_surgery | ...
+  jurisdiction VARCHAR(10),          -- UAE | EU | USA | UK
+  diagnostic_confidence FLOAT,       -- AI model confidence (0-100)
+  patient_risk_score FLOAT,          -- Patient risk stratification (0-100)
+  -- 6 OMNIX governance signals
+  probability_score FLOAT,           -- Clinical confidence probability
+  risk_exposure FLOAT,               -- Patient risk index
+  signal_coherence FLOAT,            -- Multi-signal clinical alignment
+  trend_persistence FLOAT,           -- Patient trajectory stability
+  stress_resilience FLOAT,           -- Comorbidity edge-case resilience
+  logic_consistency FLOAT,           -- Care plan and ethics alignment
+  decision VARCHAR(10),              -- APPROVED | BLOCKED | HOLD
+  decision_score FLOAT,              -- Composite governance score
+  block_reason VARCHAR(300),         -- Checkpoint failure reason(s)
+  receipt_id VARCHAR(120),           -- OMNIX-MED cryptographic receipt
+  created_at TIMESTAMP WITH TIME ZONE
+)
+
+-- Cycle aggregates
+medical_cycle_metrics (
+  cycle_id VARCHAR(60) PRIMARY KEY,
+  cycle_number INTEGER,
+  decisions_evaluated INTEGER,
+  decisions_approved INTEGER,
+  decisions_blocked INTEGER,
+  avg_diagnostic_confidence FLOAT,
+  avg_patient_risk FLOAT,
+  avg_decision_score FLOAT,
+  approval_rate FLOAT,
+  cycle_duration_ms INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE
+)
+```
+
+### 8.4 Signal Adaptation — Medical Domain
+
+The same 6 OMNIX signals (ADR-026 domain-agnostic framework) are adapted to clinical context:
+
+| OMNIX Signal | Trading Meaning | Medical Meaning |
+|---|---|---|
+| `probability_score` | Trade win probability | Diagnostic/clinical confidence |
+| `risk_exposure` | Portfolio risk | Patient risk stratification |
+| `signal_coherence` | Market signal alignment | Multi-signal clinical coherence |
+| `trend_persistence` | Market regime persistence | Patient recovery trajectory |
+| `stress_resilience` | Drawdown resilience | Comorbidity edge-case robustness |
+| `logic_consistency` | Strategy logic alignment | Care plan & ethics alignment |
+
+### 8.5 Simulation Parameters
+
+- **Cycle interval:** 240 seconds (4 minutes)
+- **Batch size:** 4–10 decisions per cycle
+- **Decision types:** rehabilitation_guidance (35%), diagnostic_alert (25%), monitoring_alert (20%), therapeutic_recommendation (12%), surgical_clearance (8%)
+- **Jurisdictions:** UAE (35%), EU (30%), USA (25%), UK (10%)
+- **Patient profiles:** 6 profiles with calibrated risk ranges
+- **Hard blocks:** Ethics flag OR consent not verified → immediate BLOCK (no score override)
+
+### 8.6 Web Routes
+
+| Path | Page |
+|------|------|
+| `/governance-demo-medical` | Interactive 11-checkpoint clinical demo |
+| `/medical` | Live Medical AI Dashboard |
+
+---
+
 *OMNIX QUANTUM LTD — Decision Governance Infrastructure*
 *Harold Nunes | Founder | omnixquantum.net*
 *Eureka GCC Dubai 2026 Semifinalista*

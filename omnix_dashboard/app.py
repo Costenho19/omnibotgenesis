@@ -62,7 +62,7 @@ def create_app():
         governance_sandbox_bp, governance_alerts_bp,
         public_sandbox_bp, public_verify_bp,
     )
-    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp
+    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp, medical_bp
     from omnix_dashboard.blueprints.live_metrics import live_metrics_bp
     from omnix_dashboard.blueprints.receipt_verification import receipt_pki_bp
 
@@ -71,6 +71,7 @@ def create_app():
     app.register_blueprint(credit_bp)
     app.register_blueprint(insurance_bp)
     app.register_blueprint(robotics_bp)
+    app.register_blueprint(medical_bp)
     app.register_blueprint(views_bp)
     app.register_blueprint(core_bp)
     app.register_blueprint(market_bp)
@@ -102,6 +103,19 @@ def create_app():
     except Exception as _tbl_err:
         logger.warning(f"[Credit] Table init skipped: {_tbl_err}")
 
+    # Ensure Medical AI tables exist BEFORE any request arrives
+    try:
+        import psycopg2 as _psycopg2
+        _db_url = os.environ.get("DATABASE_URL")
+        if _db_url:
+            from omnix_core.medical.medical_simulator import _create_medical_decisions_table
+            _med_conn = _psycopg2.connect(_db_url)
+            _create_medical_decisions_table(_med_conn)
+            _med_conn.close()
+            logger.info("✅ [Medical] Tables initialized")
+    except Exception as _med_tbl_err:
+        logger.warning(f"[Medical] Table init skipped: {_med_tbl_err}")
+
     # Start Islamic Credit Governance simulation engine in background
     try:
         from omnix_core.credit.credit_simulator import start_credit_simulation_background
@@ -125,6 +139,14 @@ def create_app():
         logger.info("✅ [Robotics] Robotics Governance engine started (24/7 simulation)")
     except Exception as _rbt_err:
         logger.warning(f"[Robotics] Simulation engine startup skipped: {_rbt_err}")
+
+    # Start Medical AI Governance simulation engine in background
+    try:
+        from omnix_core.medical.medical_simulator import start_background_simulator as _med_start
+        _med_start()
+        logger.info("✅ [Medical] Medical AI Governance engine started (24/7 simulation)")
+    except Exception as _med_err:
+        logger.warning(f"[Medical] Simulation engine startup skipped: {_med_err}")
 
     try:
         from scripts.initialize_avm_baselines import initialize_avm_baselines

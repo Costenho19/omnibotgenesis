@@ -24,6 +24,7 @@ from .receipt_verification import receipt_pki_bp
 from .credit_governance import credit_bp
 from .insurance_governance import insurance_bp
 from .robotics_governance import robotics_bp
+from .medical_governance import medical_bp
 
 __all__ = [
     'views_bp',
@@ -47,4 +48,5 @@ __all__ = [
     'credit_bp',
     'insurance_bp',
     'robotics_bp',
+    'medical_bp',
 ]
