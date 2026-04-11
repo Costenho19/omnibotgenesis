@@ -37,7 +37,7 @@ const REFERRAL_OPTIONS = [
 
 export default function CommercialLanding() {
   const { metrics, isLive, formatNumber, formatNumberFull, animKey } = useLiveMetrics()
-  const { total: liveTotal } = useTotalDecisions()
+  const { total: liveTotal, loaded } = useTotalDecisions()
   const [formData, setFormData] = useState({
     name: '', company: '', email: '', referral_source: '', message: ''
   })

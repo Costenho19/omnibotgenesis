@@ -179,7 +179,6 @@ function DecisionBadge({ decision }: { decision: string }) {
 function FrequencyGauge({ hz }: { hz: number }) {
   const safe   = hz < 0.15
   const warn   = hz >= 0.15 && hz < 0.35
-  const danger = hz >= 0.35
   const color  = safe ? E_GREEN : warn ? '#F59E0B' : '#EF4444'
   const pct    = Math.min(100, (hz / 0.5) * 100)
 
@@ -606,7 +605,7 @@ export default function EnergyDashboard() {
               </span>
               <span className="text-[10px] text-slate-600">{byType.reduce((a, t) => a + t.total, 0).toLocaleString()} total</span>
             </div>
-            <div className="divide-y" style={{ divideColor: `${E_BLUE}08` }}>
+            <div className="divide-y">
               {byType.length === 0
                 ? <div className="px-6 py-8 text-center text-xs text-slate-600">Collecting data…</div>
                 : byType.map((t) => {
@@ -661,7 +660,7 @@ export default function EnergyDashboard() {
               </span>
               <span className="text-[10px] text-slate-600">{byRegion.length} markets active</span>
             </div>
-            <div className="divide-y" style={{ divideColor: `${E_BLUE}08` }}>
+            <div className="divide-y">
               {byRegion.length === 0
                 ? <div className="px-6 py-8 text-center text-xs text-slate-600">Collecting data…</div>
                 : byRegion.map((r) => {
