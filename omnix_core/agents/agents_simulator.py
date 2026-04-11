@@ -466,19 +466,31 @@ class AgentSimulator:
 
 
 _simulator_instance: Optional[AgentSimulator] = None
-_simulator_task: Optional[asyncio.Task] = None
+_simulator_thread = None
 
 
-def start_background_simulator(loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
-    global _simulator_instance, _simulator_task
+def start_background_simulator() -> None:
+    """Start Autonomous Agent simulator in a background thread with its own event loop."""
+    import threading
+    global _simulator_instance, _simulator_thread
+
     if _simulator_instance is not None:
         return
+
     _simulator_instance = AgentSimulator()
-    if loop is None:
+
+    def _thread_target():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-    _simulator_task = loop.create_task(_simulator_instance.run_forever())
-    logger.info("Autonomous Agent background simulator scheduled")
+            loop.run_until_complete(_simulator_instance.run_forever())
+        except Exception as e:
+            logger.error(f"[AgentSim] Background thread error: {e}", exc_info=True)
+        finally:
+            loop.close()
+
+    _simulator_thread = threading.Thread(
+        target=_thread_target, daemon=True, name="AutonomousAgentSimulator"
+    )
+    _simulator_thread.start()
+    logger.info("Autonomous Agent background simulator thread started")

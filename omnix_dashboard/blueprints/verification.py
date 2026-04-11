@@ -336,7 +336,7 @@ def governance_metrics():
                 'total_receipts': total_receipts,
                 'decisions_blocked': vetoed_count,
                 'capital_preserved_pct': capital_preserved_pct,
-                'verticals_demo': 4,
+                'verticals_demo': 7,
                 'system_uptime_days': system_uptime_days,
                 'decisions': decision_counts,
                 'capital_exposure_block_rate': f"{block_rate}%",

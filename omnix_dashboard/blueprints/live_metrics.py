@@ -347,7 +347,7 @@ def get_live_metrics():
                 'uptime_days':      uptime_days,
                 'adr_count':        ADR_COUNT,
                 'checkpoint_count': CHECKPOINT_COUNT,
-                'verticals_live':   4,
+                'verticals_live':   7,
                 'tam_usd':          '137B+',
             },
             'pipeline': {
