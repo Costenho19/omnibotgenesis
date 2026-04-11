@@ -707,9 +707,9 @@ export default function InsuranceGovernanceDemo() {
         </section>
 
         <section className="glass-card p-10 text-center mb-16" style={{ borderColor: 'rgba(59, 130, 246, 0.3)' }}>
-          <h2 className="text-2xl font-bold text-white mb-4">Four Verticals. One Governance Engine.</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Seven Verticals. One Governance Engine.</h2>
           <p className="text-muted max-w-2xl mx-auto mb-6">
-            OMNIX now demonstrates governance across four distinct domains — trading, credit, insurance, and energy.
+            OMNIX governs decisions across seven distinct domains — trading, Islamic credit, insurance, robotics, medical AI, autonomous agents, and more.
             Each uses the same 11-checkpoint fail-closed architecture with domain-specific signals.
             The core engine is validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles.
           </p>

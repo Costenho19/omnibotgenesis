@@ -808,7 +808,7 @@ export default function InvestorDemo() {
           }}>
             {[
               { label: 'Checkpoints per decision', value: '11', color: '#C9A227' },
-              { label: 'Active verticals', value: '4', color: '#a78bfa' },
+              { label: 'Active verticals', value: '7', color: '#a78bfa' },
               { label: 'Signature standard', value: 'NIST PQC', color: '#10B981' },
               { label: 'Raising pre-seed', value: '$500K', color: '#60a5fa' },
             ].map(m => (

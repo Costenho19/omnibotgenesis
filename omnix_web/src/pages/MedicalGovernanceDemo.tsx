@@ -373,7 +373,7 @@ export default function MedicalGovernanceDemo() {
             {[
               { label: 'Evaluation Cycles', value: (liveMetrics.evaluation_cycles ?? 0).toLocaleString(), color: 'text-white' },
               { label: 'PQC Receipts Issued', value: (liveMetrics.pqc_signed_receipts ?? 0).toLocaleString(), color: 'text-emerald-400' },
-              { label: 'Verticals Active', value: liveMetrics.verticals_demo ?? 6, color: 'text-violet-400' },
+              { label: 'Verticals Active', value: liveMetrics.verticals_demo ?? 7, color: 'text-violet-400' },
               { label: 'System Uptime (Days)', value: liveMetrics.system_uptime_days ?? '—', color: 'text-blue-400' },
             ].map((m, i) => (
               <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-center">

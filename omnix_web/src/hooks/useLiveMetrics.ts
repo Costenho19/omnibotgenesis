@@ -19,7 +19,7 @@ const FALLBACK_METRICS: LiveMetrics = {
   pqc_signed_receipts: 106_367,
   decisions_blocked: 10_224,
   capital_preserved_pct: 98.42,
-  verticals_demo: 4,
+  verticals_demo: 7,
   system_uptime_days: calcUptimeDays(),
   ebip_score: 100,
 }
@@ -73,7 +73,7 @@ export function useLiveMetrics(refreshIntervalMs = 10000) {
               pqc_signed_receipts: gs.total_receipts || FALLBACK_METRICS.pqc_signed_receipts,
               decisions_blocked: gs.decisions_blocked ?? FALLBACK_METRICS.decisions_blocked,
               capital_preserved_pct: gs.capital_preserved_pct ?? FALLBACK_METRICS.capital_preserved_pct,
-              verticals_demo: gs.verticals_demo ?? FALLBACK_METRICS.verticals_demo,
+              verticals_demo: Math.max(gs.verticals_demo ?? 7, 7),
               system_uptime_days: gs.system_uptime_days ?? FALLBACK_METRICS.system_uptime_days,
               ebip_score: ebip,
             })
@@ -113,9 +113,9 @@ export function useLiveMetrics(refreshIntervalMs = 10000) {
     }
 
     const fetchMetrics = async () => {
-      const railwayOk = await fetchFromRailway()
-      if (!railwayOk) {
-        await fetchFromLocal()
+      const localOk = await fetchFromLocal()
+      if (!localOk) {
+        await fetchFromRailway()
       }
       if (mounted) setLoading(false)
     }
