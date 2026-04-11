@@ -59,6 +59,22 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/api/medical': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/api/energy': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/api/autonomous': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/api/real-estate': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   }
 })
