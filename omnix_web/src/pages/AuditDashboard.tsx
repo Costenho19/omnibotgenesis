@@ -67,6 +67,7 @@ const DOMAIN_COLORS: Record<string, string> = {
   medical_ai:       '#f472b6',
   autonomous_agent: '#fb923c',
   real_estate:      '#38bdf8',
+  energy_governance: '#00B4D8',
 }
 const DOMAIN_ICONS: Record<string, string> = {
   trading:          '📈',
@@ -76,6 +77,7 @@ const DOMAIN_ICONS: Record<string, string> = {
   medical_ai:       '🏥',
   autonomous_agent: '🧠',
   real_estate:      '🏢',
+  energy_governance: '⚡',
 }
 
 function PulseDot({ color = '#10B981' }: { color?: string }) {
@@ -414,7 +416,7 @@ export default function AuditDashboard() {
             <span>Filter:</span>
           </div>
 
-          {['', 'trading', 'credit', 'insurance', 'robotics', 'medical_ai', 'autonomous_agent', 'real_estate'].map(d => (
+          {['', 'trading', 'credit', 'insurance', 'robotics', 'medical_ai', 'autonomous_agent', 'real_estate', 'energy_governance'].map(d => (
             <button
               key={d || 'all'}
               onClick={() => setDomainFilter(d)}

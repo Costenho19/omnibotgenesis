@@ -1,13 +1,15 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors: digital asset trading, Islamic credit, global insurance claims, robotics pre-execution safety, medical AI, autonomous agents, and real estate property decisions. It employs a consistent 11-checkpoint pipeline (CP-1 to CP-11), issuing a post-quantum cryptographically signed receipt (CRYSTALS-Dilithium3) for every decision.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors: digital asset trading, Islamic credit, global insurance claims, robotics pre-execution safety, medical AI, autonomous agents, real estate property decisions, and energy governance (dispatch, curtailment, PPA, capacity, carbon). It employs a consistent 11-checkpoint pipeline (CP-1 to CP-11), issuing a post-quantum cryptographically signed receipt (CRYSTALS-Dilithium3) for every decision.
 
 Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raising $500K pre-seed at $3M pre-money valuation.
 
 **7/7 Pitch Deck Verticals LIVE (público)**: Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL
 
-**1 Vertical Interno (no anunciado)**: Real Estate Property Governance · ADR-RES-001 — activo en modo prueba interna
+**2 Verticales Internos (no anunciados)**:
+- Real Estate Property Governance · ADR-RES-001 — activo en modo prueba interna
+- Energy Governance · ADR-ENG-001 — activo en modo prueba interna (11-Apr-2026)
 
 ---
 
@@ -44,6 +46,57 @@ Vertical construido internamente para testing y validación. **No anunciado púb
 - `app.py` → blueprint registrado + tablas inicializadas + simulador arrancado
 - `App.tsx` → rutas `/real-estate` y `/governance-demo-real-estate`
 - `ClientDashboard.tsx` + `AuditDashboard.tsx` → `real_estate: '🏢' / #38bdf8` en DOMAIN_LABELS/ICONS/COLORS
+
+---
+
+## ADR-ENG-001 — Energy Governance Vertical (INTERNAL — 11-Apr-2026)
+
+### Estrategia
+Vertical construido internamente para testing y validación. **No anunciado públicamente.** Potencial piloto vía Naimat (contacto con utilities/energy trading). Se libera cuando llegue el cliente correcto.
+
+### Config
+- `domain: energy_governance` · `code: EGV` · `receipt_prefix: OMNIX-EGV` · `color: #00B4D8` (electric blue) · `icon: ⚡` · `badge: ADR-112`
+- Rutas internas: `/energy` (dashboard live SCADA) · `/governance-demo-energy` (demo existente, público)
+- **NO** añadido a `live_metrics.py` (no va en el Investor Command Center público)
+
+### Visual Identity — SCADA Control Room
+- Background: `#030810` (más oscuro que todos los demás dashboards)
+- Accent primario: `#00B4D8` (electric blue/cyan)
+- Approved: `#0AFF9D` (voltage green)
+- Paneles únicos: Grid Frequency Gauge animado (Hz), Fuel Mix stacked bar, CO₂ Avoided counter, Settlement Risk, Capacity Margin indicator
+- Tablas look-and-feel: power grid operator interface
+
+### Backend
+- `omnix_core/energy/energy_signal_adapter.py` — 6 señales:
+  - LMP forecast confidence + freq health → `probability_score` (grid stability)
+  - MW concentration + vol risk + capacity margin → `risk_exposure` (portfolio exposure)
+  - Day-ahead/RT spread + futures convergence + cross-border → `signal_coherence`
+  - Load accuracy + demand stability + seasonality → `trend_persistence`
+  - Renewable buffer + interconnect headroom + storage → `stress_resilience`
+  - Regulatory compliance + carbon intensity → `logic_consistency`
+  - Hard blocks: freq_deviation > 0.5Hz | capacity_margin < 5% | counterparty_default | carbon_cap_breach | regulatory_violation | sanctions
+- `omnix_core/energy/energy_simulator.py` — 24/7 simulator: 180s cycles, 4-10 decisiones/ciclo
+  - Tipos: dispatch_order(35%) curtailment_order(20%) ppa_contract(15%) capacity_trade(15%) carbon_credit(10%) balancing_action(5%)
+  - Fuentes: Natural_Gas Wind_Onshore Wind_Offshore Solar_Utility Nuclear Hydro Battery_Storage LNG Coal
+  - Regiones: PJM UK EU_ENTSO_E ERCOT GCC AEMO
+  - Tablas: `energy_decisions` + `energy_cycle_metrics`
+- `omnix_dashboard/blueprints/energy_governance.py` — Flask API /api/energy/*:
+  - /metrics · /decisions · /by-type · /by-source · /by-region · /timeline · /live-feed · /evaluate · /health
+
+### Frontend (interno)
+- `EnergyDashboard.tsx` — SCADA aesthetic. KPIs: MW Governed, Approved MW, CO₂ Avoided, Decisions/24h, Grid Stability, Capacity Margin, Hard Blocks, Settlement Risk. Paneles SCADA: Grid Frequency Monitor, Fuel Mix donut/bar, Signal Health strip. Tablas: Decision Types, Grid Regions, Energy Source breakdown. Live feed con telemetría (Hz, capacity %, MW)
+
+### Integración infraestructura
+- `decision_receipt.py` → `'energy_governance': 'EGV'`
+- `blueprints/__init__.py` → `energy_bp` exportado
+- `app.py` → blueprint registrado + tablas inicializadas + simulador arrancado
+- `App.tsx` → ruta `/energy`
+- `vite.config.ts` → proxy `/api/energy` ya configurado
+- `ClientDashboard.tsx` + `AuditDashboard.tsx` → `energy_governance: '⚡' / #00B4D8`
+
+### Métricas primer ciclo de prueba (11-Apr-2026)
+- 7 decisiones | 4 APPROVED | 2 BLOCKED | 1 HELD | 4,174 MW gobernados | 5,718 ktCO₂e evitados
+- API /api/energy/health → `status: operational` | `receipt_prefix: OMNIX-EGV`
 
 ---
 

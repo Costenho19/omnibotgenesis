@@ -176,6 +176,7 @@ class DecisionReceiptEngine:
         "medical_ai":        "MED",
         "autonomous_agent":  "AGT",
         "real_estate":       "REP",
+        "energy_governance": "EGV",
     }
 
     @classmethod
