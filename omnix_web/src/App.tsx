@@ -17,6 +17,8 @@ import MedicalGovernanceDemo from './pages/MedicalGovernanceDemo'
 import MedicalDashboard from './pages/MedicalDashboard'
 import AgentsGovernanceDemo from './pages/AgentsGovernanceDemo'
 import AgentsDashboard from './pages/AgentsDashboard'
+import RealEstateGovernanceDemo from './pages/RealEstateGovernanceDemo'
+import RealEstateDashboard from './pages/RealEstateDashboard'
 import InvestorCommandCenter from './pages/InvestorCommandCenter'
 import AuditDashboard from './pages/AuditDashboard'
 import ClientDashboard from './pages/ClientDashboard'
@@ -46,6 +48,8 @@ function App() {
           <Route path="/medical" element={<MedicalDashboard />} />
           <Route path="/governance-demo-agents" element={<AgentsGovernanceDemo />} />
           <Route path="/agents" element={<AgentsDashboard />} />
+          <Route path="/governance-demo-real-estate" element={<RealEstateGovernanceDemo />} />
+          <Route path="/real-estate" element={<RealEstateDashboard />} />
           <Route path="/try" element={<PublicGovernanceSandbox />} />
           <Route path="/verify" element={<PublicDecisionVerify />} />
           <Route path="/verify/:receiptId" element={<PublicDecisionVerify />} />

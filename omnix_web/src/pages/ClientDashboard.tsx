@@ -56,14 +56,15 @@ const DOMAIN_LABELS: Record<string, string> = {
   robotics:          'Robotics & Autonomous Systems',
   medical_ai:        'Medical AI — Clinical',
   autonomous_agent:  'Autonomous Agents',
+  real_estate:       'Real Estate Governance',
 }
 const DOMAIN_ICONS: Record<string, string> = {
   trading: '📈', credit: '🕌', insurance: '🛡️', robotics: '🤖',
-  medical_ai: '🏥', autonomous_agent: '🧠',
+  medical_ai: '🏥', autonomous_agent: '🧠', real_estate: '🏢',
 }
 const DOMAIN_COLORS: Record<string, string> = {
   trading: '#C9A227', credit: '#a78bfa', insurance: '#60a5fa', robotics: '#34d399',
-  medical_ai: '#f472b6', autonomous_agent: '#fb923c',
+  medical_ai: '#f472b6', autonomous_agent: '#fb923c', real_estate: '#38bdf8',
 }
 const FW_COLORS: Record<string, string> = {
   EU_AI_ACT: '#3B82F6', DORA: '#8B5CF6', NIST_AI_RMF: '#10B981',

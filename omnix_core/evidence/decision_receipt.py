@@ -175,6 +175,7 @@ class DecisionReceiptEngine:
         "public_sandbox":    "PUB",
         "medical_ai":        "MED",
         "autonomous_agent":  "AGT",
+        "real_estate":       "REP",
     }
 
     @classmethod

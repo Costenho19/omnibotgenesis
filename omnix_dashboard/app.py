@@ -62,7 +62,7 @@ def create_app():
         governance_sandbox_bp, governance_alerts_bp,
         public_sandbox_bp, public_verify_bp,
     )
-    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp, medical_bp, agents_bp
+    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp, medical_bp, agents_bp, real_estate_bp
     from omnix_dashboard.blueprints.live_metrics import live_metrics_bp
     from omnix_dashboard.blueprints.receipt_verification import receipt_pki_bp
 
@@ -73,6 +73,7 @@ def create_app():
     app.register_blueprint(robotics_bp)
     app.register_blueprint(medical_bp)
     app.register_blueprint(agents_bp)
+    app.register_blueprint(real_estate_bp)
     app.register_blueprint(views_bp)
     app.register_blueprint(core_bp)
     app.register_blueprint(market_bp)
@@ -169,6 +170,27 @@ def create_app():
         logger.info("✅ [Agents] Autonomous Agent Governance engine started (24/7 simulation)")
     except Exception as _agt_err:
         logger.warning(f"[Agents] Simulation engine startup skipped: {_agt_err}")
+
+    # Ensure Real Estate tables exist BEFORE any request arrives
+    try:
+        import psycopg2 as _psycopg2
+        _db_url = os.environ.get("DATABASE_URL")
+        if _db_url:
+            from omnix_core.real_estate.real_estate_simulator import _create_property_decisions_table
+            _res_conn = _psycopg2.connect(_db_url)
+            _create_property_decisions_table(_res_conn)
+            _res_conn.close()
+            logger.info("✅ [RealEstate] Tables initialized")
+    except Exception as _res_tbl_err:
+        logger.warning(f"[RealEstate] Table init skipped: {_res_tbl_err}")
+
+    # Start Real Estate Governance simulation engine in background
+    try:
+        from omnix_core.real_estate.real_estate_simulator import start_background_simulator as _res_start
+        _res_start()
+        logger.info("✅ [RealEstate] Real Estate Governance engine started (24/7 simulation)")
+    except Exception as _res_err:
+        logger.warning(f"[RealEstate] Simulation engine startup skipped: {_res_err}")
 
     try:
         from scripts.initialize_avm_baselines import initialize_avm_baselines

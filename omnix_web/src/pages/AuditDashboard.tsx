@@ -66,6 +66,7 @@ const DOMAIN_COLORS: Record<string, string> = {
   robotics:         '#34d399',
   medical_ai:       '#f472b6',
   autonomous_agent: '#fb923c',
+  real_estate:      '#38bdf8',
 }
 const DOMAIN_ICONS: Record<string, string> = {
   trading:          '📈',
@@ -74,6 +75,7 @@ const DOMAIN_ICONS: Record<string, string> = {
   robotics:         '🤖',
   medical_ai:       '🏥',
   autonomous_agent: '🧠',
+  real_estate:      '🏢',
 }
 
 function PulseDot({ color = '#10B981' }: { color?: string }) {

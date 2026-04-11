@@ -26,6 +26,7 @@ from .insurance_governance import insurance_bp
 from .robotics_governance import robotics_bp
 from .medical_governance import medical_bp
 from .agents_governance import agents_bp
+from .real_estate_governance import real_estate_bp
 
 __all__ = [
     'views_bp',
@@ -51,4 +52,5 @@ __all__ = [
     'robotics_bp',
     'medical_bp',
     'agents_bp',
+    'real_estate_bp',
 ]
