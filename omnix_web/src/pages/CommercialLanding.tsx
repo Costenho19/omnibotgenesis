@@ -90,9 +90,11 @@ export default function CommercialLanding() {
           </div>
           <div className="flex items-center gap-8">
             <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
-            <Link to="/credit" className="nav-link font-semibold" style={{color:'#a78bfa', fontSize:'0.85rem'}}>Islamic Credit</Link>
-            <Link to="/insurance" className="nav-link font-semibold" style={{color:'#60a5fa', fontSize:'0.85rem'}}>Insurance</Link>
-            <Link to="/robotics" className="nav-link font-semibold" style={{color:'#34d399', fontSize:'0.85rem'}}>Robotics</Link>
+            <Link to="/credit" className="nav-link font-semibold" style={{color:'#a78bfa', fontSize:'0.82rem'}}>Islamic Credit</Link>
+            <Link to="/insurance" className="nav-link font-semibold" style={{color:'#60a5fa', fontSize:'0.82rem'}}>Insurance</Link>
+            <Link to="/robotics" className="nav-link font-semibold" style={{color:'#34d399', fontSize:'0.82rem'}}>Robotics</Link>
+            <Link to="/medical" className="nav-link font-semibold" style={{color:'#f472b6', fontSize:'0.82rem'}}>Medical AI</Link>
+            <Link to="/agents" className="nav-link font-semibold" style={{color:'#fb923c', fontSize:'0.82rem'}}>Agents</Link>
             <Link to="/command" className="nav-link font-semibold" style={{color:'#10B981', background:'rgba(16,185,129,0.08)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(16,185,129,0.25)', fontSize:'0.82rem'}}>⚡ Live Data</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
             <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
@@ -107,7 +109,7 @@ export default function CommercialLanding() {
             <span className="gold-gradient">Before They Happen</span>
           </h1>
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
-            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage — with cryptographic proof. Live across 4 domains: digital asset trading, Islamic credit, insurance, and autonomous robotics.
+            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage — with cryptographic proof. Live across 7 domains: digital asset trading, Islamic credit, insurance, robotics, Medical AI, autonomous agents, and more.
           </p>
           <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-8 pl-4 border-l-2 border-[#C9A227]/40">
             "OMNIX doesn't just follow rules. It understands when and why they should apply."
@@ -128,7 +130,7 @@ export default function CommercialLanding() {
                 {liveTotal.toLocaleString()}+
               </span>
               <span style={{fontSize:'0.95rem',color:'#94A3B8',fontWeight:500}}>
-                decisions governed · 4 domains · right now
+                decisions governed · 7 domains · right now
               </span>
               <Activity style={{width:18,height:18,color:'#10B981'}} />
             </Link>

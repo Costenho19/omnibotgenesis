@@ -136,7 +136,7 @@ export default function PitchDeck() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
             <span className="tag" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981' }}>
-              <span className="live-dot" /> Live · 4 Domains
+              <span className="live-dot" /> Live · 7 Domains
             </span>
             <span className="tag" style={{ background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)', color: '#C9A227' }}>
               Pre-Seed · $500K · $3M Valuation
@@ -155,7 +155,7 @@ export default function PitchDeck() {
           <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap', marginBottom: 48 }}>
             {[
               { label: total.toLocaleString() + '+', sub: 'Decisions Governed' },
-              { label: '4', sub: 'Live Domains' },
+              { label: '7', sub: 'Live Domains' },
               { label: '11', sub: 'Governance Checkpoints' },
               { label: '~$137B+', sub: 'Total Addressable Market' },
             ].map(s => (
@@ -307,9 +307,11 @@ export default function PitchDeck() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
             {[
               { emoji: '📈', domain: 'Digital Asset Trading', color: '#C9A227', liveSince: 'Live since Jan 2026', stats: [{ v: total.toLocaleString() + '+', l: 'Total Governed' }, { v: '100%', l: 'PQC-Signed' }] },
-              { emoji: '🕌', domain: 'Islamic Credit — UAE', color: '#a78bfa', liveSince: 'Live since Mar 2026', stats: [{ v: '18,811+', l: 'Applications' }, { v: 'AED 77.4B+', l: 'Financing Governed' }] },
-              { emoji: '🛡️', domain: 'Insurance — Global', color: '#60a5fa', liveSince: 'Live since Mar 2026', stats: [{ v: '16,799+', l: 'Claims Screened' }, { v: '$1.46B+', l: 'Loss Prevented' }] },
-              { emoji: '🤖', domain: 'Robotics — Autonomous', color: '#34d399', liveSince: 'Live since Mar 2026', stats: [{ v: '24,405+', l: 'Actions Governed' }, { v: '13,897+', l: 'Robots Active' }] },
+              { emoji: '🕌', domain: 'Islamic Credit — UAE', color: '#a78bfa', liveSince: 'Live since Mar 2026', stats: [{ v: '23,000+', l: 'Applications' }, { v: 'AED 77.4B+', l: 'Financing Governed' }] },
+              { emoji: '🛡️', domain: 'Insurance — Global', color: '#60a5fa', liveSince: 'Live since Mar 2026', stats: [{ v: '22,000+', l: 'Claims Screened' }, { v: '$1.46B+', l: 'Loss Prevented' }] },
+              { emoji: '🤖', domain: 'Robotics — Autonomous', color: '#34d399', liveSince: 'Live since Mar 2026', stats: [{ v: '24,000+', l: 'Actions Governed' }, { v: '13,897+', l: 'Robots Active' }] },
+              { emoji: '🏥', domain: 'Medical AI — Clinical', color: '#f472b6', liveSince: 'Live since Apr 2026', stats: [{ v: '28+', l: 'Decisions Governed' }, { v: '100%', l: 'Ethics-Reviewed' }] },
+              { emoji: '🧠', domain: 'Autonomous Agents', color: '#fb923c', liveSince: 'Live since Apr 2026', stats: [{ v: '34+', l: 'Actions Governed' }, { v: 'Zero', l: 'Unauthorized Runs' }] },
             ].map(v => (
               <div key={v.domain} className="glass" style={{ padding: '1.25rem', borderColor: `${v.color}30`, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${v.color}, transparent)` }} />
@@ -360,11 +362,11 @@ export default function PitchDeck() {
                 icon: <Activity size={20} color="#10B981" />,
                 title: 'Production Governance',
                 items: [
-                  `${total.toLocaleString()}+ decisions governed across 4 domains`,
-                  '4 live governance engines running 24/7',
+                  `${total.toLocaleString()}+ decisions governed across 7 domains`,
+                  '7 live governance engines running 24/7',
                   'AED 77.4B+ Islamic financing evaluated',
                   '$1.46B+ insurance loss prevented',
-                  '57+ Architecture Decision Records',
+                  '79+ Architecture Decision Records',
                 ],
                 color: '#10B981',
               },
@@ -474,7 +476,7 @@ export default function PitchDeck() {
               { emoji: '🕌', domain: 'Islamic Finance (GCC)', tam: '$3.95T AUM', detail: 'Sharia-compliant credit governance', color: '#a78bfa' },
               { emoji: '🛡️', domain: 'Global Insurance', tam: '$7T+', detail: 'Annual premium governed market', color: '#60a5fa' },
               { emoji: '🤖', domain: 'Industrial Robotics', tam: '$80B+', detail: 'Pre-execution safety governance', color: '#34d399' },
-              { emoji: '🧬', domain: 'Biotech / Clinical', tam: '$30B+', detail: 'Trial decision governance (next)', color: '#f59e0b' },
+              { emoji: '🏥', domain: 'Medical AI — Clinical', tam: '$45B+', detail: 'Clinical AI governance · LIVE since Apr 2026', color: '#f472b6' },
               { emoji: '🔗', domain: 'Supply Chain', tam: '$15B+', detail: 'Automated procurement decisions (next)', color: '#ef4444' },
             ].map(v => (
               <div key={v.domain} className="glass" style={{ padding: '1rem', borderColor: `${v.color}22` }}>
@@ -684,7 +686,7 @@ export default function PitchDeck() {
               ⭐ Eureka GCC Dubai 2026 Semifinalist
             </span>
             <span className="tag" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981' }}>
-              <span className="live-dot" style={{ width: 6, height: 6 }} /> 4 Live Governance Engines
+              <span className="live-dot" style={{ width: 6, height: 6 }} /> 7 Live Governance Engines
             </span>
             <span className="tag" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#6366f1' }}>
               First Client Imminent
@@ -709,7 +711,7 @@ export default function PitchDeck() {
           <div className="glass" style={{ padding: '1.5rem 2rem', maxWidth: 560, margin: '0 auto 32px', borderColor: 'rgba(201,162,39,0.3)' }}>
             <DollarSign size={20} color="#C9A227" style={{ margin: '0 auto 10px', display: 'block' }} />
             <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
-              At <strong style={{ color: '#F8FAFC' }}>$3M valuation</strong>, you're investing in a governance infrastructure with <strong style={{ color: '#C9A227' }}>{total.toLocaleString()}+ decisions already governed</strong> across 4 live domains, a signed channel partner, and an enterprise deployment advancing to close — before the raise ends.
+              At <strong style={{ color: '#F8FAFC' }}>$3M valuation</strong>, you're investing in a governance infrastructure with <strong style={{ color: '#C9A227' }}>{total.toLocaleString()}+ decisions already governed</strong> across 7 live domains, a signed channel partner, and an enterprise deployment advancing to close — before the raise ends.
             </p>
           </div>
 

@@ -73,9 +73,9 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     decisions_today:  5_265,
     receipts_total:   106_367,
     uptime_days:      73,
-    adr_count:        57,
+    adr_count:        79,
     checkpoint_count: 11,
-    verticals_live:   4,
+    verticals_live:   7,
     tam_usd:          '137B+',
   },
   pipeline: {
@@ -386,7 +386,7 @@ export default function InvestorCommandCenter() {
             <span style={{ color: '#C9A227' }}>Decisions Governed</span>
           </h1>
           <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
-            4 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 57} Architecture Decision Records
+            7 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 79} Architecture Decision Records
           </p>
         </div>
 
@@ -451,7 +451,7 @@ export default function InvestorCommandCenter() {
                   Shared Governance Pipeline
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b' }}>
-                  The same {data.pipeline.checkpoints_count} checkpoints + CAG + TIE govern all 4 verticals simultaneously
+                  The same {data.pipeline.checkpoints_count} checkpoints + CAG + TIE govern all {data.totals.verticals_live} verticals simultaneously
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>

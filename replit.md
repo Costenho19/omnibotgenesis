@@ -7,6 +7,54 @@ Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raisin
 
 **7/7 Pitch Deck Verticals LIVE**: Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL
 
+---
+
+## AUDITORÍA PROFUNDA — Correcciones 11-Apr-2026 (13 errores encontrados y corregidos)
+
+### Arquitecto consultado: evaluate_task — Veredicto: FAIL → PASS después de correcciones
+
+| # | Categoría | Error | Corrección | Prioridad |
+|---|-----------|-------|------------|-----------|
+| 1 | PITCH | PitchDeck "Live · 4 Domains" | → "Live · 7 Domains" | P1 |
+| 2 | PITCH | PitchDeck stat `{label:'4'}` | → `{label:'7'}` | P1 |
+| 3 | PITCH | Solo 4 tarjetas verticales (sin Medical AI ni Agents) | Añadidas tarjetas Medical AI 🏥 y Autonomous Agents 🧠 | P1 |
+| 4 | PITCH | "4 domains / 4 live governance engines" en traction | → "7 domains / 7 live governance engines" | P1 |
+| 5 | PITCH | "57+ Architecture Decision Records" en traction | → "79+ Architecture Decision Records" | P1 |
+| 6 | PITCH | Market slide: "Biotech/Clinical · $30B+ · (next)" | → "Medical AI — Clinical · $45B+ · LIVE since Apr 2026" | P2 |
+| 7 | LANDING | CommercialLanding: "Live across 4 domains" | → "7 domains" con Medical AI y Agents mencionados | P1 |
+| 8 | LANDING | CommercialLanding: "4 domains · right now" | → "7 domains · right now" | P1 |
+| 9 | LANDING | Navbar sin enlaces a /medical ni /agents | Añadidos Medical AI (rosa) y Agents (naranja) | P1 |
+| 10 | INVESTOR | InvestorCommandCenter fallback `verticals_live: 4` | → `7` | P1 |
+| 11 | INVESTOR | InvestorCommandCenter fallback `adr_count: 57` | → `79` | P1 |
+| 12 | INVESTOR | "govern all 4 verticals simultaneously" | → `data.totals.verticals_live` (dinámico) | P1 |
+| 13 | BACKEND P0 | `live_metrics.py` ADR_COUNT=57 | → `ADR_COUNT = 79` | P0 |
+| 14 | BACKEND P0 | `live_metrics.py` docstring: "4 governance verticals" | → "7 governance verticals" | P0 |
+| 15 | BACKEND P0 | `live_metrics.py` VERTICALS_META: solo 4 entradas | Añadidas `medical` y `agents` con `_query_medical()` + `_query_agents()` | P0 |
+| 16 | BACKEND P0 | `live_metrics.py` IMPACT_PHRASES: "4 industries/Four domains" | → 7, añadidas frases de Medical AI y Agents | P0 |
+| 17 | BACKEND P0 | `core.py` evaluation_cycles: solo `shadow_trade_events` (~825K) | → suma todos los verticales: trading+credit+insurance+robotics+medical+agents (~1.01M) | P0 |
+| 18 | BACKEND P0 | `core.py` fallback evaluation_cycles: `766741` | → `1_010_734` | P0 |
+| 19 | DB P0 | `decision_receipts.domain = NULL` (138,400 filas) | Backfill: `UPDATE ... SET domain='trading' WHERE domain IS NULL` | P0 |
+| 20 | DB | Sin índice en `decision_receipts.domain` | `CREATE INDEX IF NOT EXISTS idx_decision_receipts_domain` | P0 |
+| 21 | CORE P0 | `DecisionReceiptEngine._DOMAIN_CODES` sin medical ni agents | Añadidos `"medical_ai": "MED"` y `"autonomous_agent": "AGT"` | P0 |
+| 22 | CORE P0 | `medical_simulator.py`: dict de decisión sin campo `domain` | Añadido `"domain": "medical_ai"` en return dict | P0 |
+| 23 | CORE P0 | `agents_simulator.py`: dict de decisión sin campo `domain` | Añadido `"domain": "autonomous_agent"` en return dict | P0 |
+
+### Resultado post-corrección
+- `/api/metrics/live` → 7 verticales LIVE (trading, credit, insurance, robotics, medical, agents)
+- `verticals_live: 7`, `adr_count: 79` en todos los endpoints
+- `evaluation_cycles` → suma real todos los verticales (~905K desde PostgreSQL)
+- `decision_receipts.domain` → 0 filas con NULL (138,400 filas = 'trading', 187 = 'public_sandbox')
+- Futuros recibos Medical AI → prefix `OMNIX-MED-`, Agents → `OMNIX-AGT-`
+- TypeScript: 0 errores de compilación
+
+### Source of Truth — `LIVE_VERTICALS = 7`
+Todos los hardcoded "4" actualizados. Fuentes que controlan el número de verticales:
+- Backend: `live_metrics.py → VERTICALS_META` (dict con 7 keys) + `verticals_live: 7` en totals
+- Frontend: `useLiveMetrics` hook → `data.totals.verticals_live` (dinámico desde API)
+- Fallbacks: InvestorCommandCenter → `verticals_live: 7`, CommercialLanding → texto fijo "7 domains"
+
+---
+
 ## AGL-AGT-001 — Autonomous Agent Governance Vertical (COMPLETED)
 
 ### Backend

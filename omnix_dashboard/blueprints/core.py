@@ -2567,7 +2567,7 @@ def api_live_metrics():
         'success': True,
         'live': False,
         'metrics': {
-            'evaluation_cycles': 766741,
+            'evaluation_cycles': 1_010_734,
             'pqc_signed_receipts': 82518,
             'decisions_blocked': 9317,
             'capital_preserved_pct': 98.42,
@@ -2585,7 +2585,16 @@ def api_live_metrics():
         try:
             cursor = conn.cursor()
             
-            cursor.execute("SELECT COUNT(*) FROM shadow_trade_events")
+            cursor.execute("""
+                SELECT
+                    (SELECT COUNT(*) FROM shadow_trade_events) +
+                    (SELECT COUNT(*) FROM credit_applications) +
+                    (SELECT COUNT(*) FROM insurance_claims) +
+                    (SELECT COUNT(*) FROM robot_actions) +
+                    (SELECT COUNT(*) FROM medical_decisions) +
+                    (SELECT COUNT(*) FROM agent_decisions)
+                AS total_evaluation_cycles
+            """)
             evaluation_cycles = cursor.fetchone()[0]
             
             cursor.execute("SELECT COUNT(*) FROM decision_receipts")

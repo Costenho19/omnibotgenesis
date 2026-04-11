@@ -332,6 +332,7 @@ def _evaluate_decision(decision_data: dict) -> dict:
     return {
         **decision_data,
         **signal_dict,
+        "domain": "autonomous_agent",
         "decision": decision_outcome,
         "decision_score": round(decision_score, 2),
         "block_reason": block_reason,

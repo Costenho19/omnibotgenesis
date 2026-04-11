@@ -168,11 +168,13 @@ class DecisionReceiptEngine:
     _DEFAULT_TTL_MS: int = 30_000
 
     _DOMAIN_CODES: Dict[str, str] = {
-        "trading":        "TRD",
-        "islamic_credit": "CRD",
-        "insurance":      "INS",
-        "robotics":       "RBT",
-        "public_sandbox": "PUB",
+        "trading":           "TRD",
+        "islamic_credit":    "CRD",
+        "insurance":         "INS",
+        "robotics":          "RBT",
+        "public_sandbox":    "PUB",
+        "medical_ai":        "MED",
+        "autonomous_agent":  "AGT",
     }
 
     @classmethod
