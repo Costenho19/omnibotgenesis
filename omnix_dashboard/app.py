@@ -97,7 +97,7 @@ def create_app():
     # Ensure credit tables exist BEFORE any request arrives (Railway fresh DB fix)
     try:
         import psycopg2 as _psycopg2
-        _db_url = os.environ.get("DATABASE_URL")
+        _db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
         if _db_url:
             from omnix_core.credit.credit_simulator import _ensure_tables
             _credit_conn = _psycopg2.connect(_db_url)
@@ -109,7 +109,7 @@ def create_app():
     # Ensure Medical AI tables exist BEFORE any request arrives
     try:
         import psycopg2 as _psycopg2
-        _db_url = os.environ.get("DATABASE_URL")
+        _db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
         if _db_url:
             from omnix_core.medical.medical_simulator import _create_medical_decisions_table
             _med_conn = _psycopg2.connect(_db_url)
@@ -122,7 +122,7 @@ def create_app():
     # Ensure Autonomous Agent tables exist BEFORE any request arrives
     try:
         import psycopg2 as _psycopg2
-        _db_url = os.environ.get("DATABASE_URL")
+        _db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
         if _db_url:
             from omnix_core.agents.agents_simulator import _create_agent_decisions_table
             _agt_conn = _psycopg2.connect(_db_url)
@@ -175,7 +175,7 @@ def create_app():
     # Ensure Real Estate tables exist BEFORE any request arrives
     try:
         import psycopg2 as _psycopg2
-        _db_url = os.environ.get("DATABASE_URL")
+        _db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
         if _db_url:
             from omnix_core.real_estate.real_estate_simulator import _create_property_decisions_table
             _res_conn = _psycopg2.connect(_db_url)
@@ -196,7 +196,7 @@ def create_app():
     # Initialize Energy Governance tables
     try:
         import psycopg2 as _psycopg2
-        _db_url = os.environ.get("DATABASE_URL")
+        _db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
         if _db_url:
             from omnix_core.energy.energy_simulator import _create_energy_tables
             _egy_conn = _psycopg2.connect(_db_url)

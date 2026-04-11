@@ -358,7 +358,7 @@ class RoboticsSimulator:
     def _get_conn(self):
         import psycopg2
         if self._conn is None or self._conn.closed:
-            self._conn = psycopg2.connect(os.environ["DATABASE_URL"])
+            self._conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
         return self._conn
 
     def run_cycle(self) -> dict:
