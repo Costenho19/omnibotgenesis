@@ -138,3 +138,9 @@ id = "jkrKQGwkRkgOKOf6woi0o"
 uri = "file://OMNIX_Velos_Supplement_Clause10_1.pdf"
 type = "pdf"
 title = "Supplement Clause 10.1 — OMNIX + Velos (Versión Final)"
+
+[[outputs]]
+id = "Sol5RkNp5KrLcGoOXy9w0"
+uri = "file://OMNIX_Skilligen_NDA.pdf"
+type = "pdf"
+title = "Mutual NDA & IP Protection Agreement — OMNIX x Skilligen HDI"
