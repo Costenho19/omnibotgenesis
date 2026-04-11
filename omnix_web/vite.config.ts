@@ -67,7 +67,7 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
-      '/api/autonomous': {
+      '/api/agents': {
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
