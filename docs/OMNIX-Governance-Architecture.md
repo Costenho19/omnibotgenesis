@@ -154,7 +154,7 @@ On load:
 
 ## 5. Receipt ID Canonical Format
 
-All 6 domains produce receipts via `DecisionReceiptEngine.build_receipt_id(domain)`:
+All 8 domains produce receipts via `DecisionReceiptEngine.build_receipt_id(domain)`:
 
 | Domain | Code | Format |
 |--------|------|--------|
@@ -162,6 +162,8 @@ All 6 domains produce receipts via `DecisionReceiptEngine.build_receipt_id(domai
 | `islamic_credit` | CRD | `OMNIX-CRD-{12hex}` |
 | `insurance` | INS | `OMNIX-INS-{12hex}` |
 | `robotics` | RBT | `OMNIX-RBT-{12hex}` |
+| `medical_ai` | MED | `OMNIX-MED-{12hex}` |
+| `autonomous_agent` | AGT | `OMNIX-AGT-{12hex}` |
 | `public_sandbox` | PUB | `OMNIX-PUB-{12hex}` |
 | unknown | — | `OMNIX-{12hex}` |
 
@@ -182,6 +184,8 @@ Never hardcode `f"OMNIX-{CODE}-{uuid.uuid4()...}"` directly. Enforced by tests
 | Islamic Credit | `omnix_core/credit/credit_simulator.py` | 300s | 4-10 | `credit_applications` |
 | Insurance | `omnix_core/insurance/insurance_simulator.py` | 300s | 4-10 | `insurance_claims` |
 | Robotics | `omnix_core/robotics/robotics_simulator.py` | 300s | 6-15 | `robot_actions` |
+| Medical AI | `omnix_core/medical/medical_simulator.py` (roadmap) | 300s | 4-10 | `medical_decisions` |
+| Autonomous Agent | `omnix_core/agents/agent_simulator.py` (roadmap) | 300s | 4-10 | `agent_actions` |
 
 **Sharia language rule:** Always "Sharia parameter screening" — never "Sharia compliance".
 

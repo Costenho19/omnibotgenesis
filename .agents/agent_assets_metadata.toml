@@ -144,3 +144,9 @@ id = "Sol5RkNp5KrLcGoOXy9w0"
 uri = "file://OMNIX_Skilligen_NDA.pdf"
 type = "pdf"
 title = "Mutual NDA & IP Protection Agreement — OMNIX x Skilligen HDI"
+
+[[outputs]]
+id = "iNIH0uURYp_IWuBdY1U3_"
+uri = "file://OMNIX_Autonomous_Governance_Layer.pdf"
+type = "pdf"
+title = "OMNIX — Autonomous Governance Layer (MED + AGT)"
