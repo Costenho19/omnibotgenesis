@@ -136,7 +136,7 @@ export default function PitchDeck() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
             <span className="tag" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981' }}>
-              <span className="live-dot" /> Live · 7 Domains
+              <span className="live-dot" /> Live · 8 Domains
             </span>
             <span className="tag" style={{ background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)', color: '#C9A227' }}>
               Pre-Seed · $500K · $3M Valuation
@@ -440,7 +440,7 @@ export default function PitchDeck() {
             {[
               { icon: '🔐', title: 'Post-Quantum Cryptography', desc: 'NIST-standardized CRYSTALS-Dilithium & CRYSTALS-Kyber. Every governance receipt is quantum-resistant and independently verifiable.', badge: 'NIST Standard' },
               { icon: '⚡', title: 'Real-Time Pipeline', desc: 'All 11 checkpoints complete in <50ms. Monte Carlo simulations, regime detection, coherence scoring — before any execution.', badge: '<50ms' },
-              { icon: '🧱', title: '57+ ADRs Published', desc: 'Architecture Decision Records document every design choice, algorithm, and governance rule. Full auditability for regulators.', badge: 'Auditable' },
+              { icon: '🧱', title: '112+ ADRs Published', desc: 'Architecture Decision Records document every design choice, algorithm, and governance rule. Full auditability for regulators.', badge: 'Auditable' },
               { icon: '🌐', title: 'Domain-Agnostic Core', desc: 'Same 11-checkpoint pipeline instantiated for any decision domain. Adding a new vertical requires no changes to the core engine.', badge: 'Extensible' },
               { icon: '📊', title: 'Published Research', desc: 'Peer-validated methodology with DOI. Terra/LUNA forensic reconstruction demonstrates retrospective accuracy with real historical data.', badge: 'DOI Published' },
               { icon: '🔗', title: 'REST API + Webhooks', desc: 'Integrate into any existing decision infrastructure in hours. No need to replace current systems — OMNIX operates as a governance proxy.', badge: 'API-First' },
@@ -686,7 +686,7 @@ export default function PitchDeck() {
               ⭐ Eureka GCC Dubai 2026 Semifinalist
             </span>
             <span className="tag" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981' }}>
-              <span className="live-dot" style={{ width: 6, height: 6 }} /> 7 Live Governance Engines
+              <span className="live-dot" style={{ width: 6, height: 6 }} /> 8 Live Governance Engines
             </span>
             <span className="tag" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#6366f1' }}>
               First Client Imminent
