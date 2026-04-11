@@ -73,10 +73,10 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     decisions_today:  5_265,
     receipts_total:   106_367,
     uptime_days:      73,
-    adr_count:        79,
+    adr_count:        112,
     checkpoint_count: 11,
     verticals_live:   7,
-    tam_usd:          '137B+',
+    tam_usd:          '212B+',
   },
   pipeline: {
     checkpoints_count: 11,
@@ -386,7 +386,7 @@ export default function InvestorCommandCenter() {
             <span style={{ color: '#C9A227' }}>Decisions Governed</span>
           </h1>
           <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
-            7 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 79} Architecture Decision Records
+            7 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 112} Architecture Decision Records
           </p>
         </div>
 

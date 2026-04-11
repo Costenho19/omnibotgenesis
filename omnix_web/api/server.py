@@ -338,9 +338,9 @@ def get_metrics_live():
         # ── ADR count ─────────────────────────────────────────────────────────
         try:
             cur.execute("SELECT COUNT(*) FROM architecture_decisions")
-            adr_count = int(cur.fetchone()[0] or 57)
+            adr_count = int(cur.fetchone()[0] or 112)
         except Exception:
-            adr_count = 57
+            adr_count = 112
 
         cur.close()
         conn.close()
@@ -446,10 +446,10 @@ def get_metrics_live():
                 'decisions_today':  5_265,
                 'receipts_total':   106_367,
                 'uptime_days':      uptime_days,
-                'adr_count':        57,
+                'adr_count':        112,
                 'checkpoint_count': 11,
-                'verticals_live':   4,
-                'tam_usd':          '137B+',
+                'verticals_live':   7,
+                'tam_usd':          '212B+',
             },
             'pipeline': PIPELINE,
             'verticals': {

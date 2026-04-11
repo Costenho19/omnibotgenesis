@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 live_metrics_bp = Blueprint('live_metrics', __name__)
 
-ADR_COUNT = 79
+ADR_COUNT = 112
 CHECKPOINT_COUNT = 11
 TRACK_RECORD_START = datetime(2026, 1, 15, tzinfo=timezone.utc)
 
