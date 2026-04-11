@@ -1,11 +1,49 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors: digital asset trading, Islamic credit, global insurance claims, robotics pre-execution safety, medical AI, and autonomous agents. It employs a consistent 11-checkpoint pipeline (CP-1 to CP-11), issuing a post-quantum cryptographically signed receipt (CRYSTALS-Dilithium3) for every decision.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors: digital asset trading, Islamic credit, global insurance claims, robotics pre-execution safety, medical AI, autonomous agents, and real estate property decisions. It employs a consistent 11-checkpoint pipeline (CP-1 to CP-11), issuing a post-quantum cryptographically signed receipt (CRYSTALS-Dilithium3) for every decision.
 
 Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raising $500K pre-seed at $3M pre-money valuation.
 
-**7/7 Pitch Deck Verticals LIVE**: Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL
+**7/7 Pitch Deck Verticals LIVE (público)**: Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL
+
+**1 Vertical Interno (no anunciado)**: Real Estate Property Governance · ADR-RES-001 — activo en modo prueba interna
+
+---
+
+## ADR-RES-001 — Real Estate Property Governance Vertical (INTERNAL — 11-Apr-2026)
+
+### Estrategia
+Vertical construido internamente para testing y validación. **No anunciado públicamente.** Se libera cuando llegue el cliente correcto.
+
+### Config
+- `domain: real_estate` · `code: REP` · `receipt_prefix: OMNIX-REP` · `color: #38bdf8` · `icon: 🏢`
+- Rutas internas: `/real-estate` (dashboard live) · `/governance-demo-real-estate` (demo 11 checkpoints)
+- **NO** añadido a `live_metrics.py` (no va en el Investor Command Center público)
+
+### Backend
+- `omnix_core/real_estate/real_estate_signal_adapter.py` — 6 señales:
+  - AVM confidence → probability_score · transaction risk → risk_exposure · data alignment → signal_coherence
+  - market trajectory → trend_persistence · stress resilience → stress_resilience · regulatory compliance → logic_consistency
+  - Hard blocks: AML flag | RERA non-compliant | Sharia parameter screening failed | LTV > límite según modo (90% Conv / 85% Murabaha+Ijarah / 80% Musharaka)
+- `omnix_core/real_estate/real_estate_simulator.py` — 24/7 simulator: 300s cycles, 3-8 decisiones/ciclo
+  - Tipos: property_valuation · mortgage_approval · tenant_screening · AML_property · rental_yield
+  - Tipos propiedad: Residential, Commercial, Industrial, Mixed_Use, Land
+  - Jurisdicciones: UAE, UK, GCC, EU, International · Modos financiamiento: Conventional, Murabaha, Ijarah, Musharaka
+  - Tablas: `property_decisions` + `property_cycle_metrics`
+- `omnix_dashboard/blueprints/real_estate_governance.py` — Flask API /api/real-estate/*:
+  - /metrics · /decisions · /by-type · /by-jurisdiction · /by-property-type · /timeline · /live-feed · /evaluate · /health
+
+### Frontend (interno)
+- `RealEstateDashboard.tsx` — 8 KPIs, signal health strip, breakdown por tipo/jurisdicción/propiedad, live feed
+- `RealEstateGovernanceDemo.tsx` — selectores interactivos, sliders (AVM/LTV/AML/trend/liquidity), hard block toggles (AML/RERA/Sharia/UBO), pipeline 11 checkpoints animado, receipt PQC
+
+### Integración infraestructura
+- `decision_receipt.py` → `'real_estate': 'REP'`
+- `blueprints/__init__.py` → `real_estate_bp` exportado
+- `app.py` → blueprint registrado + tablas inicializadas + simulador arrancado
+- `App.tsx` → rutas `/real-estate` y `/governance-demo-real-estate`
+- `ClientDashboard.tsx` + `AuditDashboard.tsx` → `real_estate: '🏢' / #38bdf8` en DOMAIN_LABELS/ICONS/COLORS
 
 ---
 

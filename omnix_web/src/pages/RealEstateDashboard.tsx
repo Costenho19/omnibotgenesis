@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Shield, CheckCircle, XCircle, Clock, Activity,
-  Building2, AlertTriangle, TrendingUp, Globe,
-  Home, Landmark, BarChart3, RefreshCw, ArrowLeft
+  CheckCircle, XCircle, Clock, Activity,
+  AlertTriangle, TrendingUp, Landmark, RefreshCw, ArrowLeft
 } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || ''

@@ -401,7 +401,7 @@ export default function AuditDashboard() {
             <span>Filter:</span>
           </div>
 
-          {['', 'trading', 'credit', 'insurance', 'robotics'].map(d => (
+          {['', 'trading', 'credit', 'insurance', 'robotics', 'medical_ai', 'autonomous_agent', 'real_estate'].map(d => (
             <button
               key={d || 'all'}
               onClick={() => setDomainFilter(d)}
