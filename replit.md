@@ -1,9 +1,50 @@
 # OMNIX — Decision Governance Infrastructure
 
 ## Overview
-OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors such as digital asset trading, Islamic credit, global insurance claims, and robotics pre-execution safety. It employs a consistent 11-checkpoint pipeline (CP-1 to CP-11), issuing a post-quantum cryptographically signed receipt for every decision.
+OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors: digital asset trading, Islamic credit, global insurance claims, robotics pre-execution safety, medical AI, and autonomous agents. It employs a consistent 11-checkpoint pipeline (CP-1 to CP-11), issuing a post-quantum cryptographically signed receipt (CRYSTALS-Dilithium3) for every decision.
 
 Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raising $500K pre-seed at $3M pre-money valuation.
+
+**7/7 Pitch Deck Verticals LIVE**: Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL
+
+## AGL-AGT-001 — Autonomous Agent Governance Vertical (COMPLETED)
+
+### Backend
+- `omnix_core/agents/agents_signal_adapter.py` — Adapts 8 agent parameters to 6 OMNIX signals:
+  - task_complexity → probability_score (viability probability)
+  - scope_blast_radius → risk_exposure (action blast radius)
+  - context+task alignment → signal_coherence
+  - goal_alignment → trend_persistence (goal trajectory stability)
+  - fallback_coverage → stress_resilience (failure mode robustness)
+  - authorization+ethics → logic_consistency (principal hierarchy)
+  - Hard blocks: safety_critical_flag=True → BLOCK | human_approval_required + not approved → BLOCK
+- `omnix_core/agents/agents_simulator.py` — 24/7 simulator: 200s cycles, 3-8 decisions/cycle
+  - Decision types: task_delegation(35%), data_access(20%), external_api_call(18%), resource_allocation(15%), state_modification(12%)
+  - Agent types: Financial_Agent, Enterprise_Agent, Logistics_Agent, Infrastructure_Agent, Research_Agent
+  - Environments: production, staging, development, sandbox (strictness amplifiers)
+  - Reversibility factors: fully_reversible, partially_reversible, irreversible, unknown
+  - Data sensitivity penalties: low, medium, high, pii, phi
+  - Tables: `agent_decisions` + `agent_cycle_metrics`
+- `omnix_dashboard/blueprints/agents_governance.py` — Flask API /api/agents/*:
+  - /metrics, /decisions, /by-type, /by-agent, /by-environment, /timeline, /live-feed, /evaluate, /health
+
+### Frontend
+- `/governance-demo-agents` → `AgentsGovernanceDemo.tsx` — Interactive 11-checkpoint demo
+  - Decision type, agent type, environment, reversibility, data sensitivity selectors
+  - Sliders: task complexity, scope blast radius, context completeness, goal alignment
+  - Hard block flags: safety_critical_flag, human_approval_required, human_approved, cross_boundary
+  - Animated pipeline evaluation with per-checkpoint reasoning
+- `/agents` → `AgentsDashboard.tsx` — Live dashboard
+  - 7 KPI cards (total, approved, blocked, approval rate, avg complexity, active agents, safety blocks)
+  - Average signal health strip (6 signals)
+  - Breakdown: by decision type, by agent type, by environment
+  - Live decision feed (30 decisions, 10s refresh)
+  - 3 feature callout cards (PQC receipts, hard safety blocks, principal hierarchy)
+
+### Registration
+- `blueprints/__init__.py` — agents_bp imported and exported
+- `app.py` — blueprint registered, tables initialized eagerly on startup, simulator started
+- `App.tsx` — routes /governance-demo-agents + /agents registered
 
 ## ADR-074 — Enterprise Governance Baseline (COMPLETED)
 - **AVM PostgreSQL persistence**: `avm_calibration_snapshots` + `avm_baseline_change_log` tables
