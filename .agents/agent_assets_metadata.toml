@@ -150,3 +150,9 @@ id = "iNIH0uURYp_IWuBdY1U3_"
 uri = "file://OMNIX_Autonomous_Governance_Layer.pdf"
 type = "pdf"
 title = "OMNIX — Autonomous Governance Layer (MED + AGT)"
+
+[[outputs]]
+id = "8OLAfz-b6h9crDXKSinEj"
+uri = "file://OMNIX_Velos_Pipeline_Log_v1.pdf"
+type = "pdf"
+title = "OMNIX x Velos — Shared Pipeline Log v1.0 (Cláusula 4.4)"
