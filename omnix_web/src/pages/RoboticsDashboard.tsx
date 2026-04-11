@@ -169,7 +169,7 @@ export default function RoboticsDashboard() {
   const [byIndustry, setByIndustry] = useState<ByIndustry[]>([])
   const [byRobot, setByRobot] = useState<ByRobot[]>([])
   const [fleet, setFleet] = useState<FleetRobot[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [retrying, setRetrying] = useState(false)

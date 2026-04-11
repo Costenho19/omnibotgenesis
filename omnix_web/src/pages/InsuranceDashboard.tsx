@@ -129,7 +129,7 @@ export default function InsuranceDashboard() {
   const [claims, setClaims] = useState<Claim[]>([])
   const [byType, setByType] = useState<ByType[]>([])
   const [byRegion, setByRegion] = useState<ByRegion[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [retrying, setRetrying] = useState(false)
