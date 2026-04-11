@@ -198,23 +198,6 @@ def make_pill_para(label, bg, fg=WHITE):
 PIPELINE = [
     {
         "id": "VX-001",
-        "prospect": "Skilligen HDI",
-        "sector": "Human Development / Enterprise AI",
-        "location": "UAE / International",
-        "contact": "Amanulla Khan — Co-founder",
-        "track": "Track B",
-        "stage": "NDA SENT",
-        "stage_color": AMBER,
-        "stage_bg": AMBER_LIGHT,
-        "omnix_layer": "OMNIX-AGT",
-        "velos_role": "Modular — Velos engages direct if client requires execution layer",
-        "est_value": "$4,500 / mo (Velos direct)",
-        "tier": "Standard",
-        "next_action": "Awaiting NDA signature. No architecture co-creation until signed.",
-        "notes": "HDI = human formation upstream of OMNIX. Discussed Formation→Admissibility→Execution architecture. IP protected. Potential referral pipeline for enterprise agents.",
-    },
-    {
-        "id": "VX-002",
         "prospect": "TBD — Eureka GCC Cohort",
         "sector": "FinTech / Multi-sector",
         "location": "Dubai / GCC",
@@ -231,7 +214,7 @@ PIPELINE = [
         "notes": "Eureka GCC semifinal (Harold Nunes) activates network of GCC founders and investors. Joint stack pitch relevant to any autonomous decision system in region.",
     },
     {
-        "id": "VX-003",
+        "id": "VX-002",
         "prospect": "TBD — Velos Existing Client",
         "sector": "Open",
         "location": "Open",
