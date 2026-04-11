@@ -218,6 +218,8 @@ function DecisionRow({
   )
 }
 
+const AUDIT_REFRESH_MS = 60_000
+
 export default function AuditDashboard() {
   const [data, setData] = useState<AuditResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -226,9 +228,10 @@ export default function AuditDashboard() {
   const [domainFilter, setDomainFilter] = useState('')
   const [decisionFilter, setDecisionFilter] = useState('')
   const [isDemo, setIsDemo] = useState(true)
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     setError(null)
     try {
       const params = new URLSearchParams()
@@ -244,15 +247,20 @@ export default function AuditDashboard() {
       const json: AuditResponse = await res.json()
       if (!json.success) throw new Error('API returned error')
       setData(json)
+      setLastRefresh(new Date())
     } catch (e: unknown) {
-      setError('Unable to load audit data.')
+      if (!silent) setError('Unable to load audit data.')
       console.error(e)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [domainFilter, decisionFilter, isDemo])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(() => fetchData(true), AUDIT_REFRESH_MS)
+    return () => clearInterval(interval)
+  }, [fetchData])
 
   const selectedItem = data?.items.find(i => i.receipt_id === selectedId) || null
   const filtered = data?.items.filter(item => {
@@ -298,8 +306,13 @@ export default function AuditDashboard() {
               <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700 }}>DEMO DATA</span>
             </div>
           )}
+          {lastRefresh && (
+            <span style={{ fontSize: 10, color: '#334155' }}>
+              Updated {lastRefresh.toLocaleTimeString()} · auto 60s
+            </span>
+          )}
           <button
-            onClick={fetchData}
+            onClick={() => fetchData(false)}
             style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}
           >
             <RefreshCw size={12} />
