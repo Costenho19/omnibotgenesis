@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
 function useTotalDecisions() {
-  const [total, setTotal] = useState<number>(113_349)
+  const [total, setTotal] = useState<number>(0)
   const [loaded, setLoaded] = useState(false)
   const ref = useRef(true)
   useEffect(() => {
@@ -127,7 +127,7 @@ export default function CommercialLanding() {
             }}>
               <span style={{display:'inline-block',width:9,height:9,borderRadius:'50%',background:'#10B981',boxShadow:'0 0 8px #10B981',animation:'livePulse 2s ease-in-out infinite'}} />
               <span style={{fontSize:'1.45rem',fontWeight:900,color:'#C9A227',letterSpacing:'-0.01em'}}>
-                {liveTotal.toLocaleString()}+
+                {loaded && liveTotal > 0 ? `${liveTotal.toLocaleString()}+` : '—'}
               </span>
               <span style={{fontSize:'0.95rem',color:'#94A3B8',fontWeight:500}}>
                 decisions governed · 7 domains · right now
@@ -252,15 +252,15 @@ export default function CommercialLanding() {
 
             <div key={animKey} className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center mb-6">
               <div style={liveStatStyle(animKey)}>
-                <div className="text-3xl font-bold gold-text">{formatNumberFull(metrics.evaluation_cycles)}</div>
+                <div className="text-3xl font-bold gold-text">{isLive && metrics.evaluation_cycles > 0 ? formatNumberFull(metrics.evaluation_cycles) : '—'}</div>
                 <div className="text-sm text-muted mt-1">Evaluation Cycles</div>
               </div>
               <div style={{ ...liveStatStyle(animKey), animationDelay: '0.08s' }}>
-                <div className="text-3xl font-bold text-emerald-400">{formatNumber(metrics.pqc_signed_receipts)}</div>
+                <div className="text-3xl font-bold text-emerald-400">{isLive && metrics.pqc_signed_receipts > 0 ? formatNumber(metrics.pqc_signed_receipts) : '—'}</div>
                 <div className="text-sm text-muted mt-1">PQC-Signed Receipts</div>
               </div>
               <div style={{ ...liveStatStyle(animKey), animationDelay: '0.16s' }}>
-                <div className="text-3xl font-bold text-white">{metrics.capital_preserved_pct}%</div>
+                <div className="text-3xl font-bold text-white">{isLive && metrics.capital_preserved_pct > 0 ? `${metrics.capital_preserved_pct}%` : '—'}</div>
                 <div className="text-sm text-muted mt-1">Capital Preserved</div>
               </div>
               <div style={{ ...liveStatStyle(animKey), animationDelay: '0.24s' }}>
@@ -269,8 +269,8 @@ export default function CommercialLanding() {
               </div>
               <div style={{ ...liveStatStyle(animKey), animationDelay: '0.32s' }} className="md:col-span-2">
                 <div className="flex items-center justify-center gap-2">
-                  <div className="text-3xl font-bold text-violet-400">{metrics.ebip_score}</div>
-                  <div className="text-lg font-bold text-muted/60">/ 100</div>
+                  <div className="text-3xl font-bold text-violet-400">{isLive && metrics.ebip_score > 0 ? metrics.ebip_score : '—'}</div>
+                  {isLive && metrics.ebip_score > 0 && <div className="text-lg font-bold text-muted/60">/ 100</div>}
                 </div>
                 <div className="text-sm text-muted mt-1">Execution Integrity Score</div>
                 <div className="text-xs text-muted/40 mt-0.5">EBIP · ADR-045</div>

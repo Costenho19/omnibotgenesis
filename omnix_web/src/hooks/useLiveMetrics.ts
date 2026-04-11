@@ -15,13 +15,13 @@ const calcUptimeDays = () =>
   Math.floor((Date.now() - TRACK_RECORD_START.getTime()) / 86400000) + 1
 
 const FALLBACK_METRICS: LiveMetrics = {
-  evaluation_cycles: 791_103,
-  pqc_signed_receipts: 106_367,
-  decisions_blocked: 10_224,
-  capital_preserved_pct: 98.42,
+  evaluation_cycles: 0,
+  pqc_signed_receipts: 0,
+  decisions_blocked: 0,
+  capital_preserved_pct: 0,
   verticals_demo: 7,
   system_uptime_days: calcUptimeDays(),
-  ebip_score: 100,
+  ebip_score: 0,
 }
 
 const RAILWAY_PUBLIC_API = 'https://omnibotgenesis-production.up.railway.app'

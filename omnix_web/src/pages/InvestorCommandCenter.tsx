@@ -62,17 +62,19 @@ const LAYER_COLORS: Record<string, string> = {
   output:     '#C9A227',
 }
 
+const _uptimeDays = Math.max(0, Math.floor((Date.now() - new Date('2026-01-15').getTime()) / 86400000))
+
 const FALLBACK_DATA: LiveMetricsResponse = {
   success: true,
   generated_at: new Date().toISOString(),
   totals: {
-    decisions_total:  113_349,
-    approved_total:   3_483,
-    blocked_total:    13_433,
-    hold_total:       96_433,
-    decisions_today:  5_265,
-    receipts_total:   106_367,
-    uptime_days:      73,
+    decisions_total:  0,
+    approved_total:   0,
+    blocked_total:    0,
+    hold_total:       0,
+    decisions_today:  0,
+    receipts_total:   0,
+    uptime_days:      _uptimeDays,
     adr_count:        112,
     checkpoint_count: 11,
     verticals_live:   7,
@@ -104,36 +106,35 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     trading: {
       label: 'Digital Asset Trading', market_size: '$5B TAM', live_since: '2026-01-15',
       cycle_sec: 90, color: '#C9A227', icon: '📈',
-      decisions: 106_367, approved: 42, blocked: 10_224, hold: 96_101,
-      decisions_today: 2_471, latest_receipt_id: 'OMNIX-071E49E51817', status: 'LIVE',
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
     credit: {
       label: 'Islamic Credit (UAE/GCC)', market_size: '$2T AUM', live_since: '2026-03-27',
       cycle_sec: 300, color: '#a78bfa', icon: '🕌',
-      decisions: 6_035, approved: 2_826, blocked: 3_209, hold: 0,
-      decisions_today: 1_847, latest_receipt_id: 'ICF-1774828466-04CB10CD', status: 'LIVE',
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
     insurance: {
       label: 'Global Insurance Claims', market_size: '$7T+ Premiums', live_since: '2026-03-29',
       cycle_sec: 240, color: '#60a5fa', icon: '🛡️',
-      decisions: 353, approved: 206, blocked: 0, hold: 147,
-      decisions_today: 353, latest_receipt_id: 'INS-3282F16E0137', status: 'LIVE',
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
     robotics: {
       label: 'Robotics & Autonomous Systems', market_size: '$80B+ Market', live_since: '2026-03-29',
       cycle_sec: 180, color: '#34d399', icon: '🤖',
-      decisions: 617, approved: 428, blocked: 0, hold: 189,
-      decisions_today: 617, active_robots: 448, latest_receipt_id: 'RBT-0756F8B1F47A', status: 'LIVE',
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
   },
   impact_phrases: [
-    'OMNIX is governing decisions across 4 industries simultaneously, right now, in real time.',
-    'One governance engine. Four domains. Every decision cryptographically signed.',
-    'This is not a demo. These numbers are live from the production database.',
+    'OMNIX is governing decisions across 7 industries simultaneously, right now, in real time.',
+    'One governance engine. Seven domains. Every decision cryptographically signed.',
+    'The same 11-checkpoint pipeline governing trading, credit, insurance, robotics, medical AI, and more.',
     'Every 3 minutes, a robot is evaluated before it\'s permitted to act.',
-    '106,000+ governance receipts issued. Each independently verifiable.',
-    'The same 11-checkpoint pipeline governing trading, credit, insurance, and robotics.',
-    'We didn\'t build a product. We built infrastructure. The demo is watching it run.',
+    'Every governance decision generates a post-quantum cryptographic receipt — independently verifiable.',
+    'We didn\'t build a product. We built infrastructure. The live data proves it.',
   ],
 }
 

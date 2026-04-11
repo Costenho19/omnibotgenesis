@@ -2563,18 +2563,20 @@ def api_live_metrics():
     No API key required - returns only aggregate counts safe for public display.
     Used by omnixquantum.net and demo pages to show live production data.
     """
+    _track_start = datetime(2026, 1, 15)
+    _uptime_fallback = max(0, (datetime.now() - _track_start).days)
     fallback = {
         'success': True,
         'live': False,
         'metrics': {
-            'evaluation_cycles': 1_010_734,
-            'pqc_signed_receipts': 82518,
-            'decisions_blocked': 9317,
-            'capital_preserved_pct': 98.42,
+            'evaluation_cycles': None,
+            'pqc_signed_receipts': None,
+            'decisions_blocked': None,
+            'capital_preserved_pct': None,
             'verticals_demo': 7,
-            'system_uptime_days': 112,
+            'system_uptime_days': _uptime_fallback,
         },
-        'source': 'fallback',
+        'source': 'offline',
         'last_updated': datetime.now().isoformat()
     }
     

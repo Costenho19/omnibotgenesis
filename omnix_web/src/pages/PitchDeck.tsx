@@ -7,7 +7,7 @@ import {
 import { API_BASE } from '../lib/apiBase'
 
 function useLiveTotal() {
-  const [total, setTotal] = useState(113_349)
+  const [total, setTotal] = useState(0)
   const ref = useRef(true)
   useEffect(() => {
     const load = async () => {
