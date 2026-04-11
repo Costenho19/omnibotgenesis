@@ -10,7 +10,8 @@
 
 | Archivo | Descripción | Estado |
 |---------|-------------|--------|
-| `OMNIX_Velos_Supplement_Clause10_1.pdf` | Suplemento a cláusula 10.1 — acuerdo comercial | EJECUTADO ✓ |
+| `OMNIX_Velos_Supplement_Ejecutado_11042026.pdf` | Suplemento ejecutado — firmado Harold + Naimat 11/04/2026 | EJECUTADO ✓ |
+| `OMNIX_Velos_Supplement_Clause10_1.pdf` | Versión borrador del suplemento | Archivado |
 | `OMNIX_Velos_Pipeline_Log_v1.pdf` | Pipeline log conjunto — Cláusula 4.4 | v1.0 |
 | `generate_velos_supplement_pdf.py` | Script generador del suplemento | Archivado |
 | `generate_velos_pipeline_log.py` | Script generador del pipeline log | Activo |
