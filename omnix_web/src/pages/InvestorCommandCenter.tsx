@@ -129,12 +129,13 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     },
   },
   impact_phrases: [
-    'OMNIX is governing decisions across 7 industries simultaneously, right now, in real time.',
-    'One governance engine. Seven domains. Every decision cryptographically signed.',
-    'The same 11-checkpoint pipeline governing trading, credit, insurance, robotics, medical AI, and more.',
-    'Every 3 minutes, a robot is evaluated before it\'s permitted to act.',
+    'OMNIX is governing decisions across 8 industries simultaneously, right now, in real time.',
+    'One governance engine. Eight domains. Every decision cryptographically signed.',
+    'The same 11-checkpoint pipeline governing trading, credit, insurance, robotics, medical AI, autonomous agents, and more.',
+    'Every 3 minutes, a robot or medical AI is evaluated before it\'s permitted to act.',
     'Every governance decision generates a post-quantum cryptographic receipt — independently verifiable.',
     'We didn\'t build a product. We built infrastructure. The live data proves it.',
+    '112 Architecture Decision Records. 11 governance checkpoints. Zero compromise.',
   ],
 }
 
@@ -383,11 +384,11 @@ export default function InvestorCommandCenter() {
             </span>
           </div>
           <h1 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.8rem)', fontWeight: 900, color: '#F8FAFC', margin: '0 0 0.75rem', lineHeight: 1.1 }}>
-            <AnimatedNumber value={t?.decisions_total ?? 110_400} />{' '}
+            <AnimatedNumber value={t?.decisions_total ?? 0} />{' '}
             <span style={{ color: '#C9A227' }}>Decisions Governed</span>
           </h1>
           <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
-            7 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 112} Architecture Decision Records
+            8 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 112} Architecture Decision Records
           </p>
         </div>
 

@@ -121,8 +121,8 @@ const TOOLS = [
     color: '#6366f1',
     title: 'Command Center',
     subtitle: '1,000s of decisions. Live.',
-    desc: 'Real-time view of every governance decision across all 7 verticals — updated every 10 seconds, no caching, no simulation.',
-    tag: 'Live · 7 Verticals',
+    desc: 'Real-time view of every governance decision across all 8 verticals — updated every 10 seconds, no caching, no simulation.',
+    tag: 'Live · 8 Verticals',
     link: '/command',
     linkLabel: 'Open Command Center',
   },
@@ -808,7 +808,7 @@ export default function InvestorDemo() {
           }}>
             {[
               { label: 'Checkpoints per decision', value: '11', color: '#C9A227' },
-              { label: 'Active verticals', value: '7', color: '#a78bfa' },
+              { label: 'Active verticals', value: '8', color: '#a78bfa' },
               { label: 'Signature standard', value: 'NIST PQC', color: '#10B981' },
               { label: 'Raising pre-seed', value: '$500K', color: '#60a5fa' },
             ].map(m => (

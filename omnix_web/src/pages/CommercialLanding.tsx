@@ -109,7 +109,7 @@ export default function CommercialLanding() {
             <span className="gold-gradient">Before They Happen</span>
           </h1>
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
-            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage — with cryptographic proof. Live across 7 domains: digital asset trading, Islamic credit, insurance, robotics, Medical AI, autonomous agents, and more.
+            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage — with cryptographic proof. Live across 8 domains: digital asset trading, Islamic credit, insurance, robotics, Medical AI, autonomous agents, and more.
           </p>
           <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-8 pl-4 border-l-2 border-[#C9A227]/40">
             "OMNIX doesn't just follow rules. It understands when and why they should apply."
@@ -130,7 +130,7 @@ export default function CommercialLanding() {
                 {loaded && liveTotal > 0 ? `${liveTotal.toLocaleString()}+` : '—'}
               </span>
               <span style={{fontSize:'0.95rem',color:'#94A3B8',fontWeight:500}}>
-                decisions governed · 7 domains · right now
+                decisions governed · 8 domains · right now
               </span>
               <Activity style={{width:18,height:18,color:'#10B981'}} />
             </Link>
@@ -294,8 +294,8 @@ export default function CommercialLanding() {
 
         <section className="mb-24">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-white mb-3">Four Verticals. Running Now.</h2>
-            <p className="text-muted max-w-2xl mx-auto">Same governance pipeline. Four industries. All four operating 24/7.</p>
+            <h2 className="text-3xl font-bold text-white mb-3">Six Verticals. Running Now.</h2>
+            <p className="text-muted max-w-2xl mx-auto">Same 11-checkpoint governance pipeline. Six live domains. All operating 24/7.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="glass-card p-8 border border-emerald-400/20">
@@ -365,6 +365,42 @@ export default function CommercialLanding() {
                 <div><div className="text-xl font-bold text-emerald-400">5 robot types</div><div className="text-xs text-muted">Arm · AMR · Cobot · Drone · AGV</div></div>
               </div>
               <Link to="/robotics" className="text-emerald-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="glass-card p-8 border border-pink-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-pink-400 bg-pink-400/10 border border-pink-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#f472b6',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Medical AI Governance</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Pre-authorization governance for medical AI decisions. Bias detection gate + 11 checkpoints screening diagnostics, treatment recommendations, drug dosing, and imaging interpretations 24/7.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-pink-400">4 AI types</div><div className="text-xs text-muted">Diagnostics · Treatment · Drug · Imaging</div></div>
+                <div><div className="text-xl font-bold text-pink-400">240s cycles</div><div className="text-xs text-muted">Continuous evaluation</div></div>
+              </div>
+              <Link to="/medical" className="text-pink-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="glass-card p-8 border border-orange-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-orange-400 bg-orange-400/10 border border-orange-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#fb923c',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Autonomous Agent Governance</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Pre-execution governance for AI agent actions. Intent validation gate + 11 checkpoints evaluating every agent decision before it executes — across trading, content, support, and research agents.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-orange-400">4 agent types</div><div className="text-xs text-muted">Trading · Content · Support · Research</div></div>
+                <div><div className="text-xl font-bold text-orange-400">200s cycles</div><div className="text-xs text-muted">Real-time evaluation</div></div>
+              </div>
+              <Link to="/agents" className="text-orange-400 text-sm hover:text-white transition-colors flex items-center gap-1">
                 View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
