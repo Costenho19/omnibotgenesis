@@ -135,8 +135,6 @@ const FINANCING_LABELS: Record<string, string> = {
 function ScoreBar({ value, color, inverted = false }: { value: number; color: string; inverted?: boolean }) {
   const display = inverted ? 100 - value : value
   const pct = Math.max(0, Math.min(100, display))
-  const green = pct >= 65
-  const yellow = pct >= 45 && pct < 65
   const barColor = inverted
     ? value > 70 ? '#f87171' : value > 45 ? '#fbbf24' : '#34d399'
     : color
@@ -162,7 +160,7 @@ function ScoreBar({ value, color, inverted = false }: { value: number; color: st
 }
 
 function KpiCard({
-  label, value, sub, icon, color, trend
+  label, value, sub, icon, color
 }: {
   label: string; value: string | number; sub?: string;
   icon: React.ReactNode; color: string; trend?: 'up' | 'down' | 'neutral'

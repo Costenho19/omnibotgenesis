@@ -96,7 +96,6 @@ function evaluatePropertyCheckpoints(c: PropertyCase): CheckpointResult[] {
   const cp2Pass = cp2Score >= cp2Threshold
 
   // ── CP-3: Transaction Risk / LTV Exposure ─────────────────────────────
-  const ltvMax = finData.ltvMax / 100
   const ltvHardBlock = c.ltvRatio > finData.ltvMax
   const rawRisk = (ltv * 0.40 + dev * 0.30 + aml * 0.20 + (c.amlFlag ? 0.10 : 0)) * segData.amlMod * propData.riskMod
   const cp3Score = Math.round((1 - Math.min(rawRisk, 1)) * 100)
@@ -520,7 +519,7 @@ export default function RealEstateGovernanceDemo() {
                   disabled={running}
                   onClick={() => update({ decisionType: dt.value })}
                   style={{
-                    padding: '9px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
                     background: c.decisionType === dt.value ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)',
                     color: c.decisionType === dt.value ? '#38bdf8' : '#94a3b8',
                     textAlign: 'left', fontSize: 12, fontWeight: c.decisionType === dt.value ? 600 : 400,
@@ -546,7 +545,7 @@ export default function RealEstateGovernanceDemo() {
                   disabled={running}
                   onClick={() => update({ propertyType: pt.value })}
                   style={{
-                    padding: '7px 10px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                    padding: '7px 10px', borderRadius: 7, cursor: 'pointer',
                     background: c.propertyType === pt.value ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.04)',
                     color: c.propertyType === pt.value ? '#38bdf8' : '#64748b',
                     fontSize: 11, fontWeight: c.propertyType === pt.value ? 600 : 400,
@@ -571,7 +570,7 @@ export default function RealEstateGovernanceDemo() {
                   disabled={running}
                   onClick={() => update({ marketSegment: seg.value })}
                   style={{
-                    padding: '7px 10px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                    padding: '7px 10px', borderRadius: 7, cursor: 'pointer',
                     background: c.marketSegment === seg.value ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.04)',
                     color: c.marketSegment === seg.value ? '#a78bfa' : '#64748b',
                     fontSize: 11, fontWeight: c.marketSegment === seg.value ? 600 : 400,
@@ -596,7 +595,7 @@ export default function RealEstateGovernanceDemo() {
                   disabled={running}
                   onClick={() => update({ jurisdiction: jx.value })}
                   style={{
-                    padding: '7px 10px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                    padding: '7px 10px', borderRadius: 7, cursor: 'pointer',
                     background: c.jurisdiction === jx.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)',
                     color: c.jurisdiction === jx.value ? '#fbbf24' : '#64748b',
                     fontSize: 11, textAlign: 'left', fontWeight: c.jurisdiction === jx.value ? 600 : 400,
@@ -622,7 +621,7 @@ export default function RealEstateGovernanceDemo() {
                     disabled={running}
                     onClick={() => update({ financingMode: fm.value })}
                     style={{
-                      padding: '7px 10px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                      padding: '7px 10px', borderRadius: 7, cursor: 'pointer',
                       background: c.financingMode === fm.value ? 'rgba(192,132,252,0.12)' : 'rgba(255,255,255,0.03)',
                       color: c.financingMode === fm.value ? '#c084fc' : '#64748b',
                       fontSize: 11, textAlign: 'left', fontWeight: c.financingMode === fm.value ? 600 : 400,
