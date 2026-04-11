@@ -93,7 +93,7 @@ def get_live_metrics():
                     'decisions_blocked': 9317,
                     'exit_receipts': 78,
                     'capital_preserved_pct': 98.42,
-                    'verticals_demo': 4,
+                    'verticals_demo': 8,
                     'system_uptime_days': 112,
                 },
                 'last_updated': datetime.now(timezone.utc).isoformat()
@@ -160,7 +160,7 @@ def get_live_metrics():
                 'decisions_blocked': decisions_blocked,
                 'exit_receipts': exit_receipts,
                 'capital_preserved_pct': capital_preserved,
-                'verticals_demo': 4,
+                'verticals_demo': 8,
                 'system_uptime_days': uptime_days,
             },
             'last_updated': datetime.now(timezone.utc).isoformat()
@@ -177,7 +177,7 @@ def get_live_metrics():
                 'decisions_blocked': 9317,
                 'exit_receipts': 78,
                 'capital_preserved_pct': 98.42,
-                'verticals_demo': 4,
+                'verticals_demo': 8,
                 'system_uptime_days': 112,
             },
             'last_updated': datetime.now(timezone.utc).isoformat()
