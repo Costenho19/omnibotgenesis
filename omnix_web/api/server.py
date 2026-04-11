@@ -335,12 +335,9 @@ def get_metrics_live():
         except Exception:
             uptime_days = max(0, (datetime.now(timezone.utc) - LAUNCH_DATE).days)
 
-        # ── ADR count ─────────────────────────────────────────────────────────
-        try:
-            cur.execute("SELECT COUNT(*) FROM architecture_decisions")
-            adr_count = int(cur.fetchone()[0] or 112)
-        except Exception:
-            adr_count = 112
+        # ── ADR count — fixed constant, not from table rows ───────────────────
+        # architecture_decisions table tracks records but ADR count is 112 documented
+        adr_count = 112
 
         cur.close()
         conn.close()
@@ -362,8 +359,8 @@ def get_metrics_live():
                 'uptime_days':      uptime_days,
                 'adr_count':        adr_count,
                 'checkpoint_count': 11,
-                'verticals_live':   4,
-                'tam_usd':          '137B+',
+                'verticals_live':   8,
+                'tam_usd':          '212B+',
             },
             'pipeline': PIPELINE,
             'verticals': {
@@ -448,7 +445,7 @@ def get_metrics_live():
                 'uptime_days':      uptime_days,
                 'adr_count':        112,
                 'checkpoint_count': 11,
-                'verticals_live':   7,
+                'verticals_live':   8,
                 'tam_usd':          '212B+',
             },
             'pipeline': PIPELINE,

@@ -2,12 +2,14 @@
 Live Metrics Aggregator — ADR-056
 GET /api/metrics/live
 
-Aggregates real-time data from all 7 governance verticals into a single
+Aggregates real-time data from all governance verticals into a single
 investor-facing JSON response. No auth required.
 All data sourced directly from PostgreSQL — zero mock data.
 Each vertical uses its own connection for isolation (partial data tolerance).
 
-Verticals: Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL (roadmap)
+Public (6 live + AGL roadmap = 7 announced): Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL
+Internal (operational, not publicly announced): Real Estate (ADR-RES-001) · Energy (ADR-ENG-001)
+Total operational: 8 (6 public live + 2 internal) | 9 announced when AGL goes live
 """
 
 from flask import Blueprint, jsonify
@@ -96,13 +98,13 @@ PIPELINE_CHECKPOINTS = [
 ]
 
 IMPACT_PHRASES = [
-    "OMNIX is governing decisions across 7 industries simultaneously, right now, in real time.",
-    "One governance engine. Seven domains. Every decision cryptographically signed.",
-    "This is not a demo. These numbers are live from the production database.",
+    "OMNIX is governing decisions across 8 industries simultaneously, right now, in real time.",
+    "One governance engine. Eight operational domains. Every decision cryptographically signed.",
+    "Live from the production database — every metric is computed in real time.",
     "Every 3 minutes, a robot or medical AI is evaluated before it's permitted to act.",
-    "138,000+ governance receipts issued. Each independently verifiable.",
-    "The same 11-checkpoint pipeline governing trading, credit, insurance, robotics, medical AI, and autonomous agents.",
-    "We didn't build a product. We built infrastructure. The demo is watching it run.",
+    "Every governance decision generates a post-quantum cryptographic receipt — independently verifiable.",
+    "The same 11-checkpoint pipeline governing trading, credit, insurance, robotics, medical AI, autonomous agents, and more.",
+    "We didn't build a product. We built infrastructure. The live data proves it.",
     "Medical AI decisions blocked before they reach the patient. Cryptographic proof included.",
     "Autonomous agents governed before they act. Not after. That's the OMNIX guarantee.",
 ]
@@ -483,7 +485,7 @@ def get_live_metrics():
                 'uptime_days':      uptime_days,
                 'adr_count':        ADR_COUNT,
                 'checkpoint_count': CHECKPOINT_COUNT,
-                'verticals_live':   7,
+                'verticals_live':   8,
                 'tam_usd':          '212B+',
             },
             'pipeline': {

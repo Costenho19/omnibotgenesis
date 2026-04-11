@@ -77,7 +77,7 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     uptime_days:      _uptimeDays,
     adr_count:        112,
     checkpoint_count: 11,
-    verticals_live:   7,
+    verticals_live:   8,
     tam_usd:          '212B+',
   },
   pipeline: {
