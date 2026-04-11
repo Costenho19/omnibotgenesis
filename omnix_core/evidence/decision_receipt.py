@@ -217,6 +217,7 @@ class DecisionReceiptEngine:
             'prev_hash':        prev_hash,
             'signing_provider': provider_id,
             'signing_key_id':   self.key_id,
+            'domain':           domain if domain else None,
         }
 
         if 'sharia_compliance' in decision:

@@ -778,6 +778,7 @@ class AutoTradingBot:
                 'decision': receipt_decision,
                 'decision_trace': decision.get('decision_trace', []),
                 'policy_version': os.environ.get('OMNIX_VERSION', '6.5.4e'),
+                'domain': 'trading',
             }
 
             if 'sharia_admissible' in decision:
@@ -1061,6 +1062,7 @@ class AutoTradingBot:
                             "decision": "BLOCK",
                             "decision_trace": [f"CAG SESSION_BLOCKED: {cag_result.violation}"],
                             "policy_version": os.environ.get("OMNIX_VERSION", "6.5.4e"),
+                            "domain": "trading",
                             "context_admission": {
                                 "check": "enabled",
                                 "result": "blocked",

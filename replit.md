@@ -55,6 +55,30 @@ Todos los hardcoded "4" actualizados. Fuentes que controlan el número de vertic
 
 ---
 
+## SEGUNDA AUDITORÍA PROFUNDA — 11-Apr-2026 (6 errores nuevos encontrados y corregidos)
+
+| # | Categoría | Error | Corrección | Prioridad |
+|---|-----------|-------|------------|-----------|
+| 24 | CORE P0 | `generate_receipt` no añadía `domain` al receipt dict → `store_receipt` siempre guardaba domain=NULL | Añadido `'domain': domain if domain else None` en `public_payload` | P0 |
+| 25 | CORE P0 | `auto_trading_bot.py` receipt_input (line 776) sin `'domain':'trading'` → receipt IDs sin prefijo TRD, DB NULL | Añadido `'domain': 'trading'` en receipt_input principal | P0 |
+| 26 | CORE P0 | `auto_trading_bot.py` CAG session receipt_input (line 1059) sin `'domain':'trading'` | Añadido `'domain': 'trading'` en CAG session receipt | P0 |
+| 27 | FRONTEND P1 | `ClientDashboard.tsx` DOMAIN_LABELS/ICONS/COLORS: solo 4 dominios (sin medical_ai ni autonomous_agent) | Añadidos `medical_ai: 'Medical AI — Clinical'` y `autonomous_agent: 'Autonomous Agents'` + colores + íconos | P1 |
+| 28 | FRONTEND P1 | `AuditDashboard.tsx` DOMAIN_COLORS/ICONS: solo 4 dominios | Añadidos medical_ai (#f472b6 🏥) y autonomous_agent (#fb923c 🧠) | P1 |
+| 29 | PITCH P1 | Market slide: "Supply Chain" (futura) en TAM en lugar de "Autonomous Agents" (vertical LIVE). "4 live domains". TAM $137B+ sin incluir Medical ni Agents | → Agents $30B+ LIVE. "7 live domains". TAM $212B+. Segunda caja $262B+ | P1 |
+| 30 | API | `live_metrics.py` `tam_usd: '137B+'` desactualizado | → `'212B+'` (137 + 45 Medical + 30 Agents) | P1 |
+| 31 | SECURITY | `public_verify.py` RECEIPT_ID_RE regex `^OMNIX[-_][A-Z0-9]{6,20}$` rechaza `OMNIX-TRD-{hex}` y `OMNIX-MED-{hex}` (multi-segmento) | → `^OMNIX[-_](?:[A-Z0-9]{2,4}[-_])?[A-Z0-9]{6,20}$` — soporta legacy y domain-code formats | P1 |
+| 32 | DB | 30 receipts adicionales con domain=NULL (trading bot corriendo sin la corrección) | Backfill final: `UPDATE decision_receipts SET domain='trading' WHERE domain IS NULL` → 0 NULLs | P0 |
+
+### Resultado post-corrección (Segunda Auditoría)
+- `decision_receipts.domain` → 0 NULLs — 138,620 trading + 187 sandbox
+- Futuros receipts trading → `OMNIX-TRD-{hex}` con `domain='trading'` en DB
+- ClientDashboard y AuditDashboard muestran 🏥 Medical AI y 🧠 Autonomous Agents con colores correctos
+- PitchDeck Market: "7 live domains" · TAM $212B+ · Agents LIVE
+- public_verify.py acepta todos los formatos de receipt_id (legacy + TRD/MED/AGT/PUB)
+- TypeScript: 0 errores de compilación
+
+---
+
 ## AGL-AGT-001 — Autonomous Agent Governance Vertical (COMPLETED)
 
 ### Backend

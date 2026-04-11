@@ -50,16 +50,20 @@ interface ReportData {
 }
 
 const DOMAIN_LABELS: Record<string, string> = {
-  trading:   'Digital Asset Trading',
-  credit:    'Islamic Credit',
-  insurance: 'Insurance Underwriting',
-  robotics:  'Robotics & Autonomous Systems',
+  trading:           'Digital Asset Trading',
+  credit:            'Islamic Credit',
+  insurance:         'Insurance Underwriting',
+  robotics:          'Robotics & Autonomous Systems',
+  medical_ai:        'Medical AI — Clinical',
+  autonomous_agent:  'Autonomous Agents',
 }
 const DOMAIN_ICONS: Record<string, string> = {
   trading: '📈', credit: '🕌', insurance: '🛡️', robotics: '🤖',
+  medical_ai: '🏥', autonomous_agent: '🧠',
 }
 const DOMAIN_COLORS: Record<string, string> = {
   trading: '#C9A227', credit: '#a78bfa', insurance: '#60a5fa', robotics: '#34d399',
+  medical_ai: '#f472b6', autonomous_agent: '#fb923c',
 }
 const FW_COLORS: Record<string, string> = {
   EU_AI_ACT: '#3B82F6', DORA: '#8B5CF6', NIST_AI_RMF: '#10B981',

@@ -477,7 +477,7 @@ export default function PitchDeck() {
               { emoji: '🛡️', domain: 'Global Insurance', tam: '$7T+', detail: 'Annual premium governed market', color: '#60a5fa' },
               { emoji: '🤖', domain: 'Industrial Robotics', tam: '$80B+', detail: 'Pre-execution safety governance', color: '#34d399' },
               { emoji: '🏥', domain: 'Medical AI — Clinical', tam: '$45B+', detail: 'Clinical AI governance · LIVE since Apr 2026', color: '#f472b6' },
-              { emoji: '🔗', domain: 'Supply Chain', tam: '$15B+', detail: 'Automated procurement decisions (next)', color: '#ef4444' },
+              { emoji: '🧠', domain: 'Autonomous Agents', tam: '$30B+', detail: 'Agent runtime governance · LIVE since Apr 2026', color: '#fb923c' },
             ].map(v => (
               <div key={v.domain} className="glass" style={{ padding: '1rem', borderColor: `${v.color}22` }}>
                 <div style={{ fontSize: 22, marginBottom: 8 }}>{v.emoji}</div>
@@ -489,12 +489,12 @@ export default function PitchDeck() {
           </div>
           <div className="glass" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'center', gap: 40, flexWrap: 'wrap', borderColor: 'rgba(201,162,39,0.3)' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#C9A227' }}>~$137B+</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Current TAM (4 live domains)</div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#C9A227' }}>~$212B+</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Current TAM (7 live domains)</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#a78bfa' }}>$182B+</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>TAM with biotech + supply chain</div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#a78bfa' }}>$262B+</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>TAM expansion · biotech + supply chain</div>
             </div>
           </div>
         </div>

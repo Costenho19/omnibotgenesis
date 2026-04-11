@@ -60,16 +60,20 @@ interface AuditResponse {
 }
 
 const DOMAIN_COLORS: Record<string, string> = {
-  trading:   '#C9A227',
-  credit:    '#a78bfa',
-  insurance: '#60a5fa',
-  robotics:  '#34d399',
+  trading:          '#C9A227',
+  credit:           '#a78bfa',
+  insurance:        '#60a5fa',
+  robotics:         '#34d399',
+  medical_ai:       '#f472b6',
+  autonomous_agent: '#fb923c',
 }
 const DOMAIN_ICONS: Record<string, string> = {
-  trading:   '📈',
-  credit:    '🕌',
-  insurance: '🛡️',
-  robotics:  '🤖',
+  trading:          '📈',
+  credit:           '🕌',
+  insurance:        '🛡️',
+  robotics:         '🤖',
+  medical_ai:       '🏥',
+  autonomous_agent: '🧠',
 }
 
 function PulseDot({ color = '#10B981' }: { color?: string }) {

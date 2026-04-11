@@ -484,7 +484,7 @@ def get_live_metrics():
                 'adr_count':        ADR_COUNT,
                 'checkpoint_count': CHECKPOINT_COUNT,
                 'verticals_live':   7,
-                'tam_usd':          '137B+',
+                'tam_usd':          '212B+',
             },
             'pipeline': {
                 'checkpoints_count':        CHECKPOINT_COUNT,

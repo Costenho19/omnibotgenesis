@@ -30,7 +30,7 @@ public_verify_bp = Blueprint('public_verify', __name__)
 _rate_limit_store: dict = {}
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 30
-RECEIPT_ID_RE = re.compile(r'^OMNIX[-_][A-Z0-9]{6,20}$')
+RECEIPT_ID_RE = re.compile(r'^OMNIX[-_](?:[A-Z0-9]{2,4}[-_])?[A-Z0-9]{6,20}$')
 
 # ─── Checkpoint label maps ────────────────────────────────────────────────────
 
