@@ -28,14 +28,22 @@ _GATEWAY_INSTANCE = None
 
 
 def get_database_url():
-    """Get DATABASE_URL - checks multiple possible variable names"""
-    url = os.environ.get('DATABASE_URL')
+    """Get DATABASE_URL - checks multiple possible variable names.
+    OMNIX_DB_URL is checked first to avoid Replit overriding DATABASE_URL
+    with its managed Helium PostgreSQL in production deployments."""
+    url = os.environ.get('OMNIX_DB_URL')
     if url:
+        return url
+    url = os.environ.get('DATABASE_URL')
+    if url and 'rlwy.net' in url:
         return url
     url = os.environ.get('POSTGRES_URL')
     if url:
         return url
     url = os.environ.get('DATABASE_PUBLIC_URL')
+    if url:
+        return url
+    url = os.environ.get('DATABASE_URL')
     if url:
         return url
     return None
