@@ -32,7 +32,7 @@ def _get_db():
     import psycopg2
     import psycopg2.extras
     if "db" not in g:
-        g.db = psycopg2.connect(os.environ["DATABASE_URL"])
+        g.db = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
     return g.db
 
 

@@ -32,7 +32,7 @@ robotics_bp = Blueprint("robotics", __name__, url_prefix="/api/robotics")
 def _get_db():
     import psycopg2
     if "db" not in g:
-        g.db = psycopg2.connect(os.environ["DATABASE_URL"])
+        g.db = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
     return g.db
 
 
