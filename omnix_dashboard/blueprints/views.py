@@ -90,17 +90,8 @@ def catch_all(path):
     so React Router handles navigation client-side.
     NEVER return HTML for /api/* routes — return 404 JSON so frontend shows real errors.
     """
-    # API routes must NEVER be served as HTML — hard stop regardless of blueprint status
+    # API routes must NEVER be served as HTML
     if path.startswith('api/'):
-        # Try to forward to the actual blueprint handler before returning 404
-        from flask import current_app
-        try:
-            adapter = current_app.url_map.bind('')
-            endpoint, kwargs = adapter.match(f'/{path}', method=request.method)
-            if endpoint and endpoint != 'views.catch_all':
-                return current_app.view_functions[endpoint](**kwargs)
-        except Exception:
-            pass
         return jsonify({'error': 'API endpoint not found', 'path': f'/{path}'}), 404
 
     file_path = os.path.join(REACT_DIST, path)
