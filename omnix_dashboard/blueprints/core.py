@@ -602,6 +602,21 @@ def api_positions():
             })
 
 
+@core_bp.route('/api/debug/routes')
+def debug_routes():
+    """Temporary debug: list all registered routes and views.py catch-all code"""
+    import inspect
+    from flask import current_app
+    from omnix_dashboard.blueprints.views import catch_all
+    routes = sorted(
+        [(r.rule, r.endpoint) for r in current_app.url_map.iter_rules()
+         if 'credit' in r.rule or 'catch' in r.endpoint or 'debug' in r.rule],
+        key=lambda x: x[0]
+    )
+    catch_src = inspect.getsource(catch_all)[:300]
+    return jsonify({'routes': routes, 'catch_all_source': catch_src})
+
+
 @core_bp.route('/api/health')
 def api_health():
     """Health check endpoint with pool stats for Railway healthcheck"""
