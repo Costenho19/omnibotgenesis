@@ -1,0 +1,19 @@
+{
+	admin off
+	persist_config off
+	auto_https off
+}
+
+:{$PORT} {
+	# ALL /api/* requests → gunicorn on internal port 8080
+	handle /api/* {
+		reverse_proxy localhost:8080
+	}
+
+	# Static assets from React dist
+	handle {
+		root * /app/omnix_web/dist
+		try_files {path} /index.html
+		file_server
+	}
+}

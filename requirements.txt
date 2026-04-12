@@ -143,3 +143,5 @@ tables==3.9.2
 # Not available on Railway — all imports wrapped in try/except.
 # Requires DWAVE_API_TOKEN environment variable.
 dwave-ocean-sdk==9.0.0
+
+# Railway cache bust: 2026-04-12-rebuild
