@@ -144,4 +144,4 @@ tables==3.9.2
 # Requires DWAVE_API_TOKEN environment variable.
 dwave-ocean-sdk==9.0.0
 
-# Railway cache bust: 2026-04-12-rebuild
+# Railway force rebuild: 2026-04-12-021251
