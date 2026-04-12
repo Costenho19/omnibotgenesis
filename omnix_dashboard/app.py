@@ -244,9 +244,12 @@ def block_api_html_leak(response):
     convert it to 404 JSON. This prevents the SPA catch-all from leaking
     into API routes regardless of blueprint registration order or cache issues."""
     from flask import request as _req, jsonify as _jsonify
+    response.headers['X-OMNIX-Guard'] = '1'
     if _req.path.startswith('/api/') and response.status_code == 200 and \
             response.content_type and 'text/html' in response.content_type:
-        return _jsonify({'error': 'API endpoint not found', 'path': _req.path}), 404
+        new_resp = _jsonify({'error': 'API endpoint not found', 'path': _req.path})
+        new_resp.headers['X-OMNIX-Guard'] = 'blocked'
+        return new_resp, 404
     return response
 
 
