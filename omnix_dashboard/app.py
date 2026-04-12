@@ -238,6 +238,18 @@ def strip_server_header(response):
     return response
 
 
+@app.after_request
+def block_api_html_leak(response):
+    """Nuclear guard: if any /api/* path somehow gets an HTML response,
+    convert it to 404 JSON. This prevents the SPA catch-all from leaking
+    into API routes regardless of blueprint registration order or cache issues."""
+    from flask import request as _req, jsonify as _jsonify
+    if _req.path.startswith('/api/') and response.status_code == 200 and \
+            response.content_type and 'text/html' in response.content_type:
+        return _jsonify({'error': 'API endpoint not found', 'path': _req.path}), 404
+    return response
+
+
 @app.errorhandler(404)
 def not_found(e):
     from flask import request, jsonify, send_from_directory
