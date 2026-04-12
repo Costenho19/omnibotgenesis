@@ -1,7 +1,5 @@
 # Nixpacks configuration for Railway deployment
 # OMNIX Quantum - Dashboard + Web
-# Allow Nixpacks to auto-detect Python + Node so Caddy is configured
-# Custom Caddyfile in repo root overrides the auto-generated routing
 
 [phases.setup]
 nixPkgs = ["python312", "nodejs_20", "caddy"]
@@ -14,8 +12,9 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "cd omnix_web && npm run build"
+  "cd omnix_web && npm run build",
+  "mkdir -p /etc/caddy && cp /app/Caddyfile /etc/caddy/Caddyfile"
 ]
 
 [start]
-cmd = "caddy run --config Caddyfile & gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 4 --timeout 120 omnix_dashboard.app:app"
+cmd = "caddy run & gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 4 --timeout 120 omnix_dashboard.app:app"
