@@ -13,8 +13,8 @@ cmds = [
 [phases.build]
 cmds = [
   "cd omnix_web && npm run build",
-  "mkdir -p /etc/caddy && cp /app/Caddyfile /etc/caddy/Caddyfile"
+  "cp /app/Caddyfile /app/omnix-custom.caddyfile"
 ]
 
 [start]
-cmd = "caddy run & gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 4 --timeout 120 omnix_dashboard.app:app"
+cmd = "caddy run --config /app/omnix-custom.caddyfile & gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 4 --timeout 120 omnix_dashboard.app:app"
