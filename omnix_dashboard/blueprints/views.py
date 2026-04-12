@@ -82,6 +82,21 @@ def index():
     return redirect('/terminal')
 
 
+@views_bp.route('/api/<path:api_path>')
+def api_not_found(api_path):
+    """
+    Explicit catch-all for /api/* routes NOT handled by any blueprint.
+    Returns 404 JSON — NEVER serves React HTML for API routes.
+    This route is MORE SPECIFIC than /<path:path> so Flask prefers it
+    for all /api/* requests that fall through the registered blueprints.
+    """
+    return jsonify({
+        'error': 'API endpoint not found',
+        'path': f'/api/{api_path}',
+        'status': 404,
+    }), 404
+
+
 @views_bp.route('/<path:path>')
 def catch_all(path):
     """
@@ -90,9 +105,13 @@ def catch_all(path):
     so React Router handles navigation client-side.
     NEVER return HTML for /api/* routes — return 404 JSON so frontend shows real errors.
     """
-    # API routes must NEVER be served as HTML
-    if path.startswith('api/'):
-        return jsonify({'error': 'API endpoint not found', 'path': f'/{path}'}), 404
+    rpath = request.path
+    if rpath.startswith('/api/') or path.startswith('api/'):
+        return jsonify({
+            'error': 'API endpoint not found',
+            'path': rpath,
+            'status': 404,
+        }), 404
 
     file_path = os.path.join(REACT_DIST, path)
     if os.path.isfile(file_path):
