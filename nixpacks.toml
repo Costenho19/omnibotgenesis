@@ -1,14 +1,21 @@
-# Nixpacks configuration for Railway deployment (stellar-hope: Flask Dashboard)
-# Python-only provider — prevents Nixpacks from auto-adding Node.js/Caddy
-# omnix_web/dist is committed to the repo; no npm build needed on Railway
+# Nixpacks configuration for Railway deployment
+# OMNIX Quantum - Dashboard + Web
+# Allow Nixpacks to auto-detect Python + Node so Caddy is configured
+# Custom Caddyfile in repo root overrides the auto-generated routing
 
-providers = ["python"]
+[phases.setup]
+nixPkgs = ["python312", "nodejs_20", "caddy"]
 
 [phases.install]
-cmds = ["/opt/venv/bin/pip install -r requirements.txt"]
+cmds = [
+  "pip install -r requirements.txt",
+  "cd omnix_web && npm install"
+]
 
 [phases.build]
-cmds = []
+cmds = [
+  "cd omnix_web && npm run build"
+]
 
 [start]
-cmd = "gunicorn --bind 0.0.0.0:\ --workers 2 --threads 4 --timeout 120 omnix_dashboard.app:app"
+cmd = "caddy run --config Caddyfile & gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 4 --timeout 120 omnix_dashboard.app:app"
