@@ -2709,3 +2709,39 @@ def api_contact_lead():
                 'error': 'Failed to save contact information',
                 'fallback_email': 'contacto@omnixquantum.net'
             }), 500
+
+
+@core_bp.route('/api/sys/caddy-config')
+def caddy_config():
+    import subprocess, os, sys
+    result = {}
+    # Read Caddyfile
+    for p in ['/assets/Caddyfile', '/app/Caddyfile', './Caddyfile']:
+        if os.path.isfile(p):
+            with open(p) as f:
+                result['caddyfile_path'] = p
+                result['caddyfile'] = f.read()
+            break
+    else:
+        result['caddyfile'] = 'NOT FOUND'
+    # Gunicorn port
+    result['PORT_env'] = os.environ.get('PORT', '?')
+    result['GUNICORN_PORT_env'] = os.environ.get('GUNICORN_PORT', '?')
+    result['GUNICORN_BIND_env'] = os.environ.get('GUNICORN_BIND', '?')
+    # Registered routes (api only)
+    from flask import current_app
+    routes = []
+    for rule in current_app.url_map.iter_rules():
+        if rule.rule.startswith('/api/'):
+            routes.append({'path': rule.rule, 'endpoint': rule.endpoint})
+    result['api_route_count'] = len(routes)
+    result['api_routes_sample'] = routes[:30]
+    # Check if caddy is running
+    try:
+        out = subprocess.check_output(['ps', 'aux'], text=True, timeout=5)
+        result['caddy_running'] = 'caddy' in out
+        result['ps_sample'] = [l for l in out.split('
+') if 'caddy' in l.lower() or 'gunicorn' in l.lower()][:10]
+    except Exception as e:
+        result['ps_error'] = str(e)
+    return jsonify(result)
