@@ -1,10 +1,7 @@
-# Nixpacks configuration — omnibotgenesis Telegram Bot
-# start command is defined in railway.json: "python -u main.py"
+# Nixpacks configuration for Railway deployment
+# OMNIX Telegram Bot
 
-[phases.setup]
-nixPkgs = ["python312"]
+providers = ["python"]
 
-[phases.install]
-cmds = [
-  "python3 -m pip install -r requirements.txt"
-]
+[start]
+cmd = "python main.py"
