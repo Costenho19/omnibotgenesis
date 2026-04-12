@@ -1,7 +1,14 @@
-# Nixpacks configuration for Railway deployment
-# OMNIX Telegram Bot
+# Nixpacks configuration for Railway deployment (stellar-hope: Flask Dashboard)
+# Python-only provider — prevents Nixpacks from auto-adding Node.js/Caddy
+# omnix_web/dist is committed to the repo; no npm build needed on Railway
 
 providers = ["python"]
 
+[phases.install]
+cmds = ["/opt/venv/bin/pip install -r requirements.txt"]
+
+[phases.build]
+cmds = []
+
 [start]
-cmd = "python main.py"
+cmd = "gunicorn --bind 0.0.0.0:\ --workers 2 --threads 4 --timeout 120 omnix_dashboard.app:app"
