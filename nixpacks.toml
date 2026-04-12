@@ -1,20 +1,10 @@
-# Nixpacks configuration for Railway deployment
-# OMNIX Quantum - Dashboard + Web
-# Flask/gunicorn via railway_wsgi.py handles ALL routing (API + static files). No Caddy.
+# Nixpacks configuration — omnibotgenesis Telegram Bot
+# start command is defined in railway.json: "python -u main.py"
 
 [phases.setup]
-nixPkgs = ["python312", "nodejs_20"]
+nixPkgs = ["python312"]
 
 [phases.install]
 cmds = [
-  "pip install -r requirements.txt",
-  "cd omnix_web && npm install"
+  "python3 -m pip install -r requirements.txt"
 ]
-
-[phases.build]
-cmds = [
-  "cd omnix_web && npm run build"
-]
-
-[start]
-cmd = "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --worker-class sync railway_wsgi:app"
