@@ -1,8 +1,9 @@
 # Nixpacks configuration for Railway deployment
 # OMNIX Quantum - Dashboard + Web
+# Flask/gunicorn handles ALL routing (API + static files). No Caddy needed.
 
 [phases.setup]
-nixPkgs = ["python312", "nodejs_20", "caddy"]
+nixPkgs = ["python312", "nodejs_20"]
 
 [phases.install]
 cmds = [
@@ -12,9 +13,8 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "cd omnix_web && npm run build",
-  "cp /app/Caddyfile /app/omnix-custom.caddyfile"
+  "cd omnix_web && npm run build"
 ]
 
 [start]
-cmd = "caddy run --config /app/omnix-custom.caddyfile & gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 4 --timeout 120 omnix_dashboard.app:app"
+cmd = "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --worker-class sync omnix_dashboard.app:app"
