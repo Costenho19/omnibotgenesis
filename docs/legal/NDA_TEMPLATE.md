@@ -7,7 +7,9 @@
 
 This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of __________ ("Effective Date") between:
 
-**OMNIX** ("Disclosing Party / Company")
+**OMNIX QUANTUM LTD** ("Disclosing Party / Company")
+Registered in England & Wales
+Registered Office: 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom
 Represented by: Harold Alberto Nunes Rodelo, Founder & CEO
 Contact: contacto@omnixquantum.net
 

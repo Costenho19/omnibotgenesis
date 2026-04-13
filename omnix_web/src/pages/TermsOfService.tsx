@@ -81,6 +81,7 @@ export default function TermsOfService() {
             <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: '600', marginBottom: '16px', borderBottom: '1px solid #1e293b', paddingBottom: '8px' }}>9. Governing Law</h2>
             <p>These Terms shall be governed by and construed in accordance with the laws of the State of Delaware, United States, without regard to its conflict of law principles.</p>
             <p style={{ marginTop: '12px' }}>Any dispute arising under these Terms shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association, conducted in English.</p>
+            <p style={{ marginTop: '12px' }}>The Service is provided by OMNIX QUANTUM LTD, a company registered in England and Wales, with registered office at 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom.</p>
           </section>
 
           <section style={{ marginBottom: '40px' }}>

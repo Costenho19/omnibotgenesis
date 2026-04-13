@@ -761,9 +761,12 @@ export default function CommercialLanding() {
 
       <footer className="border-t border-[#C9A227]/10 py-12 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="OMNIX" className="w-10 h-10 object-contain" />
-            <span className="text-muted text-sm">&copy; 2026 OMNIX QUANTUM. All rights reserved.</span>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="OMNIX" className="w-10 h-10 object-contain" />
+              <span className="text-muted text-sm">&copy; 2026 OMNIX QUANTUM LTD. All rights reserved.</span>
+            </div>
+            <span className="text-muted text-xs opacity-60">Registered in England &amp; Wales &middot; 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ</span>
           </div>
           <div className="flex items-center gap-6">
             <Link to="/try" className="text-[#C9A227] hover:text-white text-sm transition-colors font-medium">
