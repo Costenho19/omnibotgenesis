@@ -186,6 +186,12 @@ _SSRF_BLOCKED_NETWORKS = [
 _MONTHLY_ALERT_THRESHOLD = 500
 _monthly_alert_sent: dict = {}
 
+# ── PER-CLIENT QUOTA ENFORCEMENT (ADR-081) ────────────────────────────────────
+# Hard limits that block new evaluations when exceeded.
+# Configurable via env vars — raise per client by updating b2b_clients table (tier field).
+_CLIENT_DAILY_QUOTA_MAX   = int(os.environ.get('OMNIX_B2B_DAILY_QUOTA',   '5000'))
+_CLIENT_MONTHLY_QUOTA_MAX = int(os.environ.get('OMNIX_B2B_MONTHLY_QUOTA', '50000'))
+
 _ENGINE_AVAILABLE = False
 _GovernanceEvaluationEngine = None
 _DecisionReceiptEngine = None
@@ -400,6 +406,50 @@ def _auto_ban_ip(ip: str, reason: str, violation_count: int = 3) -> None:
             logger.error(f"[IP BLOCK] Auto-ban failed for {ip}: {e}")
 
     threading.Thread(target=_run, daemon=True).start()
+
+
+def _check_client_quota(client_id: str) -> tuple:
+    """
+    Enforce per-client daily and monthly hard quotas (ADR-081).
+    Queries decision_receipts for real usage counts — fail-open if DB unavailable.
+    Returns (allowed: bool, error_message: str).
+    """
+    try:
+        conn = _get_db_conn()
+        cur = conn.cursor()
+
+        cur.execute(
+            "SELECT COUNT(*) FROM decision_receipts "
+            "WHERE client_id = %s AND created_at >= NOW() - INTERVAL '24 hours'",
+            (client_id,),
+        )
+        daily_count = cur.fetchone()[0]
+        if daily_count >= _CLIENT_DAILY_QUOTA_MAX:
+            conn.close()
+            logger.warning(f"[QUOTA] Daily limit hit: client={client_id} count={daily_count}")
+            return False, (
+                f'Daily evaluation quota reached ({_CLIENT_DAILY_QUOTA_MAX}/24 h). '
+                f'Contact support@omnixquantum.net to discuss a higher-tier plan.'
+            )
+
+        cur.execute(
+            "SELECT COUNT(*) FROM decision_receipts "
+            "WHERE client_id = %s AND created_at >= date_trunc('month', NOW())",
+            (client_id,),
+        )
+        monthly_count = cur.fetchone()[0]
+        conn.close()
+        if monthly_count >= _CLIENT_MONTHLY_QUOTA_MAX:
+            logger.warning(f"[QUOTA] Monthly limit hit: client={client_id} count={monthly_count}")
+            return False, (
+                f'Monthly evaluation quota reached ({_CLIENT_MONTHLY_QUOTA_MAX}/month). '
+                f'Contact support@omnixquantum.net to discuss a higher-tier plan.'
+            )
+
+        return True, ''
+    except Exception as e:
+        logger.warning(f'[QUOTA] DB unavailable — fail-open: {e}')
+        return True, ''
 
 
 def _check_monthly_alert(client_id: str) -> None:
@@ -1286,6 +1336,17 @@ def api_governance_evaluate():
             'window_seconds': _CLIENT_RATE_LIMIT_WINDOW,
         }), 429
 
+    # Per-client quota enforcement — ADR-081
+    quota_ok, quota_error = _check_client_quota(client_id)
+    if not quota_ok:
+        ref_id = str(uuid.uuid4())[:8]
+        return jsonify({
+            'error': quota_error,
+            'status': 429,
+            'reference': ref_id,
+            'type': 'quota_exceeded',
+        }), 429
+
     if not request.is_json:
         return jsonify({'error': 'Request must be Content-Type: application/json', 'status': 400}), 400
 
@@ -1294,11 +1355,35 @@ def api_governance_evaluate():
     except Exception:
         return jsonify({'error': 'Invalid JSON body', 'status': 400}), 400
 
-    if not body or 'signals' not in body:
+    if not isinstance(body, dict) or 'signals' not in body:
         return jsonify({
-            'error': "Request body must include a 'signals' object. See GET /api/governance/schema.",
+            'error': "Request body must be a JSON object including a 'signals' field. See GET /api/governance/schema.",
             'status': 400,
         }), 400
+
+    # ── Body-level schema validation — ADR-080 ──────────────────────────────
+    _ALLOWED_EVALUATE_KEYS = {'signals', 'asset', 'domain', 'metadata'}
+    unknown_keys = set(body.keys()) - _ALLOWED_EVALUATE_KEYS
+    if unknown_keys:
+        return jsonify({
+            'error': f'Unknown field(s): {", ".join(sorted(unknown_keys))}. Allowed: signals, asset, domain, metadata.',
+            'status': 400,
+        }), 400
+
+    _asset_raw = body.get('asset', 'UNKNOWN')
+    if not isinstance(_asset_raw, str):
+        return jsonify({'error': '"asset" must be a string.', 'status': 400}), 400
+
+    _domain_raw = body.get('domain', 'generic')
+    if not isinstance(_domain_raw, str):
+        return jsonify({'error': '"domain" must be a string.', 'status': 400}), 400
+
+    _metadata_raw = body.get('metadata', {})
+    if _metadata_raw is not None and not isinstance(_metadata_raw, dict):
+        return jsonify({'error': '"metadata" must be a JSON object or omitted.', 'status': 400}), 400
+    if isinstance(_metadata_raw, dict) and len(_metadata_raw) > 50:
+        return jsonify({'error': '"metadata" must not contain more than 50 keys.', 'status': 400}), 400
+    # ────────────────────────────────────────────────────────────────────────
 
     if not _load_engine():
         return jsonify({'error': 'Governance engine temporarily unavailable', 'status': 503}), 503
@@ -1312,11 +1397,9 @@ def api_governance_evaluate():
             'hint': 'See GET /api/governance/schema for required fields and value ranges.',
         }), 400
 
-    asset = str(body.get('asset', 'UNKNOWN'))[:64]
-    domain = str(body.get('domain', 'generic'))[:32]
-    metadata = body.get('metadata', {})
-    if not isinstance(metadata, dict):
-        metadata = {}
+    asset = _asset_raw[:64]
+    domain = _domain_raw[:32]
+    metadata = _metadata_raw if isinstance(_metadata_raw, dict) else {}
 
     try:
         checkpoint_overrides = _load_client_checkpoint_overrides(client_id)

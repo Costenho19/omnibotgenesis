@@ -254,6 +254,47 @@ Todos los hardcoded "4" actualizados. Fuentes que controlan el número de vertic
 - **Blueprint**: `omnix_dashboard/blueprints/receipt_verification.py` (receipt_pki_bp)
 - **Tests**: `tests/test_receipt_verification_endpoint.py` (23 tests — E1 a E23)
 
+## ADR-080 — Strict Input Schema Validation (COMPLETED 13-Apr-2026)
+Validates every API request at the boundary, before any logic, Gemini calls, or DB access. Rejects malformed or unexpected input with clear 400 errors.
+
+### Public Sandbox (`omnix_web/api/sandbox.py`)
+- `_validate_sandbox_request(data)` — validates full request structure
+- **Required**: `scenario_text` (string, 10–1500 chars)
+- **Optional**: `company_name` (string ≤ 120), `language` (enum: 16 supported), `email` (RFC 5321 format, ≤ 254)
+- **Rejects**: unknown keys (prevents payload confusion attacks), wrong types, out-of-range lengths
+- **Allowed keys enum**: `{scenario_text, scenario, company_name, language, email}`
+
+### B2B Governance API (`omnix_web/api/gov_blueprint.py` — `/api/governance/evaluate`)
+- **Allowed top-level keys**: `{signals, asset, domain, metadata}` — unknown keys rejected
+- `asset` must be string; `domain` must be string; `metadata` must be dict ≤ 50 keys
+- `signals` validated by existing `_GovernanceEvaluationEngine.validate_signals()` (all fields 0–100)
+- All validations run before engine load and DB access
+
+### Security context
+- Mitigates bypass-of-logic attacks via malformed inputs (payload confusion)
+- Mitigates type coercion edge cases (e.g. `scenario_text: null`, `signals: [1,2,3]`)
+- Supports future OpenAPI spec generation from the same source of truth
+
+## ADR-081 — Per-Client B2B Quota Enforcement (COMPLETED 13-Apr-2026)
+Hard daily and monthly evaluation limits per authenticated B2B client. Applied on every `/api/governance/evaluate` call, after rate-limit check, before engine invocation.
+
+### Configuration
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `OMNIX_B2B_DAILY_QUOTA` | `5000` | Max evaluations per client per 24 h rolling window |
+| `OMNIX_B2B_MONTHLY_QUOTA` | `50000` | Max evaluations per client per calendar month |
+
+### Implementation (`gov_blueprint.py`)
+- `_check_client_quota(client_id)` → queries `decision_receipts` table for live counts
+- **Fail-open**: if DB is unreachable, quota check passes (non-blocking resilience)
+- **Response when exceeded**: HTTP 429 `{"error": "...", "type": "quota_exceeded", "reference": "<ref_id>"}`
+- Contact message: `support@omnixquantum.net` for tier upgrades
+- Harold Telegram alert at 500 evaluations/month already in place (`_check_monthly_alert`)
+
+### Audit trail
+- Quota breaches logged at WARNING level: `[QUOTA] Daily limit hit: client=X count=Y`
+- Quota is based on actual `decision_receipts` rows — the same data used for billing audit (ADR-051)
+
 ## Test Suite: ~392+ tests passing
 - `tests/test_enterprise_audit.py`: 35 tests (receipt format, AVM persistence, hash integrity, versioning)
 - `tests/test_code_verification.py`: 14 tests

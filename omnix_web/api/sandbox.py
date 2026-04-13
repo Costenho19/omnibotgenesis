@@ -56,6 +56,76 @@ def _sanitize_input(text: str) -> str:
         cleaned = re.sub(pattern, '[REDACTED]', cleaned, flags=re.IGNORECASE | re.DOTALL)
     return cleaned
 
+
+# ── INPUT SCHEMA VALIDATION (ADR-080) ─────────────────────────────────────────
+_VALID_LANGUAGES = {
+    'en', 'es', 'ar', 'fr', 'de', 'zh', 'pt', 'ja',
+    'ko', 'tr', 'ru', 'it', 'nl', 'pl', 'sv', 'hi',
+}
+_EMAIL_RE = re.compile(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+_ALLOWED_SANDBOX_KEYS = {'scenario_text', 'scenario', 'company_name', 'language', 'email'}
+
+
+def _validate_sandbox_request(data) -> tuple:
+    """
+    Strict JSON schema validation — public sandbox evaluate endpoint.
+    Runs BEFORE any logic, Gemini calls, or DB access.
+    Returns (is_valid: bool, error_message: str, http_status: int).
+    ADR-080.
+    """
+    if not isinstance(data, dict):
+        return False, 'Request body must be a JSON object.', 400
+
+    # scenario_text — required
+    scenario = data.get('scenario_text') or data.get('scenario')
+    if scenario is None:
+        return False, 'Missing required field: "scenario_text".', 400
+    if not isinstance(scenario, str):
+        return False, '"scenario_text" must be a string.', 400
+    if len(scenario.strip()) < 10:
+        return False, '"scenario_text" is too short — minimum 10 characters.', 400
+    if len(scenario) > 1500:
+        return False, '"scenario_text" exceeds 1500 character limit — please summarise the scenario.', 400
+
+    # company_name — optional
+    company_name = data.get('company_name')
+    if company_name is not None:
+        if not isinstance(company_name, str):
+            return False, '"company_name" must be a string.', 400
+        if len(company_name) > 120:
+            return False, '"company_name" must not exceed 120 characters.', 400
+
+    # language — optional, enum
+    language = data.get('language')
+    if language is not None:
+        if not isinstance(language, str):
+            return False, '"language" must be a string.', 400
+        if language.strip().lower() not in _VALID_LANGUAGES:
+            return False, (
+                f'"language" must be one of: {", ".join(sorted(_VALID_LANGUAGES))}.'
+            ), 400
+
+    # email — optional, format check
+    email = data.get('email')
+    if email is not None:
+        if not isinstance(email, str):
+            return False, '"email" must be a string.', 400
+        if len(email) > 254:
+            return False, '"email" must not exceed 254 characters.', 400
+        if not _EMAIL_RE.match(email.strip()):
+            return False, '"email" is not a valid email address.', 400
+
+    # Unknown keys — reject to prevent payload confusion attacks
+    unknown = set(data.keys()) - _ALLOWED_SANDBOX_KEYS
+    if unknown:
+        return False, (
+            f'Unknown field(s): {", ".join(sorted(unknown))}. '
+            f'Allowed: scenario_text, company_name, language, email.'
+        ), 400
+
+    return True, '', 200
+
+
 VERIFICATION_BASE_URL = "https://omnixquantum.net/verify"
 
 EXAMPLE_SCENARIOS = [
@@ -2205,25 +2275,20 @@ def register_sandbox_routes(app):
             }), 429
 
         data = flask_request.get_json(silent=True)
-        if not data or not data.get('scenario_text', data.get('scenario')):
-            return flask_jsonify({
-                'error': 'Missing "scenario_text" field. Provide a free-form text description.',
-                'error_es': 'Falta el campo "scenario_text". Proporcione una descripción en texto libre.',
-            }), 400
 
-        scenario_text = str(data.get('scenario_text', data.get('scenario', ''))).strip()
-        company_name = str(data.get('company_name', '')).strip() or None
-        language_hint = str(data.get('language', '')).strip() or None
+        # ── Strict schema validation — ADR-080 ──────────────────────────────
+        is_valid, val_error, val_status = _validate_sandbox_request(data)
+        if not is_valid:
+            return flask_jsonify({
+                'error': val_error,
+                'hint': 'Allowed fields: scenario_text (required), company_name, language, email.',
+            }), val_status
+        # ────────────────────────────────────────────────────────────────────
+
+        scenario_text = str(data.get('scenario_text', data.get('scenario', ''))).strip()[:1500]
+        company_name = str(data.get('company_name', '')).strip()[:120] or None
+        language_hint = str(data.get('language', '')).strip().lower() or None
         user_email = str(data.get('email', '')).strip()[:254] or None
-
-        if len(scenario_text) < 10:
-            return flask_jsonify({
-                'error': 'Scenario too short. Please describe the decision in more detail.',
-                'error_es': 'Escenario muy corto. Por favor describa la decisión con más detalle.',
-            }), 400
-
-        if len(scenario_text) > 1500:
-            scenario_text = scenario_text[:1500]
 
         try:
             ai_result = _parse_scenario_with_gemini(scenario_text, language_hint=language_hint, company_name=company_name)
