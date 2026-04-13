@@ -162,10 +162,12 @@ def build_pdf():
         [
             [Paragraph("OMNIX QUANTUM LTD", s['CoverPartyTitle']),
              Paragraph("SKILLIGEN HDI", s['CoverPartyTitle'])],
-            [Paragraph("Incorporated in England &amp; Wales", s['CoverPartyDetail']),
+            [Paragraph("Registered in England &amp; Wales", s['CoverPartyDetail']),
              Paragraph("Decision Architecture &amp; Governance", s['CoverPartyDetail'])],
+            [Paragraph("71-75 Shelton Street, Covent Garden, London WC2H 9JQ", s['CoverPartyDetail']),
+             Paragraph("aman@skilligen.com · www.skilligen.com", s['CoverPartyDetail'])],
             [Paragraph("Harold Nunes — Founder &amp; CEO", s['CoverPartyDetail']),
-             Paragraph("Amanulla Khan — Founder", s['CoverPartyDetail'])],
+             Paragraph("Dr. Amanulla Khan — Founder &amp; CEO", s['CoverPartyDetail'])],
             [Paragraph("(\"OMNIX\")", s['CoverPartyDetail']),
              Paragraph("(\"Skilligen\")", s['CoverPartyDetail'])],
         ],
@@ -268,16 +270,58 @@ def build_pdf():
 
     story.append(Spacer(1, 14))
 
-    # ── SECTION 5 — EXCLUSIONS ────────────────────────────────────────────────
-    story.append(SectionBanner("5", "Exclusions", DW))
+    # ── SECTION 5 — INTERFACE-LEVEL INTERACTION ───────────────────────────────
+    story.append(SectionBanner("5", "Interface-Level Interaction", DW))
+    story.append(Spacer(1, 10))
+
+    for num, body in [
+        ("5.1", "Each Party's internal systems, architectures, models, and implementations shall "
+                "remain strictly black-box to the other Party. Neither Party shall request, require, "
+                "or expect access to the internal workings of the other Party's systems."),
+        ("5.2", "Technical discussions between the Parties shall be limited to interface conditions "
+                "only — including inputs, outputs, data schemas, API contracts, and integration "
+                "boundaries — and shall not extend to internal logic, training data, model weights, "
+                "or proprietary algorithms."),
+        ("5.3", "Any integration work shall be conducted exclusively at the interface layer. Each "
+                "Party retains full control over its internal implementation without obligation to "
+                "explain or document it to the other Party."),
+    ]:
+        story.append(Paragraph(f"<b>{num}</b>", s['ClauseHead']))
+        story.append(Paragraph(body, s['Body']))
+
+    story.append(Spacer(1, 14))
+
+    # ── SECTION 6 — NO PUBLIC POSITIONING ────────────────────────────────────
+    story.append(SectionBanner("6", "No Public Positioning", DW))
+    story.append(Spacer(1, 10))
+
+    for num, body in [
+        ("6.1", "Neither Party shall make any public statement, press release, social media post, "
+                "pitch deck reference, investor communication, or marketing material that implies, "
+                "suggests, or states a partnership, joint venture, or formal commercial relationship "
+                "between the Parties without the prior written consent of the other Party."),
+        ("6.2", "This obligation is reciprocal and applies equally to both OMNIX and Skilligen. "
+                "Neither Party may use the other Party's name, logo, or brand in any public-facing "
+                "context without explicit prior written approval for each specific use."),
+        ("6.3", "Any approved public reference shall be limited strictly to the scope, wording, and "
+                "channels agreed upon in writing. Approval for one use does not constitute approval "
+                "for any other use."),
+    ]:
+        story.append(Paragraph(f"<b>{num}</b>", s['ClauseHead']))
+        story.append(Paragraph(body, s['Body']))
+
+    story.append(Spacer(1, 14))
+
+    # ── SECTION 7 — EXCLUSIONS ────────────────────────────────────────────────
+    story.append(SectionBanner("7", "Exclusions", DW))
     story.append(Spacer(1, 10))
     story.append(Paragraph("This Agreement does not apply to information that:", s['Body']))
     story.append(Spacer(1, 4))
 
     for num, body in [
-        ("5.1", "Is or becomes publicly available through no fault of the receiving Party."),
-        ("5.2", "Was already known to the receiving Party prior to disclosure."),
-        ("5.3", "Is independently developed by the receiving Party without use of the "
+        ("7.1", "Is or becomes publicly available through no fault of the receiving Party."),
+        ("7.2", "Was already known to the receiving Party prior to disclosure."),
+        ("7.3", "Is independently developed by the receiving Party without use of the "
                 "Confidential Information."),
     ]:
         story.append(Paragraph(f"<b>{num}</b>", s['ClauseHead']))
@@ -285,8 +329,8 @@ def build_pdf():
 
     story.append(Spacer(1, 14))
 
-    # ── SECTION 6 — TERM ─────────────────────────────────────────────────────
-    story.append(SectionBanner("6", "Term", DW))
+    # ── SECTION 8 — TERM ─────────────────────────────────────────────────────
+    story.append(SectionBanner("8", "Term", DW))
     story.append(Spacer(1, 10))
     story.append(Paragraph(
         "This Agreement shall remain in force for a period of <b>two (2) years</b> from the Effective "
@@ -294,8 +338,8 @@ def build_pdf():
         s['Body']))
     story.append(Spacer(1, 14))
 
-    # ── SECTION 7 — GOVERNING LAW ─────────────────────────────────────────────
-    story.append(SectionBanner("7", "Governing Law", DW))
+    # ── SECTION 9 — GOVERNING LAW ─────────────────────────────────────────────
+    story.append(SectionBanner("9", "Governing Law", DW))
     story.append(Spacer(1, 10))
     story.append(Paragraph(
         "This Agreement is governed by the laws of England and Wales. Any disputes arising from "
