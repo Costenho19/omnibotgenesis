@@ -151,8 +151,8 @@ export default function AgentsDashboard() {
       ])
       if (md.success) { setMetrics(md.metrics); setRetrying(false) }
       if (dd.success) setDecisions(dd.decisions || [])
-      if (td.success) setByType(td.by_type || [])
-      if (ad.success) setByAgent(ad.by_agent || [])
+      if (td.success) setByType(td.by_decision_type || [])
+      if (ad.success) setByAgent(ad.by_agent_type || [])
       setLastRefresh(new Date())
     } catch (_e) {
       setRetrying(true)
@@ -209,21 +209,6 @@ export default function AgentsDashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
-        {/* Restricted Access Notice — always visible */}
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-400/8 border border-amber-400/25 text-amber-300/80 text-sm">
-          <AlertTriangle size={16} className="mt-0.5 flex-shrink-0 text-amber-400/70" />
-          <div className="flex-1 min-w-0">
-            <span className="font-medium text-amber-200/90">Autonomous Agent Governance — Restricted Access</span>
-            <p className="text-amber-300/60 text-xs mt-1 leading-relaxed">
-              This vertical is currently in private testing and not yet open for public access.
-              Full launch planned following our institutional pilot phase.
-              For early access or institutional inquiries, contact{' '}
-              <a href="mailto:contacto@omnixquantum.net" className="underline underline-offset-2 hover:text-amber-200/80 transition-colors">
-                contacto@omnixquantum.net
-              </a>
-            </p>
-          </div>
-        </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

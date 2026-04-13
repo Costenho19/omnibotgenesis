@@ -55,6 +55,10 @@ def add_security_headers(response):
         "connect-src 'self' https:; "
         "frame-ancestors 'none';"
     )
+    if request.path.startswith('/api/'):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
     return response
 
 from api.sandbox import register_sandbox_routes
@@ -245,15 +249,15 @@ def get_metrics_live():
         """)
         decisions_today = int(cur.fetchone()[0] or 0)
 
-        # ── Trading vertical (shadow_trade_events) ────────────────────────────
+        # ── Trading vertical (decision_receipts domain=trading) ───────────────
         trading_total = trading_approved = trading_blocked = trading_today = 0
         trading_receipt_id = None
         try:
             cur.execute("SELECT COUNT(*) FROM shadow_trade_events")
             trading_total = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM shadow_trade_events WHERE decision IN ('APPROVED','APPROVE')")
+            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading' AND decision IN ('APPROVED','APPROVE')")
             trading_approved = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM shadow_trade_events WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
+            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading' AND decision IN ('BLOCKED','BLOCK','HOLD')")
             trading_blocked = int(cur.fetchone()[0] or 0)
             cur.execute("SELECT COUNT(*) FROM shadow_trade_events WHERE created_at >= CURRENT_DATE")
             trading_today = int(cur.fetchone()[0] or 0)
@@ -264,60 +268,146 @@ def get_metrics_live():
         except Exception:
             pass
 
-        # ── Credit vertical ───────────────────────────────────────────────────
+        # ── Credit vertical (credit_applications table) ───────────────────────
         credit_total = credit_approved = credit_blocked = credit_today = 0
         credit_receipt_id = None
         try:
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='credit'")
+            cur.execute("SELECT COUNT(*) FROM credit_applications")
             credit_total = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='credit' AND decision IN ('APPROVED','APPROVE')")
+            cur.execute("SELECT COUNT(*) FROM credit_applications WHERE decision IN ('APPROVED','APPROVE')")
             credit_approved = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='credit' AND decision IN ('BLOCKED','BLOCK','HOLD')")
+            cur.execute("SELECT COUNT(*) FROM credit_applications WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
             credit_blocked = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='credit' AND created_at >= CURRENT_DATE")
+            cur.execute("SELECT COUNT(*) FROM credit_applications WHERE evaluated_at >= CURRENT_DATE")
             credit_today = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT receipt_id FROM decision_receipts WHERE domain='credit' ORDER BY created_at DESC LIMIT 1")
+            cur.execute("SELECT receipt_id FROM credit_applications WHERE receipt_id IS NOT NULL ORDER BY evaluated_at DESC LIMIT 1")
             row = cur.fetchone()
             if row:
                 credit_receipt_id = row[0]
+            else:
+                cur.execute("SELECT application_id FROM credit_applications ORDER BY evaluated_at DESC LIMIT 1")
+                row = cur.fetchone()
+                if row:
+                    credit_receipt_id = row[0]
         except Exception:
             pass
 
-        # ── Insurance vertical ────────────────────────────────────────────────
+        # ── Insurance vertical (insurance_claims table) ───────────────────────
         ins_total = ins_approved = ins_blocked = ins_today = 0
         ins_receipt_id = None
         try:
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='insurance'")
+            cur.execute("SELECT COUNT(*) FROM insurance_claims")
             ins_total = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='insurance' AND decision IN ('APPROVED','APPROVE')")
+            cur.execute("SELECT COUNT(*) FROM insurance_claims WHERE decision IN ('APPROVED','APPROVE')")
             ins_approved = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='insurance' AND decision IN ('BLOCKED','BLOCK','HOLD')")
+            cur.execute("SELECT COUNT(*) FROM insurance_claims WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
             ins_blocked = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='insurance' AND created_at >= CURRENT_DATE")
+            cur.execute("SELECT COUNT(*) FROM insurance_claims WHERE created_at >= CURRENT_DATE")
             ins_today = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT receipt_id FROM decision_receipts WHERE domain='insurance' ORDER BY created_at DESC LIMIT 1")
+            cur.execute("SELECT receipt_id FROM insurance_claims WHERE receipt_id IS NOT NULL ORDER BY created_at DESC LIMIT 1")
             row = cur.fetchone()
             if row:
                 ins_receipt_id = row[0]
         except Exception:
             pass
 
-        # ── Robotics vertical ─────────────────────────────────────────────────
+        # ── Robotics vertical (robot_actions table) ───────────────────────────
         rob_total = rob_approved = rob_blocked = rob_today = 0
         rob_receipt_id = None
         try:
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='robotics'")
+            cur.execute("SELECT COUNT(*) FROM robot_actions")
             rob_total = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='robotics' AND decision IN ('APPROVED','APPROVE')")
+            cur.execute("SELECT COUNT(*) FROM robot_actions WHERE decision IN ('APPROVED','APPROVE')")
             rob_approved = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='robotics' AND decision IN ('BLOCKED','BLOCK','HOLD')")
+            cur.execute("SELECT COUNT(*) FROM robot_actions WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
             rob_blocked = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='robotics' AND created_at >= CURRENT_DATE")
+            cur.execute("SELECT COUNT(*) FROM robot_actions WHERE created_at >= CURRENT_DATE")
             rob_today = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT receipt_id FROM decision_receipts WHERE domain='robotics' ORDER BY created_at DESC LIMIT 1")
+            cur.execute("SELECT receipt_id FROM robot_actions WHERE receipt_id IS NOT NULL ORDER BY created_at DESC LIMIT 1")
             row = cur.fetchone()
             if row:
                 rob_receipt_id = row[0]
+        except Exception:
+            pass
+
+        # ── Medical vertical (medical_decisions table) ────────────────────────
+        med_total = med_approved = med_blocked = med_today = 0
+        med_receipt_id = None
+        try:
+            cur.execute("SELECT COUNT(*) FROM medical_decisions")
+            med_total = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM medical_decisions WHERE decision IN ('APPROVED','APPROVE')")
+            med_approved = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM medical_decisions WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
+            med_blocked = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM medical_decisions WHERE created_at >= CURRENT_DATE")
+            med_today = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT receipt_id FROM medical_decisions WHERE receipt_id IS NOT NULL ORDER BY created_at DESC LIMIT 1")
+            row = cur.fetchone()
+            if row:
+                med_receipt_id = row[0]
+        except Exception:
+            pass
+
+        # ── Energy vertical (energy_decisions table) ──────────────────────────
+        ene_total = ene_approved = ene_blocked = ene_today = 0
+        ene_receipt_id = None
+        try:
+            cur.execute("SELECT COUNT(*) FROM energy_decisions")
+            ene_total = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM energy_decisions WHERE decision IN ('APPROVED','APPROVE')")
+            ene_approved = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM energy_decisions WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
+            ene_blocked = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM energy_decisions WHERE created_at >= CURRENT_DATE")
+            ene_today = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT receipt_id FROM energy_decisions WHERE receipt_id IS NOT NULL ORDER BY created_at DESC LIMIT 1")
+            row = cur.fetchone()
+            if row:
+                ene_receipt_id = row[0]
+            else:
+                cur.execute("SELECT decision_id FROM energy_decisions ORDER BY created_at DESC LIMIT 1")
+                row = cur.fetchone()
+                if row:
+                    ene_receipt_id = row[0]
+        except Exception:
+            pass
+
+        # ── Real Estate vertical (property_decisions table) ───────────────────
+        re_total = re_approved = re_blocked = re_today = 0
+        re_receipt_id = None
+        try:
+            cur.execute("SELECT COUNT(*) FROM property_decisions")
+            re_total = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM property_decisions WHERE decision IN ('APPROVED','APPROVE')")
+            re_approved = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM property_decisions WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
+            re_blocked = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM property_decisions WHERE created_at >= CURRENT_DATE")
+            re_today = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT receipt_id FROM property_decisions WHERE receipt_id IS NOT NULL ORDER BY created_at DESC LIMIT 1")
+            row = cur.fetchone()
+            if row:
+                re_receipt_id = row[0]
+        except Exception:
+            pass
+
+        # ── Autonomous Agents vertical (agent_decisions table) ─────────────────
+        ag_total = ag_approved = ag_blocked = ag_today = 0
+        ag_receipt_id = None
+        try:
+            cur.execute("SELECT COUNT(*) FROM agent_decisions")
+            ag_total = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM agent_decisions WHERE decision IN ('APPROVED','APPROVE')")
+            ag_approved = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM agent_decisions WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
+            ag_blocked = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM agent_decisions WHERE created_at >= CURRENT_DATE")
+            ag_today = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT receipt_id FROM agent_decisions WHERE receipt_id IS NOT NULL ORDER BY created_at DESC LIMIT 1")
+            row = cur.fetchone()
+            if row:
+                ag_receipt_id = row[0]
         except Exception:
             pass
 
@@ -424,6 +514,66 @@ def get_metrics_live():
                     'latest_receipt_id': rob_receipt_id,
                     'status': 'LIVE',
                     'active_robots': rob_total,
+                },
+                'medical': {
+                    'label': 'Medical AI Governance',
+                    'market_size': '$45B+ Market',
+                    'live_since': '2026-04-01',
+                    'cycle_sec': 120,
+                    'color': '#f87171',
+                    'icon': '🏥',
+                    'decisions': med_total,
+                    'approved': med_approved,
+                    'blocked': med_blocked,
+                    'hold': 0,
+                    'decisions_today': med_today,
+                    'latest_receipt_id': med_receipt_id,
+                    'status': 'LIVE',
+                },
+                'energy': {
+                    'label': 'Energy Grid Governance',
+                    'market_size': '$1T+ Market',
+                    'live_since': '2026-04-01',
+                    'cycle_sec': 150,
+                    'color': '#facc15',
+                    'icon': '⚡',
+                    'decisions': ene_total,
+                    'approved': ene_approved,
+                    'blocked': ene_blocked,
+                    'hold': 0,
+                    'decisions_today': ene_today,
+                    'latest_receipt_id': ene_receipt_id,
+                    'status': 'LIVE',
+                },
+                'real_estate': {
+                    'label': 'Real Estate & PropTech',
+                    'market_size': '$4.3T+ Market',
+                    'live_since': '2026-04-01',
+                    'cycle_sec': 200,
+                    'color': '#fb923c',
+                    'icon': '🏢',
+                    'decisions': re_total,
+                    'approved': re_approved,
+                    'blocked': re_blocked,
+                    'hold': 0,
+                    'decisions_today': re_today,
+                    'latest_receipt_id': re_receipt_id,
+                    'status': 'LIVE',
+                },
+                'agents': {
+                    'label': 'Autonomous Agent Governance',
+                    'market_size': '$28B+ Market',
+                    'live_since': '2026-04-01',
+                    'cycle_sec': 60,
+                    'color': '#e879f9',
+                    'icon': '🤖',
+                    'decisions': ag_total,
+                    'approved': ag_approved,
+                    'blocked': ag_blocked,
+                    'hold': 0,
+                    'decisions_today': ag_today,
+                    'latest_receipt_id': ag_receipt_id,
+                    'status': 'LIVE',
                 },
             },
             'impact_phrases': IMPACT_PHRASES,
@@ -1261,6 +1411,7 @@ def credit_metrics():
         cycle_row = _credit_query_one("SELECT COUNT(*) as cycles FROM credit_cycle_metrics")
 
         return jsonify({
+            "success": True,
             "status": "ok",
             "vertical": "islamic_credit",
             "engine_version": "1.0.0",
@@ -1336,7 +1487,7 @@ def credit_applications():
             "signal_probability_score": float(row.get("signal_probability_score") or 0),
             "signal_risk_exposure": float(row.get("signal_risk_exposure") or 0),
         } for row in rows]
-        return jsonify({"status": "ok", "applications": formatted, "count": len(formatted)})
+        return jsonify({"success": True, "status": "ok", "applications": formatted, "count": len(formatted)})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -1355,7 +1506,16 @@ def credit_sectors():
             FROM credit_applications
             GROUP BY sector ORDER BY total DESC
         """)
-        return jsonify({"status": "ok", "sectors": rows})
+        formatted = [{
+            "sector": r.get("sector", ""),
+            "total": int(r.get("total") or 0),
+            "approved": int(r.get("approved") or 0),
+            "blocked": int(r.get("blocked") or 0),
+            "approval_rate": float(r.get("approval_rate") or 0),
+            "total_amount_aed": float(r.get("total_amount_aed") or 0),
+            "avg_probability": float(r.get("avg_probability") or 0),
+        } for r in rows]
+        return jsonify({"success": True, "status": "ok", "sectors": formatted})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -1421,14 +1581,679 @@ def credit_health():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+def _db_query(sql, params=None):
+    db_url = os.environ.get('DATABASE_URL', '')
+    conn = psycopg2.connect(db_url)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(sql, params or [])
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
+
+def _db_one(sql, params=None):
+    rows = _db_query(sql, params)
+    return rows[0] if rows else {}
+
+def _sf(v, default=0): return float(v) if v is not None else default
+def _si(v, default=0): return int(v) if v is not None else default
+
+
+# ── INSURANCE ────────────────────────────────────────────────────────────────
+
+@app.route('/api/insurance/metrics')
+@app.route('/api/insurance/metrics.json')
+def insurance_metrics():
+    try:
+        t = _db_one("""
+            SELECT COUNT(*) as total_claims,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COUNT(*) FILTER (WHERE decision='HOLD') as held,
+                COALESCE(SUM(claim_amount_usd) FILTER (WHERE decision='APPROVED'),0) as total_approved_usd,
+                COALESCE(SUM(claim_amount_usd) FILTER (WHERE decision='BLOCKED'),0) as total_blocked_usd,
+                COALESCE(AVG(fraud_indicators),0) as avg_fraud_score,
+                COALESCE(AVG(decision_score),0) as avg_decision_score,
+                COALESCE(AVG(trajectory_score),0) as avg_trajectory_score,
+                COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as claims_24h,
+                COUNT(*) FILTER (WHERE decision='BLOCKED' AND fraud_indicators > 60) as high_fraud_blocked
+            FROM insurance_claims
+        """)
+        cyc = _db_one("SELECT COUNT(*) as cycles FROM insurance_cycle_metrics")
+        total = _si(t.get("total_claims")) or 1
+        return jsonify({"success": True, "metrics": {
+            "total_claims": _si(t.get("total_claims")),
+            "claims_approved": _si(t.get("approved")),
+            "claims_blocked": _si(t.get("blocked")),
+            "claims_held": _si(t.get("held")),
+            "approval_rate": round(_si(t.get("approved")) / total, 4),
+            "total_approved_usd": _sf(t.get("total_approved_usd")),
+            "total_blocked_usd": _sf(t.get("total_blocked_usd")),
+            "avg_fraud_score": round(_sf(t.get("avg_fraud_score")), 2),
+            "avg_decision_score": round(_sf(t.get("avg_decision_score")), 2),
+            "avg_trajectory_score": round(_sf(t.get("avg_trajectory_score")), 2),
+            "claims_last_24h": _si(t.get("claims_24h")),
+            "high_fraud_blocked": _si(t.get("high_fraud_blocked")),
+            "simulation_cycles": _si(cyc.get("cycles")),
+            "loss_avoided_usd": _sf(t.get("total_blocked_usd")),
+        }})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/insurance/claims')
+def insurance_claims_list():
+    try:
+        limit = min(int(request.args.get("limit", 50)), 200)
+        decision = request.args.get("decision", "").upper()
+        where = "WHERE decision=%s" if decision else ""
+        params = [decision, limit] if decision else [limit]
+        rows = _db_query(f"""
+            SELECT claim_id, claimant_type, insurance_type, region,
+                claim_amount_usd, policy_limit_usd, coverage_ratio,
+                fraud_indicators, evidence_completeness,
+                decision, decision_score, block_reason, receipt_id,
+                probability_score, risk_exposure, signal_coherence,
+                trend_persistence, stress_resilience, logic_consistency,
+                trajectory_score, created_at
+            FROM insurance_claims {where} ORDER BY created_at DESC LIMIT %s
+        """, params)
+        for r in rows:
+            r["created_at"] = str(r.get("created_at", ""))
+        return jsonify({"success": True, "claims": rows, "total": len(rows)})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/insurance/by-type')
+def insurance_by_type():
+    try:
+        rows = _db_query("""
+            SELECT insurance_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COALESCE(AVG(claim_amount_usd),0) as avg_claim_usd,
+                COALESCE(SUM(claim_amount_usd) FILTER (WHERE decision='BLOCKED'),0) as blocked_usd,
+                COALESCE(AVG(fraud_indicators),0) as avg_fraud
+            FROM insurance_claims GROUP BY insurance_type ORDER BY total DESC
+        """)
+        for r in rows:
+            r["approval_rate"] = round(_si(r["approved"]) / max(_si(r["total"]),1), 4)
+            r["avg_fraud"] = round(_sf(r["avg_fraud"]), 2)
+            r["avg_claim_usd"] = round(_sf(r["avg_claim_usd"]), 2)
+            r["blocked_usd"] = _sf(r["blocked_usd"])
+        return jsonify({"success": True, "by_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/insurance/by-region')
+def insurance_by_region():
+    try:
+        rows = _db_query("""
+            SELECT region, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COALESCE(SUM(claim_amount_usd) FILTER (WHERE decision='APPROVED'),0) as approved_usd,
+                COALESCE(SUM(claim_amount_usd) FILTER (WHERE decision='BLOCKED'),0) as blocked_usd,
+                COALESCE(AVG(fraud_indicators),0) as avg_fraud
+            FROM insurance_claims GROUP BY region ORDER BY total DESC
+        """)
+        for r in rows:
+            r["approval_rate"] = round(_si(r["approved"]) / max(_si(r["total"]),1), 4)
+        return jsonify({"success": True, "by_region": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ── ROBOTICS ─────────────────────────────────────────────────────────────────
+
+@app.route('/api/robotics/metrics')
+@app.route('/api/robotics/metrics.json')
+def robotics_metrics():
+    try:
+        t = _db_one("""
+            SELECT COUNT(*) as total_actions,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COUNT(*) FILTER (WHERE decision='HOLD') as held,
+                COALESCE(AVG(sensor_confidence),0) as avg_sensor_confidence,
+                COALESCE(AVG(collision_risk),0) as avg_collision_risk,
+                COALESCE(AVG(decision_score),0) as avg_decision_score,
+                COALESCE(AVG(trajectory_score),0) as avg_trajectory_score,
+                COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as actions_24h,
+                COUNT(DISTINCT robot_id) as active_robots
+            FROM robot_actions
+        """)
+        cyc = _db_one("SELECT COUNT(*) as cycles, COALESCE(SUM(safety_incidents_prevented),0) as incidents FROM robotics_cycle_metrics")
+        total = _si(t.get("total_actions")) or 1
+        return jsonify({"success": True, "metrics": {
+            "total_actions": _si(t.get("total_actions")),
+            "actions_approved": _si(t.get("approved")),
+            "actions_blocked": _si(t.get("blocked")),
+            "actions_held": _si(t.get("held")),
+            "approval_rate": round(_si(t.get("approved")) / total, 4),
+            "avg_sensor_confidence": round(_sf(t.get("avg_sensor_confidence")), 4),
+            "avg_collision_risk": round(_sf(t.get("avg_collision_risk")), 4),
+            "avg_decision_score": round(_sf(t.get("avg_decision_score")), 4),
+            "avg_trajectory_score": round(_sf(t.get("avg_trajectory_score")), 4),
+            "actions_last_24h": _si(t.get("actions_24h")),
+            "active_robots": _si(t.get("active_robots")),
+            "safety_incidents_prevented": _si(cyc.get("incidents")),
+            "simulation_cycles": _si(cyc.get("cycles")),
+        }})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/robotics/actions')
+def robotics_actions():
+    try:
+        limit = min(int(request.args.get("limit", 50)), 200)
+        rows = _db_query("""
+            SELECT action_id, robot_id, robot_type, industry, action_type, environment,
+                sensor_confidence, collision_risk, success_probability,
+                sensor_fusion_agreement, mechanical_margin, mission_logic_score,
+                payload_kg, speed_ms, proximity_cm, battery_pct, temperature_c,
+                decision, decision_score, block_reason, receipt_id,
+                probability_score, risk_exposure, signal_coherence,
+                trend_persistence, stress_resilience, logic_consistency,
+                trajectory_score, created_at
+            FROM robot_actions ORDER BY created_at DESC LIMIT %s
+        """, [limit])
+        for r in rows:
+            r["created_at"] = str(r.get("created_at", ""))
+        return jsonify({"success": True, "actions": rows, "total": len(rows)})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/robotics/fleet')
+def robotics_fleet():
+    try:
+        rows = _db_query("""
+            SELECT robot_id, robot_type, industry,
+                COUNT(*) as total_actions,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(sensor_confidence)::numeric,3) as avg_sensor_confidence,
+                ROUND(AVG(collision_risk)::numeric,3) as avg_collision_risk,
+                ROUND(AVG(decision_score)::numeric,3) as avg_score,
+                MAX(created_at) as last_seen
+            FROM robot_actions GROUP BY robot_id, robot_type, industry ORDER BY total_actions DESC LIMIT 100
+        """)
+        for r in rows:
+            r["last_seen"] = str(r.get("last_seen", ""))
+            r["approval_rate"] = round(_si(r["approved"]) / max(_si(r["total_actions"]),1), 4)
+        return jsonify({"success": True, "fleet": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/robotics/by-robot')
+def robotics_by_robot():
+    try:
+        rows = _db_query("""
+            SELECT robot_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(AVG(collision_risk)::numeric,3) as avg_collision_risk
+            FROM robot_actions GROUP BY robot_type ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_robot_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/robotics/by-industry')
+def robotics_by_industry():
+    try:
+        rows = _db_query("""
+            SELECT industry, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(AVG(sensor_confidence)::numeric,3) as avg_sensor_confidence
+            FROM robot_actions GROUP BY industry ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_industry": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ── MEDICAL ──────────────────────────────────────────────────────────────────
+
+@app.route('/api/medical/metrics')
+@app.route('/api/medical/metrics.json')
+def medical_metrics():
+    try:
+        t = _db_one("""
+            SELECT COUNT(*) as total_decisions,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COUNT(*) FILTER (WHERE decision='HOLD') as held,
+                COALESCE(AVG(diagnostic_confidence),0) as avg_diagnostic_confidence,
+                COALESCE(AVG(patient_risk_score),0) as avg_patient_risk,
+                COALESCE(AVG(decision_score),0) as avg_decision_score,
+                COALESCE(AVG(trajectory_score),0) as avg_trajectory_score,
+                COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as decisions_24h,
+                COUNT(DISTINCT device_id) as active_devices,
+                COUNT(*) FILTER (WHERE decision='BLOCKED' AND patient_risk_score > 70) as safety_blocks
+            FROM medical_decisions
+        """)
+        cyc = _db_one("SELECT COUNT(*) as cycles FROM medical_cycle_metrics")
+        total = _si(t.get("total_decisions")) or 1
+        blocked = _si(t.get("blocked"))
+        return jsonify({"success": True, "metrics": {
+            "total_decisions": _si(t.get("total_decisions")),
+            "decisions_approved": _si(t.get("approved")),
+            "decisions_blocked": blocked,
+            "decisions_held": _si(t.get("held")),
+            "approval_rate": round(_si(t.get("approved")) / total, 4),
+            "block_rate": round(blocked / total, 4),
+            "avg_diagnostic_confidence": round(_sf(t.get("avg_diagnostic_confidence")), 4),
+            "avg_patient_risk": round(_sf(t.get("avg_patient_risk")), 4),
+            "avg_decision_score": round(_sf(t.get("avg_decision_score")), 4),
+            "avg_trajectory_score": round(_sf(t.get("avg_trajectory_score")), 4),
+            "decisions_last_24h": _si(t.get("decisions_24h")),
+            "active_devices": _si(t.get("active_devices")),
+            "safety_blocks": _si(t.get("safety_blocks")),
+            "simulation_cycles": _si(cyc.get("cycles")),
+        }})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/medical/decisions')
+def medical_decisions_list():
+    try:
+        limit = min(int(request.args.get("limit", 50)), 200)
+        rows = _db_query("""
+            SELECT decision_id, device_id, device_type, decision_type, patient_profile, jurisdiction,
+                sensor_confidence, diagnostic_confidence, patient_risk_score,
+                contraindication_score, evidence_completeness, care_plan_alignment,
+                recovery_trend, comorbidity_index, ethics_flag, consent_verified,
+                off_label_use, days_since_calibration, prior_adverse_events,
+                decision, decision_score, block_reason, receipt_id,
+                probability_score, risk_exposure, signal_coherence,
+                trend_persistence, stress_resilience, logic_consistency,
+                trajectory_score, created_at
+            FROM medical_decisions ORDER BY created_at DESC LIMIT %s
+        """, [limit])
+        for r in rows:
+            r["created_at"] = str(r.get("created_at", ""))
+        return jsonify({"success": True, "decisions": rows, "total": len(rows)})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/medical/by-type')
+def medical_by_type():
+    try:
+        rows = _db_query("""
+            SELECT decision_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(AVG(diagnostic_confidence)::numeric,3) as avg_confidence
+            FROM medical_decisions GROUP BY decision_type ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/medical/by-jurisdiction')
+def medical_by_jurisdiction():
+    try:
+        rows = _db_query("""
+            SELECT jurisdiction, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate
+            FROM medical_decisions GROUP BY jurisdiction ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_jurisdiction": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ── ENERGY ───────────────────────────────────────────────────────────────────
+
+@app.route('/api/energy/metrics')
+@app.route('/api/energy/metrics.json')
+def energy_metrics():
+    try:
+        t = _db_one("""
+            SELECT COUNT(*) as total_decisions,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COUNT(*) FILTER (WHERE decision='HOLD') as held,
+                COALESCE(SUM(contracted_mw),0) as total_mw,
+                COALESCE(SUM(contracted_mw) FILTER (WHERE decision='APPROVED'),0) as approved_mw,
+                COALESCE(SUM(contracted_mw) FILTER (WHERE decision='BLOCKED'),0) as blocked_mw,
+                COALESCE(SUM(carbon_avoided_tco2e),0) as total_carbon_avoided,
+                COALESCE(AVG(decision_score),0) as avg_decision_score,
+                COALESCE(AVG(capacity_margin_pct),0) as avg_capacity_margin,
+                COALESCE(AVG(frequency_deviation_hz),0) as avg_frequency_deviation,
+                COALESCE(AVG(settlement_risk_usd),0) as avg_settlement_risk,
+                COALESCE(AVG(lmp_forecast_confidence),0) as avg_lmp_confidence,
+                COALESCE(AVG(renewable_intermittency_buffer),0) as avg_renewable_buffer,
+                COUNT(*) FILTER (WHERE hard_block_reason IS NOT NULL AND hard_block_reason != '') as hard_blocks,
+                COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as decisions_24h,
+                COUNT(DISTINCT energy_source) as sources_active,
+                COUNT(DISTINCT grid_region) as regions_active
+            FROM energy_decisions
+        """)
+        cyc = _db_one("SELECT COUNT(*) as cycles FROM energy_cycle_metrics")
+        total = _si(t.get("total_decisions")) or 1
+        blocked = _si(t.get("blocked"))
+        return jsonify({"success": True, "metrics": {
+            "total_decisions": _si(t.get("total_decisions")),
+            "decisions_approved": _si(t.get("approved")),
+            "decisions_blocked": blocked,
+            "decisions_held": _si(t.get("held")),
+            "approval_rate": round(_si(t.get("approved")) / total, 4),
+            "block_rate": round(blocked / total, 4),
+            "total_mw_governed": round(_sf(t.get("total_mw")), 2),
+            "approved_mw": round(_sf(t.get("approved_mw")), 2),
+            "blocked_mw": round(_sf(t.get("blocked_mw")), 2),
+            "total_carbon_avoided": round(_sf(t.get("total_carbon_avoided")), 2),
+            "avg_decision_score": round(_sf(t.get("avg_decision_score")), 4),
+            "avg_capacity_margin": round(_sf(t.get("avg_capacity_margin")), 4),
+            "avg_frequency_deviation": round(_sf(t.get("avg_frequency_deviation")), 6),
+            "avg_settlement_risk": round(_sf(t.get("avg_settlement_risk")), 2),
+            "avg_lmp_confidence": round(_sf(t.get("avg_lmp_confidence")), 4),
+            "avg_renewable_buffer": round(_sf(t.get("avg_renewable_buffer")), 4),
+            "hard_blocks": _si(t.get("hard_blocks")),
+            "decisions_last_24h": _si(t.get("decisions_24h")),
+            "sources_active": _si(t.get("sources_active")),
+            "regions_active": _si(t.get("regions_active")),
+            "simulation_cycles": _si(cyc.get("cycles")),
+        }})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/energy/live-feed')
+def energy_live_feed():
+    try:
+        rows = _db_query("""
+            SELECT decision_id, decision_type, energy_source, grid_region,
+                contracted_mw, settlement_price_mwh, contract_term_years,
+                carbon_avoided_tco2e, capacity_margin_pct, frequency_deviation_hz,
+                settlement_risk_usd, lmp_forecast_confidence, renewable_intermittency_buffer,
+                decision, decision_score, block_reason, hard_block_reason, receipt_id,
+                probability_score, risk_exposure, signal_coherence,
+                trend_persistence, stress_resilience, logic_consistency,
+                trajectory_score, created_at
+            FROM energy_decisions ORDER BY created_at DESC LIMIT 50
+        """)
+        for r in rows:
+            r["created_at"] = str(r.get("created_at", ""))
+        return jsonify({"success": True, "decisions": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/energy/by-source')
+def energy_by_source():
+    try:
+        rows = _db_query("""
+            SELECT energy_source, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(SUM(contracted_mw)::numeric,1) as total_mw,
+                ROUND(SUM(carbon_avoided_tco2e)::numeric,1) as carbon_avoided
+            FROM energy_decisions GROUP BY energy_source ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_source": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/energy/by-region')
+def energy_by_region():
+    try:
+        rows = _db_query("""
+            SELECT grid_region, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(SUM(contracted_mw)::numeric,1) as total_mw
+            FROM energy_decisions GROUP BY grid_region ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_region": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/energy/by-type')
+def energy_by_type():
+    try:
+        rows = _db_query("""
+            SELECT decision_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate
+            FROM energy_decisions GROUP BY decision_type ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ── REAL ESTATE ───────────────────────────────────────────────────────────────
+
+@app.route('/api/real-estate/metrics')
+@app.route('/api/real-estate/metrics.json')
+def real_estate_metrics():
+    try:
+        t = _db_one("""
+            SELECT COUNT(*) as total_decisions,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COUNT(*) FILTER (WHERE decision='HOLD') as held,
+                COALESCE(AVG(model_accuracy),0) as avg_avm_confidence,
+                COALESCE(AVG(ltv_ratio),0) as avg_ltv_ratio,
+                COALESCE(AVG(decision_score),0) as avg_decision_score,
+                COALESCE(AVG(trajectory_score),0) as avg_trajectory_score,
+                COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as decisions_24h,
+                COUNT(DISTINCT property_type) as property_types_active,
+                COUNT(*) FILTER (WHERE aml_flag=true) as aml_blocks,
+                COUNT(*) FILTER (WHERE rera_compliant=false AND decision='BLOCKED') as compliance_blocks
+            FROM property_decisions
+        """)
+        cyc = _db_one("SELECT COUNT(*) as cycles FROM property_cycle_metrics")
+        total = _si(t.get("total_decisions")) or 1
+        blocked = _si(t.get("blocked"))
+        return jsonify({"success": True, "metrics": {
+            "total_decisions": _si(t.get("total_decisions")),
+            "decisions_approved": _si(t.get("approved")),
+            "decisions_blocked": blocked,
+            "decisions_held": _si(t.get("held")),
+            "approval_rate": round(_si(t.get("approved")) / total, 4),
+            "block_rate": round(blocked / total, 4),
+            "avg_avm_confidence": round(_sf(t.get("avg_avm_confidence")), 4),
+            "avg_ltv_ratio": round(_sf(t.get("avg_ltv_ratio")), 4),
+            "avg_decision_score": round(_sf(t.get("avg_decision_score")), 4),
+            "avg_trajectory_score": round(_sf(t.get("avg_trajectory_score")), 4),
+            "decisions_last_24h": _si(t.get("decisions_24h")),
+            "property_types_active": _si(t.get("property_types_active")),
+            "aml_blocks": _si(t.get("aml_blocks")),
+            "compliance_blocks": _si(t.get("compliance_blocks")),
+            "simulation_cycles": _si(cyc.get("cycles")),
+        }})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/real-estate/live-feed')
+def real_estate_live_feed():
+    try:
+        rows = _db_query("""
+            SELECT decision_id, property_id, decision_type, property_type,
+                market_segment, jurisdiction, financing_mode,
+                comparable_quality, model_accuracy, data_freshness,
+                market_depth, ltv_ratio, price_deviation, aml_risk_score,
+                comparable_alignment, market_trend_score, demand_index,
+                inventory_pressure, liquidity_score, rate_sensitivity,
+                vacancy_risk, aml_flag, rera_compliant, sharia_screening_passed,
+                beneficial_owner_verified,
+                decision, decision_score, block_reason, receipt_id,
+                probability_score, risk_exposure, signal_coherence,
+                trend_persistence, stress_resilience, logic_consistency,
+                trajectory_score, created_at
+            FROM property_decisions ORDER BY created_at DESC LIMIT 50
+        """)
+        for r in rows:
+            r["created_at"] = str(r.get("created_at", ""))
+        return jsonify({"success": True, "decisions": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/real-estate/by-type')
+def real_estate_by_type():
+    try:
+        rows = _db_query("""
+            SELECT decision_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate
+            FROM property_decisions GROUP BY decision_type ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/real-estate/by-property')
+def real_estate_by_property():
+    try:
+        rows = _db_query("""
+            SELECT property_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(AVG(ltv_ratio)::numeric,3) as avg_ltv
+            FROM property_decisions GROUP BY property_type ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_property_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/real-estate/by-jurisdiction')
+def real_estate_by_jurisdiction():
+    try:
+        rows = _db_query("""
+            SELECT jurisdiction, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(AVG(ltv_ratio)::numeric,3) as avg_ltv
+            FROM property_decisions GROUP BY jurisdiction ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_jurisdiction": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ── AGENTS ───────────────────────────────────────────────────────────────────
+
+@app.route('/api/agents/metrics')
+@app.route('/api/agents/metrics.json')
+def agents_metrics():
+    try:
+        t = _db_one("""
+            SELECT COUNT(*) as total_decisions,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COUNT(*) FILTER (WHERE decision='HOLD') as held,
+                COALESCE(AVG(task_complexity),0) as avg_task_complexity,
+                COALESCE(AVG(scope_blast_radius),0) as avg_scope_risk,
+                COALESCE(AVG(decision_score),0) as avg_decision_score,
+                COALESCE(AVG(trajectory_score),0) as avg_trajectory_score,
+                COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as decisions_24h,
+                COUNT(DISTINCT agent_id) as active_agents,
+                COUNT(*) FILTER (WHERE decision='BLOCKED' AND scope_blast_radius > 70) as safety_blocks
+            FROM agent_decisions
+        """)
+        cyc = _db_one("SELECT COUNT(*) as cycles FROM agent_cycle_metrics")
+        total = _si(t.get("total_decisions")) or 1
+        blocked = _si(t.get("blocked"))
+        return jsonify({"success": True, "metrics": {
+            "total_decisions": _si(t.get("total_decisions")),
+            "decisions_approved": _si(t.get("approved")),
+            "decisions_blocked": blocked,
+            "decisions_held": _si(t.get("held")),
+            "approval_rate": round(_si(t.get("approved")) / total, 4),
+            "block_rate": round(blocked / total, 4),
+            "avg_task_complexity": round(_sf(t.get("avg_task_complexity")), 4),
+            "avg_scope_risk": round(_sf(t.get("avg_scope_risk")), 4),
+            "avg_decision_score": round(_sf(t.get("avg_decision_score")), 4),
+            "avg_trajectory_score": round(_sf(t.get("avg_trajectory_score")), 4),
+            "decisions_last_24h": _si(t.get("decisions_24h")),
+            "active_agents": _si(t.get("active_agents")),
+            "safety_blocks": _si(t.get("safety_blocks")),
+            "simulation_cycles": _si(cyc.get("cycles")),
+        }})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/agents/decisions')
+def agents_decisions_list():
+    try:
+        limit = min(int(request.args.get("limit", 50)), 200)
+        rows = _db_query("""
+            SELECT decision_id, agent_id, agent_type, decision_type,
+                environment, reversibility, task_complexity, resource_utilization,
+                context_completeness, goal_alignment, dependency_score,
+                scope_blast_radius, fallback_coverage, permission_scope,
+                safety_critical_flag, decision, decision_score, block_reason, receipt_id,
+                probability_score, risk_exposure, signal_coherence,
+                trend_persistence, stress_resilience, logic_consistency,
+                trajectory_score, created_at
+            FROM agent_decisions ORDER BY created_at DESC LIMIT %s
+        """, [limit])
+        for r in rows:
+            r["created_at"] = str(r.get("created_at", ""))
+        return jsonify({"success": True, "decisions": rows, "total": len(rows)})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/agents/by-agent')
+def agents_by_agent():
+    try:
+        rows = _db_query("""
+            SELECT agent_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(AVG(task_complexity)::numeric,3) as avg_task_complexity,
+                ROUND(AVG(scope_blast_radius)::numeric,3) as avg_scope_risk
+            FROM agent_decisions GROUP BY agent_type ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_agent_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/agents/by-type')
+def agents_by_type():
+    try:
+        rows = _db_query("""
+            SELECT decision_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate
+            FROM agent_decisions GROUP BY decision_type ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_decision_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_frontend(path):
     if request.path.startswith('/api/'):
         return jsonify({'error': 'API endpoint not found', 'path': request.path}), 404
     if path and os.path.exists(os.path.join(DIST_DIR, path)):
-        return send_from_directory(DIST_DIR, path)
-    return send_from_directory(DIST_DIR, 'index.html')
+        resp = send_from_directory(DIST_DIR, path)
+        if path.endswith('.html'):
+            resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            resp.headers['Pragma'] = 'no-cache'
+            resp.headers['Expires'] = '0'
+        return resp
+    resp = send_from_directory(DIST_DIR, 'index.html')
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 
 

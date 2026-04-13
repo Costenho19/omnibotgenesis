@@ -119,7 +119,15 @@ export default function PublicGovernanceSandbox() {
   }, [])
 
   const runEvaluation = async () => {
-    if (!scenario.trim() || scenario.trim().length < 10) return
+    const trimmed = scenario.trim()
+    if (!trimmed) {
+      setError('Please describe a decision scenario before evaluating.\nEscribe un escenario de decisión antes de evaluar.')
+      return
+    }
+    if (trimmed.length < 10) {
+      setError('Your scenario is too short. Add a bit more detail so OMNIX can evaluate it.\nTu escenario es muy corto. Añade un poco más de detalle para que OMNIX pueda evaluarlo.')
+      return
+    }
     setIsEvaluating(true)
     setResult(null)
     setError(null)
@@ -131,7 +139,7 @@ export default function PublicGovernanceSandbox() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          scenario_text: scenario.trim().slice(0, 1500),
+          scenario_text: trimmed.slice(0, 1500),
           ...(companyName ? { company_name: companyName } : {}),
           language: language === 'auto' ? 'en' : language,
           ...(email.trim() ? { email: email.trim() } : {}),
@@ -139,23 +147,38 @@ export default function PublicGovernanceSandbox() {
       })
 
       if (res.status === 429) {
-        setError('Rate limit: max 5 per minute. Wait a moment and try again.\nLímite: máximo 5 por minuto. Espere un momento.')
+        setError('You have reached the evaluation limit. Please wait a moment and try again.\nHas alcanzado el límite de evaluaciones. Espera un momento e intenta de nuevo.')
         setIsEvaluating(false)
         return
       }
 
-      const data = await res.json()
+      let data: Record<string, unknown>
+      try {
+        data = await res.json()
+      } catch {
+        setError('The server returned an unexpected response. Please try again in a few seconds.\nEl servidor devolvió una respuesta inesperada. Intenta de nuevo en unos segundos.')
+        setIsEvaluating(false)
+        return
+      }
+
       if (!data.success) {
-        setError(data.error || data.error_es || 'Evaluation failed')
+        const msg = (data.error_es as string) || (data.error as string) || ''
+        if (msg.toLowerCase().includes('short') || msg.toLowerCase().includes('corto')) {
+          setError('Your scenario is too short. Please add more detail about the decision you want to evaluate.\nTu escenario es muy corto. Añade más detalle sobre la decisión que quieres evaluar.')
+        } else if (res.status >= 500) {
+          setError('Our servers are busy right now. Please try again in a few seconds.\nNuestros servidores están ocupados. Intenta de nuevo en unos segundos.')
+        } else {
+          setError('We could not process your scenario. Try rephrasing it or use one of the examples as a guide.\nNo pudimos procesar tu escenario. Intenta reformularlo o usa uno de los ejemplos como guía.')
+        }
         setIsEvaluating(false)
         return
       }
 
-      setResult(data)
+      setResult(data as unknown as EvaluationResult)
       setIsEvaluating(false)
 
       let step = 0
-      const totalGates = data.gate_results?.length || 0
+      const totalGates = (data.gate_results as unknown[])?.length || 0
       const animate = () => {
         if (step < totalGates) {
           setCurrentCheckpoint(step)
@@ -173,7 +196,7 @@ export default function PublicGovernanceSandbox() {
       }, 200)
 
     } catch {
-      setError('Connection error. Please try again.\nError de conexión. Intente de nuevo.')
+      setError('Connection error. Check your internet and try again.\nError de conexión. Verifica tu internet e intenta de nuevo.')
       setIsEvaluating(false)
     }
   }

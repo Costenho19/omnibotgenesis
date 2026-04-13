@@ -166,7 +166,7 @@ export default function PitchDeck() {
             ))}
           </div>
           <div style={{ fontSize: 13, color: '#475569' }}>
-            Harold Nunes · Founder · Abu Dhabi, UAE · contacto@omnixquantum.net
+            Harold Nunes · Founder · contacto@omnixquantum.net
           </div>
           <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8 }}>
             <span className="tag" style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.25)', color: '#facc15' }}>
@@ -623,7 +623,7 @@ export default function PitchDeck() {
                 H
               </div>
               <h3 style={{ fontWeight: 800, color: '#F8FAFC', fontSize: 18, margin: '0 0 4px' }}>Harold Nunes</h3>
-              <div style={{ fontSize: 13, color: '#C9A227', marginBottom: 16, fontWeight: 600 }}>Founder · Builder · Abu Dhabi, UAE</div>
+              <div style={{ fontSize: 13, color: '#C9A227', marginBottom: 16, fontWeight: 600 }}>Founder · Builder</div>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
                   { icon: <Star size={13} color="#facc15" />, text: 'Eureka GCC Dubai 2026 Semifinalist' },
@@ -742,7 +742,7 @@ export default function PitchDeck() {
           </div>
 
           <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 11, color: '#334155' }}>
-            OMNIX Quantum · Harold Nunes · Abu Dhabi, UAE · omnixquantum.net · April 2026
+            OMNIX Quantum · Harold Nunes · omnixquantum.net · April 2026
             <br />Confidential — for qualified investors only
           </div>
         </div>

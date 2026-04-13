@@ -94,7 +94,6 @@ export default function TermsOfService() {
             <div style={{ marginTop: '12px', padding: '16px', background: '#1e293b', borderRadius: '8px' }}>
               <p style={{ margin: '0' }}>Email: <a href="mailto:contacto@omnixquantum.net" style={{ color: '#6366f1' }}>contacto@omnixquantum.net</a></p>
               <p style={{ margin: '8px 0 0 0' }}>Website: <a href="https://omnixquantum.net" style={{ color: '#6366f1' }}>omnixquantum.net</a></p>
-              <p style={{ margin: '8px 0 0 0' }}>Abu Dhabi, UAE</p>
             </div>
           </section>
 

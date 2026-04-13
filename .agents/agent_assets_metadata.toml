@@ -156,3 +156,9 @@ id = "8OLAfz-b6h9crDXKSinEj"
 uri = "file://OMNIX_Velos_Pipeline_Log_v1.pdf"
 type = "pdf"
 title = "OMNIX x Velos — Shared Pipeline Log v1.0 (final)"
+
+[[outputs]]
+id = "9Kz4moE-2e-VxQ7B85NRm"
+uri = "file://output/OMNIX_Skilligen_NDA.pdf"
+type = "pdf"
+title = "NDA — OMNIX Quantum Ltd & Skilligen HDI"

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle, Copy, Terminal, Zap, Key, FileText, Shield, ArrowRight, Cpu } from 'lucide-react'
+import { CheckCircle, Copy, Terminal, Zap, Key, FileText, Shield, ArrowRight } from 'lucide-react'
 
 const GOLD = '#C9A227'
 const DARK = '#0A1628'
@@ -130,7 +130,7 @@ export default function IntegrationGuide() {
       {/* Header */}
       <div style={{ borderBottom: `1px solid ${GOLD}22`, padding: '28px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Cpu size={22} color={GOLD} />
+          <img src="/logo.png" alt="OMNIX" style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'contain' }} />
           <span style={{ fontWeight: 800, fontSize: 18, color: GOLD, letterSpacing: '0.08em' }}>OMNIX</span>
           <span style={{ color: '#444466', margin: '0 8px' }}>|</span>
           <span style={{ fontSize: 14, color: '#999' }}>Integration Guide</span>

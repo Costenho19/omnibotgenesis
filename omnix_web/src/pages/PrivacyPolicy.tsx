@@ -17,7 +17,7 @@ export default function PrivacyPolicy() {
           <section style={{ marginBottom: '40px' }}>
             <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: '600', marginBottom: '16px', borderBottom: '1px solid #1e293b', paddingBottom: '8px' }}>1. Who We Are</h2>
             <p>OMNIX ("we", "our", "us") operates the Decision Governance Infrastructure platform accessible at omnixquantum.net. This Privacy Policy explains what data we collect, how we use it, and your rights regarding that data.</p>
-            <p style={{ marginTop: '12px' }}>Contact: <a href="mailto:contacto@omnixquantum.net" style={{ color: '#6366f1' }}>contacto@omnixquantum.net</a> · Abu Dhabi, UAE</p>
+            <p style={{ marginTop: '12px' }}>Contact: <a href="mailto:contacto@omnixquantum.net" style={{ color: '#6366f1' }}>contacto@omnixquantum.net</a></p>
           </section>
 
           <section style={{ marginBottom: '40px' }}>
@@ -120,7 +120,6 @@ export default function PrivacyPolicy() {
             <div style={{ padding: '16px', background: '#1e293b', borderRadius: '8px' }}>
               <p style={{ margin: '0' }}>Email: <a href="mailto:contacto@omnixquantum.net" style={{ color: '#6366f1' }}>contacto@omnixquantum.net</a></p>
               <p style={{ margin: '8px 0 0 0' }}>Website: <a href="https://omnixquantum.net" style={{ color: '#6366f1' }}>omnixquantum.net</a></p>
-              <p style={{ margin: '8px 0 0 0' }}>Abu Dhabi, UAE</p>
             </div>
           </section>
 

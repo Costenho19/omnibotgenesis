@@ -1144,14 +1144,30 @@ class AutoTradingBot:
         """
         ADR-067: Return (trade_count_24h, source) for AML structuring detection.
 
-        Attempts to read today's executed trade count from the database service.
-        If unavailable, returns (0, "PROXY") so the AML call site can emit
-        AML_FREQUENCY_PROXY_MODE in the decision trace — making the limitation
-        explicit rather than silently passing trade_frequency=0.
+        Queries shadow_trade_events for trades in the last 24 hours directly
+        via DB connection. Falls back to database_service methods, then PROXY.
 
         Returns:
             (int, str): (trade_count, source) where source is "DB" or "PROXY"
         """
+        try:
+            import os
+            import psycopg2
+            db_url = os.environ.get('OMNIX_DB_URL') or os.environ.get('DATABASE_URL')
+            if db_url:
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                cur.execute("""
+                    SELECT COUNT(*) FROM shadow_trade_events
+                    WHERE created_at >= NOW() - INTERVAL '24 hours'
+                """)
+                row = cur.fetchone()
+                cur.close()
+                conn.close()
+                if row is not None:
+                    return (int(row[0] or 0), "DB")
+        except Exception:
+            pass
         try:
             if self.database_service and hasattr(self.database_service, 'get_today_trade_stats'):
                 stats = self.database_service.get_today_trade_stats()
@@ -4265,6 +4281,18 @@ class AutoTradingBot:
             # Screens for Anti-Money Laundering risk: privacy coins, mixer tokens,
             # anomalous volume, and structuring patterns. FATF/FinCEN/UAE Central Bank aligned.
             # Fail-safe: exceptions → pass-through. Default: DISABLED.
+
+            # ADR-072: Pre-compute estimated_value_usd for AML volume detection
+            # Uses position_size_usd from decision if available, else current_price * default unit
+            if 'estimated_value_usd' not in decision or not decision.get('estimated_value_usd'):
+                try:
+                    _pos_usd = float(decision.get('position_size_usd') or 0)
+                    if _pos_usd <= 0:
+                        _pos_usd = float(current_price) * 1.0
+                    decision['estimated_value_usd'] = round(_pos_usd, 2)
+                except Exception:
+                    pass
+
             if AML_GATE_AVAILABLE and AMLGate is not None:
                 try:
                     # ADR-067: Get real trade frequency; emit trace if proxy/unavailable

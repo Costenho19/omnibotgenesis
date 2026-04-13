@@ -1068,7 +1068,6 @@ export default function InstitutionalPage() {
                     WhatsApp
                   </a>
                 </li>
-                <li>Abu Dhabi, UAE</li>
               </ul>
             </div>
           </div>

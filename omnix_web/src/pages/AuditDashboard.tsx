@@ -229,7 +229,7 @@ export default function AuditDashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [domainFilter, setDomainFilter] = useState('')
   const [decisionFilter, setDecisionFilter] = useState('')
-  const [isDemo, setIsDemo] = useState(true)
+  const [isDemo] = useState(false)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
   const fetchData = useCallback(async (silent = false) => {
@@ -242,7 +242,7 @@ export default function AuditDashboard() {
 
       const url = isDemo
         ? `${API_BASE}/api/public/audit-demo`
-        : `${API_BASE}/api/governance/audit/decisions?${params}`
+        : `${API_BASE}/api/public/audit-live?${params}`
 
       const res = await fetch(url, { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -583,17 +583,9 @@ export default function AuditDashboard() {
             OMNIX Decision Governance — Executive Audit · ADR-059
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {isDemo && (
-              <button
-                onClick={() => setIsDemo(false)}
-                style={{ fontSize: 10, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Connect real data (API key required)
-              </button>
-            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#334155' }}>
-              <PulseDot color="#C9A227" />
-              <span>NIST-standardized post-quantum cryptography</span>
+              <PulseDot color="#10B981" />
+              <span>Live data · NIST post-quantum cryptography · 8 verticals</span>
             </div>
           </div>
         </div>

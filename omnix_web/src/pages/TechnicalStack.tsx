@@ -1,4 +1,4 @@
-import { CheckCircle, Shield, Lock, FileText, ArrowRight, Cpu, Link } from 'lucide-react'
+import { CheckCircle, Shield, Lock, FileText, ArrowRight, Link } from 'lucide-react'
 
 const GOLD = '#C9A227'
 const DARK = '#0A1628'
@@ -59,7 +59,7 @@ export default function TechnicalStack() {
       {/* Header */}
       <div style={{ borderBottom: `1px solid ${GOLD}22`, padding: '28px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Cpu size={22} color={GOLD} />
+          <img src="/logo.png" alt="OMNIX" style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'contain' }} />
           <span style={{ fontWeight: 800, fontSize: 18, color: GOLD, letterSpacing: '0.08em' }}>OMNIX</span>
           <span style={{ color: '#444466', margin: '0 8px' }}>|</span>
           <span style={{ fontSize: 14, color: '#999' }}>Technical Stack Summary</span>
@@ -179,10 +179,14 @@ export default function TechnicalStack() {
           <h2 style={{ fontSize: 13, fontWeight: 700, color: '#555', letterSpacing: '0.12em', marginBottom: 24 }}>DOMAIN COVERAGE</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
             {[
-              { name: 'Algorithmic Trading', link: '/credit' },
+              { name: 'Algorithmic Trading', link: '/try' },
               { name: 'Islamic Credit', link: '/credit' },
               { name: 'Insurance', link: '/insurance' },
               { name: 'Industrial Robotics', link: '/robotics' },
+              { name: 'Medical AI', link: '/medical' },
+              { name: 'Autonomous Agents', link: '/agents' },
+              { name: 'Energy Governance', link: '/energy' },
+              { name: 'Real Estate & PropTech', link: '/real-estate' },
             ].map(d => (
               <a key={d.name} href={d.link} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0D1E35', border: `1px solid ${GOLD}22`, borderRadius: 12, padding: '16px 18px', textDecoration: 'none' }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#ddd' }}>{d.name}</span>

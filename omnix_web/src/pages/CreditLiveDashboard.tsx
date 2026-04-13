@@ -167,16 +167,9 @@ export default function CreditLiveDashboard() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-
-  const safeJson = async (res: Response): Promise<unknown | null> => {
-    const text = await res.text()
-    if (!text || !text.trim()) return null
-    try { return JSON.parse(text) }
-    catch { return { _raw: text.slice(0, 120), _parseError: true } }
-  }
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fetchAll = useCallback(async () => {
-    setRefreshing(true)
     try {
       const [metricsRes, appsRes, sectorsRes] = await Promise.all([
         fetch(`${API_BASE}/api/credit/metrics`),
@@ -184,65 +177,38 @@ export default function CreditLiveDashboard() {
         fetch(`${API_BASE}/api/credit/sectors`),
       ])
 
-      const metricsData = await safeJson(metricsRes) as Record<string, unknown> | null
-      if (metricsData && (metricsData as Record<string, unknown>)._parseError) {
-      } else if (metricsRes.ok && metricsData) {
-        const d = metricsData as Record<string, unknown>
-        if (d.status === 'ok') {
-          setMetrics(d.metrics as Metrics)
-          setMacro(d.macro as MacroData)
-          setActivity(d.activity_24h as Activity24h)
-          dataLoaded.current = true
-        } else {
-        }
+      if (!metricsRes.ok || metricsRes.headers.get('content-type')?.includes('text/html')) {
+        throw new Error(`HTTP ${metricsRes.status}`)
       }
 
-      const appsData = await safeJson(appsRes) as Record<string, unknown> | null
-      if (appsRes.ok && appsData && !(appsData as Record<string, unknown>)._parseError) {
-        const d = appsData as Record<string, unknown>
-        if (d.status === 'ok') setApplications(d.applications as Application[])
+      const [md, ad, sd] = await Promise.all([
+        metricsRes.json(), appsRes.json(), sectorsRes.json()
+      ])
+
+      if (md.success) {
+        setMetrics(md.metrics as Metrics)
+        setMacro(md.macro as MacroData)
+        setActivity(md.activity_24h as Activity24h)
       }
-      const sectorsData = await safeJson(sectorsRes) as Record<string, unknown> | null
-      if (sectorsRes.ok && sectorsData && !(sectorsData as Record<string, unknown>)._parseError) {
-        const d = sectorsData as Record<string, unknown>
-        if (d.status === 'ok') setSectors(d.sectors as SectorData[])
-      }
+      if (ad.success) setApplications(ad.applications as Application[])
+      if (sd.success) setSectors(sd.sectors as SectorData[])
 
       setLastRefresh(new Date())
-    } catch (e) {
+    } catch {
+      if (retryRef.current) clearTimeout(retryRef.current)
+      retryRef.current = setTimeout(() => fetchAll(), RETRY_INTERVAL)
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
   }, [])
 
-  const dataLoaded = useRef(false)
-
   useEffect(() => {
-    let retryTimer: ReturnType<typeof setInterval> | null = null
-    let mainInterval: ReturnType<typeof setInterval> | null = null
-
-    const doFetch = async () => {
-      await fetchAll()
-    }
-
-    doFetch()
-
-    // Fast retry every 5s until data is loaded (handles cold start)
-    retryTimer = setInterval(async () => {
-      if (!dataLoaded.current) {
-        await fetchAll()
-      } else {
-        if (retryTimer) clearInterval(retryTimer)
-      }
-    }, RETRY_INTERVAL)
-
-    // Normal refresh every 30s
-    mainInterval = setInterval(fetchAll, REFRESH_INTERVAL)
-
+    fetchAll()
+    const interval = setInterval(fetchAll, REFRESH_INTERVAL)
     return () => {
-      if (retryTimer) clearInterval(retryTimer)
-      if (mainInterval) clearInterval(mainInterval)
+      clearInterval(interval)
+      if (retryRef.current) clearTimeout(retryRef.current)
     }
   }, [fetchAll])
 

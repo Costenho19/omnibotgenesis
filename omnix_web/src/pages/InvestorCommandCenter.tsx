@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Activity, Shield, TrendingUp, Clock, Database, Lock,
-  RefreshCw, ExternalLink, ArrowLeft, Zap, CheckCircle
+  RefreshCw, ExternalLink, ArrowLeft, Zap, CheckCircle,
+  LineChart, Landmark, ShieldCheck, Cpu, Stethoscope,
+  Building2, Network, Gauge
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
 
@@ -14,7 +16,7 @@ interface VerticalData {
   live_since: string
   cycle_sec: number
   color: string
-  icon: string
+  icon: ReactNode
   decisions: number
   approved: number
   blocked: number
@@ -105,25 +107,49 @@ const FALLBACK_DATA: LiveMetricsResponse = {
   verticals: {
     trading: {
       label: 'Digital Asset Trading', market_size: '$5B TAM', live_since: '2026-01-15',
-      cycle_sec: 90, color: '#C9A227', icon: '📈',
+      cycle_sec: 90, color: '#C9A227', icon: <LineChart size={22} strokeWidth={1.5} />,
       decisions: 0, approved: 0, blocked: 0, hold: 0,
       decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
     credit: {
       label: 'Islamic Credit (UAE/GCC)', market_size: '$2T AUM', live_since: '2026-03-27',
-      cycle_sec: 300, color: '#a78bfa', icon: '🕌',
+      cycle_sec: 300, color: '#a78bfa', icon: <Landmark size={22} strokeWidth={1.5} />,
       decisions: 0, approved: 0, blocked: 0, hold: 0,
       decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
     insurance: {
       label: 'Global Insurance Claims', market_size: '$7T+ Premiums', live_since: '2026-03-29',
-      cycle_sec: 240, color: '#60a5fa', icon: '🛡️',
+      cycle_sec: 240, color: '#60a5fa', icon: <ShieldCheck size={22} strokeWidth={1.5} />,
       decisions: 0, approved: 0, blocked: 0, hold: 0,
       decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
     robotics: {
       label: 'Robotics & Autonomous Systems', market_size: '$80B+ Market', live_since: '2026-03-29',
-      cycle_sec: 180, color: '#34d399', icon: '🤖',
+      cycle_sec: 180, color: '#34d399', icon: <Cpu size={22} strokeWidth={1.5} />,
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
+    },
+    medical: {
+      label: 'Medical AI Governance', market_size: '$45B+ Market', live_since: '2026-04-01',
+      cycle_sec: 120, color: '#f87171', icon: <Stethoscope size={22} strokeWidth={1.5} />,
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
+    },
+    energy: {
+      label: 'Energy Grid Governance', market_size: '$1T+ Market', live_since: '2026-04-01',
+      cycle_sec: 150, color: '#facc15', icon: <Gauge size={22} strokeWidth={1.5} />,
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
+    },
+    real_estate: {
+      label: 'Real Estate & PropTech', market_size: '$4.3T+ Market', live_since: '2026-04-01',
+      cycle_sec: 200, color: '#fb923c', icon: <Building2 size={22} strokeWidth={1.5} />,
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
+    },
+    agents: {
+      label: 'Autonomous Agent Governance', market_size: '$28B+ Market', live_since: '2026-04-01',
+      cycle_sec: 60, color: '#e879f9', icon: <Network size={22} strokeWidth={1.5} />,
       decisions: 0, approved: 0, blocked: 0, hold: 0,
       decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
@@ -195,7 +221,8 @@ function VerticalCard({ id, data, isLive }: { id: string; data: VerticalData; is
             width: 44, height: 44, borderRadius: 12,
             background: `${data.color}18`,
             border: `1px solid ${data.color}40`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: data.color,
           }}>{data.icon}</div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 14, color: '#F8FAFC', lineHeight: 1.2 }}>{data.label}</div>
@@ -525,7 +552,7 @@ export default function InvestorCommandCenter() {
           flexWrap: 'wrap', gap: 8,
         }}>
           <div style={{ fontSize: 11, color: '#334155' }}>
-            OMNIX Decision Governance · Harold Nunes · Abu Dhabi, UAE
+            OMNIX Decision Governance · Harold Nunes
           </div>
           <div style={{ fontSize: 11, color: '#334155' }}>
             All data sourced directly from production database · No mock data · Refresh every 30s

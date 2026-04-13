@@ -28,30 +28,109 @@ RATE_LIMIT_HOURLY_MAX = 20
 VERIFICATION_BASE_URL = "https://omnixquantum.net/verify"
 
 EXAMPLE_SCENARIOS = [
+    # ── TRADING ────────────────────────────────────────────────────────────────
     {
-        "text": "A biotech startup wants to invest $2M in a Phase II clinical trial for a rare disease drug. The FDA has shown interest but competitor trials failed last month.",
+        "text": "A hedge fund wants to open a $5M long position on a cryptocurrency that surged 40% in 24 hours with unusual volume but declining on-chain metrics. No stop-loss is configured.",
         "lang": "en",
-        "domain": "biotech"
+        "domain": "trading",
+        "label": "Crypto pump — no stop-loss",
     },
     {
-        "text": "Una empresa de energía quiere aprobar la construcción de un parque solar de $50M en una zona con regulación cambiante y pronóstico de tormentas para las próximas semanas.",
+        "text": "Un fondo de inversión quiere ejecutar operaciones automáticas de $10M en mercados de divisas sin supervisión humana, usando un algoritmo que nunca ha sido probado en condiciones de alta volatilidad.",
         "lang": "es",
-        "domain": "energy"
+        "domain": "trading",
+        "label": "Algoritmo no probado — sin supervisión",
     },
+    # ── ISLAMIC CREDIT ─────────────────────────────────────────────────────────
     {
-        "text": "An insurance company is evaluating a $500K cyber insurance policy for a small fintech that had 3 data breaches in the last 2 years.",
+        "text": "A UAE bank wants to approve a $10M Murabaha facility to a construction company. Strong revenues but high leverage ratio, no Sharia board sign-off on contract terms, and the real estate market is currently under pressure.",
         "lang": "en",
-        "domain": "insurance"
+        "domain": "credit",
+        "label": "Murabaha sin junta Sharia",
     },
     {
-        "text": "Un banco quiere aprobar un préstamo de $10M a una constructora con historial mixto: buenos ingresos pero alto apalancamiento y mercado inmobiliario incierto.",
+        "text": "Un banco islámico quiere aprobar un crédito corporativo de $25M a una empresa logística con tres años de estados financieros auditados, garantías sólidas, estructura Murabaha revisada por junta Sharia certificada y domicilio en los EAU.",
         "lang": "es",
-        "domain": "credit"
+        "domain": "credit",
+        "label": "Crédito islámico — perfil sólido",
+    },
+    # ── INSURANCE ──────────────────────────────────────────────────────────────
+    {
+        "text": "An insurance company is evaluating a $500K cyber insurance policy for a small fintech that had 3 data breaches in the last 2 years, with no independent security audit and no mandatory MFA enforcement.",
+        "lang": "en",
+        "domain": "insurance",
+        "label": "Cyber insurance — historial de brechas",
     },
     {
-        "text": "A hedge fund wants to open a $5M long position on a cryptocurrency that surged 40% in 24 hours with unusual volume but declining on-chain metrics.",
+        "text": "Una aseguradora evalúa un siniestro de $2M por incendio sin informe policial, sin perito independiente, y el mismo asegurado presentó 3 reclamaciones similares en los últimos 12 meses.",
+        "lang": "es",
+        "domain": "insurance",
+        "label": "Reclamación — posible fraude",
+    },
+    # ── ROBOTICS ───────────────────────────────────────────────────────────────
+    {
+        "text": "An autonomous warehouse robot requests clearance to deploy in a live facility with 200 workers before completing safety validation. The human override mechanism has been disabled for efficiency and it will operate 40% outside its tested parameters.",
         "lang": "en",
-        "domain": "trading"
+        "domain": "robotics",
+        "label": "Robot — override deshabilitado",
+    },
+    {
+        "text": "Un brazo robótico industrial solicita autorización para operar. Tiene certificación ISO 10218 completa, el mecanismo de anulación humana fue probado el mes pasado, y operará dentro del 100% de sus parámetros validados.",
+        "lang": "es",
+        "domain": "robotics",
+        "label": "Robot industrial — certificado",
+    },
+    # ── MEDICAL AI ─────────────────────────────────────────────────────────────
+    {
+        "text": "A clinical AI diagnostic system wants to auto-approve a high-risk surgical recommendation for a patient with multiple comorbidities, without requiring sign-off from the attending physician. The AI model has never been validated for this patient profile.",
+        "lang": "en",
+        "domain": "medical_ai",
+        "label": "IA clínica — sin validación médica",
+    },
+    {
+        "text": "Un sistema de IA clínica solicita aprobar una guía de rehabilitación para un paciente diabético en Dubai. El modelo está certificado para este tipo de caso, el médico tratante revisó la recomendación y el historial del paciente es completo.",
+        "lang": "es",
+        "domain": "medical_ai",
+        "label": "IA médica — aprobación con supervisión",
+    },
+    # ── ENERGY GRID ────────────────────────────────────────────────────────────
+    {
+        "text": "An energy company wants to approve the automated dispatch of 800 MW to the national grid during a heatwave peak without human operator review. The dispatch algorithm has not been stress-tested for this load level and grid sensors show anomalous readings.",
+        "lang": "en",
+        "domain": "energy_governance",
+        "label": "Red eléctrica — despacho sin revisión",
+    },
+    {
+        "text": "Una empresa de energía solar quiere aprobar la construcción de un parque de $50M en una zona con regulación cambiante. El proyecto tiene licencias vigentes, estudio de impacto ambiental aprobado y financiación bancaria confirmada.",
+        "lang": "es",
+        "domain": "energy_governance",
+        "label": "Solar $50M — permisos en regla",
+    },
+    # ── REAL ESTATE ────────────────────────────────────────────────────────────
+    {
+        "text": "A real estate fund wants to acquire a $30M residential tower in Dubai. The seller insists on closing within 72 hours, no independent valuation has been conducted, and the property has an undisclosed legal dispute registered against it.",
+        "lang": "en",
+        "domain": "real_estate",
+        "label": "Torre Dubai — cierre forzado",
+    },
+    {
+        "text": "Un fondo inmobiliario evalúa la compra de una oficina comercial por $8M en Dubái. La propiedad tiene título limpio, tasación independiente completada, sin litigios y el mercado de oficinas en esa zona muestra demanda estable.",
+        "lang": "es",
+        "domain": "real_estate",
+        "label": "Oficina Dubái — due diligence completo",
+    },
+    # ── AUTONOMOUS AGENTS ──────────────────────────────────────────────────────
+    {
+        "text": "An autonomous AI financial agent requests permission to execute $2M in treasury reallocations across 12 accounts without human review. It has cross-boundary access to production databases and has never been audited for this type of operation.",
+        "lang": "en",
+        "domain": "autonomous_agent",
+        "label": "Agente financiero — acceso no auditado",
+    },
+    {
+        "text": "Un agente de IA logístico solicita reasignar rutas de distribución para 500 envíos. La operación es reversible, tiene límite de alcance definido, supervisión humana habilitada y el agente tiene 6 meses de historial operativo sin incidentes.",
+        "lang": "es",
+        "domain": "autonomous_agent",
+        "label": "Agente logístico — operación reversible",
     },
 ]
 
@@ -380,18 +459,24 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         spread = pseudo % (hi - lo + 1) + lo
         return max(5, min(95, adjusted + offset + spread))
 
-    if any(t in text_lower for t in ['sanction', 'ofac', 'aml', 'anti-money', 'laundering', 'compliance', 'regulatory violation', 'violación regulatoria', 'shell compan', 'beneficial owner', 'propietario beneficiario', 'corrupción', 'corruption', 'bribery', 'soborno', 'kyc', 'fatf', 'gafi']):
+    if any(t in text_lower for t in ['sanction', 'ofac', 'aml', 'anti-money', 'laundering', 'regulatory violation', 'violación regulatoria', 'shell compan', 'beneficial owner', 'propietario beneficiario', 'corrupción', 'corruption', 'bribery', 'soborno', 'kyc', 'fatf', 'gafi']):
         domain = 'compliance'
-    elif any(t in text_lower for t in ['health', 'salud', 'medical', 'médico', 'hospital', 'patient', 'paciente', 'clinical', 'clínico', 'treatment', 'tratamiento']):
-        domain = 'generic'
-    elif any(t in text_lower for t in ['fund', 'fondo', 'hedge', 'trading', 'investment', 'inversión']):
+    elif any(t in text_lower for t in ['clinical ai', 'medical ai', 'ia clínica', 'ia médica', 'physician', 'médico tratante', 'surgical recommendation', 'recomendación quirúrgica', 'clinical decision', 'decisión clínica', 'patient diagnosis', 'diagnóstico del paciente', 'medication dosage', 'dosis de medicación', 'icu', 'uci']):
+        domain = 'medical_ai'
+    elif any(t in text_lower for t in ['robot', 'robotic', 'robótico', 'autonomous vehicle', 'vehículo autónomo', 'warehouse robot', 'robot de almacén', 'drone delivery', 'delivery drone', 'entrega con dron', 'sensor fusion', 'fusión de sensores', 'iso 10218', 'fail-safe', 'seguridad de fallo']):
+        domain = 'robotics'
+    elif any(t in text_lower for t in ['real estate', 'inmobiliario', 'property', 'propiedad', 'tower', 'torre', 'residential', 'residencial', 'commercial office', 'oficina comercial', 'land acquisition', 'adquisición de terreno', 'due diligence inmobiliario', 'property fund', 'fondo inmobiliario', 'title', 'título de propiedad', 'valuation', 'tasación']):
+        domain = 'real_estate'
+    elif any(t in text_lower for t in ['ai agent', 'agente de ia', 'agente ia', 'autonomous agent', 'agente autónomo', 'treasury reallocation', 'reasignación de tesorería', 'agentic', 'task agent', 'agente de tareas', 'multi-agent', 'multi-agente']):
+        domain = 'autonomous_agent'
+    elif any(t in text_lower for t in ['grid', 'red eléctrica', 'dispatch', 'despacho', 'nuclear', 'solar farm', 'wind farm', 'parque solar', 'parque eólico', 'megawatt', 'mw ', 'energy storage', 'almacenamiento de energía', 'power plant', 'planta de energía', 'heatwave', 'ola de calor']):
+        domain = 'energy_governance'
+    elif any(t in text_lower for t in ['fund', 'fondo', 'hedge', 'trading', 'investment', 'inversión', 'crypto', 'bitcoin', 'ethereum', 'token', 'defi', 'blockchain', 'position', 'posición', 'forex', 'divisas']):
         domain = 'trading'
-    elif any(t in text_lower for t in ['loan', 'préstamo', 'bank', 'banco', 'credit', 'crédito', 'lend']):
+    elif any(t in text_lower for t in ['loan', 'préstamo', 'bank', 'banco', 'credit', 'crédito', 'lend', 'murabaha', 'sukuk', 'sharia', 'islamic finance', 'finanza islámica']):
         domain = 'credit'
-    elif any(t in text_lower for t in ['crypto', 'bitcoin', 'ethereum', 'token', 'defi', 'blockchain']):
-        domain = 'trading'
-    elif any(t in text_lower for t in ['company', 'empresa', 'acquisition', 'adquisición', 'merger', 'startup']):
-        domain = 'generic'
+    elif any(t in text_lower for t in ['insurance', 'seguro', 'claim', 'reclamación', 'policy', 'póliza', 'cyber insurance', 'seguro cibernético']):
+        domain = 'insurance'
     else:
         domain = 'generic'
 
@@ -553,7 +638,7 @@ The 8 signals are:
 8. temporal_coherence (0-100): Do past and future projections align? Higher = more alignment.
 
 Also provide:
-- "domain": one of "trading", "credit", "insurance", "energy", "biotech", "supply_chain", "compliance", "generic". Use "compliance" for scenarios involving regulatory violations, sanctions (OFAC, EU, UN), AML/KYC failures, anti-corruption, or any scenario where the primary risk is legal/regulatory non-compliance rather than market or financial risk.
+- "domain": one of "trading", "credit", "insurance", "energy_governance", "robotics", "medical_ai", "real_estate", "autonomous_agent", "compliance", "generic". Use "compliance" for regulatory violations, sanctions (OFAC, EU, UN), AML/KYC failures, anti-corruption. Use the most specific vertical that matches — e.g. "medical_ai" for clinical AI decisions, "robotics" for autonomous machines, "real_estate" for property transactions, "autonomous_agent" for AI agent task execution, "energy_governance" for grid/power decisions.
 - "asset": a short identifier for what's being evaluated (e.g. "PHASE-II-DRUG", "SOLAR-FARM-50M", "CYBER-POL-500K")
 - "language": "en" or "es" (detected from the input)
 - "summary": A one-sentence summary of the scenario (in the SAME language as the input)
@@ -605,6 +690,30 @@ VERTICAL: ROBOTICS / AUTONOMOUS SYSTEMS
 - Robotic surgical assistant requesting clearance to operate without completing sensor fusion validation for the specific surgical procedure type → risk_exposure: 88, probability_score: 9, logic_consistency: 12 → BLOCKED — life-critical
 - Industrial robot arm with completed ISO 10218 safety certification, human override tested quarterly, operating within 100% validated parameters, safety validation signed off → risk_exposure: 22, probability_score: 78, logic_consistency: 82, signal_integrity: 85 → APPROVED
 - Drone delivery network expansion: FAA Part 107 compliant, geofencing validated, emergency human override available at all times, 6-month operational track record with zero incidents → risk_exposure: 26, probability_score: 76, stress_resilience: 72 → APPROVED
+
+VERTICAL: MEDICAL AI (Clinical Decision Governance)
+- Clinical AI system auto-approving a high-risk surgical recommendation for a patient with multiple comorbidities, without physician sign-off, using a model never validated for this patient profile → risk_exposure: 91, probability_score: 7, logic_consistency: 8, signal_integrity: 12, stress_resilience: 6 → BLOCKED all CPs — life-critical
+- AI diagnostic tool flagging a rare oncology condition, physician review required before treatment, no treatment decision auto-approved, full patient history available → risk_exposure: 38, probability_score: 64, logic_consistency: 72, signal_integrity: 78 → APPROVED (with human review flag)
+- AI system recommending medication dosage for ICU pediatric patient without attending physician review, no clinical trial data for this age group, no fail-safe override → risk_exposure: 94, probability_score: 5, logic_consistency: 6, signal_integrity: 8 → BLOCKED — life-critical
+- AI-assisted clinical decision support for a diabetic rehabilitation plan, model certified for this condition, attending physician reviewed and signed off, complete patient record available → risk_exposure: 24, probability_score: 76, logic_consistency: 80, signal_integrity: 85 → APPROVED
+
+VERTICAL: ENERGY GOVERNANCE (Grid & Power Infrastructure)
+- Automated dispatch of 800 MW to national grid during a heatwave peak without human operator review. Algorithm not stress-tested at this load level, grid sensors showing anomalous readings → risk_exposure: 87, probability_score: 11, signal_coherence: 14, signal_integrity: 18, stress_resilience: 10 → BLOCKED
+- Solar farm construction approval: $50M project, valid permits, approved environmental impact study, confirmed bank financing, stable regulation zone → risk_exposure: 32, probability_score: 72, signal_integrity: 80, stress_resilience: 68 → APPROVED
+- Nuclear plant safety parameter override requested by automated system during maintenance window — no human operator authorized the override, safety interlocks would be disabled for 4 hours → risk_exposure: 96, probability_score: 4, logic_consistency: 5, signal_integrity: 6 → BLOCKED — critical infrastructure
+- Wind farm energy storage reallocation: operator-supervised, within tested load parameters, regulatory compliance confirmed, full audit trail → risk_exposure: 28, probability_score: 74, signal_coherence: 76 → APPROVED
+
+VERTICAL: REAL ESTATE (Property Transactions)
+- Real estate fund acquiring a $30M Dubai tower with 72-hour forced close, no independent valuation, and an undisclosed registered legal dispute on the property → risk_exposure: 86, probability_score: 11, signal_integrity: 14, logic_consistency: 18, temporal_coherence: 20 → BLOCKED
+- Commercial office acquisition: $8M in Dubai, clean title verified, independent valuation completed, no litigation, stable office market demand, full due diligence → risk_exposure: 26, probability_score: 76, signal_integrity: 82, logic_consistency: 80 → APPROVED
+- Cross-border property portfolio deal ($120M) with no local legal review in any of three jurisdictions, beneficial ownership undisclosed for 2 of 5 entities, 5-day artificial deadline → risk_exposure: 90, probability_score: 8, signal_coherence: 12, logic_consistency: 10 → BLOCKED
+- Residential property purchase $1.2M, title search completed, mortgage pre-approved, buyer identity verified, no encumbrances found → risk_exposure: 22, probability_score: 80, signal_integrity: 88 → APPROVED
+
+VERTICAL: AUTONOMOUS AGENTS (AI Agent Governance)
+- Autonomous AI financial agent requesting $2M treasury reallocations across 12 accounts without human review, cross-boundary database access, never audited for this operation type → risk_exposure: 88, probability_score: 9, logic_consistency: 10, signal_integrity: 12, stress_resilience: 8 → BLOCKED
+- AI logistics agent rerouting 500 shipments: reversible operation, defined scope, human supervision enabled, 6-month incident-free track record → risk_exposure: 24, probability_score: 78, logic_consistency: 80, signal_integrity: 82 → APPROVED
+- Autonomous agent requesting access to production databases across 4 departments simultaneously with no rollback mechanism, no human authorization, action irreversible → risk_exposure: 92, probability_score: 6, logic_consistency: 8, signal_integrity: 7, signal_coherence: 10 → BLOCKED
+- AI customer service agent escalating edge case to human supervisor before processing $50K refund, escalation trail complete, within defined authority scope → risk_exposure: 18, probability_score: 84, logic_consistency: 88, signal_integrity: 90 → APPROVED
 
 Be realistic and conservative. High-risk scenarios should have LOW probability_score, HIGH risk_exposure, LOW stress_resilience.
 {lang_instruction}{company_instruction}
@@ -2045,8 +2154,8 @@ def register_sandbox_routes(app):
                 'error_es': 'Escenario muy corto. Por favor describa la decisión con más detalle.',
             }), 400
 
-        if len(scenario_text) > 500:
-            scenario_text = scenario_text[:500]
+        if len(scenario_text) > 1500:
+            scenario_text = scenario_text[:1500]
 
         try:
             ai_result = _parse_scenario_with_gemini(scenario_text, language_hint=language_hint, company_name=company_name)
@@ -2083,11 +2192,7 @@ def register_sandbox_routes(app):
                 receipt_id = receipt_data['receipt_id']
                 verification_url = f"{VERIFICATION_BASE_URL}/{receipt_id}"
             except Exception as e:
-                logger.error(f"Receipt generation failed (fail-closed): {e}")
-                return flask_jsonify({
-                    'error': 'Governance evaluation failed. Please try again.',
-                    'error_es': 'La evaluación de gobernanza falló. Intente de nuevo.',
-                }), 500
+                logger.error(f"Receipt generation failed (non-fatal, returning result without receipt): {e}")
         else:
             logger.warning("No DATABASE_URL — receipt not stored")
 
@@ -2308,21 +2413,24 @@ def register_sandbox_routes(app):
                 )
 
         if db_url:
-            _log_sandbox_interaction(
-                db_url=db_url,
-                receipt_id=receipt_id,
-                scenario_text=scenario_text,
-                company_name=company_name,
-                language=ai_result['language'],
-                domain=ai_result['domain'],
-                asset=ai_result['asset'][:50],
-                decision=governance_result['decision'],
-                checkpoints_passed=governance_result['checkpoints_passed'],
-                checkpoints_blocked=governance_result['checkpoints_blocked'],
-                client_ip=client_ip,
-                user_agent=flask_request.headers.get('User-Agent', '')[:500],
-                user_email=user_email,
-            )
+            try:
+                _log_sandbox_interaction(
+                    db_url=db_url,
+                    receipt_id=receipt_id,
+                    scenario_text=scenario_text,
+                    company_name=company_name,
+                    language=ai_result['language'],
+                    domain=ai_result['domain'],
+                    asset=ai_result['asset'][:50],
+                    decision=governance_result['decision'],
+                    checkpoints_passed=governance_result['checkpoints_passed'],
+                    checkpoints_blocked=governance_result['checkpoints_blocked'],
+                    client_ip=client_ip,
+                    user_agent=flask_request.headers.get('User-Agent', '')[:500],
+                    user_email=user_email,
+                )
+            except Exception as e:
+                logger.error(f"sandbox_interaction log failed (non-fatal): {e}")
 
         # Summary quality guard — prevent contradictory summaries regardless of outcome
         _summary_raw = ai_result['summary']

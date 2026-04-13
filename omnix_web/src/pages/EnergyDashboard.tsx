@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Shield, AlertTriangle, CheckCircle, XCircle, Activity,
-  Zap, Lock, RefreshCw, ArrowLeft, TrendingUp, Wind,
+  Zap, RefreshCw, ArrowLeft, TrendingUp, Wind,
   Sun, Flame, Atom, Droplets, Battery, Globe
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
@@ -340,18 +340,6 @@ export default function EnergyDashboard() {
         </div>
       </header>
 
-      {/* ── Restricted Access Banner — ALWAYS visible ─────────────────── */}
-      <div
-        className="border-b"
-        style={{ background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.25)' }}
-      >
-        <div className="max-w-screen-xl mx-auto px-6 py-2.5 flex items-center gap-3">
-          <Lock size={13} className="text-amber-400 shrink-0" />
-          <span className="text-xs text-amber-300 font-medium">
-            <strong>Restricted Access</strong> — Energy Governance vertical · Internal testing environment (ADR-ENG-001) · Not for public distribution
-          </span>
-        </div>
-      </div>
 
       <main className="max-w-screen-xl mx-auto px-6 py-8 space-y-8">
 
