@@ -291,8 +291,27 @@ Hard daily and monthly evaluation limits per authenticated B2B client. Applied o
 - Contact message: `support@omnixquantum.net` for tier upgrades
 - Harold Telegram alert at 500 evaluations/month already in place (`_check_monthly_alert`)
 
+### Fail-open circuit breaker (anti-abuse during DB intermittencies)
+- First 2 consecutive DB errors within 60 s → **fail-open** (non-blocking)
+- 3rd consecutive error within 60 s → **fail-closed** (`'Service temporarily unavailable'`)
+- Counter resets automatically on the next successful DB connection
+- Config: `_QUOTA_DB_FAIL_OPEN_MAX = 3`, `_QUOTA_DB_FAIL_WINDOW = 60`
+
+### Validation message policy (ADR-080 refinement)
+- Error messages are **neutral** — do not enumerate internal field names, allowed key lists, or supported enums
+- Unknown-field errors: `'Request contains unrecognised fields. Refer to the API documentation.'`
+- Unsupported language: `'Unsupported language code. See API documentation for supported values.'`
+- Payload-size errors: `'Request payload exceeds allowed limits.'` (no size revealed)
+- Developer-facing fields (type errors, missing fields) remain descriptive where safe
+
+### Metadata total payload size limit
+- Key count: ≤ 50 keys
+- Serialised size: ≤ 8 192 bytes (`json.dumps` with minimal separators)
+- Non-serialisable objects → 400 `'Invalid metadata — must be a JSON-serialisable object.'`
+
 ### Audit trail
 - Quota breaches logged at WARNING level: `[QUOTA] Daily limit hit: client=X count=Y`
+- DB circuit breaker: `[QUOTA] Fail-CLOSED after N consecutive DB errors in 60s for client=X`
 - Quota is based on actual `decision_receipts` rows — the same data used for billing audit (ADR-051)
 
 ## Test Suite: ~392+ tests passing

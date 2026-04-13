@@ -101,9 +101,7 @@ def _validate_sandbox_request(data) -> tuple:
         if not isinstance(language, str):
             return False, '"language" must be a string.', 400
         if language.strip().lower() not in _VALID_LANGUAGES:
-            return False, (
-                f'"language" must be one of: {", ".join(sorted(_VALID_LANGUAGES))}.'
-            ), 400
+            return False, 'Unsupported language code. See API documentation for supported values.', 400
 
     # email — optional, format check
     email = data.get('email')
@@ -118,10 +116,7 @@ def _validate_sandbox_request(data) -> tuple:
     # Unknown keys — reject to prevent payload confusion attacks
     unknown = set(data.keys()) - _ALLOWED_SANDBOX_KEYS
     if unknown:
-        return False, (
-            f'Unknown field(s): {", ".join(sorted(unknown))}. '
-            f'Allowed: scenario_text, company_name, language, email.'
-        ), 400
+        return False, 'Request contains unrecognised fields. Refer to the API documentation.', 400
 
     return True, '', 200
 

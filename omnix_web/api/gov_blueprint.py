@@ -192,6 +192,13 @@ _monthly_alert_sent: dict = {}
 _CLIENT_DAILY_QUOTA_MAX   = int(os.environ.get('OMNIX_B2B_DAILY_QUOTA',   '5000'))
 _CLIENT_MONTHLY_QUOTA_MAX = int(os.environ.get('OMNIX_B2B_MONTHLY_QUOTA', '50000'))
 
+# Fail-open safety circuit — after this many consecutive DB failures per client
+# within _QUOTA_DB_FAIL_WINDOW seconds, switch to fail-closed to prevent abuse
+# during sustained DB outages. Resets automatically when DB recovers.
+_QUOTA_DB_FAIL_OPEN_MAX  = 3    # consecutive errors before fail-closed kicks in
+_QUOTA_DB_FAIL_WINDOW    = 60   # seconds
+_quota_db_failures: dict = defaultdict(list)   # client_id -> [timestamps]
+
 _ENGINE_AVAILABLE = False
 _GovernanceEvaluationEngine = None
 _DecisionReceiptEngine = None
@@ -411,7 +418,14 @@ def _auto_ban_ip(ip: str, reason: str, violation_count: int = 3) -> None:
 def _check_client_quota(client_id: str) -> tuple:
     """
     Enforce per-client daily and monthly hard quotas (ADR-081).
-    Queries decision_receipts for real usage counts — fail-open if DB unavailable.
+    Queries decision_receipts for real usage counts.
+
+    Fail-open / fail-closed policy:
+      - First _QUOTA_DB_FAIL_OPEN_MAX-1 consecutive DB errors within _QUOTA_DB_FAIL_WINDOW
+        seconds → fail-open (non-blocking, request proceeds).
+      - On the Nth consecutive error → fail-closed to prevent sustained abuse
+        during DB outages. Resets automatically when DB recovers.
+
     Returns (allowed: bool, error_message: str).
     """
     try:
@@ -428,8 +442,8 @@ def _check_client_quota(client_id: str) -> tuple:
             conn.close()
             logger.warning(f"[QUOTA] Daily limit hit: client={client_id} count={daily_count}")
             return False, (
-                f'Daily evaluation quota reached ({_CLIENT_DAILY_QUOTA_MAX}/24 h). '
-                f'Contact support@omnixquantum.net to discuss a higher-tier plan.'
+                'Daily evaluation quota reached. '
+                'Contact support@omnixquantum.net to discuss a higher-tier plan.'
             )
 
         cur.execute(
@@ -442,13 +456,28 @@ def _check_client_quota(client_id: str) -> tuple:
         if monthly_count >= _CLIENT_MONTHLY_QUOTA_MAX:
             logger.warning(f"[QUOTA] Monthly limit hit: client={client_id} count={monthly_count}")
             return False, (
-                f'Monthly evaluation quota reached ({_CLIENT_MONTHLY_QUOTA_MAX}/month). '
-                f'Contact support@omnixquantum.net to discuss a higher-tier plan.'
+                'Monthly evaluation quota reached. '
+                'Contact support@omnixquantum.net to discuss a higher-tier plan.'
             )
 
+        # DB recovered — clear failure history for this client
+        _quota_db_failures.pop(client_id, None)
         return True, ''
+
     except Exception as e:
-        logger.warning(f'[QUOTA] DB unavailable — fail-open: {e}')
+        now = time.time()
+        recent = [t for t in _quota_db_failures[client_id] if now - t < _QUOTA_DB_FAIL_WINDOW]
+        recent.append(now)
+        _quota_db_failures[client_id] = recent
+
+        if len(recent) >= _QUOTA_DB_FAIL_OPEN_MAX:
+            logger.warning(
+                f'[QUOTA] Fail-CLOSED after {len(recent)} consecutive DB errors '
+                f'in {_QUOTA_DB_FAIL_WINDOW}s for client={client_id}'
+            )
+            return False, 'Service temporarily unavailable — please retry in a few minutes.'
+
+        logger.warning(f'[QUOTA] DB error ({len(recent)}/{_QUOTA_DB_FAIL_OPEN_MAX}) — fail-open: {type(e).__name__}')
         return True, ''
 
 
@@ -1366,7 +1395,7 @@ def api_governance_evaluate():
     unknown_keys = set(body.keys()) - _ALLOWED_EVALUATE_KEYS
     if unknown_keys:
         return jsonify({
-            'error': f'Unknown field(s): {", ".join(sorted(unknown_keys))}. Allowed: signals, asset, domain, metadata.',
+            'error': 'Request contains unrecognised fields. See GET /api/governance/schema.',
             'status': 400,
         }), 400
 
@@ -1382,7 +1411,14 @@ def api_governance_evaluate():
     if _metadata_raw is not None and not isinstance(_metadata_raw, dict):
         return jsonify({'error': '"metadata" must be a JSON object or omitted.', 'status': 400}), 400
     if isinstance(_metadata_raw, dict) and len(_metadata_raw) > 50:
-        return jsonify({'error': '"metadata" must not contain more than 50 keys.', 'status': 400}), 400
+        return jsonify({'error': 'Request payload exceeds allowed limits.', 'status': 400}), 400
+    if isinstance(_metadata_raw, dict):
+        try:
+            _metadata_size = len(json.dumps(_metadata_raw, separators=(',', ':')))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Invalid metadata — must be a JSON-serialisable object.', 'status': 400}), 400
+        if _metadata_size > 8192:
+            return jsonify({'error': 'Request payload exceeds allowed limits.', 'status': 400}), 400
     # ────────────────────────────────────────────────────────────────────────
 
     if not _load_engine():
