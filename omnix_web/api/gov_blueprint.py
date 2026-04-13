@@ -1681,8 +1681,8 @@ def admin_create_client():
             'api_key': api_key,
             'message': 'Store this API key securely — it is shown only once and never stored in plaintext.',
         }), 201
-    except ValueError as e:
-        return jsonify({'error': str(e), 'status': 409}), 409
+    except ValueError:
+        return jsonify({'error': 'Client ID already exists. Use a different client_id.', 'status': 409}), 409
 
 
 @governance_bp.route('/api/governance/admin/clients', methods=['GET'])
@@ -1754,8 +1754,8 @@ def admin_rotate_key(target_client_id: str):
             'expires_in_days': 90,
             'message': 'New API key generated. Previous key is now invalid. Store this key securely — shown once only.',
         }), 200
-    except ValueError as e:
-        return jsonify({'error': str(e), 'status': 404}), 404
+    except ValueError:
+        return jsonify({'error': 'Client not found.', 'status': 404}), 404
 
 
 # ── WEBHOOK MANAGEMENT ENDPOINTS (ADR-053) ────────────────────────────────────

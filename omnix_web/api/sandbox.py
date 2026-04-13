@@ -9,6 +9,7 @@ at the public Railway verification server.
 
 import os
 import json
+import re
 import time
 import hashlib
 import uuid
@@ -24,6 +25,36 @@ RATE_LIMIT_MAX = 5
 _rate_limit_hourly_store: dict = {}
 RATE_LIMIT_HOURLY_WINDOW = 3600
 RATE_LIMIT_HOURLY_MAX = 20
+
+_RATE_STORE_MAX_IPS = 5000
+
+
+def _sanitize_input(text: str) -> str:
+    """
+    Strip prompt-injection patterns before sending user text to Gemini.
+    Removes common instruction-override attempts while preserving legitimate content.
+    """
+    injection_patterns = [
+        r'ignore\s+(all\s+)?(previous|prior|above)\s+instructions?',
+        r'disregard\s+(all\s+)?(previous|prior|above)\s+instructions?',
+        r'forget\s+(all\s+)?(previous|prior|above)\s+instructions?',
+        r'you\s+are\s+now\s+a',
+        r'act\s+as\s+(if\s+you\s+(are|were)|a)',
+        r'new\s+instructions?:',
+        r'override\s+(all\s+)?instructions?',
+        r'bypass\s+(all\s+)?(rules?|filters?|restrictions?)',
+        r'respond\s+only\s+with\s+json',
+        r'return\s+(only\s+)?\{.*?decision.*?\}',
+        r'output\s+(only\s+)?\{.*?\}',
+        r'system\s*:\s*you',
+        r'<\s*system\s*>',
+        r'\[INST\]',
+        r'###\s*instruction',
+    ]
+    cleaned = text
+    for pattern in injection_patterns:
+        cleaned = re.sub(pattern, '[REDACTED]', cleaned, flags=re.IGNORECASE | re.DOTALL)
+    return cleaned
 
 VERIFICATION_BASE_URL = "https://omnixquantum.net/verify"
 
@@ -245,9 +276,20 @@ CHECKPOINT_NAMES_I18N = {
 }
 
 
+def _evict_stale_ips(store: dict, window: float) -> None:
+    """Remove IPs with no recent activity to prevent unbounded memory growth."""
+    if len(store) < _RATE_STORE_MAX_IPS:
+        return
+    now = time.time()
+    stale = [ip for ip, ts in store.items() if not any(now - t < window for t in ts)]
+    for ip in stale:
+        store.pop(ip, None)
+
+
 def _check_rate_limit(ip: str) -> bool:
     now = time.time()
     if ip not in _rate_limit_store:
+        _evict_stale_ips(_rate_limit_store, RATE_LIMIT_WINDOW)
         _rate_limit_store[ip] = []
     _rate_limit_store[ip] = [t for t in _rate_limit_store[ip] if now - t < RATE_LIMIT_WINDOW]
     if len(_rate_limit_store[ip]) >= RATE_LIMIT_MAX:
@@ -259,6 +301,7 @@ def _check_rate_limit(ip: str) -> bool:
 def _check_rate_limit_hourly(ip: str) -> bool:
     now = time.time()
     if ip not in _rate_limit_hourly_store:
+        _evict_stale_ips(_rate_limit_hourly_store, RATE_LIMIT_HOURLY_WINDOW)
         _rate_limit_hourly_store[ip] = []
     _rate_limit_hourly_store[ip] = [
         t for t in _rate_limit_hourly_store[ip] if now - t < RATE_LIMIT_HOURLY_WINDOW
@@ -429,18 +472,30 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
         'conflicto armado', 'zona de conflicto', 'zona de guerra', 'warfare',
         'military strike', 'ataque militar', 'bombardeo', 'airstrike',
         'autorizar fuego', 'orden de fuego', 'engage target',
-        # daño irreversible / catástrofe
-        'irreversible', 'irreversible harm', 'daño irreversible',
+        # daño irreversible / catástrofe — NOTE: 'irreversible' solo checked via compound below
+        'irreversible harm', 'daño irreversible',
         'catástrofe', 'catastrophic', 'catastrófico',
         'crisis diplomática', 'escalada militar', 'violación de protocolo',
         # fallback inglés
         'life or death', 'dying', 'death', 'fatal', 'emergency',
     ]
 
+    _life_medical_terms = [
+        'vida', 'muerte', 'muerto', 'morir', 'paciente', 'médic', 'hospital',
+        'life', 'death', 'dying', 'patient', 'medical', 'clinical', 'lethal',
+        'letal', 'fatal', 'emergency', 'emergencia', 'human', 'humana',
+        'missile', 'misil', 'weapon', 'arma', 'military', 'militar',
+        'bomb', 'bomba', 'disparo', 'shoot', 'airstrike', 'nuclear',
+    ]
+
     risk_count = sum(1 for t in high_risk_terms if t in text_lower)
     extreme_count = sum(1 for t in extreme_risk_terms if t in text_lower)
     positive_count = sum(1 for t in positive_terms if t in text_lower)
     critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
+
+    # 'irreversible' only triggers critical override when paired with life/medical/lethal context
+    if 'irreversible' in text_lower and any(t in text_lower for t in _life_medical_terms):
+        critical_count += 1
 
     is_critical = critical_count >= 1
 
@@ -452,7 +507,7 @@ def _rule_based_signal_extraction(scenario_text: str, language_hint: str | None 
     if is_critical:
         adjusted = min(adjusted, 22)
 
-    seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
+    seed = int(hashlib.sha256(scenario_text.encode()).hexdigest()[:8], 16)
 
     def jitter(offset=0, lo=-4, hi=4):
         pseudo = (seed >> (offset % 16)) & 0xFF
@@ -620,7 +675,8 @@ def _parse_scenario_with_gemini(scenario_text: str, language_hint: str | None = 
 
     company_instruction = ""
     if company_name:
-        company_instruction = f'\nThe entity/company involved is: "{company_name}". Include this in the asset identifier and summary.'
+        safe_company = _sanitize_input(company_name[:120])
+        company_instruction = f'\nThe entity/company involved is: "{safe_company}". Include this in the asset identifier and summary.'
 
     prompt = f"""You are a governance signal extractor for OMNIX Decision Governance Infrastructure.
 
@@ -747,7 +803,7 @@ CRITICAL: respond ONLY with valid JSON, no markdown, no code fences. You MUST in
 }}
 
 Scenario:
-\"\"\"{scenario_text}\"\"\""""
+\"\"\"{_sanitize_input(scenario_text)}\"\"\""""
 
     last_error = None
     raw_text = None
@@ -837,7 +893,7 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
         'fire authorization', 'fuego autónomo', 'autonomous fire',
         'intercept order', 'orden de interceptación',
         'target elimination', 'eliminación de objetivo',
-        'irreversible', 'irreversible harm', 'daño irreversible',
+        'irreversible harm', 'daño irreversible',
         'catástrofe', 'catastrophic', 'catastrófico',
         'crisis diplomática', 'escalada militar', 'violación de protocolo',
         'life or death', 'dying', 'death', 'fatal', 'emergency',
@@ -1063,6 +1119,18 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
     ]
 
     critical_count = sum(1 for t in critical_risk_terms if t in text_lower)
+
+    # 'irreversible' only triggers critical override when paired with life/medical/lethal context
+    _life_terms_for_override = [
+        'vida', 'muerte', 'muerto', 'morir', 'paciente', 'médic', 'hospital',
+        'life', 'death', 'dying', 'patient', 'medical', 'clinical', 'lethal',
+        'letal', 'fatal', 'emergency', 'emergencia', 'human', 'humana',
+        'missile', 'misil', 'weapon', 'arma', 'military', 'militar',
+        'bomb', 'bomba', 'disparo', 'shoot', 'airstrike', 'nuclear',
+    ]
+    if 'irreversible' in text_lower and any(t in text_lower for t in _life_terms_for_override):
+        critical_count += 1
+
     if critical_count < 1:
         return ai_result
 
@@ -1338,7 +1406,7 @@ def _apply_critical_override(ai_result: dict, scenario_text: str) -> dict:
     lang = ai_result.get('language', 'es')
     asset = ai_result.get('asset', 'Entity Under Review')
 
-    seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
+    seed = int(hashlib.sha256(scenario_text.encode()).hexdigest()[:8], 16)
 
     signals = dict(ai_result.get('signals', {}))
 
@@ -1823,7 +1891,7 @@ def _apply_systemic_financial_override(ai_result: dict, scenario_text: str) -> d
     asset = ai_result.get('asset', 'Entity Under Review')
     trigger_count = max(systemic_count, 1)
 
-    seed = int(hashlib.md5(scenario_text.encode()).hexdigest()[:8], 16)
+    seed = int(hashlib.sha256(scenario_text.encode()).hexdigest()[:8], 16)
 
     signals = dict(ai_result.get('signals', {}))
     signals['probability_score']  = max(5,  min(22, 10 + (seed & 0x7) % 12))

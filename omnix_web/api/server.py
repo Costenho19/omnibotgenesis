@@ -61,6 +61,18 @@ def add_security_headers(response):
         response.headers['Expires'] = '0'
     return response
 
+@app.errorhandler(500)
+def handle_500(e):
+    print(f"[500] Unhandled server error: {e}")
+    return jsonify({'success': False, 'error': 'An internal server error occurred'}), 500
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print(f"[EXCEPTION] Unhandled exception: {type(e).__name__}: {e}")
+    return jsonify({'success': False, 'error': 'An internal server error occurred'}), 500
+
+
 from api.sandbox import register_sandbox_routes
 register_sandbox_routes(app)
 
@@ -1120,7 +1132,7 @@ def public_verify_receipt(receipt_id):
         conn.close()
     except Exception as e:
         print(f"Verify DB error: {e}")
-        return jsonify({'found': False, 'error': str(e)}), 500
+        return jsonify({'found': False, 'error': 'Verification service temporarily unavailable'}), 500
 
     if not row:
         return jsonify({'found': False})

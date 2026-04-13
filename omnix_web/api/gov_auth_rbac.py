@@ -83,7 +83,7 @@ def authenticate_client(api_key: str) -> dict | None:
 
         if count == 0:
             env_key = os.environ.get("B2B_API_KEY", "")
-            if env_key and api_key == env_key:
+            if env_key and secrets.compare_digest(api_key, env_key):
                 cur.close()
                 conn.close()
                 return {
