@@ -1185,12 +1185,251 @@ def send_receipt_email():
         return jsonify({'success': False, 'error': 'Failed to send email. Please try again.'}), 500
 
 
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ISLAMIC CREDIT GOVERNANCE API — ADR-052
+# All /api/credit/* routes. DB: credit_applications, credit_cycle_metrics
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _credit_query(sql, params=None):
+    """Run a SELECT query against credit_applications. Returns list of dicts."""
+    conn = get_db_connection()
+    if not conn:
+        return []
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, params or [])
+            cols = [d[0] for d in cur.description]
+            return [dict(zip(cols, row)) for row in cur.fetchall()]
+    except Exception:
+        return []
+    finally:
+        conn.close()
+
+
+def _credit_query_one(sql, params=None):
+    rows = _credit_query(sql, params)
+    return rows[0] if rows else {}
+
+
+@app.route('/api/credit/metrics')
+@app.route('/api/credit/metrics.json')
+def credit_metrics():
+    try:
+        t = _credit_query_one("""
+            SELECT
+                COUNT(*) as total_applications,
+                COUNT(*) FILTER (WHERE decision = 'APPROVED') as total_approved,
+                COUNT(*) FILTER (WHERE decision = 'BLOCKED') as total_blocked,
+                COUNT(*) FILTER (WHERE decision = 'HOLD') as total_hold,
+                ROUND(AVG(CASE WHEN decision = 'APPROVED' THEN 1.0 ELSE 0.0 END) * 100, 2) as approval_rate,
+                ROUND(SUM(requested_amount), 2) as total_amount_evaluated,
+                ROUND(SUM(CASE WHEN decision = 'APPROVED' THEN requested_amount ELSE 0 END), 2) as total_amount_approved,
+                ROUND(SUM(CASE WHEN decision = 'BLOCKED' THEN requested_amount ELSE 0 END), 2) as total_amount_blocked,
+                ROUND(AVG(signal_probability_score), 2) as avg_probability_score,
+                ROUND(AVG(signal_risk_exposure), 2) as avg_risk_exposure,
+                COUNT(*) FILTER (WHERE sharia_compliant = FALSE) as sharia_violations,
+                ROUND(AVG(CASE WHEN sharia_compliant = TRUE THEN 1.0 ELSE 0.0 END) * 100, 2) as sharia_compliance_rate,
+                MIN(submitted_at) as first_evaluation,
+                MAX(submitted_at) as last_evaluation
+            FROM credit_applications
+        """)
+        c = _credit_query_one("""
+            SELECT ROUND(SUM(requested_amount * (signal_risk_exposure / 200.0)), 2) as capital_protected_estimate
+            FROM credit_applications WHERE decision = 'BLOCKED'
+        """)
+        a = _credit_query_one("""
+            SELECT
+                COUNT(*) as applications_24h,
+                COUNT(*) FILTER (WHERE decision = 'APPROVED') as approved_24h,
+                COUNT(*) FILTER (WHERE decision = 'BLOCKED') as blocked_24h
+            FROM credit_applications WHERE submitted_at >= NOW() - INTERVAL '24 hours'
+        """)
+        macro = _credit_query_one("""
+            SELECT macro_credit_index, macro_stress_level, fed_funds_rate, macro_volatility
+            FROM credit_applications WHERE macro_credit_index IS NOT NULL
+            ORDER BY submitted_at DESC LIMIT 1
+        """)
+        block_reasons = _credit_query("""
+            SELECT COALESCE(blocked_at_checkpoint, 'CP-?') as checkpoint,
+                COUNT(*) as count,
+                ROUND(COUNT(*) * 100.0 / NULLIF((SELECT COUNT(*) FROM credit_applications WHERE decision = 'BLOCKED'), 0), 1) as pct
+            FROM credit_applications WHERE decision = 'BLOCKED'
+            GROUP BY blocked_at_checkpoint ORDER BY count DESC LIMIT 5
+        """)
+        cycle_row = _credit_query_one("SELECT COUNT(*) as cycles FROM credit_cycle_metrics")
+
+        return jsonify({
+            "status": "ok",
+            "vertical": "islamic_credit",
+            "engine_version": "1.0.0",
+            "metrics": {
+                "total_applications": int(t.get("total_applications") or 0),
+                "total_approved": int(t.get("total_approved") or 0),
+                "total_blocked": int(t.get("total_blocked") or 0),
+                "total_hold": int(t.get("total_hold") or 0),
+                "approval_rate": float(t.get("approval_rate") or 0),
+                "total_amount_evaluated_aed": float(t.get("total_amount_evaluated") or 0),
+                "total_amount_approved_aed": float(t.get("total_amount_approved") or 0),
+                "total_amount_blocked_aed": float(t.get("total_amount_blocked") or 0),
+                "capital_protected_estimate_aed": float(c.get("capital_protected_estimate") or 0),
+                "avg_probability_score": float(t.get("avg_probability_score") or 0),
+                "avg_risk_exposure": float(t.get("avg_risk_exposure") or 0),
+                "sharia_compliance_rate": float(t.get("sharia_compliance_rate") or 100),
+                "sharia_violations": int(t.get("sharia_violations") or 0),
+                "simulation_cycles": int(cycle_row.get("cycles") or 0),
+                "first_evaluation": str(t.get("first_evaluation") or ""),
+                "last_evaluation": str(t.get("last_evaluation") or ""),
+            },
+            "activity_24h": {
+                "applications": int(a.get("applications_24h") or 0),
+                "approved": int(a.get("approved_24h") or 0),
+                "blocked": int(a.get("blocked_24h") or 0),
+            },
+            "top_block_reasons": block_reasons,
+            "macro": {
+                "credit_index": float((macro or {}).get("macro_credit_index") or 58),
+                "stress_level": str((macro or {}).get("macro_stress_level") or "MODERATE"),
+                "fed_funds_rate": float((macro or {}).get("fed_funds_rate") or 5.33),
+                "volatility": float((macro or {}).get("macro_volatility") or 38),
+            },
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/credit/applications')
+@app.route('/api/credit/applications.json')
+def credit_applications():
+    try:
+        limit = min(int(request.args.get("limit", 50)), 200)
+        where_clauses = []
+        params = []
+        if request.args.get("decision"):
+            where_clauses.append("decision = %s")
+            params.append(request.args["decision"].upper())
+        if request.args.get("sector"):
+            where_clauses.append("sector = %s")
+            params.append(request.args["sector"])
+        where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+        params.append(limit)
+        rows = _credit_query(f"""
+            SELECT application_id, submitted_at, applicant_type, sector,
+                requested_amount, currency, tenor_months, financing_type, purpose,
+                credit_score, debt_service_ratio, asset_backing_ratio,
+                sharia_compliant, gharar_score,
+                signal_probability_score, signal_risk_exposure,
+                decision, receipt_id, blocked_at_checkpoint, block_reason,
+                checkpoints_passed, checkpoints_total,
+                macro_stress_level, fed_funds_rate
+            FROM credit_applications {where_sql} ORDER BY submitted_at DESC LIMIT %s
+        """, params)
+        formatted = [{
+            **row,
+            "submitted_at": str(row.get("submitted_at", "")),
+            "requested_amount": float(row.get("requested_amount") or 0),
+            "credit_score": float(row.get("credit_score") or 0),
+            "debt_service_ratio": float(row.get("debt_service_ratio") or 0),
+            "asset_backing_ratio": float(row.get("asset_backing_ratio") or 0),
+            "gharar_score": float(row.get("gharar_score") or 0),
+            "signal_probability_score": float(row.get("signal_probability_score") or 0),
+            "signal_risk_exposure": float(row.get("signal_risk_exposure") or 0),
+        } for row in rows]
+        return jsonify({"status": "ok", "applications": formatted, "count": len(formatted)})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/credit/sectors')
+@app.route('/api/credit/sectors.json')
+def credit_sectors():
+    try:
+        rows = _credit_query("""
+            SELECT sector, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision = 'APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision = 'BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision = 'APPROVED' THEN 1.0 ELSE 0.0 END) * 100, 1) as approval_rate,
+                ROUND(SUM(requested_amount), 0) as total_amount_aed,
+                ROUND(AVG(signal_probability_score), 1) as avg_probability
+            FROM credit_applications
+            GROUP BY sector ORDER BY total DESC
+        """)
+        return jsonify({"status": "ok", "sectors": rows})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/credit/timeline')
+def credit_timeline():
+    try:
+        rows = _credit_query("""
+            SELECT DATE_TRUNC('hour', submitted_at) as hour,
+                COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision = 'APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision = 'BLOCKED') as blocked
+            FROM credit_applications
+            WHERE submitted_at >= NOW() - INTERVAL '7 days'
+            GROUP BY hour ORDER BY hour DESC LIMIT 168
+        """)
+        formatted = [{**r, "hour": str(r.get("hour", ""))} for r in rows]
+        return jsonify({"status": "ok", "timeline": formatted})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/credit/macro')
+def credit_macro():
+    try:
+        row = _credit_query_one("""
+            SELECT macro_credit_index, macro_stress_level, fed_funds_rate,
+                macro_volatility, submitted_at
+            FROM credit_applications WHERE macro_credit_index IS NOT NULL
+            ORDER BY submitted_at DESC LIMIT 1
+        """)
+        return jsonify({
+            "status": "ok",
+            "credit_index": float((row or {}).get("macro_credit_index") or 58),
+            "stress_level": str((row or {}).get("macro_stress_level") or "MODERATE"),
+            "fed_funds_rate": float((row or {}).get("fed_funds_rate") or 5.33),
+            "volatility": float((row or {}).get("macro_volatility") or 38),
+            "as_of": str((row or {}).get("submitted_at") or ""),
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/credit/health')
+def credit_health():
+    try:
+        row = _credit_query_one("""
+            SELECT COUNT(*) as total,
+                MAX(submitted_at) as last_evaluation,
+                EXTRACT(EPOCH FROM (NOW() - MAX(submitted_at))) as seconds_since_last
+            FROM credit_applications
+        """)
+        total = int(row.get("total") or 0)
+        secs = float(row.get("seconds_since_last") or 9999)
+        return jsonify({
+            "status": "ok",
+            "engine": "RUNNING" if secs < 900 else "STALE",
+            "total_evaluations": total,
+            "last_evaluation": str(row.get("last_evaluation") or ""),
+            "seconds_since_last_evaluation": round(secs, 0),
+            "vertical": "islamic_credit_v1",
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_frontend(path):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'API endpoint not found', 'path': request.path}), 404
     if path and os.path.exists(os.path.join(DIST_DIR, path)):
         return send_from_directory(DIST_DIR, path)
     return send_from_directory(DIST_DIR, 'index.html')
+
 
 
 if __name__ == '__main__':
