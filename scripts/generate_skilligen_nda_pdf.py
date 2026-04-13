@@ -185,7 +185,7 @@ def build_pdf():
     story.append(parties)
     story.append(Spacer(1, 24))
 
-    story.append(Paragraph("Effective Date: [DATE TO BE INSERTED]", s['CoverMeta']))
+    story.append(Paragraph("Effective Date: 13 April 2026", s['CoverMeta']))
     story.append(Spacer(1, 16))
     story.append(GoldRule(DW, 1))
     story.append(Spacer(1, 8))
