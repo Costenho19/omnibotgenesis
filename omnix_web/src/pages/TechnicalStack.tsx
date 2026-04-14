@@ -88,8 +88,8 @@ export default function TechnicalStack() {
             {[
               { v: '11', l: 'Checkpoints' },
               { v: '8', l: 'Regulatory Frameworks' },
-              { v: '4', l: 'Industry Domains' },
-              { v: 'PQC', l: 'Post-Quantum Signed' },
+              { v: '8', l: 'Industry Domains' },
+              { v: 'W3C VC', l: 'Receipt Format' },
             ].map(({ v, l }) => (
               <div key={l} style={{ background: '#111830', border: `1px solid ${GOLD}22`, borderRadius: 12, padding: '16px 24px', textAlign: 'center', minWidth: 100 }}>
                 <div style={{ fontSize: 26, fontWeight: 900, color: GOLD }}>{v}</div>
