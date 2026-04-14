@@ -268,6 +268,68 @@ Contract language for external integrators (Velos):
 
 ---
 
+## 10. Cross-Border Governance — ADR-085 (2026-04-14)
+
+### 10.1 The cross-border semantic problem
+
+W3C VCs + JSON-LD + schema mappings ensure verifiable structure, not semantic equivalence
+across jurisdictions. Independent verifiers can validate the same receipt and still arrive
+at different regulatory conclusions. This is accurate and expected — no governance system
+can guarantee cross-border regulatory equivalence.
+
+OMNIX's response: maximum coverage with transparent scope boundaries.
+
+### 10.2 Three-layer solution
+
+**Layer 1 — Regulatory mapping (10 frameworks, 6 regions)**
+
+Every receipt maps the outcome to all applicable frameworks simultaneously. A verifier in
+any target jurisdiction finds their framework inside the receipt without needing OMNIX knowledge.
+
+Frameworks: EU AI Act · GDPR · DORA · FATF · UK FCA/SM&CR · US SEC Rule 15c3-5 ·
+MAS Singapore · UAE CBUAE · SAMA Saudi Arabia · FSB G20.
+
+**Layer 2 — Proof scope**
+
+Every receipt contains a `proof_scope` block with explicit lists of:
+- `what_this_receipt_proves` — 5 cryptographic facts, all independently verifiable
+- `what_this_receipt_does_not_claim` — 4 explicit non-claims, including no cross-border semantic equivalence
+- `verifier_guidance` — step-by-step instructions for using the receipt as governance evidence
+
+**Layer 3 — Cross-jurisdiction concordance**
+
+A `cross_jurisdiction_concordance` block shows which frameworks agree on the outcome
+and where additional local obligations (FATF STR, UK SM&CR mapping, US Reg SCI) may arise.
+
+### 10.3 Trust score fix (Bug resolved in ADR-085)
+
+`jurisdiction_semantics` now computed BEFORE `trust_score` — the +0.10 bonus is applied
+correctly. Maximum reachable trust score is now 1.0 (was capped at 0.90).
+
+### 10.4 Key consistency fix (Bug resolved in ADR-085)
+
+`gov_blueprint._load_engine()` now imports `DecisionReceiptEngine` directly (not via
+`spec_from_file_location`). Trust registry and governance API share the same keypair.
+Independent verification against published public key now succeeds for all receipts.
+
+### 10.5 Reference documents
+
+- `docs/adr/ADR-085-cross-border-semantic-governance.md` — Technical decision record
+- `docs/compliance/CROSS_JURISDICTION_GOVERNANCE.md` — Institutional reference document
+
+---
+
+## 11. Cryptographic Standards Alignment
+
+| Algorithm | NIST Standard | Status | Active Since |
+|-----------|---------------|--------|--------------|
+| CRYSTALS-Dilithium-3 (ML-DSA-65) | FIPS 204 | Operational — production baseline | Nov 2025 |
+| CRYSTALS-Dilithium-5 (ML-DSA-87) | FIPS 204 | Available — high-assurance configuration | Mar 2026 |
+| CRYSTALS-Kyber-768 (ML-KEM-768) | FIPS 203 | Operational — key encapsulation | Nov 2025 |
+
+---
+
 *OMNIX QUANTUM LTD — Decision Governance Infrastructure*  
-*Harold Nunes | Solo Founder | OMNIX QUANTUM LTD, UK*  
+*Harold Nunes | Founder | OMNIX QUANTUM LTD, UK*  
+*71-75 Shelton Street, Covent Garden, London, WC2H 9JQ*  
 *Eureka GCC Dubai 2026 Semifinalista*
