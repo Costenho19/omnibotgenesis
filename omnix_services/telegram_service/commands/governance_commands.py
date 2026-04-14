@@ -412,12 +412,12 @@ async def impact_command(self, update, context):
             """
             SELECT
                 domain,
-                disposition,
+                UPPER(decision) AS decision,
                 COUNT(*) AS cnt
             FROM   decision_receipts
             WHERE  created_at >= NOW() - INTERVAL '7 days'
-            GROUP  BY domain, disposition
-            ORDER  BY domain, disposition
+            GROUP  BY domain, UPPER(decision)
+            ORDER  BY domain, UPPER(decision)
             """
         )
         rows_7d = cur.fetchall()
@@ -426,10 +426,10 @@ async def impact_command(self, update, context):
         cur.execute(
             """
             SELECT
-                COUNT(*)                                         AS total,
-                COUNT(*) FILTER (WHERE disposition = 'BLOCKED') AS blocked,
-                COUNT(*) FILTER (WHERE disposition = 'APPROVED') AS approved,
-                COUNT(DISTINCT domain)                           AS domains_active
+                COUNT(*)                                                                     AS total,
+                COUNT(*) FILTER (WHERE UPPER(decision) IN ('BLOCKED','BLOCK','HOLD','REJECT')) AS blocked,
+                COUNT(*) FILTER (WHERE UPPER(decision) IN ('APPROVED','APPROVE','PASS'))       AS approved,
+                COUNT(DISTINCT domain)                                                       AS domains_active
             FROM decision_receipts
             """
         )
@@ -473,9 +473,11 @@ async def impact_command(self, update, context):
             dom = row["domain"] or "generic"
             if dom not in stats:
                 stats[dom] = {"APPROVED": 0, "BLOCKED": 0}
-            disp = (row["disposition"] or "").upper()
-            if disp in ("APPROVED", "BLOCKED"):
-                stats[dom][disp] += int(row["cnt"])
+            dec = (row["decision"] or "").upper()
+            if dec in ("APPROVED", "APPROVE", "PASS"):
+                stats[dom]["APPROVED"] += int(row["cnt"])
+            elif dec in ("BLOCKED", "BLOCK", "HOLD", "REJECT"):
+                stats[dom]["BLOCKED"] += int(row["cnt"])
 
         total_7d   = sum(v["APPROVED"] + v["BLOCKED"] for v in stats.values())
         blocked_7d = sum(v["BLOCKED"] for v in stats.values())
