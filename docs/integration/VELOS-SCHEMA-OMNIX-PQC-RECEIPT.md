@@ -371,4 +371,80 @@ A chain break means either:
 
 ---
 
+## 10. W3C Verifiable Credential (VC) Format — ADR-084
+
+Every OMNIX receipt can be exported as a **W3C Verifiable Credential** (JSON-LD), making it readable by any VC-compatible system without requiring knowledge of OMNIX internals.
+
+### 10.1 Endpoint
+
+```
+POST https://omnixquantum.net/api/governance/receipt/vc
+Content-Type: application/json
+
+{
+  "receipt": { ...OMNIX receipt object... }
+}
+```
+
+### 10.2 W3C VC Envelope Structure
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld"
+  ],
+  "id": "https://omnixquantum.net/receipts/OMNIX-A3F7C1D92B0E",
+  "type": ["VerifiableCredential", "OmnixGovernanceCredential"],
+  "issuer": {
+    "id":   "did:web:omnixquantum.net",
+    "name": "OMNIX Quantum Ltd",
+    "url":  "https://omnixquantum.net"
+  },
+  "issuanceDate":   "2026-04-09T14:23:01+00:00",
+  "expirationDate": "2027-04-09T14:23:01+00:00",
+  "credentialSubject": {
+    "id":           "https://omnixquantum.net/receipts/OMNIX-A3F7C1D92B0E",
+    "receipt_id":   "OMNIX-A3F7C1D92B0E",
+    "asset":        "BTC/USDT",
+    "decision":     "BLOCKED",
+    "domain":       "trading",
+    "veto_chain":   ["..."],
+    "jurisdiction_semantics": {
+      "EU_AI_ACT":  { "interpretation": "..." },
+      "FATF":       { "interpretation": "..." },
+      "GDPR":       { "interpretation": "..." }
+    }
+  },
+  "proof": {
+    "type":               "Dilithium2021",
+    "created":            "2026-04-09T14:23:01+00:00",
+    "verificationMethod": "did:web:omnixquantum.net#pqc-key-1",
+    "proofPurpose":       "assertionMethod",
+    "proofValue":         "BASE64_DILITHIUM3_SIGNATURE",
+    "signatureAlgorithm": "Dilithium-3",
+    "signedData":         "SHA256_CONTENT_HASH"
+  }
+}
+```
+
+### 10.3 Public Schemas
+
+| Resource | URL | MIME Type |
+|---|---|---|
+| JSON-LD Context | `https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld` | `application/ld+json` |
+| JSON Schema | `https://omnixquantum.net/schemas/omnix-receipt-schema-v6.5.4e.json` | `application/schema+json` |
+
+### 10.4 Jurisdiction Semantics on `/verify`
+
+The `/api/public/verify/<receipt_id>` endpoint now includes a `jurisdiction_semantics` block explaining what the decision outcome means under 5 regulatory frameworks:
+
+- **EU AI Act** — Compliance with Article 9 (risk management) / Article 14 (human oversight)
+- **FATF** — AML/CTF Recommendation 10 interpretation
+- **GDPR** — Article 22 automated decision-making rights
+- **DORA** — ICT operational resilience requirements
+- **UAE CBUAE** — UAE Central Bank AI Governance Framework
+
+---
+
 *Document prepared by Harold Nunes. OMNIX QUANTUM LTD — Eureka GCC Dubai 2026 Semifinalist.*

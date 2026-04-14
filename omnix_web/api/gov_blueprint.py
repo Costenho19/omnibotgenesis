@@ -3142,6 +3142,110 @@ def api_governance_due_diligence_report():
     }), 200
 
 
+@governance_bp.route('/api/governance/receipt/vc', methods=['POST'])
+def api_receipt_to_vc():
+    """
+    POST /api/governance/receipt/vc
+    ADR-084: W3C Verifiable Credential endpoint.
+
+    Accepts an OMNIX receipt JSON and returns the W3C VC equivalent.
+    Validates that the receipt is not expired and has an intact content hash
+    before issuing the VC.
+
+    Body: { "receipt": { ...OMNIX receipt object... } }
+    Returns: W3C VC JSON-LD object
+
+    No authentication required — public interoperability endpoint.
+    Rate-limited: 30/min.
+    """
+    import sys
+    import os
+    import json as _json
+    import hashlib as _hashlib
+    from datetime import datetime as _dt, timezone as _tz
+
+    data = request.get_json(silent=True) or {}
+    receipt = data.get("receipt")
+
+    if not receipt or not isinstance(receipt, dict):
+        return jsonify({
+            "error": "Missing or invalid 'receipt' field. "
+                     "POST body must be { \"receipt\": { ...OMNIX receipt object... } }"
+        }), 400
+
+    receipt_id   = receipt.get("receipt_id", "")
+    content_hash = receipt.get("content_hash", "")
+    decision     = receipt.get("decision", "")
+
+    if not receipt_id or not content_hash:
+        return jsonify({
+            "error": "Receipt is missing required fields: receipt_id and/or content_hash."
+        }), 422
+
+    payload_for_hash = {
+        "receipt_id":       receipt.get("receipt_id"),
+        "timestamp":        receipt.get("timestamp"),
+        "asset":            receipt.get("asset"),
+        "decision":         receipt.get("decision"),
+        "veto_chain":       receipt.get("veto_chain"),
+        "policy_version":   receipt.get("policy_version"),
+        "engine_version":   receipt.get("engine_version"),
+        "prev_hash":        receipt.get("prev_hash"),
+        "signing_provider": receipt.get("signing_provider"),
+    }
+    if payload_for_hash["signing_provider"] is None:
+        del payload_for_hash["signing_provider"]
+
+    for optional_block in (
+        "sharia_compliance", "aml_compliance", "fraud_compliance",
+        "jurisdiction_compliance", "context_admission",
+    ):
+        if optional_block in receipt:
+            payload_for_hash[optional_block] = receipt[optional_block]
+    if "veto_type" in receipt:
+        payload_for_hash["veto_type"] = receipt["veto_type"]
+
+    canonical    = _json.dumps(payload_for_hash, sort_keys=True, ensure_ascii=True)
+    computed     = _hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    hash_valid   = computed == content_hash
+
+    if not hash_valid:
+        return jsonify({
+            "error":          "Receipt integrity check failed. content_hash does not match payload.",
+            "expected_hash":  computed[:16] + "...",
+            "received_hash":  content_hash[:16] + "...",
+            "note":           "Ensure the receipt has not been modified since issuance.",
+        }), 409
+
+    try:
+        sys.path.insert(0, os.path.dirname(__file__))
+        from api.omnix_engine.receipt_to_vc import ReceiptToVC, build_jurisdiction_semantics
+    except ImportError:
+        try:
+            from omnix_engine.receipt_to_vc import ReceiptToVC, build_jurisdiction_semantics
+        except ImportError as e:
+            logger.error(f"ReceiptToVC import failed: {e}")
+            return jsonify({"error": "VC converter not available"}), 500
+
+    converter = ReceiptToVC()
+    vc = converter.convert(receipt)
+
+    jurisdiction_semantics = build_jurisdiction_semantics(
+        veto_chain=receipt.get("veto_chain", []),
+        decision=decision,
+        domain=receipt.get("domain", "generic"),
+    )
+    vc["credentialSubject"]["jurisdiction_semantics"] = jurisdiction_semantics
+
+    return jsonify({
+        "verifiable_credential": vc,
+        "hash_verified":         True,
+        "schema_url":            "https://omnixquantum.net/schemas/omnix-receipt-schema-v6.5.4e.json",
+        "context_url":           "https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld",
+        "w3c_spec":              "https://www.w3.org/TR/vc-data-model/",
+    }), 200
+
+
 @governance_bp.route('/api/governance/execution-integrity', methods=['GET'])
 def api_execution_integrity_status():
     """

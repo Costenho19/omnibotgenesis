@@ -720,6 +720,48 @@ def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
 
+@app.route('/schemas/omnix-receipt-v1.jsonld', methods=['GET'])
+def serve_jsonld_context():
+    """ADR-084: Serve the public OMNIX JSON-LD context file."""
+    import pathlib
+    schema_path = pathlib.Path(__file__).parent.parent / 'public' / 'schemas' / 'omnix-receipt-v1.jsonld'
+    try:
+        content = schema_path.read_text(encoding='utf-8')
+        return app.response_class(
+            response=content,
+            status=200,
+            mimetype='application/ld+json',
+            headers={
+                'Cache-Control': 'public, max-age=86400',
+                'Access-Control-Allow-Origin': '*',
+                'X-OMNIX-Schema-Version': '1.0',
+            }
+        )
+    except FileNotFoundError:
+        return jsonify({'error': 'Schema file not found'}), 404
+
+
+@app.route('/schemas/omnix-receipt-schema-v6.5.4e.json', methods=['GET'])
+def serve_json_schema():
+    """ADR-084: Serve the public OMNIX JSON Schema for external validation."""
+    import pathlib
+    schema_path = pathlib.Path(__file__).parent.parent / 'public' / 'schemas' / 'omnix-receipt-schema-v6.5.4e.json'
+    try:
+        content = schema_path.read_text(encoding='utf-8')
+        return app.response_class(
+            response=content,
+            status=200,
+            mimetype='application/schema+json',
+            headers={
+                'Cache-Control': 'public, max-age=86400',
+                'Access-Control-Allow-Origin': '*',
+                'X-OMNIX-Schema-Version': '6.5.4e',
+            }
+        )
+    except FileNotFoundError:
+        return jsonify({'error': 'Schema file not found'}), 404
+
+
 @app.route('/api/analytics/decisions', methods=['GET'])
 def analytics_decisions():
     """
@@ -1173,7 +1215,25 @@ def public_verify_receipt(receipt_id):
         en_sum = f"Decision {dec} for {asset} — {passed} checkpoints passed, {blocked} blocked."
         es_sum = f"Decisión {dec} para {asset} — {passed} pasaron, {blocked} bloqueados."
 
-    return jsonify({
+    try:
+        from api.omnix_engine.receipt_to_vc import build_jurisdiction_semantics
+        jurisdiction_semantics = build_jurisdiction_semantics(
+            veto_chain=veto_list,
+            decision=dec,
+            domain=domain or 'generic',
+        )
+    except Exception:
+        try:
+            from omnix_engine.receipt_to_vc import build_jurisdiction_semantics
+            jurisdiction_semantics = build_jurisdiction_semantics(
+                veto_chain=veto_list,
+                decision=dec,
+                domain=domain or 'generic',
+            )
+        except Exception:
+            jurisdiction_semantics = None
+
+    response_body = {
         'found':               True,
         'receipt_id':          rid,
         'timestamp_utc':       ts_str,
@@ -1189,17 +1249,27 @@ def public_verify_receipt(receipt_id):
         'checkpoints_blocked': blocked,
         'checkpoints':         checkpoints,
         'integrity': {
-            'content_hash':           content_hash or '',
-            'prev_hash':              prev_hash or '',
-            'signature_algorithm':    sig_algo or 'SHA-256 (sandbox)',
-            'is_pqc':                 is_pqc,
+            'content_hash':             content_hash or '',
+            'prev_hash':                prev_hash or '',
+            'signature_algorithm':      sig_algo or 'SHA-256 (sandbox)',
+            'is_pqc':                   is_pqc,
             'independently_verifiable': True,
-            'nist_note':              'NIST-standardized cryptographic algorithms' if is_pqc else 'SHA-256 hash chain integrity',
+            'nist_note': (
+                'NIST-standardized cryptographic algorithms' if is_pqc
+                else 'SHA-256 hash chain integrity'
+            ),
         },
-        'policy_version':      policy_ver or '',
-        'engine_version':      engine_ver or '',
+        'policy_version':         policy_ver or '',
+        'engine_version':         engine_ver or '',
         'independent_verify_url': None,
-    })
+        'schema_url':             'https://omnixquantum.net/schemas/omnix-receipt-schema-v6.5.4e.json',
+        'context_url':            'https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld',
+        'vc_endpoint':            f'https://omnixquantum.net/api/governance/receipt/vc',
+    }
+    if jurisdiction_semantics:
+        response_body['jurisdiction_semantics'] = jurisdiction_semantics
+
+    return jsonify(response_body)
 
 
 @app.route('/api/public/send-receipt', methods=['POST'])
