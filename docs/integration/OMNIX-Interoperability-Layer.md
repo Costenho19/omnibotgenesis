@@ -215,12 +215,103 @@ Per OMNIX's Mutual NDA with partners (ADR-084, interface-level interaction princ
 
 ---
 
-## 7. Future: Federated Trust Registry
+## 7. Federated Trust Layer — ADR-085
 
-Phase 2 (not in this release) will add:
-- DID-based verifiable issuer registry
-- Cross-system automated reconciliation with partner governance engines
-- Real-time receipt streaming via WebSub
+The federated trust layer makes OMNIX receipts independently verifiable by any external system, without requiring access to OMNIX's internal DB or knowledge of OMNIX internals.
+
+### 7.1 DID Document — `did:web:omnixquantum.net`
+
+The OMNIX DID is now resolvable:
+
+```
+GET https://omnixquantum.net/.well-known/did.json
+Accept: application/did+json
+```
+
+Returns the full DID Document with:
+- Live PQC public key (runtime ephemeral, always current)
+- Verification methods: `#pqc-key-1`, `#governance-key-1`
+- Service endpoints: governance API, receipt verifier, VC issuer, trust registry, schema repository
+
+### 7.2 Trust Registry
+
+```
+GET https://omnixquantum.net/api/trust/registry
+```
+
+Returns:
+- OMNIX as a trusted issuer with live public key and supported schemas
+- Pending partners (Skilligen HDI, Velos Capital) with their DIDs and trust levels
+- Step-by-step guide for external systems to verify OMNIX receipts
+- All supported regulatory frameworks
+
+### 7.3 Independent Stateless Verifier
+
+```
+POST https://omnixquantum.net/api/trust/verify
+Content-Type: application/json
+
+{ "receipt": { ...OMNIX receipt... } }
+// OR
+{ "verifiable_credential": { ...W3C VC... } }
+```
+
+**No DB access required. No OMNIX account required.**
+
+Verifies:
+1. SHA-256 content hash — receipt payload is intact
+2. PQC signature — cryptographic authenticity (if public key embedded)
+3. Jurisdiction semantics — what the decision means per regulatory framework
+4. Trust chain — confirms issuer DID and links to registry
+
+Response includes:
+- `hash_valid`, `signature_valid`, `overall_valid`
+- `jurisdiction_semantics` (EU AI Act, FATF, GDPR, DORA, UAE CBUAE)
+- `trust_chain` with all resolution URLs
+
+### 7.4 Regulatory Frameworks Catalog
+
+```
+GET https://omnixquantum.net/api/trust/frameworks
+```
+
+Returns full mapping of 11 checkpoints × 8+ regulatory frameworks with descriptions, article references, and applicability scope.
+
+### 7.5 Trust Layer Health
+
+```
+GET https://omnixquantum.net/api/trust/health
+```
+
+Live status of all 6 interoperability components: DID document, JSON-LD context, JSON Schema, signing key, VC converter, independent verifier.
+
+---
+
+## 8. Complete API Surface — Interoperability Layer
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/.well-known/did.json` | DID Document — resolves `did:web:omnixquantum.net` |
+| `GET` | `/api/trust/registry` | Trust Registry — issuers, keys, schemas, partners |
+| `POST` | `/api/trust/verify` | Independent Verifier — no DB, no OMNIX account needed |
+| `GET` | `/api/trust/frameworks` | Regulatory Framework Catalog |
+| `GET` | `/api/trust/health` | Interoperability layer health check |
+| `POST` | `/api/governance/receipt/vc` | Convert receipt → W3C VC |
+| `GET` | `/api/public/verify/<id>` | Verify by receipt ID (includes jurisdiction semantics) |
+| `GET` | `/schemas/omnix-receipt-v1.jsonld` | JSON-LD Context |
+| `GET` | `/schemas/omnix-receipt-schema-v6.5.4e.json` | JSON Schema |
+
+---
+
+## 9. Partner Onboarding — How to Add a Trusted Counterparty
+
+To add Skilligen HDI, Velos Capital, or any other partner to the OMNIX trust chain:
+
+1. Partner publishes their own `/.well-known/did.json` at their domain
+2. Partner shares their DID (e.g. `did:web:skilligen.com`) with OMNIX
+3. OMNIX adds their DID to the trust registry under `trusted_issuers`
+4. Both systems can now independently verify each other's evidence without a shared DB
+5. Joint decisions carry both DIDs in the `proof` block
 
 ---
 

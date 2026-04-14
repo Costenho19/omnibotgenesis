@@ -762,6 +762,201 @@ def serve_json_schema():
         return jsonify({'error': 'Schema file not found'}), 404
 
 
+@app.route('/.well-known/did.json', methods=['GET'])
+def serve_did_document():
+    """ADR-085: Serve the DID Document for did:web:omnixquantum.net resolution."""
+    import pathlib
+    did_path = pathlib.Path(__file__).parent.parent / 'public' / '.well-known' / 'did.json'
+    try:
+        import json as _json
+        did_doc = _json.loads(did_path.read_text(encoding='utf-8'))
+        try:
+            from api.omnix_engine.federated_trust import _get_runtime_public_key, _get_signing_algorithm
+            runtime_key = _get_runtime_public_key()
+            algo        = _get_signing_algorithm()
+            if runtime_key:
+                for vm in did_doc.get('verificationMethod', []):
+                    if vm.get('id', '').endswith('#pqc-key-1'):
+                        vm['publicKeyJwk']['x']   = runtime_key
+                        vm['publicKeyJwk']['crv']  = algo.replace('-', '') if algo else 'Dilithium3'
+                        vm['publicKeyJwk']['alg']  = 'CRYDI3'
+        except Exception:
+            pass
+        return app.response_class(
+            response=_json.dumps(did_doc, indent=2),
+            status=200,
+            mimetype='application/did+json',
+            headers={
+                'Cache-Control': 'no-cache, must-revalidate',
+                'Access-Control-Allow-Origin': '*',
+                'X-OMNIX-DID': 'did:web:omnixquantum.net',
+            }
+        )
+    except FileNotFoundError:
+        return jsonify({'error': 'DID document not found'}), 404
+
+
+@app.route('/api/trust/registry', methods=['GET'])
+def trust_registry():
+    """
+    ADR-085: Public Trust Registry.
+    Returns OMNIX as a trusted issuer with live public key, verification methods,
+    supported schemas, regulatory frameworks, and pending partner DIDs.
+    Any external system uses this to discover how to trust and verify OMNIX receipts.
+    """
+    try:
+        from api.omnix_engine.federated_trust import build_trust_registry
+        registry = build_trust_registry()
+    except ImportError:
+        try:
+            from omnix_engine.federated_trust import build_trust_registry
+            registry = build_trust_registry()
+        except Exception as e:
+            return jsonify({'error': f'Trust registry unavailable: {e}'}), 500
+    return jsonify(registry), 200, {
+        'Cache-Control': 'no-cache, must-revalidate',
+        'Access-Control-Allow-Origin': '*',
+        'X-OMNIX-Trust-Version': 'v1',
+    }
+
+
+@app.route('/api/trust/verify', methods=['POST'])
+@limiter.limit("60 per minute")
+def trust_verify():
+    """
+    ADR-085: Independent Stateless Verifier.
+    Accepts an OMNIX receipt OR a W3C VC and verifies it without DB access.
+    Verifies: SHA-256 hash integrity + PQC signature (if key embedded) + jurisdiction semantics.
+    Any external system can call this endpoint to independently validate OMNIX governance evidence.
+    """
+    data = request.get_json(silent=True) or {}
+    receipt_or_vc = data.get('receipt') or data.get('verifiable_credential') or data
+
+    if not isinstance(receipt_or_vc, dict) or not receipt_or_vc:
+        return jsonify({
+            'error': 'Send { "receipt": {...} } or { "verifiable_credential": {...} }',
+            'example_url': 'https://omnixquantum.net/api/trust/verify',
+        }), 400
+
+    try:
+        from api.omnix_engine.federated_trust import independent_verify
+        result = independent_verify(receipt_or_vc)
+    except ImportError:
+        try:
+            from omnix_engine.federated_trust import independent_verify
+            result = independent_verify(receipt_or_vc)
+        except Exception as e:
+            return jsonify({'error': f'Verifier unavailable: {e}'}), 500
+
+    status_code = 200 if result.get('overall_valid') else 200
+    return jsonify(result), status_code, {'Access-Control-Allow-Origin': '*'}
+
+
+@app.route('/api/trust/frameworks', methods=['GET'])
+def trust_frameworks():
+    """
+    ADR-085: Regulatory Frameworks Catalog.
+    Returns the full catalog of regulatory frameworks OMNIX maps to,
+    with checkpoint coverage and status for each framework.
+    """
+    try:
+        from api.omnix_engine.regulatory_mapping import get_full_framework_catalog, FRAMEWORK_METADATA
+        catalog = get_full_framework_catalog()
+    except ImportError:
+        try:
+            from omnix_engine.regulatory_mapping import get_full_framework_catalog
+            catalog = get_full_framework_catalog()
+        except Exception as e:
+            return jsonify({'error': f'Framework catalog unavailable: {e}'}), 500
+
+    return jsonify({
+        'spec':        'OMNIX Regulatory Framework Catalog v1.0',
+        'description': (
+            'Complete mapping of OMNIX governance checkpoints to regulatory frameworks. '
+            'Use this to determine which regulations are enforced for a given decision domain.'
+        ),
+        'catalog':     catalog,
+        'did_issuer':  'did:web:omnixquantum.net',
+        'registry_url': 'https://omnixquantum.net/api/trust/registry',
+    }), 200, {'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=3600'}
+
+
+@app.route('/api/trust/health', methods=['GET'])
+def trust_health():
+    """
+    ADR-085: Trust Layer Health Check.
+    Returns the live status of all interoperability components:
+    DID resolution, trust registry, independent verifier, schema endpoints.
+    """
+    import pathlib
+    components = {}
+
+    did_path = pathlib.Path(__file__).parent.parent / 'public' / '.well-known' / 'did.json'
+    components['did_document'] = {
+        'status': 'ok' if did_path.exists() else 'missing',
+        'url': 'https://omnixquantum.net/.well-known/did.json',
+        'did': 'did:web:omnixquantum.net',
+    }
+
+    jsonld_path = pathlib.Path(__file__).parent.parent / 'public' / 'schemas' / 'omnix-receipt-v1.jsonld'
+    schema_path = pathlib.Path(__file__).parent.parent / 'public' / 'schemas' / 'omnix-receipt-schema-v6.5.4e.json'
+    components['json_ld_context'] = {
+        'status': 'ok' if jsonld_path.exists() else 'missing',
+        'url': 'https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld',
+    }
+    components['json_schema'] = {
+        'status': 'ok' if schema_path.exists() else 'missing',
+        'url': 'https://omnixquantum.net/schemas/omnix-receipt-schema-v6.5.4e.json',
+    }
+
+    try:
+        from api.omnix_engine.federated_trust import _get_runtime_public_key, _get_signing_algorithm
+        pub_key = _get_runtime_public_key()
+        algo    = _get_signing_algorithm()
+        components['signing_key'] = {
+            'status':    'ok' if pub_key else 'fallback',
+            'algorithm': algo,
+            'key_available': pub_key is not None,
+            'note': 'Ephemeral key — refresh from /api/trust/registry before each verification batch.',
+        }
+    except Exception as e:
+        components['signing_key'] = {'status': 'error', 'detail': str(e)}
+
+    try:
+        from api.omnix_engine.receipt_to_vc import ReceiptToVC
+        components['vc_converter'] = {'status': 'ok', 'endpoint': '/api/governance/receipt/vc'}
+    except Exception:
+        try:
+            from omnix_engine.receipt_to_vc import ReceiptToVC
+            components['vc_converter'] = {'status': 'ok', 'endpoint': '/api/governance/receipt/vc'}
+        except Exception:
+            components['vc_converter'] = {'status': 'error'}
+
+    try:
+        from api.omnix_engine.federated_trust import independent_verify
+        components['independent_verifier'] = {'status': 'ok', 'endpoint': '/api/trust/verify'}
+    except Exception:
+        components['independent_verifier'] = {'status': 'error'}
+
+    all_ok = all(c.get('status') in ('ok', 'fallback') for c in components.values())
+    return jsonify({
+        'status':     'ok' if all_ok else 'degraded',
+        'layer':      'OMNIX Federated Trust Layer v1.0 — ADR-085',
+        'did':        'did:web:omnixquantum.net',
+        'components': components,
+        'timestamp':  datetime.now(timezone.utc).isoformat(),
+        'endpoints': {
+            'did_document':         '/.well-known/did.json',
+            'trust_registry':       '/api/trust/registry',
+            'independent_verifier': '/api/trust/verify',
+            'vc_issuer':            '/api/governance/receipt/vc',
+            'framework_catalog':    '/api/trust/frameworks',
+            'jsonld_context':       '/schemas/omnix-receipt-v1.jsonld',
+            'json_schema':          '/schemas/omnix-receipt-schema-v6.5.4e.json',
+        },
+    }), 200, {'Access-Control-Allow-Origin': '*'}
+
+
 @app.route('/api/analytics/decisions', methods=['GET'])
 def analytics_decisions():
     """
