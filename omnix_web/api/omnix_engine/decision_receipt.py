@@ -25,6 +25,25 @@ except ImportError:
     _LEGACY_DILITHIUM3_AVAILABLE = False
     dilithium3 = None
 
+# ---------------------------------------------------------------------------
+# STABLE DEPLOYMENT KEY — generated ONCE per server process (ADR-085 fix)
+# All receipts in the same deployment use the same keypair so the public key
+# in the trust registry always matches the key embedded in receipts.
+# ---------------------------------------------------------------------------
+_STABLE_SIGNING_KEYS: Optional[Tuple[bytes, bytes]] = None
+_STABLE_PUBLIC_KEY_B64: Optional[str] = None
+
+if PQC_AVAILABLE and _active_provider is not None:
+    try:
+        _STABLE_SIGNING_KEYS = _active_provider.generate_keypair()
+        _STABLE_PUBLIC_KEY_B64 = _active_provider.serialize_public_key(_STABLE_SIGNING_KEYS[0])
+        logger.info(
+            f"Stable deployment signing keys generated "
+            f"({_active_provider.algorithm_name()}) — all receipts this deployment share this key."
+        )
+    except Exception as _e:
+        logger.error(f"Failed to generate stable signing keys: {_e}")
+
 
 def _get_db_connection(db_url: str):
     if not db_url:
@@ -56,9 +75,15 @@ class DecisionReceiptEngine:
         if not PQC_AVAILABLE or self._provider is None:
             logger.warning("Crypto provider not available - receipts will use SHA-256 only")
             return
+        # Use the module-level stable keypair so ALL receipts in this deployment
+        # share the same public key — required for trust registry consistency (ADR-085).
+        if _STABLE_SIGNING_KEYS is not None:
+            self._signing_keys = _STABLE_SIGNING_KEYS
+            return
+        # Fallback: generate (only if stable key generation failed at startup)
         try:
             self._signing_keys = self._provider.generate_keypair()
-            logger.info(f"Receipt signing keys generated ({self._provider.algorithm_name()})")
+            logger.warning("Fallback: generated per-instance keys (stable key unavailable)")
         except Exception as e:
             logger.error(f"Failed to generate signing keys: {e}")
 

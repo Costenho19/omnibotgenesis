@@ -956,6 +956,103 @@ def trust_health():
     }), 200, {'Access-Control-Allow-Origin': '*'}
 
 
+@app.route('/api/explorer/receipt/<receipt_id>', methods=['GET'])
+def explorer_receipt(receipt_id: str):
+    """
+    ADR-085 Premium: Receipt Explorer — public read-only view of any OMNIX receipt.
+    Like Etherscan but for governance decisions.
+    Accepts a receipt_id, fetches from DB, runs independent verification, returns full report.
+    No auth required — governance evidence is public by design.
+    """
+    if not receipt_id or len(receipt_id) > 100:
+        return jsonify({'error': 'Invalid receipt_id'}), 400
+
+    conn = get_db_connection()
+    receipt_row = None
+    domain_found = None
+
+    domain_tables = [
+        ("trading",       "decision_receipts",  "receipt_id, timestamp_utc, asset, decision, veto_chain, policy_version, engine_version, prev_hash, content_hash, signature, signature_algorithm, public_key, signing_provider, domain, client_id, created_at"),
+        ("credit",        "credit_applications","receipt_id, evaluated_at AS timestamp_utc, NULL AS asset, decision, NULL AS veto_chain, NULL AS policy_version, NULL AS engine_version, NULL AS prev_hash, NULL AS content_hash, NULL AS signature, NULL AS signature_algorithm, NULL AS public_key, NULL AS signing_provider, 'credit' AS domain, client_id, created_at"),
+        ("insurance",     "insurance_claims",   "receipt_id, created_at AS timestamp_utc, NULL AS asset, decision, NULL AS veto_chain, NULL AS policy_version, NULL AS engine_version, NULL AS prev_hash, NULL AS content_hash, NULL AS signature, NULL AS signature_algorithm, NULL AS public_key, NULL AS signing_provider, 'insurance' AS domain, NULL AS client_id, created_at"),
+        ("robotics",      "robot_actions",      "receipt_id, created_at AS timestamp_utc, NULL AS asset, decision, NULL AS veto_chain, NULL AS policy_version, NULL AS engine_version, NULL AS prev_hash, NULL AS content_hash, NULL AS signature, NULL AS signature_algorithm, NULL AS public_key, NULL AS signing_provider, 'robotics' AS domain, NULL AS client_id, created_at"),
+        ("medical",       "medical_decisions",  "receipt_id, created_at AS timestamp_utc, NULL AS asset, decision, NULL AS veto_chain, NULL AS policy_version, NULL AS engine_version, NULL AS prev_hash, NULL AS content_hash, NULL AS signature, NULL AS signature_algorithm, NULL AS public_key, NULL AS signing_provider, 'medical_ai' AS domain, NULL AS client_id, created_at"),
+        ("energy",        "energy_decisions",   "receipt_id, created_at AS timestamp_utc, NULL AS asset, decision, NULL AS veto_chain, NULL AS policy_version, NULL AS engine_version, NULL AS prev_hash, NULL AS content_hash, NULL AS signature, NULL AS signature_algorithm, NULL AS public_key, NULL AS signing_provider, 'energy_governance' AS domain, NULL AS client_id, created_at"),
+        ("real_estate",   "property_decisions", "receipt_id, created_at AS timestamp_utc, NULL AS asset, decision, NULL AS veto_chain, NULL AS policy_version, NULL AS engine_version, NULL AS prev_hash, NULL AS content_hash, NULL AS signature, NULL AS signature_algorithm, NULL AS public_key, NULL AS signing_provider, 'real_estate' AS domain, NULL AS client_id, created_at"),
+        ("agents",        "agent_decisions",    "receipt_id, created_at AS timestamp_utc, NULL AS asset, decision, NULL AS veto_chain, NULL AS policy_version, NULL AS engine_version, NULL AS prev_hash, NULL AS content_hash, NULL AS signature, NULL AS signature_algorithm, NULL AS public_key, NULL AS signing_provider, 'autonomous_agent' AS domain, NULL AS client_id, created_at"),
+    ]
+
+    if conn:
+        try:
+            cur = conn.cursor()
+            for domain_name, table, cols in domain_tables:
+                try:
+                    cur.execute(f"SELECT {cols} FROM {table} WHERE receipt_id = %s LIMIT 1", (receipt_id,))
+                    row = cur.fetchone()
+                    if row:
+                        col_names = [desc[0] for desc in cur.description]
+                        receipt_row  = dict(zip(col_names, row))
+                        domain_found = domain_name
+                        break
+                except Exception:
+                    continue
+            cur.close()
+        except Exception:
+            pass
+        finally:
+            conn.close()
+
+    if not receipt_row:
+        return jsonify({
+            'error':      f'Receipt {receipt_id!r} not found',
+            'receipt_id': receipt_id,
+            'explorer':   'https://omnixquantum.net/api/explorer/receipt/<id>',
+        }), 404
+
+    for k, v in receipt_row.items():
+        if hasattr(v, 'isoformat'):
+            receipt_row[k] = v.isoformat()
+
+    receipt_for_verify = {
+        'receipt_id':     receipt_row.get('receipt_id'),
+        'timestamp':      receipt_row.get('timestamp_utc'),
+        'asset':          receipt_row.get('asset'),
+        'decision':       receipt_row.get('decision'),
+        'veto_chain':     receipt_row.get('veto_chain') or [],
+        'policy_version': receipt_row.get('policy_version'),
+        'engine_version': receipt_row.get('engine_version'),
+        'prev_hash':      receipt_row.get('prev_hash'),
+        'content_hash':   receipt_row.get('content_hash'),
+        'signature':      receipt_row.get('signature'),
+        'public_key':     receipt_row.get('public_key'),
+        'signature_algorithm': receipt_row.get('signature_algorithm'),
+        'signing_provider':    receipt_row.get('signing_provider'),
+        'domain':         receipt_row.get('domain', domain_found),
+    }
+
+    verification = {}
+    try:
+        from api.omnix_engine.federated_trust import independent_verify
+        verification = independent_verify(receipt_for_verify)
+    except Exception:
+        try:
+            from omnix_engine.federated_trust import independent_verify
+            verification = independent_verify(receipt_for_verify)
+        except Exception:
+            pass
+
+    return jsonify({
+        'explorer_url':  f'https://omnixquantum.net/api/explorer/receipt/{receipt_id}',
+        'receipt_id':    receipt_id,
+        'domain':        domain_found,
+        'receipt':       receipt_row,
+        'verification':  verification,
+        'issuer_did':    'did:web:omnixquantum.net',
+        'registry_url':  'https://omnixquantum.net/api/trust/registry',
+        'schema_url':    'https://omnixquantum.net/schemas/omnix-receipt-schema-v6.5.4e.json',
+    }), 200, {'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache'}
+
+
 @app.route('/api/analytics/decisions', methods=['GET'])
 def analytics_decisions():
     """

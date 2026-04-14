@@ -60,19 +60,25 @@ FUTURE_TRUSTED_PARTNERS = [
 
 
 def _get_runtime_public_key() -> Optional[str]:
-    """Attempt to retrieve the current runtime PQC public key from the signing engine."""
+    """
+    Return the STABLE deployment public key (ADR-085 fix).
+    Uses the module-level _STABLE_PUBLIC_KEY_B64 so the trust registry always
+    returns the same key that signs all receipts in this deployment.
+    Never creates a new engine instance (which would generate a fresh orphan key).
+    """
     try:
-        from api.omnix_engine.decision_receipt import DecisionReceiptEngine
-        engine = DecisionReceiptEngine()
-        return engine.public_key_b64
+        from api.omnix_engine.decision_receipt import _STABLE_PUBLIC_KEY_B64
+        if _STABLE_PUBLIC_KEY_B64:
+            return _STABLE_PUBLIC_KEY_B64
     except Exception:
-        try:
-            from omnix_engine.decision_receipt import DecisionReceiptEngine
-            engine = DecisionReceiptEngine()
-            return engine.public_key_b64
-        except Exception as e:
-            logger.debug(f"Runtime key not available: {e}")
-            return None
+        pass
+    try:
+        from omnix_engine.decision_receipt import _STABLE_PUBLIC_KEY_B64
+        if _STABLE_PUBLIC_KEY_B64:
+            return _STABLE_PUBLIC_KEY_B64
+    except Exception as e:
+        logger.debug(f"Stable key not available: {e}")
+    return None
 
 
 def _get_signing_algorithm() -> str:
@@ -288,6 +294,65 @@ def independent_verify(receipt_or_vc: Dict[str, Any]) -> Dict[str, Any]:
 
     result["overall_valid"] = (
         result["hash_valid"] and result["signature_valid"] is not False
+    )
+
+    # ------------------------------------------------------------------
+    # ANTI-REPLAY / TIMESTAMP VALIDATION (ADR-085)
+    # Receipts are governance evidence — they don't expire, but we flag
+    # their age so the caller can apply their own retention policies.
+    # We also detect obvious clock-skew (future timestamps).
+    # ------------------------------------------------------------------
+    receipt_ts = receipt.get("timestamp") or receipt.get("timestamp_utc")
+    if receipt_ts:
+        try:
+            from datetime import timedelta
+            ts_clean = receipt_ts.replace("Z", "+00:00") if receipt_ts.endswith("Z") else receipt_ts
+            receipt_dt = datetime.fromisoformat(ts_clean)
+            if receipt_dt.tzinfo is None:
+                receipt_dt = receipt_dt.replace(tzinfo=timezone.utc)
+            now_dt = datetime.now(timezone.utc)
+            age_seconds = (now_dt - receipt_dt).total_seconds()
+            age_hours   = round(age_seconds / 3600, 2)
+            result["receipt_age_hours"]  = age_hours
+            result["receipt_timestamp"]  = receipt_ts
+            if age_seconds < -300:
+                result["timestamp_valid"]  = False
+                result["timestamp_note"]   = "FUTURE timestamp detected — possible clock skew or replay attack."
+            elif age_seconds > 365 * 24 * 3600:
+                result["timestamp_valid"]  = True
+                result["timestamp_note"]   = f"Receipt is {round(age_hours/24)} days old — valid historical evidence."
+            else:
+                result["timestamp_valid"]  = True
+                result["timestamp_note"]   = f"Receipt age: {age_hours}h — within normal range."
+        except Exception as _e:
+            result["timestamp_valid"] = None
+            result["timestamp_note"]  = f"Timestamp parse failed: {_e}"
+    else:
+        result["timestamp_valid"] = None
+        result["timestamp_note"]  = "No timestamp in receipt."
+
+    # ------------------------------------------------------------------
+    # TRUST SCORE (ADR-085 premium)
+    # Composite score 0.0–1.0 based on all verification dimensions.
+    # ------------------------------------------------------------------
+    score = 0.0
+    if result["hash_valid"]:
+        score += 0.40
+    if result["signature_valid"] is True:
+        score += 0.35
+    elif result["signature_valid"] is None:
+        score += 0.10
+    if result.get("timestamp_valid") is True:
+        score += 0.10
+    if result.get("jurisdiction_semantics"):
+        score += 0.10
+    if veto_chain:
+        score += 0.05
+    result["trust_score"]       = round(min(score, 1.0), 3)
+    result["trust_score_label"] = (
+        "HIGH"   if score >= 0.85 else
+        "MEDIUM" if score >= 0.55 else
+        "LOW"
     )
 
     try:
