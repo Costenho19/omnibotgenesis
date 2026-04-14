@@ -16,6 +16,14 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from telegram.request import HTTPXRequest
 
+# [ADR-083] Enterprise Security Middleware
+try:
+    from omnix_services.security.bot_security import get_security_middleware
+    _SECURITY_AVAILABLE = True
+except ImportError as _sec_err:
+    _SECURITY_AVAILABLE = False
+    get_security_middleware = None
+
 # Import centralized settings
 from omnix_config.settings import settings
 from omnix_config import VERSION_BANNER
@@ -493,6 +501,14 @@ class EnterpriseTelegramBot:
         self._message_buffers: Dict[str, List[Dict[str, Any]]] = {}
         self._message_timers: Dict[str, asyncio.Task] = {}
         self._message_aggregation_delay = 0.5
+
+        # [ADR-083] Enterprise Security Middleware
+        if _SECURITY_AVAILABLE:
+            self.security = get_security_middleware(allow_groups=False)
+            logger.info("[ADR-083] BotSecurityMiddleware active — rate limiting, injection detection, blocklist enabled")
+        else:
+            self.security = None
+            logger.warning("[ADR-083] Security middleware not available — running without protection")
         
         self._sync_message_buffers: Dict[str, List[Dict[str, Any]]] = {}
         self._sync_message_timers: Dict[str, Any] = {}
@@ -1295,7 +1311,7 @@ También puedes escribir naturalmente:
         except Exception as e:
             logger.error(f"❌ Error en /buscar: {e}")
             await update.message.reply_text(
-                f"❌ Error al buscar: {str(e)[:100]}",
+                "❌ No se pudo realizar la búsqueda en este momento. Por favor intenta de nuevo.",
                 parse_mode='Markdown'
             )
 
@@ -1760,7 +1776,7 @@ _Datos actualizados en tiempo real_
                 
             except Exception as e:
                 logger.error(f"Error obteniendo balance: {e}")
-                mensaje = f"❌ Error obteniendo balance: {str(e)[:100]}"
+                mensaje = "❌ No se pudo obtener el balance en este momento. Por favor intenta de nuevo."
             
             await update.message.reply_text(mensaje, parse_mode='Markdown')
             
@@ -3409,7 +3425,7 @@ Ejemplo: /risk_events 48
             logger.error(f"❌ TRACEBACK COMPLETO: {traceback.format_exc()}")
             try:
                 if buffered_messages and buffered_messages[0].get('update'):
-                    await buffered_messages[0]['update'].message.reply_text(f"⚠️ Error procesando mensaje: {str(e)[:200]}")
+                    await buffered_messages[0]['update'].message.reply_text("🤖 OMNIX encontró un inconveniente. Por favor intenta de nuevo en un momento.")
             except Exception:
                 pass
 
@@ -3421,7 +3437,29 @@ Ejemplo: /risk_events 48
             user_id = str(user.id)
             user_name = user.first_name or "Usuario"
             telegram_chat_id = str(update.effective_chat.id)
-            
+            chat_type = update.effective_chat.type  # "private", "group", "supergroup", "channel"
+
+            # ── [ADR-083] Enterprise Security Check ─────────────────────────
+            if self.security is not None:
+                _sec_result = self.security.check(user_id, chat_type, user_message or "")
+                if not _sec_result.allowed:
+                    logger.warning(
+                        f"[ADR-083] BLOCKED user={user_id} reason={_sec_result.reason} "
+                        f"injection={_sec_result.injection_detected} rate_limited={_sec_result.rate_limited}"
+                    )
+                    if _sec_result.reply_message:
+                        try:
+                            await update.message.reply_text(_sec_result.reply_message)
+                        except Exception:
+                            pass
+                    return
+                user_message = _sec_result.sanitized_message or user_message
+            # ────────────────────────────────────────────────────────────────
+
+            # [ADR-083] Buffer size guard — prevent unbounded memory growth
+            if user_id in self._message_buffers and len(self._message_buffers[user_id]) >= 5:
+                self._message_buffers[user_id].pop(0)
+
             if user_id in self._message_timers:
                 self._message_timers[user_id].cancel()
                 logger.info(f"🔄 Timer cancelado para {user_name} - agregando mensaje al buffer")
@@ -3634,7 +3672,7 @@ Usa: `/autotrading activar ACEPTO`"""
                         except Exception as e:
                             logger.error(f"❌ Error en búsqueda natural: {e}")
                             await searching_msg.edit_text(
-                                f"❌ Error al buscar: {str(e)[:100]}",
+                                "❌ No se pudo realizar la búsqueda en este momento. Por favor intenta de nuevo.",
                                 parse_mode='Markdown'
                             )
                         
@@ -3944,7 +3982,7 @@ Usa: `/autotrading activar ACEPTO`"""
             try:
                 query = update.callback_query
                 await query.answer()
-                await query.edit_message_text(f"❌ Error procesando acción: {str(e)[:100]}")
+                await query.edit_message_text("❌ No se pudo procesar la acción. Por favor intenta de nuevo.")
             except Exception:
                 pass
 
