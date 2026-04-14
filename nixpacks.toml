@@ -1,15 +1,6 @@
 # Nixpacks configuration — omnibotgenesis Telegram Bot
-# start command is defined in railway.json: "python -u main.py"
+# nixpacks auto-detects Python from requirements.txt and handles pip.
+# Only the start command is forced here to prevent Procfile conflict.
 
-[phases.setup]
-nixPkgs = ["python312"]
-
-[phases.install]
-cmds = [
-  "python3 -m ensurepip --upgrade",
-  "python3 -m pip install --upgrade pip",
-  "python3 -m pip install -r requirements.txt"
-]
-
-[phases.start]
+[start]
 cmd = "python -u main.py"
