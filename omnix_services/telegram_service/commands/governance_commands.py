@@ -366,3 +366,201 @@ async def recibo_command(self, update, context):
         await update.message.reply_text(
             "⚠️ Error consultando recibos. Verifica DATABASE_URL."
         )
+
+
+# ── /impact — Governance Impact Score ────────────────────────────────────────
+
+_DOMAIN_LABELS = {
+    "trading":            "Trading",
+    "credit":             "Crédito",
+    "insurance":          "Seguros",
+    "robotics":           "Robótica",
+    "medical_ai":         "Médico/AI",
+    "energy_governance":  "Energía",
+    "real_estate":        "Inmobiliario",
+    "autonomous_agent":   "Agentes",
+    "compliance":         "Compliance",
+    "public_sandbox":     "Sandbox",
+    "generic":            "Genérico",
+}
+
+_DOMAIN_ORDER = [
+    "trading", "credit", "insurance", "robotics",
+    "medical_ai", "energy_governance", "real_estate", "autonomous_agent",
+    "compliance", "public_sandbox", "generic",
+]
+
+
+async def impact_command(self, update, context):
+    """
+    /impact — Governance Impact Score en tiempo real.
+    Muestra decisiones por dominio (últimos 7 días), tasa de contención
+    de riesgo y capital bajo gobernanza.
+    ADR-083 Addendum — Governance Impact Reporting.
+    """
+    processing = await update.message.reply_text(
+        "🔄 _Calculando Governance Impact Score..._",
+        parse_mode="Markdown",
+    )
+
+    try:
+        conn, extras = _db_connect()
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+
+        # ── 1. Decisiones por dominio (últimos 7 días) ──────────────────────
+        cur.execute(
+            """
+            SELECT
+                domain,
+                disposition,
+                COUNT(*) AS cnt
+            FROM   decision_receipts
+            WHERE  created_at >= NOW() - INTERVAL '7 days'
+            GROUP  BY domain, disposition
+            ORDER  BY domain, disposition
+            """
+        )
+        rows_7d = cur.fetchall()
+
+        # ── 2. Totales históricos ───────────────────────────────────────────
+        cur.execute(
+            """
+            SELECT
+                COUNT(*)                                         AS total,
+                COUNT(*) FILTER (WHERE disposition = 'BLOCKED') AS blocked,
+                COUNT(*) FILTER (WHERE disposition = 'APPROVED') AS approved,
+                COUNT(DISTINCT domain)                           AS domains_active
+            FROM decision_receipts
+            """
+        )
+        totals = cur.fetchone()
+
+        # ── 3. Capital bajo gobernanza (paper trading) ──────────────────────
+        balance_usd = None
+        try:
+            cur.execute(
+                "SELECT balance_usd FROM paper_trading_balances LIMIT 1"
+            )
+            bal_row = cur.fetchone()
+            if bal_row:
+                balance_usd = float(bal_row["balance_usd"])
+        except Exception:
+            pass
+
+        # ── 4. Señales vetadas (shadow_trade_events) ────────────────────────
+        vetoed_signals = 0
+        try:
+            cur.execute(
+                """
+                SELECT COUNT(*) AS cnt
+                FROM   shadow_trade_events
+                WHERE  action = 'VETOED'
+                   AND timestamp >= NOW() - INTERVAL '7 days'
+                """
+            )
+            vr = cur.fetchone()
+            if vr:
+                vetoed_signals = int(vr["cnt"])
+        except Exception:
+            pass
+
+        cur.close()
+        conn.close()
+
+        # ── 5. Armar estadísticas por dominio ───────────────────────────────
+        stats: dict = {}
+        for row in rows_7d:
+            dom = row["domain"] or "generic"
+            if dom not in stats:
+                stats[dom] = {"APPROVED": 0, "BLOCKED": 0}
+            disp = (row["disposition"] or "").upper()
+            if disp in ("APPROVED", "BLOCKED"):
+                stats[dom][disp] += int(row["cnt"])
+
+        total_7d   = sum(v["APPROVED"] + v["BLOCKED"] for v in stats.values())
+        blocked_7d = sum(v["BLOCKED"] for v in stats.values())
+        approved_7d = total_7d - blocked_7d
+
+        # ── 6. Governance Impact Score (GIS 0-100) ──────────────────────────
+        total_all    = int(totals["total"] or 0)
+        blocked_all  = int(totals["blocked"] or 0)
+        domains_ever = int(totals["domains_active"] or 0)
+
+        containment_rate = (blocked_all / total_all * 100) if total_all > 0 else 0
+        gis = min(100, int(
+            70                                          # pipeline operativo
+            + min(15, containment_rate * 0.15)          # +15 si contención = 100%
+            + min(10, domains_ever * 1.25)              # +10 si 8 dominios activos
+            + (5 if balance_usd and balance_usd > 900_000 else 0)  # +5 capital preservado
+        ))
+
+        # ── 7. Barra GIS visual ─────────────────────────────────────────────
+        filled   = gis // 10
+        empty    = 10 - filled
+        gis_bar  = "█" * filled + "░" * empty
+
+        # ── 8. Tabla de dominios ────────────────────────────────────────────
+        domain_lines = []
+        active_domains = 0
+        for dom in _DOMAIN_ORDER:
+            if dom not in stats:
+                continue
+            label    = _DOMAIN_LABELS.get(dom, dom)
+            approved = stats[dom]["APPROVED"]
+            blocked  = stats[dom]["BLOCKED"]
+            total_d  = approved + blocked
+            block_pct = int(blocked / total_d * 100) if total_d > 0 else 0
+            active_domains += 1
+            domain_lines.append(
+                f"  • {label:<14} {total_d:>4} eval │ "
+                f"🔴 {blocked} ({block_pct}%) │ 🟢 {approved}"
+            )
+
+        if not domain_lines:
+            domain_lines = ["  _Sin datos en los últimos 7 días. Usa /evaluar para generar decisiones._"]
+
+        domains_block = "\n".join(domain_lines)
+
+        # ── 9. Balance line ─────────────────────────────────────────────────
+        balance_line = (
+            f"💼 *Capital bajo gobernanza:* ${balance_usd:,.2f} USD "
+            f"({balance_usd / 1_000_000 * 100:.1f}% de $1M preservado)\n"
+            if balance_usd else ""
+        )
+
+        # ── 10. Signals line ────────────────────────────────────────────────
+        signals_line = (
+            f"⛔ *Señales vetadas (7d):* {vetoed_signals:,}\n"
+            if vetoed_signals > 0 else ""
+        )
+
+        # ── 11. Mensaje final ───────────────────────────────────────────────
+        msg = (
+            f"🏛️ *OMNIX — GOVERNANCE IMPACT SCORE*\n\n"
+            f"┌─ GIS: *{gis}/100* ─────────────────┐\n"
+            f"│ {gis_bar} │\n"
+            f"└──────────────────────────────────────┘\n\n"
+            f"📊 *DECISIONES — Últimos 7 días*\n"
+            f"{domains_block}\n\n"
+            f"📈 *RESUMEN GLOBAL (histórico)*\n"
+            f"  Evaluaciones totales:    {total_all:>6,}\n"
+            f"  🔴 BLOCKED:              {blocked_all:>6,} ({containment_rate:.1f}% contención)\n"
+            f"  🟢 APPROVED:             {total_all - blocked_all:>6,}\n"
+            f"  Dominios activos:        {domains_ever:>6}/8\n\n"
+            f"{balance_line}"
+            f"{signals_line}"
+            f"\n🔗 omnixquantum.net · _OMNIX Decision Governance_"
+        )
+
+        await processing.edit_text(msg, parse_mode="Markdown")
+
+    except RuntimeError as exc:
+        logger.warning(f"[IMPACT] DB no disponible: {exc}")
+        await processing.edit_text(
+            "⚠️ Base de datos no disponible. Verifica DATABASE_URL."
+        )
+    except Exception as exc:
+        logger.error(f"[IMPACT] Error inesperado: {exc}")
+        await processing.edit_text(
+            "⚠️ No se pudo calcular el Governance Impact Score. Intenta de nuevo."
+        )

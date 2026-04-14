@@ -35,6 +35,7 @@ try:
         gobernanza_command,
         velos_command,
         recibo_command,
+        impact_command,
     )
     _GOVERNANCE_COMMANDS_AVAILABLE = True
 except ImportError as _gc_err:
@@ -976,7 +977,8 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("velos", self.velos_command))
             self.application.add_handler(CommandHandler("recibo", self.recibo_command))
             self.application.add_handler(CommandHandler("receipt", self.recibo_command))     # Alias inglés
-            logger.info(f"🏛️ Governance commands registrados (ADR-058): /evaluar, /gobernanza, /velos, /recibo")
+            self.application.add_handler(CommandHandler("impact", self.impact_command))      # ADR-083 GIS
+            logger.info(f"🏛️ Governance commands registrados (ADR-058): /evaluar, /gobernanza, /velos, /recibo, /impact")
 
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -8801,7 +8803,8 @@ if _GOVERNANCE_COMMANDS_AVAILABLE:
     EnterpriseTelegramBot.gobernanza_command = gobernanza_command  # type: ignore[attr-defined]
     EnterpriseTelegramBot.velos_command      = velos_command       # type: ignore[attr-defined]
     EnterpriseTelegramBot.recibo_command     = recibo_command      # type: ignore[attr-defined]
-    logger.info("🏛️ [ADR-058] Governance commands enlazados en EnterpriseTelegramBot")
+    EnterpriseTelegramBot.impact_command     = impact_command      # type: ignore[attr-defined]
+    logger.info("🏛️ [ADR-058] Governance commands enlazados en EnterpriseTelegramBot (incl. /impact)")
 else:
     # Stubs para que el bot no crashee si governance_commands falla al importar
     async def _governance_stub(self, update, context):
@@ -8810,6 +8813,7 @@ else:
     EnterpriseTelegramBot.gobernanza_command = _governance_stub    # type: ignore[attr-defined]
     EnterpriseTelegramBot.velos_command      = _governance_stub    # type: ignore[attr-defined]
     EnterpriseTelegramBot.recibo_command     = _governance_stub    # type: ignore[attr-defined]
+    EnterpriseTelegramBot.impact_command     = _governance_stub    # type: ignore[attr-defined]
 
 
 if __name__ == "__main__":
