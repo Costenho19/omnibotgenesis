@@ -2,9 +2,10 @@
 # start command is defined in railway.json: "python -u main.py"
 
 [phases.setup]
-nixPkgs = ["python312"]
+nixPkgs = ["python312", "python312Packages.pip"]
 
 [phases.install]
 cmds = [
+  "python3 -m pip install --upgrade pip",
   "python3 -m pip install -r requirements.txt"
 ]
