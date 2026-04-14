@@ -25,6 +25,45 @@ except ImportError:
     _LEGACY_DILITHIUM3_AVAILABLE = False
     dilithium3 = None
 
+# ---------------------------------------------------------------------------
+# STABLE MODULE-LEVEL KEY — generated ONCE per process at import time (ADR-085).
+# All DecisionReceiptEngine instances in this process share the same keypair.
+# This eliminates EPHEMERAL warnings when env vars are not set, and ensures the
+# public key published in the trust registry matches all receipts signed in this
+# deployment.  Set OMNIX_SIGNING_SECRET_KEY_B64 + OMNIX_SIGNING_PUBLIC_KEY_B64
+# in Railway env vars to persist the same key across restarts.
+# ---------------------------------------------------------------------------
+_STABLE_SIGNING_KEYS: Optional[Tuple[bytes, bytes]] = None
+_STABLE_PUBLIC_KEY_B64: Optional[str] = None
+
+if PQC_AVAILABLE and _active_provider is not None:
+    _sk_b64 = os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64", "").strip()
+    _pk_b64 = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "").strip()
+    if _sk_b64 and _pk_b64:
+        try:
+            _sk_bytes = base64.b64decode(_sk_b64)
+            _pk_bytes = base64.b64decode(_pk_b64)
+            _test_sig = _active_provider.sign(b"OMNIX-KEY-SELFTEST", _sk_bytes)
+            if _test_sig and _active_provider.verify(_test_sig, b"OMNIX-KEY-SELFTEST", _pk_bytes):
+                _STABLE_SIGNING_KEYS   = (_pk_bytes, _sk_bytes)
+                _STABLE_PUBLIC_KEY_B64 = _active_provider.serialize_public_key(_pk_bytes)
+                logger.info(
+                    f"[ADR-085] Signing keys loaded from env vars — "
+                    f"stable across restarts. algorithm={_active_provider.algorithm_name()}"
+                )
+        except Exception as _env_key_err:
+            logger.warning(f"[ADR-085] Env-var keys invalid, generating ephemeral stable key: {_env_key_err}")
+    if _STABLE_SIGNING_KEYS is None:
+        try:
+            _STABLE_SIGNING_KEYS   = _active_provider.generate_keypair()
+            _STABLE_PUBLIC_KEY_B64 = _active_provider.serialize_public_key(_STABLE_SIGNING_KEYS[0])
+            logger.info(
+                f"[ADR-085] Stable process-scoped signing keys generated "
+                f"({_active_provider.algorithm_name()}) — shared by all instances this process."
+            )
+        except Exception as _gen_err:
+            logger.error(f"[ADR-085] Failed to generate stable signing keys: {_gen_err}")
+
 
 def _get_db_connection(db_url: str):
     if not db_url:
@@ -114,7 +153,16 @@ class DecisionReceiptEngine:
             self._key_mode = "required_missing"
             return
 
-        # ephemeral_dev mode — generate keys, never log secret material
+        # ADR-085: Reuse the module-level stable keypair if available.
+        # This ensures all instances in this process share the same public key,
+        # so the trust registry always matches the actual signing key.
+        if _STABLE_SIGNING_KEYS is not None:
+            self._signing_keys = _STABLE_SIGNING_KEYS
+            self._key_mode = "stable_process"
+            self._active_since = datetime.now(timezone.utc).isoformat()
+            return
+
+        # Last resort: generate per-instance (should rarely reach here)
         try:
             self._signing_keys = self._provider.generate_keypair()
             pk_bytes = self._signing_keys[0]
@@ -123,10 +171,8 @@ class DecisionReceiptEngine:
             kid = self._compute_key_id(pk_bytes)
             pk_b64_out = self._provider.serialize_public_key(pk_bytes)
             logger.warning(
-                f"[ADR-078] EPHEMERAL signing keys generated. "
-                f"Receipts signed now will NOT be re-verifiable after process restart.\n"
+                f"[ADR-078] EPHEMERAL signing keys generated (stable key unavailable). "
                 f"key_id={kid}  algorithm={self._provider.algorithm_name()}\n"
-                f"Public key (safe to share): {pk_b64_out}\n"
                 f"To persist keys across restarts, run:\n"
                 f"  python -m omnix_core.tools.key_gen\n"
                 f"and set OMNIX_SIGNING_SECRET_KEY_B64 + OMNIX_SIGNING_PUBLIC_KEY_B64."

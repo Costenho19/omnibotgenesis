@@ -230,15 +230,12 @@ def _load_engine():
 
         # Path 1: bundled copy inside omnix_web/api/omnix_engine/ (Railway — only omnix_web is deployed)
         _local_evaluator = os.path.join(_api_dir, "omnix_engine", "external_evaluator.py")
-        _local_receipt   = os.path.join(_api_dir, "omnix_engine", "decision_receipt.py")
 
         # Path 2: full repo (local dev — omnix_core available 3 levels up)
         _root = os.path.dirname(os.path.dirname(_api_dir))
         _repo_evaluator = os.path.join(_root, "omnix_core", "governance", "external_evaluator.py")
-        _repo_receipt   = os.path.join(_root, "omnix_core", "evidence", "decision_receipt.py")
 
         evaluator_path = _local_evaluator if os.path.exists(_local_evaluator) else _repo_evaluator
-        receipt_path   = _local_receipt   if os.path.exists(_local_receipt)   else _repo_receipt
 
         spec_ev = importlib.util.spec_from_file_location("_omnix_gov_evaluator", evaluator_path)
         mod_ev = importlib.util.module_from_spec(spec_ev)
@@ -246,15 +243,21 @@ def _load_engine():
         spec_ev.loader.exec_module(mod_ev)
         _GovernanceEvaluationEngine = mod_ev.GovernanceEvaluationEngine
 
-        spec_rc = importlib.util.spec_from_file_location("_omnix_gov_receipt", receipt_path)
-        mod_rc = importlib.util.module_from_spec(spec_rc)
-        sys.modules['_omnix_gov_receipt'] = mod_rc
-        spec_rc.loader.exec_module(mod_rc)
-        _DecisionReceiptEngine = mod_rc.DecisionReceiptEngine
+        # ── DecisionReceiptEngine: ALWAYS import from the canonical module (ADR-085 fix).
+        # Loading it via spec_from_file_location would create a SECOND module object with its
+        # own _STABLE_SIGNING_KEYS — a different key than what federated_trust.py publishes in
+        # the trust registry, breaking independent verification.
+        # Direct import reuses the already-loaded module so both share the same stable key.
+        try:
+            from api.omnix_engine.decision_receipt import DecisionReceiptEngine as _DRE
+        except ImportError:
+            from omnix_engine.decision_receipt import DecisionReceiptEngine as _DRE
+        _DecisionReceiptEngine = _DRE
 
         _ENGINE_AVAILABLE = True
         logger.info(
-            f"GovernanceEvaluationEngine loaded from: {evaluator_path}"
+            f"GovernanceEvaluationEngine loaded from: {evaluator_path} | "
+            f"DecisionReceiptEngine: direct import (key-consistent)"
         )
         return True
     except Exception as e:

@@ -732,6 +732,7 @@ async def handle_governance_metrics(request):
 def create_verification_app() -> web.Application:
     app = web.Application()
     app.router.add_get('/', handle_health)
+    app.router.add_get('/health', handle_health)
     app.router.add_get('/verify', handle_verify_page)
     app.router.add_get('/api/verify/recent', handle_recent_receipts)
     app.router.add_get('/api/verify/{receipt_id}', handle_verify_receipt)

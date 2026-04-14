@@ -203,7 +203,12 @@ def initialize_services_v7():
 
 
 async def start_verification_server_task():
-    """Start the public verification web server on port 8000."""
+    """Start the public verification web server.
+
+    Uses the PORT env var (set by Railway/Cloud) so the platform health-check
+    succeeds.  Falls back to 8000 for local development.
+    """
+    port = int(os.environ.get("PORT", "8000"))
     try:
         import importlib.util
         spec = importlib.util.spec_from_file_location(
@@ -214,11 +219,11 @@ async def start_verification_server_task():
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        runner = await mod.start_verification_server(port=8000)
-        logger.info("Public verification server started on port 8000")
+        runner = await mod.start_verification_server(port=port)
+        logger.info(f"Public verification server started on port {port}")
         return runner
     except Exception as e:
-        logger.warning(f"Verification server failed to start: {e}")
+        logger.warning(f"Verification server failed to start on port {port}: {e}")
         return None
 
 

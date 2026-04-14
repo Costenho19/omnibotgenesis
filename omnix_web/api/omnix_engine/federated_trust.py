@@ -118,8 +118,9 @@ def build_trust_registry() -> Dict[str, Any]:
                 "algorithm": signing_algo,
                 "public_key_b64": runtime_pub_key,
                 "note":  (
-                    "Ephemeral per deployment — refresh from registry before verification. "
-                    "Stable key rotation policy: ADR-043."
+                    "Stable per process — same key for all receipts in this deployment. "
+                    "Set OMNIX_SIGNING_SECRET_KEY_B64 + OMNIX_SIGNING_PUBLIC_KEY_B64 in Railway "
+                    "to persist across restarts. Rotation policy: ADR-043."
                 ),
             }
         ],
@@ -332,8 +333,26 @@ def independent_verify(receipt_or_vc: Dict[str, Any]) -> Dict[str, Any]:
         result["timestamp_note"]  = "No timestamp in receipt."
 
     # ------------------------------------------------------------------
+    # JURISDICTION SEMANTICS — computed first so trust_score can include it
+    # ------------------------------------------------------------------
+    try:
+        from api.omnix_engine.receipt_to_vc import build_jurisdiction_semantics
+        result["jurisdiction_semantics"] = build_jurisdiction_semantics(
+            veto_chain=veto_chain, decision=decision, domain=domain
+        )
+    except Exception:
+        try:
+            from omnix_engine.receipt_to_vc import build_jurisdiction_semantics
+            result["jurisdiction_semantics"] = build_jurisdiction_semantics(
+                veto_chain=veto_chain, decision=decision, domain=domain
+            )
+        except Exception:
+            result["jurisdiction_semantics"] = None
+
+    # ------------------------------------------------------------------
     # TRUST SCORE (ADR-085 premium)
     # Composite score 0.0–1.0 based on all verification dimensions.
+    # Jurisdiction semantics must be computed before this block.
     # ------------------------------------------------------------------
     score = 0.0
     if result["hash_valid"]:
@@ -354,20 +373,6 @@ def independent_verify(receipt_or_vc: Dict[str, Any]) -> Dict[str, Any]:
         "MEDIUM" if score >= 0.55 else
         "LOW"
     )
-
-    try:
-        from api.omnix_engine.receipt_to_vc import build_jurisdiction_semantics
-        result["jurisdiction_semantics"] = build_jurisdiction_semantics(
-            veto_chain=veto_chain, decision=decision, domain=domain
-        )
-    except Exception:
-        try:
-            from omnix_engine.receipt_to_vc import build_jurisdiction_semantics
-            result["jurisdiction_semantics"] = build_jurisdiction_semantics(
-                veto_chain=veto_chain, decision=decision, domain=domain
-            )
-        except Exception:
-            result["jurisdiction_semantics"] = None
 
     result["trust_chain"] = {
         "issuer_did":       OMNIX_DID,
