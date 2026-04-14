@@ -848,8 +848,7 @@ def trust_verify():
         except Exception as e:
             return jsonify({'error': f'Verifier unavailable: {e}'}), 500
 
-    status_code = 200 if result.get('overall_valid') else 200
-    return jsonify(result), status_code, {'Access-Control-Allow-Origin': '*'}
+    return jsonify(result), 200, {'Access-Control-Allow-Origin': '*'}
 
 
 @app.route('/api/trust/frameworks', methods=['GET'])
@@ -860,7 +859,7 @@ def trust_frameworks():
     with checkpoint coverage and status for each framework.
     """
     try:
-        from api.omnix_engine.regulatory_mapping import get_full_framework_catalog, FRAMEWORK_METADATA
+        from api.omnix_engine.regulatory_mapping import get_full_framework_catalog
         catalog = get_full_framework_catalog()
     except ImportError:
         try:
