@@ -122,6 +122,71 @@ def _validate_sandbox_request(data) -> tuple:
 
 
 VERIFICATION_BASE_URL = "https://omnixquantum.net/verify"
+OMNIX_ISSUER_URL      = "https://omnixquantum.net"
+OMNIX_VC_CONTEXT      = [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://omnixquantum.net/context/governance/v1",
+]
+
+
+def _build_w3c_vc(
+    receipt_id: str,
+    timestamp: str,
+    decision: str,
+    asset: str,
+    domain: str,
+    checkpoints_passed: int,
+    checkpoints_total: int,
+    policy_version: str,
+    content_hash: str,
+    signature_algorithm: str,
+    signature=None,
+    key_id: str = None,
+) -> dict:
+    """
+    Wrap an OMNIX governance receipt as a W3C Verifiable Credential.
+    Enables interoperability with EUDI-compatible trust frameworks,
+    DID resolvers, and any W3C VC-aware system.
+    ADR-082.
+    """
+    verification_url = f"{VERIFICATION_BASE_URL}/{receipt_id}"
+    verification_method = (
+        f"{OMNIX_ISSUER_URL}/keys/{key_id}"
+        if key_id
+        else f"{OMNIX_ISSUER_URL}/keys/current"
+    )
+
+    is_pqc = "Dilithium" in signature_algorithm or "ML-DSA" in signature_algorithm
+
+    return {
+        "@context": OMNIX_VC_CONTEXT,
+        "id": f"{OMNIX_ISSUER_URL}/receipts/{receipt_id}",
+        "type": ["VerifiableCredential", "GovernanceDecisionCredential"],
+        "issuer": {
+            "id": OMNIX_ISSUER_URL,
+            "name": "OMNIX Quantum Ltd",
+        },
+        "issuanceDate": timestamp,
+        "credentialSubject": {
+            "id": f"{OMNIX_ISSUER_URL}/receipts/{receipt_id}",
+            "receiptId": receipt_id,
+            "decision": decision,
+            "asset": asset,
+            "domain": domain,
+            "checkpointsPassed": checkpoints_passed,
+            "checkpointsTotal": checkpoints_total,
+            "policyVersion": policy_version,
+            "contentHash": content_hash,
+            "verificationUrl": verification_url,
+        },
+        "proof": {
+            "type": "Dilithium3Signature2024" if is_pqc else "SHA256HashChain2024",
+            "created": timestamp,
+            "verificationMethod": verification_method,
+            "signatureAlgorithm": signature_algorithm,
+            "proofValue": signature if signature else None,
+        },
+    }
 
 EXAMPLE_SCENARIOS = [
     # ── TRADING ────────────────────────────────────────────────────────────────
