@@ -265,13 +265,13 @@ def get_metrics_live():
         trading_total = trading_approved = trading_blocked = trading_today = 0
         trading_receipt_id = None
         try:
-            cur.execute("SELECT COUNT(*) FROM shadow_trade_events")
+            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading'")
             trading_total = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading' AND decision IN ('APPROVED','APPROVE')")
+            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading' AND decision IN ('APPROVED','APPROVE','PASS')")
             trading_approved = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading' AND decision IN ('BLOCKED','BLOCK','HOLD')")
+            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading' AND decision IN ('BLOCKED','BLOCK','HOLD','REJECT')")
             trading_blocked = int(cur.fetchone()[0] or 0)
-            cur.execute("SELECT COUNT(*) FROM shadow_trade_events WHERE created_at >= CURRENT_DATE")
+            cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading' AND created_at >= CURRENT_DATE")
             trading_today = int(cur.fetchone()[0] or 0)
             cur.execute("SELECT receipt_id FROM decision_receipts WHERE domain='trading' ORDER BY created_at DESC LIMIT 1")
             row = cur.fetchone()
