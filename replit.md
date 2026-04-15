@@ -49,7 +49,7 @@ Vertical construido internamente para testing y validación. **No anunciado púb
 
 ---
 
-## ADR-ENG-001 — Energy Governance Vertical (INTERNAL — 11-Apr-2026)
+## ADR-ENG-001 / ADR-112 — Energy Governance Vertical (INTERNAL — 11-Apr-2026)
 
 ### Estrategia
 Vertical construido internamente para testing y validación. **No anunciado públicamente.** Potencial piloto vía Naimat (contacto con utilities/energy trading). Se libera cuando llegue el cliente correcto.
@@ -170,7 +170,7 @@ Todos los hardcoded "4" actualizados. Fuentes que controlan el número de vertic
 
 ---
 
-## AGL-AGT-001 — Autonomous Agent Governance Vertical (COMPLETED)
+## AGL-AGT-001 / ADR-091 — Autonomous Agent Governance Vertical (COMPLETED)
 
 ### Backend
 - `omnix_core/agents/agents_signal_adapter.py` — Adapts 8 agent parameters to 6 OMNIX signals:
@@ -314,21 +314,83 @@ Hard daily and monthly evaluation limits per authenticated B2B client. Applied o
 - DB circuit breaker: `[QUOTA] Fail-CLOSED after N consecutive DB errors in 60s for client=X`
 - Quota is based on actual `decision_receipts` rows — the same data used for billing audit (ADR-051)
 
-## ADR-082, ADR-083 — PENDIENTE DOCUMENTAR
+## ADR-082 — W3C Verifiable Credentials — Public Governance Sandbox (COMPLETED Apr-2026)
 
-> **⚠ GAP DOCUMENTACIÓN**: ADR-082 y ADR-083 están referenciados pero no tienen entradas en replit.md ni archivos en `docs/adr/`. ADR-084 está referenciado como "Receipt → W3C VC Converter" en ADR-085. Harold debe confirmar qué cubren para completar estas entradas.
+**Archivo**: `omnix_web/api/sandbox.py` — función `_build_w3c_vc()`
+
+Cada decisión del sandbox público genera un W3C Verifiable Credential además del recibo OMNIX nativo. Permite interoperabilidad con cualquier sistema compatible W3C VC (EUDI wallets, DID resolvers, herramientas de compliance institucional) sin código OMNIX específico.
+
+### VC structure
+- `type`: `["VerifiableCredential", "GovernanceDecisionCredential"]`
+- `issuer.id`: `https://did.omnixquantum.net`
+- `credentialSubject`: receipt_id, decision, asset, domain, checkpoints_passed/total, content_hash, verification_url
+- `proof.type`: `Dilithium3Signature2024` (PQC) o `SHA256HashChain2024` (fallback)
+- Respuesta API: campo `verifiable_credential` junto al `receipt` nativo
+
+**ADR completo**: `docs/adr/ADR-082-w3c-verifiable-credentials-sandbox.md`
 
 ---
 
-## ADR-084 — Receipt → W3C Verifiable Credential Converter (COMPLETED Apr-2026)
+## ADR-083 — Enterprise Bot Security Middleware (COMPLETED Apr-2026)
 
-**Archivo**: `omnix_web/api/omnix_engine/receipt_to_vc.py`
+**Archivo principal**: `omnix_services/security/bot_security.py`
 
-Convierte recibos PQC de OMNIX al estándar W3C Verifiable Credentials (VC), incluyendo:
-- Envolvente JSON-LD con `@context` estándar W3C
-- Issuer DID: `did:web:omnixquantum.net`
-- Campo `jurisdiction_semantics` con interpretación regulatoria por framework
-- Compatible con `federated_trust.py` → `independent_verify()`
+Seguridad enterprise-grade para el bot Telegram. Clase `BotSecurityMiddleware` como único punto de entrada antes de cualquier handler o llamada a AI.
+
+### 8 vulnerabilidades corregidas
+| ID | Severidad | Descripción |
+|----|-----------|-------------|
+| C1 | CRÍTICO | Inyección de prompt via user_message → AI |
+| C2 | CRÍTICO | Sin rate limiting por usuario — riesgo AI cost + DoS |
+| C3 | ALTO | Sin límite de longitud de mensaje |
+| C4 | ALTO | Memory leak en `_message_buffers` sin límite |
+| C5 | ALTO | Bot respondía en grupos sin restricción |
+| M1 | MEDIO | Stack traces internos expuestos al usuario |
+| M2 | MEDIO | Sin blocklist de usuarios |
+| M3 | MEDIO | Auto-registro ilimitado de usuarios en DB |
+| L1 | BAJO | URL fetch sin guardia SSRF |
+
+### Pipeline de seguridad (por mensaje)
+1. **Blocklist** → usuario bloqueado → respuesta genérica
+2. **Restricción de grupos** → solo chats privados
+3. **Rate limiting** (sliding window): 10 mensajes/60s, burst 3/5s, cooldown 30s
+4. **Truncado** a 1500 caracteres
+5. **Detección de inyección** (20+ patrones regex) → sanitización + auto-block a 3 intentos
+6. **Detección SSRF** (localhost, RFC-1918, file://, gopher://) → `[URL_BLOCKED]`
+
+### Addendum — Comando `/impact` (Governance Impact Score)
+- GIS (0-100) = 70 base + contención de riesgo (+15 máx) + dominios activos (+10 máx) + volumen (+5)
+- Muestra: barra visual GIS, decisiones últimos 7 días por dominio, resumen histórico global
+- Query real a `decision_receipts` (todos los dominios)
+- Handler registrado en `enterprise_bot.py` línea 980
+
+**Archivos**: `bot_security.py`, `enterprise_bot.py` (líneas 506–512, 3444–3461), `commands/governance_commands.py` (`impact_command`)  
+**ADR completo**: `docs/adr/ADR-083-enterprise-bot-security.md`
+
+---
+
+## ADR-084 — W3C VC Endpoint + Interoperability Layer (COMPLETED Apr-2026)
+
+**Archivos**: `omnix_web/api/omnix_engine/receipt_to_vc.py` · `omnix_web/api/gov_blueprint.py` · `omnix_web/api/server.py`
+
+Extiende ADR-082 al B2B API y añade tres endpoints públicos de interoperabilidad:
+
+### Endpoints
+| Endpoint | Auth | Propósito |
+|----------|------|-----------|
+| `POST /api/governance/receipt/vc` | Ninguna (público) | Convierte recibo OMNIX → W3C VC. Rate limit: 30/min |
+| `GET /schemas/omnix-receipt-v1.jsonld` | Ninguna | JSON-LD context. MIME: application/ld+json. Cache: 24h |
+| `GET /schemas/omnix-receipt-schema-v6.5.4e.json` | Ninguna | JSON Schema para validación externa. Cache: 24h |
+
+### Módulo converter
+- `build_w3c_vc(receipt)` — recibo OMNIX dict → W3C VC JSON-LD
+- `build_jurisdiction_semantics(decision, asset, domain)` — 10 frameworks regulatorios (ADR-085)
+- `independent_verify(receipt)` — verifica hash + firma contra trust registry
+
+### DID Document
+`did:web:omnixquantum.net` — resoluble en `https://omnixquantum.net/.well-known/did.json`. Contiene clave pública Dilithium-3 para verificación externa de firmas.
+
+**Referencia completa**: `docs/integration/OMNIX-Interoperability-Layer.md` · `docs/adr/ADR-084-w3c-vc-endpoint.md`
 
 ---
 

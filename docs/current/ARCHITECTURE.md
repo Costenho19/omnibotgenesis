@@ -3,7 +3,7 @@
 **Internal Build Reference**: 6.5.4e  
 **Actualizado**: 15 de Abril 2026  
 **Estado**: Producción 24/7 — 11-checkpoint pipeline + EBIP + TIE + 9 Verticals activos  
-**Último Cambio**: TelegramBotAdapter activado (ADR-086 fix) + ADR-085 Cross-Border Semantic Governance — Apr 15, 2026
+**Último Cambio**: TelegramBotAdapter activado (handler fix 15-Apr-2026) + ADR-085 Cross-Border Semantic Governance — Apr 15, 2026
 
 ---
 
