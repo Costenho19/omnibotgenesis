@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type ReactNode } from 'react'
 import {
   Shield, Activity, Lock, Zap, Globe, CheckCircle,
   ArrowRight, DollarSign, Users, TrendingUp, Target,
-  Award, Star
+  Award
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
 
