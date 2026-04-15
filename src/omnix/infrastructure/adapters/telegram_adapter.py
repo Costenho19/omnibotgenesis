@@ -468,31 +468,16 @@ class TelegramBotAdapter:
         
         app = None
         try:
-            if hasattr(self._bot, 'application') and self._bot.application:
-                app = self._bot.application
-                
-                if not app.running:
-                    logger.info("TelegramBotAdapter: Initializing Application...")
-                    await app.initialize()
-                    await app.start()
-                
-                if hasattr(app, 'updater') and app.updater:
-                    logger.info("TelegramBotAdapter: Starting updater.start_polling()...")
-                    await app.updater.start_polling(allowed_updates=["message", "callback_query", "inline_query"])
-                    self._is_running = True
-                    logger.info("TelegramBotAdapter: Polling ACTIVE - entering blocking loop")
-                    
-                    while self._is_running:
-                        await asyncio.sleep(1)
-                else:
-                    logger.error("TelegramBotAdapter: No updater available on Application")
-                    return
-                    
-            elif hasattr(self._bot, 'start_polling'):
+            # FIX: Always use enterprise_bot.start_polling() so that all command
+            # handlers are registered before polling starts. The previous path
+            # called app.updater.start_polling() directly, bypassing handler
+            # registration and leaving the bot unable to receive any commands.
+            if hasattr(self._bot, 'start_polling'):
                 start_polling = self._bot.start_polling
-                logger.info("TelegramBotAdapter: Starting polling via legacy start_polling()")
+                logger.info("TelegramBotAdapter: Starting via enterprise_bot.start_polling() — handlers will be registered")
                 self._is_running = True
-                
+                app = getattr(self._bot, 'application', None)
+
                 if asyncio.iscoroutinefunction(start_polling):
                     await start_polling()
                 else:

@@ -261,7 +261,10 @@ async def run_telegram_bot_v7(services: dict):
         verification_runner = await start_verification_server_task()
         
         logger.info("Starting Telegram bot (V7.0 mode)...")
-        await telegram_adapter.start()
+        # NOTE: Do NOT call telegram_adapter.start() separately.
+        # run_polling() delegates to enterprise_bot.start_polling() which
+        # handles its own initialization, handler registration, and polling.
+        # Calling start() first would initialize the Application twice.
         await telegram_adapter.run_polling()
     else:
         logger.warning("TelegramBotAdapter not available, falling back to legacy")
