@@ -1,9 +1,9 @@
 # OMNIX — Arquitectura
 
 **Internal Build Reference**: 6.5.4e  
-**Actualizado**: 27 de Marzo 2026  
-**Estado**: Producción 24/7 — 11-checkpoint pipeline + EBIP + TIE + 3 Verticals (ADR-052/053/054/055)  
-**Último Cambio**: Insurance Governance (ADR-054) + Robotics Governance (ADR-055) — Mar 29, 2026
+**Actualizado**: 15 de Abril 2026  
+**Estado**: Producción 24/7 — 11-checkpoint pipeline + EBIP + TIE + 9 Verticals activos  
+**Último Cambio**: TelegramBotAdapter activado (ADR-086 fix) + ADR-085 Cross-Border Semantic Governance — Apr 15, 2026
 
 ---
 
@@ -416,11 +416,11 @@ class AdaptiveGateDecision:
 | CachePort | CacheAdapter | ⬜ No activo |
 | NotificationPort | NotificationAdapter | ⬜ No activo |
 
-### Driver Ports (Entrada) - 0/2 Activos
+### Driver Ports (Entrada) - 1/2 Activos
 
 | Port | Adapter | Estado |
 |------|---------|--------|
-| TelegramPort | TelegramBotAdapter | ⬜ No activo (legacy en uso) |
+| TelegramPort | TelegramBotAdapter | ✅ **ACTIVO** — `run_polling()` delega a `enterprise_bot.start_polling()` (fix 15-Apr-2026: todos los handlers registrados antes del inicio del polling) |
 | RestApiPort | Flask Blueprints | ⬜ No activo |
 
 Ver [REAL_SYSTEM_STATUS.md](../REAL_SYSTEM_STATUS.md) para estado real de producción.

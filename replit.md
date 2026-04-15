@@ -314,6 +314,95 @@ Hard daily and monthly evaluation limits per authenticated B2B client. Applied o
 - DB circuit breaker: `[QUOTA] Fail-CLOSED after N consecutive DB errors in 60s for client=X`
 - Quota is based on actual `decision_receipts` rows — the same data used for billing audit (ADR-051)
 
+## ADR-082, ADR-083 — PENDIENTE DOCUMENTAR
+
+> **⚠ GAP DOCUMENTACIÓN**: ADR-082 y ADR-083 están referenciados pero no tienen entradas en replit.md ni archivos en `docs/adr/`. ADR-084 está referenciado como "Receipt → W3C VC Converter" en ADR-085. Harold debe confirmar qué cubren para completar estas entradas.
+
+---
+
+## ADR-084 — Receipt → W3C Verifiable Credential Converter (COMPLETED Apr-2026)
+
+**Archivo**: `omnix_web/api/omnix_engine/receipt_to_vc.py`
+
+Convierte recibos PQC de OMNIX al estándar W3C Verifiable Credentials (VC), incluyendo:
+- Envolvente JSON-LD con `@context` estándar W3C
+- Issuer DID: `did:web:omnixquantum.net`
+- Campo `jurisdiction_semantics` con interpretación regulatoria por framework
+- Compatible con `federated_trust.py` → `independent_verify()`
+
+---
+
+## ADR-085 — Cross-Border Semantic Governance Framework (COMPLETED 14-Apr-2026)
+
+**Fecha**: 14 de abril 2026 | **Autor**: Harold Nunes | **Estado**: Accepted
+
+Respuesta a objeción técnica de Antonio Socorro: los recibos eran criptográficamente correctos pero `jurisdiction_semantics` no delimitaba qué certifica el recibo vs. qué queda sujeto a interpretación local.
+
+### Tres capas implementadas
+
+**Capa 1 — 10 frameworks regulatorios, 6 regiones** (expandido de 5 a 10):
+| Framework | Jurisdicción | Región |
+|-----------|-------------|--------|
+| EU AI Act (Reg. 2024/1689) | Unión Europea | Europa |
+| EU GDPR Art. 22 | Unión Europea | Europa |
+| DORA (Reg. 2022/2554) | Sector Financiero EU | Europa |
+| FATF R.10/16/20/29 (2023) | G7 + 37 miembros | Global |
+| UK FCA — COBS 11.2 + SM&CR + SYSC 9.1 | Reino Unido | UK |
+| US SEC Rule 15c3-5 + Reg SCI | Estados Unidos | Norteamérica |
+| MAS FEAT Principles v2 (2020) | Singapur | Asia-Pacífico |
+| UAE CBUAE AI Governance Framework (2024) | Emiratos Árabes | Medio Oriente |
+| SAMA Responsible AI Principles (2023) | Arabia Saudita | Medio Oriente |
+| FSB G20 AI/ML in Financial Services (2023) | G20 Internacional | Global |
+
+**Capa 2 — `proof_scope` en cada recibo**:
+- `what_this_receipt_proves` (5 ítems criptográficos explícitos)
+- `what_this_receipt_does_not_claim` (4 ítems — no reclama equivalencia semántica ni certificado de cumplimiento)
+- `verifier_guidance` — instrucción a verificadores externos
+
+**Capa 3 — `cross_jurisdiction_concordance`**:
+- Status: BROADLY_ALIGNED / ALIGNED_WITH_LOCAL_REPORTING_OBLIGATIONS / FULLY_ALIGNED
+- `divergence_risk` cuantificado por región
+
+### Bugs corregidos como parte de ADR-085
+| Bug | Impacto | Corrección |
+|-----|---------|-----------|
+| `trust_score` nunca llegaba a 1.0 | `jurisdiction_semantics` se computaba DESPUÉS del trust_score | Computar jurisdiction_semantics primero |
+| `gov_blueprint._load_engine()` via `importlib.spec_from_file_location()` | Keypair diferente → verificación independiente siempre fallaba | Import directo canónico |
+| `verification_server.py` puerto 8000 hardcodeado | Railway asigna `$PORT` → omnibotgenesis crasheaba | Lee `$PORT` del entorno (fallback 8000 local) |
+| `verification_server.py` sin `/health` | Railway health check fallaba | `GET /health` añadido |
+| `runtime.py`: `execute_one()` no existe | Error en startup | Corregido a `execute_query()` |
+
+### Archivos
+- `omnix_web/api/omnix_engine/receipt_to_vc.py` — `build_jurisdiction_semantics()` (10 frameworks)
+- `omnix_web/api/omnix_engine/federated_trust.py` — `independent_verify()`, trust_score fix
+- `omnix_web/api/gov_blueprint.py` — `_load_engine()` import directo
+- `omnix_core/evidence/decision_receipt.py` — `_STABLE_SIGNING_KEYS` + `_init_keys()`
+- `omnix_core/evidence/verification_server.py` — `$PORT` + `/health`
+- `src/omnix/bootstrap/main_entry.py` — `start_verification_server_task()` (PORT)
+- `src/omnix/bootstrap/runtime.py` — `execute_one` → `execute_query`
+- `docs/adr/ADR-085-cross-border-semantic-governance.md` — ADR completo
+- `docs/compliance/CROSS_JURISDICTION_GOVERNANCE.md` — documento institucional
+
+---
+
+## Fix Crítico Telegram Handlers (15-Apr-2026)
+
+**Problema**: El path V7 del bot llamaba `app.updater.start_polling()` directamente, saltándose `enterprise_bot.start_polling()` donde se registran los ~50 handlers de comandos. El bot podía ENVIAR mensajes (auto-trading activo) pero no podía RECIBIR ningún comando — cero handlers conectados.
+
+Adicionalmente, `main_entry.py` llamaba `telegram_adapter.start()` antes de `run_polling()` → doble inicialización de `Application`.
+
+### Corrección
+| Archivo | Cambio |
+|---------|--------|
+| `src/omnix/infrastructure/adapters/telegram_adapter.py` | `run_polling()` siempre usa `enterprise_bot.start_polling()` — registra todos los handlers antes del updater |
+| `src/omnix/bootstrap/main_entry.py` | Eliminada llamada prematura a `telegram_adapter.start()` |
+
+**Commits**: `a0fa97e8` (telegram_adapter.py) + `d2334b8e` (main_entry.py)
+
+**Estado post-fix**: Bot responde a todos los comandos. Auto-trading sigue activo. PAPER_MODE=TRUE.
+
+---
+
 ## Test Suite: ~392+ tests passing
 - `tests/test_enterprise_audit.py`: 35 tests (receipt format, AVM persistence, hash integrity, versioning)
 - `tests/test_code_verification.py`: 14 tests

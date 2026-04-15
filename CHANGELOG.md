@@ -5,6 +5,98 @@ Registro de cambios, correcciones y mejoras del sistema.
 
 ---
 
+## [2026-04-15] — Fix Crítico: Telegram Command Handlers + Double Init
+
+### Problema
+El path V7 del bot llamaba `app.updater.start_polling()` directamente, saltándose `enterprise_bot.start_polling()` donde se registran los ~50 handlers de comandos. El bot podía ENVIAR mensajes (auto-trading funcionaba) pero no podía RECIBIR ningún comando — ningún handler estaba conectado.
+
+Adicionalmente, `main_entry.py` llamaba `telegram_adapter.start()` antes de `run_polling()`, inicializando la `Application` dos veces.
+
+### Corrección
+
+| Archivo | Cambio |
+|---------|--------|
+| `src/omnix/infrastructure/adapters/telegram_adapter.py` | `run_polling()` ahora siempre usa `enterprise_bot.start_polling()` — registra todos los handlers antes de iniciar el updater |
+| `src/omnix/bootstrap/main_entry.py` | Eliminada llamada prematura a `telegram_adapter.start()` — `enterprise_bot.start_polling()` maneja su propia inicialización |
+
+### Commits
+- `a0fa97e8` — telegram_adapter.py: fix run_polling → enterprise_bot.start_polling()
+- `d2334b8e` — main_entry.py: remove premature start() call
+
+### Estado
+- Bot en Railway responde a todos los comandos (`/start`, `/status`, `/auto_start`, `/evaluar`, etc.)
+- Auto-trading sigue activo (XRP/USD paper trades)
+- PAPER_MODE=TRUE sin cambios
+
+---
+
+## [2026-04-14] — ADR-085: Cross-Border Semantic Governance Framework
+
+### Contexto
+Objeción técnica identificada por Antonio Socorro: los recibos PQC eran criptográficamente correctos pero el bloque `jurisdiction_semantics` solo cubría 5 frameworks y no delimitaba explícitamente qué certifica el recibo vs. qué queda sujeto a interpretación local.
+
+### Solución — 3 capas
+
+**Capa 1 — 10 frameworks regulatorios, 6 regiones**
+- EU AI Act, GDPR Art. 22, DORA, FATF R.10/16/20/29, UK FCA COBS 11.2 + SM&CR, US SEC Rule 15c3-5 + Reg SCI, MAS FEAT, UAE CBUAE 2024, SAMA 2023, FSB G20
+
+**Capa 2 — `proof_scope` en cada recibo**
+- `what_this_receipt_proves` — 5 ítems explícitos
+- `what_this_receipt_does_not_claim` — 4 ítems (no reclama equivalencia semántica ni certificado de cumplimiento)
+- `verifier_guidance` — instrucción a verificadores externos
+
+**Capa 3 — `cross_jurisdiction_concordance`**
+- Status: BROADLY_ALIGNED / ALIGNED_WITH_LOCAL_REPORTING_OBLIGATIONS / FULLY_ALIGNED
+- `divergence_risk` cuantificado
+
+### Bugs adicionales corregidos
+
+| Bug | Corrección |
+|-----|-----------|
+| `trust_score` nunca llegaba a 1.0 — `jurisdiction_semantics` se computaba DESPUÉS del score | Ahora se computa antes → trust_score correcto hasta 1.0 |
+| `gov_blueprint._load_engine()` usaba `importlib.util.spec_from_file_location()` → keypair diferente al del trust registry → verificación independiente siempre fallaba | Import directo `from omnix_engine.decision_receipt import DecisionReceiptEngine` |
+| `verification_server.py` hardcodeado en puerto 8000 — Railway asigna `$PORT` dinámicamente → omnibotgenesis crasheaba | Lee `$PORT` del entorno (fallback 8000 para dev local) |
+| `verification_server.py` sin ruta `/health` — Railway health check fallaba | Añadida ruta `GET /health` |
+| `runtime.py` llamaba `execute_one()` (función inexistente) | Corregido a `execute_query()` |
+
+### Archivos modificados
+- `omnix_web/api/omnix_engine/receipt_to_vc.py` — `build_jurisdiction_semantics()`: 10 frameworks, proof_scope, concordance
+- `omnix_web/api/omnix_engine/federated_trust.py` — trust_score fix (jurisdiction_semantics primero)
+- `omnix_web/api/gov_blueprint.py` — `_load_engine()`: import directo
+- `omnix_core/evidence/decision_receipt.py` — `_STABLE_SIGNING_KEYS` + `_init_keys()`
+- `omnix_core/evidence/verification_server.py` — `$PORT` dinámico + ruta `/health`
+- `src/omnix/bootstrap/main_entry.py` — `start_verification_server_task()` lee `$PORT`
+- `src/omnix/bootstrap/runtime.py` — `execute_one` → `execute_query`
+
+### Documentación
+- `docs/adr/ADR-085-cross-border-semantic-governance.md` — ADR completo
+- `docs/compliance/CROSS_JURISDICTION_GOVERNANCE.md` — documento institucional de referencia
+
+---
+
+## [2026-04-14] — nixpacks.toml + railway.json: Fix Crash omnibotgenesis en Railway
+
+### Problema
+El servicio `omnibotgenesis` en Railway crasheaba en startup. Dos causas:
+1. `nixpacks.toml` ejecutaba npm durante la fase de build — innecesario para el bot Python
+2. `railway.json` tenía startCommand incorrecto
+
+### Corrección
+
+| Archivo | Cambio |
+|---------|--------|
+| `nixpacks.toml` | `[phases.build] cmds=[]` — suprime npm; venv setup en `[phases.install]` |
+| `railway.json` | `startCommand: ".venv/bin/python3 -u main.py"` |
+
+### Regla permanente
+`[phases.build] cmds=[]` en `nixpacks.toml` NUNCA debe eliminarse. Su ausencia reactiva npm y crashea el bot.
+
+### Verificación
+- XRP/USD COMPRA EJECUTADA confirmada en Telegram (paper trade)
+- Bot 24/7 activo en Railway, PAPER_MODE=TRUE
+
+---
+
 ## [2026-01-14] - ADR-007 Coherence Threshold Calibration
 
 ### Diagnóstico
