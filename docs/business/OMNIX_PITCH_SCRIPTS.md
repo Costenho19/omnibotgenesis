@@ -1,11 +1,11 @@
 # OMNIX — Pitch Scripts
 
-**Version**: 1.2  
-**Date**: March 6, 2026  
-**Author**: Harold Nunes, Founder & Product Architect  
-**Status**: MENTOR-REVIEWED  
-**ADR Compliance**: ADR-036 (Exit Governance Layer)  
-**Target**: Eureka Dubai Semifinal, Investor Meetings, Elevator Conversations
+**Version**: 1.2 
+**Date**: March 6, 2026 
+**Author**: Harold Nunes, Founder & Product Architect 
+**Status**: MENTOR-REVIEWED 
+**ADR Compliance**: ADR-036 (Exit Governance Layer) 
+**Target**: Semifinal, Investor Meetings, Elevator Conversations
 
 ---
 
@@ -64,7 +64,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 
 ---
 
-## VERSION A — 90 SECONDS (Competition / Eureka Dubai)
+## VERSION A — 90 SECONDS (Competition / )
 
 ### English
 
@@ -86,7 +86,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > OMNIX — governing decisions under uncertainty.
 
-**Estimated time**: ~85-90 seconds  
+**Estimated time**: ~85-90 seconds 
 
 ---
 
@@ -110,7 +110,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > OMNIX — gobernando decisiones bajo incertidumbre.
 
-**Tiempo estimado**: ~85-90 segundos  
+**Tiempo estimado**: ~85-90 segundos 
 
 ---
 
@@ -132,7 +132,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > OMNIX — governing decisions under uncertainty.
 
-**Estimated time**: ~55-60 seconds  
+**Estimated time**: ~55-60 seconds 
 
 ---
 
@@ -152,7 +152,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > OMNIX — gobernando decisiones bajo incertidumbre.
 
-**Tiempo estimado**: ~55-60 segundos  
+**Tiempo estimado**: ~55-60 segundos 
 
 ---
 

@@ -12,7 +12,7 @@ OMNIX needed a public-facing, no-authentication demonstration that runs the **re
 2. Watch the real governance pipeline evaluate it checkpoint by checkpoint
 3. Receive a PQC-signed, publicly verifiable receipt
 
-This serves both as a product demo for Eureka Dubai GCC 2026 and as a credibility differentiator: the sandbox runs the same engine validated across production evaluation cycles.
+This serves both as a product demo for and as a credibility differentiator: the sandbox runs the same engine validated across production evaluation cycles.
 
 ## Decision
 

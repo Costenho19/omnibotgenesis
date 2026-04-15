@@ -1,8 +1,8 @@
 # OMNIX — Estado REAL del Sistema
 
-**Fecha**: 29 de Marzo 2026  
-**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | Eureka GCC SEMIFINALISTA | **External Governance API LIVE** | **EBIP LIVE** | **Dual Mode CORE/ACTIVE LIVE** | **TIE LIVE (ADR-053)** | **Islamic Credit 24/7 LIVE (ADR-052)** | **Insurance Governance 24/7 LIVE (ADR-054)** | **Robotics Governance 24/7 LIVE (ADR-055)** | **CP-9 AML Gate LIVE (ADR-047)** | **CP-10 Fraud Gate LIVE (ADR-048)** | **CP-11 Jurisdiction Gate LIVE (ADR-049)** | **Pipeline: 11 Checkpoints** | **3 Verticals LIVE**  
-**Versión interna (dev)**: V6.5.4e  
+**Fecha**: 29 de Marzo 2026 
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | SEMIFINALISTA | **External Governance API LIVE** | **EBIP LIVE** | **Dual Mode CORE/ACTIVE LIVE** | **TIE LIVE (ADR-053)** | **Islamic Credit 24/7 LIVE (ADR-052)** | **Insurance Governance 24/7 LIVE (ADR-054)** | **Robotics Governance 24/7 LIVE (ADR-055)** | **CP-9 AML Gate LIVE (ADR-047)** | **CP-10 Fraud Gate LIVE (ADR-048)** | **CP-11 Jurisdiction Gate LIVE (ADR-049)** | **Pipeline: 11 Checkpoints** | **3 Verticals LIVE** 
+**Versión interna (dev)**: V6.5.4e 
 **TAM Multi-Vertical**: $137B+ (3 verticales NOW: trading [$5B], insurance [$50B], robotics [$80B] | supply chain [Year 2-3], lending [Year 2-3], energy [Year 3+])
 
 ### Métricas de Producción (Feb 23, 2026)
@@ -15,23 +15,23 @@
 | Capital Preserved | 98.42% | Durante BTC -7.37% volatilidad |
 | Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
 
-### Cambios Recientes (Mar 24, 2026) — Semana 1 Eureka Demo Features
+### Cambios Recientes (Mar 24, 2026) 
 
-- **Mar 24 (Semana 1)**: **3 features premium para demo Eureka Dubai GCC 2026 implementados y desplegados**:
-  1. **EBIP Dashboard Widget** — Nuevo widget en Performance Dashboard Flask (IIFE, SVG ring gauge, 4-component grid ACV/ECP/NPM/CP, navigation distribution bars, alert level pulse). Endpoint: `GET /api/governance/execution-integrity`. CSS + JS: `executionintegrity.js/css`.
-  2. **EBIP Score en Receipts** — Página pública `/verify/:receiptId` ahora muestra sección "Execution Boundary Integrity" con score, alert level, concentration risk, y estado de los 4 componentes al momento de la verificación. Backend: `_fetch_ebip_snapshot()` en `public_verify.py`.
-  3. **Contador en vivo en Homepage** — Sección "Live Production Data" mejorada: badge LIVE pulsante con animación CSS, `@keyframes omnixStatReveal` con stagger para cada número, **5ª métrica: Execution Integrity Score /100** (violeta, etiquetado ADR-045), indicador live dots. Hook `useLiveMetrics.ts` actualizado con `ebip_score` + `animKey`.
+- **Mar 24 (Semana 1)**: **3 features premium implementados y desplegados
+ 1. **EBIP Dashboard Widget** — Nuevo widget en Performance Dashboard Flask (IIFE, SVG ring gauge, 4-component grid ACV/ECP/NPM/CP, navigation distribution bars, alert level pulse). Endpoint: `GET /api/governance/execution-integrity`. CSS + JS: `executionintegrity.js/css`.
+ 2. **EBIP Score en Receipts** — Página pública `/verify/:receiptId` ahora muestra sección "Execution Boundary Integrity" con score, alert level, concentration risk, y estado de los 4 componentes al momento de la verificación. Backend: `_fetch_ebip_snapshot()` en `public_verify.py`.
+ 3. **Contador en vivo en Homepage** — Sección "Live Production Data" mejorada: badge LIVE pulsante con animación CSS, `@keyframes omnixStatReveal` con stagger para cada número, **5ª métrica: Execution Integrity Score /100** (violeta, etiquetado ADR-045), indicador live dots. Hook `useLiveMetrics.ts` actualizado con `ebip_score` + `animKey`.
 
 ### Cambios Recientes (Mar 24, 2026) — Execution Boundary Integrity Protocol (EBIP)
 
 - **Mar 24**: **EBIP LIVE — ADR-045 implementado**. Capa de 4 componentes que opera en la frontera de ejecución del pipeline de gobernanza:
-  - **ACV (AdmissibilityConsistencyValidator)**: Detecta combinaciones de señales internamente contradictorias ANTES de que corran los checkpoints. 5 reglas de contradicción (HIGH_PROBABILITY_HIGH_RISK, HIGH_COHERENCE_LOW_PERSISTENCE, HIGH_RESILIENCE_HIGH_EXPOSURE, LOW_LOGIC_HIGH_APPROVAL_SIGNALS, ALL_SIGNALS_EXTREME). Output: `consistency_score` (0–100), `is_consistent` boolean. Violaciones HIGH persistidas en `admissibility_violations`.
-  - **ECP (ExecutionCommitmentProtocol)**: Commitment criptográfico a los criterios de evaluación ANTES de correr el pipeline. Schema: `nonce + signals_hash + criteria_hash + timestamp_ns → SHA-256 → commitment_hash`. Detección de tampering verificada (señales alteradas = commitment inválido). Aproxima ZKP commitment semantics sin infraestructura ZKP completa.
-  - **NPM (NavigationPatternMonitor)**: Monitorea la distribución de decisiones sobre ventanas temporales. Detecta concentración y path-dependency DENTRO del espacio admisible — los patrones que admissibility sola no puede gobernar. Alert levels: NOMINAL / WATCH / CAUTION / CRITICAL. Persiste en `navigation_patterns`.
-  - **CP (ConcentrationPredictor)**: Predice riesgo de concentración ANTES de que emerja. Trend analysis sobre últimas N ventanas. Output: LOW / MEDIUM / HIGH / CRITICAL + confidence %.
-  - **API pública**: `GET /api/governance/execution-integrity` (sin auth).
-  - **Tablas nuevas**: `navigation_patterns`, `admissibility_violations` (creadas automáticamente).
-  - **Fail-safe**: EBIP nunca bloquea el pipeline principal — falla silenciosamente.
+ - **ACV (AdmissibilityConsistencyValidator)**: Detecta combinaciones de señales internamente contradictorias ANTES de que corran los checkpoints. 5 reglas de contradicción (HIGH_PROBABILITY_HIGH_RISK, HIGH_COHERENCE_LOW_PERSISTENCE, HIGH_RESILIENCE_HIGH_EXPOSURE, LOW_LOGIC_HIGH_APPROVAL_SIGNALS, ALL_SIGNALS_EXTREME). Output: `consistency_score` (0–100), `is_consistent` boolean. Violaciones HIGH persistidas en `admissibility_violations`.
+ - **ECP (ExecutionCommitmentProtocol)**: Commitment criptográfico a los criterios de evaluación ANTES de correr el pipeline. Schema: `nonce + signals_hash + criteria_hash + timestamp_ns → SHA-256 → commitment_hash`. Detección de tampering verificada (señales alteradas = commitment inválido). Aproxima ZKP commitment semantics sin infraestructura ZKP completa.
+ - **NPM (NavigationPatternMonitor)**: Monitorea la distribución de decisiones sobre ventanas temporales. Detecta concentración y path-dependency DENTRO del espacio admisible — los patrones que admissibility sola no puede gobernar. Alert levels: NOMINAL / WATCH / CAUTION / CRITICAL. Persiste en `navigation_patterns`.
+ - **CP (ConcentrationPredictor)**: Predice riesgo de concentración ANTES de que emerja. Trend analysis sobre últimas N ventanas. Output: LOW / MEDIUM / HIGH / CRITICAL + confidence %.
+ - **API pública**: `GET /api/governance/execution-integrity` (sin auth).
+ - **Tablas nuevas**: `navigation_patterns`, `admissibility_violations` (creadas automáticamente).
+ - **Fail-safe**: EBIP nunca bloquea el pipeline principal — falla silenciosamente.
 
 ### Cambios Recientes (Mar 15, 2026) — Public Governance Sandbox (/try)
 
@@ -46,76 +46,76 @@
 ### Cambios Recientes (Mar 11, 2026) — Production Audit + B2B Encryption Fix
 
 - **Mar 11 (tarde)**: **Audit de producción completo — solo lectura, 7 áreas auditadas**. Resultados:
-  - **INTEGRIDAD DE DATOS**: Hash chain 99/99 links sin rupturas ✅. 58,129/58,129 receipts firmados con Dilithium-3 = 100.0% ✅. `retention_until` correcto en todos los receipts nuevos (0 errores) ✅.
-  - **GOBERNANZA**: Pipeline end-to-end verificado ✅. TCV activo en receipts recientes (score=100.0) ✅. Safety floors funcionando ✅. RBAC: key inválida → 401 ✅, rol incorrecto → 403 ✅.
-  - **INFRAESTRUCTURA**: Railway 305ms (< 500ms) ✅. Redis 8.2.1 conectado ✅. `/verify` público HTTP/2 200 ✅. 7/7 widgets Flask Dashboard operativos ✅.
-  - **3 vulnerabilidades identificadas**:
-    1. ✅ **RESUELTA** — `PAYLOAD_ENCRYPTION_KEY` no configurado → datos B2B en texto plano. **Fix aplicado mismo día**: clave generada, configurada en Railway + Replit secrets. Cifrado Fernet verificado: receipt `OMNIX-EFD6120F22EA` → `encrypted_payload = gAAAAABpsSXv...` (ya no NULL).
-    2. ⏳ **PENDIENTE** — `shadow_trade_outcomes`: solo 50 filas de 740K+ eventos. El engine de outcomes calcula hacia futuro (espera 1h/4h/24h/7d/30d) — coverage mejora automáticamente con el tiempo. Sin acción requerida.
-    3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
-  - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
+ - **INTEGRIDAD DE DATOS**: Hash chain 99/99 links sin rupturas ✅. 58,129/58,129 receipts firmados con Dilithium-3 = 100.0% ✅. `retention_until` correcto en todos los receipts nuevos (0 errores) ✅.
+ - **GOBERNANZA**: Pipeline end-to-end verificado ✅. TCV activo en receipts recientes (score=100.0) ✅. Safety floors funcionando ✅. RBAC: key inválida → 401 ✅, rol incorrecto → 403 ✅.
+ - **INFRAESTRUCTURA**: Railway 305ms (< 500ms) ✅. Redis 8.2.1 conectado ✅. `/verify` público HTTP/2 200 ✅. 7/7 widgets Flask Dashboard operativos ✅.
+ - **3 vulnerabilidades identificadas**:
+ 1. ✅ **RESUELTA** — `PAYLOAD_ENCRYPTION_KEY` no configurado → datos B2B en texto plano. **Fix aplicado mismo día**: clave generada, configurada en Railway + Replit secrets. Cifrado Fernet verificado: receipt `OMNIX-EFD6120F22EA` → `encrypted_payload = gAAAAABpsSXv...` (ya no NULL).
+ 2. ⏳ **PENDIENTE** — `shadow_trade_outcomes`: solo 50 filas de 740K+ eventos. El engine de outcomes calcula hacia futuro (espera 1h/4h/24h/7d/30d) — coverage mejora automáticamente con el tiempo. Sin acción requerida.
+ 3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
+ - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
 
 ### Cambios Recientes (Mar 27, 2026) — TIE + Islamic Credit Vertical — ADR-052/053
 
 - **Mar 27**: **Trajectory Invariant Enforcement (TIE) IMPLEMENTADO — ADR-053**. Motor post-pipeline que enforces bounded evolution sobre el espacio de decisiones. Concepto de Rigel Randolph: no solo verificar estado S_t, sino que la trayectoria S_0 → S_t → S_t+n permanezca en el espacio admisible.
-  - **Posición en pipeline**: `8 Checkpoints → TIE → APPROVED | HOLD`. Solo opera sobre APPROVED; nunca modifica BLOCKED.
-  - **5 Invariantes**:
-    - **I-1 RISK_MONOTONIC_ASCENT**: risk_exposure > 70 Y subiendo 5 decisiones consecutivas → HOLD
-    - **I-2 PROBABILITY_DEAD_ZONE**: probability_score < 35 por 4 decisiones consecutivas → HOLD
-    - **I-3 COHERENCE_STRUCTURAL_DECAY**: signal_coherence < 40 por 3 decisiones consecutivas → HOLD
-    - **I-4 TRAJECTORY_VOLATILITY**: σ(probability_score) > 32 sobre últimas 8 decisiones → WARNING
-    - **I-5 GLOBAL_REGIME_COLLAPSE**: 3+ activos simultáneamente en dead zone → HOLD (cross-asset)
-  - **Storage**: tabla `trajectory_states` (rolling 20 estados por asset/domain, auto-pruning)
-  - **Response**: campo `trajectory_analysis` en toda respuesta del evaluador con `trajectory_score` (0-100), violations, warnings
-  - **Fail-safe**: excepciones → pass-through (nunca rompe el pipeline principal)
-  - **Diferencia vs EBIP**: EBIP monitorea distribución de decisiones (nunca bloquea). TIE enforces invariantes de trayectoria (puede emitir HOLD).
-  - **ADR-053 creado**.
+ - **Posición en pipeline**: `8 Checkpoints → TIE → APPROVED | HOLD`. Solo opera sobre APPROVED; nunca modifica BLOCKED.
+ - **5 Invariantes**:
+ - **I-1 RISK_MONOTONIC_ASCENT**: risk_exposure > 70 Y subiendo 5 decisiones consecutivas → HOLD
+ - **I-2 PROBABILITY_DEAD_ZONE**: probability_score < 35 por 4 decisiones consecutivas → HOLD
+ - **I-3 COHERENCE_STRUCTURAL_DECAY**: signal_coherence < 40 por 3 decisiones consecutivas → HOLD
+ - **I-4 TRAJECTORY_VOLATILITY**: σ(probability_score) > 32 sobre últimas 8 decisiones → WARNING
+ - **I-5 GLOBAL_REGIME_COLLAPSE**: 3+ activos simultáneamente en dead zone → HOLD (cross-asset)
+ - **Storage**: tabla `trajectory_states` (rolling 20 estados por asset/domain, auto-pruning)
+ - **Response**: campo `trajectory_analysis` en toda respuesta del evaluador con `trajectory_score` (0-100), violations, warnings
+ - **Fail-safe**: excepciones → pass-through (nunca rompe el pipeline principal)
+ - **Diferencia vs EBIP**: EBIP monitorea distribución de decisiones (nunca bloquea). TIE enforces invariantes de trayectoria (puede emitir HOLD).
+ - **ADR-053 creado**.
 
 - **Mar 27**: **Islamic Credit Governance OPERATIVO — ADR-052**. Motor de crédito islámico UAE 24/7 confirmado corriendo:
-  - Ciclos cada 5 min, 3-8 aplicaciones/ciclo calibradas al mercado UAE/GCC
-  - Tipos: SME 60%, Individual 30%, Corporate 10%
-  - Financiamiento: Murabaha 60%, Ijara 20%, Musharaka 15%, Diminishing 5%
-  - Sectores: tech, real_estate, healthcare, retail, F&B, manufacturing, logistics
-  - Datos en DB: `credit_applications` + `credit_cycle_metrics`
-  - Sharia Gate: sector halal, no Riba, Gharar ≤ 65, DSR ≤ 40%, asset backing ≥ 50%
-  - Dashboard premium en `/credit` (React + Flask API `/api/credit/*`)
+ - Ciclos cada 5 min, 3-8 aplicaciones/ciclo calibradas al mercado UAE/GCC
+ - Tipos: SME 60%, Individual 30%, Corporate 10%
+ - Financiamiento: Murabaha 60%, Ijara 20%, Musharaka 15%, Diminishing 5%
+ - Sectores: tech, real_estate, healthcare, retail, F&B, manufacturing, logistics
+ - Datos en DB: `credit_applications` + `credit_cycle_metrics`
+ - Sharia Gate: sector halal, no Riba, Gharar ≤ 65, DSR ≤ 40%, asset backing ≥ 50%
+ - Dashboard premium en `/credit` (React + Flask API `/api/credit/*`)
 
 ### Cambios Recientes (Mar 26, 2026) — Dual Trading Mode CORE/ACTIVE — ADR-051
 
 - **Mar 26**: **Dual Trading Mode IMPLEMENTADO — ADR-051**. Sistema de dos modos operacionales controlado por una sola variable de entorno `TRADING_MODE` en Railway. Raíz del problema: 0 trades en 5 meses por umbrales ECW demasiado estrictos para mercados con edge marginal.
-  - **CORE** (default, comportamiento actual): ECW WR≥50%, 3 ciclos, BS HIGH resetea counter. Coherence veto normal ≥45%.
-  - **ACTIVE** (thresholds calibrados): ECW WR≥48%, 2 ciclos, BS HIGH **reduce posición a 0.5% del balance** (sin resetear counter). Coherence veto normal ≥40%.
-  - **Un solo cambio en Railway**: `TRADING_MODE=ACTIVE` activa el modo. Rollback inmediato: `TRADING_MODE=CORE`.
-  - Los ENVs individuales (`ECW_MC_WR_MIN`, `ECW_CYCLES_REQUIRED`, `ECW_MC_ER_MIN`) siguen funcionando con prioridad (retrocompatibilidad 100%).
-  - Logging de inicio: `🎛️ TRADING_MODE=ACTIVE | ECW WR>=48% ER>0.001 CYCLES=2 BS_HIGH_BLOCKS=False`.
-  - `trading_mode` incluido en `ecw_thresholds` de cada receipt para audit trail.
-  - ADR-051 creado.
-  - **Narrativa inversores**: "We didn't lower standards. We calibrated thresholds to market reality. 48% win rate is still a statistical edge. 2 consecutive cycles still require persistence. The governance logic is intact."
+ - **CORE** (default, comportamiento actual): ECW WR≥50%, 3 ciclos, BS HIGH resetea counter. Coherence veto normal ≥45%.
+ - **ACTIVE** (thresholds calibrados): ECW WR≥48%, 2 ciclos, BS HIGH **reduce posición a 0.5% del balance** (sin resetear counter). Coherence veto normal ≥40%.
+ - **Un solo cambio en Railway**: `TRADING_MODE=ACTIVE` activa el modo. Rollback inmediato: `TRADING_MODE=CORE`.
+ - Los ENVs individuales (`ECW_MC_WR_MIN`, `ECW_CYCLES_REQUIRED`, `ECW_MC_ER_MIN`) siguen funcionando con prioridad (retrocompatibilidad 100%).
+ - Logging de inicio: `🎛️ TRADING_MODE=ACTIVE | ECW WR>=48% ER>0.001 CYCLES=2 BS_HIGH_BLOCKS=False`.
+ - `trading_mode` incluido en `ecw_thresholds` de cada receipt para audit trail.
+ - ADR-051 creado.
+ - **Narrativa inversores**: "We didn't lower standards. We calibrated thresholds to market reality. 48% win rate is still a statistical edge. 2 consecutive cycles still require persistence. The governance logic is intact."
 
 ### Cambios Recientes (Mar 26, 2026) — Context Admission Gate (CAG) — ADR-050
 
 - **Mar 26**: **Context Admission Gate IMPLEMENTADO — ADR-050**. Gate de pre-admisión a nivel de sesión que evalúa condiciones GLOBALES de mercado ANTES de que cualquier señal entre al pipeline de 8 checkpoints. Si CAG bloquea, no se forma ningún estado ejecutable — el pipeline nunca comienza. 4 parámetros independientes:
-  - **global_volatility_threshold** (default: 80): Índice de volatilidad compuesta — debe ser MENOR al umbral. Violación: `GLOBAL_VOLATILITY_EXCEEDED`.
-  - **cross_pair_correlation_threshold** (default: 90): Correlación entre pares — inestabilidad de régimen. Violación: `CORRELATION_REGIME_INSTABILITY`.
-  - **liquidity_score_minimum** (default: 20): Score de liquidez mínimo requerido. Violación: `INSUFFICIENT_LIQUIDITY`.
-  - **macro_risk_ceiling** (default: 85): Riesgo macro compuesto — debe ser MENOR al techo. Violación: `MACRO_RISK_CEILING_BREACHED`.
-  - Deshabilitado por defecto (`CAG_ENABLED=false`) — cero impacto en Railway. Fail-safe: excepciones → pass-through.
-  - Integrado en `GovernanceEvaluationEngine.evaluate()` ANTES del loop de checkpoints, via `compliance_config`.
-  - Logging: `[CAG] SESSION_BLOCKED` / `[CAG] SESSION_ADMITTED` / `[CAG] SESSION_ADMITTED_WITH_WARNINGS`.
-  - Bloque `context_admission` en respuesta del evaluador: `admission_score`, `violation`, 4 `parameters`, `gate_checks[]`.
-  - 30/30 tests unitarios pasados. ADR-050 creado.
-  - **Narrativa inversores**: "When market conditions become structurally inadmissible, OMNIX doesn't just block individual signals. It blocks the entire evaluation session before it starts. The receipt doesn't say 'we decided to wait.' It says 'no executable state was ever formed.'"
+ - **global_volatility_threshold** (default: 80): Índice de volatilidad compuesta — debe ser MENOR al umbral. Violación: `GLOBAL_VOLATILITY_EXCEEDED`.
+ - **cross_pair_correlation_threshold** (default: 90): Correlación entre pares — inestabilidad de régimen. Violación: `CORRELATION_REGIME_INSTABILITY`.
+ - **liquidity_score_minimum** (default: 20): Score de liquidez mínimo requerido. Violación: `INSUFFICIENT_LIQUIDITY`.
+ - **macro_risk_ceiling** (default: 85): Riesgo macro compuesto — debe ser MENOR al techo. Violación: `MACRO_RISK_CEILING_BREACHED`.
+ - Deshabilitado por defecto (`CAG_ENABLED=false`) — cero impacto en Railway. Fail-safe: excepciones → pass-through.
+ - Integrado en `GovernanceEvaluationEngine.evaluate()` ANTES del loop de checkpoints, via `compliance_config`.
+ - Logging: `[CAG] SESSION_BLOCKED` / `[CAG] SESSION_ADMITTED` / `[CAG] SESSION_ADMITTED_WITH_WARNINGS`.
+ - Bloque `context_admission` en respuesta del evaluador: `admission_score`, `violation`, 4 `parameters`, `gate_checks[]`.
+ - 30/30 tests unitarios pasados. ADR-050 creado.
+ - **Narrativa inversores**: "When market conditions become structurally inadmissible, OMNIX doesn't just block individual signals. It blocks the entire evaluation session before it starts. The receipt doesn't say 'we decided to wait.' It says 'no executable state was ever formed.'"
 
 ### Cambios Recientes (Mar 25, 2026) — Compliance Gates CP-9/10/11
 
 - **Mar 25**: **Compliance Gates CP-9, CP-10, CP-11 IMPLEMENTADOS — ADR-047/048/049**. Pipeline extendido a 11 checkpoints:
-  - **CP-9 AML Gate** (`aml_gate.py`): Screening anti-lavado: monedas de privacidad (XMR, ZEC, DASH, GRIN, BEAM), mixer tokens (TORN, RAIL), volumen anómalo (>$500K), frecuencia structuring (>10/24h). Activar: `AML_GATE_ENABLED=true`. Alineado FATF Rec.15, FinCEN, UAE Central Bank AML/CFT.
-  - **CP-10 Fraud Gate** (`fraud_gate.py`): Detección de manipulación: DCI ≥ 85 → VETO duro (EXTREME_DCI), divergencia técnica/sentimiento ≥ 60 → VETO duro (SIGNAL_DIVERGENCE), reversiones rápidas → penalización. Activar: `FRAUD_GATE_ENABLED=true`. Alineado EU AI Act Art. 6, MiFID II, SEC Rule 10b-5.
-  - **CP-11 Jurisdiction Gate** (`jurisdiction_gate.py`): Valida activo + tipo de operación contra framework jurisdiccional. UAE: XMR/ZEC/DASH/GRIN/BEAM prohibidos + no leverage/derivatives. EU: MiCA (solo XMR/GRIN/BEAM restringidos). US: FinCEN/SEC. GCC: UAE-aligned. Activar: `JURISDICTION_GATE_ENABLED=true` + `JURISDICTION=UAE`. Sanctions OFAC siempre activos.
-  - Todos deshabilitados por defecto — cero impacto en Railway. Fail-safe: excepciones → pass-through.
-  - Logging estructurado: `[CP-9] AML_VETO/PASS`, `[CP-10] FRAUD_VETO/PASS`, `[CP-11] JURISDICTION_VETO/PASS`.
-  - Bloque de compliance en receipt PQC: `aml_compliance`, `fraud_compliance`, `jurisdiction_compliance` — dentro del payload firmado con Dilithium-3.
-  - 10/10 tests unitarios pasados. ADR-047, ADR-048, ADR-049 creados.
+ - **CP-9 AML Gate** (`aml_gate.py`): Screening anti-lavado: monedas de privacidad (XMR, ZEC, DASH, GRIN, BEAM), mixer tokens (TORN, RAIL), volumen anómalo (>$500K), frecuencia structuring (>10/24h). Activar: `AML_GATE_ENABLED=true`. Alineado FATF Rec.15, FinCEN, UAE Central Bank AML/CFT.
+ - **CP-10 Fraud Gate** (`fraud_gate.py`): Detección de manipulación: DCI ≥ 85 → VETO duro (EXTREME_DCI), divergencia técnica/sentimiento ≥ 60 → VETO duro (SIGNAL_DIVERGENCE), reversiones rápidas → penalización. Activar: `FRAUD_GATE_ENABLED=true`. Alineado EU AI Act Art. 6, MiFID II, SEC Rule 10b-5.
+ - **CP-11 Jurisdiction Gate** (`jurisdiction_gate.py`): Valida activo + tipo de operación contra framework jurisdiccional. UAE: XMR/ZEC/DASH/GRIN/BEAM prohibidos + no leverage/derivatives. EU: MiCA (solo XMR/GRIN/BEAM restringidos). US: FinCEN/SEC. GCC: UAE-aligned. Activar: `JURISDICTION_GATE_ENABLED=true` + `JURISDICTION=UAE`. Sanctions OFAC siempre activos.
+ - Todos deshabilitados por defecto — cero impacto en Railway. Fail-safe: excepciones → pass-through.
+ - Logging estructurado: `[CP-9] AML_VETO/PASS`, `[CP-10] FRAUD_VETO/PASS`, `[CP-11] JURISDICTION_VETO/PASS`.
+ - Bloque de compliance en receipt PQC: `aml_compliance`, `fraud_compliance`, `jurisdiction_compliance` — dentro del payload firmado con Dilithium-3.
+ - 10/10 tests unitarios pasados. ADR-047, ADR-048, ADR-049 creados.
 
 ### Cambios Recientes (Mar 25, 2026) — CP-6 Sharia Governance Gate
 
@@ -132,40 +132,40 @@
 ### Cambios Recientes (Mar 6, 2026) — Requirements Audit
 
 - **Mar 06**: **requirements.txt auditado y producción-ificado** — separación prod/dev, versiones pinadas, conflictos eliminados:
-  - **Duplicados eliminados**: `langdetect` (x2), `plotly` (x2), `reportlab` (x2) → una sola entrada cada uno con versión exacta
-  - **Conflicto resuelto**: paquete `telegram` (standalone v0.0.1) eliminado — conflicto de namespace con `python-telegram-bot==21.9`
-  - **Versiones pinadas**: `tavily-python==0.7.14`, `fast-langdetect==1.0.0`, `pydantic-settings==2.12.0`, `streamlit==1.52.1`, `dependency-injector==4.48.3`, `gevent==25.9.1`, `websockets==14.2`, `aiohttp==3.13.2`, `yt-dlp==2025.11.12`, `ccxt==4.5.24`, `dwave-ocean-sdk==9.0.0`
-  - **requirements-dev.txt creado**: `pytest==9.0.2`, `pytest-asyncio==1.3.0`, `pytest-env==1.2.0`, `import-linter==2.9` separados de producción
-  - **Paquetes OPTIONAL documentados** con comentarios explícitos: `dependency-injector` (Railway no disponible — guarded), `kaleido` (Chromium dependency), `tables` (libhdf5 system dependency), `dwave-ocean-sdk` (DWAVE_API_TOKEN requerido)
-  - **streamlit import** protegido con try/except en `omnix_dashboard/streamlit_app.py`
-  - **Archivos**: `requirements.txt`, `requirements-dev.txt` (nuevo), `omnix_dashboard/streamlit_app.py`
+ - **Duplicados eliminados**: `langdetect` (x2), `plotly` (x2), `reportlab` (x2) → una sola entrada cada uno con versión exacta
+ - **Conflicto resuelto**: paquete `telegram` (standalone v0.0.1) eliminado — conflicto de namespace con `python-telegram-bot==21.9`
+ - **Versiones pinadas**: `tavily-python==0.7.14`, `fast-langdetect==1.0.0`, `pydantic-settings==2.12.0`, `streamlit==1.52.1`, `dependency-injector==4.48.3`, `gevent==25.9.1`, `websockets==14.2`, `aiohttp==3.13.2`, `yt-dlp==2025.11.12`, `ccxt==4.5.24`, `dwave-ocean-sdk==9.0.0`
+ - **requirements-dev.txt creado**: `pytest==9.0.2`, `pytest-asyncio==1.3.0`, `pytest-env==1.2.0`, `import-linter==2.9` separados de producción
+ - **Paquetes OPTIONAL documentados** con comentarios explícitos: `dependency-injector` (Railway no disponible — guarded), `kaleido` (Chromium dependency), `tables` (libhdf5 system dependency), `dwave-ocean-sdk` (DWAVE_API_TOKEN requerido)
+ - **streamlit import** protegido con try/except en `omnix_dashboard/streamlit_app.py`
+ - **Archivos**: `requirements.txt`, `requirements-dev.txt` (nuevo), `omnix_dashboard/streamlit_app.py`
 
 ### Cambios Recientes (Mar 5, 2026) — Production Bug Fixes
 
 - **Mar 05 (tarde)**: **2 bugs de producción corregidos — bot Railway restaurado**:
-  - **Bug 1 — ConversationalAI undefined**: `ai_service/__init__.py` importa `container.py` que requiere `dependency_injector` (no disponible en Railway). Cuando el `__init__.py` falla, `ConversationalAI` no queda definida en `enterprise_bot.py` → NameError en línea 476 → `TelegramBotAdapter` no inicializa → bot caído. **Fix**: Import cambiado a `from omnix_services.ai_service.conversational_ai_adapter import ConversationalAI` (directamente del módulo que solo usa stdlib). Mismo fix aplicado en `src/omnix/bootstrap/main_entry.py` (legacy path). `ConversationalAI = None` añadido como fallback defensivo pre-try.
-  - **Bug 2 — columna was_correct faltante**: Tabla `trade_evaluations` existía en Railway antes de que se añadiera la columna `was_correct BOOLEAN NOT NULL`. `CREATE TABLE IF NOT EXISTS` no actualiza tablas existentes → error en inicialización. **Fix**: `ALTER TABLE trade_evaluations ADD COLUMN IF NOT EXISTS was_correct BOOLEAN NOT NULL DEFAULT FALSE` añadido en la sección de migraciones de `_init_tables_enterprise()`.
-  - **Tests post-fix**: 27/27 passing. Revisión arquitectural: PASS — fixes correctos y completos.
-  - **Archivos**: `omnix_services/telegram_service/enterprise_bot.py`, `omnix_services/database_service/database_service.py`, `src/omnix/bootstrap/main_entry.py`
+ - **Bug 1 — ConversationalAI undefined**: `ai_service/__init__.py` importa `container.py` que requiere `dependency_injector` (no disponible en Railway). Cuando el `__init__.py` falla, `ConversationalAI` no queda definida en `enterprise_bot.py` → NameError en línea 476 → `TelegramBotAdapter` no inicializa → bot caído. **Fix**: Import cambiado a `from omnix_services.ai_service.conversational_ai_adapter import ConversationalAI` (directamente del módulo que solo usa stdlib). Mismo fix aplicado en `src/omnix/bootstrap/main_entry.py` (legacy path). `ConversationalAI = None` añadido como fallback defensivo pre-try.
+ - **Bug 2 — columna was_correct faltante**: Tabla `trade_evaluations` existía en Railway antes de que se añadiera la columna `was_correct BOOLEAN NOT NULL`. `CREATE TABLE IF NOT EXISTS` no actualiza tablas existentes → error en inicialización. **Fix**: `ALTER TABLE trade_evaluations ADD COLUMN IF NOT EXISTS was_correct BOOLEAN NOT NULL DEFAULT FALSE` añadido en la sección de migraciones de `_init_tables_enterprise()`.
+ - **Tests post-fix**: 27/27 passing. Revisión arquitectural: PASS — fixes correctos y completos.
+ - **Archivos**: `omnix_services/telegram_service/enterprise_bot.py`, `omnix_services/database_service/database_service.py`, `src/omnix/bootstrap/main_entry.py`
 - **Mar 05 (noche) — Fix v2**: Los fixes anteriores eran incompletos. Causas raíz reales identificadas:
-  - **Bug 1 (real)**: Python ejecuta `__init__.py` del paquete antes de importar cualquier submodulo. El `__init__.py` de `ai_service` importa `container.py` sin protección → todo el paquete falla. **Fix real**: envolver el import de `.container` en try/except en `omnix_services/ai_service/__init__.py`. Ahora `ConversationalAI` queda disponible aunque `dependency_injector` no esté instalado en Railway.
-  - **Bug 2 (real)**: El `CREATE INDEX ... ON trade_evaluations(was_correct)` en línea 1906 fallaba ANTES de que corriese el ALTER TABLE que habíamos puesto en línea 2278. **Fix real**: mover el ALTER TABLE a línea ~1903, inmediatamente después del CREATE TABLE y antes de los CREATE INDEX que referencian la columna.
-  - **Tests post-fix v2**: 27/27 passing.
+ - **Bug 1 (real)**: Python ejecuta `__init__.py` del paquete antes de importar cualquier submodulo. El `__init__.py` de `ai_service` importa `container.py` sin protección → todo el paquete falla. **Fix real**: envolver el import de `.container` en try/except en `omnix_services/ai_service/__init__.py`. Ahora `ConversationalAI` queda disponible aunque `dependency_injector` no esté instalado en Railway.
+ - **Bug 2 (real)**: El `CREATE INDEX ... ON trade_evaluations(was_correct)` en línea 1906 fallaba ANTES de que corriese el ALTER TABLE que habíamos puesto en línea 2278. **Fix real**: mover el ALTER TABLE a línea ~1903, inmediatamente después del CREATE TABLE y antes de los CREATE INDEX que referencian la columna.
+ - **Tests post-fix v2**: 27/27 passing.
 
 ### Cambios Recientes (Mar 5, 2026) — Architectural Gaps
 
 - **Mar 05**: **4 Architectural Gaps implemented — ADR-033/034/035/036** — Gaps identificados proactivamente mediante análisis arquitectural post-TCV:
-  - **ADR-033**: Signal Integrity Validator (SIV) — Checkpoint 0. Pre-pipeline data quality gate. 4 validation categories: freshness, completeness, anomaly detection, cross-source consistency. Integrated in `_make_v52_decision()` before Monte Carlo VETO. 46 tests passing. FAIL-SAFE: pass-through on module error.
-  - **ADR-034**: Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV (backward-looking). Evaluates what proposed action implies for next N cycles using: Regime Transition Risk (40%), Implied Decision Consistency (35%), Signal Momentum Sustainability (25%). Conservative threshold (25/100). 45 tests passing. Positioned between TCV and ECW gate.
-  - **ADR-035**: Regime-Conditioned Kelly. Kelly inputs (win_rate, avg_win, avg_loss) now segmented by HMM market regime. 3-level fallback chain: regime-specific → global → conservative defaults. Replaces hardcoded `win_rate=0.55` in `_analyze_market()`. Confidence levels: HIGH (≥30 samples), MEDIUM (10-29), LOW (fallback). 36 tests passing.
-  - **ADR-036**: Exit Governance Layer (EGL). 3-gate pipeline for exit decisions: Regime-Adjusted Threshold Gate + Exit Coherence Gate + TCV Exit Check. PQC-signed exit receipts stored in `exit_governance_receipts` table. Integrated in `_check_open_positions_tp_sl()`. Emergency SL bypasses EGL (capital protection = absolute priority). 44 tests passing.
-  - **Total nuevos tests**: 171 tests (46+45+36+44) — todos pasando
-  - **ADR count**: Now 36 (ADR-001 → ADR-036)
-  - **Pipeline**: Entry governance now has 8 named checkpoints (CP-0 SIV through CP-8 ECW). Exit governance now has 3-gate pipeline (previously: price comparison only).
+ - **ADR-033**: Signal Integrity Validator (SIV) — Checkpoint 0. Pre-pipeline data quality gate. 4 validation categories: freshness, completeness, anomaly detection, cross-source consistency. Integrated in `_make_v52_decision()` before Monte Carlo VETO. 46 tests passing. FAIL-SAFE: pass-through on module error.
+ - **ADR-034**: Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV (backward-looking). Evaluates what proposed action implies for next N cycles using: Regime Transition Risk (40%), Implied Decision Consistency (35%), Signal Momentum Sustainability (25%). Conservative threshold (25/100). 45 tests passing. Positioned between TCV and ECW gate.
+ - **ADR-035**: Regime-Conditioned Kelly. Kelly inputs (win_rate, avg_win, avg_loss) now segmented by HMM market regime. 3-level fallback chain: regime-specific → global → conservative defaults. Replaces hardcoded `win_rate=0.55` in `_analyze_market()`. Confidence levels: HIGH (≥30 samples), MEDIUM (10-29), LOW (fallback). 36 tests passing.
+ - **ADR-036**: Exit Governance Layer (EGL). 3-gate pipeline for exit decisions: Regime-Adjusted Threshold Gate + Exit Coherence Gate + TCV Exit Check. PQC-signed exit receipts stored in `exit_governance_receipts` table. Integrated in `_check_open_positions_tp_sl()`. Emergency SL bypasses EGL (capital protection = absolute priority). 44 tests passing.
+ - **Total nuevos tests**: 171 tests (46+45+36+44) — todos pasando
+ - **ADR count**: Now 36 (ADR-001 → ADR-036)
+ - **Pipeline**: Entry governance now has 8 named checkpoints (CP-0 SIV through CP-8 ECW). Exit governance now has 3-gate pipeline (previously: price comparison only).
 
 ### Cambios Recientes (Mar 4, 2026)
 
-- **Mar 04**: **Temporal Coherence Validation (TCV) — Checkpoint 7 documentado en toda la documentación** — EUREKA_JUDGE_QA_PREPARATION.md, EUREKA_20_TOUGH_QUESTIONS.md, EUREKA_QA_SIMULATION.md, INVESTOR_FAQ.md, one_pager.md, ARCHITECTURE.md, InstitutionalPage.tsx, CommercialLanding.tsx, BiotechGovernanceDemo.tsx, EnergyGovernanceDemo.tsx, REAL_SYSTEM_STATUS.md actualizados con marco dual: "6 checkpoints validados hasta feb 2026 + TCV Checkpoint 7 agregado marzo 2026 (ADR-032)". README.md actualizado con referencia a ADR-032. MIGRATION_STATUS.md actualizado con nota temporal. Verificación final: cero referencias ambiguas a "6 checkpoints" en superficies críticas (Eureka, inversores, web principal).
+- **Mar 04**: **Temporal Coherence Validation (TCV) — Checkpoint 7 documentado en toda la documentación** — INVESTOR_FAQ.md, one_pager.md, ARCHITECTURE.md, InstitutionalPage.tsx, CommercialLanding.tsx, BiotechGovernanceDemo.tsx, EnergyGovernanceDemo.tsx, REAL_SYSTEM_STATUS.md actualizados con marco dual: "6 checkpoints validados hasta feb 2026 + TCV Checkpoint 7 agregado marzo 2026 (ADR-032)". README.md actualizado con referencia a ADR-032. MIGRATION_STATUS.md actualizado con nota temporal. Verificación final: cero referencias ambiguas a "6 checkpoints" en superficies críticas (Eureka, inversores, web principal).
 
 ### Cambios Recientes (Mar 1, 2026)
 
@@ -181,12 +181,12 @@
 - **Feb 24**: DEEP AUDIT (Phase 3): trading_system.py — fake technical analysis (RSI=50.0, MACD=0.0, fake SMA percentages) eliminado, fake multi-asset analysis (BTC=95000, ETH=3200 hardcoded, change=2.5%, volume=25000) eliminado, DummyPerformanceTracker ya no reporta system_health=100.0/memory=0.0/cpu=0.0 (ahora None), video/analyzer.py confidence 0.85 hardcoded eliminado, auto_trading_bot ROI 0.0 TODO implementado con cálculo real, FIPS 203/204 references corregidas a "NIST-standardized algorithms", balance hardcoded $159.93 eliminado. Todos los callers actualizados para manejar None.
 - **Feb 24**: REAL-DATA INTEGRITY AUDIT (Phase 2): 40+ métricas fabricadas eliminadas del sistema completo — analytics_engine.py (20+ métodos con datos inventados: fake HFT, fake arbitraje, fake Monte Carlo 150K→1K, fake sentimiento, fake correlaciones), dashboard system.py (strategy_weights falsos 50-58% win_rate, performance_metrics inventados), dashboard core.py (avg_bot comparación con datos falsos de industria). Creado módulo data_integrity.py (REAL_DATA_MODE=True, @real_data_required decorator) y test anti-regresión (test_no_hardcoded_metrics.py). Zero violations en scan final.
 - **Feb 24**: AUDITORÍA CRÍTICA (Phase 1): 18 métricas hardcodeadas encontradas y eliminadas — ai_confidence 93%, prediction_accuracy 88%, correlations, cpu_efficiency, success_rate, momentum, volatility, BTC price fallback, scan_arbitrage_opportunities. Todas reemplazadas con queries reales a PostgreSQL (shadow_trade_events, decision_receipts). Documentado en TECHNICAL_DEBT.md
-- **Feb 23**: Auditoría consistencia documentación Eureka — arabic_executive_summary actualizado (equity 10%→16.7%, valuación $4.5M→$2.5M-$3M, rebranding a Decision Governance Infrastructure)
+- **Feb 23**: Auditoría consistencia documentación — arabic_executive_summary actualizado (equity 10%→16.7%, valuación $4.5M→$2.5M-$3M, rebranding a Decision Governance Infrastructure)
 - **Feb 23**: Fix system_uptime_days en verification_server.py — ahora calcula desde shadow_trade_events con fallback a Nov 28, 2025 (antes solo usaba decision_receipts mostrando 2 días)
 - **Feb 23**: NARRATIVE_CONSISTENCY.md actualizado — arabic_executive_summary agregado a la matriz de seguimiento
-- **Feb 23**: Vertical Robótica/Sistemas Autónomos agregada a reporte Eureka, website, documentación (Year 3+, TAM +$12.4B)
+- **Feb 23**: Vertical Robótica/Sistemas Autónomos agregada a reporte, website, documentación (Year 3+, TAM +$12.4B)
 - **Feb 23**: Fix saludos AI — bot responde con calidez a "hola/hello" en vez de datos de mercado
-- **Feb 22**: Reporte Eureka PDF generado (14 secciones, formato institucional) + paquetes para mentores
+- **Feb 22**: Reporte PDF generado (14 secciones, formato institucional) + paquetes para mentores
 - **Feb 21**: Optimización costos Railway — check_interval a 90s (~77% reducción en ciclos/día)
 - **Feb 20**: Mejoras página verificación — filtros por fecha/decisión, paginación, conteo total
 - **Feb 19**: Página institucional actualizada — sin límites hardcodeados de duración
@@ -203,13 +203,13 @@
 ### Timeline Oficial
 
 ```
-Nov-Dic 2025        │ 15 Ene 2026         │ 13 Feb 2026
+Nov-Dic 2025 │ 15 Ene 2026 │ 13 Feb 2026
 ────────────────────┼─────────────────────┼──────────────────
-LEARNING BASELINE   │ OFFICIAL DAY 1      │ DAY 30 REVIEW
-119 trades          │ Track record        │ Meta: 100 trades
-Calibración         │ oficial inicia      │ WR target: >45%
-telemetry_source:   │ telemetry_source:   │ Decisión threshold
-LEGACY_ESTIMATED    │ REAL                │ ADR-007 Phase 2?
+LEARNING BASELINE │ OFFICIAL DAY 1 │ DAY 30 REVIEW
+119 trades │ Track record │ Meta: 100 trades
+Calibración │ oficial inicia │ WR target: >45%
+telemetry_source: │ telemetry_source: │ Decisión threshold
+LEGACY_ESTIMATED │ REAL │ ADR-007 Phase 2?
 ```
 
 ### Separación de Períodos
@@ -456,8 +456,8 @@ SELECT SUM(blocked_capital) FROM v_shadow_trade_metrics WHERE ecw_status = 'WAIT
 
 -- DCI distribution
 SELECT 
-  CASE WHEN approx_dci >= 70 THEN 'CONTRADICTORY' ELSE 'ALIGNED' END,
-  COUNT(*)
+ CASE WHEN approx_dci >= 70 THEN 'CONTRADICTORY' ELSE 'ALIGNED' END,
+ COUNT(*)
 FROM v_shadow_trade_metrics GROUP BY 1;
 ```
 
@@ -776,9 +776,9 @@ Follow-up: Track BTC price 24h later
 **Query SQL Unificada:**
 ```sql
 SELECT 
-    SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as net_wins,
-    SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as dir_wins,
-    SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
+ SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as net_wins,
+ SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as dir_wins,
+ SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
 FROM paper_trading_trades WHERE status = 'closed'
 ```
 
@@ -937,11 +937,11 @@ Por cada trade bloqueado:
 python -m omnix_services.database_service.shadow_portfolio_runner --min-age 24 --max-events 100
 
 Options:
-  --min-age N      Minimum age of events to analyze (hours, default: 24)
-  --max-events N   Maximum events to process (default: 100)
-  --symbol SYM     Only analyze specific symbol (e.g., BTC)
-  --dry-run        Analyze but do not persist results
-  --verbose        Enable debug logging
+ --min-age N Minimum age of events to analyze (hours, default: 24)
+ --max-events N Maximum events to process (default: 100)
+ --symbol SYM Only analyze specific symbol (e.g., BTC)
+ --dry-run Analyze but do not persist results
+ --verbose Enable debug logging
 ```
 
 **Counterfactual Logic:**
@@ -963,8 +963,8 @@ Options:
 Railway Cron: 0 5 * * * (05:00 UTC daily)
 Command: bash scripts/operations/run_shadow_portfolio.sh
 Environment Variables:
-  SHADOW_MIN_AGE_HOURS=24 (default)
-  SHADOW_MAX_EVENTS=250 (default)
+ SHADOW_MIN_AGE_HOURS=24 (default)
+ SHADOW_MAX_EVENTS=250 (default)
 ```
 
 **Dashboard Widget:**
@@ -996,7 +996,7 @@ Streamlit → "Shadow Portfolio" tab muestra:
 
 **Antes (Código duplicado):**
 ```
-Bot: veto_critical = profile.coherence_veto_critical  # 35% fijo
+Bot: veto_critical = profile.coherence_veto_critical # 35% fijo
 Bot: if coherence_score < veto_critical → BLOCK
 ```
 
@@ -1058,7 +1058,7 @@ paper_mode=self.config['paper_mode']
 
 **RESULTADO:** Dashboard ahora muestra datos en tiempo real idénticos a PostgreSQL:
 - **119 trades** ✅
-- **$-15,198.73 P&L** ✅  
+- **$-15,198.73 P&L** ✅ 
 - **20.2% Win Rate** ✅
 
 ---
@@ -1107,12 +1107,12 @@ paper_mode=self.config['paper_mode']
 **Logging Estructurado:**
 ```json
 {
-  "event": "ADAPTIVE_COHERENCE_GATE",
-  "gate_active": true,
-  "ema_score": 40,
-  "black_swan_severity": "LOW",
-  "block_threshold": 35,
-  "reason": "EMA=40pts >= 35, BlackSwan=LOW"
+ "event": "ADAPTIVE_COHERENCE_GATE",
+ "gate_active": true,
+ "ema_score": 40,
+ "black_swan_severity": "LOW",
+ "block_threshold": 35,
+ "reason": "EMA=40pts >= 35, BlackSwan=LOW"
 }
 ```
 
@@ -1156,16 +1156,16 @@ created_at (TIMESTAMP)
 **Endpoint Response Format:**
 ```json
 {
-  "capital_protected": {
-    "permanent": 11423.60,  // Assets excluidos
-    "dynamic_48h": 0,       // Vetoes últimas 48h
-    "dynamic_7d": 0,        // Vetoes últimos 7d
-    "grand_total": 11423.60 // Suma total
-  },
-  "vetoes": {
-    "48h": {"by_type": {...}, "total_count": 0},
-    "7d": {"by_type": {...}, "total_count": 0}
-  }
+ "capital_protected": {
+ "permanent": 11423.60, // Assets excluidos
+ "dynamic_48h": 0, // Vetoes últimas 48h
+ "dynamic_7d": 0, // Vetoes últimos 7d
+ "grand_total": 11423.60 // Suma total
+ },
+ "vetoes": {
+ "48h": {"by_type": {...}, "total_count": 0},
+ "7d": {"by_type": {...}, "total_count": 0}
+ }
 }
 ```
 
@@ -1408,7 +1408,7 @@ El error persistía después del fix inicial porque `_build_strategy_signals()` 
 **safe_float() mejorado:**
 ```python
 if isinstance(value, str):
-    value = value.strip().replace('%', '')
+ value = value.strip().replace('%', '')
 return float(value)
 ```
 
@@ -1508,8 +1508,8 @@ El método `generate_signal()` nunca se ejecutaba porque `prices=0` (lista vací
 ```python
 # omnix_services/trading_service/trading_service.py
 def get_ohlc(self, pair: str, interval: int = 60, since: Optional[int] = None) -> List[List]:
-    """Delegate OHLC data retrieval to Kraken client."""
-    return self.kraken.get_ohlc(pair=pair, interval=interval, since=since)
+ """Delegate OHLC data retrieval to Kraken client."""
+ return self.kraken.get_ohlc(pair=pair, interval=interval, since=since)
 ```
 
 **Resultado esperado:**
@@ -1536,21 +1536,21 @@ El flujo de veto no estaba jerárquicamente claro. Coherence Engine evaluaba DES
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NUEVO FLUJO JERÁRQUICO                       │
+│ NUEVO FLUJO JERÁRQUICO │
 ├─────────────────────────────────────────────────────────────────┤
-│  1. EMA Signal Generation                                       │
-│         ↓                                                       │
-│  2. MC VETO (expected_return < 0 || VaR95 > -3%)               │
-│         ↓                                                       │
-│  3. RMS VETO (CircuitBreaker + LimitsEngine)                   │
-│         ↓                                                       │
-│  4. COHERENCE GATE ← ANTES del scoring                          │
-│     • veto_critical < 35% → REJECTED (subido de 30%)           │
-│     • veto_normal < 50% → REJECTED (subido de 45%)             │
-│         ↓                                                       │
-│  5. Scoring Final (solo señales pre-validadas)                 │
-│         ↓                                                       │
-│  6. Decision + Execution                                        │
+│ 1. EMA Signal Generation │
+│ ↓ │
+│ 2. MC VETO (expected_return < 0 || VaR95 > -3%) │
+│ ↓ │
+│ 3. RMS VETO (CircuitBreaker + LimitsEngine) │
+│ ↓ │
+│ 4. COHERENCE GATE ← ANTES del scoring │
+│ • veto_critical < 35% → REJECTED (subido de 30%) │
+│ • veto_normal < 50% → REJECTED (subido de 45%) │
+│ ↓ │
+│ 5. Scoring Final (solo señales pre-validadas) │
+│ ↓ │
+│ 6. Decision + Execution │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1667,10 +1667,10 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 - **Lógica**: Trades con confidence 50-65% ejecutan con 25-40% del tamaño normal
 - **Beneficio**: Convierte HOLDs en pequeñas oportunidades sin aumentar riesgo
 - **Configuración** (en PRODUCTION_STABLE):
-  - `partial_position_min_confidence`: 0.50 (50%)
-  - `partial_position_max_confidence`: 0.65 (65%)
-  - `partial_position_min_size`: 0.25 (25%)
-  - `partial_position_max_size`: 0.40 (40%)
+ - `partial_position_min_confidence`: 0.50 (50%)
+ - `partial_position_max_confidence`: 0.65 (65%)
+ - `partial_position_min_size`: 0.25 (25%)
+ - `partial_position_max_size`: 0.40 (40%)
 
 #### FASE 2.2: BTC Short Selling
 - **Estado**: ✅ IMPLEMENTADO
@@ -1678,24 +1678,24 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 - **Comportamiento**: Cuando HMM detecta régimen bearish con alta confianza, genera señal SHORT
 - **Position Size**: 50% del tamaño normal (conservador para nueva estrategia)
 - **Configuración** (en PRODUCTION_STABLE):
-  - `short_selling_enabled`: True
-  - `short_selling_symbols`: ['BTC/USD']
-  - `short_selling_min_bearish_confidence`: 0.70
+ - `short_selling_enabled`: True
+ - `short_selling_symbols`: ['BTC/USD']
+ - `short_selling_min_bearish_confidence`: 0.70
 
 #### FASE 2.3: Quarantine Probation System
 - **Estado**: ✅ IMPLEMENTADO
 - **Lógica**: Probar UN activo bloqueado con reglas estrictas
 - **Activo en Probation**: AVAX/USD (menor pérdida histórica después de XRP/BTC)
 - **Comportamiento**:
-  - Partial sizing forzado (máximo 40%)
-  - Contador de pérdidas consecutivas
-  - Auto-revert a cuarentena tras 3 pérdidas consecutivas
+ - Partial sizing forzado (máximo 40%)
+ - Contador de pérdidas consecutivas
+ - Auto-revert a cuarentena tras 3 pérdidas consecutivas
 - **Configuración** (en PRODUCTION_STABLE):
-  - `probation_enabled`: True
-  - `probation_asset`: 'AVAX/USD'
-  - `probation_max_consecutive_losses`: 3
-  - `probation_force_partial`: True
-  - `probation_max_size_pct`: 0.40
+ - `probation_enabled`: True
+ - `probation_asset`: 'AVAX/USD'
+ - `probation_max_consecutive_losses`: 3
+ - `probation_force_partial`: True
+ - `probation_max_size_pct`: 0.40
 
 ### Investor-Ready UI Refactor (Dec 23, 2025)
 **Eliminated all phrases that could damage investor confidence:**
@@ -1703,15 +1703,15 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 - **Removed `N/A`, `unavailable`, `no disponible`** from all UI components
 - **Error states show `Updating...`** instead of error messages
 - **Files modified**: 
-  - `terminal.html` (header stats, performance metrics)
-  - `dashboard.html` (all metric cards)
-  - `utils.js` (formatCurrency, formatPercent fallbacks)
-  - `riskguardian.js` (error state message)
-  - `feargreed.js` (classification fallback)
-  - `snapshots.js` (error messages)
-  - `system.py` (session details fallback)
-  - `market.py` (RSI signal fallback)
-  - `streamlit_app.py` (overview metrics)
+ - `terminal.html` (header stats, performance metrics)
+ - `dashboard.html` (all metric cards)
+ - `utils.js` (formatCurrency, formatPercent fallbacks)
+ - `riskguardian.js` (error state message)
+ - `feargreed.js` (classification fallback)
+ - `snapshots.js` (error messages)
+ - `system.py` (session details fallback)
+ - `market.py` (RSI signal fallback)
+ - `streamlit_app.py` (overview metrics)
 
 **Investor-Safe UI Principle**: Dashboard NEVER shows "data unavailable" - only verified data or silent loading states.
 
@@ -1748,25 +1748,25 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 **Three New Investor-Facing Metrics for Pitch Presentations:**
 
 1. **Sessions Widget** (`/api/system/sessions`):
-   - Shows active PostgreSQL sessions in real-time
-   - Displays SaaS scalability capacity (100,000+ concurrent users)
-   - Backend: `UserSessionManager` integration with fallback to PostgreSQL sessions
-   - Frontend: `omnix_dashboard/static/js/components/sessions.js`
-   - API: `omnix_dashboard/blueprints/system.py` lines 810-849
+ - Shows active PostgreSQL sessions in real-time
+ - Displays SaaS scalability capacity (100,000+ concurrent users)
+ - Backend: `UserSessionManager` integration with fallback to PostgreSQL sessions
+ - Frontend: `omnix_dashboard/static/js/components/sessions.js`
+ - API: `omnix_dashboard/blueprints/system.py` lines 810-849
 
 2. **Equity Comparison Widget** (`/api/system/equity`):
-   - Compares OMNIX performance vs BTC Hold strategy
-   - Calculates **Alpha** (outperformance metric): `OMNIX return % - BTC Hold return %`
-   - Shows cumulative P&L curves for both strategies
-   - Data source: 109 real closed trades from PostgreSQL
-   - Frontend: `omnix_dashboard/static/js/components/equitycomparison.js`
-   - API: `omnix_dashboard/blueprints/system.py` lines 720-806
+ - Compares OMNIX performance vs BTC Hold strategy
+ - Calculates **Alpha** (outperformance metric): `OMNIX return % - BTC Hold return %`
+ - Shows cumulative P&L curves for both strategies
+ - Data source: 109 real closed trades from PostgreSQL
+ - Frontend: `omnix_dashboard/static/js/components/equitycomparison.js`
+ - API: `omnix_dashboard/blueprints/system.py` lines 720-806
 
 3. **Main Driver Badge** (Adaptive Engine Enhancement):
-   - Highlights strategy with ≥80% weight as "Main Driver"
-   - Currently: **Quantum Momentum (85%)** with ANU QRNG description
-   - Modified: `omnix_dashboard/static/js/components/adaptive.js` (+57 lines)
-   - API: Enhanced `/api/system/adaptive` response with `is_main_driver` flag
+ - Highlights strategy with ≥80% weight as "Main Driver"
+ - Currently: **Quantum Momentum (85%)** with ANU QRNG description
+ - Modified: `omnix_dashboard/static/js/components/adaptive.js` (+57 lines)
+ - API: Enhanced `/api/system/adaptive` response with `is_main_driver` flag
 
 **Dashboard Integration Summary:**
 - **14/14 widgets operational** with ~1.5s refresh cycle
@@ -1829,9 +1829,9 @@ Simplificado a **5 inputs principales** + veto/penalty layers:
 - **ELIMINADOS** diccionarios hardcodeados de detección de idioma (código basura)
 - **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
 - **FLUJO AI-First**:
-  - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
-  - Textos cortos (<50 chars): Gemini AI (`gemini-2.5-flash`, temp=0, max_tokens=5)
-  - Fallback: fast-langdetect → langdetect → 'en'
+ - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
+ - Textos cortos (<50 chars): Gemini AI (`gemini-2.5-flash`, temp=0, max_tokens=5)
+ - Fallback: fast-langdetect → langdetect → 'en'
 - **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
 - **RESULTADO**: 12/12 tests pasando (9 cortos + 3 largos)
 - **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
@@ -1912,13 +1912,13 @@ El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está co
 ### Adapters (22)
 
 ```
-ai_gateway_shim          authorization_adapter    cache_adapter
-coherence_adapter        database_adapter         derivatives_adapter
-execution_adapter        gemini_adapter           intent_classification
-kraken_adapter           market_intel_adapter     notification_adapter
-optimization_adapter     portfolio_adapter        risk_adapter
-risk_control_adapter     telegram_adapter         trading_adapter
-voice_adapter            user_session_adapter     blockchain_info_provider
+ai_gateway_shim authorization_adapter cache_adapter
+coherence_adapter database_adapter derivatives_adapter
+execution_adapter gemini_adapter intent_classification
+kraken_adapter market_intel_adapter notification_adapter
+optimization_adapter portfolio_adapter risk_adapter
+risk_control_adapter telegram_adapter trading_adapter
+voice_adapter user_session_adapter blockchain_info_provider
 onchain_adapter
 ```
 
@@ -1928,18 +1928,18 @@ onchain_adapter
 
 ```
 main.py
-    │
-    ├─[TRY]→ src/omnix/bootstrap/main_entry.run_omnix()
-    │            │
-    │            ├─ USE_APP_LAYER = false (default)
-    │            │
-    │            └─ initialize_services_legacy()
-    │                    │
-    │                    ├─ Importa omnix_services/* directamente
-    │                    ├─ NO usa DI Container
-    │                    └─ NO usa adapters V7
-    │
-    └─[CATCH]→ Fallback: EnterpriseTelegramBot() directamente
+ │
+ ├─[TRY]→ src/omnix/bootstrap/main_entry.run_omnix()
+ │ │
+ │ ├─ USE_APP_LAYER = false (default)
+ │ │
+ │ └─ initialize_services_legacy()
+ │ │
+ │ ├─ Importa omnix_services/* directamente
+ │ ├─ NO usa DI Container
+ │ └─ NO usa adapters V7
+ │
+ └─[CATCH]→ Fallback: EnterpriseTelegramBot() directamente
 ```
 
 ---

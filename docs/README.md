@@ -1,8 +1,8 @@
 # OMNIX — Documentación
 
-**Identidad**: Decision Governance Infrastructure for Automated Systems  
-**Actualizado**: 19 de Febrero 2026  
-**Estado**: Producción 24/7 en Railway | Track Record COMPLETADO (30 días) | Fase 1 Operativa  
+**Identidad**: Decision Governance Infrastructure for Automated Systems 
+**Actualizado**: 19 de Febrero 2026 
+**Estado**: Producción 24/7 en Railway | Track Record COMPLETADO (30 días) | Fase 1 Operativa 
 **Versión interna (dev)**: V6.5.4e
 
 ---
@@ -27,28 +27,28 @@ Ver `replit.md` para el checklist completo de prioridades de revisión.
 | [RISK_GUARDIAN_PRODUCT.md](business/investor/RISK_GUARDIAN_PRODUCT.md) | Sistema de riesgo empaquetado como producto | Risk Officers, Due Diligence |
 | [TRACK_RECORD_CASE_STUDY.md](business/investor/TRACK_RECORD_CASE_STUDY.md) | Narrativa: cómo OMNIX protege capital | Prospectos, Pitch Meetings |
 | [PITCH_DECK_OUTLINE.md](business/investor/PITCH_DECK_OUTLINE.md) | Esqueleto de 12 slides para presentación | Pitch Meetings |
-| [OMNIX_PITCH_SCRIPTS.md](business/OMNIX_PITCH_SCRIPTS.md) | Scripts 60s y 90s (EN/ES) con notas de entrega | Eureka Dubai, Elevator, Networking |
+| [OMNIX_PITCH_SCRIPTS.md](business/OMNIX_PITCH_SCRIPTS.md) | Scripts 60s y 90s (EN/ES) con notas de entrega | , Elevator, Networking |
 | [OMNIX_GOVERNANCE_BEHAVIOR_SNAPSHOT.md](business/OMNIX_GOVERNANCE_BEHAVIOR_SNAPSHOT.md) | Evidencia real de gobernanza activa con datos de producción | Pitch, Due Diligence, Auditoría |
 | [INSTITUTIONAL_GOVERNANCE_STRUCTURE.md](business/investor/INSTITUTIONAL_GOVERNANCE_STRUCTURE.md) | Estructura de gobernanza institucional: 3 layers (Human Authority, Control Architecture, Future Expansion) | Due Diligence, Compliance, Board |
 
-**Posicionamiento**: OMNIX = **Decision Governance Infrastructure for Automated Systems** — building the category of Decision Governance Infrastructure.  
+**Posicionamiento**: OMNIX = **Decision Governance Infrastructure for Automated Systems** — building the category of Decision Governance Infrastructure. 
 Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic para expansión multi-vertical.
 
-**Referencia**: [ADR-023](reference/adr/ADR-023-investor-positioning-refinement.md) - Reglas de posicionamiento investor  
-**Referencia**: [ADR-025](reference/adr/ADR-025-decision-governance-platform.md) - Repositioning como Decision Governance Platform  
-**Referencia**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md) - Multi-Vertical Governance Architecture (Domain Adapter Pattern)  
-**Referencia**: [ADR-027](reference/adr/ADR-027-decision-governance-infrastructure.md) - Decision Governance Infrastructure for Automated Systems (Category Creation)  
-**Referencia**: [ADR-028](reference/adr/ADR-028-external-signal-evaluation-api.md) - External Signal Evaluation API — POST /api/governance/evaluate (B2B product endpoint, PQC-signed receipts)  
-**Referencia**: [ADR-029](reference/adr/ADR-029-governance-compliance-modules.md) - Governance Compliance Modules — NIST AI RMF + ISO/IEC 42001 + EU AI Act (5 módulos, 21 endpoints, 7 tablas)  
-**Referencia**: [ADR-030](reference/adr/ADR-030-insurance-domain-pilot.md) - Insurance Domain Pilot — tercer dominio validado con 3 receipts PQC reales (Mar 1, 2026)  
-**Referencia**: [ADR-032](reference/adr/ADR-032-temporal-coherence-validation.md) - Temporal Coherence Validation (TCV) — Checkpoint 7 del trading pipeline. Evalúa admisibilidad temporal de decisiones (Mar 2026). 49 tests pasando.  
-**Referencia**: [ADR-033](reference/adr/ADR-033-signal-integrity-validator.md) - Signal Integrity Validator (SIV) — Checkpoint 0. Data quality gate pre-análisis: freshness + completeness + anomaly + cross-source. 46 tests pasando (Mar 2026).  
-**Referencia**: [ADR-034](reference/adr/ADR-034-forward-trajectory-implication.md) - Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV: Regime Transition Risk + Implied Consistency + Signal Momentum. 45 tests pasando (Mar 2026).  
-**Referencia**: [ADR-035](reference/adr/ADR-035-regime-conditioned-kelly.md) - Regime-Conditioned Kelly (RCK). Kelly inputs segmentados por régimen HMM con 3-level fallback chain. 36 tests pasando (Mar 2026).  
-**Referencia**: [ADR-036](reference/adr/ADR-036-exit-governance-layer.md) - Exit Governance Layer (EGL). 3-gate exit pipeline + PQC-signed exit receipts. Exit governance parity with entry governance. 44 tests pasando (Mar 2026).  
-**Referencia**: [ADR-041](reference/adr/ADR-041-multi-agent-decision-governance.md) - Multi-Agent Decision Governance. 3 agentes especializados (SignalAgent 45%, RiskAgent 30%, SentimentAgent 25%) con consenso ponderado paralelo. Feature flag `ENABLE_MULTI_AGENT_GOVERNANCE`. 19 tests pasando (Mar 2026).  
-**Referencia**: [ADR-042](reference/adr/ADR-042-hybrid-cryptography.md) - Hybrid Cryptography. X25519 (ECDH clásico) + Kyber-768 (PQC KEM) combinados via HKDF. Secreto combinado = HKDF(kyber_secret || ecdh_secret). Degradación grácil: hybrid → kyber_only → ecdh_only. 8 tests pasando (Mar 2026).  
-**Referencia**: [ADR-043](reference/adr/ADR-043-crypto-agility-layer.md) - Crypto-Agility Layer. CryptoProvider interface + registry (dilithium3, dilithium5, ed25519). Swap de algoritmo vía `ACTIVE_SIGNING_PROVIDER` env var sin cambios de código. Backward-compatible. 10 tests pasando (Mar 2026).  
+**Referencia**: [ADR-023](reference/adr/ADR-023-investor-positioning-refinement.md) - Reglas de posicionamiento investor 
+**Referencia**: [ADR-025](reference/adr/ADR-025-decision-governance-platform.md) - Repositioning como Decision Governance Platform 
+**Referencia**: [ADR-026](reference/adr/ADR-026-multi-vertical-governance-architecture.md) - Multi-Vertical Governance Architecture (Domain Adapter Pattern) 
+**Referencia**: [ADR-027](reference/adr/ADR-027-decision-governance-infrastructure.md) - Decision Governance Infrastructure for Automated Systems (Category Creation) 
+**Referencia**: [ADR-028](reference/adr/ADR-028-external-signal-evaluation-api.md) - External Signal Evaluation API — POST /api/governance/evaluate (B2B product endpoint, PQC-signed receipts) 
+**Referencia**: [ADR-029](reference/adr/ADR-029-governance-compliance-modules.md) - Governance Compliance Modules — NIST AI RMF + ISO/IEC 42001 + EU AI Act (5 módulos, 21 endpoints, 7 tablas) 
+**Referencia**: [ADR-030](reference/adr/ADR-030-insurance-domain-pilot.md) - Insurance Domain Pilot — tercer dominio validado con 3 receipts PQC reales (Mar 1, 2026) 
+**Referencia**: [ADR-032](reference/adr/ADR-032-temporal-coherence-validation.md) - Temporal Coherence Validation (TCV) — Checkpoint 7 del trading pipeline. Evalúa admisibilidad temporal de decisiones (Mar 2026). 49 tests pasando. 
+**Referencia**: [ADR-033](reference/adr/ADR-033-signal-integrity-validator.md) - Signal Integrity Validator (SIV) — Checkpoint 0. Data quality gate pre-análisis: freshness + completeness + anomaly + cross-source. 46 tests pasando (Mar 2026). 
+**Referencia**: [ADR-034](reference/adr/ADR-034-forward-trajectory-implication.md) - Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV: Regime Transition Risk + Implied Consistency + Signal Momentum. 45 tests pasando (Mar 2026). 
+**Referencia**: [ADR-035](reference/adr/ADR-035-regime-conditioned-kelly.md) - Regime-Conditioned Kelly (RCK). Kelly inputs segmentados por régimen HMM con 3-level fallback chain. 36 tests pasando (Mar 2026). 
+**Referencia**: [ADR-036](reference/adr/ADR-036-exit-governance-layer.md) - Exit Governance Layer (EGL). 3-gate exit pipeline + PQC-signed exit receipts. Exit governance parity with entry governance. 44 tests pasando (Mar 2026). 
+**Referencia**: [ADR-041](reference/adr/ADR-041-multi-agent-decision-governance.md) - Multi-Agent Decision Governance. 3 agentes especializados (SignalAgent 45%, RiskAgent 30%, SentimentAgent 25%) con consenso ponderado paralelo. Feature flag `ENABLE_MULTI_AGENT_GOVERNANCE`. 19 tests pasando (Mar 2026). 
+**Referencia**: [ADR-042](reference/adr/ADR-042-hybrid-cryptography.md) - Hybrid Cryptography. X25519 (ECDH clásico) + Kyber-768 (PQC KEM) combinados via HKDF. Secreto combinado = HKDF(kyber_secret || ecdh_secret). Degradación grácil: hybrid → kyber_only → ecdh_only. 8 tests pasando (Mar 2026). 
+**Referencia**: [ADR-043](reference/adr/ADR-043-crypto-agility-layer.md) - Crypto-Agility Layer. CryptoProvider interface + registry (dilithium3, dilithium5, ed25519). Swap de algoritmo vía `ACTIVE_SIGNING_PROVIDER` env var sin cambios de código. Backward-compatible. 10 tests pasando (Mar 2026). 
 **Referencia**: [ADR-044](reference/adr/ADR-044-quantum-secure-decision-receipts.md) - Quantum-Secure Decision Receipts. Timestamping RFC 3161-style interno, rolling Merkle root, transparency log (`governance_transparency_log`). Receipts auto-verificables sin infraestructura OMNIX. 18 tests pasando (Mar 2026).
 
 ---
@@ -122,9 +122,9 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ DESPLEGADO - Migración de modelo AI deprecado
 - **PROBLEMA**: Google deprecó `gemini-2.0-flash-exp` (retirement March 31, 2026), causando fallo total de AI ("System busy")
 - **SOLUCIÓN**:
-  - Actualizado TODAS las instancias de `gemini-2.0-flash-exp` → `gemini-2.5-flash` (modelo estable GA)
-  - 6 archivos actualizados: settings.py, ai_models.py, conversational_ai_adapter.py, community_analyzer.py, advanced_intelligence.py, enterprise_bot.py
-  - Cadena de fallback: Gemini 2.5 Flash (primary) → GPT-4o → Claude Sonnet 4
+ - Actualizado TODAS las instancias de `gemini-2.0-flash-exp` → `gemini-2.5-flash` (modelo estable GA)
+ - 6 archivos actualizados: settings.py, ai_models.py, conversational_ai_adapter.py, community_analyzer.py, advanced_intelligence.py, enterprise_bot.py
+ - Cadena de fallback: Gemini 2.5 Flash (primary) → GPT-4o → Claude Sonnet 4
 - **OpenAI Key Validator**: Relajado de `startswith('sk-') and len > 40` a `len > 20` para soportar nuevos formatos
 - **AI Startup Diagnostics**: Log de resumen al inicio mostrando modelos disponibles y cadena de fallback
 
@@ -132,10 +132,10 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ DESPLEGADO - Optimización de velocidad de respuesta AI
 - **PROBLEMA**: Timeout de OpenAI a 15s causando respuestas incompletas
 - **SOLUCIÓN**:
-  - Timeout aumentado a 30s (OpenAI, Gemini, Anthropic)
-  - GPT-4o-mini fast path para consultas simples (3x más rápido)
-  - Selección inteligente: simples → 4o-mini, complejas → 4o
-  - Validación relajada para respuestas cortas (10 chars vs 50)
+ - Timeout aumentado a 30s (OpenAI, Gemini, Anthropic)
+ - GPT-4o-mini fast path para consultas simples (3x más rápido)
+ - Selección inteligente: simples → 4o-mini, complejas → 4o
+ - Validación relajada para respuestas cortas (10 chars vs 50)
 - **DOCUMENTACIÓN**: [2026-01-30-ai-speed-optimization.md](history/2026-01/2026-01-30-ai-speed-optimization.md)
 
 ### ECW Calibration v1.1 (Jan 29, 2026)
@@ -148,39 +148,39 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ OPERATIVO - Landing page institucional en Puerto 5000
 - **STACK**: React 18 + TypeScript + Vite + Tailwind CSS
 - **CARACTERÍSTICAS**:
-  - Hero con estadísticas animadas (Cycles, Vetos, Capital Preserved)
-  - Visualización 4-Layer Validation Architecture
-  - Track Record Transparency (Learning Baseline vs Official)
-  - Live Market Data (CoinGecko, Alternative.me)
-  - Risk Calculator tool
-  - Pricing: B2C SaaS ($49-$499/mo) + B2B Enterprise ($10K-$100K+)
-  - Certifications: NIST FIPS 203/204 (Implemented), ADGM (Target), Sharia (In Development)
+ - Hero con estadísticas animadas (Cycles, Vetos, Capital Preserved)
+ - Visualización 4-Layer Validation Architecture
+ - Track Record Transparency (Learning Baseline vs Official)
+ - Live Market Data (CoinGecko, Alternative.me)
+ - Risk Calculator tool
+ - Pricing: B2C SaaS ($49-$499/mo) + B2B Enterprise ($10K-$100K+)
+ - Certifications: NIST FIPS 203/204 (Implemented), ADGM (Target), Sharia (In Development)
 - **DOCUMENTACIÓN**:
-  - [WEB_INFRASTRUCTURE.md](current/WEB_INFRASTRUCTURE.md) - Arquitectura multi-puerto
-  - [omnix_web/README.md](../omnix_web/README.md) - Documentación técnica
+ - [WEB_INFRASTRUCTURE.md](current/WEB_INFRASTRUCTURE.md) - Arquitectura multi-puerto
+ - [omnix_web/README.md](../omnix_web/README.md) - Documentación técnica
 
 ### Shadow Portfolio Runner Activado (Jan 27, 2026)
 - **ESTADO**: ✅ ACTIVADO - Análisis contrafactual operativo
 - **PROPÓSITO**: Validar que los vetos del sistema fueron correctos usando precios históricos reales
 - **TABLAS**:
-  - `shadow_trade_events`: 670,000+ eventos capturados
-  - `shadow_trade_outcomes`: 50+ procesados (100% accuracy)
+ - `shadow_trade_events`: 670,000+ eventos capturados
+ - `shadow_trade_outcomes`: 50+ procesados (100% accuracy)
 - **FIX APLICADO**: Timezone bug (`datetime.utcnow()` → `datetime.now(timezone.utc)`)
 - **EJECUCIÓN**: `python -m omnix_services.database_service.shadow_portfolio_runner --max-events 500`
 - **RUNBOOKS**:
-  - [RUNBOOK_SHADOW_PORTFOLIO.md](operations/RUNBOOK_SHADOW_PORTFOLIO.md) - Operación del runner
-  - [RAILWAY_SHADOW_PORTFOLIO_CRON.md](operations/RAILWAY_SHADOW_PORTFOLIO_CRON.md) - Configuración cron Railway
+ - [RUNBOOK_SHADOW_PORTFOLIO.md](operations/RUNBOOK_SHADOW_PORTFOLIO.md) - Operación del runner
+ - [RAILWAY_SHADOW_PORTFOLIO_CRON.md](operations/RAILWAY_SHADOW_PORTFOLIO_CRON.md) - Configuración cron Railway
 - **RESULTADOS INICIALES**:
-  - BLACK_SWAN vetos: 100% accuracy
-  - COHERENCE_GATE vetos: 100% accuracy
-  - Total validados: 50/50 correctos
+ - BLACK_SWAN vetos: 100% accuracy
+ - COHERENCE_GATE vetos: 100% accuracy
+ - Total validados: 50/50 correctos
 
 ### ADR-022: Post-Quantum Cryptography Status (Jan 23, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - PQC operativo desde Nov 2025
 - **CRÍTICO**: PQC YA ESTÁ IMPLEMENTADO - NO es roadmap. La IA no debe decir "PQC planificado para Q3 2026"
 - **ALGORITMOS**:
-  - Kyber-768 (ML-KEM-768) - NIST FIPS 203 - Encriptación
-  - Dilithium-3 (ML-DSA-65) - NIST FIPS 204 - Firmas digitales
+ - Kyber-768 (ML-KEM-768) - NIST FIPS 203 - Encriptación
+ - Dilithium-3 (ML-DSA-65) - NIST FIPS 204 - Firmas digitales
 - **INTEGRACIÓN**: Órdenes de trading firmadas con Dilithium-3 antes de ejecución
 - **NIVEL SEGURIDAD**: NIST Level 3 (~192-bit classical security)
 - **ARCHIVOS**: `omnix_core/security/pqc_security.py`, `omnix_config/system_state_manifest.json`
@@ -190,29 +190,29 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ IMPLEMENTADO - VIEW SQL para parsing de decision_trace + Dashboard
 - **PROBLEMA**: Análisis retroactivo de DCI requería extraer métricas de decision_trace JSONB
 - **SOLUCIÓN**: VIEW `v_shadow_trade_metrics` con regex parsing:
-  - `mc_win_rate`: Monte Carlo Win Rate %
-  - `mc_expected_return`: Monte Carlo Expected Return %
-  - `coherence_score`: Coherence Engine Score %
-  - `ecw_cycles`: ECW cycles (0-3)
-  - `ecw_status`: WAITING / OPEN
-  - `black_swan_severity`: LOW / MEDIUM / HIGH / EXTREME
-  - `approx_dci`: DCI aproximado (0-100)
+ - `mc_win_rate`: Monte Carlo Win Rate %
+ - `mc_expected_return`: Monte Carlo Expected Return %
+ - `coherence_score`: Coherence Engine Score %
+ - `ecw_cycles`: ECW cycles (0-3)
+ - `ecw_status`: WAITING / OPEN
+ - `black_swan_severity`: LOW / MEDIUM / HIGH / EXTREME
+ - `approx_dci`: DCI aproximado (0-100)
 - **DISEÑO**: VIEW (no tabla física) - zero risk, 100% reversible
 - **DATOS**: 76,910+ eventos parseados desde Jan 15, 2026
 - **DASHBOARD**: Nueva página "Shadow Analytics" en Streamlit con:
-  - Block A: 4 KPIs (Total Events, Avg WR, Avg Coherence, % ECW Blocked)
-  - Block B: Charts (WR histogram, Coherence by Symbol, Coherence vs DCI scatter)
-  - Block C: Governance tables (ECW waiting, Low coherence, Top vetos)
-  - Disclaimer institucional sobre data source
+ - Block A: 4 KPIs (Total Events, Avg WR, Avg Coherence, % ECW Blocked)
+ - Block B: Charts (WR histogram, Coherence by Symbol, Coherence vs DCI scatter)
+ - Block C: Governance tables (ECW waiting, Low coherence, Top vetos)
+ - Disclaimer institucional sobre data source
 - **REFERENCIA**: `docs/reference/adr/ADR-021-shadow-trade-metrics-view.md`
 
 ### ADR-020: Institutional Response Quality Standards (Jan 21, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO - Filtros de calidad para respuestas de inversores
 - **PROBLEMA**: Respuesta de bot incluía cifras infladas ($82M), umbrales irreales (WR 60%), lenguaje arbitrario ("ignorar módulos")
 - **SOLUCIÓN**: Sistema multi-capa de calidad de respuestas:
-  - **Layer 1 - Post-Processing**: Blacklist de cifras infladas, reemplazos de lenguaje institucional
-  - **Layer 2 - Prompt Rules**: RULE 15 con umbrales realistas (ADR-018) y criterio ECW (ADR-019)
-  - **Layer 3 - Prohibiciones**: "Es difícil cuantificar" bloqueado, fórmula explícita requerida
+ - **Layer 1 - Post-Processing**: Blacklist de cifras infladas, reemplazos de lenguaje institucional
+ - **Layer 2 - Prompt Rules**: RULE 15 con umbrales realistas (ADR-018) y criterio ECW (ADR-019)
+ - **Layer 3 - Prohibiciones**: "Es difícil cuantificar" bloqueado, fórmula explícita requerida
 - **UMBRALES REALISTAS**: WR ≥52%, ER >0%, DCI <70, Black Swan ≤MEDIUM, 3 ciclos consecutivos
 - **FÓRMULA**: `Pérdida Evitada = Position_Size × max(VaR95, Historical_Avg_Loss)`
 - **ARCHIVOS**: `omnix_services/ai_service/conversational_ai_adapter.py`, `prompt_templates.py`
@@ -230,10 +230,10 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ IMPLEMENTADO - Shadow metric observacional
 - **PROBLEMA**: Inversores preguntaban "si había señal BUY fuerte, ¿por qué no entró?"
 - **SOLUCIÓN**: DCI mide contradicción interna entre señales locales y edge global:
-  - Local Signal Strength (0-40 pts): promedio Non-Markovian + EMA
-  - Global Edge Penalty (0-30 pts): inverso de calidad MC_ER/WR
-  - Regime Penalty (0-15 pts): VOLATILE/RANGING penalizado
-  - Risk Overlay (0-15 pts): severidad Black Swan
+ - Local Signal Strength (0-40 pts): promedio Non-Markovian + EMA
+ - Global Edge Penalty (0-30 pts): inverso de calidad MC_ER/WR
+ - Regime Penalty (0-15 pts): VOLATILE/RANGING penalizado
+ - Risk Overlay (0-15 pts): severidad Black Swan
 - **OUTPUT**: Score 0-100, Niveles: ALIGNED (<35) / TENSIONED (35-69) / CONTRADICTORY (≥70)
 - **MODO**: Shadow only - NO afecta decisiones de trading
 - **VALIDACIÓN**: Day 9 análisis de correlación con win rate
@@ -256,11 +256,11 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ IMPLEMENTADO - Basic Auth + Rate Limiting + Security Headers
 - **PROBLEMA**: Dashboard sin autenticación (calificación C+ en auditoría de seguridad)
 - **SOLUCIÓN**: Middleware de seguridad centralizado:
-  - Basic HTTP Authentication con env vars (DASHBOARD_USER, DASHBOARD_PASSWORD)
-  - Rate limiting por IP (60 req/min configurable via DASHBOARD_RATE_LIMIT)
-  - IP allowlist opcional (DASHBOARD_IP_ALLOWLIST)
-  - Security headers (X-Content-Type-Options, X-Frame-Options, etc.)
-  - Endpoints exentos: /api/health, /static/*, /favicon.ico
+ - Basic HTTP Authentication con env vars (DASHBOARD_USER, DASHBOARD_PASSWORD)
+ - Rate limiting por IP (60 req/min configurable via DASHBOARD_RATE_LIMIT)
+ - IP allowlist opcional (DASHBOARD_IP_ALLOWLIST)
+ - Security headers (X-Content-Type-Options, X-Frame-Options, etc.)
+ - Endpoints exentos: /api/health, /static/*, /favicon.ico
 - **ARCHIVOS**: `omnix_dashboard/utils/auth.py`, `omnix_dashboard/app.py`
 - **REFERENCIA**: `docs/reference/adr/ADR-015-dashboard-security.md`
 
@@ -268,17 +268,17 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ IMPLEMENTADO - Mejoras TYPE_C basadas en feedback de inversores
 - **PROBLEMA**: Respuestas sobre proveedores calificadas 7/10 por inversores sofisticados
 - **GAPS IDENTIFICADOS**:
-  - Fallos silenciosos no cubiertos (timeouts ≠ datos corruptos)
-  - Cross-validation sin umbrales concretos
-  - Single-tenant no resuelve fuentes compartidas corruptas
-  - Falta transparencia sobre limitaciones residuales
+ - Fallos silenciosos no cubiertos (timeouts ≠ datos corruptos)
+ - Cross-validation sin umbrales concretos
+ - Single-tenant no resuelve fuentes compartidas corruptas
+ - Falta transparencia sobre limitaciones residuales
 - **SOLUCIÓN**: TYPE_C override mejorado con:
-  - Validación de timestamps (>60s = stale data)
-  - Cross-validation con umbrales (>3% discrepancia = pausa)
-  - Sanity checks de volumen (10x promedio = anomalía)
-  - Honestidad sobre limitación single-tenant
-  - Riesgo residual + fail-closed + intervención humana
-  - Roadmap: oráculos blockchain (Chainlink, Band Protocol)
+ - Validación de timestamps (>60s = stale data)
+ - Cross-validation con umbrales (>3% discrepancia = pausa)
+ - Sanity checks de volumen (10x promedio = anomalía)
+ - Honestidad sobre limitación single-tenant
+ - Riesgo residual + fail-closed + intervención humana
+ - Roadmap: oráculos blockchain (Chainlink, Band Protocol)
 - **SCORE ESPERADO**: 7/10 → 9/10
 - **REFERENCIA**: `docs/reference/adr/ADR-014-provider-resilience-enhancement.md`
 
@@ -286,10 +286,10 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ IMPLEMENTADO - Routing determinístico de preguntas sistémicas
 - **PROBLEMA**: Bot usaba misma apertura ("no genera señales sincronizadas") para TODAS las preguntas sistémicas
 - **SOLUCIÓN**: Clasificador determinístico con 4 tipos de riesgo sistémico:
-  - **TYPE_A (Coordination)**: Señales sincronizadas, venta masiva → "OMNIX no genera señales sincronizadas..."
-  - **TYPE_B (Software)**: Defectos de código, bugs, despliegue → "OMNIX implementa múltiples capas de defensa..."
-  - **TYPE_C (Dependencies)**: Proveedores, APIs, datos → "OMNIX valida cada fuente de datos..."
-  - **TYPE_D (Governance)**: Reguladores, compliance, auditorías → "Desde perspectiva de gobernanza..."
+ - **TYPE_A (Coordination)**: Señales sincronizadas, venta masiva → "OMNIX no genera señales sincronizadas..."
+ - **TYPE_B (Software)**: Defectos de código, bugs, despliegue → "OMNIX implementa múltiples capas de defensa..."
+ - **TYPE_C (Dependencies)**: Proveedores, APIs, datos → "OMNIX valida cada fuente de datos..."
+ - **TYPE_D (Governance)**: Reguladores, compliance, auditorías → "Desde perspectiva de gobernanza..."
 - **PRIORIDAD**: A > D > C > B (para preguntas que coinciden con múltiples tipos)
 - **TESTS**: 23 tests en `tests/test_systemic_router.py`
 - **REFERENCIA**: `docs/reference/adr/ADR-013-systemic-framing-router.md`
@@ -308,9 +308,9 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ IMPLEMENTADO - Data Quality corregido
 - **PROBLEMA**: 119 trades sin coherence_score ni hmm_regime (pre-telemetría)
 - **SOLUCIÓN**:
-  - Track A: Backfill estimado basado en profit_pct/profit_loss
-  - Track B: Columna `telemetry_source` (LEGACY_ESTIMATED vs REAL)
-  - Track C: Métrica segmentada en Health Score
+ - Track A: Backfill estimado basado en profit_pct/profit_loss
+ - Track B: Columna `telemetry_source` (LEGACY_ESTIMATED vs REAL)
+ - Track C: Métrica segmentada en Health Score
 - **RESULTADO**: Data Quality 25% → 100% (con telemetría estimada marcada)
 - **REFERENCIA**: `docs/reference/adr/ADR-011-legacy-telemetry-backfill.md`
 
@@ -318,8 +318,8 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ IMPLEMENTADO - Métricas unificadas
 - **PROBLEMA**: Inconsistencia entre "$1.2B Protected" vs "$267K Avoided"
 - **SOLUCIÓN**: Sistema de dos métricas:
-  - Primaria: "Est. Loss Avoided*" = Notional × 0.6%
-  - Secundaria: "Notional Blocked" (transparencia)
+ - Primaria: "Est. Loss Avoided*" = Notional × 0.6%
+ - Secundaria: "Notional Blocked" (transparencia)
 - **WIDGETS ACTUALIZADOS**: quarantine.js, learninginsights.js, regimedetection.js, streamlit_app.py
 - **REFERENCIA**: `docs/reference/adr/ADR-010-capital-protection-metric-standard.md`
 
@@ -327,9 +327,9 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: ✅ ADOPTADO - Framework de validación Day 30
 - **PROPÓSITO**: Documentar oportunidades perdidas vs pérdidas evitadas sin cambiar thresholds
 - **MÉTRICAS**:
-  - Missed Opportunities: Trades bloqueados con buenas condiciones (Coh >50%, RANGING)
-  - Losses Avoided: Trades correctamente bloqueados (Coh <30%, VOLATILE)
-  - Net Opportunity: Balance diario para decisión data-driven
+ - Missed Opportunities: Trades bloqueados con buenas condiciones (Coh >50%, RANGING)
+ - Losses Avoided: Trades correctamente bloqueados (Coh <30%, VOLATILE)
+ - Net Opportunity: Balance diario para decisión data-driven
 - **CRITERIO DAY 30**: Si missed > 20 AND profit > $3K → Test threshold 35%
 - **FECHA REVISIÓN**: 13 de Febrero 2026
 - **REFERENCIA**: `docs/reference/adr/ADR-008-opportunity-tracker.md`
@@ -339,8 +339,8 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **DIAGNÓSTICO**: Sistema sobre-protector bloqueando 48,937 trades en 7 días ($978.7M bloqueados)
 - **CAUSA RAÍZ**: COHERENCE_GATE promedio 26.3% coherencia, BLACK_SWAN bloqueando 21,402 señales
 - **SOLUCIÓN Phase 1**: Reducción de 5 puntos en umbrales adaptativos
-  - LOW: 35% → 30%, MEDIUM: 45% → 40%, HIGH: 55% → 50%, EXTREME: 65% → 60%
-  - EMA trigger: 25 → 20 puntos
+ - LOW: 35% → 30%, MEDIUM: 45% → 40%, HIGH: 55% → 50%, EXTREME: 65% → 60%
+ - EMA trigger: 25 → 20 puntos
 - **IMPACTO ESPERADO**: Tasa de veto -15-20%, Win rate 37.8% → 42-45%
 - **GUARDRAIL**: Rollback si drawdown > 3% en 48h
 - **REFERENCIA**: `docs/reference/adr/ADR-007-coherence-threshold-calibration.md`
@@ -349,40 +349,40 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ESTADO**: Documentado, pendiente implementación
 - **ANÁLISIS EXTERNO**: Dashboard evaluado en 7.5/10, objetivo 9.5/10
 - **BUGS CRÍTICOS IDENTIFICADOS**:
-  - WR Dir muestra 0.0% en Trade History (debería ser 37.8%)
-  - Fee Eroded muestra 0 (debería ser 21)
-  - "Protected" es métrica engañosa (renombrar a "Notional Blocked")
+ - WR Dir muestra 0.0% en Trade History (debería ser 37.8%)
+ - Fee Eroded muestra 0 (debería ser 21)
+ - "Protected" es métrica engañosa (renombrar a "Notional Blocked")
 - **MEJORAS UX PROPUESTAS**:
-  - System Health Score (indicador visual 0-100)
-  - Live Status (qué hace el sistema ahora)
-  - Quick Insights (insights auto-generados)
-  - Calibration Progress (barra de progreso)
+ - System Health Score (indicador visual 0-100)
+ - Live Status (qué hace el sistema ahora)
+ - Quick Insights (insights auto-generados)
+ - Calibration Progress (barra de progreso)
 - **DOCUMENTACIÓN**:
-  - ADR: `docs/reference/adr/ADR-006-dashboard-improvement-proposals.md`
-  - Backlog: `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
-  - Auditoría: `docs/compliance/audits/DASHBOARD_UX_AUDIT_JAN13_2026.md`
+ - ADR: `docs/reference/adr/ADR-006-dashboard-improvement-proposals.md`
+ - Backlog: `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md`
+ - Auditoría: `docs/compliance/audits/DASHBOARD_UX_AUDIT_JAN13_2026.md`
 
 ### ADR-004: Position Sizing Hotfix (Jan 12, 2026)
 - **ESTADO**: ✅ IMPLEMENTADO (27 tests pasados)
 - **PROBLEMA DETECTADO**: Kelly operaba con max_position=20% ($62,500), cayendo en rango de trades que pierden
 - **EVIDENCIA EMPÍRICA**:
-  - Trades <$1K: **55.56% WR** → RENTABLES
-  - Trades >$10K: **31% WR** → PIERDEN
+ - Trades <$1K: **55.56% WR** → RENTABLES
+ - Trades >$10K: **31% WR** → PIERDEN
 - **HOTFIXES PROPUESTOS**:
-  - Kelly max_position: 20% → **2%** ($62,500 → $20,000)
-  - Position Hard Cap: **$20,000** máximo por trade
-  - Spread mínimo: 5 bps → 25 bps
+ - Kelly max_position: 20% → **2%** ($62,500 → $20,000)
+ - Position Hard Cap: **$20,000** máximo por trade
+ - Spread mínimo: 5 bps → 25 bps
 - **REFERENCIA**: `docs/reference/adr/ADR-004-position-sizing-hotfix.md`
 
 ### Dual Win Rate Framework - Dashboard UI Update (Jan 12, 2026)
 - **INVESTIGACIÓN**: Descubierto que 21 trades ganaron en dirección pero perdieron por fees de Kraken (~0.26%)
 - **DOS MÉTRICAS**:
-  - **Precisión (37.82%)**: % de trades donde el precio se movió en la dirección predicha (pnl_percent > 0)
-  - **Rentable (20.17%)**: % de trades rentables después de comisiones (profit_loss > 0)
+ - **Precisión (37.82%)**: % de trades donde el precio se movió en la dirección predicha (pnl_percent > 0)
+ - **Rentable (20.17%)**: % de trades rentables después de comisiones (profit_loss > 0)
 - **UI ACTUALIZADA**:
-  - Terminal Header: Muestra "Precisión" y "Rentable" con tooltips explicativos en español
-  - Trade History Widget: Muestra ambos win rates + contador de "Fee Eroded" trades
-  - Streamlit Overview: 5 columnas con ambas métricas y tooltips explicativos
+ - Terminal Header: Muestra "Precisión" y "Rentable" con tooltips explicativos en español
+ - Trade History Widget: Muestra ambos win rates + contador de "Fee Eroded" trades
+ - Streamlit Overview: 5 columnas con ambas métricas y tooltips explicativos
 - **FEE EROSION**: 21 trades identificados que acertaron dirección pero perdieron a fees
 - **MITIGACIÓN**: Cap de $1,000 implementado para reducir impacto de fees en trades pequeños
 - **ALINEACIÓN ADR-002**: Ambas métricas visibles con contexto claro (Honest Framing)
@@ -392,8 +392,8 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **ADR-003**: OMNIX officially positioned as "Decision Governance Infrastructure for Automated Systems" (updated by ADR-027)
 - **NEW DOCUMENT**: `docs/reference/omnix_official_language.md` - Complete language guide
 - **TWO RESPONSE MODES**: 
-  - Mode 1 (Positioning): Lead with architecture/preservation for general inquiries
-  - Mode 2 (Honest Metrics): Show all data when specifically asked
+ - Mode 1 (Positioning): Lead with architecture/preservation for general inquiries
+ - Mode 2 (Honest Metrics): Show all data when specifically asked
 - **KPI HIERARCHY**: Capital Preservation > Risk Events Blocked > System Integrity > Win Rate
 - **Combined with ADR-002**: Honest Framing ensures transparency when metrics requested
 
@@ -423,12 +423,12 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 - **SHADOW PORTFOLIO COMPLETE**: Sistema de análisis contrafactual de trades bloqueados
 - **CRON JOB**: `scripts/operations/run_shadow_portfolio.sh` para Railway (05:00 UTC diario)
 - **DASHBOARD WIDGET**: Nueva pestaña "Shadow Portfolio" en Streamlit con:
-  - Accuracy por tipo de veto (gráfico de barras)
-  - Top missed opportunities (trades rentables bloqueados)
-  - Recomendaciones de calibración de filtros
+ - Accuracy por tipo de veto (gráfico de barras)
+ - Top missed opportunities (trades rentables bloqueados)
+ - Recomendaciones de calibración de filtros
 - **RUNBOOKS ACTUALIZADOS (Jan 27, 2026)**:
-  - [RUNBOOK_SHADOW_PORTFOLIO.md](operations/RUNBOOK_SHADOW_PORTFOLIO.md) - Operación completa
-  - [RAILWAY_SHADOW_PORTFOLIO_CRON.md](operations/RAILWAY_SHADOW_PORTFOLIO_CRON.md) - Cron job Railway
+ - [RUNBOOK_SHADOW_PORTFOLIO.md](operations/RUNBOOK_SHADOW_PORTFOLIO.md) - Operación completa
+ - [RAILWAY_SHADOW_PORTFOLIO_CRON.md](operations/RAILWAY_SHADOW_PORTFOLIO_CRON.md) - Cron job Railway
 - Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para detalles
 
 ### Veto Tracking System + psycopg v3 Fix (Jan 7, 2026)
@@ -447,8 +447,8 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 ### Type Safety Hotfix - Coherence Engine (Dec 30, 2025)
 - **ERROR CORREGIDO**: `">= not supported between instances of 'str' and 'int'"` en Coherence Gate
 - **NUEVAS FUNCIONES**:
-  - `normalize_signal()` - Convierte strings "BUY"/"SELL" a Enum Signal
-  - `normalize_strategy_signal()` - Normaliza StrategySignal completo (signal→Enum, confidence→float)
+ - `normalize_signal()` - Convierte strings "BUY"/"SELL" a Enum Signal
+ - `normalize_strategy_signal()` - Normaliza StrategySignal completo (signal→Enum, confidence→float)
 - **BLINDAJE safe_float()** en todas las comparaciones >= de CoherenceEngine
 - **16 tests nuevos** en `tests/test_coherence_type_safety.py`
 - **Total tests Dec 30**: 43 (27 críticos + 16 type safety)
@@ -456,11 +456,11 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 
 ### Critical Audit Fixes + ENV Control (Dec 30, 2025)
 - **AUDITORÍA CRÍTICA COMPLETADA**: 4 fixes de seguridad implementados
-  - Coherence Gate ahora FAIL-CLOSED (excepciones → BLOCKED)
-  - MC Veto semántica corregida: ER<0% → BLOCKED, WR<50% → SIZE_REDUCE
-  - DecisionPayload extendido con campos de auditoría
+ - Coherence Gate ahora FAIL-CLOSED (excepciones → BLOCKED)
+ - MC Veto semántica corregida: ER<0% → BLOCKED, WR<50% → SIZE_REDUCE
+ - DecisionPayload extendido con campos de auditoría
 - **TRACK_RECORD_MODE controlado por ENV** (default=false)
-  - Rollback sin redeploy: `TRACK_RECORD_MODE=true` en Railway Variables
+ - Rollback sin redeploy: `TRACK_RECORD_MODE=true` en Railway Variables
 - **27/27 tests pasando** incluyendo verificación de código fuente
 - **Campos de auditoría** en cada decisión: `track_record_mode`, `low_vol_mode`
 - Ver [REAL_SYSTEM_STATUS.md](REAL_SYSTEM_STATUS.md) para detalles completos
@@ -558,37 +558,37 @@ Primer vertical validado: Digital Asset Trading. Arquitectura domain-agnostic pa
 
 ```
 docs/
-├── README.md                 <- Este archivo (índice)
-├── REAL_SYSTEM_STATUS.md     <- Estado REAL de producción (fuente de verdad)
-├── MIGRATION_STATUS.md       <- Estado V7.0 consolidado (arquitectura)
+├── README.md <- Este archivo (índice)
+├── REAL_SYSTEM_STATUS.md <- Estado REAL de producción (fuente de verdad)
+├── MIGRATION_STATUS.md <- Estado V7.0 consolidado (arquitectura)
 │
-├── current/                  <- Documentos "vivos" (estado actual)
-│   ├── HEXAGONAL_MIGRATION_STATUS.md  <- Ports/Adapters detallado
-│   ├── COMPLETE_FUNCTIONALITY_MAP.md  <- Referencia sistema legacy
-│   ├── TECHNICAL_DEBT.md              <- Issues conocidos
-│   ├── TRADING_OPERATIONS.md          <- Operaciones de trading
-│   ├── MULTI_USER_ARCHITECTURE.md     <- Auditoría multi-tenant
-│   └── WEB_INFRASTRUCTURE.md          <- Arquitectura multi-puerto (Jan 28)
+├── current/ <- Documentos "vivos" (estado actual)
+│ ├── HEXAGONAL_MIGRATION_STATUS.md <- Ports/Adapters detallado
+│ ├── COMPLETE_FUNCTIONALITY_MAP.md <- Referencia sistema legacy
+│ ├── TECHNICAL_DEBT.md <- Issues conocidos
+│ ├── TRADING_OPERATIONS.md <- Operaciones de trading
+│ ├── MULTI_USER_ARCHITECTURE.md <- Auditoría multi-tenant
+│ └── WEB_INFRASTRUCTURE.md <- Arquitectura multi-puerto (Jan 28)
 │
-├── operations/               <- Runbooks y guías operativas
-│   ├── DEPLOYMENT.md
-│   ├── RUNBOOK_*_ACTIVATION.md        <- Runbooks por port
-│   └── CONFIGURACION_OPTIMIZADA.md
+├── operations/ <- Runbooks y guías operativas
+│ ├── DEPLOYMENT.md
+│ ├── RUNBOOK_*_ACTIVATION.md <- Runbooks por port
+│ └── CONFIGURACION_OPTIMIZADA.md
 │
-├── reference/                <- Referencia técnica estática
-│   ├── TRACEABILITY_MATRIX.md
-│   └── adr/                           <- Architecture Decision Records
+├── reference/ <- Referencia técnica estática
+│ ├── TRACEABILITY_MATRIX.md
+│ └── adr/ <- Architecture Decision Records
 │
-├── business/                 <- Documentos de negocio
-│   ├── EXECUTIVE_FACT_SHEET.md        <- Day 1 oficial (institucional)
-│   └── investor/                      <- Pitch deck, proyecciones
+├── business/ <- Documentos de negocio
+│ ├── EXECUTIVE_FACT_SHEET.md <- Day 1 oficial (institucional)
+│ └── investor/ <- Pitch deck, proyecciones
 │
-├── compliance/               <- Auditorías (solo actuales)
-│   └── audits/
+├── compliance/ <- Auditorías (solo actuales)
+│ └── audits/
 │
-└── history/                  <- Archivo histórico (congelado)
-    ├── 2025-11/                       <- Noviembre 2025
-    └── 2025-12/                       <- Diciembre 2025
+└── history/ <- Archivo histórico (congelado)
+ ├── 2025-11/ <- Noviembre 2025
+ └── 2025-12/ <- Diciembre 2025
 ```
 
 ---
@@ -597,33 +597,33 @@ docs/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    OMNIX — Decision Governance Infrastructure     │
+│ OMNIX — Decision Governance Infrastructure │
 ├─────────────────────────────────────────────────────────────────┤
-│  PRODUCCIÓN (Railway)                                            │
-│  ├── 100% código legacy operando 24/7                           │
-│  ├── 0% arquitectura hexagonal activa                           │
-│  └── Feature flags: TODOS en false                              │
+│ PRODUCCIÓN (Railway) │
+│ ├── 100% código legacy operando 24/7 │
+│ ├── 0% arquitectura hexagonal activa │
+│ └── Feature flags: TODOS en false │
 ├─────────────────────────────────────────────────────────────────┤
-│  ARQUITECTURA V7.0 (Implementada, no activa)                    │
-│  ├── 17 Driven Ports + 3 Driver Ports = 20 ports                │
-│  ├── 22 Adapters implementados                                  │
-│  ├── 164 tests totales (10 críticos en CI workflow)             │
-│  └── Patrón: Strangler Fig (activación gradual)                 │
+│ ARQUITECTURA V7.0 (Implementada, no activa) │
+│ ├── 17 Driven Ports + 3 Driver Ports = 20 ports │
+│ ├── 22 Adapters implementados │
+│ ├── 164 tests totales (10 críticos en CI workflow) │
+│ └── Patrón: Strangler Fig (activación gradual) │
 ├─────────────────────────────────────────────────────────────────┤
-│  INTERFACES                                                      │
-│  ├── Telegram Bot (enterprise_bot.py)                           │
-│  ├── Flask Dashboard (puerto 5000)                              │
-│  └── Streamlit Dashboard (puerto 8080)                          │
+│ INTERFACES │
+│ ├── Telegram Bot (enterprise_bot.py) │
+│ ├── Flask Dashboard (puerto 5000) │
+│ └── Streamlit Dashboard (puerto 8080) │
 ├─────────────────────────────────────────────────────────────────┤
-│  DATA LAYER                                                      │
-│  ├── PostgreSQL (42+ tablas)                                    │
-│  ├── Redis (cache + estado)                                     │
-│  └── DatabaseGateway (connection pool)                          │
+│ DATA LAYER │
+│ ├── PostgreSQL (42+ tablas) │
+│ ├── Redis (cache + estado) │
+│ └── DatabaseGateway (connection pool) │
 ├─────────────────────────────────────────────────────────────────┤
-│  EXTERNAL APIs                                                   │
-│  ├── Kraken (crypto)                                            │
-│  ├── Gemini 2.0 Flash (AI)                                      │
-│  └── Tavily (web search)                                        │
+│ EXTERNAL APIs │
+│ ├── Kraken (crypto) │
+│ ├── Gemini 2.0 Flash (AI) │
+│ └── Tavily (web search) │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

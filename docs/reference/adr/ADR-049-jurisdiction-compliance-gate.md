@@ -1,9 +1,9 @@
 # ADR-049: Jurisdiction Compliance Gate (CP-11)
 
-**Status:** IMPLEMENTED  
-**Date:** March 25, 2026  
-**Implemented:** March 29, 2026  
-**Author:** Harold Nunes  
+**Status:** IMPLEMENTED 
+**Date:** March 25, 2026 
+**Implemented:** March 29, 2026 
+**Author:** Harold Nunes 
 **Module:** `omnix_core/governance/jurisdiction_gate.py`
 
 ---
@@ -78,14 +78,14 @@ CP-8 (ECW) → CP-9 (AML) → CP-10 (Fraud) → CP-11 (Jurisdiction Gate) ← NE
 
 ```json
 {
-  "jurisdiction_compliance": {
-    "check": "enabled",
-    "result": "passed|failed|skipped",
-    "jurisdiction": "UAE",
-    "compliance_score": 100.0,
-    "violation": "",
-    "asset": "BTC/USD"
-  }
+ "jurisdiction_compliance": {
+ "check": "enabled",
+ "result": "passed|failed|skipped",
+ "jurisdiction": "UAE",
+ "compliance_score": 100.0,
+ "violation": "",
+ "asset": "BTC/USD"
+ }
 }
 ```
 
@@ -109,7 +109,7 @@ Result: XMR, ZEC, DASH, GRIN, BEAM, FIRO will be blocked. Leveraged and derivati
 
 ### Positive
 - OMNIX can credibly claim jurisdiction-aware governance infrastructure — no competitor has this
-- UAE + GCC configuration directly supports the Eureka Dubai pitch narrative
+- UAE + GCC configuration directly supports the pitch narrative
 - Jurisdictional compliance receipts can be presented to regulators without additional documentation
 - Extensible: new jurisdictions can be added by updating the `JURISDICTION_RULES` dict
 

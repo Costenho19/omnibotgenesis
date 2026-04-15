@@ -169,9 +169,6 @@ export default function PitchDeck() {
             Harold Nunes · Founder · contacto@omnixquantum.net
           </div>
           <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8 }}>
-            <span className="tag" style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.25)', color: '#facc15' }}>
-              ⭐ Eureka GCC Dubai 2026 Semifinalist
-            </span>
           </div>
           <button onClick={() => scrollTo('problem')} style={{
             marginTop: 40, background: 'none', border: '1px solid rgba(201,162,39,0.3)',
@@ -374,7 +371,6 @@ export default function PitchDeck() {
                 icon: <Award size={20} color="#facc15" />,
                 title: 'Recognition & Research',
                 items: [
-                  '⭐ Eureka GCC Dubai 2026 Semifinalist',
                   'Published research with DOI — governance methodology',
                   'Terra/LUNA forensic reconstruction published',
                   '11-checkpoint pipeline peer-validated',
@@ -626,7 +622,6 @@ export default function PitchDeck() {
               <div style={{ fontSize: 13, color: '#C9A227', marginBottom: 16, fontWeight: 600 }}>Founder · Builder</div>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
-                  { icon: <Star size={13} color="#facc15" />, text: 'Eureka GCC Dubai 2026 Semifinalist' },
                   { icon: <Shield size={13} color="#10B981" />, text: 'Founder-led architecture with focused execution across all layers' },
                   { icon: <Lock size={13} color="#a78bfa" />, text: 'Post-quantum cryptography researcher & implementer' },
                   { icon: <Activity size={13} color="#60a5fa" />, text: 'Published governance methodology with DOI' },
@@ -682,9 +677,6 @@ export default function PitchDeck() {
           <p style={{ fontSize: '1.15rem', color: '#94A3B8', margin: '0 0 12px' }}>$3,000,000 valuation cap</p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 40, flexWrap: 'wrap' }}>
-            <span className="tag" style={{ background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)', color: '#C9A227' }}>
-              ⭐ Eureka GCC Dubai 2026 Semifinalist
-            </span>
             <span className="tag" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981' }}>
               <span className="live-dot" style={{ width: 6, height: 6 }} /> 8 Live Governance Engines
             </span>

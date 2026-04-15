@@ -1,8 +1,8 @@
 # Outreach — JJ Jimenez / QuantumThreat Labs
 
-**Purpose**: LinkedIn message to send before March 15, 2026 (Eureka Dubai deadline)  
+**Purpose**: LinkedIn message to send before March 15, 2026 ( deadline) 
 **Goal**: Acknowledge his influence on ADR-032, establish dialogue, and open the door
-for a brief conversation that could be referenced at Eureka if he responds positively  
+for a brief conversation that could be referenced at if he responds positively 
 **Tone**: Peer-to-peer. Intellectual respect. No cold-pitch. No favors asked directly.
 
 ---
@@ -37,15 +37,15 @@ without a regime change, the checkpoint flags it.
 We documented the distinction explicitly in the architecture decision record — including
 the attribution.
 
-I'm presenting OMNIX at Eureka Dubai on March 15. Not asking for anything formal — just
+I'm presenting OMNIX at on March 15. Not asking for anything formal — just
 thought you'd find it interesting to see how your framing translated into a different
 domain. And if you have 20 minutes before then to share a reaction or poke holes in the
 approach, I'd genuinely value it.
 
 Either way, thank you for making temporal coherence a first-class concept worth building on.
 
-Harold Nunes  
-Founder, OMNIX  
+Harold Nunes 
+Founder, OMNIX 
 
 ---
 
@@ -61,7 +61,7 @@ related principles to decision governance." This signals you're plugged into the
 right intellectual community.
 
 **What if no response**: That's fine. The ADR-032 attribution stands on its own.
-The honest answer in Eureka ("a conversation with JJ Jimenez's work identified the gap")
+The honest answer in ("a conversation with JJ Jimenez's work identified the gap")
 is already strong without his endorsement.
 
 **What NOT to say in follow-up**: Don't ask him to attend, endorse, or invest.

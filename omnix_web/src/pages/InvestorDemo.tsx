@@ -833,7 +833,7 @@ export default function InvestorDemo() {
               Ready to govern your decisions?
             </h3>
             <p style={{ fontSize: 13, color: '#475569', margin: '0 0 1.5rem', maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
-              OMNIX is raising $500K pre-seed at a $3M valuation. Harold Nunes (Founder) — Eureka GCC Dubai 2026 semifinalist.
+              OMNIX is raising $500K pre-seed at a $3M valuation. Harold Nunes (Founder) — contacto@omnixquantum.net
             </p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               <a
@@ -883,7 +883,7 @@ export default function InvestorDemo() {
         borderTop: '1px solid rgba(255,255,255,0.04)',
         marginTop: '2rem', fontSize: 10, color: '#1e293b',
       }}>
-        OMNIX Decision Governance · Harold Nunes · Eureka GCC Dubai 2026 · contacto@omnixquantum.net
+        OMNIX Decision Governance · Harold Nunes · omnixquantum.net
       </div>
     </div>
   )

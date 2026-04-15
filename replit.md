@@ -3,7 +3,7 @@
 ## Overview
 OMNIX is a domain-agnostic Decision Governance Infrastructure designed to govern high-stakes automated decisions across various sectors: digital asset trading, Islamic credit, global insurance claims, robotics pre-execution safety, medical AI, autonomous agents, real estate property decisions, and energy governance (dispatch, curtailment, PPA, capacity, carbon). It employs a consistent 11-checkpoint pipeline (CP-1 to CP-11), issuing a post-quantum cryptographically signed receipt (CRYSTALS-Dilithium3) for every decision.
 
-Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raising $500K pre-seed at $3M pre-money valuation.
+Harold Nunes — Solo Founder & CEO. Raising $500K pre-seed at $3M pre-money valuation.
 
 **7/7 Pitch Deck Verticals LIVE (público)**: Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL
 
@@ -27,16 +27,16 @@ Vertical construido internamente para testing y validación. **No anunciado púb
 
 ### Backend
 - `omnix_core/real_estate/real_estate_signal_adapter.py` — 6 señales:
-  - AVM confidence → probability_score · transaction risk → risk_exposure · data alignment → signal_coherence
-  - market trajectory → trend_persistence · stress resilience → stress_resilience · regulatory compliance → logic_consistency
-  - Hard blocks: AML flag | RERA non-compliant | Sharia parameter screening failed | LTV > límite según modo (90% Conv / 85% Murabaha+Ijarah / 80% Musharaka)
+ - AVM confidence → probability_score · transaction risk → risk_exposure · data alignment → signal_coherence
+ - market trajectory → trend_persistence · stress resilience → stress_resilience · regulatory compliance → logic_consistency
+ - Hard blocks: AML flag | RERA non-compliant | Sharia parameter screening failed | LTV > límite según modo (90% Conv / 85% Murabaha+Ijarah / 80% Musharaka)
 - `omnix_core/real_estate/real_estate_simulator.py` — 24/7 simulator: 300s cycles, 3-8 decisiones/ciclo
-  - Tipos: property_valuation · mortgage_approval · tenant_screening · AML_property · rental_yield
-  - Tipos propiedad: Residential, Commercial, Industrial, Mixed_Use, Land
-  - Jurisdicciones: UAE, UK, GCC, EU, International · Modos financiamiento: Conventional, Murabaha, Ijarah, Musharaka
-  - Tablas: `property_decisions` + `property_cycle_metrics`
+ - Tipos: property_valuation · mortgage_approval · tenant_screening · AML_property · rental_yield
+ - Tipos propiedad: Residential, Commercial, Industrial, Mixed_Use, Land
+ - Jurisdicciones: UAE, UK, GCC, EU, International · Modos financiamiento: Conventional, Murabaha, Ijarah, Musharaka
+ - Tablas: `property_decisions` + `property_cycle_metrics`
 - `omnix_dashboard/blueprints/real_estate_governance.py` — Flask API /api/real-estate/*:
-  - /metrics · /decisions · /by-type · /by-jurisdiction · /by-property-type · /timeline · /live-feed · /evaluate · /health
+ - /metrics · /decisions · /by-type · /by-jurisdiction · /by-property-type · /timeline · /live-feed · /evaluate · /health
 
 ### Frontend (interno)
 - `RealEstateDashboard.tsx` — 8 KPIs, signal health strip, breakdown por tipo/jurisdicción/propiedad, live feed
@@ -70,20 +70,20 @@ Vertical construido internamente para testing y validación. **No anunciado púb
 
 ### Backend
 - `omnix_core/energy/energy_signal_adapter.py` — 6 señales:
-  - LMP forecast confidence + freq health → `probability_score` (grid stability)
-  - MW concentration + vol risk + capacity margin → `risk_exposure` (portfolio exposure)
-  - Day-ahead/RT spread + futures convergence + cross-border → `signal_coherence`
-  - Load accuracy + demand stability + seasonality → `trend_persistence`
-  - Renewable buffer + interconnect headroom + storage → `stress_resilience`
-  - Regulatory compliance + carbon intensity → `logic_consistency`
-  - Hard blocks: freq_deviation > 0.5Hz | capacity_margin < 5% | counterparty_default | carbon_cap_breach | regulatory_violation | sanctions
+ - LMP forecast confidence + freq health → `probability_score` (grid stability)
+ - MW concentration + vol risk + capacity margin → `risk_exposure` (portfolio exposure)
+ - Day-ahead/RT spread + futures convergence + cross-border → `signal_coherence`
+ - Load accuracy + demand stability + seasonality → `trend_persistence`
+ - Renewable buffer + interconnect headroom + storage → `stress_resilience`
+ - Regulatory compliance + carbon intensity → `logic_consistency`
+ - Hard blocks: freq_deviation > 0.5Hz | capacity_margin < 5% | counterparty_default | carbon_cap_breach | regulatory_violation | sanctions
 - `omnix_core/energy/energy_simulator.py` — 24/7 simulator: 180s cycles, 4-10 decisiones/ciclo
-  - Tipos: dispatch_order(35%) curtailment_order(20%) ppa_contract(15%) capacity_trade(15%) carbon_credit(10%) balancing_action(5%)
-  - Fuentes: Natural_Gas Wind_Onshore Wind_Offshore Solar_Utility Nuclear Hydro Battery_Storage LNG Coal
-  - Regiones: PJM UK EU_ENTSO_E ERCOT GCC AEMO
-  - Tablas: `energy_decisions` + `energy_cycle_metrics`
+ - Tipos: dispatch_order(35%) curtailment_order(20%) ppa_contract(15%) capacity_trade(15%) carbon_credit(10%) balancing_action(5%)
+ - Fuentes: Natural_Gas Wind_Onshore Wind_Offshore Solar_Utility Nuclear Hydro Battery_Storage LNG Coal
+ - Regiones: PJM UK EU_ENTSO_E ERCOT GCC AEMO
+ - Tablas: `energy_decisions` + `energy_cycle_metrics`
 - `omnix_dashboard/blueprints/energy_governance.py` — Flask API /api/energy/*:
-  - /metrics · /decisions · /by-type · /by-source · /by-region · /timeline · /live-feed · /evaluate · /health
+ - /metrics · /decisions · /by-type · /by-source · /by-region · /timeline · /live-feed · /evaluate · /health
 
 ### Frontend (interno)
 - `EnergyDashboard.tsx` — SCADA aesthetic. KPIs: MW Governed, Approved MW, CO₂ Avoided, Decisions/24h, Grid Stability, Capacity Margin, Hard Blocks, Settlement Risk. Paneles SCADA: Grid Frequency Monitor, Fuel Mix donut/bar, Signal Health strip. Tablas: Decision Types, Grid Regions, Energy Source breakdown. Live feed con telemetría (Hz, capacity %, MW)
@@ -176,35 +176,35 @@ Todos los hardcoded "4" actualizados. Fuentes que controlan el número de vertic
 
 ### Backend
 - `omnix_core/agents/agents_signal_adapter.py` — Adapts 8 agent parameters to 6 OMNIX signals:
-  - task_complexity → probability_score (viability probability)
-  - scope_blast_radius → risk_exposure (action blast radius)
-  - context+task alignment → signal_coherence
-  - goal_alignment → trend_persistence (goal trajectory stability)
-  - fallback_coverage → stress_resilience (failure mode robustness)
-  - authorization+ethics → logic_consistency (principal hierarchy)
-  - Hard blocks: safety_critical_flag=True → BLOCK | human_approval_required + not approved → BLOCK
+ - task_complexity → probability_score (viability probability)
+ - scope_blast_radius → risk_exposure (action blast radius)
+ - context+task alignment → signal_coherence
+ - goal_alignment → trend_persistence (goal trajectory stability)
+ - fallback_coverage → stress_resilience (failure mode robustness)
+ - authorization+ethics → logic_consistency (principal hierarchy)
+ - Hard blocks: safety_critical_flag=True → BLOCK | human_approval_required + not approved → BLOCK
 - `omnix_core/agents/agents_simulator.py` — 24/7 simulator: 200s cycles, 3-8 decisions/cycle
-  - Decision types: task_delegation(35%), data_access(20%), external_api_call(18%), resource_allocation(15%), state_modification(12%)
-  - Agent types: Financial_Agent, Enterprise_Agent, Logistics_Agent, Infrastructure_Agent, Research_Agent
-  - Environments: production, staging, development, sandbox (strictness amplifiers)
-  - Reversibility factors: fully_reversible, partially_reversible, irreversible, unknown
-  - Data sensitivity penalties: low, medium, high, pii, phi
-  - Tables: `agent_decisions` + `agent_cycle_metrics`
+ - Decision types: task_delegation(35%), data_access(20%), external_api_call(18%), resource_allocation(15%), state_modification(12%)
+ - Agent types: Financial_Agent, Enterprise_Agent, Logistics_Agent, Infrastructure_Agent, Research_Agent
+ - Environments: production, staging, development, sandbox (strictness amplifiers)
+ - Reversibility factors: fully_reversible, partially_reversible, irreversible, unknown
+ - Data sensitivity penalties: low, medium, high, pii, phi
+ - Tables: `agent_decisions` + `agent_cycle_metrics`
 - `omnix_dashboard/blueprints/agents_governance.py` — Flask API /api/agents/*:
-  - /metrics, /decisions, /by-type, /by-agent, /by-environment, /timeline, /live-feed, /evaluate, /health
+ - /metrics, /decisions, /by-type, /by-agent, /by-environment, /timeline, /live-feed, /evaluate, /health
 
 ### Frontend
 - `/governance-demo-agents` → `AgentsGovernanceDemo.tsx` — Interactive 11-checkpoint demo
-  - Decision type, agent type, environment, reversibility, data sensitivity selectors
-  - Sliders: task complexity, scope blast radius, context completeness, goal alignment
-  - Hard block flags: safety_critical_flag, human_approval_required, human_approved, cross_boundary
-  - Animated pipeline evaluation with per-checkpoint reasoning
+ - Decision type, agent type, environment, reversibility, data sensitivity selectors
+ - Sliders: task complexity, scope blast radius, context completeness, goal alignment
+ - Hard block flags: safety_critical_flag, human_approval_required, human_approved, cross_boundary
+ - Animated pipeline evaluation with per-checkpoint reasoning
 - `/agents` → `AgentsDashboard.tsx` — Live dashboard
-  - 7 KPI cards (total, approved, blocked, approval rate, avg complexity, active agents, safety blocks)
-  - Average signal health strip (6 signals)
-  - Breakdown: by decision type, by agent type, by environment
-  - Live decision feed (30 decisions, 10s refresh)
-  - 3 feature callout cards (PQC receipts, hard safety blocks, principal hierarchy)
+ - 7 KPI cards (total, approved, blocked, approval rate, avg complexity, active agents, safety blocks)
+ - Average signal health strip (6 signals)
+ - Breakdown: by decision type, by agent type, by environment
+ - Live decision feed (30 decisions, 10s refresh)
+ - 3 feature callout cards (PQC receipts, hard safety blocks, principal hierarchy)
 
 ### Registration
 - `blueprints/__init__.py` — agents_bp imported and exported
@@ -366,7 +366,7 @@ Seguridad enterprise-grade para el bot Telegram. Clase `BotSecurityMiddleware` c
 - Query real a `decision_receipts` (todos los dominios)
 - Handler registrado en `enterprise_bot.py` línea 980
 
-**Archivos**: `bot_security.py`, `enterprise_bot.py` (líneas 506–512, 3444–3461), `commands/governance_commands.py` (`impact_command`)  
+**Archivos**: `bot_security.py`, `enterprise_bot.py` (líneas 506–512, 3444–3461), `commands/governance_commands.py` (`impact_command`) 
 **ADR completo**: `docs/adr/ADR-083-enterprise-bot-security.md`
 
 ---
@@ -669,17 +669,17 @@ Every B2B client (e.g. Velos) gets a unique API key. All their evaluations are t
 ```bash
 # Create the Velos partner client
 railway run python scripts/provision_b2b_client.py \
-    --client-id  velos-partner \
-    --name       "Velos Capital" \
-    --email      naimat@veloscapital.com \
-    --role       standard
+ --client-id velos-partner \
+ --name "Velos Capital" \
+ --email naimat@veloscapital.com \
+ --role standard
 
 # Create Harold's admin key (first time only)
 railway run python scripts/provision_b2b_client.py \
-    --client-id  omnix-admin \
-    --name       "OMNIX Admin" \
-    --email      contacto@omnixquantum.net \
-    --role       admin
+ --client-id omnix-admin \
+ --name "OMNIX Admin" \
+ --email contacto@omnixquantum.net \
+ --role admin
 
 # List all clients
 railway run python scripts/provision_b2b_client.py --client-id any --list
@@ -704,18 +704,18 @@ railway run python scripts/provision_b2b_client.py --client-id velos-partner --d
 ### Usage Report Example (how Harold checks Velos billing)
 ```bash
 curl -H "X-API-Key: <harold-admin-key>" \
-     "https://omnixquantum.net/api/governance/admin/usage/velos-partner?months=3"
+ "https://omnixquantum.net/api/governance/admin/usage/velos-partner?months=3"
 # Returns: monthly breakdown of APPROVED/BLOCKED/HOLD evaluations tagged client_id='velos-partner'
 ```
 
 ### Velos Integration Flow
 ```
 Naimat's system
-    → POST /api/governance/evaluate  (header: X-API-Key: OMNIX-<velos-key>)
-    → OMNIX runs 11-checkpoint pipeline
-    → Receipt generated, saved to decision_receipts (client_id='velos-partner')
-    → JSON response returned to Naimat
-    → Naimat pushes receipt to velos-gateway for 60s Auth_Hash window
+ → POST /api/governance/evaluate (header: X-API-Key: OMNIX-<velos-key>)
+ → OMNIX runs 11-checkpoint pipeline
+ → Receipt generated, saved to decision_receipts (client_id='velos-partner')
+ → JSON response returned to Naimat
+ → Naimat pushes receipt to velos-gateway for 60s Auth_Hash window
 Monthly: Harold queries usage endpoint → sees exact count → emits invoice
 ```
 
@@ -784,10 +784,10 @@ Los comandos de gobernanza del bot de Telegram están en un módulo separado `go
 
 ```
 omnix_services/telegram_service/
-├── enterprise_bot.py          # Import + binding + handlers + /version, /start, /help actualizados
+├── enterprise_bot.py # Import + binding + handlers + /version, /start, /help actualizados
 └── commands/
-    ├── __init__.py
-    └── governance_commands.py # 4 handlers: evaluar, gobernanza, velos, recibo
+ ├── __init__.py
+ └── governance_commands.py # 4 handlers: evaluar, gobernanza, velos, recibo
 docs/reference/adr/
 └── ADR-058-bot-governance-integration.md
 ```
@@ -822,10 +822,10 @@ Panel ejecutivo accesible en `/audit`. Traduce los recibos PQC técnicos a lengu
 ### Archivos afectados (ADR-059)
 
 ```
-omnix_web/src/pages/AuditDashboard.tsx   # Nueva página React (KPI, filtros, tabla, panel detalle)
-omnix_web/src/App.tsx                     # Ruta /audit añadida
-omnix_web/src/pages/InvestorCommandCenter.tsx  # Link "Executive Audit" → /audit añadido
-omnix_web/api/gov_blueprint.py            # 2 endpoints nuevos + traducción veto_chain
+omnix_web/src/pages/AuditDashboard.tsx # Nueva página React (KPI, filtros, tabla, panel detalle)
+omnix_web/src/App.tsx # Ruta /audit añadida
+omnix_web/src/pages/InvestorCommandCenter.tsx # Link "Executive Audit" → /audit añadido
+omnix_web/api/gov_blueprint.py # 2 endpoints nuevos + traducción veto_chain
 docs/reference/adr/ADR-059-executive-audit-dashboard.md
 ```
 
@@ -847,7 +847,7 @@ docs/reference/adr/ADR-059-executive-audit-dashboard.md
 | ADR-065 | **Epistemic Transparency Layer — Correcting Manufactured Confidence**: Four blind spots found and fixed — all instances of the same pattern: system manufacturing confidence when it has no data. (1) **TCV**: `trajectory_score=100.0` when no trajectory history → now `0.0` with explicit reason "score=0 reflects absence of evidence, not trajectory failure". Sub-scores (`direction_coherence=75`, `signal_stability=80`) also corrected to 0 without data. (2) **OPTIONAL_SIGNAL_DEFAULTS**: `signal_integrity=75` and `temporal_coherence=65` passed checkpoints automatically without data. Now every default substitution is logged as `SIGNAL_DEFAULT_APPLIED` in `decision_trace` and included as `applied_signal_defaults` in result. (3) **CAG**: when enabled but no real market data provided (vol=0, macro=0, liq=100), session was admitted on assumed ideal conditions. Now logs `CAG_WARNING` in trace and in `context_admission_block["epistemic_warning"]`. (4) **Fraud Gate**: CP-10 inputs derived from pipeline-approved signals (circular dependency). Now documented as `FRAUD_PROXY_MODE` in trace and `compliance_blocks["fraud_compliance"]["proxy_mode"]`. None of these fixes break existing pipeline behavior — they make existing limitations visible in the audit trail. Files: `omnix_core/temporal/coherence_validator.py`, `omnix_core/governance/external_evaluator.py`. ADR-065 written. |
 | ADR-061 | **Persistent IP Blocklist**: DB-backed `blocked_ips` PostgreSQL table with 30s in-memory cache (thread-safe). Auto-bans any IP that triggers rate limit 3+ times in 10 minutes → 1-hour ban persisted to DB, survives Railway restarts. Enforcement at two points: `_require_auth()` + `api_governance_evaluate()`. Telegram notification to Harold on every auto-ban. `_auto_ban_ip()` runs in daemon thread — zero pipeline latency impact. Existing in-memory brute-force lockout (ADR-052) unchanged. Files: `omnix_web/api/gov_blueprint.py`. |
 | Audit-Fix-Apr2026 | **Production-Grade Audit + Critical Fix**: Full 15-section audit executed. 67/67 tests pass. One critical gap found: `/api/verify/recent` (public receipt ledger) missing from Railway Flask (`omnix_web/api/server.py`) — endpoint existed only in local Flask Dashboard. Fixed: endpoint added to `omnix_web/api/server.py` with identical ADR-063 filters (signature_algorithm IS NOT NULL, asset regex, ORDER BY created_at DESC). Verified locally: 20 signed receipts returned. Audit confirmed: 0 TypeScript errors, 0 concurrency failures (10/10 parallel), 319ms avg latency, 8 regulatory frameworks, auth fail-closed (401 before payload processing), Python SDK OK, Node SDK OK. |
-| Content-Audit-Apr2026 | **Investor Content Audit — 7 errores críticos corregidos**: (1) `CommercialLanding.tsx` hero text: "Next verticals: credit, insurance, biotech" → "Live across 4 domains: digital asset trading, Islamic credit, insurance, and autonomous robotics". (2) `CommercialLanding.tsx` L296: "Two Verticals. Running Now." → "Four Verticals. Running Now." (3) `CommercialLanding.tsx` Islamic Credit card: "3,700+ / AED 15B+" → "18,811+ / AED 77.4B+". (4) `CommercialLanding.tsx` Advisory tier: "supply chain" → "robotics" (supply chain is NOT live). (5) `InstitutionalPage.tsx` hero: "Future verticals (Year 2-3+): robotics/insurance..." → "Currently live across 4 domains...". (6) `InstitutionalPage.tsx` Integration Partners section + FAQ: same fix for two more occurrences. (7) `InstitutionalPage.tsx` "Individual Users $149/mo" (B2C pricing) → "Channel Partners · 10% mutual commissions". New: `PitchDeck.tsx` — pitch deck completo creado como componente React, ruta `/pitch` añadida en `App.tsx` (ahora accesible en omnixquantum.net/pitch en Railway). Valuation $3M, raising $500K pre-seed, 4 verticals LIVE, Eureka GCC, canal Velos, pricing enterprise ($8K/$20K/$35K), 11 slides. |
+| Content-Audit-Apr2026 | **Investor Content Audit — 7 errores críticos corregidos**: (1) `CommercialLanding.tsx` hero text: "Next verticals: credit, insurance, biotech" → "Live across 4 domains: digital asset trading, Islamic credit, insurance, and autonomous robotics". (2) `CommercialLanding.tsx` L296: "Two Verticals. Running Now." → "Four Verticals. Running Now." (3) `CommercialLanding.tsx` Islamic Credit card: "3,700+ / AED 15B+" → "18,811+ / AED 77.4B+". (4) `CommercialLanding.tsx` Advisory tier: "supply chain" → "robotics" (supply chain is NOT live). (5) `InstitutionalPage.tsx` hero: "Future verticals (Year 2-3+): robotics/insurance..." → "Currently live across 4 domains...". (6) `InstitutionalPage.tsx` Integration Partners section + FAQ: same fix for two more occurrences. (7) `InstitutionalPage.tsx` "Individual Users $149/mo" (B2C pricing) → "Channel Partners · 10% mutual commissions". New: `PitchDeck.tsx` — pitch deck completo creado como componente React, ruta `/pitch` añadida en `App.tsx` (ahora accesible en omnixquantum.net/pitch en Railway). Valuation $3M, raising $500K pre-seed, 4 verticals LIVE, , canal Velos, pricing enterprise ($8K/$20K/$35K), 11 slides. |
 | Fix-CSP-GA | **CSP Google Analytics**: `script-src` en `omnix_dashboard/utils/auth.py` ahora incluye `https://www.googletagmanager.com https://www.google-analytics.com`. `connect-src` añade `https://analytics.google.com`. Antes bloqueaba GA en todos los templates del Flask Dashboard. |
 | ADR-063 | **Public Ledger Receipt Filter (ROAD-008)**: `/api/verify/recent` ahora filtra a nivel SQL — `WHERE signature_algorithm IS NOT NULL AND signature_algorithm <> 'NONE' AND asset IS NOT NULL AND asset ~ '^[A-Z0-9]+/[A-Z]+$'`. Excluye recibos sin firma y activos de prueba (UNINTELLIGIBLE-SCENARIO). Segunda capa defensiva en frontend JS (regex `VALID_ASSET`). `signed` siempre `True` en respuesta (garantizado por WHERE). Individual lookup `/api/verify/<id>` no afectado. ADR completo en `docs/adr/ADR-063-receipt-public-ledger-filter.md`. Files: `omnix_dashboard/blueprints/verification.py`, `omnix_dashboard/templates/verify.html`. |
 | ADR-062 | **Premium Features**: (1) Regulatory Mapping Engine — `omnix_engine/regulatory_mapping.py` maps all 11 CPs to EU AI Act, DORA, NIST AI RMF, ISO 42001, CA SB 243, GDPR, FATF, Basel III. `regulatory_alignment` field now in every evaluate response. Public endpoint `GET /api/governance/regulatory/catalog`. (2) Due Diligence PDF Package — `omnix_engine/due_diligence.py` + `GET /api/governance/due-diligence-report?format=pdf&days=N`. Premium branded PDF: logo, KPIs, domain breakdown, regulatory table, attestation. Auth required. (3) Python SDK — `omnix_sdk/python/omnix_sdk.py` (stdlib only, no deps). (4) Node.js SDK — `omnix_sdk/node/index.js` (stdlib only). Both SDKs: evaluate, get_receipt, list_receipts, due_diligence_report, regulatory_catalog. (5) Client Portal — `/client` → `ClientDashboard.tsx`. API key auth, KPIs, domain breakdown, regulatory framework badges, receipt table, PDF download, SDK quickstart. Link added to InvestorCommandCenter. ADR-062 written. |

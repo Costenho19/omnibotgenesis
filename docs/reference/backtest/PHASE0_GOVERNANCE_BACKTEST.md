@@ -1,10 +1,10 @@
 # OMNIX Phase 0 — Retrospective Governance Backtest
 
-**Status**: INTERNAL DUE DILIGENCE  
-**Date**: 2026-03-01  
-**Author**: Harold Nunes  
-**Period Analyzed**: July 6 – August 18, 2025 (Phase 0, Real Kraken Capital)  
-**Method**: Retrospective signal estimation from real trade price history  
+**Status**: INTERNAL DUE DILIGENCE 
+**Date**: 2026-03-01 
+**Author**: Harold Nunes 
+**Period Analyzed**: July 6 – August 18, 2025 (Phase 0, Real Kraken Capital) 
+**Method**: Retrospective signal estimation from real trade price history 
 
 ---
 
@@ -118,9 +118,9 @@ This is **exactly what we would expect** looking back at the Jul–Aug 2025 peri
 
 ### What We Cannot Claim (Per Architect Review)
 - We **cannot** state an exact P&L improvement figure, because:
-  - The signal computation is a reconstruction, not a live replay
-  - The thresholds were calibrated in Nov 2025–Jan 2026, not in Jul–Aug 2025
-  - Blocking trades in a short-term scalping regime doesn't simply "preserve" the spent USD — it changes the entire trading behavior
+ - The signal computation is a reconstruction, not a live replay
+ - The thresholds were calibrated in Nov 2025–Jan 2026, not in Jul–Aug 2025
+ - Blocking trades in a short-term scalping regime doesn't simply "preserve" the spent USD — it changes the entire trading behavior
 - The hourly grouping simplifies 1,115 individual trades into 225 evaluation points
 
 ---
@@ -172,5 +172,5 @@ The backtest provides internal evidence that the engine's conservative behavior 
 
 ---
 
-*See also: `docs/business/OMNIX_EUREKA_PITCH_FINAL.md` Slide 6 for investor-facing narrative.*  
+*See also: `docs/business/OMNIX_EUREKA_PITCH_FINAL.md` Slide 6 for investor-facing narrative.* 
 *Scripts: `scripts/backtest/01_fetch_ohlcv.py`, `02_compute_signals.py`, `03_run_evaluation.py`*

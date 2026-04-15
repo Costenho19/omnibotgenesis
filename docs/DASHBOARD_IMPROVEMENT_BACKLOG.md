@@ -1,7 +1,7 @@
 # OMNIX Dashboard Improvement Backlog
 
-**Created:** January 13, 2026  
-**Last Updated:** January 14, 2026  
+**Created:** January 13, 2026 
+**Last Updated:** January 14, 2026 
 **Reference:** ADR-006-dashboard-improvement-proposals.md
 
 ## Priority Legend
@@ -19,26 +19,26 @@
 
 ### BUG-001: WR Dir Shows 0.0% Instead of 37.8%
 
-**Location:** Trade History Widget  
-**File:** `omnix_dashboard/blueprints/core.py`  
-**Problem:** Trade History API didn't return `win_rate_directional`  
-**Fix:** Added SQL aggregate `SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END)` to API  
+**Location:** Trade History Widget 
+**File:** `omnix_dashboard/blueprints/core.py` 
+**Problem:** Trade History API didn't return `win_rate_directional` 
+**Fix:** Added SQL aggregate `SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END)` to API 
 **Status:** [x] COMPLETED (Jan 13, 2026)
 
 ### BUG-002: Fee Eroded Shows 0 Instead of 21
 
-**Location:** Trade History Widget  
-**File:** `omnix_dashboard/blueprints/core.py`  
-**Problem:** Fee-eroded count not returned by API  
-**Fix:** Added SQL aggregate `SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END)` to API  
+**Location:** Trade History Widget 
+**File:** `omnix_dashboard/blueprints/core.py` 
+**Problem:** Fee-eroded count not returned by API 
+**Fix:** Added SQL aggregate `SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END)` to API 
 **Status:** [x] COMPLETED (Jan 13, 2026)
 
 ### BUG-003: "Protected" Metric is Misleading
 
-**Location:** Header  
-**Files:** `omnix_dashboard/templates/terminal.html`  
-**Problem:** "$31.4M Protected" implies $31.4M at risk when capital is $1M  
-**Fix:** Renamed to "Notional Blocked" with explanatory tooltip  
+**Location:** Header 
+**Files:** `omnix_dashboard/templates/terminal.html` 
+**Problem:** "$31.4M Protected" implies $31.4M at risk when capital is $1M 
+**Fix:** Renamed to "Notional Blocked" with explanatory tooltip 
 **Status:** [x] COMPLETED (Jan 13, 2026)
 
 ---
@@ -47,7 +47,7 @@
 
 ### FEAT-001: System Health Score Widget
 
-**Description:** Visual health indicator showing system status at a glance  
+**Description:** Visual health indicator showing system status at a glance 
 **Components:**
 - Risk Controls score (35% weight) - Capital preservation tracking
 - Data Quality score (25% weight) - Database connection status
@@ -65,7 +65,7 @@
 
 ### FEAT-002: Live Status Section
 
-**Description:** Real-time view of what the system is doing NOW  
+**Description:** Real-time view of what the system is doing NOW 
 **Components:**
 - Current action (ANALYZING/EXECUTING/MONITORING)
 - Status detail message
@@ -82,7 +82,7 @@
 
 ### FEAT-003: Quick Insights (Auto-Generated)
 
-**Description:** Auto-generated actionable insights based on real trading data  
+**Description:** Auto-generated actionable insights based on real trading data 
 **Components:**
 - Priority-ranked insights (1-5)
 - Type badges (SUCCESS/WARNING/INFO/PROGRESS/CAUTION)
@@ -100,7 +100,7 @@
 
 ### FEAT-004: Calibration Progress Bar
 
-**Description:** Visual progress toward system optimization  
+**Description:** Visual progress toward system optimization 
 **Components:**
 - Phase 1: Data Collection (119/100 trades) - 100%
 - Phase 2: Pattern Analysis (profitable patterns identified) - 100%
@@ -117,7 +117,7 @@
 
 ### FEAT-005: Recommended Actions
 
-**Description:** Suggested next steps for Harold  
+**Description:** Suggested next steps for Harold 
 **Status:** [x] COMPLETED (Jan 13, 2026)
 
 **Implementation:**
@@ -132,7 +132,7 @@
 - Color-coded priority badges
 - Auto-refresh every 10 seconds
 
-**Current Actions Shown:**  
+**Current Actions Shown:** 
 **Components:**
 - Urgent actions with reasoning
 - Review items with context
@@ -146,7 +146,7 @@
 
 ### FEAT-006: Comparative Metrics Table
 
-**Description:** OMNIX vs BTC Hold vs Average Bot comparison  
+**Description:** OMNIX vs BTC Hold vs Average Bot comparison 
 **Metrics:** Return, Max DD, Win Rate, Capital Preserved %, Risk Blocked
 
 **Implementation:**
@@ -165,7 +165,7 @@
 
 ### FEAT-007: P&L Breakdown Visual
 
-**Description:** Detailed P&L by symbol and by reason  
+**Description:** Detailed P&L by symbol and by reason 
 **Components:** Bar charts, percentages, trend indicators
 
 **Implementation:**
@@ -183,7 +183,7 @@
 
 ### FEAT-008: Correlation Heatmap
 
-**Description:** Asset performance matrix with correlation analysis  
+**Description:** Asset performance matrix with correlation analysis 
 **Components:** Per-symbol metrics, hourly P&L correlation, diversification score
 
 **Implementation:**
@@ -201,7 +201,7 @@
 
 ### FEAT-009: Time Heatmap
 
-**Description:** P&L analysis by hour and day of week  
+**Description:** P&L analysis by hour and day of week 
 **Components:** 7x24 heatmap grid, best/worst time identification
 
 **Implementation:**
@@ -220,7 +220,7 @@
 
 ### FEAT-010: Regime Detection Dashboard
 
-**Description:** Current market regime with historical performance  
+**Description:** Current market regime with historical performance 
 **Components:** Regime indicator, confidence, duration, performance by regime
 
 **Implementation:**
@@ -243,7 +243,7 @@
 
 ### FEAT-011: Opportunity Tracker (formerly Learning Engine Insights)
 
-**Description:** Shadow Portfolio analysis for missed opportunities vs losses avoided  
+**Description:** Shadow Portfolio analysis for missed opportunities vs losses avoided 
 **Components:** Two-sided accounting, Day 30 review framework, veto effectiveness
 
 **Implementation:**
@@ -277,18 +277,18 @@
 ```
 🎯 OPPORTUNITY TRACKER | Day 1/30
 ┌─────────────────────────────────────────────┐
-│  💎 MISSED      ⚖️ VS       ✅ AVOIDED      │
-│   +$0            ⚖️          -$239.5K       │
-│   0 trades                   479 trades     │
+│ 💎 MISSED ⚖️ VS ✅ AVOIDED │
+│ +$0 ⚖️ -$239.5K │
+│ 0 trades 479 trades │
 ├─────────────────────────────────────────────┤
-│  NET: -$239.5K = Sistema protegiendo ✅     │
-│  📅 Review: Feb 13, 2026 | Mantener        │
+│ NET: -$239.5K = Sistema protegiendo ✅ │
+│ 📅 Review: Feb 13, 2026 | Mantener │
 └─────────────────────────────────────────────┘
 ```
 
 ### FEAT-012: Collapsible Advanced Sections
 
-**Description:** Mobile-friendly collapsed sections  
+**Description:** Mobile-friendly collapsed sections 
 **Sections:** Advanced Metrics, Detailed History, Model Parameters
 
 ---
@@ -361,7 +361,7 @@ All critical, high-priority, and nice-to-have features have been delivered.
 
 ---
 
-### PRIORIDAD ALTA — Construir antes de Eureka Dubai
+### PRIORIDAD ALTA — Construir antes de 
 
 #### MOD-009: Regulatory-Aware Decision Engine (Sharia Gate)
 - **Descripción:** Valida decisiones contra marcos regulatorios específicos por cliente: AML, impuestos, jurisdicción, y cumplimiento Sharia para mercados del Golfo

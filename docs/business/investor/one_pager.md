@@ -38,7 +38,7 @@
 | System Uptime | **95%+** | Production on Railway since Nov 2025 |
 | Execution Latency | **~120ms** | Measured, not estimated |
 | Multi-Vertical Demos | **3** | Trading, Credit, Insurance |
-| Competition Status | **Semifinalist** | Eureka Dubai 2026 |
+| Competition Status | **Semifinalist** | 2026 |
 
 ---
 
@@ -154,7 +154,7 @@ Founder & Product Architect, OMNIX
 ---
 
 *OMNIX — Governing decisions under uncertainty.*
-*Eureka Dubai 2026 — Semifinalist*
+* 2026 — Semifinalist*
 
 *This document is for informational purposes. OMNIX is decision governance infrastructure, not an investment product. All metrics are from governance engine operation in real market conditions.*
 

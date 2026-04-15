@@ -1,8 +1,8 @@
 # OMNIX Technical Debt Registry
 
-**Created:** December 11, 2025  
-**Updated:** March 11, 2026  
-**Status:** Active - Deferred until 500-trade milestone  
+**Created:** December 11, 2025 
+**Updated:** March 11, 2026 
+**Status:** Active - Deferred until 500-trade milestone 
 **Priority:** Track record generation > Code refactoring
 
 ---
@@ -30,7 +30,7 @@
 
 **Status:** COMPLETED — Production requirements cleaned, versions pinned, dev dependencies separated
 
-**Context:** Pre-fundraise (Eureka Dubai GCC March 15, 2026) audit to ensure Railway deployments are reproducible and conflict-free. Prior state had duplicates, unpinned packages, and a namespace conflict with the standalone `telegram` package.
+**Context:** Pre-fundraise ( March 15, 2026) audit to ensure Railway deployments are reproducible and conflict-free. Prior state had duplicates, unpinned packages, and a namespace conflict with the standalone `telegram` package.
 
 ### Issues Found & Resolved
 
@@ -158,7 +158,7 @@ Extended audit beyond advanced_intelligence.py to ALL modules:
 | `/api/live-data` (Flask) | `trading_accuracy: 0` (misleading) | `trading_accuracy: N/A — no executed trades` |
 | `/api/system-status` (Flask) | Referenced fake `trading_accuracy` | Safe fallback with explanation |
 
-**Risk Assessment:** HIGH — if an Eureka judge or investor had asked "show me how you calculate that 91%", there would have been no verifiable answer. Now every metric shown can be traced to a specific PostgreSQL query.
+**Risk Assessment:** HIGH — if an judge or investor had asked "show me how you calculate that 91%", there would have been no verifiable answer. Now every metric shown can be traced to a specific PostgreSQL query.
 
 ---
 
@@ -395,7 +395,7 @@ Extended audit beyond advanced_intelligence.py to ALL modules:
 **Mejora a safe_float:**
 ```python
 if isinstance(value, str):
-    value = value.strip().replace('%', '')
+ value = value.strip().replace('%', '')
 ```
 
 **Tests:** 12 tests directos + 28 tests en `tests/test_auto_trading_bot_type_safety.py`
@@ -469,11 +469,11 @@ UPDATE users SET is_admin = true, subscription_tier = 'owner' WHERE user_id = '7
 - Added `AUTHORIZATION_ADAPTER_AVAILABLE` import block in `auto_trading_bot.py`
 - Created `_require_trading_permission()` helper method (lines 796-843)
 - Integrated permission checks in 5 methods:
-  - `start()` - checks `auto_trading` permission before activating
-  - `stop()` - checks `auto_trading` permission before stopping
-  - `_execute_smart_trade()` - checks `trading` permission before executing
-  - `_check_open_positions_tp_sl()` - checks `view_positions` permission
-  - `_check_position_limit_early()` - checks `view_positions` permission
+ - `start()` - checks `auto_trading` permission before activating
+ - `stop()` - checks `auto_trading` permission before stopping
+ - `_execute_smart_trade()` - checks `trading` permission before executing
+ - `_check_open_positions_tp_sl()` - checks `view_positions` permission
+ - `_check_position_limit_early()` - checks `view_positions` permission
 
 **Permission Logic:**
 - Paper mode: Uses `PAPER_TRADING` or `PAPER_AUTO_TRADING` for trading, `VIEW_BALANCE` for positions
@@ -527,9 +527,9 @@ UPDATE users SET is_admin = true, subscription_tier = 'owner' WHERE user_id = '7
 - **ELIMINADOS** diccionarios hardcodeados de detección de idioma (código basura)
 - **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
 - **FLUJO AI-First**:
-  - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
-  - Textos cortos (<50 chars): Gemini AI (`gemini-2.5-flash`, temp=0, max_tokens=5)
-  - Fallback: fast-langdetect → langdetect → 'en'
+ - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
+ - Textos cortos (<50 chars): Gemini AI (`gemini-2.5-flash`, temp=0, max_tokens=5)
+ - Fallback: fast-langdetect → langdetect → 'en'
 - **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
 - **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
 - **RESULTADO**: 12/12 tests pasando
@@ -593,7 +593,7 @@ result = database_gateway.execute(query)
 
 # TARGET V7.0 (port injection)
 def __init__(self, db: DatabasePort):
-    self.db = db
+ self.db = db
 ```
 
 **Resolution Plan:** V7.0 Strangler Fig migration per `MIGRATION_ROADMAP.md`
@@ -621,7 +621,7 @@ def __init__(self, db: DatabasePort):
 Dashboard blueprints import service singletons directly:
 ```python
 # omnix_dashboard/blueprints/core.py
-from omnix_services.database_service import database_gateway  # Direct coupling
+from omnix_services.database_service import database_gateway # Direct coupling
 ```
 
 **Resolution Plan:** Inject dependencies through Flask extensions
@@ -643,7 +643,7 @@ Added `@property connected` to `DatabaseGateway` that delegates to internal stat
 ```python
 @property
 def connected(self) -> bool:
-    return self._connected and self._pool is not None
+ return self._connected and self._pool is not None
 ```
 
 **Issue 2: Early-binding connection check at `__init__` time**
@@ -659,17 +659,17 @@ Changed from early-binding variable to lazy `@property` evaluation in all 5 modu
 ```python
 # BEFORE (early-binding - problem)
 def __init__(self, database_service=None):
-    self.db = database_service
-    self.connected = self.db is not None and self.db.connected  # Set once!
+ self.db = database_service
+ self.connected = self.db is not None and self.db.connected # Set once!
 
 # AFTER (lazy evaluation - fix)
 def __init__(self, database_service=None):
-    self.db = database_service
+ self.db = database_service
 
 @property
 def connected(self):
-    """Lazy connection check - evaluates each time for late-binding db_manager."""
-    return self.db is not None and self.db.connected
+ """Lazy connection check - evaluates each time for late-binding db_manager."""
+ return self.db is not None and self.db.connected
 ```
 
 **Files affected:**
@@ -688,23 +688,23 @@ def connected(self):
 
 ### 2.1 Bare Except Clauses (MEDIUM)
 
-**Count:** ~80 instances  
+**Count:** ~80 instances 
 **Risk:** Silent failures, debugging difficulty
 
 **Example:**
 ```python
 # Current
 try:
-    result = risky_operation()
-except:  # Bare except
-    pass
+ result = risky_operation()
+except: # Bare except
+ pass
 
 # Target
 try:
-    result = risky_operation()
+ result = risky_operation()
 except SpecificError as e:
-    logger.error(f"Operation failed: {e}")
-    raise
+ logger.error(f"Operation failed: {e}")
+ raise
 ```
 
 **Files with highest density:**
@@ -714,7 +714,7 @@ except SpecificError as e:
 
 ### 2.2 Silenced Exceptions (HIGH)
 
-**Count:** ~55 instances  
+**Count:** ~55 instances 
 **Pattern:** `except: pass` or `except Exception: pass`
 
 **Risk:** Critical errors may go unnoticed in production
@@ -723,7 +723,7 @@ except SpecificError as e:
 
 ### 2.3 TODO/FIXME Comments (LOW)
 
-**Count:** 26 unresolved  
+**Count:** 26 unresolved 
 **Status:** Documented but not critical for track record
 
 ### 2.4 Large Files (MEDIUM)
@@ -777,7 +777,7 @@ Previously documented paths did not match actual code locations. Updated in:
 # omnix_config/settings.py
 VERSION = "6.5.4e"
 VERSION_NAME = "INSTITUTIONAL+"
-VERSION_BANNER = f"V{VERSION} {VERSION_NAME}"  # "V6.5.4e INSTITUTIONAL+"
+VERSION_BANNER = f"V{VERSION} {VERSION_NAME}" # "V6.5.4e INSTITUTIONAL+"
 ```
 
 **Usage Pattern:**
@@ -798,8 +798,8 @@ logger.info(f"OMNIX {VERSION_BANNER} started")
 JavaScript cannot dynamically import Python constants. When updating VERSION:
 1. Update `omnix_config/settings.py` (central source)
 2. Manually update console.log statements in:
-   - `omnix_dashboard/static/js/pages/terminal.js`
-   - `omnix_dashboard/static/js/pages/dashboard.js`
+ - `omnix_dashboard/static/js/pages/terminal.js`
+ - `omnix_dashboard/static/js/pages/dashboard.js`
 3. Run `python scripts/verify_version_consistency.py` to verify
 
 **Status:** ✅ COMPLETE
@@ -810,7 +810,7 @@ JavaScript cannot dynamically import Python constants. When updating VERSION:
 
 ### 4.1 Test Coverage (CRITICAL - Deferred)
 
-**Current Coverage:** <1%  
+**Current Coverage:** <1% 
 **Target Coverage:** 60%+ for core trading logic
 
 | Area | Current Tests | Target |
@@ -874,11 +874,11 @@ Based on the comprehensive Functional Domain Map audit (December 12, 2025), the 
 Before deprecating any package:
 
 1. **Verify no imports:**
-   ```bash
-   grep -r "from omnix_services.alerts" . --include="*.py"
-   grep -r "from omnix_services.concurrency" . --include="*.py"
-   grep -r "from omnix_strategies" . --include="*.py"
-   ```
+ ```bash
+ grep -r "from omnix_services.alerts" . --include="*.py"
+ grep -r "from omnix_services.concurrency" . --include="*.py"
+ grep -r "from omnix_strategies" . --include="*.py"
+ ```
 
 2. **Check database tables:** Ensure no active data would be orphaned
 
@@ -896,42 +896,42 @@ Before deprecating any package:
 
 ```
 IMPACT ↑
-         │  ┌─────────────────┐   ┌─────────────────┐
-   HIGH  │  │ Ports           │   │ main.py         │
-         │  │ Integration     │   │ Bootstrap       │
-         │  └─────────────────┘   └─────────────────┘
-         │  ┌─────────────────┐   ┌─────────────────┐
- MEDIUM  │  │ Bare excepts    │   │ enterprise_bot  │
-         │  │ Add logging     │   │ Split file      │
-         │  └─────────────────┘   └─────────────────┘
-         │  ┌─────────────────┐   ┌─────────────────┐
-   LOW   │  │ TODO comments   │   │ Type hints      │
-         │  │ Cleanup         │   │ Add coverage    │
-         │  └─────────────────┘   └─────────────────┘
-         └────────────────────────────────────────────→ EFFORT
-                 LOW              MEDIUM           HIGH
+ │ ┌─────────────────┐ ┌─────────────────┐
+ HIGH │ │ Ports │ │ main.py │
+ │ │ Integration │ │ Bootstrap │
+ │ └─────────────────┘ └─────────────────┘
+ │ ┌─────────────────┐ ┌─────────────────┐
+ MEDIUM │ │ Bare excepts │ │ enterprise_bot │
+ │ │ Add logging │ │ Split file │
+ │ └─────────────────┘ └─────────────────┘
+ │ ┌─────────────────┐ ┌─────────────────┐
+ LOW │ │ TODO comments │ │ Type hints │
+ │ │ Cleanup │ │ Add coverage │
+ │ └─────────────────┘ └─────────────────┘
+ └────────────────────────────────────────────→ EFFORT
+ LOW MEDIUM HIGH
 ```
 
 ### Recommended Order (Post-500 Trades)
 
 1. **Quick Wins** (1-2 days)
-   - Add logging to silenced exceptions
-   - Clean up bare except clauses
-   - Resolve critical TODOs
+ - Add logging to silenced exceptions
+ - Clean up bare except clauses
+ - Resolve critical TODOs
 
 2. **Bootstrap Refactor** (3-5 days)
-   - Extract main.py to bootstrap module
-   - Create DI container
-   - Enable unit testing
+ - Extract main.py to bootstrap module
+ - Create DI container
+ - Enable unit testing
 
 3. **Hexagonal Integration** (1-2 weeks)
-   - Connect ports to adapters
-   - Inject dependencies
-   - Add integration tests
+ - Connect ports to adapters
+ - Inject dependencies
+ - Add integration tests
 
 4. **File Splitting** (1 week)
-   - enterprise_bot.py → command modules
-   - auto_trading_bot.py → strategy modules
+ - enterprise_bot.py → command modules
+ - auto_trading_bot.py → strategy modules
 
 ---
 
@@ -949,5 +949,5 @@ IMPACT ↑
 
 ---
 
-*Document maintained by: OMNIX Development Team*  
+*Document maintained by: OMNIX Development Team* 
 *Last reviewed: December 12, 2025*

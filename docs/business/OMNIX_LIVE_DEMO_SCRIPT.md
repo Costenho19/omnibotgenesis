@@ -8,8 +8,6 @@
 
 Este script es para reuniones 1:1 con inversores o clientes potenciales que piden ver el sistema funcionando en tiempo real. Duración: **3–5 minutos**. No requiere preparación técnica — solo tener el navegador abierto.
 
-Para la presentación en escenario (Eureka GCC Mar 18), ver `OMNIX_PRESENTER_GUIDE.md`.
-
 ---
 
 ## NÚMEROS ACTUALES (Mar 11, 2026)

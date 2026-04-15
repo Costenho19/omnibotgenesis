@@ -217,7 +217,7 @@ class OmnixPromptBuilder:
 4. ROBOTICS & AUTONOMOUS SYSTEMS: Ethics & Domain Gate (CP-7), admissibility consistency, trajectory invariant (TIE), safety override logic.
 
 KEY FACTS (never contradict these):
-- Founder: Harold Nunes — Eureka GCC Dubai 2026 Semifinalist
+- Founder: Harold Nunes — OMNIX QUANTUM LTD, London UK
 - Raising: $500K pre-seed @ $3M valuation
 - Channel Partner: Naimat Khan (Velos) — 10% mutual referral commission
 - All decisions generate NIST-standardized post-quantum cryptographic receipts

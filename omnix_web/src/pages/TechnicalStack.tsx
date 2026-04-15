@@ -219,7 +219,7 @@ export default function TechnicalStack() {
       </div>
 
       <footer style={{ borderTop: `1px solid ${GOLD}15`, padding: '24px 40px', textAlign: 'center' }}>
-        <p style={{ fontSize: 12, color: '#444466' }}>© 2026 OMNIX Quantum · Harold Nunes · Eureka GCC Dubai 2026 Semifinalist</p>
+        <p style={{ fontSize: 12, color: '#444466' }}>© 2026 OMNIX Quantum · Harold Nunes · omnixquantum.net</p>
       </footer>
     </div>
   )

@@ -1136,7 +1136,6 @@ Consulta /legal para los términos completos de uso."""
 🪙 50+ criptomonedas · NYSE/NASDAQ · Monte Carlo 10K
 
 **🏆 POSICIÓN:**
-Eureka GCC Dubai 2026 — Semifinalista
 Pre-seed $500K @ $3M · Harold Nunes
 
 ✅ Build {VERSION_BANNER} confirmado — omnixquantum.net"""
@@ -1152,7 +1151,7 @@ Pre-seed $500K @ $3M · Harold Nunes
         try:
             help_text = f"""
 🏛️ **OMNIX Decision Governance — COMANDOS COMPLETOS**
-_Harold Nunes · Dubai 2026 · omnixquantum.net_
+_Harold Nunes · omnixquantum.net_
 
 ━━━━━━━━━━━━━━━━━━━━━━
 **🏛️ GOVERNANCE PIPELINE (ADR-058):**

@@ -15,9 +15,9 @@ governance pipeline to two high-stakes autonomous AI domains where decisions
 execute without real-time human intervention:
 
 1. **Medical AI Governance (MED)** — Clinical decisions made by AI systems
-   in diagnostic, therapeutic, rehabilitation, and monitoring contexts.
+ in diagnostic, therapeutic, rehabilitation, and monitoring contexts.
 2. **Autonomous Agent Governance (AGT)** — Decisions made by AI agents
-   operating in financial, logistics, enterprise, or infrastructure environments.
+ operating in financial, logistics, enterprise, or infrastructure environments.
 
 Both sub-verticals share the same core principle: **if not admissible, no
 execution path exists.** The domain adapter pattern (ADR-026) ensures the
@@ -95,16 +95,16 @@ the execution path does not exist.
 ### 3.4 Receipt Structure — OMNIX-MED
 
 ```
-Receipt ID:     OMNIX-MED-{12hex}
-Domain:         medical_ai
-Patient ID:     [SHA-256 anonymised]
-Decision Type:  [rehabilitation_guidance | diagnostic | alert | therapeutic]
-Checkpoints:    CP-1 through CP-11 — all PASS required
-Outcome:        APPROVED | BLOCKED | HOLD
-PQC Signature:  Dilithium-3
-Timestamp:      UTC nanosecond precision
+Receipt ID: OMNIX-MED-{12hex}
+Domain: medical_ai
+Patient ID: [SHA-256 anonymised]
+Decision Type: [rehabilitation_guidance | diagnostic | alert | therapeutic]
+Checkpoints: CP-1 through CP-11 — all PASS required
+Outcome: APPROVED | BLOCKED | HOLD
+PQC Signature: Dilithium-3
+Timestamp: UTC nanosecond precision
 Clinician Link: [clinician_id if human oversight invoked]
-Regulatory:     [FDA | MDR | DOH | MHRA] — jurisdiction flag
+Regulatory: [FDA | MDR | DOH | MHRA] — jurisdiction flag
 ```
 
 ### 3.5 Apollo Medica Integration Model
@@ -115,18 +115,18 @@ before it reaches the wearable's haptic/audio output passes through OMNIX-MED:
 
 ```
 Sensor Input (biofeedback + motion data)
-      │
-      ▼
+ │
+ ▼
 OMNIX-MED 11-Checkpoint Pipeline
-      │
-      ├── BLOCKED → No output to patient device
-      │
-      └── APPROVED → OMNIX-MED-{receipt} issued
-                          │
-                          ▼
-                  Wearable executes guidance
-                  Receipt logged to clinician dashboard
-                  Underwriter-visible audit trail
+ │
+ ├── BLOCKED → No output to patient device
+ │
+ └── APPROVED → OMNIX-MED-{receipt} issued
+ │
+ ▼
+ Wearable executes guidance
+ Receipt logged to clinician dashboard
+ Underwriter-visible audit trail
 ```
 
 This makes every guidance decision provable, auditable, and insurable.
@@ -164,16 +164,16 @@ This makes every guidance decision provable, auditable, and insurable.
 ### 4.3 Receipt Structure — OMNIX-AGT
 
 ```
-Receipt ID:     OMNIX-AGT-{12hex}
-Domain:         autonomous_agent
-Agent ID:       [agent_identifier]
-Action Type:    [financial | data_modification | communication | workflow]
-Checkpoints:    CP-1 through CP-11 — all PASS required
-Outcome:        APPROVED | BLOCKED | HOLD
-PQC Signature:  Dilithium-3
-Timestamp:      UTC nanosecond precision
-Blast Radius:   [quantified impact scope]
-Reversibility:  [reversible | irreversible]
+Receipt ID: OMNIX-AGT-{12hex}
+Domain: autonomous_agent
+Agent ID: [agent_identifier]
+Action Type: [financial | data_modification | communication | workflow]
+Checkpoints: CP-1 through CP-11 — all PASS required
+Outcome: APPROVED | BLOCKED | HOLD
+PQC Signature: Dilithium-3
+Timestamp: UTC nanosecond precision
+Blast Radius: [quantified impact scope]
+Reversibility: [reversible | irreversible]
 ```
 
 ### 4.4 Velos Integration Model (T=0 Enforcement)
@@ -182,18 +182,18 @@ For autonomous agent deployments with Velos execution enforcement:
 
 ```
 Agent Decision Proposal
-      │
-      ▼
+ │
+ ▼
 OMNIX-AGT 11-Checkpoint Pipeline
-      │
-      ├── BLOCKED → Velos T=0 halt — no execution
-      │
-      └── APPROVED → OMNIX-AGT-{receipt} issued
-                          │
-                          ▼
-                  Velos enforces execution at T=0
-                  Receipt cryptographically anchored
-                  Underwriter-visible proof of admissibility
+ │
+ ├── BLOCKED → Velos T=0 halt — no execution
+ │
+ └── APPROVED → OMNIX-AGT-{receipt} issued
+ │
+ ▼
+ Velos enforces execution at T=0
+ Receipt cryptographically anchored
+ Underwriter-visible proof of admissibility
 ```
 
 ---
@@ -288,40 +288,40 @@ The Medical AI vertical is fully implemented and running in the OMNIX platform.
 ```sql
 -- Primary decisions table
 medical_decisions (
-  decision_id VARCHAR(60) PRIMARY KEY,
-  device_type VARCHAR(50),           -- Wearable | Clinical_AI | Monitoring_System | Surgical_Robot
-  decision_type VARCHAR(60),         -- rehabilitation_guidance | diagnostic_alert | ...
-  patient_profile VARCHAR(50),       -- rehabilitation | chronic_condition | post_surgery | ...
-  jurisdiction VARCHAR(10),          -- UAE | EU | USA | UK
-  diagnostic_confidence FLOAT,       -- AI model confidence (0-100)
-  patient_risk_score FLOAT,          -- Patient risk stratification (0-100)
-  -- 6 OMNIX governance signals
-  probability_score FLOAT,           -- Clinical confidence probability
-  risk_exposure FLOAT,               -- Patient risk index
-  signal_coherence FLOAT,            -- Multi-signal clinical alignment
-  trend_persistence FLOAT,           -- Patient trajectory stability
-  stress_resilience FLOAT,           -- Comorbidity edge-case resilience
-  logic_consistency FLOAT,           -- Care plan and ethics alignment
-  decision VARCHAR(10),              -- APPROVED | BLOCKED | HOLD
-  decision_score FLOAT,              -- Composite governance score
-  block_reason VARCHAR(300),         -- Checkpoint failure reason(s)
-  receipt_id VARCHAR(120),           -- OMNIX-MED cryptographic receipt
-  created_at TIMESTAMP WITH TIME ZONE
+ decision_id VARCHAR(60) PRIMARY KEY,
+ device_type VARCHAR(50), -- Wearable | Clinical_AI | Monitoring_System | Surgical_Robot
+ decision_type VARCHAR(60), -- rehabilitation_guidance | diagnostic_alert | ...
+ patient_profile VARCHAR(50), -- rehabilitation | chronic_condition | post_surgery | ...
+ jurisdiction VARCHAR(10), -- UAE | EU | USA | UK
+ diagnostic_confidence FLOAT, -- AI model confidence (0-100)
+ patient_risk_score FLOAT, -- Patient risk stratification (0-100)
+ -- 6 OMNIX governance signals
+ probability_score FLOAT, -- Clinical confidence probability
+ risk_exposure FLOAT, -- Patient risk index
+ signal_coherence FLOAT, -- Multi-signal clinical alignment
+ trend_persistence FLOAT, -- Patient trajectory stability
+ stress_resilience FLOAT, -- Comorbidity edge-case resilience
+ logic_consistency FLOAT, -- Care plan and ethics alignment
+ decision VARCHAR(10), -- APPROVED | BLOCKED | HOLD
+ decision_score FLOAT, -- Composite governance score
+ block_reason VARCHAR(300), -- Checkpoint failure reason(s)
+ receipt_id VARCHAR(120), -- OMNIX-MED cryptographic receipt
+ created_at TIMESTAMP WITH TIME ZONE
 )
 
 -- Cycle aggregates
 medical_cycle_metrics (
-  cycle_id VARCHAR(60) PRIMARY KEY,
-  cycle_number INTEGER,
-  decisions_evaluated INTEGER,
-  decisions_approved INTEGER,
-  decisions_blocked INTEGER,
-  avg_diagnostic_confidence FLOAT,
-  avg_patient_risk FLOAT,
-  avg_decision_score FLOAT,
-  approval_rate FLOAT,
-  cycle_duration_ms INTEGER,
-  created_at TIMESTAMP WITH TIME ZONE
+ cycle_id VARCHAR(60) PRIMARY KEY,
+ cycle_number INTEGER,
+ decisions_evaluated INTEGER,
+ decisions_approved INTEGER,
+ decisions_blocked INTEGER,
+ avg_diagnostic_confidence FLOAT,
+ avg_patient_risk FLOAT,
+ avg_decision_score FLOAT,
+ approval_rate FLOAT,
+ cycle_duration_ms INTEGER,
+ created_at TIMESTAMP WITH TIME ZONE
 )
 ```
 
@@ -358,4 +358,4 @@ The same 6 OMNIX signals (ADR-026 domain-agnostic framework) are adapted to clin
 
 *OMNIX QUANTUM LTD — Decision Governance Infrastructure*
 *Harold Nunes | Founder | omnixquantum.net*
-*Eureka GCC Dubai 2026 Semifinalista*
+*

@@ -1,9 +1,9 @@
 # ADR-027: Category Creation — Decision Governance Infrastructure
 
-**Status**: ADOPTED  
-**Date**: February 17, 2026  
-**Author**: Harold Nunes, OMNIX Team  
-**Category**: Business / Strategic Positioning  
+**Status**: ADOPTED 
+**Date**: February 17, 2026 
+**Author**: Harold Nunes, OMNIX Team 
+**Category**: Business / Strategic Positioning 
 **Supersedes**: ADR-025 (extends, does not replace)
 
 ---
@@ -132,7 +132,7 @@ All existing metrics remain exactly as documented:
 |--------|-------|
 | "AI Decision Governance Platform" | **"Decision Governance Infrastructure for Automated Systems"** |
 
-### 2. Pitch Narrative (Eureka Slide 1)
+### 2. Pitch Narrative
 
 | Before | After |
 |--------|-------|

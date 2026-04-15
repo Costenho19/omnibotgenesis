@@ -70,7 +70,7 @@ When there is no governance layer:
 | **System uptime** | 95%+ | Production-grade infrastructure |
 | **Execution latency** | ~120ms | Measured, not estimated |
 | **Multi-vertical demos** | 3 | Trading (validated), Credit, Insurance (interactive demos live) |
-| **Competition status** | Semifinalist | Eureka Dubai 2026 |
+| **Competition status** | Semifinalist | 2026 |
 
 ---
 
@@ -232,7 +232,7 @@ Founder & Product Architect, OMNIX
 ---
 
 *OMNIX — Governing decisions under uncertainty.*
-*Eureka Dubai 2026 — Semifinalist*
+* 2026 — Semifinalist*
 
 *This document is for informational purposes. OMNIX is decision governance infrastructure, not an investment product. All metrics are from governance engine operation in real market conditions.*
 

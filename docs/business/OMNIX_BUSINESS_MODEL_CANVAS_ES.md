@@ -1,5 +1,5 @@
 # OMNIX — Business Model Canvas
-## Version Alineada para Eureka Dubai | Marzo 2026
+## Version Alineada para | Marzo 2026
 
 **Clasificacion**: Suplemento de Competencia — Revisado por Expertos
 **Alineacion**: Todos los numeros coinciden con el Pitch Deck Final de OMNIX Eureka
@@ -12,8 +12,8 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            OMNIX BUSINESS MODEL                                 │
-│              Gobernanza de Riesgo Institucional para Activos Digitales           │
+│ OMNIX BUSINESS MODEL │
+│ Gobernanza de Riesgo Institucional para Activos Digitales │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -171,7 +171,7 @@ Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3
 | ADGM Innovation Hub | Comunidad regulatoria + programas startup | 5-10 intros calidas/trimestre |
 | Hub71 (si aceptado) | Red de aceleradora + intros corporativas | 3-5 leads calificados/trimestre |
 | Eventos de industria | TOKEN2049 Dubai, FinTech Abu Dhabi, GITEX | 10+ contactos calificados/evento |
-| Eureka Dubai (actual) | Exposicion de competencia + intros de jueces | Pipeline inmediato |
+| (actual) | Exposicion de competencia + intros de jueces | Pipeline inmediato |
 
 ### Presencia Digital (Secundario)
 
@@ -319,10 +319,10 @@ Supply Chain, Credito/Prestamos (Ano 2-3) → Seguros, Trading de Energia (Ano 3
 ### Modelo de ROI
 
 ```
-Costo mensual OMNIX:            $25K (licencia API rango medio)
-Capital mensual en riesgo:      $5M
-Impacto reduccion drawdown:     -40% eventos severos
-Capital preservado est./mes:    $50K-200K
+Costo mensual OMNIX: $25K (licencia API rango medio)
+Capital mensual en riesgo: $5M
+Impacto reduccion drawdown: -40% eventos severos
+Capital preservado est./mes: $50K-200K
 
 ROI: 2x-8x costo mensual
 Driver de valor principal: Exposicion a riesgo de cola evitada
@@ -393,8 +393,8 @@ Driver de valor principal: Exposicion a riesgo de cola evitada
 
 | Atributo | Valor |
 |----------|-------|
-| Preparado para | Eureka Dubai 2026, Revision institucional, Ecosistema ADGM |
-| Alineacion | Todos los numeros coinciden con Pitch Deck Final de OMNIX Eureka |
+| Preparado para | 2026, Revision institucional, Ecosistema ADGM |
+| Alineacion | Todos los numeros coinciden con Pitch Deck Final de OMNIX |
 | Fundador | Harold Nunes |
 | Contacto | contacto@omnixquantum.net |
 | Website | www.omnixquantum.net |
@@ -403,4 +403,4 @@ Driver de valor principal: Exposicion a riesgo de cola evitada
 ---
 
 *OMNIX — Protegiendo Capital Primero*
-*Eureka Dubai 2026 — Semifinalista*
+* 2026 — Semifinalista*

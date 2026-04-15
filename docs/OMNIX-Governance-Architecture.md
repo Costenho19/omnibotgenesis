@@ -1,10 +1,10 @@
 # OMNIX Decision Governance Infrastructure
 ## Governance Architecture Reference
 
-**Version:** 6.6.0  
-**Author:** Harold Nunes, OMNIX QUANTUM LTD  
-**Last updated:** 2026-04-09 (post Forensic Audit Ronda 3)  
-**Raises:** $500K pre-seed @ $3M valuation | Eureka GCC Dubai 2026
+**Version:** 6.6.0 
+**Author:** Harold Nunes, OMNIX QUANTUM LTD 
+**Last updated:** 2026-04-09 (post Forensic Audit Ronda 3) 
+**Raises:** $500K pre-seed @ $3M valuation | 
 
 ---
 
@@ -23,37 +23,37 @@ The system is designed around one principle: **when in doubt, block**.
 
 ```
 Input Signals
-      │
-      ▼
+ │
+ ▼
 ┌─────────────────────────────────────────────────────┐
-│  AVM — Assumption Validity Monitor (ADR-064/075)     │
-│  ┌──────────────────────────────────────────────┐   │
-│  │ Guard 1: NON_FINITE_SIGNAL (NaN/Inf → BLOCK) │   │
-│  │ Guard 2: CRITICAL_STALE   (age → BLOCK)      │   │
-│  │ Guard 3: DRIFT_BLOCK      (drift → BLOCK)    │   │
-│  └──────────────────────────────────────────────┘   │
+│ AVM — Assumption Validity Monitor (ADR-064/075) │
+│ ┌──────────────────────────────────────────────┐ │
+│ │ Guard 1: NON_FINITE_SIGNAL (NaN/Inf → BLOCK) │ │
+│ │ Guard 2: CRITICAL_STALE (age → BLOCK) │ │
+│ │ Guard 3: DRIFT_BLOCK (drift → BLOCK) │ │
+│ └──────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────┘
-      │ is_valid=True + pass_through=False (certified)
-      ▼
+ │ is_valid=True + pass_through=False (certified)
+ ▼
 ┌─────────────────────────────────────────────────────┐
-│  CAG — Context Admission Gate (ADR-050)              │
+│ CAG — Context Admission Gate (ADR-050) │
 └─────────────────────────────────────────────────────┘
-      │
-      ▼
+ │
+ ▼
 ┌─────────────────────────────────────────────────────┐
-│  11 Checkpoints (CP-1 to CP-11)                     │
-│  Each checkpoint: signal evaluation + threshold gate │
+│ 11 Checkpoints (CP-1 to CP-11) │
+│ Each checkpoint: signal evaluation + threshold gate │
 └─────────────────────────────────────────────────────┘
-      │
-      ▼
+ │
+ ▼
 ┌─────────────────────────────────────────────────────┐
-│  TIE — Transaction Integrity Engine (ADR-053)        │
-│  Generates post-quantum signed receipt               │
+│ TIE — Transaction Integrity Engine (ADR-053) │
+│ Generates post-quantum signed receipt │
 └─────────────────────────────────────────────────────┘
-      │
-      ▼
+ │
+ ▼
 Decision: APPROVED / BLOCKED / HOLD
-+ Receipt: OMNIX-{DOMAIN}-{12hex}  (canónico)
++ Receipt: OMNIX-{DOMAIN}-{12hex} (canónico)
 + PQC signature (Dilithium)
 ```
 
@@ -101,12 +101,12 @@ Any non-finite signal → `NON_FINITE_BLOCK`, `is_valid=False`, `pass_through=Fa
 drift_score = Σ (weight_i × |current_i - baseline_i|) / Σ weight_i
 
 Signal weights (must sum to 1.0):
-  probability_score: 0.25
-  signal_coherence:  0.25
-  risk_exposure:     0.20  (amplified ×1.4 when increasing)
-  stress_resilience: 0.15
-  trend_persistence: 0.10
-  logic_consistency: 0.05
+ probability_score: 0.25
+ signal_coherence: 0.25
+ risk_exposure: 0.20 (amplified ×1.4 when increasing)
+ stress_resilience: 0.15
+ trend_persistence: 0.10
+ logic_consistency: 0.05
 
 effective_threshold = drift_threshold × (1 - 0.3 × age_overage_ratio)
 ```
@@ -126,15 +126,15 @@ effective_threshold = drift_threshold × (1 - 0.3 × age_overage_ratio)
 
 ```
 baseline_signals (dict)
-    → json.dumps(sort_keys=True, separators=(',',':'))
-    → SHA-256
-    → baseline_hash (stored in DB)
+ → json.dumps(sort_keys=True, separators=(',',':'))
+ → SHA-256
+ → baseline_hash (stored in DB)
 
 On load:
-    recompute hash → compare with stored
-    match  → integrity_status = OK
-    miss   → integrity_status = TAMPERED → snapshot rejected
-    empty  → integrity_status = LEGACY_NO_HASH → warning
+ recompute hash → compare with stored
+ match → integrity_status = OK
+ miss → integrity_status = TAMPERED → snapshot rejected
+ empty → integrity_status = LEGACY_NO_HASH → warning
 ```
 
 ### 4.3 Versioning
@@ -329,7 +329,7 @@ Independent verification against published public key now succeeds for all recei
 
 ---
 
-*OMNIX QUANTUM LTD — Decision Governance Infrastructure*  
-*Harold Nunes | Founder | OMNIX QUANTUM LTD, UK*  
-*71-75 Shelton Street, Covent Garden, London, WC2H 9JQ*  
-*Eureka GCC Dubai 2026 Semifinalista*
+*OMNIX QUANTUM LTD — Decision Governance Infrastructure* 
+*Harold Nunes | Founder | OMNIX QUANTUM LTD, UK* 
+*71-75 Shelton Street, Covent Garden, London, WC2H 9JQ* 
+*

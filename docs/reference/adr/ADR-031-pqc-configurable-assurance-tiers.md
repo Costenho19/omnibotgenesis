@@ -1,9 +1,9 @@
 # ADR-031: PQC Configurable Assurance Tiers
 
-**Status**: ACCEPTED  
-**Date**: March 3, 2026  
-**Author**: Harold Nunes  
-**Category**: Security Architecture / Cryptographic Posture  
+**Status**: ACCEPTED 
+**Date**: March 3, 2026 
+**Author**: Harold Nunes 
+**Category**: Security Architecture / Cryptographic Posture 
 **Depends on**:
 - ADR-022 (Post-Quantum Cryptography Implementation — base implementation)
 - ADR-028 (External Governance API — receipt signing)
@@ -12,7 +12,7 @@
 
 ## Context
 
-During Eureka Dubai GCC 2026 due diligence, a technical evaluator (Leighton) asked a legitimate architecture question:
+During due diligence, a technical evaluator (Leighton) asked a legitimate architecture question:
 
 > "You use language like 'sovereign' and 'high-assurance.' Your current signing is ML-DSA-65 (NIST Level 3). Level 3 ≠ Level 5. How do you justify the alignment between your positioning and your cryptographic level selection?"
 
@@ -20,11 +20,11 @@ This is a well-formed question. NIST defines five security levels for post-quant
 
 | Level | Classical Security Equivalent | Representative Use Case |
 |-------|------------------------------|------------------------|
-| 1     | ~128-bit (AES-128)           | Consumer / lightweight IoT |
-| 2     | ~128-bit (SHA-256 collision) | General enterprise |
-| **3** | **~192-bit (AES-192)**       | **Capital-sensitive enterprise, governance infrastructure** |
-| 4     | ~192-bit (SHA-384 collision) | High-value enterprise |
-| **5** | **~256-bit (AES-256)**       | **National-grade, state-secrecy, maximum assurance** |
+| 1 | ~128-bit (AES-128) | Consumer / lightweight IoT |
+| 2 | ~128-bit (SHA-256 collision) | General enterprise |
+| **3** | **~192-bit (AES-192)** | **Capital-sensitive enterprise, governance infrastructure** |
+| 4 | ~192-bit (SHA-384 collision) | High-value enterprise |
+| **5** | **~256-bit (AES-256)** | **National-grade, state-secrecy, maximum assurance** |
 
 OMNIX selected Level 3 (ML-DSA-65 / Dilithium-3) as the production baseline because:
 
@@ -54,8 +54,8 @@ Refactor the PQC signing layer so that the assurance tier is **deployment-contex
 
 | PQC_SIGNING_LEVEL | Algorithm | NIST Variant | Security | Use Case |
 |-------------------|-----------|--------------|----------|----------|
-| `3` (default)     | Dilithium-3 | ML-DSA-65 | ~192-bit classical equivalent | Enterprise baseline — capital governance, institutional deployments |
-| `5`               | Dilithium-5 | ML-DSA-87 | ~256-bit classical equivalent | High-assurance — regulated environments, national-grade, maximum assurance |
+| `3` (default) | Dilithium-3 | ML-DSA-65 | ~192-bit classical equivalent | Enterprise baseline — capital governance, institutional deployments |
+| `5` | Dilithium-5 | ML-DSA-87 | ~256-bit classical equivalent | High-assurance — regulated environments, national-grade, maximum assurance |
 
 ---
 

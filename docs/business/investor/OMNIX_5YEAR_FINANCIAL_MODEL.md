@@ -340,20 +340,20 @@
 ### 8.2 Revenue vs. Cost Curve (Simplified)
 
 ```
-$26M ----                                              *** REVENUE
-                                                  ***
-$13M ----                                    ***    *** COSTS
-                                       ***  --
- $5.5M ----                      ***   --
-                           ***  --
- $1.8M ----          ***  --
-                  ** --
-  $300K ----  ** --
-         Q1  Q2  Q3  Q4 | Y2  |  Y3  |  Y4  |  Y5
-         2026            2027   2028   2029   2030
-                   ^
-               BREAK-EVEN
-               Q4 2026
+$26M ---- *** REVENUE
+ ***
+$13M ---- *** *** COSTS
+ *** --
+ $5.5M ---- *** --
+ *** --
+ $1.8M ---- *** --
+ ** --
+ $300K ---- ** --
+ Q1 Q2 Q3 Q4 | Y2 | Y3 | Y4 | Y5
+ 2026 2027 2028 2029 2030
+ ^
+ BREAK-EVEN
+ Q4 2026
 ```
 
 ---
@@ -400,7 +400,7 @@ $13M ----                                    ***    *** COSTS
 | Category | % | Amount | Activities |
 |----------|:-:|-------:|-----------|
 | Engineering Team (4 hires) | 40% | $1,400K | Expand product velocity |
-| Enterprise Sales & Marketing | 30% | $1,050K | Sales team, events, Eureka follow-ups |
+| Enterprise Sales & Marketing | 30% | $1,050K | Sales team, events, follow-ups |
 | ADGM Operational Setup | 15% | $525K | Full regulatory entity, Key-person insurance |
 | Product & Partnerships | 10% | $350K | Product Manager, vertical expansion |
 | Reserve | 5% | $175K | Buffer |
@@ -526,8 +526,8 @@ $13M ----                                    ***    *** COSTS
 | Attribute | Value |
 |-----------|-------|
 | Model Version | 1.0 |
-| Prepared for | Eureka Dubai GCC 2026, Pre-Seed Investors |
-| Aligned with | OMNIX Eureka Pitch Final, Business Model Canvas, financial_projections.md |
+| Prepared for | , Pre-Seed Investors |
+| Aligned with | OMNIX Pitch Final, Business Model Canvas, financial_projections.md |
 | Founder | Harold Nunes — harold@omnix.ai |
 | Last Updated | March 6, 2026 |
 | ADR Count | 36 |

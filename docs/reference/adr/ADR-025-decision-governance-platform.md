@@ -2,20 +2,20 @@
 
 **Note (Feb 17, 2026):** Extended by ADR-027, which upgrades "AI Decision Governance Platform" to "Decision Governance Infrastructure for Automated Systems" with category-creation framing.
 
-**Status**: ADOPTED  
-**Date**: February 15, 2026  
-**Author**: Harold Nunes, OMNIX Team  
+**Status**: ADOPTED 
+**Date**: February 15, 2026 
+**Author**: Harold Nunes, OMNIX Team 
 **Category**: Business / Strategic Positioning
 
 ---
 
 ## Context
 
-OMNIX has successfully completed its 30-day paper trading track record (Jan 15 - Feb 13, 2026) and advanced to **Semifinalist** status in Eureka Dubai. The core technology — a 6-checkpoint veto architecture, Monte Carlo simulation, Non-Markovian Memory, Shadow Portfolio learning engine — has been validated in real market conditions with 670,000+ decision cycles analyzed.
+OMNIX has successfully completed its 30-day paper trading track record (Jan 15 - Feb 13, 2026) and advanced to **Semifinalist** status in . The core technology — a 6-checkpoint veto architecture, Monte Carlo simulation, Non-Markovian Memory, Shadow Portfolio learning engine — has been validated in real market conditions with 670,000+ decision cycles analyzed.
 
 Upon review, the technology OMNIX has built is **not limited to trading**. The core engine solves a universal problem: **governing high-stakes decisions under uncertainty**. Crypto trading is simply the first domain where this was validated.
 
-Investors and competition judges (Eureka Dubai, Hub71) evaluate **total addressable market** and **scalability potential**. Positioning OMNIX solely as "crypto trading risk infrastructure" limits perceived market size and creates direct competition with thousands of trading bots. Positioning as a **decision governance platform** opens multiple verticals worth billions collectively.
+Investors and competition judges (, Hub71) evaluate **total addressable market** and **scalability potential**. Positioning OMNIX solely as "crypto trading risk infrastructure" limits perceived market size and creates direct competition with thousands of trading bots. Positioning as a **decision governance platform** opens multiple verticals worth billions collectively.
 
 ## Decision
 
@@ -160,7 +160,7 @@ All existing metrics remain exactly as documented:
 ### Positive
 
 - **Dramatically expanded TAM** — from crypto risk infra (~$18.8B) to decision governance across multiple industries
-- **Stronger Eureka Dubai positioning** — judges see scalable platform, not niche bot
+- **Stronger positioning** — judges see scalable platform, not niche bot
 - **Investor appeal** — multi-vertical potential justifies valuation and shows growth trajectory
 - **Competitive differentiation** — exits "trading bot" category entirely
 - **Natural metaphor extension** — "airport security" works for any domain

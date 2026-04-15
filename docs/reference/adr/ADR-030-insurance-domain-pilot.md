@@ -1,9 +1,9 @@
 # ADR-030: Insurance Domain Pilot — Multi-Domain Extensibility Validated
 
-**Status**: ACCEPTED  
-**Date**: March 1, 2026  
-**Author**: Harold Nunes  
-**Category**: Architecture / Strategic Validation  
+**Status**: ACCEPTED 
+**Date**: March 1, 2026 
+**Author**: Harold Nunes 
+**Category**: Architecture / Strategic Validation 
 **Depends on**:
 - ADR-026 (Multi-Vertical Governance Architecture — Domain Adapter Pattern)
 - ADR-027 (Decision Governance Infrastructure — Category Creation)
@@ -20,7 +20,7 @@ Concurrently, an interactive insurance demo was built in the frontend (`omnix_we
 
 This ADR documents the conversion of that frontend demonstration into **real, PQC-signed governance receipts** via the External Governance API (ADR-028). The insurance domain is now the **third validated domain** — alongside trading (production, 699,000+ cycles) and the HealthTech conceptual framework — with immutable on-chain evidence.
 
-**Strategic positioning**: This is not a "pilot" in the product sense — no insurance company has been onboarded. It is a **demonstration of extensibility**: the same fail-closed engine that governs trading decisions can govern insurance underwriting decisions, generating a verifiable PQC-signed audit trail, without any changes to the core engine. This evidence directly supports the multi-vertical TAM claim in the Eureka Dubai GCC 2026 pitch.
+**Strategic positioning**: This is not a "pilot" in the product sense — no insurance company has been onboarded. It is a **demonstration of extensibility**: the same fail-closed engine that governs trading decisions can govern insurance underwriting decisions, generating a verifiable PQC-signed audit trail, without any changes to the core engine. This evidence directly supports the multi-vertical TAM claim in the pitch.
 
 ---
 
@@ -64,11 +64,11 @@ All 3 receipts were generated on **March 1, 2026** and are publicly verifiable a
 | stress_resilience | 63 | ≥ 35 | PASS |
 | logic_consistency | 74 | ≥ 40 | PASS |
 
-**Decision**: APPROVED (6/6 checkpoints passed)  
-**Receipt ID**: `OMNIX-AB1D878EC56A`  
-**Asset**: AUTO-POL-2847  
-**Timestamp**: 2026-03-01T05:36:21Z  
-**Signature**: Dilithium-3 (ML-DSA-65, NIST-standardized)  
+**Decision**: APPROVED (6/6 checkpoints passed) 
+**Receipt ID**: `OMNIX-AB1D878EC56A` 
+**Asset**: AUTO-POL-2847 
+**Timestamp**: 2026-03-01T05:36:21Z 
+**Signature**: Dilithium-3 (ML-DSA-65, NIST-standardized) 
 **Insurance Interpretation**: BIND — all governance gates cleared, policy may be issued automatically
 
 ---
@@ -86,12 +86,12 @@ All 3 receipts were generated on **March 1, 2026** and are publicly verifiable a
 | stress_resilience | 19 | ≥ 35 | VETO |
 | logic_consistency | 31 | ≥ 40 | VETO |
 
-**Decision**: BLOCKED (6/6 checkpoints vetoed)  
-**Receipt ID**: `OMNIX-B5782882E993`  
-**Asset**: AUTO-POL-9999  
-**Timestamp**: 2026-03-01T05:36:39Z  
-**Veto Chain**: CP-1 · CP-2 · CP-3 · CP-4 · CP-5 · CP-6  
-**Signature**: Dilithium-3 (ML-DSA-65, NIST-standardized)  
+**Decision**: BLOCKED (6/6 checkpoints vetoed) 
+**Receipt ID**: `OMNIX-B5782882E993` 
+**Asset**: AUTO-POL-9999 
+**Timestamp**: 2026-03-01T05:36:39Z 
+**Veto Chain**: CP-1 · CP-2 · CP-3 · CP-4 · CP-5 · CP-6 
+**Signature**: Dilithium-3 (ML-DSA-65, NIST-standardized) 
 **Insurance Interpretation**: DECLINE — unanimous veto across all 6 governance checkpoints
 
 ---
@@ -109,12 +109,12 @@ All 3 receipts were generated on **March 1, 2026** and are publicly verifiable a
 | stress_resilience | 42 | ≥ 35 | PASS |
 | logic_consistency | 49 | ≥ 40 | PASS |
 
-**Decision**: BLOCKED (2/6 checkpoints vetoed — fail-closed)  
-**Receipt ID**: `OMNIX-C23154E3D1B0`  
-**Asset**: LIFE-POL-4521  
-**Timestamp**: 2026-03-01T05:36:42Z  
-**Veto Chain**: CP-3:Signal Coherence · CP-4:Trend Persistence  
-**Signature**: Dilithium-3 (ML-DSA-65, NIST-standardized)  
+**Decision**: BLOCKED (2/6 checkpoints vetoed — fail-closed) 
+**Receipt ID**: `OMNIX-C23154E3D1B0` 
+**Asset**: LIFE-POL-4521 
+**Timestamp**: 2026-03-01T05:36:42Z 
+**Veto Chain**: CP-3:Signal Coherence · CP-4:Trend Persistence 
+**Signature**: Dilithium-3 (ML-DSA-65, NIST-standardized) 
 **Insurance Interpretation**: REFER — borderline profile blocked by declining claims trend and insufficient signal coherence. Requires human underwriter review.
 
 **Notable**: The borderline scenario demonstrates the fail-closed architecture elegantly. Probability and risk scores are borderline acceptable, but the coherence gate (54 vs. 55 threshold) and trend gate (38 vs. 50 threshold) independently veto. One checkpoint is enough to block. This mirrors how ECW behaves in trading: patience over marginal edge.
@@ -163,7 +163,7 @@ Insurance is listed as Phase 5 (Year 3+) in ADR-026's implementation roadmap —
 
 ### Pitch Positioning
 
-Do NOT say: *"We have an insurance pilot"*  
+Do NOT say: *"We have an insurance pilot"* 
 DO say: *"The same engine that has governed 699,000+ trading decisions can govern insurance underwriting decisions — here are 3 PQC-signed receipts from today proving it. The governance infrastructure scales across domains."*
 
 This is the narrative of extensibility, not the narrative of a vertical product.
@@ -178,8 +178,8 @@ This is the narrative of extensibility, not the narrative of a vertical product.
 | `OMNIX-B5782882E993` | insurance | AUTO-POL-9999 | BLOCKED | 6/6 vetoed |
 | `OMNIX-C23154E3D1B0` | insurance | LIFE-POL-4521 | BLOCKED | 4 pass, 2 veto |
 
-All verifiable at: `https://omnibotgenesis-production.up.railway.app/verify`  
-All signed with Dilithium-3 (ML-DSA-65, NIST-standardized post-quantum algorithm)  
+All verifiable at: `https://omnibotgenesis-production.up.railway.app/verify` 
+All signed with Dilithium-3 (ML-DSA-65, NIST-standardized post-quantum algorithm) 
 All stored in immutable PQC hash chain — cannot be altered retroactively
 
 ---
@@ -195,5 +195,5 @@ All stored in immutable PQC hash chain — cannot be altered retroactively
 
 ---
 
-*Decision accepted: March 1, 2026*  
+*Decision accepted: March 1, 2026* 
 *Third domain validated. Trading (699K+ cycles) + Insurance (3 real receipts) + HealthTech (conceptual framework). All via same governance engine, zero core changes.*

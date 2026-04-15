@@ -1,7 +1,7 @@
 # OMNIX — Competitive Landscape Analysis
 
 **Last Updated**: March 6, 2026
-**Purpose**: Investor due diligence and Eureka presentation preparation
+**Purpose**: Investor due diligence and presentation preparation
 
 ---
 
@@ -10,21 +10,21 @@
 OMNIX operates in a new category: **Decision Governance Infrastructure**. No single competitor offers the same product. Competition comes from adjacent categories:
 
 ```
-                        GOVERNANCE DEPTH
-                    (Pre-execution control)
-                           HIGH
-                            |
-                      [OMNIX]
-                            |
-                ────────────┼────────────
-    POST-TRADE              |              PRE-TRADE
-    (Reporting)   [Riskalyze]|[Internal     (Execution)
-                  [BarraOne] | Quant Tools]
-                            |
-                     [3Commas]
-                   [Cryptohopper]
-                            |
-                           LOW
+ GOVERNANCE DEPTH
+ (Pre-execution control)
+ HIGH
+ |
+ [OMNIX]
+ |
+ ────────────┼────────────
+ POST-TRADE | PRE-TRADE
+ (Reporting) [Riskalyze]|[Internal (Execution)
+ [BarraOne] | Quant Tools]
+ |
+ [3Commas]
+ [Cryptohopper]
+ |
+ LOW
 ```
 
 **OMNIX is the only solution that provides deep pre-execution governance accessible to firms below $100M AUM.**
@@ -163,4 +163,4 @@ As more clients use OMNIX:
 ---
 
 *OMNIX — Governing decisions under uncertainty.*
-*Eureka Dubai 2026 — Semifinalist*
+* 2026 — Semifinalist*

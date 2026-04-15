@@ -103,7 +103,7 @@ async def evaluar_command(self, update, context):
             " no AML officer, subsidiaria en lista de control de exportaciones de la UE.`\n\n"
             "El pipeline de 11 checkpoints evalúa: integridad de señal, riesgo,"
             " ética, AML, fraude y cumplimiento jurisdiccional.\n\n"
-            "_OMNIX Decision Governance — Harold Nunes, Dubai 2026_",
+            "_OMNIX Decision Governance — Harold Nunes · omnixquantum.net_",
             parse_mode="Markdown",
         )
         return
@@ -168,7 +168,7 @@ async def evaluar_command(self, update, context):
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"🧪 *Modo Demo — Análisis real, firma pendiente*\n"
             f"_Este análisis ha sido ejecutado por el pipeline real de OMNIX con sus 11 checkpoints activos — no es simulado ni ficticio. Sin embargo, al ser una demostración pública, el recibo no lleva firma criptográfica institucional ni tiene validez legal o contractual. Para evaluaciones con plena validez institucional, firma PQC y soporte regulatorio, contacta a OMNIX._\n\n"
-            f"_OMNIX Decision Governance · Harold Nunes · Dubai 2026_"
+            f"_OMNIX Decision Governance · Harold Nunes · omnixquantum.net_"
         )
 
         await processing_msg.edit_text(msg, parse_mode="Markdown")
@@ -222,7 +222,6 @@ async def gobernanza_command(self, update, context):
         f"✅ G7 — PEP / Politically Exposed Persons\n\n"
         f"🌐 *Jurisdicciones activas:* 13\n"
         f"🤝 *Partner:* Velos — Naimat Khan · 10% mutual referral\n"
-        f"🏆 *Posición:* Eureka GCC Dubai 2026 — Semifinalista\n"
         f"💰 *Pre-seed:* $500K @ $3M valuation\n\n"
         f"📌 *Versión:* {VERSION_BANNER}\n"
         f"🔗 omnixquantum.net\n\n"

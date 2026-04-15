@@ -1,11 +1,11 @@
 # OMNIX — Real-Time Governance Behavior Snapshot
 
-**Status**: Live Conditions — Capital Preservation Mode  
-**Date**: February 17, 2026  
-**Observation Period**: January 15 – February 17, 2026 (33 days)  
-**Vertical**: Digital Asset Trading (First Validated Vertical)  
-**Identity**: OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems.  
-**ADR Compliance**: ADR-018 (DCI), ADR-019 (ECW), ADR-023, ADR-027  
+**Status**: Live Conditions — Capital Preservation Mode 
+**Date**: February 17, 2026 
+**Observation Period**: January 15 – February 17, 2026 (33 days) 
+**Vertical**: Digital Asset Trading (First Validated Vertical) 
+**Identity**: OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems. 
+**ADR Compliance**: ADR-018 (DCI), ADR-019 (ECW), ADR-023, ADR-027 
 
 ---
 
@@ -113,38 +113,38 @@ If an investor asks: *"Why isn't the system trading?"*
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│              GOVERNANCE IN ACTION                            │
-│              Real-Time Production Data                       │
-│                                                              │
-│  ┌─────────────────────────────────────────────────────┐     │
-│  │  LAYER 1: External Guards                           │     │
-│  │                                                     │     │
-│  │  ✅ Monte Carlo    ✅ RMS    ✅ EMA Signal          │     │
-│  │  ✅ Coherence Gate ✅ ECW    ✅ Consensus           │     │
-│  │                                                     │     │
-│  │  ALL PASSED — System capable of execution           │     │
-│  └─────────────────────────────────────────────────────┘     │
-│                          │                                   │
-│                          ▼                                   │
-│  ┌─────────────────────────────────────────────────────┐     │
-│  │  LAYER 2: Structural Coherence Analysis             │     │
-│  │                                                     │     │
-│  │  DCI above execution threshold                      │     │
-│  │  Classification:  CONTRADICTORY                     │     │
-│  │                                                     │     │
-│  │  ⛔ BLOCKED — Internal signals do not agree         │     │
-│  └─────────────────────────────────────────────────────┘     │
-│                                                              │
-│           ╔═══════════════════════════════════════╗           │
-│           ║                                       ║           │
-│           ║  Capable of execution.                ║           │
-│           ║  Chose preservation.                  ║           │
-│           ║                                       ║           │
-│           ╚═══════════════════════════════════════╝           │
-│                                                              │
-│  OMNIX — When systems can act, but choose discipline.        │
-│                                                              │
+│ │
+│ GOVERNANCE IN ACTION │
+│ Real-Time Production Data │
+│ │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ LAYER 1: External Guards │ │
+│ │ │ │
+│ │ ✅ Monte Carlo ✅ RMS ✅ EMA Signal │ │
+│ │ ✅ Coherence Gate ✅ ECW ✅ Consensus │ │
+│ │ │ │
+│ │ ALL PASSED — System capable of execution │ │
+│ └─────────────────────────────────────────────────────┘ │
+│ │ │
+│ ▼ │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ LAYER 2: Structural Coherence Analysis │ │
+│ │ │ │
+│ │ DCI above execution threshold │ │
+│ │ Classification: CONTRADICTORY │ │
+│ │ │ │
+│ │ ⛔ BLOCKED — Internal signals do not agree │ │
+│ └─────────────────────────────────────────────────────┘ │
+│ │
+│ ╔═══════════════════════════════════════╗ │
+│ ║ ║ │
+│ ║ Capable of execution. ║ │
+│ ║ Chose preservation. ║ │
+│ ║ ║ │
+│ ╚═══════════════════════════════════════╝ │
+│ │
+│ OMNIX — When systems can act, but choose discipline. │
+│ │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -152,7 +152,7 @@ If an investor asks: *"Why isn't the system trading?"*
 
 ---
 
-## 6. Post-Eureka Roadmap
+## 6. Product Roadmap
 
 | Phase | Action | Rationale |
 |-------|--------|-----------|
@@ -178,11 +178,11 @@ If an investor asks: *"Why isn't the system trading?"*
 [2026-02-17 06:05:43] → Action: HOLD (BLOCKED by COHERENCE)
 
 [2026-02-17 06:05:43] DECISION_CONTRADICTION_INDEX:
-[2026-02-17 06:05:43]    - Score: 72.9 (CONTRADICTORY)
-[2026-02-17 06:05:43]    - Local strength: 21.4 (NM=63%, EMA=44%)
-[2026-02-17 06:05:43]    - Edge penalty: 29.6 (WR=50.6%, ER=0.0000)
-[2026-02-17 06:05:43]    - Regime: TRENDING (15pts) | Risk: MEDIUM (7pts)
-[2026-02-17 06:05:43]    → Significant internal conflict - capital preservation mode
+[2026-02-17 06:05:43] - Score: 72.9 (CONTRADICTORY)
+[2026-02-17 06:05:43] - Local strength: 21.4 (NM=63%, EMA=44%)
+[2026-02-17 06:05:43] - Edge penalty: 29.6 (WR=50.6%, ER=0.0000)
+[2026-02-17 06:05:43] - Regime: TRENDING (15pts) | Risk: MEDIUM (7pts)
+[2026-02-17 06:05:43] → Significant internal conflict - capital preservation mode
 
 [2026-02-17 06:05:43] Análisis V5.2 completado: HOLD - Confianza: 58.5%
 ```

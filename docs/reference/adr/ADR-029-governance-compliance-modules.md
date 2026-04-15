@@ -1,10 +1,10 @@
 # ADR-029: Governance Compliance Modules
 
-**Status**: ACCEPTED  
-**Date**: 2026-03-01  
-**Author**: Harold Nunes, CEO — OMNIX Quantum  
-**Internal Build Reference**: 6.5.4e  
-**Supersedes**: None (additive to ADR-028)  
+**Status**: ACCEPTED 
+**Date**: 2026-03-01 
+**Author**: Harold Nunes, CEO — OMNIX Quantum 
+**Internal Build Reference**: 6.5.4e 
+**Supersedes**: None (additive to ADR-028) 
 **Related**: ADR-028 (External Governance API), ADR-022 (Post-Quantum Cryptography), ADR-023 (Track Record), ADR-024 (Investor Challenge Response)
 
 ---
@@ -19,7 +19,7 @@ OMNIX has operated a live External Governance API (ADR-028) since February 27, 2
 4. **Manage governance incidents** in a traceable lifecycle (EU AI Act Art. 9 + 62)
 5. **Generate compliance reports** with full decision lineage (EU AI Act Art. 12)
 
-**Trigger**: Eureka Dubai GCC 2026 semifinals (March 15, 2026) require demonstrable regulatory maturity. Institutional due diligence partners require evidence that OMNIX governance is not just a claim — it is a structured, auditable system.
+**Trigger**: semifinals (March 15, 2026) require demonstrable regulatory maturity. Institutional due diligence partners require evidence that OMNIX governance is not just a claim — it is a structured, auditable system.
 
 **Constraint**: All new modules must be ADDITIVE. Zero changes to existing tables, endpoints, or the PQC-signed decision receipt hash chain.
 
@@ -63,100 +63,100 @@ Implement 5 governance compliance modules as a new layer above the existing Exte
 ```sql
 -- Module 1: Risk Mapping
 CREATE TABLE governance_risk_map (
-    id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    client_id         TEXT NOT NULL,
-    use_case          TEXT NOT NULL,
-    classification    TEXT CHECK (classification IN ('CRITICAL','HIGH','MEDIUM','LOW')) NOT NULL,
-    impact_financial  INTEGER CHECK (impact_financial BETWEEN 0 AND 100) DEFAULT 50,
-    impact_operational INTEGER CHECK (impact_operational BETWEEN 0 AND 100) DEFAULT 50,
-    impact_regulatory  INTEGER CHECK (impact_regulatory BETWEEN 0 AND 100) DEFAULT 50,
-    stakeholders      JSONB DEFAULT '[]',
-    thresholds        JSONB DEFAULT '{}',
-    created_at        TIMESTAMPTZ DEFAULT NOW(),
-    updated_at        TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (client_id, use_case)
+ id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+ client_id TEXT NOT NULL,
+ use_case TEXT NOT NULL,
+ classification TEXT CHECK (classification IN ('CRITICAL','HIGH','MEDIUM','LOW')) NOT NULL,
+ impact_financial INTEGER CHECK (impact_financial BETWEEN 0 AND 100) DEFAULT 50,
+ impact_operational INTEGER CHECK (impact_operational BETWEEN 0 AND 100) DEFAULT 50,
+ impact_regulatory INTEGER CHECK (impact_regulatory BETWEEN 0 AND 100) DEFAULT 50,
+ stakeholders JSONB DEFAULT '[]',
+ thresholds JSONB DEFAULT '{}',
+ created_at TIMESTAMPTZ DEFAULT NOW(),
+ updated_at TIMESTAMPTZ DEFAULT NOW(),
+ UNIQUE (client_id, use_case)
 );
 
 -- Module 2: Measurement & Monitoring
 CREATE TABLE governance_metrics (
-    id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    client_id     TEXT NOT NULL,
-    checkpoint_id TEXT NOT NULL,
-    approval_rate NUMERIC(5,2),
-    block_rate    NUMERIC(5,2),
-    avg_score     NUMERIC(5,2),
-    window_start  TIMESTAMPTZ,
-    window_end    TIMESTAMPTZ,
-    created_at    TIMESTAMPTZ DEFAULT NOW()
+ id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+ client_id TEXT NOT NULL,
+ checkpoint_id TEXT NOT NULL,
+ approval_rate NUMERIC(5,2),
+ block_rate NUMERIC(5,2),
+ avg_score NUMERIC(5,2),
+ window_start TIMESTAMPTZ,
+ window_end TIMESTAMPTZ,
+ created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE governance_drift_log (
-    id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    client_id      TEXT NOT NULL,
-    signal_name    TEXT NOT NULL,
-    baseline_stats JSONB DEFAULT '{}',
-    current_stats  JSONB DEFAULT '{}',
-    drift_score    NUMERIC(6,3),
-    threshold      NUMERIC(6,3) DEFAULT 2.0,
-    alert_level    TEXT CHECK (alert_level IN ('ALERT','WARNING','OK')) DEFAULT 'OK',
-    detected_at    TIMESTAMPTZ DEFAULT NOW(),
-    created_at     TIMESTAMPTZ DEFAULT NOW()
+ id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+ client_id TEXT NOT NULL,
+ signal_name TEXT NOT NULL,
+ baseline_stats JSONB DEFAULT '{}',
+ current_stats JSONB DEFAULT '{}',
+ drift_score NUMERIC(6,3),
+ threshold NUMERIC(6,3) DEFAULT 2.0,
+ alert_level TEXT CHECK (alert_level IN ('ALERT','WARNING','OK')) DEFAULT 'OK',
+ detected_at TIMESTAMPTZ DEFAULT NOW(),
+ created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Module 3: Human Oversight
 CREATE TABLE governance_overrides (
-    id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    client_id           TEXT NOT NULL,
-    receipt_id          TEXT NOT NULL,
-    decision_before     TEXT NOT NULL,
-    decision_after      TEXT NOT NULL,
-    justification       TEXT NOT NULL,
-    overridden_by       TEXT NOT NULL,
-    role                TEXT,
-    signature           TEXT,
-    signature_algorithm TEXT,
-    public_key          TEXT,
-    content_hash        TEXT,
-    prev_hash           TEXT,
-    created_at          TIMESTAMPTZ DEFAULT NOW()
+ id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+ client_id TEXT NOT NULL,
+ receipt_id TEXT NOT NULL,
+ decision_before TEXT NOT NULL,
+ decision_after TEXT NOT NULL,
+ justification TEXT NOT NULL,
+ overridden_by TEXT NOT NULL,
+ role TEXT,
+ signature TEXT,
+ signature_algorithm TEXT,
+ public_key TEXT,
+ content_hash TEXT,
+ prev_hash TEXT,
+ created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Module 4: Incident Management
 CREATE TABLE governance_incidents (
-    id                 UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    client_id          TEXT NOT NULL,
-    incident_id        TEXT UNIQUE NOT NULL,
-    severity           TEXT CHECK (severity IN ('CRITICAL','HIGH','MEDIUM','LOW','INFORMATIONAL')) NOT NULL,
-    title              TEXT NOT NULL,
-    description        TEXT,
-    related_receipt_id TEXT,
-    status             TEXT CHECK (status IN ('OPEN','UNDER_REVIEW','RESOLVED','CLOSED')) DEFAULT 'OPEN',
-    reported_by        TEXT,
-    created_at         TIMESTAMPTZ DEFAULT NOW(),
-    resolved_at        TIMESTAMPTZ
+ id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+ client_id TEXT NOT NULL,
+ incident_id TEXT UNIQUE NOT NULL,
+ severity TEXT CHECK (severity IN ('CRITICAL','HIGH','MEDIUM','LOW','INFORMATIONAL')) NOT NULL,
+ title TEXT NOT NULL,
+ description TEXT,
+ related_receipt_id TEXT,
+ status TEXT CHECK (status IN ('OPEN','UNDER_REVIEW','RESOLVED','CLOSED')) DEFAULT 'OPEN',
+ reported_by TEXT,
+ created_at TIMESTAMPTZ DEFAULT NOW(),
+ resolved_at TIMESTAMPTZ
 );
 
 CREATE TABLE governance_incident_reviews (
-    id                 UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    incident_id        TEXT NOT NULL,
-    reviewer           TEXT,
-    findings           TEXT,
-    corrective_actions JSONB DEFAULT '[]',
-    reviewed_at        TIMESTAMPTZ DEFAULT NOW(),
-    created_at         TIMESTAMPTZ DEFAULT NOW()
+ id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+ incident_id TEXT NOT NULL,
+ reviewer TEXT,
+ findings TEXT,
+ corrective_actions JSONB DEFAULT '[]',
+ reviewed_at TIMESTAMPTZ DEFAULT NOW(),
+ created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Module 5: Governance Reporting
 CREATE TABLE governance_reports (
-    id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    client_id    TEXT NOT NULL,
-    period_start TIMESTAMPTZ,
-    period_end   TIMESTAMPTZ,
-    report_type  TEXT DEFAULT 'COMPLIANCE',
-    content_json JSONB DEFAULT '{}',
-    content_hash TEXT,
-    generated_by TEXT,
-    created_at   TIMESTAMPTZ DEFAULT NOW()
+ id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+ client_id TEXT NOT NULL,
+ period_start TIMESTAMPTZ,
+ period_end TIMESTAMPTZ,
+ report_type TEXT DEFAULT 'COMPLIANCE',
+ content_json JSONB DEFAULT '{}',
+ content_hash TEXT,
+ generated_by TEXT,
+ created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
 

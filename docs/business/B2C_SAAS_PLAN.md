@@ -132,59 +132,59 @@ Login → Conecta Kraken API (read-only) → Import portfolio
 ### 3.1 Current Architecture (Institutional)
 
 ```
-                    ESTADO ACTUAL
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-   Telegram Bot     Flask API      Streamlit
-   (single user)   (no auth)     (no auth)
-        │                │                │
-        └────────┬───────┴────────────────┘
-                 │
-        ┌────────▼────────┐
-        │ DatabaseGateway │ ← Todos comparten
-        │   (shared)      │
-        └─────────────────┘
+ ESTADO ACTUAL
+ │
+ ┌────────────────┼────────────────┐
+ ▼ ▼ ▼
+ Telegram Bot Flask API Streamlit
+ (single user) (no auth) (no auth)
+ │ │ │
+ └────────┬───────┴────────────────┘
+ │
+ ┌────────▼────────┐
+ │ DatabaseGateway │ ← Todos comparten
+ │ (shared) │
+ └─────────────────┘
 ```
 
 ### 3.2 Target Architecture (B2C SaaS)
 
 ```
-                    ARQUITECTURA B2C
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-   Web App          Mobile App       Telegram
-   (Next.js)         (futuro)        (multi-tenant)
-        │                │                │
-        └────────┬───────┴────────────────┘
-                 │
-        ┌────────▼────────┐
-        │   API Gateway   │ ← Rate limiting por plan
-        │  (Kong/Nginx)   │
-        └────────┬────────┘
-                 │
-        ┌────────▼────────┐
-        │   Auth Layer    │ ← JWT + Refresh Tokens
-        │  (Clerk/Auth0)  │
-        └────────┬────────┘
-                 │
-        ┌────────▼────────┐
-        │  Subscription   │ ← Stripe Billing
-        │    Manager      │
-        └────────┬────────┘
-                 │
-    ┌────────────┼────────────┐
-    ▼            ▼            ▼
- Flask API   Background    Telegram
-(endpoints)   Workers       Bot
-    │            │            │
-    └────────────┼────────────┘
-                 │
-        ┌────────▼────────┐
-        │ DatabaseGateway │ ← Row-Level Security
-        │ (tenant_id)     │
-        └─────────────────┘
+ ARQUITECTURA B2C
+ │
+ ┌────────────────┼────────────────┐
+ ▼ ▼ ▼
+ Web App Mobile App Telegram
+ (Next.js) (futuro) (multi-tenant)
+ │ │ │
+ └────────┬───────┴────────────────┘
+ │
+ ┌────────▼────────┐
+ │ API Gateway │ ← Rate limiting por plan
+ │ (Kong/Nginx) │
+ └────────┬────────┘
+ │
+ ┌────────▼────────┐
+ │ Auth Layer │ ← JWT + Refresh Tokens
+ │ (Clerk/Auth0) │
+ └────────┬────────┘
+ │
+ ┌────────▼────────┐
+ │ Subscription │ ← Stripe Billing
+ │ Manager │
+ └────────┬────────┘
+ │
+ ┌────────────┼────────────┐
+ ▼ ▼ ▼
+ Flask API Background Telegram
+(endpoints) Workers Bot
+ │ │ │
+ └────────────┼────────────┘
+ │
+ ┌────────▼────────┐
+ │ DatabaseGateway │ ← Row-Level Security
+ │ (tenant_id) │
+ └─────────────────┘
 ```
 
 ### 3.3 Database Schema Changes
@@ -192,29 +192,29 @@ Login → Conecta Kraken API (read-only) → Import portfolio
 **Nueva tabla: subscriptions**
 ```sql
 CREATE TABLE subscriptions (
-    id SERIAL PRIMARY KEY,
-    user_id VARCHAR(255) REFERENCES users(user_id),
-    stripe_customer_id VARCHAR(255),
-    stripe_subscription_id VARCHAR(255),
-    plan VARCHAR(50), -- 'free', 'basic', 'pro', 'premium'
-    status VARCHAR(50), -- 'active', 'cancelled', 'past_due'
-    current_period_start TIMESTAMP,
-    current_period_end TIMESTAMP,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+ id SERIAL PRIMARY KEY,
+ user_id VARCHAR(255) REFERENCES users(user_id),
+ stripe_customer_id VARCHAR(255),
+ stripe_subscription_id VARCHAR(255),
+ plan VARCHAR(50), -- 'free', 'basic', 'pro', 'premium'
+ status VARCHAR(50), -- 'active', 'cancelled', 'past_due'
+ current_period_start TIMESTAMP,
+ current_period_end TIMESTAMP,
+ created_at TIMESTAMP DEFAULT NOW(),
+ updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
 
 **Nueva tabla: usage_tracking**
 ```sql
 CREATE TABLE usage_tracking (
-    id SERIAL PRIMARY KEY,
-    user_id VARCHAR(255) REFERENCES users(user_id),
-    feature VARCHAR(100), -- 'analysis', 'signal', 'alert', 'voice'
-    count INTEGER DEFAULT 0,
-    period_start DATE,
-    period_end DATE,
-    UNIQUE(user_id, feature, period_start)
+ id SERIAL PRIMARY KEY,
+ user_id VARCHAR(255) REFERENCES users(user_id),
+ feature VARCHAR(100), -- 'analysis', 'signal', 'alert', 'voice'
+ count INTEGER DEFAULT 0,
+ period_start DATE,
+ period_end DATE,
+ UNIQUE(user_id, feature, period_start)
 );
 ```
 
@@ -227,7 +227,7 @@ ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(255);
 -- Row-Level Security
 ALTER TABLE paper_trading_trades ENABLE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON paper_trading_trades
-    USING (tenant_id = current_setting('app.current_tenant'));
+ USING (tenant_id = current_setting('app.current_tenant'));
 ```
 
 ### 3.4 API Endpoints (New)
@@ -363,7 +363,7 @@ CREATE POLICY tenant_isolation ON paper_trading_trades
 
 ```bash
 # Authentication
-AUTH_PROVIDER=clerk  # or auth0
+AUTH_PROVIDER=clerk # or auth0
 CLERK_PUBLISHABLE_KEY=pk_live_xxx
 CLERK_SECRET_KEY=sk_live_xxx
 JWT_SECRET=xxx
@@ -394,10 +394,10 @@ ENABLE_PORTFOLIO_ADVISOR=true
 #### Flujo de Deploy
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Git Push   │ ──▶ │   Railway   │ ──▶ │    Build    │ ──▶ │   Deploy    │
-│  to main    │     │   Detect    │     │  Container  │     │  Production │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ Git Push │ ──▶ │ Railway │ ──▶ │ Build │ ──▶ │ Deploy │
+│ to main │ │ Detect │ │ Container │ │ Production │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
 ```
 
 #### Archivos de Configuración
@@ -410,15 +410,15 @@ web: gunicorn wsgi:app -b 0.0.0.0:$PORT --workers 2 --threads 4
 **railway.json** (para Bot principal):
 ```json
 {
-  "$schema": "https://railway.app/railway.schema.json",
-  "build": {
-    "builder": "NIXPACKS"
-  },
-  "deploy": {
-    "startCommand": "python -u main.py",
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
-  }
+ "$schema": "https://railway.app/railway.schema.json",
+ "build": {
+ "builder": "NIXPACKS"
+ },
+ "deploy": {
+ "startCommand": "python -u main.py",
+ "restartPolicyType": "ON_FAILURE",
+ "restartPolicyMaxRetries": 10
+ }
 }
 ```
 

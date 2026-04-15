@@ -1,8 +1,8 @@
 # OMNIX Post-Quantum Mandate Receipt — Schema Specification
-**For:** Naimat Khan / Velos  
-**Prepared by:** Harold Nunes — OMNIX QUANTUM LTD  
-**Date:** 2026-04-09  
-**Version:** 1.0.0 (schema v6.5.4e)  
+**For:** Naimat Khan / Velos 
+**Prepared by:** Harold Nunes — OMNIX QUANTUM LTD 
+**Date:** 2026-04-09 
+**Version:** 1.0.0 (schema v6.5.4e) 
 **ADR refs:** ADR-022 (PQC), ADR-031 (assurance tiers), ADR-043 (crypto-agility), ADR-044 (transparency chain)
 
 ---
@@ -26,41 +26,41 @@ The receipt is the atomic unit of the OMNIX evidence layer. It is:
 
 ```json
 {
-  "receipt_id":          "OMNIX-A3F7C1D92B0E",
-  "timestamp":           "2026-04-09T14:23:01.847291+00:00",
-  "issued_at_ms":        1744208581847,
-  "ttl_epoch_ms":        1744208611847,
-  "ttl_ms":              30000,
+ "receipt_id": "OMNIX-A3F7C1D92B0E",
+ "timestamp": "2026-04-09T14:23:01.847291+00:00",
+ "issued_at_ms": 1744208581847,
+ "ttl_epoch_ms": 1744208611847,
+ "ttl_ms": 30000,
 
-  "asset":               "BTC/USDT",
-  "decision":            "BLOCK",
+ "asset": "BTC/USDT",
+ "decision": "BLOCK",
 
-  "veto_chain":          [
-    "AML: PASS — volume_score=12.4 frequency_score=0.3",
-    "FRAUD: PASS — sentiment_score=0.12 reversal_risk=0.04",
-    "SHARIA: BLOCK — gharar_score=0.81 exceeds threshold 0.35",
-    "CAG: SKIPPED (upstream veto)"
-  ],
+ "veto_chain": [
+ "AML: PASS — volume_score=12.4 frequency_score=0.3",
+ "FRAUD: PASS — sentiment_score=0.12 reversal_risk=0.04",
+ "SHARIA: BLOCK — gharar_score=0.81 exceeds threshold 0.35",
+ "CAG: SKIPPED (upstream veto)"
+ ],
 
-  "policy_version":      "6.5.4e",
-  "engine_version":      "6.5.4e",
-  "prev_hash":           "a9f3c1d4e8b2...",
+ "policy_version": "6.5.4e",
+ "engine_version": "6.5.4e",
+ "prev_hash": "a9f3c1d4e8b2...",
 
-  "signing_provider":    "dilithium3",
-  "content_hash":        "3f8e7a2c...",
+ "signing_provider": "dilithium3",
+ "content_hash": "3f8e7a2c...",
 
-  "signature":           "BASE64==...",
-  "signature_algorithm": "Dilithium-3 (ML-DSA-65)",
-  "signature_format":    "base64_pqc",
-  "public_key":          "BASE64==...",
+ "signature": "BASE64==...",
+ "signature_algorithm": "Dilithium-3 (ML-DSA-65)",
+ "signature_format": "base64_pqc",
+ "public_key": "BASE64==...",
 
-  "sharia_compliance":   { ... },
-  "aml_compliance":      { ... },
-  "fraud_compliance":    { ... },
-  "jurisdiction_compliance": { ... },
-  "context_admission":   { ... },
-  "veto_type":           "SHARIA_BLOCK",
-  "avm_result":          { ... }
+ "sharia_compliance": { ... },
+ "aml_compliance": { ... },
+ "fraud_compliance": { ... },
+ "jurisdiction_compliance": { ... },
+ "context_admission": { ... },
+ "veto_type": "SHARIA_BLOCK",
+ "avm_result": { ... }
 }
 ```
 
@@ -87,7 +87,7 @@ The receipt is the atomic unit of the OMNIX evidence layer. It is:
 ```python
 now_ms = int(time.time() * 1000)
 if now_ms > receipt["ttl_epoch_ms"]:
-    return {"status": "REJECTED", "reason": "RECEIPT_EXPIRED"}
+ return {"status": "REJECTED", "reason": "RECEIPT_EXPIRED"}
 ```
 
 #### Decision Fields (always present)
@@ -145,13 +145,13 @@ These blocks appear **only when the corresponding gate was evaluated** for the d
 
 ```json
 {
-  "is_valid":          true,
-  "snapshot_id":       "snap-abc123",
-  "parameter_version": "v3.1",
-  "drift_score":       0.12,
-  "age_hours":         2.4,
-  "pass_through":      false,
-  "block_reason":      "DRIFT_EXCEEDED"
+ "is_valid": true,
+ "snapshot_id": "snap-abc123",
+ "parameter_version": "v3.1",
+ "drift_score": 0.12,
+ "age_hours": 2.4,
+ "pass_through": false,
+ "block_reason": "DRIFT_EXCEEDED"
 }
 ```
 
@@ -208,75 +208,75 @@ Conditional (if present):
 import json, hashlib, base64, time
 
 def verify_omnix_receipt(receipt: dict) -> dict:
-    result = {"receipt_id": receipt.get("receipt_id"), "valid": False, "reason": None}
+ result = {"receipt_id": receipt.get("receipt_id"), "valid": False, "reason": None}
 
-    # Step 1 — TTL check
-    ttl_epoch_ms = receipt.get("ttl_epoch_ms")
-    if ttl_epoch_ms is not None:
-        now_ms = int(time.time() * 1000)
-        if now_ms > ttl_epoch_ms:
-            result["reason"] = "RECEIPT_EXPIRED"
-            return result
+ # Step 1 — TTL check
+ ttl_epoch_ms = receipt.get("ttl_epoch_ms")
+ if ttl_epoch_ms is not None:
+ now_ms = int(time.time() * 1000)
+ if now_ms > ttl_epoch_ms:
+ result["reason"] = "RECEIPT_EXPIRED"
+ return result
 
-    # Step 2 — Reconstruct payload for hashing
-    MANDATORY = [
-        "receipt_id", "timestamp", "issued_at_ms", "ttl_epoch_ms", "ttl_ms",
-        "asset", "decision", "veto_chain",
-        "policy_version", "engine_version", "prev_hash", "signing_provider"
-    ]
-    CONDITIONAL = [
-        "sharia_compliance", "aml_compliance", "fraud_compliance",
-        "jurisdiction_compliance", "context_admission", "veto_type", "avm_result"
-    ]
+ # Step 2 — Reconstruct payload for hashing
+ MANDATORY = [
+ "receipt_id", "timestamp", "issued_at_ms", "ttl_epoch_ms", "ttl_ms",
+ "asset", "decision", "veto_chain",
+ "policy_version", "engine_version", "prev_hash", "signing_provider"
+ ]
+ CONDITIONAL = [
+ "sharia_compliance", "aml_compliance", "fraud_compliance",
+ "jurisdiction_compliance", "context_admission", "veto_type", "avm_result"
+ ]
 
-    payload = {k: receipt[k] for k in MANDATORY if k in receipt}
-    if payload.get("signing_provider") is None:
-        payload.pop("signing_provider", None)
-    for k in CONDITIONAL:
-        if k in receipt:
-            payload[k] = receipt[k]
+ payload = {k: receipt[k] for k in MANDATORY if k in receipt}
+ if payload.get("signing_provider") is None:
+ payload.pop("signing_provider", None)
+ for k in CONDITIONAL:
+ if k in receipt:
+ payload[k] = receipt[k]
 
-    # Step 3 — Verify content_hash
-    canonical = json.dumps(payload, sort_keys=True, ensure_ascii=True)
-    computed_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-    if computed_hash != receipt.get("content_hash"):
-        result["reason"] = "HASH_MISMATCH"
-        return result
+ # Step 3 — Verify content_hash
+ canonical = json.dumps(payload, sort_keys=True, ensure_ascii=True)
+ computed_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+ if computed_hash != receipt.get("content_hash"):
+ result["reason"] = "HASH_MISMATCH"
+ return result
 
-    # Step 4 — Verify signature based on signature_format
-    sig_format = receipt.get("signature_format", "UNKNOWN")
-    signature  = receipt.get("signature")
-    public_key = receipt.get("public_key")
-    message    = receipt["content_hash"].encode("utf-8")
+ # Step 4 — Verify signature based on signature_format
+ sig_format = receipt.get("signature_format", "UNKNOWN")
+ signature = receipt.get("signature")
+ public_key = receipt.get("public_key")
+ message = receipt["content_hash"].encode("utf-8")
 
-    if sig_format == "base64_pqc":
-        provider = receipt.get("signing_provider", "dilithium3")
-        # Use pqc library matching the provider
-        if provider == "dilithium3":
-            from pqc.sign import dilithium3
-            try:
-                dilithium3.verify(base64.b64decode(signature), message, base64.b64decode(public_key))
-                result["valid"] = True
-            except Exception:
-                result["reason"] = "SIGNATURE_INVALID"
-        elif provider == "dilithium5":
-            from pqc.sign import dilithium5
-            try:
-                dilithium5.verify(base64.b64decode(signature), message, base64.b64decode(public_key))
-                result["valid"] = True
-            except Exception:
-                result["reason"] = "SIGNATURE_INVALID"
+ if sig_format == "base64_pqc":
+ provider = receipt.get("signing_provider", "dilithium3")
+ # Use pqc library matching the provider
+ if provider == "dilithium3":
+ from pqc.sign import dilithium3
+ try:
+ dilithium3.verify(base64.b64decode(signature), message, base64.b64decode(public_key))
+ result["valid"] = True
+ except Exception:
+ result["reason"] = "SIGNATURE_INVALID"
+ elif provider == "dilithium5":
+ from pqc.sign import dilithium5
+ try:
+ dilithium5.verify(base64.b64decode(signature), message, base64.b64decode(public_key))
+ result["valid"] = True
+ except Exception:
+ result["reason"] = "SIGNATURE_INVALID"
 
-    elif sig_format == "hex_sha256_fallback":
-        expected = hashlib.sha256(receipt["content_hash"].encode("utf-8")).hexdigest()
-        result["valid"] = (expected == signature)
-        if not result["valid"]:
-            result["reason"] = "FALLBACK_HASH_MISMATCH"
+ elif sig_format == "hex_sha256_fallback":
+ expected = hashlib.sha256(receipt["content_hash"].encode("utf-8")).hexdigest()
+ result["valid"] = (expected == signature)
+ if not result["valid"]:
+ result["reason"] = "FALLBACK_HASH_MISMATCH"
 
-    else:
-        result["reason"] = f"UNKNOWN_SIGNATURE_FORMAT:{sig_format}"
+ else:
+ result["reason"] = f"UNKNOWN_SIGNATURE_FORMAT:{sig_format}"
 
-    return result
+ return result
 ```
 
 ---
@@ -326,35 +326,35 @@ A chain break means either:
 
 ```json
 {
-  "receipt_id":          "OMNIX-A3F7C1D92B0E",
-  "timestamp":           "2026-04-09T14:23:01.847291+00:00",
-  "issued_at_ms":        1744208581847,
-  "ttl_epoch_ms":        1744208611847,
-  "ttl_ms":              30000,
-  "asset":               "BTC/USDT",
-  "decision":            "BLOCK",
-  "veto_chain": [
-    "AML: PASS — volume_score=12.4 frequency_score=0.3",
-    "FRAUD: PASS — sentiment_score=0.12 reversal_risk=0.04",
-    "SHARIA: BLOCK — gharar_score=0.81 exceeds threshold 0.35",
-    "CAG: SKIPPED (upstream veto)"
-  ],
-  "policy_version":      "6.5.4e",
-  "engine_version":      "6.5.4e",
-  "prev_hash":           "a9f3c1d4e8b2fc71...",
-  "signing_provider":    "dilithium3",
-  "sharia_compliance": {
-    "admitted":          false,
-    "evaluation_state":  "EVALUATED",
-    "violation":         "GHARAR_EXCESSIVE",
-    "gharar_score":      0.81,
-    "debt_ratio":        0.0
-  },
-  "content_hash":        "3f8e7a2c91bd...",
-  "signature":           "BASE64_DILITHIUM3_SIGNATURE==",
-  "signature_algorithm": "Dilithium-3 (ML-DSA-65)",
-  "signature_format":    "base64_pqc",
-  "public_key":          "BASE64_PUBLIC_KEY=="
+ "receipt_id": "OMNIX-A3F7C1D92B0E",
+ "timestamp": "2026-04-09T14:23:01.847291+00:00",
+ "issued_at_ms": 1744208581847,
+ "ttl_epoch_ms": 1744208611847,
+ "ttl_ms": 30000,
+ "asset": "BTC/USDT",
+ "decision": "BLOCK",
+ "veto_chain": [
+ "AML: PASS — volume_score=12.4 frequency_score=0.3",
+ "FRAUD: PASS — sentiment_score=0.12 reversal_risk=0.04",
+ "SHARIA: BLOCK — gharar_score=0.81 exceeds threshold 0.35",
+ "CAG: SKIPPED (upstream veto)"
+ ],
+ "policy_version": "6.5.4e",
+ "engine_version": "6.5.4e",
+ "prev_hash": "a9f3c1d4e8b2fc71...",
+ "signing_provider": "dilithium3",
+ "sharia_compliance": {
+ "admitted": false,
+ "evaluation_state": "EVALUATED",
+ "violation": "GHARAR_EXCESSIVE",
+ "gharar_score": 0.81,
+ "debt_ratio": 0.0
+ },
+ "content_hash": "3f8e7a2c91bd...",
+ "signature": "BASE64_DILITHIUM3_SIGNATURE==",
+ "signature_algorithm": "Dilithium-3 (ML-DSA-65)",
+ "signature_format": "base64_pqc",
+ "public_key": "BASE64_PUBLIC_KEY=="
 }
 ```
 
@@ -382,7 +382,7 @@ POST https://omnixquantum.net/api/governance/receipt/vc
 Content-Type: application/json
 
 {
-  "receipt": { ...OMNIX receipt object... }
+ "receipt": { ...OMNIX receipt object... }
 }
 ```
 
@@ -390,41 +390,41 @@ Content-Type: application/json
 
 ```json
 {
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld"
-  ],
-  "id": "https://omnixquantum.net/receipts/OMNIX-A3F7C1D92B0E",
-  "type": ["VerifiableCredential", "OmnixGovernanceCredential"],
-  "issuer": {
-    "id":   "did:web:omnixquantum.net",
-    "name": "OMNIX Quantum Ltd",
-    "url":  "https://omnixquantum.net"
-  },
-  "issuanceDate":   "2026-04-09T14:23:01+00:00",
-  "expirationDate": "2027-04-09T14:23:01+00:00",
-  "credentialSubject": {
-    "id":           "https://omnixquantum.net/receipts/OMNIX-A3F7C1D92B0E",
-    "receipt_id":   "OMNIX-A3F7C1D92B0E",
-    "asset":        "BTC/USDT",
-    "decision":     "BLOCKED",
-    "domain":       "trading",
-    "veto_chain":   ["..."],
-    "jurisdiction_semantics": {
-      "EU_AI_ACT":  { "interpretation": "..." },
-      "FATF":       { "interpretation": "..." },
-      "GDPR":       { "interpretation": "..." }
-    }
-  },
-  "proof": {
-    "type":               "Dilithium2021",
-    "created":            "2026-04-09T14:23:01+00:00",
-    "verificationMethod": "did:web:omnixquantum.net#pqc-key-1",
-    "proofPurpose":       "assertionMethod",
-    "proofValue":         "BASE64_DILITHIUM3_SIGNATURE",
-    "signatureAlgorithm": "Dilithium-3",
-    "signedData":         "SHA256_CONTENT_HASH"
-  }
+ "@context": [
+ "https://www.w3.org/2018/credentials/v1",
+ "https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld"
+ ],
+ "id": "https://omnixquantum.net/receipts/OMNIX-A3F7C1D92B0E",
+ "type": ["VerifiableCredential", "OmnixGovernanceCredential"],
+ "issuer": {
+ "id": "did:web:omnixquantum.net",
+ "name": "OMNIX Quantum Ltd",
+ "url": "https://omnixquantum.net"
+ },
+ "issuanceDate": "2026-04-09T14:23:01+00:00",
+ "expirationDate": "2027-04-09T14:23:01+00:00",
+ "credentialSubject": {
+ "id": "https://omnixquantum.net/receipts/OMNIX-A3F7C1D92B0E",
+ "receipt_id": "OMNIX-A3F7C1D92B0E",
+ "asset": "BTC/USDT",
+ "decision": "BLOCKED",
+ "domain": "trading",
+ "veto_chain": ["..."],
+ "jurisdiction_semantics": {
+ "EU_AI_ACT": { "interpretation": "..." },
+ "FATF": { "interpretation": "..." },
+ "GDPR": { "interpretation": "..." }
+ }
+ },
+ "proof": {
+ "type": "Dilithium2021",
+ "created": "2026-04-09T14:23:01+00:00",
+ "verificationMethod": "did:web:omnixquantum.net#pqc-key-1",
+ "proofPurpose": "assertionMethod",
+ "proofValue": "BASE64_DILITHIUM3_SIGNATURE",
+ "signatureAlgorithm": "Dilithium-3",
+ "signedData": "SHA256_CONTENT_HASH"
+ }
 }
 ```
 
@@ -447,4 +447,4 @@ The `/api/public/verify/<receipt_id>` endpoint now includes a `jurisdiction_sema
 
 ---
 
-*Document prepared by Harold Nunes. OMNIX QUANTUM LTD — Eureka GCC Dubai 2026 Semifinalist.*
+*Document prepared by Harold Nunes. OMNIX QUANTUM LTD — 

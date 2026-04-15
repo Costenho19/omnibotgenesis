@@ -1,9 +1,9 @@
 # OMNIX — Financial Projections
-## Aligned with Eureka Dubai Pitch & Business Model Canvas | February 2026
+## Aligned with Pitch & Business Model Canvas | February 2026
 
 **Classification**: Investor-Ready — Aligned with Competition Documents
 **Last Updated**: February 19, 2026
-**Alignment**: All numbers match OMNIX Eureka Pitch Deck Final & BMC
+**Alignment**: All numbers match OMNIX Pitch Deck Final & BMC
 
 ---
 
@@ -208,8 +208,8 @@ OMNIX integrates into the client's execution flow as infrastructure. Once embedd
 
 | Attribute | Value |
 |-----------|-------|
-| Prepared for | Eureka Dubai 2026, Investor due diligence |
-| Alignment | Matches Eureka Pitch Deck, Business Model Canvas, PITCH_DECK_OUTLINE |
+| Prepared for | 2026, Investor due diligence |
+| Alignment | Matches Pitch Deck, Business Model Canvas, PITCH_DECK_OUTLINE |
 | Founder | Harold Nunes |
 | Last Updated | February 19, 2026 |
 

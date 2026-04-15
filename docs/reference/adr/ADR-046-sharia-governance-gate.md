@@ -1,15 +1,15 @@
 # ADR-046: Sharia Governance Gate (CP-6)
 
-**Status:** ACCEPTED  
-**Date:** March 25, 2026  
-**Author:** Harold Nunes  
+**Status:** ACCEPTED 
+**Date:** March 25, 2026 
+**Author:** Harold Nunes 
 **Module:** `omnix_core/governance/sharia_gate.py`
 
 ---
 
 ## Context
 
-OMNIX is presented at Eureka Dubai GCC 2026 and targets institutional capital in the Gulf Cooperation Council (UAE, Saudi Arabia, Qatar). A significant portion of institutional capital in this region operates under Islamic finance principles (Sharia law), which prohibits:
+OMNIX is presented at and targets institutional capital in the Gulf Cooperation Council (UAE, Saudi Arabia, Qatar). A significant portion of institutional capital in this region operates under Islamic finance principles (Sharia law), which prohibits:
 
 - **Riba** (interest / usury)
 - **Gharar** (excessive uncertainty)
@@ -59,9 +59,9 @@ CP-1 (Monte Carlo) → CP-2 (RMS) → CP-3 (Early Return)
 
 ```sql
 ALTER TABLE b2b_clients
-  ADD COLUMN sharia_enabled BOOLEAN DEFAULT FALSE,
-  ADD COLUMN gharar_threshold FLOAT DEFAULT 70.0,
-  ADD COLUMN debt_ratio_max FLOAT DEFAULT 0.33;
+ ADD COLUMN sharia_enabled BOOLEAN DEFAULT FALSE,
+ ADD COLUMN gharar_threshold FLOAT DEFAULT 70.0,
+ ADD COLUMN debt_ratio_max FLOAT DEFAULT 0.33;
 ```
 
 ### Halal Asset List (initial)

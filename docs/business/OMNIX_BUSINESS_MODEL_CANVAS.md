@@ -1,8 +1,8 @@
 # OMNIX — Business Model Canvas
-## Aligned Version for Eureka Dubai | February 2026
+## Aligned Version for | February 2026
 
 **Classification**: Competition Supplement — Expert-Reviewed
-**Alignment**: All numbers match OMNIX Eureka Pitch Deck Final
+**Alignment**: All numbers match OMNIX Pitch Deck Final
 
 ---
 
@@ -12,8 +12,8 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            OMNIX BUSINESS MODEL                                 │
-│         Decision Governance Infrastructure | First Vertical: Digital Assets         │
+│ OMNIX BUSINESS MODEL │
+│ Decision Governance Infrastructure | First Vertical: Digital Assets │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -196,7 +196,7 @@ Supply Chain, Lending/Credit (Year 2-3) → Insurance, Energy Trading (Year 3+).
 | ADGM Innovation Hub | Regulatory community + startup programs | 5-10 warm intros/quarter |
 | Hub71 (if accepted) | Accelerator network + corporate intros | 3-5 qualified leads/quarter |
 | Industry events | TOKEN2049 Dubai, FinTech Abu Dhabi, GITEX | 10+ qualified contacts/event |
-| Eureka Dubai (current) | Competition exposure + judge introductions | Immediate pipeline |
+| (current) | Competition exposure + judge introductions | Immediate pipeline |
 
 ### Digital Presence (Secondary)
 
@@ -343,9 +343,9 @@ Supply Chain, Lending/Credit (Year 2-3) → Insurance, Energy Trading (Year 3+).
 ### ROI Model
 
 ```
-Monthly OMNIX cost:           $25K (mid-range API license)
-Monthly capital at risk:      $5M
-Drawdown reduction impact:    -40% severe events
+Monthly OMNIX cost: $25K (mid-range API license)
+Monthly capital at risk: $5M
+Drawdown reduction impact: -40% severe events
 Est. capital preserved/month: $50K-200K
 
 ROI: 2x-8x monthly cost
@@ -418,8 +418,8 @@ Primary value driver: Avoided tail-risk exposure
 
 | Attribute | Value |
 |-----------|-------|
-| Prepared for | Eureka Dubai 2026, Institutional review, ADGM ecosystem |
-| Alignment | All numbers match OMNIX Eureka Pitch Deck Final |
+| Prepared for | 2026, Institutional review, ADGM ecosystem |
+| Alignment | All numbers match OMNIX Pitch Deck Final |
 | Founder | Harold Nunes |
 | Contact | contacto@omnixquantum.net |
 | Website | www.omnixquantum.net |
@@ -429,4 +429,4 @@ Primary value driver: Avoided tail-risk exposure
 
 *OMNIX — When systems can act, but choose discipline.*
 *Institutionalizing discipline in automated systems.*
-*Eureka Dubai 2026 — Semifinalist*
+* 2026 — Semifinalist*
