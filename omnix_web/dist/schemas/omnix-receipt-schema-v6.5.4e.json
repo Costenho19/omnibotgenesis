@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnixquantum.net/schemas/omnix-receipt-schema-v6.5.4e.json",
+  "title": "OMNIX Governance Receipt",
+  "description": "JSON Schema for OMNIX Decision Governance Receipts v6.5.4e. Each receipt is a post-quantum cryptographically signed attestation that a decision was evaluated through the 11-checkpoint OMNIX governance pipeline.",
+  "type": "object",
+  "required": [
+    "receipt_id",
+    "timestamp",
+    "asset",
+    "decision",
+    "veto_chain",
+    "policy_version",
+    "engine_version",
+    "content_hash"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^OMNIX-[A-F0-9]{12}$",
+      "description": "Unique receipt identifier. Format: OMNIX-{12-char hex}.",
+      "example": "OMNIX-A1B2C3D4E5F6"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of decision issuance."
+    },
+    "asset": {
+      "type": "string",
+      "description": "The asset, entity, or subject that was evaluated (ticker, loan ID, claim ID, etc.)."
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["APPROVED", "BLOCKED", "HOLD", "UNKNOWN"],
+      "description": "Final governance decision output."
+    },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "trading",
+        "credit",
+        "insurance",
+        "robotics",
+        "medical_ai",
+        "energy_governance",
+        "real_estate",
+        "autonomous_agent",
+        "compliance",
+        "generic"
+      ],
+      "description": "Industry domain that produced this receipt."
+    },
+    "veto_chain": {
+      "type": "array",
+      "description": "Ordered list of 11-checkpoint evaluation results. Each entry describes one governance gate outcome.",
+      "items": {
+        "type": "string",
+        "description": "Format: '{checkpoint_name}: {PASS|BLOCKED} — {reason}'"
+      },
+      "minItems": 0,
+      "maxItems": 11
+    },
+    "policy_version": {
+      "type": "string",
+      "description": "Governance policy version applied to this decision.",
+      "example": "6.5.4e"
+    },
+    "engine_version": {
+      "type": "string",
+      "description": "OMNIX engine version that produced the receipt.",
+      "example": "6.5.4e"
+    },
+    "prev_hash": {
+      "type": "string",
+      "description": "SHA-256 content hash of the preceding receipt in the chain. Empty string for the first receipt.",
+      "pattern": "^[a-f0-9]{64}$|^$"
+    },
+    "content_hash": {
+      "type": "string",
+      "description": "SHA-256 canonical hash of this receipt's payload (excluding signature fields).",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "signature": {
+      "type": ["string", "null"],
+      "description": "Base64-encoded post-quantum digital signature (Dilithium-3 / ML-DSA-65 by default)."
+    },
+    "signature_algorithm": {
+      "type": "string",
+      "description": "Cryptographic algorithm used for signing.",
+      "enum": [
+        "Dilithium-3",
+        "ML-DSA-65",
+        "Falcon-512",
+        "Ed25519",
+        "SHA-256",
+        "NONE"
+      ]
+    },
+    "public_key": {
+      "type": ["string", "null"],
+      "description": "Base64-encoded public key corresponding to the signing key at issuance time."
+    },
+    "signing_provider": {
+      "type": "string",
+      "description": "Internal signing provider identifier.",
+      "example": "dilithium3"
+    },
+    "sharia_compliance": {
+      "type": "object",
+      "description": "Sharia compliance evaluation result (if applicable).",
+      "properties": {
+        "compliant": {"type": "boolean"},
+        "reason": {"type": "string"}
+      }
+    },
+    "aml_compliance": {
+      "type": "object",
+      "description": "AML/FATF screening result (checkpoint CP-9).",
+      "properties": {
+        "status": {"type": "string", "enum": ["CLEAR", "FLAGGED", "BLOCKED"]},
+        "fatf_recommendation": {"type": "string"},
+        "risk_level": {"type": "string"}
+      }
+    },
+    "fraud_compliance": {
+      "type": "object",
+      "description": "Fraud detection result (checkpoint CP-10).",
+      "properties": {
+        "status": {"type": "string"},
+        "patterns_detected": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "jurisdiction_compliance": {
+      "type": "object",
+      "description": "Jurisdiction-specific compliance evaluation (checkpoint CP-11).",
+      "properties": {
+        "eu_ai_act_applicable": {"type": "boolean"},
+        "risk_class": {"type": "string"},
+        "gdpr_applicable": {"type": "boolean"},
+        "jurisdiction": {"type": "string"}
+      }
+    },
+    "context_admission": {
+      "type": "object",
+      "description": "Context admission gate result — whether the input context was admissible.",
+      "properties": {
+        "admitted": {"type": "boolean"},
+        "veto_type": {"type": "string"},
+        "reason": {"type": "string"}
+      }
+    },
+    "veto_type": {
+      "type": "string",
+      "description": "Type of veto applied if decision was BLOCKED.",
+      "enum": [
+        "HARD_VETO",
+        "SOFT_VETO",
+        "ETHICAL_VETO",
+        "AML_VETO",
+        "FRAUD_VETO",
+        "JURISDICTION_VETO",
+        "THRESHOLD_VETO",
+        "CONTEXT_VETO"
+      ]
+    },
+    "ttl_epoch_ms": {
+      "type": "integer",
+      "description": "Unix epoch milliseconds at which this receipt expires. After this time the receipt remains valid for audit purposes but decisions should not be re-executed against it."
+    }
+  },
+  "additionalProperties": true,
+  "examples": [
+    {
+      "receipt_id": "OMNIX-A1B2C3D4E5F6",
+      "timestamp": "2026-04-14T10:23:45.000Z",
+      "asset": "BTC-USD",
+      "decision": "BLOCKED",
+      "domain": "trading",
+      "veto_chain": [
+        "Signal Integrity Validator: PASS",
+        "Probability Assessment: PASS",
+        "Risk Evaluation: PASS",
+        "Coherence Engine: PASS",
+        "Trend Validator: PASS",
+        "Stress Testing: BLOCKED — volatility exceeds 3σ threshold"
+      ],
+      "policy_version": "6.5.4e",
+      "engine_version": "6.5.4e",
+      "prev_hash": "e3b0c44298fc1c149afb4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "content_hash": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae",
+      "signature": "BASE64_ENCODED_DILITHIUM3_SIGNATURE",
+      "signature_algorithm": "Dilithium-3",
+      "public_key": "BASE64_ENCODED_PUBLIC_KEY",
+      "signing_provider": "dilithium3"
+    }
+  ]
+}

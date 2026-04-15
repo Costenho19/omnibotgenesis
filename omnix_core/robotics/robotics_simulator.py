@@ -91,6 +91,78 @@ ENVIRONMENTS: dict[str, list] = {
 }
 
 
+def _ensure_robotics_tables(conn) -> None:
+    """Create robotics tables if they don't exist — idempotent, safe for Railway fresh deploys."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS robot_actions (
+                id SERIAL PRIMARY KEY,
+                action_id VARCHAR(64) UNIQUE NOT NULL,
+                robot_id VARCHAR(64),
+                robot_type VARCHAR(32),
+                industry VARCHAR(32),
+                action_type VARCHAR(32),
+                environment VARCHAR(32),
+                sensor_confidence NUMERIC(6,2),
+                success_probability NUMERIC(6,2),
+                collision_risk NUMERIC(6,2),
+                sensor_fusion_agreement NUMERIC(6,2),
+                environmental_stability NUMERIC(6,2),
+                mechanical_margin NUMERIC(6,2),
+                mission_logic_score NUMERIC(6,2),
+                payload_kg NUMERIC(8,2),
+                speed_ms NUMERIC(6,2),
+                proximity_cm NUMERIC(8,2),
+                battery_pct NUMERIC(5,2),
+                temperature_c NUMERIC(6,2),
+                decision VARCHAR(16),
+                decision_score NUMERIC(6,2),
+                block_reason TEXT,
+                receipt_id VARCHAR(128),
+                probability_score NUMERIC(6,2),
+                risk_exposure NUMERIC(6,2),
+                signal_coherence NUMERIC(6,2),
+                trend_persistence NUMERIC(6,2),
+                stress_resilience NUMERIC(6,2),
+                logic_consistency NUMERIC(6,2),
+                checkpoint_results JSONB DEFAULT '[]',
+                trajectory_score NUMERIC(6,2),
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS robotics_cycle_metrics (
+                id SERIAL PRIMARY KEY,
+                cycle_id VARCHAR(64) UNIQUE NOT NULL,
+                cycle_number INTEGER,
+                actions_evaluated INTEGER,
+                actions_approved INTEGER,
+                actions_blocked INTEGER,
+                avg_sensor_confidence NUMERIC(6,2),
+                avg_collision_risk NUMERIC(6,2),
+                avg_decision_score NUMERIC(6,2),
+                approval_rate NUMERIC(6,4),
+                safety_incidents_prevented INTEGER,
+                cycle_duration_ms INTEGER,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_robot_actions_decision
+            ON robot_actions (decision)
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_robot_actions_type
+            ON robot_actions (robot_type)
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_robot_actions_created
+            ON robot_actions (created_at DESC)
+        """)
+    conn.commit()
+    logger.info("robot_actions + robotics_cycle_metrics tables ready")
+
+
 def _weighted_choice(choices: list[tuple]) -> str:
     items = [c[0] for c in choices]
     weights = [c[1] for c in choices]
@@ -418,6 +490,14 @@ def get_simulator() -> RoboticsSimulator:
 
 def start_background_simulator():
     import threading
+    import psycopg2
+
+    try:
+        conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
+        _ensure_robotics_tables(conn)
+        conn.close()
+    except Exception as e:
+        logger.warning(f"RoboticsSimulator: could not pre-create tables: {e}")
 
     def _thread_target():
         loop = asyncio.new_event_loop()

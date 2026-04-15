@@ -1,0 +1,159 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@protected": true,
+    "id": "@id",
+    "type": "@type",
+
+    "omnix": "https://omnixquantum.net/schemas/v1#",
+    "schema": "https://schema.org/",
+    "vc": "https://www.w3.org/2018/credentials#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "sec": "https://w3id.org/security#",
+    "fatf": "https://www.fatf-gafi.org/ontology#",
+    "eu_ai_act": "https://artificialintelligenceact.eu/ontology#",
+
+    "OmnixGovernanceCredential": "omnix:OmnixGovernanceCredential",
+
+    "receipt_id": {
+      "@id": "omnix:receiptId",
+      "@type": "xsd:string"
+    },
+    "timestamp": {
+      "@id": "omnix:timestamp",
+      "@type": "xsd:dateTime"
+    },
+    "asset": {
+      "@id": "omnix:asset",
+      "@type": "xsd:string"
+    },
+    "decision": {
+      "@id": "omnix:decision",
+      "@type": "xsd:string",
+      "@context": {
+        "APPROVED": "omnix:ApprovedDecision",
+        "BLOCKED": "omnix:BlockedDecision",
+        "HOLD": "omnix:HoldDecision"
+      }
+    },
+    "domain": {
+      "@id": "omnix:domain",
+      "@type": "xsd:string",
+      "@context": {
+        "trading": "omnix:TradingDomain",
+        "credit": "omnix:CreditDomain",
+        "insurance": "omnix:InsuranceDomain",
+        "robotics": "omnix:RoboticsDomain",
+        "medical_ai": "omnix:MedicalAIDomain",
+        "energy_governance": "omnix:EnergyDomain",
+        "real_estate": "omnix:RealEstateDomain",
+        "autonomous_agent": "omnix:AgentsDomain"
+      }
+    },
+    "veto_chain": {
+      "@id": "omnix:vetoChain",
+      "@container": "@list",
+      "@context": {
+        "gate": "omnix:gate",
+        "result": "omnix:gateResult",
+        "PASS": "omnix:PassResult",
+        "BLOCKED": "omnix:BlockedResult"
+      }
+    },
+    "policy_version": {
+      "@id": "omnix:policyVersion",
+      "@type": "xsd:string"
+    },
+    "engine_version": {
+      "@id": "omnix:engineVersion",
+      "@type": "xsd:string"
+    },
+    "prev_hash": {
+      "@id": "omnix:prevHash",
+      "@type": "xsd:string"
+    },
+    "content_hash": {
+      "@id": "omnix:contentHash",
+      "@type": "xsd:string"
+    },
+    "signature": {
+      "@id": "sec:signature",
+      "@type": "xsd:string"
+    },
+    "signature_algorithm": {
+      "@id": "sec:signatureAlgorithm",
+      "@type": "xsd:string"
+    },
+    "public_key": {
+      "@id": "sec:publicKey",
+      "@type": "xsd:string"
+    },
+    "signing_provider": {
+      "@id": "omnix:signingProvider",
+      "@type": "xsd:string"
+    },
+    "sharia_compliance": {
+      "@id": "omnix:shariaCompliance",
+      "@type": "@json"
+    },
+    "aml_compliance": {
+      "@id": "omnix:amlCompliance",
+      "@type": "@json",
+      "@context": {
+        "fatf_recommendation": "fatf:Recommendation",
+        "status": "fatf:ComplianceStatus"
+      }
+    },
+    "fraud_compliance": {
+      "@id": "omnix:fraudCompliance",
+      "@type": "@json"
+    },
+    "jurisdiction_compliance": {
+      "@id": "omnix:jurisdictionCompliance",
+      "@type": "@json",
+      "@context": {
+        "eu_ai_act_applicable": "eu_ai_act:Applicable",
+        "risk_class": "eu_ai_act:RiskClass",
+        "gdpr_applicable": "omnix:GdprApplicable"
+      }
+    },
+    "context_admission": {
+      "@id": "omnix:contextAdmission",
+      "@type": "@json"
+    },
+    "veto_type": {
+      "@id": "omnix:vetoType",
+      "@type": "xsd:string"
+    },
+    "jurisdiction_semantics": {
+      "@id": "omnix:jurisdictionSemantics",
+      "@type": "@json"
+    },
+    "regulatory_alignment": {
+      "@id": "omnix:regulatoryAlignment",
+      "@type": "@json"
+    },
+    "ttl_epoch_ms": {
+      "@id": "omnix:ttlEpochMs",
+      "@type": "xsd:long"
+    },
+    "issuer": {
+      "@id": "schema:Organization"
+    },
+    "issuanceDate": {
+      "@id": "vc:issuanceDate",
+      "@type": "xsd:dateTime"
+    },
+    "expirationDate": {
+      "@id": "vc:expirationDate",
+      "@type": "xsd:dateTime"
+    },
+    "credentialSubject": {
+      "@id": "vc:credentialSubject"
+    },
+    "proof": {
+      "@id": "sec:proof",
+      "@type": "@json"
+    }
+  }
+}

@@ -294,8 +294,8 @@ export default function CommercialLanding() {
 
         <section className="mb-24">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-white mb-3">Six Verticals. Running Now.</h2>
-            <p className="text-muted max-w-2xl mx-auto">Same 11-checkpoint governance pipeline. Six live domains. All operating 24/7.</p>
+            <h2 className="text-3xl font-bold text-white mb-3">Eight Verticals. Running Now.</h2>
+            <p className="text-muted max-w-2xl mx-auto">Same 11-checkpoint governance pipeline. Eight live domains. All operating 24/7.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="glass-card p-8 border border-emerald-400/20">

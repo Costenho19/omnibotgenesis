@@ -1,0 +1,83 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "did:web:omnixquantum.net",
+  "controller": "did:web:omnixquantum.net",
+  "verificationMethod": [
+    {
+      "id": "did:web:omnixquantum.net#pqc-key-1",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:omnixquantum.net",
+      "publicKeyJwk": {
+        "kty": "OKP",
+        "crv": "OMNIX-Dilithium3",
+        "alg": "CRYDI3",
+        "use": "sig",
+        "kid": "pqc-key-1",
+        "x": "RUNTIME_EPHEMERAL_SEE_TRUST_REGISTRY",
+        "key_ops": ["verify"],
+        "x5u": "https://omnixquantum.net/api/trust/registry"
+      }
+    },
+    {
+      "id": "did:web:omnixquantum.net#governance-key-1",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:omnixquantum.net",
+      "publicKeyJwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "use": "sig",
+        "kid": "governance-key-1",
+        "x": "RUNTIME_EPHEMERAL_SEE_TRUST_REGISTRY",
+        "key_ops": ["verify"],
+        "x5u": "https://omnixquantum.net/api/trust/registry"
+      },
+      "note": "Hash-chain integrity anchor for non-PQC environments"
+    }
+  ],
+  "assertionMethod": [
+    "did:web:omnixquantum.net#pqc-key-1",
+    "did:web:omnixquantum.net#governance-key-1"
+  ],
+  "authentication": [
+    "did:web:omnixquantum.net#pqc-key-1"
+  ],
+  "service": [
+    {
+      "id": "did:web:omnixquantum.net#governance-api",
+      "type": "GovernanceAPI",
+      "serviceEndpoint": "https://omnixquantum.net/api/governance/evaluate"
+    },
+    {
+      "id": "did:web:omnixquantum.net#receipt-verifier",
+      "type": "ReceiptVerifier",
+      "serviceEndpoint": "https://omnixquantum.net/api/trust/verify"
+    },
+    {
+      "id": "did:web:omnixquantum.net#trust-registry",
+      "type": "TrustRegistry",
+      "serviceEndpoint": "https://omnixquantum.net/api/trust/registry"
+    },
+    {
+      "id": "did:web:omnixquantum.net#schema-repository",
+      "type": "LinkedDomains",
+      "serviceEndpoint": {
+        "origins": [
+          "https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld",
+          "https://omnixquantum.net/schemas/omnix-receipt-schema-v6.5.4e.json"
+        ]
+      }
+    },
+    {
+      "id": "did:web:omnixquantum.net#vc-issuer",
+      "type": "CredentialIssuer",
+      "serviceEndpoint": "https://omnixquantum.net/api/governance/receipt/vc"
+    }
+  ],
+  "alsoKnownAs": [
+    "https://omnixquantum.net"
+  ]
+}

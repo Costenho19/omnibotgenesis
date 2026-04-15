@@ -68,6 +68,54 @@ DOMAIN_BASELINES = {
         "description": "Baseline calibration — robotics action governance Q1 2026",
         "tags": ["initial", "q1-2026", "robotics"],
     },
+    "medical_ai": {
+        "signals": {
+            "diagnosis_confidence":   72.0,
+            "patient_risk":           35.0,
+            "evidence_quality":       70.0,
+            "treatment_alignment":    68.0,
+            "safety_margin":          80.0,
+            "regulatory_compliance":  78.0,
+        },
+        "description": "Baseline calibration — medical AI governance Q2 2026",
+        "tags": ["initial", "q2-2026", "medical"],
+    },
+    "energy_governance": {
+        "signals": {
+            "grid_stability":         88.0,
+            "power_margin":           72.0,
+            "price_coherence":        65.0,
+            "demand_forecast":        70.0,
+            "reserve_headroom":       75.0,
+            "regulatory_compliance":  82.0,
+        },
+        "description": "Baseline calibration — energy grid governance Q2 2026",
+        "tags": ["initial", "q2-2026", "energy"],
+    },
+    "real_estate": {
+        "signals": {
+            "property_valuation":     68.0,
+            "market_liquidity":       60.0,
+            "documentation_quality":  74.0,
+            "legal_compliance":       80.0,
+            "financial_health":       66.0,
+            "risk_exposure":          38.0,
+        },
+        "description": "Baseline calibration — real estate governance Q2 2026",
+        "tags": ["initial", "q2-2026", "real-estate"],
+    },
+    "autonomous_agent": {
+        "signals": {
+            "task_viability":         70.0,
+            "blast_radius":           25.0,
+            "context_quality":        72.0,
+            "goal_alignment":         75.0,
+            "fallback_coverage":      68.0,
+            "authorization_compliance": 82.0,
+        },
+        "description": "Baseline calibration — autonomous agent governance Q2 2026",
+        "tags": ["initial", "q2-2026", "agents"],
+    },
 }
 
 

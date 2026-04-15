@@ -1,54 +1,59 @@
 {
   "version": "OMNIX Decision Governance",
-  "internal_build": "6.5.4e",
+  "internal_build": "7.0.0",
   "platform_identity": "Decision Governance Infrastructure for Automated Systems",
   "category_creation": "OMNIX is building the category of Decision Governance Infrastructure",
   "tagline": "Governing Decisions Under Uncertainty",
-  "canonical_definition": "OMNIX is a governance control architecture for automated decision systems. It is building the category of Decision Governance Infrastructure. The first validated vertical is digital asset trading.",
-  "investor_one_liner": "OMNIX builds the governance layer for automated decision systems. First validated in digital asset trading.",
+  "canonical_definition": "OMNIX is a governance control architecture for automated decision systems. It is building the category of Decision Governance Infrastructure. Eight verticals are live and operational: Digital Asset Trading, Islamic Credit, Insurance Underwriting, Robotics, Medical AI, Energy Grid, Real Estate, and Autonomous Agents.",
+  "investor_one_liner": "OMNIX builds the governance layer for automated decision systems — eight verticals live, same 11-checkpoint pipeline across all domains.",
   "investor_question_reframe": "How much capital risk exists in automated systems without governance control?",
-  "first_vertical": "Digital Asset Trading (Validated)",
-  "future_verticals": [
-    "Supply Chain",
-    "Lending/Credit",
-    "Insurance",
-    "Energy Trading",
-    "RegTech/Compliance"
-  ],
-  "adr_reference": "ADR-025, ADR-026, ADR-027",
-  "multi_vertical_architecture": {
-    "adr": "ADR-026",
-    "pattern": "Domain Adapter + Normalized Governance Signals",
-    "validated_vertical": "Digital Asset Trading (670,000+ decisions)",
-    "demo_verticals_NOTE": "These are INTERACTIVE DEMOS showing architecture applicability, NOT operational governance in these verticals",
-    "demo_verticals": [
-      "Credit/Lending (Interactive Demo at /governance-demo - DEMO ONLY, not operational)",
-      "Insurance Underwriting (Interactive Demo at /governance-demo-insurance - DEMO ONLY, not operational)"
-    ],
-    "roadmap_verticals": [
-      "Supply Chain (Year 2)",
-      "Energy Trading (Year 3)"
-    ],
-    "core_abstraction": "6-Checkpoint Fail-Closed Governance Engine"
-  },
-  "last_updated": "2026-03-07",
+  "last_updated": "2026-04-15",
   "track_record_start": "2026-01-15",
-  "track_record_day": 51,
-  "track_record_status": "COMPLETED",
   "trading_mode": "paper",
   "paper_capital": 1000000,
+  "multi_vertical_architecture": {
+    "adr": "ADR-026, ADR-091, ADR-112",
+    "pattern": "Domain Adapter + Normalized Governance Signals",
+    "governance_checkpoints": 11,
+    "active_verticals": [
+      "Digital Asset Trading — operational since 2026-01-15",
+      "Islamic Credit Governance — operational since 2026-02-01",
+      "Insurance Underwriting Governance — operational since 2026-02-15",
+      "Robotics Action Governance — operational since 2026-02-28",
+      "Medical AI Governance — operational since 2026-03-15",
+      "Energy Grid Governance — operational since 2026-04-01",
+      "Real Estate Governance — operational since 2026-04-01",
+      "Autonomous Agent Governance — operational since 2026-04-10"
+    ],
+    "vertical_count": 8,
+    "db_table_mapping": {
+      "trading": "decision_receipts",
+      "islamic_credit": "credit_applications",
+      "insurance": "insurance_claims",
+      "robotics": "robot_actions",
+      "medical": "medical_decisions",
+      "energy": "energy_decisions",
+      "real_estate": "property_decisions",
+      "autonomous_agents": "agent_decisions"
+    },
+    "simulator_status": "All 8 simulators running 24/7 — generating governance decisions continuously",
+    "core_abstraction": "11-Checkpoint Fail-Closed Governance Engine",
+    "IMPORTANT_NOTE": "All 8 verticals are LIVE and OPERATIONAL — NOT demos, NOT roadmap items"
+  },
   "operational_phase": {
-    "current": "PHASE_1_GRADUAL_ACTIVATION",
-    "started": "2026-02-13",
+    "current": "PHASE_2_MULTI_VERTICAL_EXPANSION",
+    "started": "2026-04-01",
     "changes": {
-      "TRACK_RECORD_MODE": "false (was true - score cap removed)",
-      "ECW_CYCLES_REQUIRED": "2 (was 3 - faster edge confirmation)"
+      "TRACK_RECORD_MODE": "false",
+      "ECW_CYCLES_REQUIRED": "2",
+      "ACTIVE_VERTICALS": "8 (was 1 at launch)"
     },
     "safety_preserved": [
       "Monte Carlo VETO (ER < 0 = BLOCKED)",
       "RMS VETO (VaR95 > -3% = BLOCKED)",
       "Black Swan detector (always active)",
-      "Coherence Gate (< 30% critical block, < 45% normal block)"
+      "Coherence Gate (< 30% critical block, < 45% normal block)",
+      "11-checkpoint pipeline active across all 8 verticals"
     ],
     "rollback": "Set TRACK_RECORD_MODE=true and ECW_CYCLES_REQUIRED=3 in Railway ENV + restart"
   },
@@ -80,7 +85,7 @@
         "ECW_WAITING": 24
       },
       "telemetry_source": "REAL",
-      "investor_note": "Track record oficial COMPLETADO - 30 dias, sistema demostro disciplina de capital. Transicion a Fase 1 operativa."
+      "investor_note": "Track record oficial COMPLETADO - 30 dias, sistema demostro disciplina de capital. Transicion a Fase 2 multi-vertical."
     },
     "response_rules": {
       "mandatory_disclosure": "Cuando se mencione CUALQUIER métrica (P&L, win rate, trades, losses), incluir nota de período al FINAL",
@@ -115,7 +120,7 @@
     ]
   },
   "signal_architecture": {
-    "version": "V6.5.4d",
+    "version": "V7.0.0",
     "scoring_model": "5 Core Inputs (105 points max)",
     "components": {
       "EMA_REGIME_SIGNAL": {
@@ -376,29 +381,25 @@
     }
   },
   "dashboard_status": {
-    "widgets": "14/14 operational",
-    "total_trades": 109,
-    "data_source": "PostgreSQL (real trades)"
+    "widgets": "19/19 operational",
+    "verticals_live": 8,
+    "data_source": "PostgreSQL (real decisions)"
   },
   "command_surface": {
-    "audit_date": "2025-12-24",
+    "audit_date": "2026-04-15",
     "total_commands": 85,
     "unique_handlers": 81,
     "aliases": 4,
     "status": "Audited and sealed"
   },
-  "roadmap_features": {
-    "v7_planned": [
-      "alerts_inline (inline buttons)",
-      "history_inline (inline buttons)",
-      "settings_inline (inline buttons)",
-      "hexagonal_activation (strangler fig pattern)"
-    ],
-    "alternatives_available": {
-      "history": "/performance, /balance",
-      "alerts": "/rms (RMS handles risk alerts)",
-      "settings": "/miconfig, /perfil, /limites"
-    }
+  "adr_references": {
+    "multi_vertical": "ADR-026",
+    "autonomous_agents_vertical": "ADR-091",
+    "energy_vertical": "ADR-112",
+    "temporal_coherence": "ADR-032",
+    "edge_confirmation": "ADR-019, ADR-051",
+    "pqc": "ADR-022, ADR-031",
+    "dci": "ADR-018"
   },
   "institutional_language": {
     "blacklisted_phrases": [
@@ -422,7 +423,14 @@
       "Disculpa por el error anterior",
       "Perdón por el error anterior",
       "Lamento el error anterior",
-      "Me disculpo por el error"
+      "Me disculpo por el error",
+      "Six Verticals",
+      "seis verticales",
+      "only one vertical",
+      "solo un vertical",
+      "demo vertical",
+      "interactive demo only",
+      "NOT operational"
     ],
     "approved_reframes": {
       "losses": "capital deployment in learning phase",

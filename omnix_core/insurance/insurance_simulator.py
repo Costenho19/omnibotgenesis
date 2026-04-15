@@ -83,6 +83,73 @@ CLAIM_RANGES: dict[tuple, tuple] = {
 _DEFAULT_RANGE = (10_000, 500_000)
 
 
+def _ensure_insurance_tables(conn) -> None:
+    """Create insurance tables if they don't exist — idempotent, safe for Railway fresh deploys."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS insurance_claims (
+                id SERIAL PRIMARY KEY,
+                claim_id VARCHAR(64) UNIQUE NOT NULL,
+                claimant_type VARCHAR(32),
+                insurance_type VARCHAR(32),
+                region VARCHAR(16),
+                claim_amount_usd NUMERIC(18,2),
+                policy_limit_usd NUMERIC(18,2),
+                coverage_ratio NUMERIC(6,4),
+                claimant_history_score NUMERIC(6,2),
+                fraud_indicators NUMERIC(6,2),
+                evidence_completeness NUMERIC(6,2),
+                loss_ratio_trend NUMERIC(6,2),
+                reserve_adequacy NUMERIC(6,2),
+                policy_claim_alignment NUMERIC(6,2),
+                decision VARCHAR(16),
+                decision_score NUMERIC(6,2),
+                block_reason TEXT,
+                receipt_id VARCHAR(128),
+                probability_score NUMERIC(6,2),
+                risk_exposure NUMERIC(6,2),
+                signal_coherence NUMERIC(6,2),
+                trend_persistence NUMERIC(6,2),
+                stress_resilience NUMERIC(6,2),
+                logic_consistency NUMERIC(6,2),
+                checkpoint_results JSONB DEFAULT '[]',
+                trajectory_score NUMERIC(6,2),
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS insurance_cycle_metrics (
+                id SERIAL PRIMARY KEY,
+                cycle_id VARCHAR(64) UNIQUE NOT NULL,
+                cycle_number INTEGER,
+                claims_evaluated INTEGER,
+                claims_approved INTEGER,
+                claims_blocked INTEGER,
+                total_approved_usd NUMERIC(18,2),
+                total_blocked_usd NUMERIC(18,2),
+                avg_fraud_score NUMERIC(6,2),
+                avg_decision_score NUMERIC(6,2),
+                approval_rate NUMERIC(6,4),
+                cycle_duration_ms INTEGER,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_insurance_claims_decision
+            ON insurance_claims (decision)
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_insurance_claims_type
+            ON insurance_claims (insurance_type)
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_insurance_claims_created
+            ON insurance_claims (created_at DESC)
+        """)
+    conn.commit()
+    logger.info("insurance_claims + insurance_cycle_metrics tables ready")
+
+
 def _weighted_choice(choices: list[tuple]) -> str:
     items = [c[0] for c in choices]
     weights = [c[1] for c in choices]
@@ -388,6 +455,14 @@ def get_simulator() -> InsuranceSimulator:
 def start_background_simulator():
     """Start the simulator in a background thread — called from app.py startup."""
     import threading
+    import psycopg2
+
+    try:
+        conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
+        _ensure_insurance_tables(conn)
+        conn.close()
+    except Exception as e:
+        logger.warning(f"InsuranceSimulator: could not pre-create tables: {e}")
 
     def _thread_target():
         loop = asyncio.new_event_loop()
