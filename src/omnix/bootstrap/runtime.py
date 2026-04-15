@@ -99,7 +99,7 @@ def verify_database(container: Container) -> bool:
             logger.warning("Database not connected")
             return False
         
-        result = db.execute_one("SELECT 1")
+        result = db.execute_query("SELECT 1")
         if result:
             logger.info("Database connection verified")
             return True
