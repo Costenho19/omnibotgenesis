@@ -287,64 +287,103 @@ def _evaluate_decision(decision_data: dict) -> dict:
     signals = adapter.adapt(decision_input)
     signal_dict = signals.to_omnix_dict()
 
-    # Governance thresholds — medical domain is stricter
-    THRESHOLDS = {
-        "probability_score": 65.0,
-        "risk_exposure": 72.0,    # block if risk > this (inverted)
-        "signal_coherence": 60.0,
-        "trend_persistence": 55.0,
-        "stress_resilience": 55.0,
-        "logic_consistency": 60.0,
-    }
-
-    block_reason = None
-    failed_checkpoints = []
-
-    if signal_dict["probability_score"] < THRESHOLDS["probability_score"]:
-        failed_checkpoints.append("CP-2: Clinical Probability below threshold")
-    if signal_dict["risk_exposure"] > THRESHOLDS["risk_exposure"]:
-        failed_checkpoints.append("CP-3: Patient Risk Exposure exceeds safe limit")
-    if signal_dict["signal_coherence"] < THRESHOLDS["signal_coherence"]:
-        failed_checkpoints.append("CP-4: Clinical Coherence insufficient")
-    if signal_dict["trend_persistence"] < THRESHOLDS["trend_persistence"]:
-        failed_checkpoints.append("CP-5: Adverse patient trajectory detected")
-    if signal_dict["stress_resilience"] < THRESHOLDS["stress_resilience"]:
-        failed_checkpoints.append("CP-6: Stress resilience below safe margin")
-    if signal_dict["logic_consistency"] < THRESHOLDS["logic_consistency"]:
-        failed_checkpoints.append("CP-7: Ethics/care plan alignment failure")
-
-    # Ethics and consent are hard blocks regardless of scores
+    # ── Hard blocks — domain-mandatory, bypass engine (ADR-113) ─────────────
+    hard_block_reasons = []
     if decision_data["ethics_flag"]:
-        failed_checkpoints.append("CP-7: Ethics flag raised — clinical review required")
+        hard_block_reasons.append("CP-7: Ethics flag raised — clinical review required")
     if not decision_data["consent_verified"]:
-        failed_checkpoints.append("CP-7: Informed consent not verified — BLOCK")
+        hard_block_reasons.append("CP-7: Informed consent not verified — BLOCK")
 
-    if failed_checkpoints:
-        decision_outcome = "BLOCKED"
-        block_reason = " | ".join(failed_checkpoints[:2])
-    else:
-        score = sum(signal_dict.values()) / len(signal_dict)
-        decision_outcome = "APPROVED" if score >= 62 else "HOLD"
+    if hard_block_reasons:
+        _composite = (
+            signal_dict["probability_score"] + (100 - signal_dict["risk_exposure"])
+            + signal_dict["signal_coherence"] + signal_dict["trend_persistence"]
+            + signal_dict["stress_resilience"] + signal_dict["logic_consistency"]
+        ) / 6.0
+        return {
+            **decision_data,
+            **signal_dict,
+            "domain": "medical_ai",
+            "decision": "BLOCKED",
+            "decision_score": round(_composite * 0.15, 2),
+            "block_reason": " | ".join(hard_block_reasons[:2]),
+            "receipt_id": DecisionReceiptEngine.build_receipt_id("medical_ai"),
+            "trajectory_score": round(
+                signal_dict["trend_persistence"] * 0.40
+                + signal_dict["stress_resilience"] * 0.35
+                + signal_dict["signal_coherence"] * 0.25, 2
+            ),
+            "checkpoint_results": hard_block_reasons,
+        }
 
-    decision_score = sum(signal_dict.values()) / len(signal_dict)
-    trajectory_score = (
-        signal_dict["trend_persistence"] * 0.40
-        + signal_dict["stress_resilience"] * 0.35
-        + signal_dict["signal_coherence"] * 0.25
-    )
-
-    receipt_id = DecisionReceiptEngine.build_receipt_id("medical_ai")
+    # ── OMNIX GovernanceEvaluationEngine — 11-checkpoint pipeline (ADR-113) ─
+    try:
+        from omnix_core.governance.external_evaluator import GovernanceEvaluationEngine
+        engine = GovernanceEvaluationEngine()
+        result = engine.evaluate(
+            signals=signal_dict,
+            asset=f"{decision_data['device_type']}_{decision_data['decision_type']}",
+            domain="medical_ai",
+            metadata={
+                "patient_profile": decision_data["patient_profile"],
+                "jurisdiction":    decision_data["jurisdiction"],
+                "device_type":     decision_data["device_type"],
+                "off_label_use":   decision_data["off_label_use"],
+            },
+        )
+        decision_outcome   = result.get("decision", "BLOCKED")
+        receipt_id         = DecisionReceiptEngine.build_receipt_id("medical_ai")
+        checkpoint_results = result.get("gate_results", [])
+        veto_chain         = result.get("veto_chain", [])
+        scores             = result.get("scores", signal_dict)
+        composite = (
+            scores.get("probability_score", 50) + (100 - scores.get("risk_exposure", 50))
+            + scores.get("signal_coherence", 50) + scores.get("trend_persistence", 50)
+            + scores.get("stress_resilience", 50) + scores.get("logic_consistency", 50)
+        ) / 6.0
+        trajectory_score = (
+            scores.get("trend_persistence", 50) * 0.40
+            + scores.get("stress_resilience", 50) * 0.35
+            + scores.get("signal_coherence", 50) * 0.25
+        )
+        decision_score = composite
+        block_reason = (
+            veto_chain[0].get("checkpoint_name", "Governance threshold breach")
+            if veto_chain else None
+        )
+    except Exception as exc:
+        logger.warning(f"[Medical] Governance engine unavailable: {exc} — rule-based fallback active")
+        composite = (
+            signal_dict["probability_score"] + (100 - signal_dict["risk_exposure"])
+            + signal_dict["signal_coherence"] + signal_dict["trend_persistence"]
+            + signal_dict["stress_resilience"] + signal_dict["logic_consistency"]
+        ) / 6.0
+        decision_outcome = "APPROVED" if composite >= 65 else ("HOLD" if composite >= 50 else "BLOCKED")
+        receipt_id         = DecisionReceiptEngine.build_receipt_id("medical_ai")
+        checkpoint_results = []
+        trajectory_score   = (
+            signal_dict["trend_persistence"] * 0.40
+            + signal_dict["stress_resilience"] * 0.35
+            + signal_dict["signal_coherence"] * 0.25
+        )
+        decision_score = composite
+        block_reason = (
+            "CP-2: Clinical probability below governance threshold"
+            if signal_dict["probability_score"] < 65 else
+            "CP-3: Patient risk exposure exceeds safe limit"
+            if signal_dict["risk_exposure"] > 72 else None
+        )
 
     return {
         **decision_data,
         **signal_dict,
-        "domain": "medical_ai",
-        "decision": decision_outcome,
-        "decision_score": round(decision_score, 2),
-        "block_reason": block_reason,
-        "receipt_id": receipt_id,
-        "trajectory_score": round(trajectory_score, 2),
-        "checkpoint_results": failed_checkpoints,
+        "domain":            "medical_ai",
+        "decision":          decision_outcome,
+        "decision_score":    round(decision_score, 2),
+        "block_reason":      block_reason,
+        "receipt_id":        receipt_id,
+        "trajectory_score":  round(trajectory_score, 2),
+        "checkpoint_results": checkpoint_results,
     }
 
 

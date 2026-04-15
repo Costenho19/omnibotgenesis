@@ -300,62 +300,102 @@ def _generate_decision(
     signals = adapter.adapt(inp)
     sig_dict = signals.to_omnix_dict()
 
-    # ── Final decision (11-checkpoint outcome) ────────────────────────────────
-    composite = (
-        sig_dict["probability_score"]
-        + (100.0 - sig_dict["risk_exposure"])
-        + sig_dict["signal_coherence"]
-        + sig_dict["trend_persistence"]
-        + sig_dict["stress_resilience"]
-        + sig_dict["logic_consistency"]
-    ) / 6.0
-
-    trajectory_score = _clamp(
-        sig_dict["trend_persistence"] * 0.45
-        + sig_dict["signal_coherence"] * 0.35
-        + sig_dict["stress_resilience"] * 0.20,
-        0, 100
-    )
-
-    if signals.hard_block_reason:
-        decision = "BLOCKED"
-        block_reason = signals.hard_block_reason
-        decision_score = round(composite * 0.15, 2)
-    elif composite >= 70.0:
-        decision = "APPROVED"
-        block_reason = None
-        decision_score = round(composite, 2)
-    elif composite >= 52.0:
-        decision = "HOLD"
-        block_reason = "GRID_OPERATOR_REVIEW: composite score requires manual validation"
-        decision_score = round(composite, 2)
-    else:
-        decision = "BLOCKED"
-        block_reason = "HIGH_RISK: composite governance score below execution threshold"
-        decision_score = round(composite, 2)
-
     decision_id = f"EGV-{cycle_id[:8].upper()}-{uuid.uuid4().hex[:8].upper()}"
 
-    # ── PQC Receipt ───────────────────────────────────────────────────────────
-    receipt_id = None
-    try:
-        loop = asyncio.new_event_loop()
-        receipt_engine = DecisionReceiptEngine()
-        receipt = loop.run_until_complete(
-            receipt_engine.generate_receipt(
-                decision_id=decision_id,
-                decision_type=decision_type,
-                decision=decision,
-                decision_score=decision_score,
-                block_reason=block_reason,
-                domain="energy_governance",
-                signals=sig_dict,
-            )
+    # ── Hard block — grid emergency overrides, bypass engine (ADR-112/ADR-113) ─
+    if signals.hard_block_reason:
+        _composite = (
+            sig_dict["probability_score"] + (100.0 - sig_dict["risk_exposure"])
+            + sig_dict["signal_coherence"] + sig_dict["trend_persistence"]
+            + sig_dict["stress_resilience"] + sig_dict["logic_consistency"]
+        ) / 6.0
+        trajectory_score = _clamp(
+            sig_dict["trend_persistence"] * 0.45
+            + sig_dict["signal_coherence"] * 0.35
+            + sig_dict["stress_resilience"] * 0.20, 0, 100
         )
-        receipt_id = receipt.get("receipt_id")
-        loop.close()
-    except Exception as re:
-        logger.debug(f"Receipt generation skipped: {re}")
+        decision      = "BLOCKED"
+        block_reason  = signals.hard_block_reason
+        decision_score = round(_composite * 0.15, 2)
+        receipt_id    = None
+    else:
+        # ── OMNIX GovernanceEvaluationEngine — 11-checkpoint pipeline (ADR-113) ─
+        try:
+            from omnix_core.governance.external_evaluator import GovernanceEvaluationEngine
+            engine = GovernanceEvaluationEngine()
+            result = engine.evaluate(
+                signals=sig_dict,
+                asset=f"{energy_source}_{decision_type}",
+                domain="energy_governance",
+                metadata={
+                    "grid_region":          grid_region,
+                    "decision_type":        decision_type,
+                    "energy_source":        energy_source,
+                    "capacity_margin_pct":  signals.capacity_margin_pct,
+                    "frequency_deviation":  signals.frequency_deviation_hz,
+                },
+            )
+            decision   = result.get("decision", "BLOCKED")
+            scores     = result.get("scores", sig_dict)
+            _composite = (
+                scores.get("probability_score", 50) + (100.0 - scores.get("risk_exposure", 50))
+                + scores.get("signal_coherence", 50) + scores.get("trend_persistence", 50)
+                + scores.get("stress_resilience", 50) + scores.get("logic_consistency", 50)
+            ) / 6.0
+            trajectory_score = _clamp(
+                scores.get("trend_persistence", 50) * 0.45
+                + scores.get("signal_coherence", 50) * 0.35
+                + scores.get("stress_resilience", 50) * 0.20, 0, 100
+            )
+            veto_chain   = result.get("veto_chain", [])
+            decision_score = round(_composite, 2)
+            block_reason = (
+                veto_chain[0].get("checkpoint_name", "Governance threshold breach")
+                if veto_chain else
+                ("GRID_OPERATOR_REVIEW: composite score requires manual validation"
+                 if decision == "HOLD" else None)
+            )
+        except Exception as exc:
+            logger.warning(f"[Energy] Governance engine unavailable: {exc} — rule-based fallback active")
+            _composite = (
+                sig_dict["probability_score"] + (100.0 - sig_dict["risk_exposure"])
+                + sig_dict["signal_coherence"] + sig_dict["trend_persistence"]
+                + sig_dict["stress_resilience"] + sig_dict["logic_consistency"]
+            ) / 6.0
+            trajectory_score = _clamp(
+                sig_dict["trend_persistence"] * 0.45
+                + sig_dict["signal_coherence"] * 0.35
+                + sig_dict["stress_resilience"] * 0.20, 0, 100
+            )
+            if _composite >= 70.0:
+                decision, block_reason = "APPROVED", None
+            elif _composite >= 52.0:
+                decision = "HOLD"
+                block_reason = "GRID_OPERATOR_REVIEW: composite score requires manual validation"
+            else:
+                decision = "BLOCKED"
+                block_reason = "HIGH_RISK: composite governance score below execution threshold"
+            decision_score = round(_composite, 2)
+
+        receipt_id = None
+        try:
+            loop = asyncio.new_event_loop()
+            receipt_engine = DecisionReceiptEngine()
+            receipt = loop.run_until_complete(
+                receipt_engine.generate_receipt(
+                    decision_id=decision_id,
+                    decision_type=decision_type,
+                    decision=decision,
+                    decision_score=decision_score,
+                    block_reason=block_reason,
+                    domain="energy_governance",
+                    signals=sig_dict,
+                )
+            )
+            receipt_id = receipt.get("receipt_id")
+            loop.close()
+        except Exception as re:
+            logger.debug(f"Receipt generation skipped: {re}")
 
     return {
         "decision_id":             decision_id,

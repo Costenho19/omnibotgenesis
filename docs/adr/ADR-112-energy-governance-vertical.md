@@ -161,6 +161,18 @@ operators). Vertical to be released publicly when the right energy client is sec
 
 ---
 
+## Engine Integration (ADR-115)
+
+As of **15 April 2026**, the Energy Governance vertical routes all non-blocked decisions through
+`GovernanceEvaluationEngine.evaluate(domain="energy_governance")` — ADR-115 (Engine Unification).
+
+Grid emergency hard blocks (`signals.hard_block_reason` set by the signal adapter) bypass the
+engine with immediate BLOCKED at `decision_score = composite × 0.15` — grid operator cannot
+be delayed by a checkpoint pipeline during a frequency emergency. All normal operating range
+decisions run the full 11-checkpoint pipeline including AVM (with energy baseline), CAG, EBIP.
+
+---
+
 ## References
 
 - ADR-ENG-001 entry in `replit.md`

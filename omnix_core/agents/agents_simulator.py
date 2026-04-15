@@ -281,64 +281,103 @@ def _evaluate_decision(decision_data: dict) -> dict:
     signals = adapter.adapt(decision_input)
     signal_dict = signals.to_omnix_dict()
 
-    # Governance thresholds — production agents have stricter gates
-    THRESHOLDS = {
-        "probability_score": 60.0,
-        "risk_exposure": 70.0,    # block if risk > this
-        "signal_coherence": 58.0,
-        "trend_persistence": 52.0,
-        "stress_resilience": 52.0,
-        "logic_consistency": 60.0,
-    }
-
-    block_reason = None
-    failed_checkpoints = []
-
-    if signal_dict["probability_score"] < THRESHOLDS["probability_score"]:
-        failed_checkpoints.append("CP-2: Task viability probability below threshold")
-    if signal_dict["risk_exposure"] > THRESHOLDS["risk_exposure"]:
-        failed_checkpoints.append("CP-3: Action blast radius exceeds safe governance limit")
-    if signal_dict["signal_coherence"] < THRESHOLDS["signal_coherence"]:
-        failed_checkpoints.append("CP-4: Context-task alignment insufficient")
-    if signal_dict["trend_persistence"] < THRESHOLDS["trend_persistence"]:
-        failed_checkpoints.append("CP-5: Goal trajectory instability detected")
-    if signal_dict["stress_resilience"] < THRESHOLDS["stress_resilience"]:
-        failed_checkpoints.append("CP-6: Failure mode coverage below safe margin")
-    if signal_dict["logic_consistency"] < THRESHOLDS["logic_consistency"]:
-        failed_checkpoints.append("CP-7: Authorization or safety constraint violation")
-
-    # Hard blocks — override all scores
+    # ── Hard blocks — principal hierarchy overrides, bypass engine (ADR-091/ADR-113) ─
+    hard_block_reasons = []
     if decision_data["safety_critical_flag"]:
-        failed_checkpoints.append("CP-7: Safety-critical flag raised — human review mandatory")
+        hard_block_reasons.append("CP-7: Safety-critical flag raised — human review mandatory")
     if decision_data["human_approval_required"] and not decision_data["human_approved"]:
-        failed_checkpoints.append("CP-7: Human authorization required but not granted — BLOCK")
+        hard_block_reasons.append("CP-7: Human authorization required but not granted — BLOCK")
 
-    if failed_checkpoints:
-        decision_outcome = "BLOCKED"
-        block_reason = " | ".join(failed_checkpoints[:2])
-    else:
-        score = sum(signal_dict.values()) / len(signal_dict)
-        decision_outcome = "APPROVED" if score >= 60 else "HOLD"
+    if hard_block_reasons:
+        _composite = (
+            signal_dict["probability_score"] + (100 - signal_dict["risk_exposure"])
+            + signal_dict["signal_coherence"] + signal_dict["trend_persistence"]
+            + signal_dict["stress_resilience"] + signal_dict["logic_consistency"]
+        ) / 6.0
+        return {
+            **decision_data,
+            **signal_dict,
+            "domain":            "autonomous_agent",
+            "decision":          "BLOCKED",
+            "decision_score":    round(_composite * 0.15, 2),
+            "block_reason":      " | ".join(hard_block_reasons[:2]),
+            "receipt_id":        DecisionReceiptEngine.build_receipt_id("autonomous_agent"),
+            "trajectory_score":  round(
+                signal_dict["trend_persistence"] * 0.40
+                + signal_dict["stress_resilience"] * 0.35
+                + signal_dict["signal_coherence"] * 0.25, 2
+            ),
+            "checkpoint_results": hard_block_reasons,
+        }
 
-    decision_score = sum(signal_dict.values()) / len(signal_dict)
-    trajectory_score = (
-        signal_dict["trend_persistence"] * 0.40
-        + signal_dict["stress_resilience"] * 0.35
-        + signal_dict["signal_coherence"] * 0.25
-    )
-
-    receipt_id = DecisionReceiptEngine.build_receipt_id("autonomous_agent")
+    # ── OMNIX GovernanceEvaluationEngine — 11-checkpoint pipeline (ADR-113) ─
+    try:
+        from omnix_core.governance.external_evaluator import GovernanceEvaluationEngine
+        engine = GovernanceEvaluationEngine()
+        result = engine.evaluate(
+            signals=signal_dict,
+            asset=f"{decision_data['agent_type']}_{decision_data['decision_type']}",
+            domain="autonomous_agent",
+            metadata={
+                "environment":  decision_data["environment"],
+                "reversibility": decision_data["reversibility"],
+                "data_sensitivity": decision_data["data_sensitivity"],
+                "cross_boundary":   decision_data["cross_boundary"],
+            },
+        )
+        decision_outcome   = result.get("decision", "BLOCKED")
+        receipt_id         = DecisionReceiptEngine.build_receipt_id("autonomous_agent")
+        checkpoint_results = result.get("gate_results", [])
+        veto_chain         = result.get("veto_chain", [])
+        scores             = result.get("scores", signal_dict)
+        composite = (
+            scores.get("probability_score", 50) + (100 - scores.get("risk_exposure", 50))
+            + scores.get("signal_coherence", 50) + scores.get("trend_persistence", 50)
+            + scores.get("stress_resilience", 50) + scores.get("logic_consistency", 50)
+        ) / 6.0
+        trajectory_score = (
+            scores.get("trend_persistence", 50) * 0.40
+            + scores.get("stress_resilience", 50) * 0.35
+            + scores.get("signal_coherence", 50) * 0.25
+        )
+        decision_score = composite
+        block_reason = (
+            veto_chain[0].get("checkpoint_name", "Governance threshold breach")
+            if veto_chain else None
+        )
+    except Exception as exc:
+        logger.warning(f"[Agents] Governance engine unavailable: {exc} — rule-based fallback active")
+        composite = (
+            signal_dict["probability_score"] + (100 - signal_dict["risk_exposure"])
+            + signal_dict["signal_coherence"] + signal_dict["trend_persistence"]
+            + signal_dict["stress_resilience"] + signal_dict["logic_consistency"]
+        ) / 6.0
+        decision_outcome = "APPROVED" if composite >= 62 else ("HOLD" if composite >= 48 else "BLOCKED")
+        receipt_id         = DecisionReceiptEngine.build_receipt_id("autonomous_agent")
+        checkpoint_results = []
+        trajectory_score   = (
+            signal_dict["trend_persistence"] * 0.40
+            + signal_dict["stress_resilience"] * 0.35
+            + signal_dict["signal_coherence"] * 0.25
+        )
+        decision_score = composite
+        block_reason = (
+            "CP-3: Action blast radius exceeds safe governance limit"
+            if signal_dict["risk_exposure"] > 70 else
+            "CP-2: Task viability probability below threshold"
+            if signal_dict["probability_score"] < 60 else None
+        )
 
     return {
         **decision_data,
         **signal_dict,
-        "domain": "autonomous_agent",
-        "decision": decision_outcome,
-        "decision_score": round(decision_score, 2),
-        "block_reason": block_reason,
-        "receipt_id": receipt_id,
-        "trajectory_score": round(trajectory_score, 2),
-        "checkpoint_results": failed_checkpoints,
+        "domain":            "autonomous_agent",
+        "decision":          decision_outcome,
+        "decision_score":    round(decision_score, 2),
+        "block_reason":      block_reason,
+        "receipt_id":        receipt_id,
+        "trajectory_score":  round(trajectory_score, 2),
+        "checkpoint_results": checkpoint_results,
     }
 
 

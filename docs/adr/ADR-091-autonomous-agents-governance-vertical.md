@@ -132,10 +132,22 @@ Live operations dashboard:
 
 ---
 
+## Engine Integration (ADR-115)
+
+As of **15 April 2026**, the Autonomous Agents vertical routes all non-blocked decisions through
+`GovernanceEvaluationEngine.evaluate(domain="autonomous_agent")` — ADR-115 (Engine Unification).
+
+Hard blocks (safety_critical_flag · human_approval_required + not approved) bypass the engine
+with immediate BLOCKED at `decision_score = composite × 0.15`. All other decisions run the full
+11-checkpoint pipeline including AVM, CAG, EBIP, CP-1 through CP-11.
+
+---
+
 ## References
 
 - ADR-041: Multi-Agent Decision Governance (foundational)
 - ADR-044: Quantum-Secure Decision Receipts
 - ADR-083: Enterprise Bot Security (bot command complement)
+- ADR-115: Engine Unification — all 8 verticals on `GovernanceEvaluationEngine` (15 Apr 2026)
 - AGL-AGT-001 entry in `replit.md`
 - `docs/OMNIX-Autonomous-Governance-Layer.md` — Section 8: Implementation Reference

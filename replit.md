@@ -8,8 +8,10 @@ Harold Nunes — Solo Founder & CEO. Semifinalista Eureka GCC Dubai 2026. Raisin
 **7/7 Pitch Deck Verticals LIVE (público)**: Trading · Islamic Credit · Insurance · Robotics · Medical AI · Autonomous Agents · AGL
 
 **2 Verticales Internos (no anunciados)**:
-- Real Estate Property Governance · ADR-RES-001 — activo en modo prueba interna
-- Energy Governance · ADR-ENG-001 — activo en modo prueba interna (11-Apr-2026)
+- Real Estate Property Governance · ADR-RES-001 / ADR-114 — activo en modo prueba interna
+- Energy Governance · ADR-ENG-001 / ADR-112 — activo en modo prueba interna (11-Apr-2026)
+
+**ADR-115 — Engine Unification (15 Apr 2026)**: Los 8 verticales ahora enrutan por `GovernanceEvaluationEngine`. Medical AI, Real Estate, Autonomous Agents, y Energy conectados (antes usaban lógica local). Hard blocks pre-engine: ethics/consent (Medical), AML/RERA/Sharia/LTV (Real Estate), safety_critical/human_approval (Agents), grid_emergency (Energy). Fallback rule-based preservado en todos. ADRs: ADR-113 (Medical), ADR-114 (Real Estate), ADR-115 (Unification).
 
 ---
 

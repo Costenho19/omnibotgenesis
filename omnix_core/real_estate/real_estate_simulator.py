@@ -383,76 +383,112 @@ def _evaluate_decision(decision_data: dict) -> dict:
     signals = adapter.adapt(decision_input)
     signal_dict = signals.to_omnix_dict()
 
-    # Governance thresholds — real estate balances speed with compliance rigor
-    THRESHOLDS = {
-        "probability_score": 62.0,
-        "risk_exposure":     70.0,   # block if risk exceeds this (inverted signal)
-        "signal_coherence":  58.0,
-        "trend_persistence": 52.0,
-        "stress_resilience": 50.0,
-        "logic_consistency": 65.0,   # strict — AML + regulatory compliance
-    }
-
-    failed_checkpoints = []
-
-    # Hard blocks — no override possible
+    # ── Hard blocks — regulatory / AML mandatory overrides, bypass engine (ADR-113) ─
+    hard_block_reasons = []
     if decision_data["aml_flag"]:
-        failed_checkpoints.append("CP-7: AML alert triggered — transaction BLOCKED pending investigation")
+        hard_block_reasons.append("CP-7: AML alert triggered — transaction BLOCKED pending investigation")
     if not decision_data["rera_compliant"]:
-        failed_checkpoints.append("CP-7: RERA non-compliance detected — regulatory BLOCK")
+        hard_block_reasons.append("CP-7: RERA non-compliance detected — regulatory BLOCK")
     if decision_data["financing_mode"] in ("Murabaha", "Ijarah", "Musharaka") \
             and not decision_data["sharia_screening_passed"]:
-        failed_checkpoints.append("CP-7: Sharia parameter screening failed — Islamic financing BLOCK")
+        hard_block_reasons.append("CP-7: Sharia parameter screening failed — Islamic financing BLOCK")
     if signals.ltv_hard_block:
         ltv_max = {"Conventional": 90, "Murabaha": 85, "Ijarah": 85, "Musharaka": 80}.get(
             decision_data["financing_mode"], 90)
-        failed_checkpoints.append(
+        hard_block_reasons.append(
             f"CP-3: LTV {decision_data['ltv_ratio']:.1f}% exceeds maximum {ltv_max}% — HARD BLOCK"
         )
 
-    # Signal threshold checks
-    if signal_dict["probability_score"] < THRESHOLDS["probability_score"]:
-        failed_checkpoints.append("CP-2: AVM valuation confidence below minimum threshold")
-    if signal_dict["risk_exposure"] > THRESHOLDS["risk_exposure"]:
-        failed_checkpoints.append("CP-3: Transaction risk exposure exceeds governance limit")
-    if signal_dict["signal_coherence"] < THRESHOLDS["signal_coherence"]:
-        failed_checkpoints.append("CP-4: Multi-source data alignment insufficient")
-    if signal_dict["trend_persistence"] < THRESHOLDS["trend_persistence"]:
-        failed_checkpoints.append("CP-5: Adverse market trajectory detected")
-    if signal_dict["stress_resilience"] < THRESHOLDS["stress_resilience"]:
-        failed_checkpoints.append("CP-6: Asset stress resilience below safe margin")
-    if signal_dict["logic_consistency"] < THRESHOLDS["logic_consistency"]:
-        failed_checkpoints.append("CP-7: Regulatory compliance alignment failure")
+    if hard_block_reasons:
+        _composite = (
+            signal_dict["probability_score"] + (100 - signal_dict["risk_exposure"])
+            + signal_dict["signal_coherence"] + signal_dict["trend_persistence"]
+            + signal_dict["stress_resilience"] + signal_dict["logic_consistency"]
+        ) / 6.0
+        return {
+            **decision_data,
+            **signal_dict,
+            "domain":            "real_estate",
+            "decision":          "BLOCKED",
+            "decision_score":    round(_composite * 0.15, 2),
+            "block_reason":      " | ".join(hard_block_reasons[:2]),
+            "receipt_id":        DecisionReceiptEngine.build_receipt_id("real_estate"),
+            "trajectory_score":  round(
+                signal_dict["trend_persistence"] * 0.40
+                + signal_dict["stress_resilience"] * 0.35
+                + signal_dict["signal_coherence"] * 0.25, 2
+            ),
+            "checkpoint_results": hard_block_reasons,
+        }
 
-    block_reason = None
-    if failed_checkpoints:
-        decision_outcome = "BLOCKED"
-        block_reason = " | ".join(failed_checkpoints[:2])
-    else:
-        score = sum(signal_dict.values()) / len(signal_dict)
-        decision_outcome = "APPROVED" if score >= 60 else "HOLD"
-
-    decision_score = sum(signal_dict.values()) / len(signal_dict)
-
-    # Trajectory score: market stability weighted composite
-    trajectory_score = (
-        signal_dict["trend_persistence"] * 0.40
-        + signal_dict["stress_resilience"] * 0.35
-        + signal_dict["signal_coherence"]  * 0.25
-    )
-
-    receipt_id = DecisionReceiptEngine.build_receipt_id("real_estate")
+    # ── OMNIX GovernanceEvaluationEngine — 11-checkpoint pipeline (ADR-113) ─
+    try:
+        from omnix_core.governance.external_evaluator import GovernanceEvaluationEngine
+        engine = GovernanceEvaluationEngine()
+        result = engine.evaluate(
+            signals=signal_dict,
+            asset=f"{decision_data['property_type']}_{decision_data['decision_type']}",
+            domain="real_estate",
+            metadata={
+                "jurisdiction":    decision_data["jurisdiction"],
+                "financing_mode":  decision_data["financing_mode"],
+                "market_segment":  decision_data["market_segment"],
+                "decision_type":   decision_data["decision_type"],
+            },
+        )
+        decision_outcome   = result.get("decision", "BLOCKED")
+        receipt_id         = DecisionReceiptEngine.build_receipt_id("real_estate")
+        checkpoint_results = result.get("gate_results", [])
+        veto_chain         = result.get("veto_chain", [])
+        scores             = result.get("scores", signal_dict)
+        composite = (
+            scores.get("probability_score", 50) + (100 - scores.get("risk_exposure", 50))
+            + scores.get("signal_coherence", 50) + scores.get("trend_persistence", 50)
+            + scores.get("stress_resilience", 50) + scores.get("logic_consistency", 50)
+        ) / 6.0
+        trajectory_score = (
+            scores.get("trend_persistence", 50) * 0.40
+            + scores.get("stress_resilience", 50) * 0.35
+            + scores.get("signal_coherence", 50) * 0.25
+        )
+        decision_score = composite
+        block_reason = (
+            veto_chain[0].get("checkpoint_name", "Governance threshold breach")
+            if veto_chain else None
+        )
+    except Exception as exc:
+        logger.warning(f"[RealEstate] Governance engine unavailable: {exc} — rule-based fallback active")
+        composite = (
+            signal_dict["probability_score"] + (100 - signal_dict["risk_exposure"])
+            + signal_dict["signal_coherence"] + signal_dict["trend_persistence"]
+            + signal_dict["stress_resilience"] + signal_dict["logic_consistency"]
+        ) / 6.0
+        decision_outcome = "APPROVED" if composite >= 62 else ("HOLD" if composite >= 48 else "BLOCKED")
+        receipt_id         = DecisionReceiptEngine.build_receipt_id("real_estate")
+        checkpoint_results = []
+        trajectory_score   = (
+            signal_dict["trend_persistence"] * 0.40
+            + signal_dict["stress_resilience"] * 0.35
+            + signal_dict["signal_coherence"] * 0.25
+        )
+        decision_score = composite
+        block_reason = (
+            "CP-7: Regulatory compliance alignment failure"
+            if signal_dict["logic_consistency"] < 65 else
+            "CP-3: Transaction risk exposure exceeds governance limit"
+            if signal_dict["risk_exposure"] > 70 else None
+        )
 
     return {
         **decision_data,
         **signal_dict,
-        "domain":          "real_estate",
-        "decision":        decision_outcome,
-        "decision_score":  round(decision_score, 2),
-        "block_reason":    block_reason,
-        "receipt_id":      receipt_id,
-        "trajectory_score": round(trajectory_score, 2),
-        "checkpoint_results": failed_checkpoints,
+        "domain":            "real_estate",
+        "decision":          decision_outcome,
+        "decision_score":    round(decision_score, 2),
+        "block_reason":      block_reason,
+        "receipt_id":        receipt_id,
+        "trajectory_score":  round(trajectory_score, 2),
+        "checkpoint_results": checkpoint_results,
     }
 
 
