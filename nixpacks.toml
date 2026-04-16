@@ -3,4 +3,4 @@
 # Only the start command is forced here to prevent Procfile conflict.
 
 [start]
-cmd = "python -u main.py"
+cmd = "python3 -u main.py"
