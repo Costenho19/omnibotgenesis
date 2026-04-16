@@ -1,6 +1,10 @@
 # Nixpacks configuration — omnibotgenesis Telegram Bot
-# nixpacks auto-detects Python from requirements.txt and handles pip.
-# Only the start command is forced here to prevent Procfile conflict.
+
+[phases.setup]
+nixPkgs = ["python311", "python311Packages.pip"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
 
 [start]
 cmd = "python3 -u main.py"
