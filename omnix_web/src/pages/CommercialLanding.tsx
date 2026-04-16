@@ -431,6 +431,140 @@ export default function CommercialLanding() {
           </div>
         </section>
 
+        {/* ── DECISION ADMISSIBILITY GAP ── */}
+        <section className="mb-24">
+          <div className="text-center mb-14">
+            <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-4 block">THE GAP NO ONE IS FILLING</span>
+            <h2 className="text-4xl font-bold text-white mb-5 leading-tight">
+              The <span className="gold-gradient">Decision Admissibility Gap</span>
+            </h2>
+            <p className="text-lg text-muted max-w-3xl mx-auto leading-relaxed">
+              Every AI governance stack assumes the decision coming in is worth making. No one checks.
+              That assumption is where catastrophic failures originate.
+            </p>
+          </div>
+
+          <div className="max-w-2xl mx-auto mb-16">
+            {['Orchestration & Pipelines', 'Tool Schemas & Routing', 'Permissions & Guardrails', 'Logging & Audit'].map((layer) => (
+              <div key={layer} className="mb-1.5 rounded-lg px-6 py-3 text-center text-sm font-medium text-[#64748B] border border-[#1E293B] bg-[#0A1628]/40">
+                {layer}
+              </div>
+            ))}
+
+            <div className="my-3 rounded-xl border-2 border-red-500/40 bg-red-500/5 px-6 py-5 text-center relative overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none" style={{background:'radial-gradient(ellipse at center, rgba(239,68,68,0.06) 0%, transparent 70%)'}} />
+              <div className="text-red-400 font-black text-lg tracking-widest mb-1.5 uppercase">Decision Admissibility Gap</div>
+              <div className="text-red-300/60 text-sm">All upstream layers assume the incoming decision is valid. No system verifies it should be made at all.</div>
+            </div>
+
+            <div className="my-1.5 rounded-2xl border-2 border-[#C9A227] bg-[#C9A227]/5 px-6 py-7 text-center relative overflow-hidden" style={{boxShadow:'0 0 40px rgba(201,162,39,0.12)'}}>
+              <div className="absolute top-0 left-0 right-0 h-px" style={{background:'linear-gradient(90deg, transparent, #C9A227, transparent)'}} />
+              <div className="text-[#C9A227] font-black text-2xl tracking-tight mb-1">OMNIX</div>
+              <div className="text-white/90 font-bold text-sm mb-4 tracking-wide uppercase">Pre-Decision Governance Layer</div>
+              <div className="text-xs text-[#94A3B8] mb-4 font-mono">Evaluate → Gate → Certify → Proceed or Block</div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {['Admissibility', 'Risk Analysis', 'Sharia Gate', 'Context Memory', 'Dilithium-3 PQC', 'Counterfactual Proof'].map(tag => (
+                  <span key={tag} className="px-3 py-1 rounded-full text-xs font-semibold bg-[#C9A227]/10 border border-[#C9A227]/25 text-[#C9A227]/90">{tag}</span>
+                ))}
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-px" style={{background:'linear-gradient(90deg, transparent, #C9A227, transparent)'}} />
+            </div>
+
+            <div className="mt-1.5 rounded-lg border border-[#1E293B] bg-[#0A1628]/60 px-6 py-4 text-center">
+              <div className="text-white font-bold text-sm mb-1">EXECUTION BOUNDARY</div>
+              <div className="text-[#64748B] text-xs">Trading · Credit · Insurance · Robotics · Medical · Agents · Real Estate · Energy</div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="glass-card p-7 text-center">
+              <div className="text-4xl font-black text-red-400 mb-3">0</div>
+              <div className="text-sm text-white font-semibold mb-2">Systems that verify decision admissibility</div>
+              <div className="text-xs text-muted leading-relaxed">Before OMNIX, no production system asked whether a decision should be made at all — only whether it was technically executable.</div>
+            </div>
+            <div className="glass-card p-7 text-center" style={{borderColor:'rgba(201,162,39,0.3)'}}>
+              <div className="text-4xl font-black text-[#C9A227] mb-3">11</div>
+              <div className="text-sm text-white font-semibold mb-2">Independent governance checkpoints</div>
+              <div className="text-xs text-muted leading-relaxed">Each checkpoint operates independently. Any single gate can veto a decision before it reaches any execution system.</div>
+            </div>
+            <div className="glass-card p-7 text-center">
+              <div className="text-4xl font-black text-emerald-400 mb-3">8</div>
+              <div className="text-sm text-white font-semibold mb-2">Domains under active governance</div>
+              <div className="text-xs text-muted leading-relaxed">Trading, Credit, Insurance, Robotics, Medical AI, Autonomous Agents, Real Estate, and Energy — all running 24/7.</div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── COMPETITIVE COMPARISON ── */}
+        <section className="mb-24">
+          <div className="text-center mb-12">
+            <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-4 block">LANDSCAPE ANALYSIS</span>
+            <h2 className="text-4xl font-bold text-white mb-5">
+              How OMNIX <span className="gold-gradient">Compares</span>
+            </h2>
+            <p className="text-muted max-w-2xl mx-auto">
+              This table reflects which governance controls are built-in by default — not what teams could theoretically build themselves.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-[#1E293B]">
+            <table style={{width:'100%',borderCollapse:'collapse'}}>
+              <thead>
+                <tr style={{background:'rgba(10,22,40,0.9)'}}>
+                  <th className="text-left px-5 py-4 text-xs font-semibold text-muted uppercase tracking-wider border-b border-[#1E293B]" style={{minWidth:260}}>Governance Capability</th>
+                  {[
+                    {name:'OMNIX', color:'#C9A227'},
+                    {name:'A2SPA', color:'#94A3B8'},
+                    {name:'MCP', color:'#94A3B8'},
+                    {name:'LangChain', color:'#94A3B8'},
+                    {name:'AWS Bedrock', color:'#94A3B8'},
+                    {name:'AutoGPT', color:'#94A3B8'},
+                  ].map(({name,color}) => (
+                    <th key={name} className="px-4 py-4 text-xs font-bold text-center uppercase tracking-wider border-b border-[#1E293B]" style={{color, minWidth:100}}>{name}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {label:'Pre-decision admissibility assessment', vals:[true,false,false,false,false,false]},
+                  {label:'Multi-checkpoint governance pipeline (11 gates)', vals:[true,false,false,false,false,false]},
+                  {label:'Domain-specific governance (8 sectors)', vals:[true,false,false,false,false,false]},
+                  {label:'Sharia-aligned governance gate', vals:[true,false,false,false,false,false]},
+                  {label:'Post-quantum cryptography (Dilithium-3 NIST)', vals:[true,false,false,false,false,false]},
+                  {label:'W3C Verifiable Credential decision receipts', vals:[true,false,false,false,false,false]},
+                  {label:'Counterfactual validation (Shadow Portfolio)', vals:[true,false,false,false,false,false]},
+                  {label:'Human deliberation integration (HOLD state)', vals:[true,false,false,false,false,false]},
+                  {label:'Execution payload signing', vals:[false,true,false,false,false,false]},
+                  {label:'Tamper-proof audit trail', vals:[true,true,false,false,true,false]},
+                  {label:'Real-time risk analysis', vals:[true,false,false,true,false,false]},
+                ].map((row, i) => (
+                  <tr key={i} style={{background: i%2===0 ? 'rgba(5,13,24,0.5)' : 'rgba(10,22,40,0.3)'}}>
+                    <td className="px-5 py-3.5 text-sm text-[#CBD5E1]">{row.label}</td>
+                    {row.vals.map((v, j) => (
+                      <td key={j} className="px-4 py-3.5 text-center">
+                        {v
+                          ? <span style={{color: j===0 ? '#C9A227' : '#10B981', fontSize:'1.1rem', fontWeight:900}}>✓</span>
+                          : <span style={{color:'rgba(239,68,68,0.45)', fontSize:'1rem', fontWeight:700}}>✗</span>
+                        }
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-8 glass-card p-7 max-w-3xl mx-auto text-center" style={{borderColor:'rgba(201,162,39,0.2)'}}>
+            <div className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-3">Important context</div>
+            <p className="text-sm text-muted leading-relaxed">
+              <span className="text-white font-semibold">OMNIX and A2SPA solve different problems and are architecturally complementary.</span>
+              {' '}OMNIX governs the admissibility of a decision before any execution system is involved.
+              A2SPA signs the execution payload at the moment an agent acts. Together, they form a complete governance stack:
+              {' '}<span className="text-[#C9A227]">pre-decision admissibility + execution-time authorization</span>.
+            </p>
+          </div>
+        </section>
+
         {/* ── PRICING ── */}
         <section className="mb-24" id="pricing">
           <div className="text-center mb-12">
@@ -492,9 +626,11 @@ export default function CommercialLanding() {
               </div>
               <div className="mb-4">
                 <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest">Enterprise</span>
-                <div className="mt-3 flex items-end gap-1">
-                  <span className="text-4xl font-bold text-white">Contact Us</span>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-white">$180K</span>
+                  <span className="text-sm text-muted font-medium">/ year</span>
                 </div>
+                <div className="text-xs text-[#C9A227]/70 mt-0.5 font-medium">Starting price · scales to $300K+</div>
                 <p className="text-xs text-muted mt-1">Governance authority tier · Early enterprise partners</p>
               </div>
               <ul className="space-y-2 flex-1 mb-6">
