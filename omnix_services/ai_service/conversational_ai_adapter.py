@@ -255,9 +255,9 @@ EVASION_REPLACEMENTS = [
     (re.compile(r'[Ee]l\s+mercado\s+es\s+impredecible(?:\s+pero)?', re.IGNORECASE),
      'Reconocemos la incertidumbre. Por eso usamos: Risk Avoided = Position_Size × max(VaR95, Avg_Loss).'),
     
-    # "Estamos en fase de aprendizaje/calibración" → replace with track record context
+    # "Estamos en fase de aprendizaje/calibración" → replace with current phase context
     (re.compile(r'[Ee]stamos\s+en\s+(?:una\s+)?fase\s+de\s+(?:aprendizaje|calibraci[oó]n)', re.IGNORECASE),
-     'Track Record Oficial (15 Ene 2026 - presente) usa parámetros recalibrados. Métricas:'),
+     'Fase 2 Multi-Vertical (desde Abril 1, 2026) en operación activa. El sistema SÍ ejecuta paper trades. Datos en tiempo real:'),
 ]
 
 from omnix_services.ai_service.response_validator import (

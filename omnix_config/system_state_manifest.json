@@ -73,10 +73,11 @@
     },
     "official_track_record": {
       "name": "Track Record Oficial (30 días)",
-      "purpose": "Período de validación oficial para inversores",
+      "purpose": "Período de validación oficial para inversores — COMPLETADO Y CERRADO",
       "start_date": "2026-01-15",
       "end_date": "2026-02-13",
-      "sql_filter": "created_at >= '2026-01-15'",
+      "STATUS": "COMPLETADO — Este período ya terminó. NO representa el estado actual del sistema.",
+      "sql_filter": "created_at >= '2026-01-15' AND created_at <= '2026-02-13'",
       "trades_executed": 0,
       "decisions_evaluated": 89623,
       "vetos_by_type": {
@@ -85,7 +86,21 @@
         "ECW_WAITING": 24
       },
       "telemetry_source": "REAL",
-      "investor_note": "Track record oficial COMPLETADO - 30 dias, sistema demostro disciplina de capital. Transicion a Fase 2 multi-vertical."
+      "investor_note": "Track record oficial COMPLETADO - 30 dias, sistema demostro disciplina de capital. Transicion a Fase 2 multi-vertical.",
+      "CRITICAL_RULE": "NUNCA usar estos datos para responder preguntas sobre el estado ACTUAL del sistema. Este período fue Jan 15 - Feb 13, 2026 y está CERRADO."
+    },
+    "phase2_current_operations": {
+      "name": "Fase 2 — Multi-Vertical Expansion (ACTIVA AHORA)",
+      "STATUS": "ACTIVO — Este es el período de operación ACTUAL del sistema",
+      "start_date": "2026-04-01",
+      "end_date": null,
+      "trading_mode": "PAPER TRADING ($1,000,000 virtual)",
+      "trades_executing": true,
+      "CRITICAL_RULE": "Cuando Harold o cualquier usuario pregunte sobre operaciones actuales, trades recientes, compras o ventas en modo paper, DEBES consultar la base de datos en tiempo real vía Real Context Provider. El sistema SÍ ejecuta trades en Fase 2. NO digas que no hay operaciones.",
+      "data_source": "Consultar paper_trading_trades tabla en PostgreSQL — datos en tiempo real",
+      "active_pairs": ["BTC/USD", "XRP/USD"],
+      "governance_active": true,
+      "investor_note": "Sistema en plena operación de paper trading. Los trades son ejecutados cuando el pipeline de 11 checkpoints los aprueba. Usar datos reales de DB, no datos históricos del Track Record."
     },
     "response_rules": {
       "mandatory_disclosure": "Cuando se mencione CUALQUIER métrica (P&L, win rate, trades, losses), incluir nota de período al FINAL",

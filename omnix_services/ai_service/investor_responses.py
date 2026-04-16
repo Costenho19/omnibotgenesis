@@ -6,11 +6,14 @@ Respuestas profesionales para preguntas difíciles de inversores.
 Basadas en datos reales del sistema, sin simulaciones ni datos inventados.
 
 DATOS REALES (por período):
-Learning Baseline (Nov 2025 - Jan 14, 2026):
+[PERÍODO 1] Learning Baseline (Nov 2025 - Ene 14, 2026): CERRADO
 - 119 trades ejecutados, 695 señales vetadas, -$15,198.73 P&L
-Track Record Oficial (Jan 15, 2026 - presente):
-- 0 trades ejecutados, 47,507+ señales vetadas (primeros 12 días)
+[PERÍODO 2] Track Record Oficial (Ene 15 → Feb 13, 2026): COMPLETADO Y CERRADO
+- 0 trades ejecutados en 30 días, 47,507+ señales vetadas (primeros 12 días)
 - 766,741 ciclos de gobernanza totales, 98.42% capital preservado
+[PERÍODO 3 — ACTUAL] Fase 2 Multi-Vertical (Abril 1, 2026 - presente): ACTIVO
+- SÍ hay trades ejecutados en paper trading. Datos en tiempo real desde DB (paper_trading_trades).
+- Active pairs: BTC/USD, XRP/USD. 8 verticales operativos.
 
 Autor: OMNIX Development Team
 Fecha: January 10, 2026
