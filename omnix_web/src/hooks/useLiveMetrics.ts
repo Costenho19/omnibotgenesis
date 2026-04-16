@@ -96,12 +96,12 @@ export function useLiveMetrics(refreshIntervalMs = 10000) {
         const response = await fetch(`${LOCAL_API}/api/live-metrics?_t=${ts}`, NO_CACHE_OPTS)
         if (response.ok) {
           const data = await response.json()
-          if (mounted && data.success && data.metrics && data.live) {
+          if (mounted && data.success && data.metrics) {
             const ebip = await fetchEbipScore()
             setMetrics({ ...data.metrics, ebip_score: ebip })
-            setIsLive(true)
+            setIsLive(data.live === true)
             setLastUpdated(data.last_updated)
-            if (!wasLiveRef.current) {
+            if (data.live && !wasLiveRef.current) {
               wasLiveRef.current = true
               setAnimKey(k => k + 1)
             }
