@@ -14,10 +14,12 @@ Purpose:
 Design:
     - Fail-safe: if module errors or disabled → pass-through (pipeline continues)
     - Configurable per client or globally via AML_GATE_ENABLED env var
-    - Default: DISABLED (preserves existing behavior for all current clients)
+    - Default: ENABLED when OMNIX_DB_URL is available (premium mode)
+    - Real-time trade frequency queried directly from DB (no proxy mode)
     - Output: VetoResult with structured reason for PQC receipt
 
 Implemented: March 2026
+Updated: April 2026 — Premium mode with real DB frequency query (ADR-047-B)
 """
 
 from __future__ import annotations
@@ -53,35 +55,37 @@ class AMLVetoResult:
     violation: str = ""
     risk_score: float = 0.0
     aml_score: float = 100.0
-    evaluation_state: str = "EVALUATED"   # ADR-066: "DISABLED" | "FAILSAFE" | "EVALUATED"
+    evaluation_state: str = "EVALUATED"
 
 
 @dataclass
 class AMLGateConfig:
-    enabled: bool = False
+    enabled: bool = True
     volume_threshold_usd: float = AML_VOLUME_THRESHOLD_DEFAULT
     frequency_threshold: int = AML_FREQUENCY_THRESHOLD_DEFAULT
     block_privacy_coins: bool = True
     block_mixer_tokens: bool = True
     custom_high_risk_assets: list[str] = field(default_factory=list)
+    db_url: Optional[str] = None
 
 
 class AMLGate:
     """
-    CP-9: AML Governance Gate
+    CP-9: AML Governance Gate — Premium Mode
 
     Validates that an automated trading decision does not exhibit
-    Anti-Money Laundering risk patterns. Designed as a configurable
-    veto layer positioned AFTER CP-8 (ECW) in the decision pipeline.
+    Anti-Money Laundering risk patterns. Queries real trade frequency
+    directly from the database — no proxy mode.
 
     Regulatory alignment:
       - FATF Recommendation 15 (Virtual Assets)
       - FinCEN Virtual Currency Guidance (2019)
       - UAE Central Bank AML/CFT Framework
+      - SAMA AML/CFT Requirements
 
     Usage:
         gate = AMLGate(config)
-        result = gate.evaluate(symbol, proposed_action, volume_usd, trade_frequency)
+        result = gate.evaluate(symbol, proposed_action, volume_usd)
         if not result.admissible and not result.pass_through:
             # VETO — block the decision
     """
@@ -91,22 +95,76 @@ class AMLGate:
         self._high_risk = HIGH_RISK_AML_ASSETS | AML_MIXER_TOKENS | {
             a.upper() for a in self.config.custom_high_risk_assets
         }
+        self._db_url = self.config.db_url or os.environ.get("OMNIX_DB_URL")
+
+    @staticmethod
+    def get_real_trade_frequency(symbol: str, db_url: str) -> tuple[int, str]:
+        """
+        Query real trade frequency from database for the last 24 hours.
+        Returns (count, source) where source is 'db' or 'unavailable'.
+        """
+        try:
+            import urllib.parse
+            import urllib.request
+            import json
+
+            try:
+                import psycopg2
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                cur.execute(
+                    """
+                    SELECT COUNT(*) FROM paper_trading_trades
+                    WHERE symbol = %s
+                    AND opened_at > NOW() - INTERVAL '24 hours'
+                    """,
+                    (symbol,)
+                )
+                count = cur.fetchone()[0]
+                cur.close()
+                conn.close()
+                return int(count), "db"
+            except ImportError:
+                pass
+
+            try:
+                import psycopg
+                with psycopg.connect(db_url) as conn:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                            """
+                            SELECT COUNT(*) FROM paper_trading_trades
+                            WHERE symbol = %s
+                            AND opened_at > NOW() - INTERVAL '24 hours'
+                            """,
+                            (symbol,)
+                        )
+                        count = cur.fetchone()[0]
+                        return int(count), "db"
+            except ImportError:
+                pass
+
+            return 0, "unavailable"
+
+        except Exception as exc:
+            logger.warning(f"[AML_CP9] DB frequency query failed for {symbol}: {exc}")
+            return 0, "unavailable"
 
     def evaluate(
         self,
         symbol: str,
         proposed_action: str,
         volume_usd: float = 0.0,
-        trade_frequency_24h: int = 0,
+        trade_frequency_24h: int = -1,
     ) -> AMLVetoResult:
         """
         Evaluate a proposed decision against AML compliance rules.
 
         Args:
-            symbol:                Trading pair (e.g., "XMR/USD")
+            symbol:                Trading pair (e.g., "BTC/USD")
             proposed_action:       "BUY", "SELL", or "HOLD"
             volume_usd:            Estimated trade volume in USD
-            trade_frequency_24h:   Number of trades in last 24 hours (for structuring detection)
+            trade_frequency_24h:   Number of trades in last 24h (-1 = auto-query DB)
 
         Returns:
             AMLVetoResult
@@ -122,9 +180,18 @@ class AMLGate:
             )
 
         try:
-            return self._run_checks(symbol, proposed_action, volume_usd, trade_frequency_24h)
+            freq_source = "caller"
+            if trade_frequency_24h < 0:
+                if self._db_url:
+                    trade_frequency_24h, freq_source = self.get_real_trade_frequency(symbol, self._db_url)
+                else:
+                    trade_frequency_24h = 0
+                    freq_source = "unavailable"
+
+            return self._run_checks(symbol, proposed_action, volume_usd, trade_frequency_24h, freq_source)
+
         except Exception as exc:
-            logger.warning(f"⚠️ [AML_GATE] Exception for {symbol}: {exc} → pass-through")
+            logger.warning(f"[AML_GATE] Exception for {symbol}: {exc} → pass-through")
             return AMLVetoResult(
                 admissible=True,
                 pass_through=True,
@@ -140,6 +207,7 @@ class AMLGate:
         proposed_action: str,
         volume_usd: float,
         trade_frequency_24h: int,
+        freq_source: str = "caller",
     ) -> AMLVetoResult:
         base_symbol = symbol.upper().replace("/USD", "").replace("/USDT", "").replace("-USD", "")
         full_symbol = symbol.upper()
@@ -163,9 +231,7 @@ class AMLGate:
             return AMLVetoResult(
                 admissible=False,
                 pass_through=False,
-                reason=(
-                    f"CP-9 AML VETO: {symbol} is a high-risk AML asset (privacy coin)"
-                ),
+                reason=f"CP-9 AML VETO: {symbol} is a high-risk AML asset (privacy coin)",
                 asset=symbol,
                 violation="HIGH_RISK_AML_ASSET_PRIVACY_COIN",
                 risk_score=100.0,
@@ -176,9 +242,7 @@ class AMLGate:
             return AMLVetoResult(
                 admissible=False,
                 pass_through=False,
-                reason=(
-                    f"CP-9 AML VETO: {symbol} is a mixer/tumbler token (prohibited under AML)"
-                ),
+                reason=f"CP-9 AML VETO: {symbol} is a mixer/tumbler token (prohibited under AML)",
                 asset=symbol,
                 violation="HIGH_RISK_AML_ASSET_MIXER",
                 risk_score=100.0,
@@ -194,7 +258,8 @@ class AMLGate:
         if trade_frequency_24h > self.config.frequency_threshold:
             aml_score -= 30.0
             violations.append(
-                f"Trade frequency {trade_frequency_24h}/24h exceeds structuring threshold {self.config.frequency_threshold}"
+                f"Trade frequency {trade_frequency_24h}/24h exceeds structuring threshold "
+                f"{self.config.frequency_threshold} [source: {freq_source}]"
             )
 
         if violations:
@@ -209,10 +274,14 @@ class AMLGate:
                 aml_score=max(0.0, aml_score),
             )
 
+        freq_label = f"trade_frequency_24h={trade_frequency_24h} [source: {freq_source}]"
         return AMLVetoResult(
             admissible=True,
             pass_through=False,
-            reason=f"CP-9 AML PASS: {symbol} — no AML risk patterns detected | score {aml_score:.0f}/100",
+            reason=(
+                f"CP-9 AML PASS: {symbol} — no AML risk patterns detected | "
+                f"score {aml_score:.0f}/100 | {freq_label}"
+            ),
             asset=symbol,
             aml_score=aml_score,
         )
@@ -221,16 +290,21 @@ class AMLGate:
 def load_aml_config_from_env() -> AMLGateConfig:
     """
     Load AML Gate configuration from environment variables.
-    Returns default (disabled) config if AML_GATE_ENABLED is not 'true'.
+    Premium mode: enabled by default when OMNIX_DB_URL is available.
     """
-    enabled = os.environ.get("AML_GATE_ENABLED", "false").lower() == "true"
-    if not enabled:
-        return AMLGateConfig(enabled=False)
+    db_url = os.environ.get("OMNIX_DB_URL")
+
+    enabled_env = os.environ.get("AML_GATE_ENABLED", "").lower()
+    if enabled_env == "false":
+        return AMLGateConfig(enabled=False, db_url=db_url)
+
+    enabled = enabled_env == "true" or bool(db_url)
 
     return AMLGateConfig(
-        enabled=True,
+        enabled=enabled,
         volume_threshold_usd=float(os.environ.get("AML_VOLUME_THRESHOLD_USD", "500000")),
         frequency_threshold=int(os.environ.get("AML_FREQUENCY_THRESHOLD", "10")),
         block_privacy_coins=os.environ.get("AML_BLOCK_PRIVACY_COINS", "true").lower() == "true",
         block_mixer_tokens=os.environ.get("AML_BLOCK_MIXER_TOKENS", "true").lower() == "true",
+        db_url=db_url,
     )
