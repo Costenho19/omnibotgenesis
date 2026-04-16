@@ -725,7 +725,7 @@ export default function CommercialLanding() {
           </div>
 
           {/* Usage-based pricing */}
-          <div className="grid md:grid-cols-2 gap-4 mb-10">
+          <div className="grid md:grid-cols-3 gap-4 mb-10">
             <div className="bg-[#0A1628]/60 border border-[#1E293B] rounded-2xl p-6 flex items-start gap-5">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
                 <Zap className="w-5 h-5 text-emerald-400" />
@@ -739,12 +739,27 @@ export default function CommercialLanding() {
                 <p className="text-xs text-muted leading-relaxed">For organisations with variable decision volume. Every governed decision includes a PQC-signed receipt. No monthly commitment required.</p>
               </div>
             </div>
-            <div className="bg-[#0A1628]/60 border border-[#1E293B] rounded-2xl p-6 flex items-start gap-5">
-              <div className="w-10 h-10 rounded-xl bg-[#C9A227]/10 border border-[#C9A227]/20 flex items-center justify-center flex-shrink-0">
-                <Phone className="w-5 h-5 text-[#C9A227]" />
+
+            <div className="bg-[#0A1628]/60 border border-[#C9A227]/20 rounded-2xl p-6 flex items-start gap-5" style={{boxShadow:'0 0 20px rgba(201,162,39,0.06)'}}>
+              <div className="w-10 h-10 rounded-xl bg-[#C9A227]/10 border border-[#C9A227]/25 flex items-center justify-center flex-shrink-0">
+                <Shield className="w-5 h-5 text-[#C9A227]" />
               </div>
               <div>
-                <div className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-1">API Call Pricing</div>
+                <div className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-1">AUG Fee — Capital Protected</div>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-2xl font-black text-white">0.5% – 1%</span>
+                  <span className="text-sm text-muted">/ year on capital governed</span>
+                </div>
+                <p className="text-xs text-muted leading-relaxed">OMNIX charges a percentage of the capital under governance. If OMNIX governs decisions over $50M in capital exposure, the fee is $250K–$500K/year. Scales with the value you protect.</p>
+              </div>
+            </div>
+
+            <div className="bg-[#0A1628]/60 border border-[#1E293B] rounded-2xl p-6 flex items-start gap-5">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                <Phone className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-1">API Call Pricing</div>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-2xl font-black text-white">Contact Us</span>
                 </div>
