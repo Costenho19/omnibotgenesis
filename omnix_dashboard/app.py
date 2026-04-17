@@ -232,6 +232,30 @@ def create_app():
 app = create_app()
 
 
+@app.route('/api/public/<path:subpath>', methods=['GET', 'POST', 'OPTIONS'])
+def proxy_public_api(subpath):
+    """Forward /api/public/* to OMNIX Web API on port 8080 (dev only)."""
+    import requests as _req
+    from flask import request, Response
+    target = f"http://127.0.0.1:8080/api/public/{subpath}"
+    try:
+        resp = _req.request(
+            method=request.method,
+            url=target,
+            params=request.args,
+            data=request.get_data(),
+            headers={k: v for k, v in request.headers if k.lower() not in ('host', 'content-length')},
+            timeout=30,
+            allow_redirects=False,
+        )
+        excluded = {'content-encoding', 'content-length', 'transfer-encoding', 'connection'}
+        headers = [(k, v) for k, v in resp.headers.items() if k.lower() not in excluded]
+        return Response(resp.content, status=resp.status_code, headers=headers)
+    except Exception as _e:
+        from flask import jsonify
+        return jsonify({'success': False, 'error': str(_e)}), 503
+
+
 @app.after_request
 def strip_server_header(response):
     response.headers['Server'] = 'OMNIX-DGI'

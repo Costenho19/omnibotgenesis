@@ -161,6 +161,42 @@ export default function CommercialLanding() {
           </div>
         </section>
 
+        {/* ── PRODUCT DEMO VIDEO ── */}
+        <section className="mb-24">
+          <div className="text-center mb-8">
+            <span style={{
+              display:'inline-block',
+              background:'rgba(201,162,39,0.08)',
+              border:'1px solid rgba(201,162,39,0.3)',
+              borderRadius:99, padding:'6px 18px',
+              fontSize:'0.8rem', fontWeight:700,
+              color:'#C9A227', letterSpacing:'0.12em',
+              textTransform:'uppercase', marginBottom:16,
+            }}>Product Demo</span>
+            <h2 className="heading-lg text-white mb-3">See OMNIX in Action</h2>
+            <p className="text-muted text-lg max-w-2xl mx-auto">
+              Watch how OMNIX intercepts a high-risk decision in real time — with cryptographic proof and full audit trail.
+            </p>
+          </div>
+          <div style={{
+            position:'relative',
+            borderRadius:16,
+            overflow:'hidden',
+            border:'1px solid rgba(201,162,39,0.25)',
+            boxShadow:'0 0 60px rgba(201,162,39,0.08), 0 24px 64px rgba(0,0,0,0.5)',
+            background:'#0A0C12',
+            maxWidth:900,
+            margin:'0 auto',
+          }}>
+            <video
+              src="/omnix-demo.mp4"
+              controls
+              playsInline
+              style={{ width:'100%', display:'block', borderRadius:16 }}
+            />
+          </div>
+        </section>
+
         <section className="mb-24">
           <div className="grid md:grid-cols-3 gap-8">
             <div className="glass-card p-8 text-center">
