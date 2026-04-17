@@ -26,21 +26,21 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/api/public/sandbox': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         proxyTimeout: 120000,
         timeout: 120000,
       },
       '/api/public/verify': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/api/public/audit-demo': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/api/public/audit-live': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/api/governance': {
