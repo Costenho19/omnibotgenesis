@@ -522,7 +522,14 @@ def _check_monthly_alert(client_id: str) -> None:
 
 
 def _get_db_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+    db_url = (
+        os.environ.get("DATABASE_URL") or
+        os.environ.get("OMNIX_DB_URL") or
+        os.environ.get("POSTGRES_URL")
+    )
+    if not db_url:
+        raise RuntimeError("No database URL configured (DATABASE_URL / OMNIX_DB_URL)")
+    return psycopg2.connect(db_url)
 
 
 # ── WEBHOOK UTILITIES (ADR-053) ────────────────────────────────────────────────
