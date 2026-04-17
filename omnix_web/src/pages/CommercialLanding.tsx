@@ -404,6 +404,43 @@ export default function CommercialLanding() {
                 View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
+
+            <div className="glass-card p-8 border border-yellow-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#facc15',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Energy — Grid &amp; Renewables</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Governance layer for energy dispatch and grid-balancing decisions. Pre-execution validation across load forecasting, carbon compliance, and regulatory jurisdiction gates — 24/7.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-yellow-400">17,000+</div><div className="text-xs text-muted">Decisions governed</div></div>
+                <div><div className="text-xl font-bold text-yellow-400">3 sectors</div><div className="text-xs text-muted">Grid · Renewables · Oil &amp; Gas</div></div>
+              </div>
+              <Link to="/energy" className="text-yellow-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="glass-card p-8 border border-cyan-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#22d3ee',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">Real Estate — Property AI</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Pre-approval governance for real estate AI decisions. Valuation integrity gate + 11 checkpoints screening mortgage approvals, investment underwriting, and property risk assessments.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-cyan-400">9,000+</div><div className="text-xs text-muted">Decisions governed</div></div>
+                <div><div className="text-xl font-bold text-cyan-400">3 markets</div><div className="text-xs text-muted">UK · UAE · US</div></div>
+              </div>
+              <Link to="/real-estate" className="text-cyan-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
           </div>
         </section>
 
