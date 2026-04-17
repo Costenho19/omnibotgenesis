@@ -467,6 +467,91 @@ Adicionalmente, `main_entry.py` llamaba `telegram_adapter.start()` antes de `run
 
 ---
 
+## V7 Architecture — Strangler Fig Migration Layer (Estado 17-Apr-2026)
+
+### Qué es V7
+
+`src/omnix/` es una capa de migración **Strangler Fig** sobre el core legacy (`omnix_core/`). No es una reescritura — es una capa de adaptadores y re-exports que permite migrar el motor gradualmente sin romper producción.
+
+El flag `USE_APP_LAYER` en `src/omnix/bootstrap/main_entry.py` controla si Railway usa el nuevo path (V7) o el legacy directo.
+
+```
+USE_APP_LAYER=true  → Enruta por src/omnix/ (capa V7)
+USE_APP_LAYER=false → Legacy directo (default actual en Railway)
+```
+
+### Estructura V7
+
+```
+src/omnix/
+├── bootstrap/
+│   ├── main_entry.py          # Entry point Railway bot (V7)
+│   ├── runtime.py             # execute_query(), lifecycle
+│   └── dependency_graph.py    # DI container
+├── domain/                    # Interfaces de dominio (re-exports limpios)
+│   ├── trading/
+│   ├── credit/
+│   └── ...
+├── infrastructure/
+│   └── adapters/
+│       └── telegram_adapter.py  # run_polling() — CRÍTICO, ver fix Apr-15
+└── application/               # Casos de uso (mayoría stubs/re-exports)
+```
+
+### Estado de las Fases V7
+
+| Fase | Descripción | Estado | Nota |
+|------|-------------|--------|------|
+| Fase 1 | Bootstrap + DI container | ✅ Completa | Entry point en Railway |
+| Fase 2 | Domain interfaces | ✅ Completa | Mayormente re-exports |
+| Fase 3 | Infrastructure adapters | ✅ Completa | telegram_adapter.py crítico |
+| Fase 4 | Application layer | ⚠ Parcial | Stubs — core legacy activo |
+| Fase 5 | Full domain isolation | ❌ No iniciada | Post-ronda |
+
+### Implicaciones para ventas (IMPORTANTE)
+
+**V7 NO afecta la funcionalidad vendible.** Todo el core de negocio (8 dominios, 11 checkpoints, PQC Dilithium-3, bot Telegram, Kraken, AI multi-proveedor) vive en `omnix_core/` — que funciona correctamente en producción. V7 es infraestructura interna de migración, invisible para clientes e inversores.
+
+**No construir V7 Fase 5 antes de tener cliente confirmado.**
+
+### Fix Crítico V7 — Telegram Handlers (Apr-15)
+
+Ver sección "Fix Crítico Telegram Handlers" arriba. El bug afectaba el path V7 del bot: `telegram_adapter.py` usaba `app.updater.start_polling()` en lugar de `enterprise_bot.start_polling()`, saltándose todos los ~50 handlers de comandos. Corregido en commit `a0fa97e8`.
+
+---
+
+## Vendibility Improvements (17-Apr-2026)
+
+### IntegrationGuide.tsx — Reescritura completa
+
+La guía de integración era un documento incompleto con URLs placeholder. Reescrita completamente para calidad enterprise:
+
+| Problema anterior | Corrección |
+|-------------------|-----------|
+| URL `your-deployment.railway.app` en curl snippet | `https://omnixquantum.net` |
+| SDK ficticio (`from omnix_sdk import OmnixClient`) | stdlib puro (`requests`, `https`) — sin dependencias |
+| Solo 4 dominios mencionados | Los 8 dominios con señales reales documentadas |
+| Endpoints sin descripción (`display: 'none'`) | Descripciones completas visibles |
+| JSON response con `...` inválido | Respuesta JSON real completa y correcta |
+| Sin rate limits ni quota | Rate limits, daily/monthly quota, overage pricing |
+| Sin error codes | HTTP 400/401/429/503 documentados con retry policy |
+| Sin SLA | 6 métricas de SLA: uptime, latencia, retención, PQC, audit trail, fail mode |
+| Footer genérico | Dirección UK real: 71-75 Shelton Street, Covent Garden, London WC2H 9JQ |
+
+### PublicDecisionVerify.tsx — Live Ledger Feed
+
+El estado vacío de `/verify` (cuando usuario llega sin ID de recibo) ahora muestra el live ledger:
+
+- **EmptyStateWithFeed**: componente nuevo que llama `/api/verify/recent?limit=8`
+- Muestra 8 recibos PQC-signed más recientes con asset, decision badge, receipt_id, hash prefix
+- Clickable — navega directamente a `/verify/RECEIPT_ID`
+- Dot verde pulsante con label "Public · append-only · PQC signed"
+- Si no hay recibos disponibles → mensaje limpio sin errores
+
+El `/api/verify/recent` ya existía en `omnix_web/api/server.py` (añadido en Audit-Fix-Apr2026) con filtros ADR-063.
+
+---
+
 ## Test Suite: ~392+ tests passing
 - `tests/test_enterprise_audit.py`: 35 tests (receipt format, AVM persistence, hash integrity, versioning)
 - `tests/test_code_verification.py`: 14 tests

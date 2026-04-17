@@ -159,6 +159,157 @@ function SearchBox({ onSearch }: { onSearch: (id: string) => void }) {
   )
 }
 
+interface RecentReceipt {
+  receipt_id: string
+  timestamp: string
+  asset: string
+  decision: string
+  signed: boolean
+  hash_prefix: string
+}
+
+function EmptyStateWithFeed() {
+  const navigate = useNavigate()
+  const [feed, setFeed]         = useState<RecentReceipt[]>([])
+  const [feedLoading, setFL]    = useState(true)
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/verify/recent?limit=8`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.receipts) setFeed(d.receipts) })
+      .catch(() => {})
+      .finally(() => setFL(false))
+  }, [])
+
+  const decColor = (d: string) => {
+    if (d === 'APPROVED') return '#22c55e'
+    if (d === 'BLOCKED')  return '#ef4444'
+    return '#eab308'
+  }
+
+  function fmtTime(ts: string) {
+    try {
+      return new Date(ts).toLocaleString('en-US', {
+        month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+      }) + ' UTC'
+    } catch { return ts }
+  }
+
+  return (
+    <div>
+      {/* ── Enter prompt ── */}
+      <div style={{
+        padding: '2rem', background: 'rgba(59,130,246,0.04)',
+        border: '1px solid rgba(59,130,246,0.15)', borderRadius: '12px',
+        textAlign: 'center', marginBottom: '2rem',
+      }}>
+        <Shield size={32} color="#3b82f6" style={{ marginBottom: '12px' }} />
+        <div style={{ fontWeight: 600, color: '#e5e7eb', marginBottom: '8px', fontSize: '1rem' }}>
+          Enter a Receipt ID above to verify
+        </div>
+        <div style={{ fontSize: '0.84rem', color: '#6b7280', lineHeight: 1.6 }}>
+          Every OMNIX governance decision generates a cryptographically signed receipt.<br />
+          Try the{' '}
+          <Link to="/try" style={{ color: '#3b82f6', fontWeight: 600 }}>public sandbox</Link>
+          {' '}to generate your own, or click any receipt below to inspect a live one.
+        </div>
+      </div>
+
+      {/* ── Live recent receipts ── */}
+      <div>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: '12px',
+        }}>
+          <div style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+            Recent Governance Receipts — Live Ledger
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+            <span style={{ fontSize: '0.68rem', color: '#4b5563' }}>Public · append-only · PQC signed</span>
+          </div>
+        </div>
+
+        {feedLoading && (
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#4b5563', fontSize: '0.85rem' }}>
+            Loading ledger...
+          </div>
+        )}
+
+        {!feedLoading && feed.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '1.5rem', color: '#4b5563', fontSize: '0.85rem' }}>
+            No public receipts available yet.
+          </div>
+        )}
+
+        {!feedLoading && feed.length > 0 && (
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', overflow: 'hidden' }}>
+            {feed.map((r, i) => (
+              <button
+                key={r.receipt_id}
+                onClick={() => navigate(`/verify/${encodeURIComponent(r.receipt_id)}`)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
+                  padding: '11px 16px', background: 'none', border: 'none',
+                  borderBottom: i < feed.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  cursor: 'pointer', textAlign: 'left',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              >
+                {/* Decision badge */}
+                <span style={{
+                  fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.08em',
+                  fontFamily: 'monospace', padding: '2px 7px', borderRadius: '4px', flexShrink: 0,
+                  color: decColor(r.decision),
+                  background: `${decColor(r.decision)}18`,
+                  border: `1px solid ${decColor(r.decision)}33`,
+                }}>
+                  {r.decision}
+                </span>
+
+                {/* Asset */}
+                <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: '#e5e7eb', fontWeight: 600, minWidth: '90px' }}>
+                  {r.asset}
+                </span>
+
+                {/* Receipt ID */}
+                <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#6b7280', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {r.receipt_id}
+                </span>
+
+                {/* Timestamp */}
+                <span style={{ fontSize: '0.7rem', color: '#4b5563', flexShrink: 0, display: 'none' }} className="ts-col">
+                  {fmtTime(r.timestamp)}
+                </span>
+
+                {/* PQC badge */}
+                <span style={{
+                  fontSize: '0.58rem', fontFamily: 'monospace', fontWeight: 700,
+                  color: '#60a5fa', background: 'rgba(96,165,250,0.08)',
+                  border: '1px solid rgba(96,165,250,0.2)', borderRadius: '4px',
+                  padding: '2px 6px', flexShrink: 0,
+                }}>
+                  PQC ✓
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!feedLoading && feed.length > 0 && (
+          <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.72rem', color: '#374151' }}>
+            Showing {feed.length} most recent signed receipts ·{' '}
+            <span style={{ color: '#4b5563' }}>click any row to inspect the full governance receipt</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function PublicDecisionVerify() {
   const { receiptId } = useParams<{ receiptId?: string }>()
   const navigate = useNavigate()
@@ -485,19 +636,9 @@ export default function PublicDecisionVerify() {
           </div>
         )}
 
-        {/* ── Empty state (no receipt ID in URL) ── */}
+        {/* ── Empty state (no receipt ID in URL) — with live recent receipts ── */}
         {!receiptId && !loading && !error && (
-          <div style={{
-            padding: '2rem', background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', textAlign: 'center',
-          }}>
-            <Shield size={32} color="#3b82f6" style={{ marginBottom: '12px' }} />
-            <div style={{ fontWeight: 600, color: '#e5e7eb', marginBottom: '8px' }}>Enter a Receipt ID to verify</div>
-            <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '16px' }}>
-              Receipts are generated by the governance engine after every decision.<br />
-              Try the <Link to="/try" style={{ color: '#3b82f6' }}>public sandbox</Link> to generate one.
-            </div>
-          </div>
+          <EmptyStateWithFeed />
         )}
       </div>
     </div>
