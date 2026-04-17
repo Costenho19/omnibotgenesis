@@ -2908,38 +2908,49 @@ def api_public_audit_live():
 
         cur.close(); conn.close()
 
-        rows.sort(key=lambda r: r['timestamp_utc'] or _dt.datetime(2000,1,1,tzinfo=_dt.timezone.utc), reverse=True)
+        def _sort_key(r):
+            try:
+                ts = r['timestamp_utc'] if isinstance(r, dict) else None
+                return ts or _dt.datetime(2000, 1, 1, tzinfo=_dt.timezone.utc)
+            except Exception:
+                return _dt.datetime(2000, 1, 1, tzinfo=_dt.timezone.utc)
+        rows.sort(key=_sort_key, reverse=True)
         rows = rows[:limit]
 
         items = []
         for row in rows:
-            dom = row.get('domain') or ''
-            dec = row.get('decision') or ''
-            cp_raw = row.get('cp_results')
-            if cp_raw:
-                try:
-                    cp_raw = _json.loads(cp_raw)
-                except Exception:
-                    cp_raw = None
-            outcomes = _parse_cp_results(cp_raw) if cp_raw else _simple_outcomes(dec, row.get('block_reason'))
-            receipt  = row.get('receipt_id') or row.get('asset') or 'OMNIX-' + dom.upper()[:3]
-            items.append({
-                'receipt_id':          receipt,
-                'timestamp_utc':       str(row['timestamp_utc']) if row.get('timestamp_utc') else None,
-                'asset':               row.get('asset'),
-                'domain':              dom,
-                'domain_label':        _DOMAIN_LABELS.get(dom, dom.title()),
-                'decision':            dec,
-                'executive_summary':   _build_executive_summary(dec, outcomes),
-                'checkpoint_outcomes': outcomes,
-                'integrity': {
-                    'signature_standard': 'NIST-standardized post-quantum algorithms',
-                    'pqc_signed':         True,
-                    'chain_linked':       True,
-                    'policy_version':     'v6.5.4e',
-                    'engine_version':     '6.5.4',
-                },
-            })
+            try:
+                row_dict = dict(row) if not isinstance(row, dict) else row
+                dom = (row_dict.get('domain') or '')
+                dec = (row_dict.get('decision') or '')
+                cp_raw = row_dict.get('cp_results')
+                if cp_raw:
+                    try:
+                        parsed = _json.loads(cp_raw) if isinstance(cp_raw, str) else cp_raw
+                        cp_raw = parsed if isinstance(parsed, list) else None
+                    except Exception:
+                        cp_raw = None
+                outcomes = _parse_cp_results(cp_raw) if cp_raw else _simple_outcomes(dec, row_dict.get('block_reason'))
+                receipt  = row_dict.get('receipt_id') or row_dict.get('asset') or 'OMNIX-' + dom.upper()[:3]
+                items.append({
+                    'receipt_id':          receipt,
+                    'timestamp_utc':       str(row_dict['timestamp_utc']) if row_dict.get('timestamp_utc') else None,
+                    'asset':               row_dict.get('asset'),
+                    'domain':              dom,
+                    'domain_label':        _DOMAIN_LABELS.get(dom, dom.title()),
+                    'decision':            dec,
+                    'executive_summary':   _build_executive_summary(dec, outcomes),
+                    'checkpoint_outcomes': outcomes,
+                    'integrity': {
+                        'signature_standard': 'NIST-standardized post-quantum algorithms',
+                        'pqc_signed':         True,
+                        'chain_linked':       True,
+                        'policy_version':     'v6.5.4e',
+                        'engine_version':     '6.5.4',
+                    },
+                })
+            except Exception as _row_err:
+                logger.warning(f"audit-live: skipping malformed row — {_row_err}")
 
         total_approved = sum(v['approved'] for v in domain_counts.values())
         total_blocked  = sum(v['blocked']  for v in domain_counts.values())
