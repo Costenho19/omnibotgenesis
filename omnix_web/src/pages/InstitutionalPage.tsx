@@ -222,14 +222,21 @@ export default function InstitutionalPage() {
                 validates every decision before execution — with a post-quantum cryptographic receipt as proof. Currently live across 8 domains: digital asset trading, Islamic credit (UAE/GCC), global insurance claims, autonomous robotics, Medical AI, autonomous agents, and more. Every domain uses the same shared governance pipeline: 11 checkpoints including SIV, Monte Carlo, DCI, AML, Fraud Detection, and Jurisdiction gates.
               </p>
               <div className="flex justify-center gap-4">
-                <button className="btn-primary flex items-center gap-2">
+                <a
+                  href="mailto:contacto@omnixquantum.net?subject=Demo Request — OMNIX Quantum&body=Hello Harold,%0A%0AI would like to schedule a demo of OMNIX Quantum."
+                  className="btn-primary flex items-center gap-2"
+                >
                   <Play className="w-4 h-4" />
                   Schedule Demo
-                </button>
-                <button className="btn-secondary flex items-center gap-2">
+                </a>
+                <a
+                  href="/whitepaper.pdf"
+                  download="OMNIX-Quantum-Technical-Brief.pdf"
+                  className="btn-secondary flex items-center gap-2"
+                >
                   Download Technical Brief
                   <ChevronRight className="w-4 h-4" />
-                </button>
+                </a>
               </div>
             </section>
 
@@ -830,13 +837,19 @@ export default function InstitutionalPage() {
                   Schedule a demo to see how OMNIX can integrate with your decision infrastructure.
                 </p>
                 <div className="flex justify-center gap-4">
-                  <button className="btn-primary flex items-center gap-2">
+                  <a
+                    href="mailto:contacto@omnixquantum.net?subject=Demo Request — OMNIX Quantum&body=Hello Harold,%0A%0AI would like to schedule a demo of OMNIX Quantum."
+                    className="btn-primary flex items-center gap-2"
+                  >
                     <Play className="w-4 h-4" />
                     Schedule Demo
-                  </button>
-                  <button className="btn-secondary">
+                  </a>
+                  <a
+                    href="mailto:contacto@omnixquantum.net?subject=Sales Inquiry — OMNIX Quantum"
+                    className="btn-secondary"
+                  >
                     Contact Sales
-                  </button>
+                  </a>
                 </div>
                 <p className="text-muted text-sm mt-6">No credit card required. 14-day free trial for Pro plans.</p>
                 <div className="flex justify-center items-center gap-8 mt-6 text-sm">
