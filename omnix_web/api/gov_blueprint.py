@@ -2887,19 +2887,22 @@ def api_public_audit_live():
             if decision_filter:
                 wheres.append(f"decision = '{decision_filter}'")
             where_sql = ('WHERE ' + ' AND '.join(wheres)) if wheres else ''
-            cur.execute(f"SELECT COUNT(*) as cnt, decision FROM ({sql_base}) t {where_sql} GROUP BY decision")
-            for r in cur.fetchall():
-                if dom not in domain_counts:
-                    domain_counts[dom] = {'domain': dom, 'label': _DOMAIN_LABELS.get(dom, dom), 'approved': 0, 'blocked': 0, 'total': 0}
-                dec = r['decision'] or ''
-                if dec == 'APPROVED':
-                    domain_counts[dom]['approved'] += r['cnt']
-                elif dec in ('BLOCKED', 'HOLD'):
-                    domain_counts[dom]['blocked'] += r['cnt']
-                domain_counts[dom]['total'] += r['cnt']
-
-            cur.execute(f"SELECT * FROM ({sql_base}) t {where_sql} ORDER BY timestamp_utc DESC LIMIT %s", (limit // len(VERTICAL_QUERIES) + 1,))
-            rows.extend(cur.fetchall())
+            try:
+                cur.execute(f"SELECT COUNT(*) as cnt, decision FROM ({sql_base}) t {where_sql} GROUP BY decision")
+                for r in cur.fetchall():
+                    if dom not in domain_counts:
+                        domain_counts[dom] = {'domain': dom, 'label': _DOMAIN_LABELS.get(dom, dom), 'approved': 0, 'blocked': 0, 'total': 0}
+                    dec = r['decision'] or ''
+                    if dec == 'APPROVED':
+                        domain_counts[dom]['approved'] += r['cnt']
+                    elif dec in ('BLOCKED', 'HOLD'):
+                        domain_counts[dom]['blocked'] += r['cnt']
+                    domain_counts[dom]['total'] += r['cnt']
+                cur.execute(f"SELECT * FROM ({sql_base}) t {where_sql} ORDER BY timestamp_utc DESC LIMIT %s", (limit // len(VERTICAL_QUERIES) + 1,))
+                rows.extend(cur.fetchall())
+            except Exception as _table_err:
+                logger.warning(f"audit-live: skipping domain '{dom}' — {_table_err}")
+                conn.rollback()
 
         cur.close(); conn.close()
 
