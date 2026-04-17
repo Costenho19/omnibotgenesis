@@ -113,8 +113,8 @@ const TOOLS = [
     subtitle: 'Any channel. Instant.',
     desc: 'Send a scenario via Telegram — receive a governance decision with a PQC-signed receipt in seconds. No dashboard required.',
     tag: 'Telegram · /evaluar',
-    link: null,
-    linkLabel: null,
+    link: 'https://t.me/omnixglobal2025_bot',
+    linkLabel: 'Open Bot',
   },
   {
     icon: Activity,
@@ -787,12 +787,21 @@ export default function InvestorDemo() {
                       {tool.tag}
                     </span>
                     {tool.link && (
-                      <Link to={tool.link} style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        fontSize: 11, fontWeight: 700, color: tool.color, textDecoration: 'none',
-                      }}>
-                        {tool.linkLabel} <ChevronRight size={12} />
-                      </Link>
+                      tool.link.startsWith('http') ? (
+                        <a href={tool.link} target="_blank" rel="noopener noreferrer" style={{
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          fontSize: 11, fontWeight: 700, color: tool.color, textDecoration: 'none',
+                        }}>
+                          {tool.linkLabel} <ChevronRight size={12} />
+                        </a>
+                      ) : (
+                        <Link to={tool.link} style={{
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          fontSize: 11, fontWeight: 700, color: tool.color, textDecoration: 'none',
+                        }}>
+                          {tool.linkLabel} <ChevronRight size={12} />
+                        </Link>
+                      )
                     )}
                   </div>
                 </div>
