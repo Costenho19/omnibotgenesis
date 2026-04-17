@@ -579,6 +579,7 @@ export default function CommercialLanding() {
                   'Zero interventions — no operational risk',
                   'Full report: what would have been blocked',
                   'PQC-signed receipts included',
+                  '500 evaluations (pilot period)',
                 ].map(f => (
                   <li key={f} className="flex items-start gap-2 text-xs text-muted">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />{f}
@@ -608,6 +609,7 @@ export default function CommercialLanding() {
                   'PQC-signed receipt per recommendation',
                   '1 vertical of choice',
                   'Monthly governance report',
+                  '5,000 evaluations / month',
                 ].map(f => (
                   <li key={f} className="flex items-start gap-2 text-xs text-muted">
                     <CheckCircle className="w-3.5 h-3.5 text-[#06b6d4] flex-shrink-0 mt-0.5" />{f}
@@ -638,6 +640,7 @@ export default function CommercialLanding() {
                   'Full audit trail + regulator export',
                   'API integration included',
                   'PQC-signed receipts on every decision',
+                  '50,000 evaluations / month',
                 ].map(f => (
                   <li key={f} className="flex items-start gap-2 text-xs text-muted">
                     <CheckCircle className="w-3.5 h-3.5 text-[#a78bfa] flex-shrink-0 mt-0.5" />{f}
