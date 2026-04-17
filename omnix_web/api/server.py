@@ -76,6 +76,232 @@ def handle_exception(e):
 from api.sandbox import register_sandbox_routes
 register_sandbox_routes(app)
 
+
+# ── Startup: ensure all vertical governance tables exist ──────────────────────
+def _ensure_vertical_tables():
+    """
+    Creates the 8 vertical governance tables if they don't exist.
+    Called once at startup so Railway stellar-hope always has a complete schema.
+    Safe: uses CREATE TABLE IF NOT EXISTS — never modifies existing tables.
+    """
+    db_url = (
+        os.environ.get("DATABASE_URL") or
+        os.environ.get("OMNIX_DB_URL") or
+        os.environ.get("POSTGRES_URL")
+    )
+    if not db_url:
+        print("[startup] No database URL — skipping vertical table creation")
+        return
+
+    VERTICAL_TABLES_SQL = [
+        # ── Robotics ──────────────────────────────────────────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS robot_actions (
+            id SERIAL PRIMARY KEY,
+            action_id VARCHAR(64) UNIQUE NOT NULL,
+            robot_id VARCHAR(64),
+            robot_type VARCHAR(32),
+            industry VARCHAR(32),
+            action_type VARCHAR(32),
+            environment VARCHAR(32),
+            sensor_confidence NUMERIC(6,2),
+            success_probability NUMERIC(6,2),
+            collision_risk NUMERIC(6,2),
+            sensor_fusion_agreement NUMERIC(6,2),
+            environmental_stability NUMERIC(6,2),
+            mechanical_margin NUMERIC(6,2),
+            mission_logic_score NUMERIC(6,2),
+            payload_kg NUMERIC(8,2),
+            speed_ms NUMERIC(6,2),
+            proximity_cm NUMERIC(8,2),
+            battery_pct NUMERIC(5,2),
+            temperature_c NUMERIC(6,2),
+            decision VARCHAR(16),
+            decision_score NUMERIC(6,2),
+            block_reason TEXT,
+            receipt_id VARCHAR(128),
+            probability_score NUMERIC(6,2),
+            risk_exposure NUMERIC(6,2),
+            signal_coherence NUMERIC(6,2),
+            trend_persistence NUMERIC(6,2),
+            stress_resilience NUMERIC(6,2),
+            logic_consistency NUMERIC(6,2),
+            checkpoint_results JSONB DEFAULT '[]',
+            trajectory_score NUMERIC(6,2),
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+        """,
+        # ── Medical AI ────────────────────────────────────────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS medical_decisions (
+            decision_id VARCHAR(60) PRIMARY KEY,
+            device_id VARCHAR(60) NOT NULL DEFAULT '',
+            device_type VARCHAR(50) NOT NULL DEFAULT '',
+            decision_type VARCHAR(60) NOT NULL DEFAULT '',
+            patient_profile VARCHAR(50) NOT NULL DEFAULT '',
+            jurisdiction VARCHAR(10) NOT NULL DEFAULT '',
+            sensor_confidence FLOAT NOT NULL DEFAULT 0,
+            diagnostic_confidence FLOAT NOT NULL DEFAULT 0,
+            patient_risk_score FLOAT NOT NULL DEFAULT 0,
+            contraindication_score FLOAT NOT NULL DEFAULT 0,
+            evidence_completeness FLOAT NOT NULL DEFAULT 0,
+            care_plan_alignment FLOAT NOT NULL DEFAULT 0,
+            recovery_trend FLOAT NOT NULL DEFAULT 0,
+            comorbidity_index FLOAT NOT NULL DEFAULT 0,
+            ethics_flag BOOLEAN DEFAULT FALSE,
+            consent_verified BOOLEAN DEFAULT TRUE,
+            off_label_use BOOLEAN DEFAULT FALSE,
+            days_since_calibration INTEGER DEFAULT 1,
+            prior_adverse_events INTEGER DEFAULT 0,
+            decision VARCHAR(10) NOT NULL DEFAULT 'PENDING',
+            decision_score FLOAT NOT NULL DEFAULT 0,
+            block_reason VARCHAR(300),
+            receipt_id VARCHAR(120) NOT NULL DEFAULT '',
+            probability_score FLOAT NOT NULL DEFAULT 0,
+            risk_exposure FLOAT NOT NULL DEFAULT 0,
+            signal_coherence FLOAT NOT NULL DEFAULT 0,
+            trend_persistence FLOAT NOT NULL DEFAULT 0,
+            stress_resilience FLOAT NOT NULL DEFAULT 0,
+            logic_consistency FLOAT NOT NULL DEFAULT 0,
+            trajectory_score FLOAT NOT NULL DEFAULT 0,
+            checkpoint_results JSONB,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+        """,
+        # ── Energy Governance ─────────────────────────────────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS energy_decisions (
+            id SERIAL PRIMARY KEY,
+            decision_id VARCHAR(64) NOT NULL UNIQUE,
+            decision_type VARCHAR(32) NOT NULL DEFAULT '',
+            energy_source VARCHAR(32) NOT NULL DEFAULT '',
+            grid_region VARCHAR(16) NOT NULL DEFAULT '',
+            contracted_mw FLOAT NOT NULL DEFAULT 0,
+            settlement_price_mwh FLOAT NOT NULL DEFAULT 0,
+            contract_term_years FLOAT NOT NULL DEFAULT 1.0,
+            decision VARCHAR(10) NOT NULL DEFAULT 'PENDING',
+            decision_score FLOAT,
+            block_reason TEXT,
+            hard_block_reason TEXT,
+            probability_score FLOAT,
+            risk_exposure FLOAT,
+            signal_coherence FLOAT,
+            trend_persistence FLOAT,
+            stress_resilience FLOAT,
+            logic_consistency FLOAT,
+            trajectory_score FLOAT,
+            capacity_margin_pct FLOAT,
+            frequency_deviation_hz FLOAT,
+            carbon_avoided_tco2e FLOAT DEFAULT 0.0,
+            settlement_risk_usd FLOAT DEFAULT 0.0,
+            lmp_forecast_confidence FLOAT,
+            renewable_intermittency_buffer FLOAT,
+            receipt_id VARCHAR(64),
+            domain VARCHAR(32) DEFAULT 'energy_governance',
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+        """,
+        # ── Real Estate ───────────────────────────────────────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS property_decisions (
+            decision_id VARCHAR(60) PRIMARY KEY,
+            property_id VARCHAR(60) NOT NULL DEFAULT '',
+            decision_type VARCHAR(60) NOT NULL DEFAULT '',
+            property_type VARCHAR(50) NOT NULL DEFAULT '',
+            market_segment VARCHAR(30) NOT NULL DEFAULT '',
+            jurisdiction VARCHAR(10) NOT NULL DEFAULT '',
+            financing_mode VARCHAR(30) NOT NULL DEFAULT '',
+            comparable_quality FLOAT NOT NULL DEFAULT 0,
+            model_accuracy FLOAT NOT NULL DEFAULT 0,
+            data_freshness FLOAT NOT NULL DEFAULT 0,
+            market_depth FLOAT NOT NULL DEFAULT 0,
+            ltv_ratio FLOAT NOT NULL DEFAULT 0,
+            price_deviation FLOAT NOT NULL DEFAULT 0,
+            aml_risk_score FLOAT NOT NULL DEFAULT 0,
+            comparable_alignment FLOAT NOT NULL DEFAULT 0,
+            market_trend_score FLOAT NOT NULL DEFAULT 0,
+            demand_index FLOAT NOT NULL DEFAULT 0,
+            inventory_pressure FLOAT NOT NULL DEFAULT 0,
+            liquidity_score FLOAT NOT NULL DEFAULT 0,
+            rate_sensitivity FLOAT NOT NULL DEFAULT 0,
+            vacancy_risk FLOAT NOT NULL DEFAULT 0,
+            aml_flag BOOLEAN DEFAULT FALSE,
+            rera_compliant BOOLEAN DEFAULT TRUE,
+            sharia_screening_passed BOOLEAN DEFAULT TRUE,
+            beneficial_owner_verified BOOLEAN DEFAULT TRUE,
+            days_since_last_valuation INTEGER DEFAULT 0,
+            prior_aml_incidents INTEGER DEFAULT 0,
+            decision VARCHAR(10) NOT NULL DEFAULT 'PENDING',
+            decision_score FLOAT NOT NULL DEFAULT 0,
+            block_reason VARCHAR(400),
+            receipt_id VARCHAR(120) NOT NULL DEFAULT '',
+            probability_score FLOAT NOT NULL DEFAULT 0,
+            risk_exposure FLOAT NOT NULL DEFAULT 0,
+            signal_coherence FLOAT NOT NULL DEFAULT 0,
+            trend_persistence FLOAT NOT NULL DEFAULT 0,
+            stress_resilience FLOAT NOT NULL DEFAULT 0,
+            logic_consistency FLOAT NOT NULL DEFAULT 0,
+            trajectory_score FLOAT NOT NULL DEFAULT 0,
+            checkpoint_results JSONB,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+        """,
+        # ── Autonomous Agents ─────────────────────────────────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS agent_decisions (
+            decision_id VARCHAR(60) PRIMARY KEY,
+            agent_id VARCHAR(60) NOT NULL DEFAULT '',
+            agent_type VARCHAR(50) NOT NULL DEFAULT '',
+            decision_type VARCHAR(60) NOT NULL DEFAULT '',
+            environment VARCHAR(30) NOT NULL DEFAULT '',
+            reversibility VARCHAR(30) NOT NULL DEFAULT '',
+            task_complexity FLOAT NOT NULL DEFAULT 0,
+            resource_utilization FLOAT NOT NULL DEFAULT 0,
+            context_completeness FLOAT NOT NULL DEFAULT 0,
+            goal_alignment FLOAT NOT NULL DEFAULT 0,
+            dependency_score FLOAT NOT NULL DEFAULT 0,
+            scope_blast_radius FLOAT NOT NULL DEFAULT 0,
+            fallback_coverage FLOAT NOT NULL DEFAULT 0,
+            permission_scope FLOAT NOT NULL DEFAULT 0,
+            safety_critical_flag BOOLEAN DEFAULT FALSE,
+            human_approval_required BOOLEAN DEFAULT FALSE,
+            human_approved BOOLEAN DEFAULT FALSE,
+            cross_boundary BOOLEAN DEFAULT FALSE,
+            data_sensitivity VARCHAR(20) DEFAULT 'low',
+            retry_count INTEGER DEFAULT 0,
+            decision VARCHAR(10) NOT NULL DEFAULT 'PENDING',
+            decision_score FLOAT NOT NULL DEFAULT 0,
+            block_reason VARCHAR(300),
+            receipt_id VARCHAR(120) NOT NULL DEFAULT '',
+            probability_score FLOAT NOT NULL DEFAULT 0,
+            risk_exposure FLOAT NOT NULL DEFAULT 0,
+            signal_coherence FLOAT NOT NULL DEFAULT 0,
+            trend_persistence FLOAT NOT NULL DEFAULT 0,
+            stress_resilience FLOAT NOT NULL DEFAULT 0,
+            logic_consistency FLOAT NOT NULL DEFAULT 0,
+            trajectory_score FLOAT NOT NULL DEFAULT 0,
+            checkpoint_results JSONB,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+        """,
+    ]
+
+    try:
+        conn = psycopg2.connect(db_url)
+        conn.autocommit = False
+        cur = conn.cursor()
+        for sql in VERTICAL_TABLES_SQL:
+            cur.execute(sql)
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("[startup] All vertical governance tables verified/created OK")
+    except Exception as e:
+        print(f"[startup] Could not create vertical tables: {e}")
+
+
+_ensure_vertical_tables()
+
 # ── B2B Governance API (ADR-028, ADR-051, ADR-052) ────────────────────────────
 # Exposes /api/governance/* on omnixquantum.net (Railway stellar-hope service)
 # Authentication: X-API-Key header (RBAC — b2b_clients table)
