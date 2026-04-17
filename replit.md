@@ -736,12 +736,74 @@ Standalone `aiohttp` server. Public receipt verification. Zero internal data exp
 ### Overview
 Every B2B client (e.g. Velos) gets a unique API key. All their evaluations are tagged with their `client_id` in `decision_receipts`. Harold can query usage at any time for billing.
 
-### Database Tables
+### Database Tables — B2B Governance
 | Table | Purpose |
 |-------|---------|
 | `b2b_clients` | One row per client: `client_id`, `api_key_hash` (SHA-256, never plaintext), `name`, `email`, `role`, `is_active`, `last_seen_at` |
 | `decision_receipts` | Every evaluation: `client_id` column links to the client. Public sandbox uses `'PUBLIC'`. |
 | `client_thresholds` | Per-client override of the 11 checkpoint thresholds (ADR-037). |
+
+---
+
+## Vertical Governance Tables — Estado Production (Railway PostgreSQL)
+
+Confirmado **17 Apr 2026**. Todas las 8 tablas existen en la DB de Railway (`OMNIX_DB_URL`) y tienen datos reales generados por los motores de gobernanza OMNIX.
+
+| Dominio | Tabla | Registros (17 Apr) | Simulador |
+|---------|-------|--------------------|-----------|
+| Trading | `decision_receipts` | ~151,570 | Bot Railway (tiempo real) |
+| Islamic Credit | `credit_applications` | ~33,125 | omnix_core/credit |
+| Insurance | `insurance_claims` | ~35,057 | omnix_core/insurance |
+| Robotics | `robot_actions` | ~51,400 | omnix_core/robotics |
+| Medical AI | `medical_decisions` | ~15,041 | omnix_core/medical |
+| Energy Governance | `energy_decisions` | ~17,596 | omnix_core/energy |
+| Real Estate | `property_decisions` | ~9,099 | omnix_core/real_estate |
+| Autonomous Agents | `agent_decisions` | ~14,451 | omnix_core/agents |
+
+### Arquitectura de simuladores — dónde corren
+
+| Servicio | Simuladores activos |
+|----------|---------------------|
+| **Flask Dashboard (Replit local)** | Todos los 8: credit, insurance, robotics, medical, energy, real_estate, agents + trading bot vía API |
+| **omnibotgenesis (Railway)** | Trading (tiempo real Binance) + credit + insurance + robotics |
+| **stellar-hope (Railway)** | credit, insurance, robotics, medical, energy, real_estate, agents — arrancados en `_start_vertical_simulators()` desde `omnix_web/api/server.py` al iniciar gunicorn |
+
+### Cómo se crean las tablas en producción
+
+`omnix_web/api/server.py` ejecuta dos funciones al arrancar el servidor de Railway:
+
+1. **`_ensure_vertical_tables()`** (commit `685f6395`): Crea las 5 tablas verticales con `CREATE TABLE IF NOT EXISTS` — nunca modifica tablas existentes.
+2. **`_start_vertical_simulators()`** (commit `aa2c291f`): Arranca los 7 motores de gobernanza en threads daemon. Cada simulador escribe decisiones reales cada 3-5 minutos. Si ya está corriendo, no arranca segunda instancia (idempotente).
+
+### DB URL fallback chain
+
+Tanto `_ensure_vertical_tables` como `_start_vertical_simulators` resuelven la DB en este orden:
+```
+DATABASE_URL → OMNIX_DB_URL → POSTGRES_URL
+```
+Railway stellar-hope tiene `OMNIX_DB_URL` configurada. El valor se copia a `DATABASE_URL` en memoria para que los simuladores lo encuentren.
+
+### Seed script (para repoblar si es necesario)
+
+```bash
+# Desde Replit (tiene acceso a OMNIX_DB_URL)
+python scripts/seed_vertical_tables.py
+```
+El script usa los motores de gobernanza reales de OMNIX (no genera datos falsos) y genera ~75 decisiones por dominio.
+
+### Verificar estado de tablas en producción
+
+```python
+import os, psycopg2
+conn = psycopg2.connect(os.environ["OMNIX_DB_URL"])
+cur = conn.cursor()
+for t in ["decision_receipts","credit_applications","insurance_claims",
+          "robot_actions","medical_decisions","energy_decisions",
+          "property_decisions","agent_decisions"]:
+    cur.execute(f"SELECT COUNT(*) FROM {t}")
+    print(f"{t}: {cur.fetchone()[0]}")
+conn.close()
+```
 
 ### API Key Rules
 - Format: `OMNIX-<40 random alphanumeric chars>`
