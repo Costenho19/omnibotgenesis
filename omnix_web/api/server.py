@@ -302,6 +302,88 @@ def _ensure_vertical_tables():
 
 _ensure_vertical_tables()
 
+
+# ── Startup: activate all 8 vertical governance simulators in background ───────
+def _start_vertical_simulators():
+    """
+    Arranca los 4 motores de gobernanza pendientes en threads de background.
+    Se ejecuta al iniciar el servidor en Railway (stellar-hope).
+    Los simuladores escriben continuamente en la misma PostgreSQL via DATABASE_URL.
+    Cada uno es idempotente — si ya está corriendo, no arranca una segunda instancia.
+    """
+    db_url = (
+        os.environ.get("DATABASE_URL") or
+        os.environ.get("OMNIX_DB_URL") or
+        os.environ.get("POSTGRES_URL")
+    )
+    if not db_url:
+        print("[simulators] No DATABASE_URL — simulators skipped")
+        return
+
+    # Los simuladores leen DATABASE_URL directamente
+    if not os.environ.get("DATABASE_URL"):
+        os.environ["DATABASE_URL"] = db_url
+
+    # ── Credit (Islamic Finance) ───────────────────────────────────────────────
+    try:
+        from omnix_core.credit.credit_simulator import start_credit_simulation_background
+        start_credit_simulation_background()
+        print("[simulators] ✅ Islamic Credit Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Credit: {e}")
+
+    # ── Insurance ─────────────────────────────────────────────────────────────
+    try:
+        from omnix_core.insurance.insurance_simulator import start_background_simulator as _ins
+        _ins()
+        print("[simulators] ✅ Insurance Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Insurance: {e}")
+
+    # ── Robotics ──────────────────────────────────────────────────────────────
+    try:
+        from omnix_core.robotics.robotics_simulator import start_background_simulator as _rbt
+        _rbt()
+        print("[simulators] ✅ Robotics Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Robotics: {e}")
+
+    # ── Medical AI ────────────────────────────────────────────────────────────
+    try:
+        from omnix_core.medical.medical_simulator import start_background_simulator as _med
+        _med()
+        print("[simulators] ✅ Medical AI Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Medical: {e}")
+
+    # ── Energy Governance ─────────────────────────────────────────────────────
+    try:
+        from omnix_core.energy.energy_simulator import start_background_simulator as _egy
+        _egy()
+        print("[simulators] ✅ Energy Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Energy: {e}")
+
+    # ── Real Estate ───────────────────────────────────────────────────────────
+    try:
+        from omnix_core.real_estate.real_estate_simulator import start_background_simulator as _res
+        _res()
+        print("[simulators] ✅ Real Estate Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Real Estate: {e}")
+
+    # ── Autonomous Agents ─────────────────────────────────────────────────────
+    try:
+        from omnix_core.agents.agents_simulator import start_background_simulator as _agt
+        _agt()
+        print("[simulators] ✅ Autonomous Agents Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Agents: {e}")
+
+
+_start_vertical_simulators()
+
+
 # ── B2B Governance API (ADR-028, ADR-051, ADR-052) ────────────────────────────
 # Exposes /api/governance/* on omnixquantum.net (Railway stellar-hope service)
 # Authentication: X-API-Key header (RBAC — b2b_clients table)
