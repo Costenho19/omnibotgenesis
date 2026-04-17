@@ -2827,6 +2827,8 @@ def api_public_audit_live():
         except Exception:
             return outcomes
         for cp in data:
+            if not isinstance(cp, dict):
+                continue
             cp_id   = cp.get('checkpoint', '')
             result  = cp.get('result', 'PASS')
             blocked = result in ('BLOCKED', 'FAIL', 'BLOCK')
