@@ -627,7 +627,7 @@ export default function CommercialLanding() {
               <div className="mb-4">
                 <span className="text-xs font-bold text-[#a78bfa] uppercase tracking-widest">Professional</span>
                 <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">$20K</span>
+                  <span className="text-3xl font-black text-white">$25K</span>
                   <span className="text-xs text-muted font-medium">/ month</span>
                 </div>
                 <p className="text-xs text-muted mt-1">Governance authority · Up to 4 verticals</p>
@@ -661,10 +661,10 @@ export default function CommercialLanding() {
               <div className="mb-4">
                 <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest">Enterprise</span>
                 <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">$25K</span>
+                  <span className="text-3xl font-black text-white">$35K</span>
                   <span className="text-xs text-muted font-medium">/ month</span>
                 </div>
-                <p className="text-xs text-[#C9A227]/70 mt-0.5 font-medium">$300,000 / year · All 8 verticals</p>
+                <p className="text-xs text-[#C9A227]/70 mt-0.5 font-medium">$420,000 / year · All 8 verticals</p>
               </div>
               <ul className="space-y-2 flex-1 mb-5">
                 {[

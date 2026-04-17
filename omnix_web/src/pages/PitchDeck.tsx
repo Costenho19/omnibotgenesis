@@ -511,10 +511,10 @@ export default function PitchDeck() {
           <div style={{ overflowX: 'auto', marginBottom: 24 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))', gap: 12, minWidth: 640 }}>
             {[
-              { tier: 'Shadow Mode',    price: 'Free',  sub: '4-week pilot',          color: '#10B981', highlight: false },
-              { tier: 'Advisory',       price: '$8K',   sub: '/ 2,000 evaluations',   color: '#06b6d4', highlight: false },
-              { tier: 'Enterprise Base',price: '$20K',  sub: '/ 15,000 evaluations',  color: '#C9A227', highlight: true  },
-              { tier: 'Enterprise Full',price: '$35K',  sub: '/ unlimited',            color: '#a78bfa', highlight: false },
+              { tier: 'Shadow Mode',  price: 'Free',  sub: '4-week pilot',         color: '#10B981', highlight: false },
+              { tier: 'Advisory',     price: '$8K',   sub: '/ month · 1 vertical', color: '#06b6d4', highlight: false },
+              { tier: 'Professional', price: '$25K',  sub: '/ month · 4 verticals',color: '#a78bfa', highlight: false },
+              { tier: 'Enterprise',   price: '$35K',  sub: '/ month · 8 verticals',color: '#C9A227', highlight: true  },
             ].map(t => (
               <div key={t.tier} style={{
                 background: t.highlight ? 'rgba(201,162,39,0.08)' : 'rgba(15,33,64,0.6)',
