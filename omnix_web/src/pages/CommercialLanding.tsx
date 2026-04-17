@@ -514,7 +514,6 @@ export default function CommercialLanding() {
                   <th className="text-left px-5 py-4 text-xs font-semibold text-muted uppercase tracking-wider border-b border-[#1E293B]" style={{minWidth:260}}>Governance Capability</th>
                   {[
                     {name:'OMNIX', color:'#C9A227'},
-                    {name:'A2SPA', color:'#94A3B8'},
                     {name:'MCP', color:'#94A3B8'},
                     {name:'LangChain', color:'#94A3B8'},
                     {name:'AWS Bedrock', color:'#94A3B8'},
@@ -526,17 +525,16 @@ export default function CommercialLanding() {
               </thead>
               <tbody>
                 {[
-                  {label:'Pre-decision admissibility assessment', vals:[true,false,false,false,false,false]},
-                  {label:'Multi-checkpoint governance pipeline (11 gates)', vals:[true,false,false,false,false,false]},
-                  {label:'Domain-specific governance (8 sectors)', vals:[true,false,false,false,false,false]},
-                  {label:'Sharia-aligned governance gate', vals:[true,false,false,false,false,false]},
-                  {label:'Post-quantum cryptography (Dilithium-3 NIST)', vals:[true,false,false,false,false,false]},
-                  {label:'W3C Verifiable Credential decision receipts', vals:[true,false,false,false,false,false]},
-                  {label:'Counterfactual validation (Shadow Portfolio)', vals:[true,false,false,false,false,false]},
-                  {label:'Human deliberation integration (HOLD state)', vals:[true,false,false,false,false,false]},
-                  {label:'Execution payload signing', vals:[false,true,false,false,false,false]},
-                  {label:'Tamper-proof audit trail', vals:[true,true,false,false,true,false]},
-                  {label:'Real-time risk analysis', vals:[true,false,false,true,false,false]},
+                  {label:'Pre-decision admissibility assessment', vals:[true,false,false,false,false]},
+                  {label:'Multi-checkpoint governance pipeline (11 gates)', vals:[true,false,false,false,false]},
+                  {label:'Domain-specific governance (8 sectors)', vals:[true,false,false,false,false]},
+                  {label:'Sharia-aligned governance gate', vals:[true,false,false,false,false]},
+                  {label:'Post-quantum cryptography (Dilithium-3 NIST)', vals:[true,false,false,false,false]},
+                  {label:'W3C Verifiable Credential decision receipts', vals:[true,false,false,false,false]},
+                  {label:'Counterfactual validation (Shadow Portfolio)', vals:[true,false,false,false,false]},
+                  {label:'Human deliberation integration (HOLD state)', vals:[true,false,false,false,false]},
+                  {label:'Tamper-proof audit trail', vals:[true,false,false,true,false]},
+                  {label:'Real-time risk analysis', vals:[true,false,true,false,false]},
                 ].map((row, i) => (
                   <tr key={i} style={{background: i%2===0 ? 'rgba(5,13,24,0.5)' : 'rgba(10,22,40,0.3)'}}>
                     <td className="px-5 py-3.5 text-sm text-[#CBD5E1]">{row.label}</td>
@@ -554,15 +552,6 @@ export default function CommercialLanding() {
             </table>
           </div>
 
-          <div className="mt-8 glass-card p-7 max-w-3xl mx-auto text-center" style={{borderColor:'rgba(201,162,39,0.2)'}}>
-            <div className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-3">Important context</div>
-            <p className="text-sm text-muted leading-relaxed">
-              <span className="text-white font-semibold">OMNIX and A2SPA solve different problems and are architecturally complementary.</span>
-              {' '}OMNIX governs the admissibility of a decision before any execution system is involved.
-              A2SPA signs the execution payload at the moment an agent acts. Together, they form a complete governance stack:
-              {' '}<span className="text-[#C9A227]">pre-decision admissibility + execution-time authorization</span>.
-            </p>
-          </div>
         </section>
 
         {/* ── PRICING ── */}
