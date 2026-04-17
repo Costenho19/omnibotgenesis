@@ -162,3 +162,15 @@ id = "9Kz4moE-2e-VxQ7B85NRm"
 uri = "file://output/OMNIX_Skilligen_NDA.pdf"
 type = "pdf"
 title = "NDA — OMNIX Quantum Ltd & Skilligen HDI"
+
+[[outputs]]
+id = "gatPT08pWALXvNEcBXpHR"
+uri = "file://attached_assets/screenshots/omnixquantum_net_integration.png"
+type = "image"
+title = "omnixquantum.net/integration — LIVE ahora"
+
+[[outputs]]
+id = "KMXMBJKBq__SsyRBh8uvb"
+uri = "file://attached_assets/screenshots/omnixquantum_net_verify.png"
+type = "image"
+title = "omnixquantum.net/verify — LIVE ahora"
