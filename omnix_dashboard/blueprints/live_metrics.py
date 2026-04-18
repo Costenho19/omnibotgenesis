@@ -22,8 +22,29 @@ logger = logging.getLogger(__name__)
 
 live_metrics_bp = Blueprint('live_metrics', __name__)
 
-ADR_COUNT = 112
 CHECKPOINT_COUNT = 11
+
+def _get_adr_count() -> int:
+    try:
+        conn = _new_conn()
+        cur  = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM architecture_decisions")
+        count = int(cur.fetchone()[0] or 0)
+        cur.close(); conn.close()
+        if count > 0:
+            return count
+    except Exception:
+        pass
+    try:
+        import re as _re
+        _adr_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                '..', 'docs', 'adr')
+        nums = [int(_re.search(r'ADR-(\d+)', f).group(1))
+                for f in os.listdir(_adr_dir) if _re.search(r'ADR-(\d+)', f)]
+        return max(nums) if nums else 115
+    except Exception:
+        return 115
+
 TRACK_RECORD_START = datetime(2026, 1, 15, tzinfo=timezone.utc)
 
 VERTICALS_META = {
@@ -483,9 +504,9 @@ def get_live_metrics():
                 'decisions_today':  decisions_today,
                 'receipts_total':   trading['decisions'],
                 'uptime_days':      uptime_days,
-                'adr_count':        ADR_COUNT,
+                'adr_count':        _get_adr_count(),
                 'checkpoint_count': CHECKPOINT_COUNT,
-                'verticals_live':   8,
+                'verticals_live':   9,
                 'tam_usd':          '212B+',
             },
             'pipeline': {

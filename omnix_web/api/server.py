@@ -21,6 +21,17 @@ import re
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
+def _count_adrs_from_files() -> int:
+    try:
+        adr_dir = os.path.join(BASE_DIR, '..', 'docs', 'adr')
+        nums = [int(re.search(r'ADR-(\d+)', f).group(1))
+                for f in os.listdir(adr_dir) if re.search(r'ADR-(\d+)', f)]
+        return max(nums) if nums else 115
+    except Exception:
+        return 115
+
+_ADR_FILE_COUNT = _count_adrs_from_files()
+
 app = Flask(__name__)
 
 CORS(app, origins=[
@@ -823,9 +834,21 @@ def get_metrics_live():
         except Exception:
             uptime_days = max(0, (datetime.now(timezone.utc) - LAUNCH_DATE).days)
 
-        # ── ADR count — fixed constant, not from table rows ───────────────────
-        # architecture_decisions table tracks records but ADR count is 112 documented
-        adr_count = 112
+        # ── ADR count — live from DB, fallback to filesystem max ──────────────
+        adr_count = 0
+        try:
+            cur.execute("SELECT COUNT(*) FROM architecture_decisions")
+            adr_count = int(cur.fetchone()[0] or 0)
+        except Exception:
+            pass
+        if adr_count == 0:
+            try:
+                import re as _re, os as _os
+                _adr_dir = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'docs', 'adr')
+                _nums = [int(_re.search(r'ADR-(\d+)', f).group(1)) for f in _os.listdir(_adr_dir) if _re.search(r'ADR-(\d+)', f)]
+                adr_count = max(_nums) if _nums else 115
+            except Exception:
+                adr_count = 115
 
         cur.close()
         conn.close()
@@ -1009,7 +1032,7 @@ def get_metrics_live():
                 'decisions_today':  5_265,
                 'receipts_total':   106_367,
                 'uptime_days':      uptime_days,
-                'adr_count':        112,
+                'adr_count':        _ADR_FILE_COUNT,
                 'checkpoint_count': 11,
                 'verticals_live':   9,
                 'tam_usd':          '212B+',
