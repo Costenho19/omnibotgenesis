@@ -735,6 +735,24 @@ export default function CommercialLanding() {
                 cause:'AI clinical recommendations contradicted physician judgment. No governance framework to resolve conflicts or escalate to human deliberation.',
                 omnix:'HOLD state routes conflicted Medical AI decisions to physician — zero autonomous override without human sign-off.',
               },
+              {
+                domain:'Energy Grid', icon:'⚡', color:'#facc15',
+                company:'ERCOT — Texas Grid', year:'2021', loss:'$130B economic damage', time:'69 hours',
+                cause:'Automated dispatch systems failed to enforce weatherisation contracts. No pre-execution governance gate validated generator readiness before load commitments were made.',
+                omnix:'Load forecast + carbon compliance + jurisdiction gates block commitment before dispatch. No dispatch without governance clearance.',
+              },
+              {
+                domain:'Real Estate AI', icon:'🏢', color:'#fb923c',
+                company:'Zillow Offers', year:'2021', loss:'$881M write-down', time:'18 months',
+                cause:'Automated Valuation Model systematically overbid on properties with no pre-decision validation. No override gate between AVM output and binding purchase commitment.',
+                omnix:'Valuation integrity gate + 11 checkpoints block overbid decisions before binding. AVM output is an input, not a decision.',
+              },
+              {
+                domain:'Autonomous Agents', icon:'🧠', color:'#e879f9',
+                company:'The DAO Smart Contract', year:'2016', loss:'$60M ETH drained', time:'3 hours',
+                cause:'Autonomous smart contract agent exploited a re-entrancy loop. No governance layer between agent intent and execution. $60M drained before a single human could intervene.',
+                omnix:'Intent validation gate + 11 checkpoints evaluate every agent action before it executes. No autonomous action without governance sign-off.',
+              },
             ].map(item => (
               <div key={item.domain} style={{
                 background:'rgba(10,22,40,0.85)',
