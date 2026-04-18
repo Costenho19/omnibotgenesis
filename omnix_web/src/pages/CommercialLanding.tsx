@@ -330,8 +330,8 @@ export default function CommercialLanding() {
 
         <section className="mb-24">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-white mb-3">Eight Verticals. Running Now.</h2>
-            <p className="text-muted max-w-2xl mx-auto">Same 11-checkpoint governance pipeline. Eight live domains. All operating 24/7.</p>
+            <h2 className="text-3xl font-bold text-white mb-3">Nine Verticals. Running Now.</h2>
+            <p className="text-muted max-w-2xl mx-auto">Same 11-checkpoint governance pipeline. Nine live domains. All operating 24/7.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="glass-card p-8 border border-emerald-400/20">
@@ -473,6 +473,25 @@ export default function CommercialLanding() {
                 <div><div className="text-xl font-bold text-cyan-400">3 markets</div><div className="text-xs text-muted">UK · UAE · US</div></div>
               </div>
               <Link to="/real-estate" className="text-cyan-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="glass-card p-8 border border-violet-400/20 md:col-span-2">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#8B5CF6',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">🪙 Stablecoin Reserve — ADR-SRG-001</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Governance engine for stablecoin reserve management. Collateral adequacy gate + 11 checkpoints enforcing MiCA compliance, PEG stability, liquidity thresholds, and counterparty limits — 24/7 reserve surveillance.</p>
+              <div className="grid grid-cols-3 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-violet-400">MiCA</div><div className="text-xs text-muted">EU Regulation compliant</div></div>
+                <div><div className="text-xl font-bold text-violet-400">$5B+</div><div className="text-xs text-muted">Reserve capacity governed</div></div>
+                <div><div className="text-xl font-bold text-violet-400">ADR-SRG-001</div><div className="text-xs text-muted">Architecture Decision Record</div></div>
+              </div>
+              <Link to="/stablecoin" className="text-violet-400 text-sm hover:text-white transition-colors flex items-center gap-1">
                 View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>

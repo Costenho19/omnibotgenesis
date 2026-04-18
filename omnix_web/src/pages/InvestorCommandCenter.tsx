@@ -79,7 +79,7 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     uptime_days:      _uptimeDays,
     adr_count:        112,
     checkpoint_count: 11,
-    verticals_live:   8,
+    verticals_live:   9,
     tam_usd:          '212B+',
   },
   pipeline: {
@@ -150,6 +150,12 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     agents: {
       label: 'Autonomous Agent Governance', market_size: '$28B+ Market', live_since: '2026-04-01',
       cycle_sec: 60, color: '#e879f9', icon: <Network size={22} strokeWidth={1.5} />,
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
+    },
+    stablecoin: {
+      label: '🪙 Stablecoin Reserve (ADR-SRG-001)', market_size: '$5B+ Reserve', live_since: '2026-04-10',
+      cycle_sec: 300, color: '#8B5CF6', icon: <Shield size={22} strokeWidth={1.5} />,
       decisions: 0, approved: 0, blocked: 0, hold: 0,
       decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },

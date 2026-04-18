@@ -80,7 +80,7 @@ register_sandbox_routes(app)
 # ── Startup: ensure all vertical governance tables exist ──────────────────────
 def _ensure_vertical_tables():
     """
-    Creates the 8 vertical governance tables if they don't exist.
+    Creates the 9 vertical governance tables if they don't exist.
     Called once at startup so Railway stellar-hope always has a complete schema.
     Safe: uses CREATE TABLE IF NOT EXISTS — never modifies existing tables.
     """
@@ -349,7 +349,7 @@ def _ensure_vertical_tables():
 _ensure_vertical_tables()
 
 
-# ── Startup: activate all 8 vertical governance simulators in background ───────
+# ── Startup: activate all 9 vertical governance simulators in background ───────
 def _start_vertical_simulators():
     """
     Arranca los motores de gobernanza en threads de background.
@@ -476,7 +476,7 @@ def get_live_metrics():
                     'decisions_blocked': 9317,
                     'exit_receipts': 78,
                     'capital_preserved_pct': 98.42,
-                    'verticals_demo': 8,
+                    'verticals_demo': 9,
                     'system_uptime_days': 112,
                 },
                 'last_updated': datetime.now(timezone.utc).isoformat()
@@ -543,7 +543,7 @@ def get_live_metrics():
                 'decisions_blocked': decisions_blocked,
                 'exit_receipts': exit_receipts,
                 'capital_preserved_pct': capital_preserved,
-                'verticals_demo': 8,
+                'verticals_demo': 9,
                 'system_uptime_days': uptime_days,
             },
             'last_updated': datetime.now(timezone.utc).isoformat()
@@ -560,7 +560,7 @@ def get_live_metrics():
                 'decisions_blocked': 9317,
                 'exit_receipts': 78,
                 'capital_preserved_pct': 98.42,
-                'verticals_demo': 8,
+                'verticals_demo': 9,
                 'system_uptime_days': 112,
             },
             'last_updated': datetime.now(timezone.utc).isoformat()
@@ -828,7 +828,7 @@ def get_metrics_live():
                 'uptime_days':      uptime_days,
                 'adr_count':        adr_count,
                 'checkpoint_count': 11,
-                'verticals_live':   8,
+                'verticals_live':   9,
                 'tam_usd':          '212B+',
             },
             'pipeline': PIPELINE,
@@ -974,7 +974,7 @@ def get_metrics_live():
                 'uptime_days':      uptime_days,
                 'adr_count':        112,
                 'checkpoint_count': 11,
-                'verticals_live':   8,
+                'verticals_live':   9,
                 'tam_usd':          '212B+',
             },
             'pipeline': PIPELINE,
