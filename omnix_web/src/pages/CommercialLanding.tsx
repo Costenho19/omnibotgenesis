@@ -30,6 +30,7 @@ const liveStatStyle = (animKey: number): React.CSSProperties => ({
   animation: animKey > 0 ? 'omnixStatReveal 0.6s ease both' : 'none',
 })
 
+
 const REFERRAL_OPTIONS = [
   'Facebook', 'WhatsApp', 'Instagram', 'Telegram',
   'LinkedIn', 'Google', 'Recomendación', 'Otro'
