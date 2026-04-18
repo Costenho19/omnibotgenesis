@@ -830,7 +830,10 @@ def get_metrics_live():
         cur.close()
         conn.close()
 
-        decisions_total = trading_total + credit_total + ins_total + rob_total
+        decisions_total = (
+            trading_total + credit_total + ins_total + rob_total +
+            med_total + ene_total + re_total + ag_total + srg_total
+        )
         if decisions_total == 0:
             decisions_total = receipts_total
 
