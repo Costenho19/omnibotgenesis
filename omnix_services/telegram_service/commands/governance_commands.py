@@ -565,3 +565,197 @@ async def impact_command(self, update, context):
         await processing.edit_text(
             "⚠️ No se pudo calcular el Governance Impact Score. Intenta de nuevo."
         )
+
+
+# ── /clientes — Lista de clientes B2B (solo admin) ───────────────────────────
+
+async def clientes_command(self, update, context):
+    """
+    /clientes — Muestra todos los clientes B2B activos con su uso.
+    Solo admin (Harold). Consulta PostgreSQL directamente.
+    """
+    user = update.effective_user
+    if not _is_admin(str(user.id)):
+        await update.message.reply_text("⛔ Solo el administrador puede ver los clientes.")
+        return
+
+    processing = await update.message.reply_text("⏳ Consultando clientes B2B...")
+
+    try:
+        conn, extras = _db_connect()
+        with conn:
+            with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT
+                        b.client_id,
+                        b.name,
+                        b.email,
+                        b.role,
+                        b.is_active,
+                        b.created_at,
+                        b.last_seen_at,
+                        b.key_expires_at,
+                        COUNT(d.id) AS total_evals,
+                        COUNT(CASE WHEN d.created_at > NOW() - INTERVAL '24 hours' THEN 1 END) AS evals_24h,
+                        COUNT(CASE WHEN d.created_at > NOW() - INTERVAL '30 days' THEN 1 END) AS evals_30d
+                    FROM b2b_clients b
+                    LEFT JOIN decision_receipts d ON d.client_id = b.client_id
+                    GROUP BY b.client_id, b.name, b.email, b.role,
+                             b.is_active, b.created_at, b.last_seen_at, b.key_expires_at
+                    ORDER BY b.created_at DESC
+                    LIMIT 20
+                """)
+                clients = cur.fetchall()
+        conn.close()
+
+        if not clients:
+            await processing.edit_text(
+                "📋 *CLIENTES B2B OMNIX*\n\n"
+                "_No hay clientes registrados todavía._\n\n"
+                "Usa `/nuevo_cliente` para añadir el primero.",
+                parse_mode="Markdown"
+            )
+            return
+
+        lines = []
+        now_ts = datetime.now(timezone.utc)
+        for c in clients:
+            status = "🟢" if c["is_active"] else "🔴"
+            role_icon = "👑" if c["role"] == "admin" else "🏢"
+            last_seen = "nunca"
+            if c["last_seen_at"]:
+                delta = now_ts - c["last_seen_at"].replace(tzinfo=timezone.utc)
+                h = int(delta.total_seconds() // 3600)
+                last_seen = f"hace {h}h" if h < 48 else f"hace {delta.days}d"
+
+            expiry = ""
+            if c["key_expires_at"]:
+                exp_delta = c["key_expires_at"].replace(tzinfo=timezone.utc) - now_ts
+                days_left = exp_delta.days
+                expiry = f" · ⏳{days_left}d" if days_left <= 14 else ""
+
+            lines.append(
+                f"{status} {role_icon} *{c['client_id']}*{expiry}\n"
+                f"   {c['name']}"
+                + (f" · {c['email']}" if c['email'] else "")
+                + f"\n"
+                f"   📊 {c['total_evals']:,} total · {c['evals_30d']:,}/30d · {c['evals_24h']:,}/24h\n"
+                f"   👁️ {last_seen}"
+            )
+
+        msg = (
+            f"📋 *CLIENTES B2B OMNIX* ({len(clients)} registrados)\n\n"
+            + "\n\n".join(lines)
+            + "\n\n_Usa `/nuevo_cliente` para añadir un cliente._"
+        )
+        await processing.edit_text(msg, parse_mode="Markdown")
+
+    except RuntimeError as exc:
+        logger.warning(f"[CLIENTES] DB no disponible: {exc}")
+        await processing.edit_text("⚠️ Base de datos no disponible.")
+    except Exception as exc:
+        logger.error(f"[CLIENTES] Error: {exc}")
+        await processing.edit_text("⚠️ Error al consultar clientes.")
+
+
+# ── /nuevo_cliente — Provisionar cliente B2B (solo admin) ────────────────────
+
+async def nuevo_cliente_command(self, update, context):
+    """
+    /nuevo_cliente id_cliente|Nombre Empresa|email@empresa.com
+    Provisiona un nuevo cliente B2B y muestra la API key (solo una vez).
+    Solo admin (Harold).
+    Ejemplo: /nuevo_cliente quant-alpha|Quant Alpha Capital|cto@quantalpha.com
+    """
+    user = update.effective_user
+    if not _is_admin(str(user.id)):
+        await update.message.reply_text("⛔ Solo el administrador puede crear clientes.")
+        return
+
+    args_str = " ".join(context.args).strip() if context.args else ""
+
+    if not args_str or "|" not in args_str:
+        await update.message.reply_text(
+            "🏢 *Crear nuevo cliente B2B*\n\n"
+            "Formato:\n"
+            "`/nuevo_cliente id-cliente|Nombre Empresa|email@empresa.com`\n\n"
+            "Ejemplo:\n"
+            "`/nuevo_cliente quant-alpha|Quant Alpha Capital|cto@quantalpha.com`\n\n"
+            "ℹ️ El id-cliente debe ser único, solo minúsculas y guiones.\n"
+            "La API key se mostrará UNA SOLA VEZ — cópiala inmediatamente.",
+            parse_mode="Markdown"
+        )
+        return
+
+    parts = [p.strip() for p in args_str.split("|")]
+    client_id = parts[0].lower().replace(" ", "-") if len(parts) > 0 else ""
+    name      = parts[1] if len(parts) > 1 else client_id
+    email     = parts[2] if len(parts) > 2 else None
+
+    if not client_id or len(client_id) < 3:
+        await update.message.reply_text("⚠️ El id-cliente debe tener al menos 3 caracteres.")
+        return
+
+    processing = await update.message.reply_text(f"⏳ Creando cliente `{client_id}`...", parse_mode="Markdown")
+
+    try:
+        import secrets as _secrets
+        import hashlib
+        import psycopg2
+
+        raw_key = "OMNIX-" + _secrets.token_hex(24).upper()
+        key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+
+        from datetime import timedelta
+        expires_at = datetime.now(timezone.utc) + timedelta(days=90)
+
+        db_url = os.environ.get("DATABASE_URL")
+        if not db_url:
+            raise RuntimeError("DATABASE_URL no configurado")
+
+        conn = psycopg2.connect(db_url)
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO b2b_clients (client_id, name, email, role, is_active, api_key_hash, key_expires_at)
+                    VALUES (%s, %s, %s, 'standard', TRUE, %s, %s)
+                    ON CONFLICT (client_id) DO NOTHING
+                    RETURNING client_id
+                """, (client_id, name, email, key_hash, expires_at))
+                result = cur.fetchone()
+
+        conn.close()
+
+        if not result:
+            await processing.edit_text(
+                f"⚠️ El cliente `{client_id}` ya existe. Usa `--rotate` en el script de Railway para rotar la key.",
+                parse_mode="Markdown"
+            )
+            return
+
+        logger.info(f"[NUEVO_CLIENTE] Cliente creado: {client_id} ({name})")
+
+        msg = (
+            f"✅ *Cliente B2B creado exitosamente*\n\n"
+            f"🏢 *Empresa:* {name}\n"
+            f"🔑 *Client ID:* `{client_id}`\n"
+            + (f"📧 *Email:* {email}\n" if email else "")
+            + f"📅 *Expira:* {expires_at.strftime('%d %b %Y')}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🔐 *API KEY (COPIA AHORA — no se volverá a mostrar):*\n\n"
+            f"`{raw_key}`\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"📖 *Instrucciones para el cliente:*\n"
+            f"Endpoint: `https://omnixquantum.net/api/governance/evaluate`\n"
+            f"Header: `X-API-Key: {raw_key}`\n\n"
+            f"Guía completa: `https://omnixquantum.net/api/governance/quickstart`\n"
+            f"Portal cliente: `https://omnixquantum.net/client`"
+        )
+        await processing.edit_text(msg, parse_mode="Markdown")
+
+    except RuntimeError as exc:
+        logger.warning(f"[NUEVO_CLIENTE] DB no disponible: {exc}")
+        await processing.edit_text("⚠️ Base de datos no disponible. Verifica DATABASE_URL.")
+    except Exception as exc:
+        logger.error(f"[NUEVO_CLIENTE] Error: {exc}")
+        await processing.edit_text(f"⚠️ Error al crear el cliente: {type(exc).__name__}")

@@ -36,6 +36,8 @@ try:
         velos_command,
         recibo_command,
         impact_command,
+        clientes_command,
+        nuevo_cliente_command,
     )
     _GOVERNANCE_COMMANDS_AVAILABLE = True
 except ImportError as _gc_err:
@@ -987,7 +989,9 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("recibo", self.recibo_command))
             self.application.add_handler(CommandHandler("receipt", self.recibo_command))     # Alias inglés
             self.application.add_handler(CommandHandler("impact", self.impact_command))      # ADR-083 GIS
-            logger.info(f"🏛️ Governance commands registrados (ADR-058): /evaluar, /gobernanza, /velos, /recibo, /impact")
+            self.application.add_handler(CommandHandler("clientes", self.clientes_command))   # Gestión B2B
+            self.application.add_handler(CommandHandler("nuevo_cliente", self.nuevo_cliente_command))  # Provisionar B2B
+            logger.info(f"🏛️ Governance commands registrados (ADR-058): /evaluar, /gobernanza, /velos, /recibo, /impact, /clientes, /nuevo_cliente")
 
             # Handler para mensajes de texto
             self.application.add_handler(
@@ -8848,8 +8852,10 @@ if _GOVERNANCE_COMMANDS_AVAILABLE:
     EnterpriseTelegramBot.gobernanza_command = gobernanza_command  # type: ignore[attr-defined]
     EnterpriseTelegramBot.velos_command      = velos_command       # type: ignore[attr-defined]
     EnterpriseTelegramBot.recibo_command     = recibo_command      # type: ignore[attr-defined]
-    EnterpriseTelegramBot.impact_command     = impact_command      # type: ignore[attr-defined]
-    logger.info("🏛️ [ADR-058] Governance commands enlazados en EnterpriseTelegramBot (incl. /impact)")
+    EnterpriseTelegramBot.impact_command          = impact_command           # type: ignore[attr-defined]
+    EnterpriseTelegramBot.clientes_command        = clientes_command         # type: ignore[attr-defined]
+    EnterpriseTelegramBot.nuevo_cliente_command   = nuevo_cliente_command    # type: ignore[attr-defined]
+    logger.info("🏛️ [ADR-058] Governance commands enlazados en EnterpriseTelegramBot (incl. /impact, /clientes, /nuevo_cliente)")
 else:
     # Stubs para que el bot no crashee si governance_commands falla al importar
     async def _governance_stub(self, update, context):
@@ -8858,7 +8864,9 @@ else:
     EnterpriseTelegramBot.gobernanza_command = _governance_stub    # type: ignore[attr-defined]
     EnterpriseTelegramBot.velos_command      = _governance_stub    # type: ignore[attr-defined]
     EnterpriseTelegramBot.recibo_command     = _governance_stub    # type: ignore[attr-defined]
-    EnterpriseTelegramBot.impact_command     = _governance_stub    # type: ignore[attr-defined]
+    EnterpriseTelegramBot.impact_command          = _governance_stub    # type: ignore[attr-defined]
+    EnterpriseTelegramBot.clientes_command        = _governance_stub    # type: ignore[attr-defined]
+    EnterpriseTelegramBot.nuevo_cliente_command   = _governance_stub    # type: ignore[attr-defined]
 
 
 if __name__ == "__main__":
