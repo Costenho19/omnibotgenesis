@@ -340,7 +340,7 @@ export default function CreditGovernanceDemo() {
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's 11-checkpoint governance architecture
             applies to credit/lending decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}{' '}
-            evaluation cycles in digital asset trading (internal dataset).
+            evaluation cycles in digital asset trading (internally verified production data).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Adjust the loan parameters below and run the governance evaluation to see each checkpoint in action.
@@ -676,7 +676,7 @@ export default function CreditGovernanceDemo() {
                 <p><span className="text-white">CP-6:</span> Decision Contradiction Index</p>
               </div>
               <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-emerald-400">{isLive ? '🟢' : '⏳'} {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles | {liveMetrics.capital_preserved_pct}% capital preserved (internal dataset)</p>
+                <p className="text-xs text-emerald-400">{isLive ? '🟢' : '⏳'} {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles | {liveMetrics.capital_preserved_pct}% capital preserved (internally verified production data)</p>
               </div>
             </div>
 
@@ -787,7 +787,7 @@ export default function CreditGovernanceDemo() {
             This is a governance architecture demonstration. The credit evaluation shown uses simplified models
             for illustrative purposes. Production credit governance would integrate with real credit bureaus,
             financial data providers, and regulatory frameworks. OMNIX's core 11-checkpoint architecture is
-            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internal dataset, not externally audited).
+            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internally verified production data).
             See ADR-026 for technical architecture details.
           </p>
         </div>

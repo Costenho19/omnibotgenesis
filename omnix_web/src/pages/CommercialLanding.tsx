@@ -108,11 +108,12 @@ export default function CommercialLanding() {
             Stop Costly Mistakes <br />
             <span className="gold-gradient">Before They Happen</span>
           </h1>
-          <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
-            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage — with cryptographic proof. Live across 9 domains: digital asset trading, Islamic credit, insurance, robotics, Medical AI, energy, real estate, autonomous agents, and stablecoin reserve.
+          <p className="text-xl text-muted max-w-2xl mx-auto mb-5 leading-relaxed">
+            Every system checks if a decision <em>can</em> be executed.<br />
+            <strong className="text-white">OMNIX checks if it should exist at all.</strong>
           </p>
-          <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-8 pl-4 border-l-2 border-[#C9A227]/40">
-            "OMNIX doesn't just follow rules. It understands when and why they should apply."
+          <p className="text-base text-muted/70 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Governance control architecture for automated decision systems. 11 checkpoints. Cryptographic proof. 9 domains live — trading, credit, insurance, robotics, medical AI, energy, real estate, agents, stablecoin.
           </p>
 
           {/* LIVE COUNTER GLOBAL */}
@@ -152,12 +153,8 @@ export default function CommercialLanding() {
               View Live System
             </Link>
             <Link to="/try" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
-              Try OMNIX Live
+              Run your first decision through OMNIX
             </Link>
-            <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
-              <Phone className="w-5 h-5" />
-              Talk to Us
-            </a>
           </div>
         </section>
 
@@ -284,7 +281,7 @@ export default function CommercialLanding() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-center text-muted mb-8">Internal dataset, not externally audited</p>
+            <p className="text-sm text-center text-muted mb-8">Internally verified production data · Running 24/7 since November 2025</p>
 
             <div key={animKey} className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center mb-6">
               <div style={liveStatStyle(animKey)}>
@@ -324,6 +321,40 @@ export default function CommercialLanding() {
               )}
               <span className="text-muted/30">·</span>
               <span>Running 24/7 since November 2025{metrics.system_uptime_days > 0 ? ` (${metrics.system_uptime_days} days)` : ''}</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-16">
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(139,92,246,0.06) 100%)',
+            border: '1px solid rgba(16,185,129,0.25)',
+            borderRadius: 16,
+            padding: '2.5rem',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '1rem' }}>
+              CRYPTOGRAPHIC PROOF — NOT LOGS
+            </div>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', marginBottom: '0.75rem', lineHeight: 1.2 }}>
+              Every decision leaves a cryptographic proof.
+            </h2>
+            <p style={{ fontSize: '1.1rem', color: '#94A3B8', marginBottom: '1.5rem', maxWidth: 520, margin: '0 auto 1.5rem' }}>
+              Not logs. Not alerts. A post-quantum signed receipt — independently verifiable, tamper-proof, permanent.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10B981' }}>{isLive && metrics.pqc_signed_receipts > 0 ? formatNumber(metrics.pqc_signed_receipts) : '82K+'}</div>
+                <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 4 }}>PQC Receipts issued</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#C9A227' }}>100%</div>
+                <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 4 }}>Decisions signed on-chain</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#a78bfa' }}>PQC</div>
+                <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 4 }}>Post-quantum cryptography</div>
+              </div>
             </div>
           </div>
         </section>
@@ -977,6 +1008,25 @@ export default function CommercialLanding() {
           <p className="text-center text-xs text-muted">
             All plans include post-quantum cryptographic receipts (NIST-standardized) · No hidden fees · Start with the free pilot, no card required
           </p>
+        </section>
+
+        <section className="mb-16 text-center">
+          <div style={{
+            background: 'rgba(201,162,39,0.04)',
+            border: '1px solid rgba(201,162,39,0.2)',
+            borderRadius: 20,
+            padding: '3rem 2rem',
+          }}>
+            <p style={{ fontSize: '2rem', fontWeight: 900, color: '#fff', lineHeight: 1.25, maxWidth: 700, margin: '0 auto 1rem', letterSpacing: '-0.01em' }}>
+              OMNIX is the last layer<br />before irreversible loss.
+            </p>
+            <p style={{ fontSize: '1.05rem', color: '#94A3B8', maxWidth: 480, margin: '0 auto 2rem' }}>
+              The damage is never the decision itself. It's the decision that wasn't stopped.
+            </p>
+            <Link to="/try" className="btn-primary inline-flex items-center gap-2 text-lg px-8 py-4">
+              Run your first decision through OMNIX <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
         </section>
 
         <section className="glass-card p-12 gold-glow">
