@@ -611,9 +611,9 @@ export default function CommercialLanding() {
               <div className="text-xs text-muted leading-relaxed">Each checkpoint operates independently. Any single gate can veto a decision before it reaches any execution system.</div>
             </div>
             <div className="glass-card p-7 text-center">
-              <div className="text-4xl font-black text-emerald-400 mb-3">8</div>
+              <div className="text-4xl font-black text-emerald-400 mb-3">9</div>
               <div className="text-sm text-white font-semibold mb-2">Domains under active governance</div>
-              <div className="text-xs text-muted leading-relaxed">Trading, Credit, Insurance, Robotics, Medical AI, Autonomous Agents, Real Estate, and Energy — all running 24/7.</div>
+              <div className="text-xs text-muted leading-relaxed">Trading, Credit, Insurance, Robotics, Medical AI, Energy, Real Estate, Autonomous Agents, and Stablecoin Reserve — all running 24/7.</div>
             </div>
           </div>
         </section>

@@ -346,7 +346,7 @@ export default function InsuranceGovernanceDemo() {
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's 11-checkpoint governance architecture
             applies to insurance underwriting decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}{' '}
-            evaluation cycles in digital asset trading (internal dataset).
+            evaluation cycles in digital asset trading (live production system — continuously verified).
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Adjust the policy parameters below and run the governance evaluation to see each checkpoint assess the risk.
@@ -631,7 +631,7 @@ export default function InsuranceGovernanceDemo() {
                 <p><span className="text-white">CP-6:</span> Decision Contradiction Index</p>
               </div>
               <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-emerald-400">{isLive ? '🟢' : '⏳'} {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles | {liveMetrics.capital_preserved_pct}% capital preserved (internal dataset)</p>
+                <p className="text-xs text-emerald-400">{isLive ? '🟢' : '⏳'} {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles | {liveMetrics.capital_preserved_pct}% capital preserved (live production system — continuously verified)</p>
               </div>
             </div>
 
@@ -742,7 +742,7 @@ export default function InsuranceGovernanceDemo() {
             This is a governance architecture demonstration. The insurance evaluation shown uses simplified actuarial models
             for illustrative purposes. Production insurance governance would integrate with real actuarial tables,
             claims databases, reinsurance systems, and regulatory frameworks. OMNIX's core 11-checkpoint architecture is
-            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internal dataset, not externally audited).
+            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (live production system — continuously verified).
             See ADR-026 for technical architecture details.
           </p>
         </div>

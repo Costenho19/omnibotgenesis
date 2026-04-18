@@ -136,7 +136,7 @@ export default function PitchDeck() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
             <span className="tag" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10B981' }}>
-              <span className="live-dot" /> Live · 8 Domains
+              <span className="live-dot" /> Live · 9 Domains
             </span>
             <span className="tag" style={{ background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)', color: '#C9A227' }}>
               Pre-Seed · $500K · $3M Valuation
@@ -248,7 +248,7 @@ export default function PitchDeck() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 36 }}>
             {[
               { id: 'CAG', name: 'Context Admission Gate', layer: 'pre', color: '#f59e0b' },
-              { id: 'CP-1→CP-8', name: '8 Domain-Specific Validation Checkpoints', layer: 'entry', color: '#6366f1' },
+              { id: 'CP-1→CP-9', name: '9 Domain-Specific Validation Checkpoints', layer: 'entry', color: '#6366f1' },
               { id: 'CP-9', name: 'AML Gate', layer: 'compliance', color: '#ef4444' },
               { id: 'CP-10', name: 'Fraud Detection Gate', layer: 'compliance', color: '#ef4444' },
               { id: 'CP-11', name: 'Jurisdiction Gate', layer: 'compliance', color: '#ef4444' },

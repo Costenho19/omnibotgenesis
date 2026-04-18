@@ -98,8 +98,8 @@ PIPELINE_CHECKPOINTS = [
 ]
 
 IMPACT_PHRASES = [
-    "OMNIX is governing decisions across 8 industries simultaneously, right now, in real time.",
-    "One governance engine. Eight operational domains. Every decision cryptographically signed.",
+    "OMNIX is governing decisions across 9 industries simultaneously, right now, in real time.",
+    "One governance engine. Nine operational domains. Every decision cryptographically signed.",
     "Live from the production database — every metric is computed in real time.",
     "Every 3 minutes, a robot or medical AI is evaluated before it's permitted to act.",
     "Every governance decision generates a post-quantum cryptographic receipt — independently verifiable.",

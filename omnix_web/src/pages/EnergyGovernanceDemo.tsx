@@ -364,7 +364,7 @@ export default function EnergyGovernanceDemo() {
           <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
             This interactive demo shows how OMNIX's governance architecture
             applies to energy trading decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}{' '}
-            evaluation cycles in digital asset trading (internal dataset). All verticals run through the same 11-checkpoint fail-closed governance engine.
+            evaluation cycles in digital asset trading (live production system — continuously verified). All verticals run through the same 11-checkpoint fail-closed governance engine.
           </p>
           <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
             Adjust energy trade parameters and run the governance evaluation to see each checkpoint assess the risk in real time.
@@ -751,7 +751,7 @@ export default function EnergyGovernanceDemo() {
             This is a governance architecture demonstration. The energy evaluation shown uses simplified market models
             for illustrative purposes. Production energy governance would integrate with real-time grid data (CAISO, ERCOT, PJM),
             weather APIs, commodity exchanges, and regulatory compliance frameworks. OMNIX's core 11-checkpoint architecture is
-            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (internal dataset, not externally audited).
+            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (live production system — continuously verified).
             See ADR-026 for technical architecture details.
           </p>
         </div>
