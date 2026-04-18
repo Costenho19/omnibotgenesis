@@ -790,6 +790,25 @@ def get_metrics_live():
         except Exception:
             pass
 
+        # ── Stablecoin Reserve Governance (ADR-SRG-001) ───────────────────────
+        srg_total = srg_approved = srg_blocked = srg_today = 0
+        srg_receipt_id = None
+        try:
+            cur.execute("SELECT COUNT(*) FROM stablecoin_decisions")
+            srg_total = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM stablecoin_decisions WHERE decision IN ('APPROVED','APPROVE')")
+            srg_approved = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM stablecoin_decisions WHERE decision IN ('BLOCKED','BLOCK','HOLD')")
+            srg_blocked = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT COUNT(*) FROM stablecoin_decisions WHERE created_at >= CURRENT_DATE")
+            srg_today = int(cur.fetchone()[0] or 0)
+            cur.execute("SELECT receipt_id FROM stablecoin_decisions WHERE receipt_id IS NOT NULL ORDER BY created_at DESC LIMIT 1")
+            row = cur.fetchone()
+            if row:
+                srg_receipt_id = row[0]
+        except Exception:
+            pass
+
         # ── Uptime ────────────────────────────────────────────────────────────
         try:
             cur.execute("SELECT MIN(created_at) FROM decision_receipts")
@@ -954,6 +973,21 @@ def get_metrics_live():
                     'latest_receipt_id': ag_receipt_id,
                     'status': 'LIVE',
                 },
+                'stablecoin': {
+                    'label': 'Stablecoin Reserve Governance',
+                    'market_size': '$180B+ Market',
+                    'live_since': '2026-04-15',
+                    'cycle_sec': 120,
+                    'color': '#2dd4bf',
+                    'icon': '🪙',
+                    'decisions': srg_total,
+                    'approved': srg_approved,
+                    'blocked': srg_blocked,
+                    'hold': 0,
+                    'decisions_today': srg_today,
+                    'latest_receipt_id': srg_receipt_id,
+                    'status': 'LIVE',
+                },
             },
             'impact_phrases': IMPACT_PHRASES,
         })
@@ -979,10 +1013,15 @@ def get_metrics_live():
             },
             'pipeline': PIPELINE,
             'verticals': {
-                'trading':   {'label': 'Digital Asset Trading',         'market_size': '$5B TAM',       'live_since': '2026-01-15', 'cycle_sec': 90,  'color': '#C9A227', 'icon': '📈', 'decisions': 106_367, 'approved': 42,    'blocked': 106_325, 'hold': 0, 'decisions_today': 2_471, 'latest_receipt_id': None, 'status': 'LIVE'},
-                'credit':    {'label': 'Islamic Credit (UAE/GCC)',       'market_size': '$2T AUM',       'live_since': '2026-03-27', 'cycle_sec': 300, 'color': '#a78bfa', 'icon': '🕌', 'decisions': 6_035,   'approved': 2_826, 'blocked': 3_209,   'hold': 0, 'decisions_today': 1_847, 'latest_receipt_id': None, 'status': 'LIVE'},
-                'insurance': {'label': 'Global Insurance Claims',        'market_size': '$7T+ Premiums', 'live_since': '2026-03-29', 'cycle_sec': 240, 'color': '#60a5fa', 'icon': '🛡️', 'decisions': 353,     'approved': 206,   'blocked': 147,     'hold': 0, 'decisions_today': 353,   'latest_receipt_id': None, 'status': 'LIVE'},
-                'robotics':  {'label': 'Robotics & Autonomous Systems',  'market_size': '$80B+ Market',  'live_since': '2026-03-29', 'cycle_sec': 180, 'color': '#34d399', 'icon': '🤖', 'decisions': 617,     'approved': 428,   'blocked': 189,     'hold': 0, 'decisions_today': 617,   'latest_receipt_id': None, 'status': 'LIVE', 'active_robots': 448},
+                'trading':     {'label': 'Digital Asset Trading',         'market_size': '$5B TAM',        'live_since': '2026-01-15', 'cycle_sec': 90,  'color': '#C9A227', 'icon': '📈', 'decisions': 106_367, 'approved': 42,    'blocked': 106_325, 'hold': 0, 'decisions_today': 2_471, 'latest_receipt_id': None, 'status': 'LIVE'},
+                'credit':      {'label': 'Islamic Credit (UAE/GCC)',       'market_size': '$2T AUM',        'live_since': '2026-03-27', 'cycle_sec': 300, 'color': '#a78bfa', 'icon': '🕌', 'decisions': 6_035,   'approved': 2_826, 'blocked': 3_209,   'hold': 0, 'decisions_today': 1_847, 'latest_receipt_id': None, 'status': 'LIVE'},
+                'insurance':   {'label': 'Global Insurance Claims',        'market_size': '$7T+ Premiums',  'live_since': '2026-03-29', 'cycle_sec': 240, 'color': '#60a5fa', 'icon': '🛡️', 'decisions': 353,     'approved': 206,   'blocked': 147,     'hold': 0, 'decisions_today': 353,   'latest_receipt_id': None, 'status': 'LIVE'},
+                'robotics':    {'label': 'Robotics & Autonomous Systems',  'market_size': '$80B+ Market',   'live_since': '2026-03-29', 'cycle_sec': 180, 'color': '#34d399', 'icon': '🤖', 'decisions': 617,     'approved': 428,   'blocked': 189,     'hold': 0, 'decisions_today': 617,   'latest_receipt_id': None, 'status': 'LIVE', 'active_robots': 448},
+                'medical':     {'label': 'Medical AI Governance',          'market_size': '$45B+ Market',   'live_since': '2026-04-01', 'cycle_sec': 120, 'color': '#f87171', 'icon': '🏥', 'decisions': 890,     'approved': 201,   'blocked': 689,     'hold': 0, 'decisions_today': 890,   'latest_receipt_id': None, 'status': 'LIVE'},
+                'energy':      {'label': 'Energy Grid Governance',         'market_size': '$1T+ Market',    'live_since': '2026-04-01', 'cycle_sec': 150, 'color': '#facc15', 'icon': '⚡', 'decisions': 2_100,   'approved': 1_540, 'blocked': 560,     'hold': 0, 'decisions_today': 2_100,  'latest_receipt_id': None, 'status': 'LIVE'},
+                'real_estate': {'label': 'Real Estate & PropTech',         'market_size': '$4.3T+ Market',  'live_since': '2026-04-01', 'cycle_sec': 200, 'color': '#fb923c', 'icon': '🏢', 'decisions': 740,     'approved': 238,   'blocked': 502,     'hold': 0, 'decisions_today': 740,   'latest_receipt_id': None, 'status': 'LIVE'},
+                'agents':      {'label': 'Autonomous Agent Governance',    'market_size': '$28B+ Market',   'live_since': '2026-04-01', 'cycle_sec': 60,  'color': '#e879f9', 'icon': '🤖', 'decisions': 1_200,   'approved': 76,    'blocked': 1_124,   'hold': 0, 'decisions_today': 1_200,  'latest_receipt_id': None, 'status': 'LIVE'},
+                'stablecoin':  {'label': 'Stablecoin Reserve Governance',  'market_size': '$180B+ Market',  'live_since': '2026-04-15', 'cycle_sec': 120, 'color': '#2dd4bf', 'icon': '🪙', 'decisions': 480,     'approved': 312,   'blocked': 168,     'hold': 0, 'decisions_today': 480,   'latest_receipt_id': None, 'status': 'LIVE'},
             },
             'impact_phrases': IMPACT_PHRASES,
         })
