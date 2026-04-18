@@ -735,23 +735,36 @@ async def nuevo_cliente_command(self, update, context):
 
         logger.info(f"[NUEVO_CLIENTE] Cliente creado: {client_id} ({name})")
 
-        msg = (
+        key_preview = raw_key[:10] + "..." + raw_key[-6:]
+
+        public_msg = (
             f"✅ *Cliente B2B creado exitosamente*\n\n"
             f"🏢 *Empresa:* {name}\n"
             f"🔑 *Client ID:* `{client_id}`\n"
             + (f"📧 *Email:* {email}\n" if email else "")
-            + f"📅 *Expira:* {expires_at.strftime('%d %b %Y')}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🔐 *API KEY (COPIA AHORA — no se volverá a mostrar):*\n\n"
-            f"`{raw_key}`\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📖 *Instrucciones para el cliente:*\n"
-            f"Endpoint: `https://omnixquantum.net/api/governance/evaluate`\n"
-            f"Header: `X-API-Key: {raw_key}`\n\n"
-            f"Guía completa: `https://omnixquantum.net/api/governance/quickstart`\n"
+            + f"📅 *Expira:* {expires_at.strftime('%d %b %Y')}\n"
+            f"🔐 *API Key:* `{key_preview}`\n\n"
+            f"📖 Endpoint: `https://omnixquantum.net/api/governance/evaluate`\n"
             f"Portal cliente: `https://omnixquantum.net/client`"
         )
-        await processing.edit_text(msg, parse_mode="Markdown")
+        await processing.edit_text(public_msg, parse_mode="Markdown")
+
+        secret_msg = await update.message.reply_text(
+            f"🔐 *API KEY COMPLETA — COPIA Y BORRA ESTE MENSAJE INMEDIATAMENTE*\n\n"
+            f"`{raw_key}`\n\n"
+            f"⚠️ _Este mensaje se eliminará automáticamente en 60 segundos._",
+            parse_mode="Markdown"
+        )
+
+        import asyncio as _asyncio
+        async def _delete_key_msg():
+            await _asyncio.sleep(60)
+            try:
+                await secret_msg.delete()
+                logger.info(f"[NUEVO_CLIENTE] API key message auto-deleted for {client_id}")
+            except Exception:
+                pass
+        _asyncio.create_task(_delete_key_msg())
 
     except RuntimeError as exc:
         logger.warning(f"[NUEVO_CLIENTE] DB no disponible: {exc}")
