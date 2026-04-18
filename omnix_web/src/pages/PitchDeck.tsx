@@ -359,8 +359,8 @@ export default function PitchDeck() {
                 icon: <Activity size={20} color="#10B981" />,
                 title: 'Production Governance',
                 items: [
-                  `${total.toLocaleString()}+ decisions governed across 8 domains`,
-                  '8 live governance engines running 24/7',
+                  `${total.toLocaleString()}+ decisions governed across 9 domains`,
+                  '9 live governance engines running 24/7',
                   'AED 77.4B+ Islamic financing evaluated',
                   '$1.46B+ insurance loss prevented',
                   '112 Architecture Decision Records',
@@ -486,7 +486,7 @@ export default function PitchDeck() {
           <div className="glass" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'center', gap: 40, flexWrap: 'wrap', borderColor: 'rgba(201,162,39,0.3)' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '2rem', fontWeight: 900, color: '#C9A227' }}>~$212B+</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Current TAM (8 live domains)</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Current TAM (9 live domains)</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '2rem', fontWeight: 900, color: '#a78bfa' }}>$262B+</div>
@@ -514,7 +514,7 @@ export default function PitchDeck() {
               { tier: 'Shadow Mode',  price: 'Free',  sub: '4-week pilot',         color: '#10B981', highlight: false },
               { tier: 'Advisory',     price: '$8K',   sub: '/ month · 1 vertical', color: '#06b6d4', highlight: false },
               { tier: 'Professional', price: '$25K',  sub: '/ month · 4 verticals',color: '#a78bfa', highlight: false },
-              { tier: 'Enterprise',   price: '$35K',  sub: '/ month · 8 verticals',color: '#C9A227', highlight: true  },
+              { tier: 'Enterprise',   price: '$35K',  sub: '/ month · 9 verticals',color: '#C9A227', highlight: true  },
             ].map(t => (
               <div key={t.tier} style={{
                 background: t.highlight ? 'rgba(201,162,39,0.08)' : 'rgba(15,33,64,0.6)',
@@ -625,7 +625,7 @@ export default function PitchDeck() {
                   { icon: <Shield size={13} color="#10B981" />, text: 'Founder-led architecture with focused execution across all layers' },
                   { icon: <Lock size={13} color="#a78bfa" />, text: 'Post-quantum cryptography researcher & implementer' },
                   { icon: <Activity size={13} color="#60a5fa" />, text: 'Published governance methodology with DOI' },
-                  { icon: <Globe size={13} color="#C9A227" />, text: 'Decision governance architecture across 8 domains' },
+                  { icon: <Globe size={13} color="#C9A227" />, text: 'Decision governance architecture across 9 domains' },
                   { icon: <Target size={13} color="#34d399" />, text: '900,000+ decisions governed across all verticals' },
                 ].map(item => (
                   <li key={item.text} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#94A3B8' }}>
@@ -703,7 +703,7 @@ export default function PitchDeck() {
           <div className="glass" style={{ padding: '1.5rem 2rem', maxWidth: 560, margin: '0 auto 32px', borderColor: 'rgba(201,162,39,0.3)' }}>
             <DollarSign size={20} color="#C9A227" style={{ margin: '0 auto 10px', display: 'block' }} />
             <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
-              At <strong style={{ color: '#F8FAFC' }}>$3M valuation</strong>, you're investing in a governance infrastructure with <strong style={{ color: '#C9A227' }}>{total.toLocaleString()}+ decisions already governed</strong> across 8 live domains, a signed channel partner, and an enterprise deployment advancing to close — before the raise ends.
+              At <strong style={{ color: '#F8FAFC' }}>$3M valuation</strong>, you're investing in a governance infrastructure with <strong style={{ color: '#C9A227' }}>{total.toLocaleString()}+ decisions already governed</strong> across 9 live domains, a signed channel partner, and an enterprise deployment advancing to close — before the raise ends.
             </p>
           </div>
 

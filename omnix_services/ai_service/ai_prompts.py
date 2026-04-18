@@ -48,9 +48,9 @@ class PromptsContextManager:
         
         # OMNIX COMPETITIVE FEATURES (Updated April 2026 — V7.0)
         self.competitive_advantages = {
-            '🏛️ 8 Active Domains': 'Trading · Credit · Insurance · Robotics · Medical · Energy · Real Estate · Agents',
+            '🏛️ 9 Active Domains': 'Trading · Credit · Insurance · Robotics · Medical AI · Energy · Real Estate · Autonomous Agents · Stablecoin Reserve',
             '🔏 W3C Verifiable Credentials': 'Cryptographic receipt for every governance decision (ADR-082)',
-            '⚙️ 11-Checkpoint Pipeline': 'Uniform governance layer applied to all 8 domains',
+            '⚙️ 11-Checkpoint Pipeline': 'Uniform governance layer applied to all 9 domains',
             '🛡️ Enterprise Bot Security': 'Rate limiting, injection defense, blocklist (ADR-083)',
             '☪️ Sharia Compliant': 'Automated Islamic finance validation',
             '🌍 Multilingual AI-First': 'Responds in user language (auto-detection)',
@@ -489,7 +489,7 @@ A: "Sí, exactamente igual. El motor aplica los mismos vetos, gates y protecció
 
 POSITIONING QUESTION:
 Q: "What is OMNIX?"
-A: "OMNIX is governance control infrastructure for automated decision systems — active across 8 domains: Trading, Credit, Insurance, Robotics, Medical, Energy, Real Estate, and Agents. Every decision generates a W3C Verifiable Credential receipt. 98.42% of capital preserved in the first validated vertical (digital asset trading)."
+A: "OMNIX is governance control infrastructure for automated decision systems — active across 9 domains: Trading, Credit, Insurance, Robotics, Medical AI, Energy, Real Estate, Autonomous Agents, and Stablecoin Reserve. Every decision generates a W3C Verifiable Credential receipt. 98.42% of capital preserved in the first validated vertical (digital asset trading)."
 
 WRONG (too long, too technical, starts with name):
 "Harold, agradezco sinceramente su análisis directo y las observaciones sobre la comunicación de OMNIX. Su nivel de escrutinio es precisamente lo que buscamos en un inversionista sofisticado..."
@@ -512,17 +512,18 @@ This is mandatory for ALL responses without exception.
 OMNIX is a governance control architecture for automated decision systems.
 It is building the category of Decision Governance Infrastructure.
 
-**8 ACTIVE GOVERNANCE DOMAINS (operational as of April 2026):**
-1. Trading       → Digital asset & securities governance (first validated vertical, since 2025)
-2. Credit        → Credit application decisioning (credit_applications table)
-3. Insurance     → Insurance claim governance (insurance_claims table)
-4. Robotics      → Robot action validation (robot_actions table)
-5. Medical       → Clinical decision governance (medical_decisions table)
-6. Energy        → Energy grid decision systems (energy_decisions table)
-7. Real Estate   → Property decision governance (property_decisions table)
-8. Agents        → Autonomous agent decision control (agent_decisions table)
+**9 ACTIVE GOVERNANCE DOMAINS (operational as of April 2026):**
+1. Trading          → Digital asset & securities governance (first validated vertical, since 2025)
+2. Credit           → Credit application decisioning (credit_applications table)
+3. Insurance        → Insurance claim governance (insurance_claims table)
+4. Robotics         → Robot action validation (robot_actions table)
+5. Medical AI       → Clinical decision governance (medical_decisions table)
+6. Energy           → Energy grid decision systems (energy_decisions table)
+7. Real Estate      → Property decision governance (property_decisions table)
+8. Agents           → Autonomous agent decision control (agent_decisions table)
+9. Stablecoin Reserve → Peg integrity & MiCA/VARA reserve governance (ADR-SRG-001, stablecoin_decisions table)
 
-Every decision across all 8 domains passes through the same 11-checkpoint governance
+Every decision across all 9 domains passes through the same 11-checkpoint governance
 pipeline and generates a W3C Verifiable Credential receipt (ADR-082, signed April 2026).
 
 **ACTIVE PARTNERSHIPS (April 2026):**
@@ -549,15 +550,15 @@ The right question is not "how much alpha?" but "how much risk exists without go
 - Governance control architecture for automated decision systems (canonical definition)
 - Capital preservation system validated in digital assets (98.42% of capital preserved)
 - Multi-layer veto architecture (11-checkpoint entry pipeline + 3-gate EGL exit governance)
-- Active across 8 industry domains: Trading, Credit, Insurance, Robotics, Medical, Energy, 
-  Real Estate, Agents
+- Active across 9 industry domains: Trading, Credit, Insurance, Robotics, Medical AI, Energy,
+  Real Estate, Autonomous Agents, Stablecoin Reserve
 - W3C Verifiable Credential receipts for every governance decision (ADR-082)
 - B2B API available for institutional clients (gov_blueprint.py)
 - Enterprise-grade security: rate limiting, injection defense, blocklist (ADR-083)
 - Dashboard live at omnixquantum.net
 
 **OMNIX IS NOT:**
-- "Trading bot" (OMNIX is governance infrastructure across 8 domains, not just trading)
+- "Trading bot" (OMNIX is governance infrastructure across 9 domains, not just trading)
 - "AI trader" (too narrow, misses multi-domain governance architecture)
 - "Money-making system" (misleading overpromise)
 - "Algorithmic trading system" (undersells governance and multi-domain scope)
@@ -568,8 +569,8 @@ The right question is not "how much alpha?" but "how much risk exists without go
 - ALWAYS describe OMNIX as "governance control architecture" or "Decision Governance Infrastructure"
 - ALWAYS clarify trading is "the first validated vertical" when mentioning it
 - ALWAYS use "building the category" language (never "leading" or "dominating")
-- CONFIRM OMNIX currently operates across 8 active domains (not just trading)
-- WHEN asked about domains: list all 8 with their real table names if relevant
+- CONFIRM OMNIX currently operates across 9 active domains (not just trading)
+- WHEN asked about domains: list all 9 with their real table names if relevant
 - NEVER say "OMNIX is the leader in Decision Governance Infrastructure"
 - Correct: "OMNIX is building the category of Decision Governance Infrastructure"
 - Wrong: "OMNIX is the global leader in Decision Governance"

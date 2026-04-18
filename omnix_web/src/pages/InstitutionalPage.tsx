@@ -155,7 +155,7 @@ export default function InstitutionalPage() {
         }
       }
     } catch {
-      console.log('Using mock news data')
+      
     }
     
     const mockNews: NewsItem[] = [
@@ -219,7 +219,7 @@ export default function InstitutionalPage() {
               </h1>
               <p className="text-xl text-muted max-w-3xl mx-auto mb-10 leading-relaxed">
                 A domain-agnostic governance control architecture for automated decision systems. Our 11-checkpoint fail-closed engine 
-                validates every decision before execution — with a post-quantum cryptographic receipt as proof. Currently live across 8 domains: digital asset trading, Islamic credit (UAE/GCC), global insurance claims, autonomous robotics, Medical AI, autonomous agents, and more. Every domain uses the same shared governance pipeline: 11 checkpoints including SIV, Monte Carlo, DCI, AML, Fraud Detection, and Jurisdiction gates.
+                validates every decision before execution — with a post-quantum cryptographic receipt as proof. Currently live across 9 domains: digital asset trading, Islamic credit (UAE/GCC), global insurance claims, autonomous robotics, Medical AI, energy grids, real estate, autonomous agents, and stablecoin reserve (MiCA/VARA compliant). Every domain uses the same shared governance pipeline: 11 checkpoints including SIV, Monte Carlo, DCI, AML, Fraud Detection, and Jurisdiction gates.
               </p>
               <div className="flex justify-center gap-4">
                 <a
@@ -555,7 +555,7 @@ export default function InstitutionalPage() {
               <div className="text-center mb-12">
                 <p className="section-title">Integration Partners</p>
                 <h2 className="text-3xl font-bold text-white">Built for Your Decision Infrastructure</h2>
-                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing decision systems via REST API or webhooks. Currently governing decisions across 8 live domains: digital asset trading, Islamic credit, insurance claims, autonomous robotics, Medical AI, autonomous agents, and more.</p>
+                <p className="text-muted mt-4 max-w-2xl mx-auto">OMNIX integrates seamlessly with existing decision systems via REST API or webhooks. Currently governing decisions across 9 live domains: digital asset trading, Islamic credit, insurance claims, autonomous robotics, Medical AI, energy grids, real estate, autonomous agents, and stablecoin reserve.</p>
               </div>
               
               <div className="grid md:grid-cols-3 gap-8">
@@ -809,7 +809,7 @@ export default function InstitutionalPage() {
               <div className="max-w-4xl mx-auto space-y-4">
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">Is OMNIX a trading bot?</h4>
-                  <p className="text-muted leading-relaxed">No. OMNIX is a governance control architecture for automated decision systems. It does not generate signals or alpha. It sits between your signal generation and execution, validating every decision through 11 independent checkpoints before execution is permitted. The same pipeline today governs 8 live domains: digital asset trading, Islamic credit (UAE/GCC), global insurance claims, autonomous robotics, Medical AI, autonomous agents, and more. The architecture is designed to expand further into AGL and supply chain.</p>
+                  <p className="text-muted leading-relaxed">No. OMNIX is a governance control architecture for automated decision systems. It does not generate signals or alpha. It sits between your signal generation and execution, validating every decision through 11 independent checkpoints before execution is permitted. The same pipeline today governs 9 live domains: digital asset trading, Islamic credit (UAE/GCC), global insurance claims, autonomous robotics, Medical AI, energy grids, real estate, autonomous agents, and stablecoin reserve (MiCA/VARA). The architecture is domain-agnostic by design.</p>
                 </div>
                 <div className="glass-card p-6">
                   <h4 className="text-lg font-semibold text-white mb-3">How does OMNIX integrate with existing systems?</h4>

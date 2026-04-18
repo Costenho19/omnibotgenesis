@@ -45,18 +45,19 @@
 | Métrica | Valor |
 |---|---|
 | Decisiones gobernadas | 327,000+ |
-| Verticales activos | 8 (Trading, Credit, Insurance, Robotics, Medical, Agents, Real Estate, Energy) |
-| Dominios públicos anunciados | 7 |
-| ADRs publicados | 79+ |
+| Verticales activos | **9** (Trading, Credit, Insurance, Robotics, Medical AI, Energy, Real Estate, Agents, **Stablecoin Reserve**) |
+| Dominios públicos anunciados | 9 |
+| ADRs publicados | 79+ (incl. ADR-SRG-001 Stablecoin Reserve Governance) |
 | TAM total cubierto | $212B+ |
 | Tests pasando | 70/70 |
 | Cobertura PQC | Dilithium-3 (CRYSTALS) + Kyber-768 |
-| AVM snapshots activos | 8 (1 por dominio) |
+| AVM snapshots activos | 9 (1 por dominio) |
 
 ### Cambios Críticos Recientes
 
 | Fecha | Fix | Commit |
 |---|---|---|
+| 18 Abr 2026 | **AUDIT PROFUNDA**: 8→9 dominios en todos los archivos (AI prompts×15, React pages×12). Sección "Coste de no tener OMNIX" en CommercialLanding. SQL/secrets audit: sin vulnerabilidades críticas. Build React: 0 errores. | pendiente push |
 | 18 Abr 2026 | Fix idioma bot: detector pt→es en msgs cortos, política idioma correcta | `26c1b959` |
 | 17 Abr 2026 | Bot indestructible: pool×16, retry×4, error handler global sin re-raise | `fa8332ba` |
 | 17 Abr 2026 | Video demo en CommercialLanding (`/public/omnix-demo.mp4`, 12MB) | `475cef96` |

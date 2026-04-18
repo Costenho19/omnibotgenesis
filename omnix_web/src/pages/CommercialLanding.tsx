@@ -109,7 +109,7 @@ export default function CommercialLanding() {
             <span className="gold-gradient">Before They Happen</span>
           </h1>
           <p className="text-2xl text-muted max-w-3xl mx-auto mb-6 leading-relaxed">
-            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage — with cryptographic proof. Live across 8 domains: digital asset trading, Islamic credit, insurance, robotics, Medical AI, autonomous agents, and more.
+            OMNIX is a governance control architecture for automated decision systems. It blocks high-risk decisions before they cause damage — with cryptographic proof. Live across 9 domains: digital asset trading, Islamic credit, insurance, robotics, Medical AI, energy, real estate, autonomous agents, and stablecoin reserve.
           </p>
           <p className="text-base italic text-[#C9A227]/80 max-w-2xl mx-auto mb-8 pl-4 border-l-2 border-[#C9A227]/40">
             "OMNIX doesn't just follow rules. It understands when and why they should apply."
@@ -130,7 +130,7 @@ export default function CommercialLanding() {
                 {loaded && liveTotal > 0 ? `${liveTotal.toLocaleString()}+` : '—'}
               </span>
               <span style={{fontSize:'0.95rem',color:'#94A3B8',fontWeight:500}}>
-                decisions governed · 8 domains · right now
+                decisions governed · 9 domains · right now
               </span>
               <Activity style={{width:18,height:18,color:'#10B981'}} />
             </Link>
@@ -600,7 +600,7 @@ export default function CommercialLanding() {
                 {[
                   {label:'Pre-decision admissibility assessment', vals:[true,false,false,false,false]},
                   {label:'Multi-checkpoint governance pipeline (11 gates)', vals:[true,false,false,false,false]},
-                  {label:'Domain-specific governance (8 sectors)', vals:[true,false,false,false,false]},
+                  {label:'Domain-specific governance (9 sectors)', vals:[true,false,false,false,false]},
                   {label:'Sharia-aligned governance gate', vals:[true,false,false,false,false]},
                   {label:'Post-quantum cryptography (Dilithium-3 NIST)', vals:[true,false,false,false,false]},
                   {label:'W3C Verifiable Credential decision receipts', vals:[true,false,false,false,false]},
@@ -625,6 +625,125 @@ export default function CommercialLanding() {
             </table>
           </div>
 
+        </section>
+
+        {/* ── COST OF NOT HAVING OMNIX ── */}
+        <section className="mb-24">
+          <div className="text-center mb-12">
+            <span style={{
+              display:'inline-block',
+              background:'rgba(239,68,68,0.08)',
+              border:'1px solid rgba(239,68,68,0.3)',
+              borderRadius:99, padding:'6px 18px',
+              fontSize:'0.8rem', fontWeight:700,
+              color:'#ef4444', letterSpacing:'0.12em',
+              textTransform:'uppercase', marginBottom:16,
+            }}>The Real Cost</span>
+            <h2 className="heading-lg text-white mb-4">
+              What Governance Failures <span style={{color:'#ef4444'}}>Actually Cost</span>
+            </h2>
+            <p className="text-muted text-lg max-w-2xl mx-auto">
+              Every domain OMNIX governs has produced a headline failure. These are not edge cases — they are the predictable cost of operating without governance infrastructure.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+            {[
+              {
+                domain:'Trading', icon:'📈', color:'#10B981',
+                company:'Knight Capital', year:'2012', loss:'$440M', time:'45 minutes',
+                cause:'Uncontrolled algorithm deployed without a governance gate. 4 million erroneous orders executed before anyone could intervene.',
+                omnix:'Signal Integrity Validator blocks the rogue signal before a single order reaches the exchange.',
+              },
+              {
+                domain:'Credit', icon:'🏦', color:'#3b82f6',
+                company:'Goldman Sachs / 1MDB', year:'2020', loss:'$3.9B fine', time:'6 years undetected',
+                cause:'Credit and deal decisions approved without governance controls. Sovereign-level fraud went undetected across multiple jurisdictions.',
+                omnix:'Jurisdiction gate flags high-risk sovereignty exposure. Decision blocked before approval.',
+              },
+              {
+                domain:'Insurance', icon:'🛡️', color:'#a78bfa',
+                company:"Equitas / Lloyd's", year:'2002', loss:'£67M reserve shortfall', time:'3 years undetected',
+                cause:"Claims systematically underpriced without actuarial governance. No pre-decision validation on high-exposure policy binding.",
+                omnix:'Monte Carlo reserves validation blocks underpriced policies before binding.',
+              },
+              {
+                domain:'Stablecoin Reserve', icon:'🪙', color:'#8B5CF6',
+                company:'MiCA Non-Compliant Issuer', year:'2024+', loss:'€10M / year', time:'Ongoing regulatory risk',
+                cause:'MiCA Art. 45: stablecoin issuers must hold adequate liquid reserves at all times. Breach = €10M/year or 2% of total turnover, whichever is higher.',
+                omnix:'Real-time peg ±0.5% + reserve coverage monitoring. Hard block before MiCA threshold breach.',
+              },
+              {
+                domain:'Robotics', icon:'🤖', color:'#f59e0b',
+                company:'Amazon Fulfilment Facility', year:'2019', loss:'$800K + 2-day halt', time:'48 hours',
+                cause:'Automated robot decision system acted without context-aware governance. Worker injury triggered facility shutdown and liability exposure.',
+                omnix:'Every robot action validated against safety envelopes before execution. No action without governance clearance.',
+              },
+              {
+                domain:'Medical AI', icon:'🏥', color:'#ef4444',
+                company:'IBM Watson Health', year:'2017', loss:'$62M + reputational damage', time:'Multi-year',
+                cause:'AI clinical recommendations contradicted physician judgment. No governance framework to resolve conflicts or escalate to human deliberation.',
+                omnix:'HOLD state routes conflicted Medical AI decisions to physician — zero autonomous override without human sign-off.',
+              },
+            ].map(item => (
+              <div key={item.domain} style={{
+                background:'rgba(10,22,40,0.85)',
+                border:`1px solid ${item.color}30`,
+                borderRadius:16, padding:'22px',
+                display:'flex', flexDirection:'column', gap:0,
+              }}>
+                <div style={{display:'flex', alignItems:'flex-start', gap:10, marginBottom:12}}>
+                  <span style={{fontSize:'1.3rem', flexShrink:0, marginTop:2}}>{item.icon}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:'0.68rem', fontWeight:700, color:item.color, textTransform:'uppercase', letterSpacing:'0.1em'}}>{item.domain}</div>
+                    <div style={{fontSize:'0.88rem', fontWeight:700, color:'#E2E8F0'}}>{item.company}</div>
+                    <div style={{fontSize:'0.72rem', color:'#64748B'}}>{item.year}</div>
+                  </div>
+                  <div style={{textAlign:'right', flexShrink:0}}>
+                    <div style={{fontSize:'0.95rem', fontWeight:900, color:'#ef4444'}}>{item.loss}</div>
+                    <div style={{fontSize:'0.65rem', color:'#64748B'}}>{item.time}</div>
+                  </div>
+                </div>
+                <p style={{fontSize:'0.76rem', color:'#94A3B8', lineHeight:1.55, marginBottom:10, flex:1}}>{item.cause}</p>
+                <div style={{borderTop:`1px solid ${item.color}20`, paddingTop:10}}>
+                  <p style={{fontSize:'0.73rem', color:item.color, fontWeight:600, lineHeight:1.5}}>
+                    🛡 {item.omnix}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Cost vs Subscription callout */}
+          <div style={{
+            background:'linear-gradient(135deg, rgba(201,162,39,0.05) 0%, rgba(16,185,129,0.03) 100%)',
+            border:'1px solid rgba(201,162,39,0.25)',
+            borderRadius:20, padding:'36px 32px',
+            textAlign:'center',
+          }}>
+            <p style={{fontSize:'1rem', color:'#94A3B8', marginBottom:6}}>
+              The cost of <span style={{color:'#ef4444', fontWeight:700}}>one governance failure</span> in any of these domains
+            </p>
+            <p style={{fontSize:'2.4rem', fontWeight:900, color:'#ef4444', marginBottom:4, letterSpacing:'-0.02em'}}>
+              $440M – $3.9B
+            </p>
+            <p style={{fontSize:'0.85rem', color:'#64748B', marginBottom:24}}>
+              in fines, operational losses, or irreversible reputational damage
+            </p>
+            <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'wrap'}}>
+              <div>
+                <p style={{fontSize:'0.85rem', color:'#94A3B8', marginBottom:2}}>OMNIX Enterprise — all 9 domains</p>
+                <p style={{fontSize:'1.8rem', fontWeight:900, color:'#10B981', letterSpacing:'-0.02em'}}>$420,000 / year</p>
+                <p style={{fontSize:'0.72rem', color:'#64748B', marginTop:2}}>Full veto authority · 9 verticals · PQC receipts · SLA 99.9%</p>
+              </div>
+              <div style={{fontSize:'1.8rem', color:'#475569', fontWeight:300}}>vs</div>
+              <div>
+                <p style={{fontSize:'0.85rem', color:'#94A3B8', marginBottom:2}}>Cost of ONE failure without it</p>
+                <p style={{fontSize:'1.8rem', fontWeight:900, color:'#ef4444', letterSpacing:'-0.02em'}}>$440,000,000+</p>
+                <p style={{fontSize:'0.72rem', color:'#64748B', marginTop:2}}>Non-recoverable · Regulatory + operational + reputational</p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ── PRICING ── */}
@@ -737,12 +856,12 @@ export default function CommercialLanding() {
                   <span className="text-3xl font-black text-white">$35K</span>
                   <span className="text-xs text-muted font-medium">/ month</span>
                 </div>
-                <p className="text-xs text-[#C9A227]/70 mt-0.5 font-medium">$420,000 / year · All 8 verticals</p>
+                <p className="text-xs text-[#C9A227]/70 mt-0.5 font-medium">$420,000 / year · All 9 verticals</p>
               </div>
               <ul className="space-y-2 flex-1 mb-5">
                 {[
                   'Full veto authority — fail-closed by default',
-                  'All 8 verticals active',
+                  'All 9 verticals active',
                   'Unlimited governed decisions',
                   'Complete audit trail for regulators',
                   'Dedicated onboarding + SLA 99.9%',

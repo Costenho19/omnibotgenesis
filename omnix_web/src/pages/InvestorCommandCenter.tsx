@@ -155,8 +155,8 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     },
   },
   impact_phrases: [
-    'OMNIX is governing decisions across 8 industries simultaneously, right now, in real time.',
-    'One governance engine. Eight domains. Every decision cryptographically signed.',
+    'OMNIX is governing decisions across 9 industries simultaneously, right now, in real time.',
+    'One governance engine. Nine domains. Every decision cryptographically signed.',
     'The same 11-checkpoint pipeline governing trading, credit, insurance, robotics, medical AI, autonomous agents, and more.',
     'Every 3 minutes, a robot or medical AI is evaluated before it\'s permitted to act.',
     'Every governance decision generates a post-quantum cryptographic receipt — independently verifiable.',
@@ -415,7 +415,7 @@ export default function InvestorCommandCenter() {
             <span style={{ color: '#C9A227' }}>Decisions Governed</span>
           </h1>
           <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
-            8 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 112} Architecture Decision Records
+            9 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 112} Architecture Decision Records
           </p>
         </div>
 

@@ -282,7 +282,7 @@ export default function IntegrationGuide() {
                 { label: 'Rate limit',           value: '120 req / minute per key' },
                 { label: 'Advisory quota',        value: '5,000 evaluations / month' },
                 { label: 'Professional quota',    value: '50,000 evaluations / month' },
-                { label: 'Enterprise',            value: 'Unlimited · all 8 verticals' },
+                { label: 'Enterprise',            value: 'Unlimited · all 9 verticals' },
               ].map(q => (
                 <div key={q.label} style={{ background: '#ffffff04', border: '1px solid #ffffff08', borderRadius: 8, padding: '10px 14px' }}>
                   <div style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>{q.label}</div>
@@ -463,7 +463,7 @@ export default function IntegrationGuide() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
               { n: '01', icon: <Key size={16} color={GOLD} />,      title: 'Get your API key', desc: 'Provided upon contract signature. Format: OMNIX-XXXX (48 chars). Scoped per client, revokable on demand.' },
-              { n: '02', icon: <Terminal size={16} color={GOLD} />, title: 'Choose your domain', desc: 'Select one of 8 governance domains: trading, islamic_credit, insurance, robotics, medical_ai, autonomous_agent, real_estate, energy_governance.' },
+              { n: '02', icon: <Terminal size={16} color={GOLD} />, title: 'Choose your domain', desc: 'Select one of 9 governance domains: trading, islamic_credit, insurance, robotics, medical_ai, autonomous_agent, real_estate, energy_governance, stablecoin_reserve.' },
               { n: '03', icon: <Zap size={16} color={GOLD} />,      title: 'POST to evaluate()', desc: 'Pass domain, asset name, and 6 normalized signals (0–100). Receive decision + PQC-signed receipt in < 800ms.' },
               { n: '04', icon: <Shield size={16} color={GOLD} />,   title: 'Store receipt_id', desc: 'The receipt_id is your cryptographic proof. Use it for regulatory reporting, LP due diligence, or internal audit.' },
               { n: '05', icon: <FileText size={16} color={GOLD} />, title: 'Download PDF report', desc: 'One API call generates a branded governance report for any time window — ready for regulatory review or LP presentation.' },

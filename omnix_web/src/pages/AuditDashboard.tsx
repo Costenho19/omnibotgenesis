@@ -587,7 +587,7 @@ export default function AuditDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#334155' }}>
               <PulseDot color="#10B981" />
-              <span>Live data · NIST post-quantum cryptography · 8 verticals</span>
+              <span>Live data · NIST post-quantum cryptography · 9 verticals</span>
             </div>
           </div>
         </div>

@@ -13,7 +13,7 @@ DATOS REALES (por período):
 - 766,741 ciclos de gobernanza totales, 98.42% capital preservado
 [PERÍODO 3 — ACTUAL] Fase 2 Multi-Vertical (Abril 1, 2026 - presente): ACTIVO
 - SÍ hay trades ejecutados en paper trading. Datos en tiempo real desde DB (paper_trading_trades).
-- Active pairs: BTC/USD, XRP/USD. 8 verticales operativos.
+- Active pairs: BTC/USD, XRP/USD. 9 verticales operativos.
 
 Autor: OMNIX Development Team
 Fecha: January 10, 2026
