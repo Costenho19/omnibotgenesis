@@ -1,0 +1,85 @@
+/**
+ * OMNIX Dashboard V6.5.4 - Typography Utilities
+ */
+
+/* Font families */
+.font-sans {
+    font-family: var(--font-sans);
+}
+
+.mono,
+.font-mono {
+    font-family: var(--font-mono);
+}
+
+/* Font sizes */
+.text-xs { font-size: var(--font-size-xs); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-lg { font-size: var(--font-size-lg); }
+.text-xl { font-size: var(--font-size-xl); }
+.text-2xl { font-size: var(--font-size-2xl); }
+.text-3xl { font-size: var(--font-size-3xl); }
+
+/* Font weights */
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+/* Text colors */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+
+/* Trading colors */
+.positive,
+.text-positive,
+.stat-positive { 
+    color: var(--accent-green-bright); 
+}
+
+.negative,
+.text-negative,
+.stat-negative { 
+    color: var(--accent-red-bright); 
+}
+
+.neutral,
+.text-neutral,
+.stat-neutral { 
+    color: var(--accent-yellow); 
+}
+
+/* Gradient text */
+.gradient-text-green {
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-green-bright));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.gradient-text-brand {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Text transform */
+.uppercase { text-transform: uppercase; }
+.lowercase { text-transform: lowercase; }
+.capitalize { text-transform: capitalize; }
+
+/* Letter spacing */
+.tracking-tight { letter-spacing: -0.025em; }
+.tracking-normal { letter-spacing: 0; }
+.tracking-wide { letter-spacing: 0.05em; }
+.tracking-wider { letter-spacing: 0.1em; }
+
+/* Terminal text style */
+.terminal-text {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.02em;
+}

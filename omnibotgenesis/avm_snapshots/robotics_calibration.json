@@ -1,0 +1,24 @@
+{
+  "snapshot_id": "AVM-E95D4DC475",
+  "parameter_version": "1.e95d4dc475",
+  "domain": "robotics",
+  "baseline_signals": {
+    "risk_score": 22.0,
+    "safety_score": 85.0,
+    "compliance_score": 80.0,
+    "operational_score": 76.0,
+    "authorization_score": 78.0,
+    "environmental_score": 72.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "Baseline calibration \u2014 robotics action governance Q1 2026",
+  "tags": [
+    "initial",
+    "q1-2026",
+    "robotics"
+  ],
+  "calibrated_at": "2026-04-09T20:43:17.200180+00:00",
+  "calibrated_at_epoch": 1775767397.20018
+}

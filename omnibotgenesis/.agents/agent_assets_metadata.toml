@@ -1,0 +1,176 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "1wSIlrHhddlnvbp3eIEHS"
+uri = "file://docs/OMNIX_Informe_Completo_Mar2026.pdf"
+type = "pdf"
+title = "OMNIX - Informe Técnico Completo (Dic 2025 - Mar 2026)"
+
+[[outputs]]
+id = "w370VE341ZHWzvwnZKd9J"
+uri = "file://docs/OMNIX_LUNA_Forensic_Simulation_May2022.pdf"
+type = "pdf"
+title = "Simulación Forense Terra/LUNA — Listo para Eureka"
+
+[[outputs]]
+id = "TNC8wU17xjmXTa3iuNnXW"
+uri = "file://docs/business/pdf/OMNIX_Eureka_Pitch_Final.pdf"
+type = "pdf"
+title = "Pitch Eureka — Inglés (14 slides, con Terra/LUNA)"
+
+[[outputs]]
+id = "8ZVmY0cynmkOGfwb6Oguw"
+uri = "file://docs/business/pdf/OMNIX_Eureka_Pitch_Final_ES.pdf"
+type = "pdf"
+title = "Pitch Eureka — Español (14 slides, con Terra/LUNA)"
+
+[[outputs]]
+id = "jDr2V_9ubxMfS8-NfrFVs"
+uri = "file://docs/business/pdfs/Report_OMNIX_HaroldNunes_March2026.pdf"
+type = "pdf"
+title = "3. Reporte Harold Nunes — Marzo 2026"
+
+[[outputs]]
+id = "XbWFvuuZXF2-M_oKYwlYK"
+uri = "file://docs/business/pdf/OMNIX_Forensic_SVB_March2023.pdf"
+type = "pdf"
+title = "5. Simulación Forense SVB Marzo 2023"
+
+[[outputs]]
+id = "OgSQGiYrHVP1cZvNgPqcL"
+uri = "file://docs/business/pdfs/OMNIX_Investor_Pitch_Deck.pdf"
+type = "pdf"
+title = "1. Pitch Deck OMNIX"
+
+[[outputs]]
+id = "Q-WgAJDDcIbu-kHbmHzQl"
+uri = "file://docs/business/pdfs/OMNIX_Pilot_Proposal.pdf"
+type = "pdf"
+title = "OMNIX Pilot Proposal — 2 páginas"
+
+[[outputs]]
+id = "HX4ZUna11Q8KMZXoIRA7F"
+uri = "file://docs/business/pdfs/OMNIX_Pilot_Proposal_EN.pdf"
+type = "pdf"
+title = "Pilot Proposal EN — WhatsApp actualizado"
+
+[[outputs]]
+id = "tsWz1HN-NbGhgQD73gttM"
+uri = "file://docs/business/pdfs/OMNIX_Pilot_Proposal_ES.pdf"
+type = "pdf"
+title = "Propuesta Piloto ES — WhatsApp actualizado"
+
+[[outputs]]
+id = "_HkhppdCnmh53M40-2zAA"
+uri = "file://docs/business/pdfs/OMNIX_Business_Model_Canvas.pdf"
+type = "pdf"
+title = "2. Business Model Canvas"
+
+[[outputs]]
+id = "JlPbZemnBvMMznluCuQ5y"
+uri = "file://OMNIX_Institutional_Report_SAMPLE.pdf"
+type = "pdf"
+title = "OMNIX Institutional Report — CP-6 visible y explicado"
+
+[[outputs]]
+id = "nf3HUrrAleHPP0KNwhWbB"
+uri = "file://OMNIX_System_Performance_Report_REAL.pdf"
+type = "pdf"
+title = "OMNIX — System Performance Report (Datos REALES)"
+
+[[outputs]]
+id = "KY3-m_XBhzcHIJJ1xEge2"
+uri = "file://OMNIX_Propuesta_Isimo_2026.pdf"
+type = "pdf"
+title = "OMNIX — Propuesta Ísimo (Final)"
+
+[[outputs]]
+id = "mUdscati1sRnFsjxT345a"
+uri = "file://OMNIX_Technical_Whitepaper_2026.pdf"
+type = "pdf"
+title = "OMNIX Whitepaper — v8 números verificables"
+
+[[outputs]]
+id = "dIhpzsXMgF0Y6aeTacFJD"
+uri = "file://OMNIX_Velos_Partner_Agreement_v2.pdf"
+type = "pdf"
+title = "OMNIX × Velos — Channel Partner Agreement v2.0 (diseño final)"
+
+[[outputs]]
+id = "KtDTOaK5hn6r0E4wUQLSu"
+uri = "file://samples/OMNIX_BTC_USD_receipt_sample.json"
+type = "unspecified"
+title = "OMNIX BTC/USD — Receipt PQC (muestra para Velos)"
+
+[[outputs]]
+id = "kf59ctKajedRrBDuxDwhL"
+uri = "file://omnix_contracts/OMNIX_Governance_Services_Agreement.pdf"
+type = "pdf"
+title = "OMNIX Governance Services Agreement"
+
+[[outputs]]
+id = "pFznMtZB_njO2CEJH7MFk"
+uri = "file://omnix_contracts/OMNIX_Order_Form.pdf"
+type = "pdf"
+title = "OMNIX Order Form"
+
+[[outputs]]
+id = "-MOWMQbUgAU4OLhkOppbl"
+uri = "file://OMNIX_Velos_GTM_Positioning.pdf"
+type = "pdf"
+title = "OMNIX × VELOS — GTM Positioning (final)"
+
+[[outputs]]
+id = "Sln9maVEZpA9QyVzijeor"
+uri = "file://docs/integration/OMNIX_Velos_Schema_PQC_Receipt.pdf"
+type = "pdf"
+title = "OMNIX — PQC Receipt Schema para Velos (4 páginas)"
+
+[[outputs]]
+id = "YbiMDaVzT4FpNp2oFGsp2"
+uri = "file://docs/OMNIX-Forensic-Technical-Report-2026.md"
+type = "text"
+title = "OMNIX Quantum — Forensic Technical Report 2026"
+
+[[outputs]]
+id = "jkrKQGwkRkgOKOf6woi0o"
+uri = "file://OMNIX_Velos_Supplement_Clause10_1.pdf"
+type = "pdf"
+title = "Supplement Clause 10.1 — OMNIX + Velos (Versión Final)"
+
+[[outputs]]
+id = "Sol5RkNp5KrLcGoOXy9w0"
+uri = "file://OMNIX_Skilligen_NDA.pdf"
+type = "pdf"
+title = "NDA — OMNIX Quantum Ltd × Skilligen HDI — 14 April 2026"
+
+[[outputs]]
+id = "iNIH0uURYp_IWuBdY1U3_"
+uri = "file://OMNIX_Autonomous_Governance_Layer.pdf"
+type = "pdf"
+title = "OMNIX — Autonomous Governance Layer (MED + AGT)"
+
+[[outputs]]
+id = "8OLAfz-b6h9crDXKSinEj"
+uri = "file://OMNIX_Velos_Pipeline_Log_v1.pdf"
+type = "pdf"
+title = "OMNIX x Velos — Shared Pipeline Log v1.0 (final)"
+
+[[outputs]]
+id = "9Kz4moE-2e-VxQ7B85NRm"
+uri = "file://output/OMNIX_Skilligen_NDA.pdf"
+type = "pdf"
+title = "NDA — OMNIX Quantum Ltd & Skilligen HDI"
+
+[[outputs]]
+id = "gatPT08pWALXvNEcBXpHR"
+uri = "file://attached_assets/screenshots/omnixquantum_net_integration.png"
+type = "image"
+title = "omnixquantum.net/integration — LIVE ahora"
+
+[[outputs]]
+id = "KMXMBJKBq__SsyRBh8uvb"
+uri = "file://attached_assets/screenshots/omnixquantum_net_verify.png"
+type = "image"
+title = "omnixquantum.net/verify — LIVE ahora"

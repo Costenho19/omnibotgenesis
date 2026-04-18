@@ -1,0 +1,24 @@
+{
+  "snapshot_id": "AVM-9CA0D26908",
+  "parameter_version": "1.9ca0d26908",
+  "domain": "medical_ai",
+  "baseline_signals": {
+    "patient_risk": 35.0,
+    "safety_margin": 80.0,
+    "evidence_quality": 70.0,
+    "treatment_alignment": 68.0,
+    "diagnosis_confidence": 72.0,
+    "regulatory_compliance": 78.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "Baseline calibration \u2014 medical AI governance Q2 2026",
+  "tags": [
+    "initial",
+    "q2-2026",
+    "medical"
+  ],
+  "calibrated_at": "2026-04-15T07:05:03.918163+00:00",
+  "calibrated_at_epoch": 1776236703.918163
+}

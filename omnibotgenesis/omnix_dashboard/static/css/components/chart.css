@@ -1,0 +1,108 @@
+/**
+ * OMNIX Dashboard V6.5.4 - Chart Component
+ */
+
+/* ================================
+   CHART CONTAINER
+   ================================ */
+.chart-container {
+    height: 100%;
+    min-height: 120px;
+    max-height: 150px;
+}
+
+.chart-container--dashboard {
+    background: rgba(20, 23, 32, 0.5);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-subtle);
+}
+
+/* ================================
+   VOLUME BAR
+   ================================ */
+.volume-bar {
+    height: 24px;
+    background: var(--bg-card);
+    border-radius: 3px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.volume-bar__fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue-terminal), var(--accent-cyan-terminal));
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+}
+
+.volume-bar__label {
+    font-size: 10px;
+    color: var(--text-primary);
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.volume-bar__value {
+    font-size: 10px;
+    color: var(--text-secondary);
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* ================================
+   FEAR & GREED GAUGE
+   ================================ */
+.fear-greed-gauge {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.fear-greed-gauge__value {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    font-family: var(--font-mono);
+}
+
+.fear-greed-gauge__label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+    text-transform: uppercase;
+}
+
+.fear-greed-gauge__bar {
+    height: 8px;
+    background: linear-gradient(90deg, #ff3366, #ff9933, #ffff00, #99ff33, #00ff88);
+    border-radius: 4px;
+    margin: 12px 0 8px;
+    position: relative;
+}
+
+.fear-greed-gauge__marker {
+    position: absolute;
+    top: -4px;
+    width: 4px;
+    height: 16px;
+    background: white;
+    border-radius: 2px;
+    transform: translateX(-50%);
+}
+
+.fear-greed-gauge__description {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    line-height: 1.4;
+}

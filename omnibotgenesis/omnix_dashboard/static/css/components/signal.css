@@ -1,0 +1,80 @@
+/**
+ * OMNIX Dashboard V6.5.4 - Signal Component
+ * BEM Naming: .signal, .signal__info, .signal--bullish
+ */
+
+/* ================================
+   SIGNAL ITEM
+   ================================ */
+.signal-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    margin-bottom: 6px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid transparent;
+}
+
+/* Signal modifiers */
+.signal-item--bullish,
+.signal-bullish {
+    border-left-color: var(--accent-green-terminal);
+}
+
+.signal-item--bearish,
+.signal-bearish {
+    border-left-color: var(--accent-red-terminal);
+}
+
+.signal-item--neutral,
+.signal-neutral {
+    border-left-color: var(--accent-yellow-terminal);
+}
+
+/* ================================
+   SIGNAL ELEMENTS
+   ================================ */
+.signal__info {
+    flex: 1;
+}
+
+.signal__strategy {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.signal__pair {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* ================================
+   SIGNAL BADGE
+   ================================ */
+.signal__badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.signal__badge--bullish,
+.badge-bullish {
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--accent-green-terminal);
+}
+
+.signal__badge--bearish,
+.badge-bearish {
+    background: rgba(255, 51, 102, 0.15);
+    color: var(--accent-red-terminal);
+}
+
+.signal__badge--neutral,
+.badge-neutral {
+    background: rgba(255, 170, 0, 0.15);
+    color: var(--accent-yellow-terminal);
+}

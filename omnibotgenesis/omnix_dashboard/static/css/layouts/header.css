@@ -1,0 +1,129 @@
+/**
+ * OMNIX Dashboard V6.5.4 - Header Layout
+ */
+
+/* ================================
+   HEADER BAR (Terminal)
+   ================================ */
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: linear-gradient(90deg, var(--bg-panel), var(--bg-card));
+    border-bottom: 1px solid var(--accent-green-terminal);
+}
+
+/* ================================
+   LOGO
+   ================================ */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo__icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue-terminal), var(--accent-purple-terminal));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.logo-image {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.logo__text {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-green-terminal);
+}
+
+.logo__version {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* ================================
+   HEADER STATS
+   ================================ */
+.header-stats {
+    display: flex;
+    gap: 24px;
+}
+
+.header-stat {
+    text-align: center;
+}
+
+.header-stat__value {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.header-stat__label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+/* ================================
+   CLOCK & LIVE INDICATOR
+   ================================ */
+.clock-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--accent-green-terminal);
+    border-radius: var(--radius-sm);
+}
+
+.live-indicator__dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-green-terminal);
+    border-radius: 50%;
+    animation: pulse-live 1.5s infinite;
+}
+
+/* ================================
+   TERMINAL HEADER (Dashboard)
+   ================================ */
+.terminal-header {
+    background: linear-gradient(180deg, #0f1115 0%, #0a0b0e 100%);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.terminal-header--sticky {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+}
+
+/* ================================
+   OMNIX BRAND BAR
+   ================================ */
+.omnix-brand-bar {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(59, 130, 246, 0.1) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.5rem;
+}

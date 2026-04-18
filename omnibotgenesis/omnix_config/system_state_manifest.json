@@ -1,0 +1,491 @@
+{
+  "version": "OMNIX Decision Governance",
+  "internal_build": "7.0.0",
+  "platform_identity": "Decision Governance Infrastructure for Automated Systems",
+  "category_creation": "OMNIX is building the category of Decision Governance Infrastructure",
+  "tagline": "Governing Decisions Under Uncertainty",
+  "canonical_definition": "OMNIX is a governance control architecture for automated decision systems. It is building the category of Decision Governance Infrastructure. Eight verticals are live and operational: Digital Asset Trading, Islamic Credit, Insurance Underwriting, Robotics, Medical AI, Energy Grid, Real Estate, and Autonomous Agents.",
+  "investor_one_liner": "OMNIX builds the governance layer for automated decision systems — eight verticals live, same 11-checkpoint pipeline across all domains.",
+  "investor_question_reframe": "How much capital risk exists in automated systems without governance control?",
+  "last_updated": "2026-04-15",
+  "track_record_start": "2026-01-15",
+  "trading_mode": "paper",
+  "paper_capital": 1000000,
+  "multi_vertical_architecture": {
+    "adr": "ADR-026, ADR-091, ADR-112",
+    "pattern": "Domain Adapter + Normalized Governance Signals",
+    "governance_checkpoints": 11,
+    "active_verticals": [
+      "Digital Asset Trading — operational since 2026-01-15",
+      "Islamic Credit Governance — operational since 2026-02-01",
+      "Insurance Underwriting Governance — operational since 2026-02-15",
+      "Robotics Action Governance — operational since 2026-02-28",
+      "Medical AI Governance — operational since 2026-03-15",
+      "Energy Grid Governance — operational since 2026-04-01",
+      "Real Estate Governance — operational since 2026-04-01",
+      "Autonomous Agent Governance — operational since 2026-04-10"
+    ],
+    "vertical_count": 8,
+    "db_table_mapping": {
+      "trading": "decision_receipts",
+      "islamic_credit": "credit_applications",
+      "insurance": "insurance_claims",
+      "robotics": "robot_actions",
+      "medical": "medical_decisions",
+      "energy": "energy_decisions",
+      "real_estate": "property_decisions",
+      "autonomous_agents": "agent_decisions"
+    },
+    "simulator_status": "All 8 simulators running 24/7 — generating governance decisions continuously",
+    "core_abstraction": "11-Checkpoint Fail-Closed Governance Engine",
+    "IMPORTANT_NOTE": "All 8 verticals are LIVE and OPERATIONAL — NOT demos, NOT roadmap items"
+  },
+  "operational_phase": {
+    "current": "PHASE_2_MULTI_VERTICAL_EXPANSION",
+    "started": "2026-04-01",
+    "changes": {
+      "TRACK_RECORD_MODE": "false",
+      "ECW_CYCLES_REQUIRED": "2",
+      "ACTIVE_VERTICALS": "8 (was 1 at launch)"
+    },
+    "safety_preserved": [
+      "Monte Carlo VETO (ER < 0 = BLOCKED)",
+      "RMS VETO (VaR95 > -3% = BLOCKED)",
+      "Black Swan detector (always active)",
+      "Coherence Gate (< 30% critical block, < 45% normal block)",
+      "11-checkpoint pipeline active across all 8 verticals"
+    ],
+    "rollback": "Set TRACK_RECORD_MODE=true and ECW_CYCLES_REQUIRED=3 in Railway ENV + restart"
+  },
+  "track_record_periods": {
+    "CRITICAL_DISTINCTION": "SIEMPRE distinguir entre Learning Baseline y Track Record Oficial al reportar trades",
+    "learning_baseline": {
+      "name": "Learning Baseline (Calibración)",
+      "purpose": "Período de calibración y ajuste de parámetros",
+      "start_date": "2025-11-01",
+      "end_date": "2026-01-14",
+      "sql_filter": "created_at < '2026-01-15'",
+      "trades": 119,
+      "pnl": -15198.73,
+      "capital_initial": 1000000,
+      "telemetry_source": "LEGACY_ESTIMATED",
+      "investor_note": "Datos de calibración - NO son parte del track record oficial"
+    },
+    "official_track_record": {
+      "name": "Track Record Oficial (30 días)",
+      "purpose": "Período de validación oficial para inversores — COMPLETADO Y CERRADO",
+      "start_date": "2026-01-15",
+      "end_date": "2026-02-13",
+      "STATUS": "COMPLETADO — Este período ya terminó. NO representa el estado actual del sistema.",
+      "sql_filter": "created_at >= '2026-01-15' AND created_at <= '2026-02-13'",
+      "trades_executed": 0,
+      "decisions_evaluated": 89623,
+      "vetos_by_type": {
+        "BLACK_SWAN": 89153,
+        "COHERENCE_GATE": 447,
+        "ECW_WAITING": 24
+      },
+      "telemetry_source": "REAL",
+      "investor_note": "Track record oficial COMPLETADO - 30 dias, sistema demostro disciplina de capital. Transicion a Fase 2 multi-vertical.",
+      "CRITICAL_RULE": "NUNCA usar estos datos para responder preguntas sobre el estado ACTUAL del sistema. Este período fue Jan 15 - Feb 13, 2026 y está CERRADO."
+    },
+    "phase2_current_operations": {
+      "name": "Fase 2 — Multi-Vertical Expansion (ACTIVA AHORA)",
+      "STATUS": "ACTIVO — Este es el período de operación ACTUAL del sistema",
+      "start_date": "2026-04-01",
+      "end_date": null,
+      "trading_mode": "PAPER TRADING ($1,000,000 virtual)",
+      "trades_executing": true,
+      "CRITICAL_RULE": "Cuando Harold o cualquier usuario pregunte sobre operaciones actuales, trades recientes, compras o ventas en modo paper, DEBES consultar la base de datos en tiempo real vía Real Context Provider. El sistema SÍ ejecuta trades en Fase 2. NO digas que no hay operaciones.",
+      "data_source": "Consultar paper_trading_trades tabla en PostgreSQL — datos en tiempo real",
+      "active_pairs": ["BTC/USD", "XRP/USD"],
+      "governance_active": true,
+      "investor_note": "Sistema en plena operación de paper trading. Los trades son ejecutados cuando el pipeline de 11 checkpoints los aprueba. Usar datos reales de DB, no datos históricos del Track Record."
+    },
+    "response_rules": {
+      "mandatory_disclosure": "Cuando se mencione CUALQUIER métrica (P&L, win rate, trades, losses), incluir nota de período al FINAL",
+      "disclosure_text": "**Nota de Período**: Estos datos corresponden al Learning Baseline (Nov-Dic 2025), fase de calibración. Desde el 15 de enero 2026, el sistema opera con parámetros recalibrados en el Track Record Oficial.",
+      "triggers": [
+        "P&L",
+        "win rate",
+        "trades",
+        "losses",
+        "-$15,198",
+        "20.2%",
+        "119 trades",
+        "símbolos problemáticos"
+      ],
+      "when_NOT_to_mention": [
+        "saludos",
+        "comandos",
+        "arquitectura",
+        "preguntas sin métricas"
+      ],
+      "never_mix": "NUNCA reportar métricas del baseline sin la nota de período"
+    }
+  },
+  "critical_dates": {
+    "track_record_start": "2026-01-15",
+    "target_duration_days": 30,
+    "DO_NOT_MENTION": [
+      "2024",
+      "2023",
+      "years of data",
+      "años de datos"
+    ]
+  },
+  "signal_architecture": {
+    "version": "V7.0.0",
+    "scoring_model": "5 Core Inputs (105 points max)",
+    "components": {
+      "EMA_REGIME_SIGNAL": {
+        "weight": 40,
+        "role": "PRIMARY DRIVER - trend detection"
+      },
+      "HMM_REGIME": {
+        "weight": 25,
+        "role": "Market regime identification"
+      },
+      "KALMAN_FILTER": {
+        "weight": 15,
+        "role": "Trend smoothing"
+      },
+      "NON_MARKOVIAN_KERNEL": {
+        "weight": 15,
+        "role": "Temporal memory with On-Chain"
+      },
+      "KELLY_CRITERION": {
+        "weight": 10,
+        "role": "Position sizing modifier"
+      }
+    },
+    "veto_penalty_layer": {
+      "monte_carlo": "VETO only - no additive scoring",
+      "black_swan": "VETO only - tail event monitoring",
+      "quantum_momentum": "Penalty only",
+      "sentiment": "Penalty only",
+      "temporal_coherence": "VETO only — trajectory incoherence blocks action"
+    },
+    "coherence_gate": {
+      "veto_critical": "< 30% coherence",
+      "veto_normal": "< 45% coherence"
+    }
+  },
+  "veto_system": {
+    "monte_carlo": {
+      "status": "ENFORCEMENT",
+      "veto_1": "Expected return < 0 → TRADE BLOCKED",
+      "veto_2": "VaR95 worse than -3% → TRADE BLOCKED",
+      "size_reduction": "Win rate < 50% → position reduced to 50%"
+    },
+    "rms": {
+      "limits_engine": "Pre-trade validation active",
+      "circuit_breaker": "Halt protection active",
+      "per_trade_limit": "5%",
+      "max_drawdown": "15%"
+    },
+    "coherence_engine": "6-tier veto system active",
+    "edge_confirmation_window": {
+      "status": "ENFORCEMENT",
+      "description": "Requiere persistencia del edge antes de permitir trades",
+      "trading_mode": "Controlado por ENV TRADING_MODE=CORE|ACTIVE (ADR-051)",
+      "thresholds_CORE": {
+        "mc_wr_min": 50,
+        "mc_er_min": 0,
+        "consecutive_cycles_required": 3,
+        "black_swan_max": "MEDIUM",
+        "bs_high": "Resetea counter ECW"
+      },
+      "thresholds_ACTIVE": {
+        "mc_wr_min": 48,
+        "mc_er_min": 0.001,
+        "consecutive_cycles_required": 2,
+        "black_swan_max": "MEDIUM",
+        "bs_high": "Permite trade, reduce posicion a 0.5% balance"
+      },
+      "behavior": {
+        "counter_increments": "When MC_WR >= mc_wr_min, MC_ER > mc_er_min, Black Swan condition met",
+        "counter_resets": "When any condition fails (CORE: BS=HIGH resetea; ACTIVE: BS=HIGH no resetea)",
+        "trade_allowed": "When counter >= consecutive_cycles_required"
+      },
+      "adr": "ADR-019, ADR-051",
+      "investor_explanation": "No operamos en el primer ciclo positivo. En modo ACTIVE esperamos 2 ciclos consecutivos con edge estadístico (WR >= 48%, ER > 0%) — 48% sigue siendo un edge positivo en mercados cripto. Esto transforma 'preservación de capital' en 'paciencia de capital calibrada'."
+    },
+    "dual_trading_mode": {
+      "adr": "ADR-051",
+      "status": "IMPLEMENTED",
+      "env_var": "TRADING_MODE",
+      "modes": {
+        "CORE": "Thresholds institucionales estrictos (default). WR>=50%, 3 ciclos, BS HIGH bloquea.",
+        "ACTIVE": "Thresholds calibrados para mercados con edge marginal. WR>=48%, 2 ciclos, BS HIGH reduce posición."
+      },
+      "switch": "Un solo cambio de ENV en Railway activa el modo. Rollback inmediato sin redeploy.",
+      "coherence_veto_normal": {
+        "CORE": "45% (profile default)",
+        "ACTIVE": "40% (relajado para coherencia moderada)"
+      }
+    },
+    "temporal_coherence_validation": {
+      "status": "ACTIVE",
+      "checkpoint": 7,
+      "description": "Temporal admissibility validator — evaluates whether proposed decision coheres with recent system trajectory",
+      "dimensions": {
+        "signal_direction_consistency": "40% weight — stability of EMA score trend",
+        "regime_action_alignment": "35% weight — proposed action vs dominant HMM regime",
+        "signal_velocity": "25% weight — rate of change of EMA signals"
+      },
+      "default_threshold": 20,
+      "env_override": "TCV_THRESHOLD",
+      "window_events": 15,
+      "fail_safe": "On DB error or module unavailable → admissible=True (pass-through)",
+      "adr": "ADR-032",
+      "position_in_pipeline": "After Coherence Gate (CP4), before ECW Gate (ADR-019)",
+      "vertical_calibration": {
+        "trading": "threshold=20, window=15 (lenient — markets are noisy)",
+        "robotics": "threshold=60, window=5 (strict — irreversible physical actions)",
+        "healthcare": "threshold=45, window=10 (moderate — regulatory auditability)"
+      },
+      "investor_explanation": "Beyond evaluating whether each decision is statistically justified, TCV evaluates whether the sequence of decisions produces a coherent system trajectory. A system that pivots from HOLD to BUY without a regime change is flagged as temporally inadmissible."
+    }
+  },
+  "post_quantum_cryptography": {
+    "status": "IMPLEMENTED",
+    "adr": "ADR-022",
+    "implementation_date": "2025-11",
+    "CRITICAL_FACT": "PQC YA ESTÁ IMPLEMENTADO - NO está en roadmap. Módulo operativo con pypqc.",
+    "standards": {
+      "key_encapsulation": "ML-KEM-768 (Kyber-768) — NIST-standardized key encapsulation mechanism (shared secret generation for secure key exchange, NOT bulk data encryption)",
+      "digital_signatures": "ML-DSA-65 (Dilithium-3) — NIST-standardized digital signature algorithm (decision signing and order authentication)"
+    },
+    "data_encryption_note": "Payload data is encrypted using AES/Fernet symmetric encryption. Kyber-768 handles key encapsulation (shared secret generation), not bulk data encryption. This follows cryptographic best practice: PQC-KEM for key exchange + symmetric cipher for data.",
+    "capabilities": {
+      "key_encapsulation": "Kyber-768 establece secretos compartidos resistentes a ataques cuánticos (intercambio de claves, no cifrado de datos)",
+      "digital_signatures": "Dilithium-3 firma cada decisión de gobernanza y órdenes de trading para autenticación e inmutabilidad",
+      "api_key_protection": "Protección de claves API mediante encapsulación PQC para transmisión segura"
+    },
+    "security_level": "Strong quantum resistance — NIST-standardized algorithms (internal engineering benchmark: comparable to ~192-bit classical security)",
+    "key_sizes": {
+      "kyber768_public": "1184 bytes",
+      "kyber768_secret": "2400 bytes",
+      "dilithium3_signature": "~3309 bytes"
+    },
+    "module_location": "omnix_core/security/pqc_security.py",
+    "communication_tier_rule": "EXTERNAL (bot, Telegram, web): use 'NIST-standardized algorithms' only — never FIPS numbers, never algorithm names. INSTITUTIONAL (investors, partners): may use algorithm names (Dilithium-3, Kyber-768) + 'NIST-standardized' — never FIPS numbers. INTERNAL (ADRs, audits): full technical detail including FIPS numbers is acceptable.",
+    "investor_explanation": "OMNIX implementa criptografía post-cuántica usando algoritmos estandarizados por NIST (Kyber-768 para intercambio de claves, Dilithium-3 para firmas digitales). Esto protege el audit trail de gobernanza y las órdenes de trading contra futuros ataques de computadoras cuánticas. El módulo está operativo desde noviembre 2025, no es roadmap.",
+    "assurance_tiers": {
+      "adr": "ADR-031",
+      "production_level": 3,
+      "production_algorithm": "Dilithium-3 (ML-DSA-65)",
+      "high_assurance_available": true,
+      "high_assurance_algorithm": "Dilithium-5 (ML-DSA-87)",
+      "configuration_mechanism": "PQC_SIGNING_LEVEL environment variable at deployment",
+      "institutional_framing": "Dilithium-3 (ML-DSA-65) is the enterprise production baseline. For high-assurance or national-grade deployments, the architecture is configurable to Dilithium-5 (ML-DSA-87) via a single deployment-environment parameter — no architectural rewrite required.",
+      "threat_model_note": "Cryptographic level is threat-model driven, not a ceiling. Level 3 (~AES-192 class security) is appropriate for capital-sensitive institutional environments. Level 5 (~AES-256 class security) is for national-grade or maximum-assurance contexts.",
+      "sovereignty_clarification": "'Sovereign' in OMNIX refers to structural decision authority and deterministic enforceability at the execution boundary — not exclusively to maximum cryptographic strength. Cryptographic level scales with deployment context."
+    },
+    "NEVER_SAY": [
+      "PQC está en roadmap",
+      "PQC planificado para Q3 2026",
+      "Seguridad cuántica no implementada",
+      "Usamos TLS 1.3 mientras esperamos PQC",
+      "NIST FIPS 203",
+      "NIST FIPS 204",
+      "NIST Level 3 security equivalent",
+      "Kyber-768 para cifrado de datos",
+      "Kyber-768 for data encryption",
+      "Kyber-768 for secure data encryption",
+      "swap dinámico en runtime entre Level 3 y Level 5",
+      "Level 5 ya activo en producción",
+      "configurable en tiempo de ejecución",
+      "Level 3 es nuestro mínimo"
+    ]
+  },
+  "decision_contradiction_index": {
+    "purpose": "Shadow metric measuring internal signal divergence to explain HOLD decisions",
+    "adr": "ADR-018",
+    "CRITICAL_RULE": "DCI ALTO = NO OPERAR. Un DCI alto indica alta contradicción interna. NUNCA usar DCI alto como condición de entrada.",
+    "levels": {
+      "ALIGNED": {
+        "range": "0-34",
+        "meaning": "Señales convergentes, alta confianza en la decisión",
+        "action": "Sistema puede operar si otros criterios pasan"
+      },
+      "TENSIONED": {
+        "range": "35-69",
+        "meaning": "Señales mixtas detectadas, ejerciendo cautela",
+        "action": "Preferir HOLD, requiere edge adicional para operar"
+      },
+      "CONTRADICTORY": {
+        "range": "70-100",
+        "meaning": "Conflicto interno significativo entre señales locales y edge global",
+        "action": "HOLD obligatorio - modo preservación de capital"
+      }
+    },
+    "components": {
+      "local_strength": "0-40 pts - Promedio de NM confidence + EMA confidence",
+      "global_edge_penalty": "0-30 pts - Penalización si MC WR < 50% o ER ≤ 0",
+      "regime_penalty": "0-15 pts - VOLATILE=15, RANGING=10, BEARISH=5",
+      "risk_penalty": "0-15 pts - Black Swan severity (MEDIUM=7, HIGH=12)"
+    },
+    "investor_explanation": "El DCI cuantifica por qué el sistema decidió HOLD cuando una señal local (ej: NM BUY 70%) sugería operar. Un DCI de 72 significa que aunque NM dice comprar, el edge global (MC sin edge), el régimen (volátil) y el riesgo (Black Swan) contradicen esa señal. El sistema prioriza preservación de capital sobre señales individuales."
+  },
+  "loss_avoidance_calculation": {
+    "purpose": "Cuantificar pérdida esperada evitada en decisiones HOLD",
+    "method": "Position size × VaR95 × Historical loss rate for similar conditions",
+    "formula": "Pérdida Evitada Est. = Position_Size × max(VaR95, Avg_Loss_Breakdown)",
+    "data_sources": [
+      "VaR95 del Monte Carlo actual",
+      "Breakdown histórico por símbolo (paper_trading_trades)",
+      "Breakdown histórico por régimen HMM",
+      "Breakdown histórico por coherence bucket"
+    ],
+    "example": {
+      "scenario": "HOLD en ADA/USD, régimen BEARISH, coherence MODERATE",
+      "position_size": 20000,
+      "var_95": "-0.46%",
+      "historical_avg_loss_ada": "-2.58% per trade",
+      "estimated_loss_avoided": "$92 (using VaR) to $516 (using historical avg)",
+      "presentation": "Rango estimado: $92 - $516 basado en VaR95 y datos históricos"
+    },
+    "NEVER_SAY": "Es difícil cuantificar la pérdida evitada"
+  },
+  "realistic_thresholds": {
+    "purpose": "Umbrales realistas para ejecución - NO curve-fitting ni fantasías",
+    "for_trade_execution": {
+      "mc_win_rate": "> 50% (edge estadístico mínimo)",
+      "mc_expected_return": "> 0% (cualquier edge positivo)",
+      "coherence": "> 50% (moderate o superior)",
+      "dci": "< 70 (ALIGNED o TENSIONED, nunca CONTRADICTORY)",
+      "black_swan": "LOW o NONE (MEDIUM requiere edge extra)"
+    },
+    "NEVER_CLAIM": [
+      "WR > 60% para operar",
+      "ER > 5% para operar",
+      "DCI > 90 para operar (INVERTIDO - esto es INCORRECTO)"
+    ],
+    "investor_honesty": "Operamos con edge modesto pero consistente. No buscamos home runs, buscamos acumulación de pequeñas ganancias mientras evitamos pérdidas grandes."
+  },
+  "asset_status": {
+    "active_pairs": [
+      "BTC/USD",
+      "XRP/USD"
+    ],
+    "quarantined": {
+      "ADA/USD": "16 losses, -$3,847",
+      "SOL/USD": "12 losses, -$2,156",
+      "ETH/USD": "8 losses, -$1,334",
+      "AVAX/USD": "Probation (max 40% size, 3 loss limit)",
+      "LINK/USD": "16 losses, -$4,482"
+    },
+    "quarantine_reason": "Capital protection - $11,819+ in avoided losses"
+  },
+  "phase2_offensive": {
+    "partial_position_sizing": {
+      "status": "ACTIVE",
+      "logic": "Confidence 50-65% → 25-40% position size"
+    },
+    "btc_short_selling": {
+      "status": "ACTIVE",
+      "condition": "Bearish regime + HMM confidence > 70%",
+      "size": "50% of normal"
+    },
+    "quarantine_probation": {
+      "status": "ACTIVE",
+      "asset": "AVAX/USD",
+      "rules": "Max 40% size, auto-revert after 3 consecutive losses"
+    }
+  },
+  "dashboard_status": {
+    "widgets": "19/19 operational",
+    "verticals_live": 8,
+    "data_source": "PostgreSQL (real decisions)"
+  },
+  "command_surface": {
+    "audit_date": "2026-04-15",
+    "total_commands": 85,
+    "unique_handlers": 81,
+    "aliases": 4,
+    "status": "Audited and sealed"
+  },
+  "adr_references": {
+    "multi_vertical": "ADR-026",
+    "autonomous_agents_vertical": "ADR-091",
+    "energy_vertical": "ADR-112",
+    "temporal_coherence": "ADR-032",
+    "edge_confirmation": "ADR-019, ADR-051",
+    "pqc": "ADR-022, ADR-031",
+    "dci": "ADR-018"
+  },
+  "institutional_language": {
+    "blacklisted_phrases": [
+      "rendimiento subóptimo",
+      "señal de alerta",
+      "riesgo de pérdidas reales",
+      "disclaimer de riesgo",
+      "podrías perder todo",
+      "pérdidas sustanciales",
+      "desempeño negativo",
+      "problema",
+      "error crítico",
+      "DCI por encima de 90",
+      "DCI alto para ejecutar",
+      "DCI > 90 para operar",
+      "win rate > 60%",
+      "expected return > 5%",
+      "es difícil cuantificar",
+      "difícil de cuantificar",
+      "Discúlpame por el error anterior",
+      "Disculpa por el error anterior",
+      "Perdón por el error anterior",
+      "Lamento el error anterior",
+      "Me disculpo por el error",
+      "Six Verticals",
+      "seis verticales",
+      "only one vertical",
+      "solo un vertical",
+      "demo vertical",
+      "interactive demo only",
+      "NOT operational",
+      "Sharia certified",
+      "Sharia certification",
+      "certificación Sharia",
+      "Sharia-certified",
+      "certified Sharia compliance",
+      "certificado por junta Sharia",
+      "aprobado por junta Sharia",
+      "Sharia board certified",
+      "Sharia compliant (certified)"
+    ],
+    "approved_reframes": {
+      "losses": "capital deployment in learning phase",
+      "low_win_rate": "strategy calibration in progress",
+      "negative_pnl": "paper trading validation phase",
+      "problem_assets": "assets under strategic review",
+      "blocked_trades": "governance-managed decisions",
+      "trading_system": "governance control architecture",
+      "trading_bot": "governance infrastructure",
+      "sharia_compliance": "Sharia-aligned governance gate"
+    }
+  },
+  "sharia_governance_gate": {
+    "CRITICAL_DISTINCTION": "OMNIX tiene una capa de gobernanza alineada a principios Sharia — NO es una certificación oficial emitida por un Sharia Supervisory Board (SSB).",
+    "what_it_is": "Governance gate que enforcea principios islámicos fundamentales: prohibición de riba (interés), detección de gharar (incertidumbre excesiva), validación de sectores halal. Implementado como checkpoint en el pipeline de 11 puntos.",
+    "what_it_is_NOT": "No es una certificación oficial de ningún SSB (Sharia Supervisory Board) ni organismo regulatorio islámico. No puede presentarse como tal.",
+    "approved_language": [
+      "Sharia-aligned governance gate",
+      "capa de gobernanza alineada a principios Sharia",
+      "enforcea principios islámicos: riba, gharar, sectores halal",
+      "Sharia-aware decision governance",
+      "gobernanza compatible con finanzas islámicas"
+    ],
+    "NEVER_SAY": [
+      "Sharia certified",
+      "certificación Sharia",
+      "aprobado por junta Sharia",
+      "Sharia board certified",
+      "compliance Sharia certificada"
+    ],
+    "investor_note": "Para instituciones GCC que requieren certificación SSB oficial, OMNIX puede integrarse con su proceso de certificación como capa de gobernanza — pero OMNIX en sí no es el organismo certificador."
+  },
+  "founder_narrative": "Always refer to the founder (Harold Nunes) in THIRD PERSON as the one controlling risk. You are OMNIX AI, the assistant - never speak as if you are the founder."
+}

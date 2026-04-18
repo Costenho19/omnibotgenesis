@@ -1,0 +1,21 @@
+# OMNIX Decision Governance Infrastructure — Development Dependencies
+# Updated: March 6, 2026
+#
+# PURPOSE: Development and testing only. NOT deployed to Railway production.
+# USAGE: pip install -r requirements-dev.txt
+#
+# Includes all production dependencies via -r requirements.txt
+
+-r requirements.txt
+
+# =============================================================================
+# TESTING
+# =============================================================================
+pytest==9.0.2
+pytest-asyncio==1.3.0
+pytest-env==1.2.0
+
+# =============================================================================
+# CODE QUALITY & LINTING
+# =============================================================================
+import-linter==2.9

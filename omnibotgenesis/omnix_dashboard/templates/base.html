@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OMNIX Decision Governance Infrastructure">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{% block title %}OMNIX Decision Governance{% endblock %}</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+    
+    <script src="{{ url_for('static', filename='js/core/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/clock.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/timezone.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/charts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/common.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

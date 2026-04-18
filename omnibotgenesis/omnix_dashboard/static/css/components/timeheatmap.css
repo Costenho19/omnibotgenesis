@@ -1,0 +1,117 @@
+.time-heatmap-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.time-heatmap-header .widget-icon {
+    font-size: 1.25rem;
+}
+
+.time-heatmap-header .widget-title {
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    flex: 1;
+}
+
+.time-heatmap-header .widget-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.time-heatmap-body {
+    padding: 0.75rem;
+}
+
+.heatmap-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.heatmap-row {
+    display: flex;
+    gap: 2px;
+}
+
+.heatmap-cell {
+    width: 28px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    border-radius: 3px;
+    transition: transform 0.2s;
+}
+
+.heatmap-cell.label {
+    width: 32px;
+    color: var(--text-secondary, #9ca3af);
+    font-size: 0.6rem;
+    background: transparent;
+}
+
+.heatmap-cell.header {
+    color: var(--text-secondary, #9ca3af);
+    font-size: 0.55rem;
+    background: transparent;
+}
+
+.heatmap-cell.data {
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.heatmap-cell.data:hover {
+    transform: scale(1.2);
+    z-index: 10;
+}
+
+.heatmap-insights {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.insight {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.insight-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary, #9ca3af);
+    text-transform: uppercase;
+}
+
+.insight-value {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+}
+
+.insight-pnl {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.insight-pnl.positive {
+    color: #10b981;
+}
+
+.insight-pnl.negative {
+    color: #ef4444;
+}

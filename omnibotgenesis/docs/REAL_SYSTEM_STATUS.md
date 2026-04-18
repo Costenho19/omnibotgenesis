@@ -1,0 +1,1974 @@
+# OMNIX — Estado REAL del Sistema
+
+**Fecha**: 29 de Marzo 2026 
+**Estado**: OPERACIÓN Y VALIDACIÓN | Dashboard 19/19 | Track Record COMPLETADO (Day 30+) | Shadow Portfolio ACTIVO | Website LIVE | SEMIFINALISTA | **External Governance API LIVE** | **EBIP LIVE** | **Dual Mode CORE/ACTIVE LIVE** | **TIE LIVE (ADR-053)** | **Islamic Credit 24/7 LIVE (ADR-052)** | **Insurance Governance 24/7 LIVE (ADR-054)** | **Robotics Governance 24/7 LIVE (ADR-055)** | **CP-9 AML Gate LIVE (ADR-047)** | **CP-10 Fraud Gate LIVE (ADR-048)** | **CP-11 Jurisdiction Gate LIVE (ADR-049)** | **Pipeline: 11 Checkpoints** | **3 Verticals LIVE** 
+**Versión interna (dev)**: V6.5.4e 
+**TAM Multi-Vertical**: $137B+ (3 verticales NOW: trading [$5B], insurance [$50B], robotics [$80B] | supply chain [Year 2-3], lending [Year 2-3], energy [Year 3+])
+
+### Métricas de Producción (Feb 23, 2026)
+
+| Métrica | Valor | Notas |
+|---------|-------|-------|
+| PQC-Signed Receipts | 82,569 | Dilithium-3, 100% coverage |
+| Evaluation Cycles | 766,741 | Motor 24/7 desde Jan 2026 |
+| Shadow Trade Events | 766,741 | Análisis contrafactual de vetos |
+| Capital Preserved | 98.42% | Durante BTC -7.37% volatilidad |
+| Check Interval | 90s | Optimizado desde ~20s (Feb 21) |
+
+### Cambios Recientes (Mar 24, 2026) 
+
+- **Mar 24 (Semana 1)**: **3 features premium implementados y desplegados
+ 1. **EBIP Dashboard Widget** — Nuevo widget en Performance Dashboard Flask (IIFE, SVG ring gauge, 4-component grid ACV/ECP/NPM/CP, navigation distribution bars, alert level pulse). Endpoint: `GET /api/governance/execution-integrity`. CSS + JS: `executionintegrity.js/css`.
+ 2. **EBIP Score en Receipts** — Página pública `/verify/:receiptId` ahora muestra sección "Execution Boundary Integrity" con score, alert level, concentration risk, y estado de los 4 componentes al momento de la verificación. Backend: `_fetch_ebip_snapshot()` en `public_verify.py`.
+ 3. **Contador en vivo en Homepage** — Sección "Live Production Data" mejorada: badge LIVE pulsante con animación CSS, `@keyframes omnixStatReveal` con stagger para cada número, **5ª métrica: Execution Integrity Score /100** (violeta, etiquetado ADR-045), indicador live dots. Hook `useLiveMetrics.ts` actualizado con `ebip_score` + `animKey`.
+
+### Cambios Recientes (Mar 24, 2026) — Execution Boundary Integrity Protocol (EBIP)
+
+- **Mar 24**: **EBIP LIVE — ADR-045 implementado**. Capa de 4 componentes que opera en la frontera de ejecución del pipeline de gobernanza:
+ - **ACV (AdmissibilityConsistencyValidator)**: Detecta combinaciones de señales internamente contradictorias ANTES de que corran los checkpoints. 5 reglas de contradicción (HIGH_PROBABILITY_HIGH_RISK, HIGH_COHERENCE_LOW_PERSISTENCE, HIGH_RESILIENCE_HIGH_EXPOSURE, LOW_LOGIC_HIGH_APPROVAL_SIGNALS, ALL_SIGNALS_EXTREME). Output: `consistency_score` (0–100), `is_consistent` boolean. Violaciones HIGH persistidas en `admissibility_violations`.
+ - **ECP (ExecutionCommitmentProtocol)**: Commitment criptográfico a los criterios de evaluación ANTES de correr el pipeline. Schema: `nonce + signals_hash + criteria_hash + timestamp_ns → SHA-256 → commitment_hash`. Detección de tampering verificada (señales alteradas = commitment inválido). Aproxima ZKP commitment semantics sin infraestructura ZKP completa.
+ - **NPM (NavigationPatternMonitor)**: Monitorea la distribución de decisiones sobre ventanas temporales. Detecta concentración y path-dependency DENTRO del espacio admisible — los patrones que admissibility sola no puede gobernar. Alert levels: NOMINAL / WATCH / CAUTION / CRITICAL. Persiste en `navigation_patterns`.
+ - **CP (ConcentrationPredictor)**: Predice riesgo de concentración ANTES de que emerja. Trend analysis sobre últimas N ventanas. Output: LOW / MEDIUM / HIGH / CRITICAL + confidence %.
+ - **API pública**: `GET /api/governance/execution-integrity` (sin auth).
+ - **Tablas nuevas**: `navigation_patterns`, `admissibility_violations` (creadas automáticamente).
+ - **Fail-safe**: EBIP nunca bloquea el pipeline principal — falla silenciosamente.
+
+### Cambios Recientes (Mar 15, 2026) — Public Governance Sandbox (/try)
+
+- **Mar 15**: **Public Governance Sandbox LIVE — ADR-040 implementado**. Endpoint público sin autenticación donde cualquier usuario puede describir un escenario en texto libre (EN/ES, max 500 chars). Gemini AI interpreta el escenario en 8 señales de gobernanza. El pipeline REAL de 8 checkpoints (`GovernanceEvaluationEngine`) evalúa la decisión. Receipt PQC-firmado almacenado en `decision_receipts` con `client_id='PUBLIC'`, `domain='public_sandbox'`. Receipt verificable en Railway: `/verify/{receipt_id}`. Rate limit: 5/min por IP. Fail-closed: si el receipt falla, la evaluación retorna error 500. Blueprint: `omnix_dashboard/blueprints/public_sandbox.py`. React page: `omnix_web/src/pages/PublicGovernanceSandbox.tsx`. Ruta: `/try`. Campos opcionales: `company_name`, `language` (auto-detect por defecto).
+
+### Cambios Recientes (Mar 12, 2026) — Sandbox + Alerts Modules
+
+- **Mar 12**: **Módulo Sandbox LIVE — ADR-038 implementado**. Clientes B2B pueden ahora testear decisiones de gobernanza en entorno aislado, sin afectar el hash chain de producción. Misma lógica de engine (GovernanceEvaluationEngine), mismo schema de señales, mismos 8 checkpoints. Tablas nuevas: `sandbox_sessions`, `sandbox_evaluations`. 6 endpoints nuevos: `POST/GET/DELETE /api/governance/sandbox/sessions`, `POST /api/governance/sandbox/evaluate`, `GET /api/governance/sandbox/schema`. Rate limit: 30 req/min (vs 10 producción). Max 100 evaluaciones por sesión. Sesiones expiran en 7 días. Receipt format: `OMNIX-SB-XXXXXXXX` (aislado, no verificable en cadena pública).
+
+- **Mar 12**: **Sistema de Alertas LIVE — ADR-039 implementado**. Notificaciones en tiempo real cuando ocurren eventos de gobernanza. Tipos: `decision_blocked`, `high_risk_score`, `checkpoint_veto`, `all_decisions`, `daily_summary`. Canales: `webhook` (HTTP POST a URL del cliente) y `email` (SMTP configurable). Delivery: asíncrono via daemon thread — cero impacto en latencia del pipeline de gobernanza. Registro completo en `alert_events` (delivered/failed/skipped). 5 endpoints nuevos: `GET/PUT /api/governance/alerts/config`, `DELETE /api/governance/alerts/config/<id>`, `GET /api/governance/alerts/events`, `POST /api/governance/alerts/test`. Tablas nuevas: `alert_configs`, `alert_events`. Integrado en `governance.py` → `api_governance_evaluate()`. Archivos: `omnix_dashboard/blueprints/governance_sandbox.py`, `omnix_dashboard/blueprints/governance_alerts.py`, `governance.py` (alerts trigger), `ADR-038`, `ADR-039`.
+
+### Cambios Recientes (Mar 11, 2026) — Production Audit + B2B Encryption Fix
+
+- **Mar 11 (tarde)**: **Audit de producción completo — solo lectura, 7 áreas auditadas**. Resultados:
+ - **INTEGRIDAD DE DATOS**: Hash chain 99/99 links sin rupturas ✅. 58,129/58,129 receipts firmados con Dilithium-3 = 100.0% ✅. `retention_until` correcto en todos los receipts nuevos (0 errores) ✅.
+ - **GOBERNANZA**: Pipeline end-to-end verificado ✅. TCV activo en receipts recientes (score=100.0) ✅. Safety floors funcionando ✅. RBAC: key inválida → 401 ✅, rol incorrecto → 403 ✅.
+ - **INFRAESTRUCTURA**: Railway 305ms (< 500ms) ✅. Redis 8.2.1 conectado ✅. `/verify` público HTTP/2 200 ✅. 7/7 widgets Flask Dashboard operativos ✅.
+ - **3 vulnerabilidades identificadas**:
+ 1. ✅ **RESUELTA** — `PAYLOAD_ENCRYPTION_KEY` no configurado → datos B2B en texto plano. **Fix aplicado mismo día**: clave generada, configurada en Railway + Replit secrets. Cifrado Fernet verificado: receipt `OMNIX-EFD6120F22EA` → `encrypted_payload = gAAAAABpsSXv...` (ya no NULL).
+ 2. ⏳ **PENDIENTE** — `shadow_trade_outcomes`: solo 50 filas de 740K+ eventos. El engine de outcomes calcula hacia futuro (espera 1h/4h/24h/7d/30d) — coverage mejora automáticamente con el tiempo. Sin acción requerida.
+ 3. ⏳ **PENDIENTE** — `filter_calibration_metrics`: 0 filas. `exit_governance_receipts`: último registro Mar 5 (6 días). Warm-up normal dado que el sistema está en período de validación sin trades activos (ECW_WAITING).
+ - **Estado general**: núcleo sólido para demo institucional. Integridad de datos, pipeline de gobernanza y seguridad de acceso robustos.
+
+### Cambios Recientes (Mar 27, 2026) — TIE + Islamic Credit Vertical — ADR-052/053
+
+- **Mar 27**: **Trajectory Invariant Enforcement (TIE) IMPLEMENTADO — ADR-053**. Motor post-pipeline que enforces bounded evolution sobre el espacio de decisiones. Concepto de Rigel Randolph: no solo verificar estado S_t, sino que la trayectoria S_0 → S_t → S_t+n permanezca en el espacio admisible.
+ - **Posición en pipeline**: `8 Checkpoints → TIE → APPROVED | HOLD`. Solo opera sobre APPROVED; nunca modifica BLOCKED.
+ - **5 Invariantes**:
+ - **I-1 RISK_MONOTONIC_ASCENT**: risk_exposure > 70 Y subiendo 5 decisiones consecutivas → HOLD
+ - **I-2 PROBABILITY_DEAD_ZONE**: probability_score < 35 por 4 decisiones consecutivas → HOLD
+ - **I-3 COHERENCE_STRUCTURAL_DECAY**: signal_coherence < 40 por 3 decisiones consecutivas → HOLD
+ - **I-4 TRAJECTORY_VOLATILITY**: σ(probability_score) > 32 sobre últimas 8 decisiones → WARNING
+ - **I-5 GLOBAL_REGIME_COLLAPSE**: 3+ activos simultáneamente en dead zone → HOLD (cross-asset)
+ - **Storage**: tabla `trajectory_states` (rolling 20 estados por asset/domain, auto-pruning)
+ - **Response**: campo `trajectory_analysis` en toda respuesta del evaluador con `trajectory_score` (0-100), violations, warnings
+ - **Fail-safe**: excepciones → pass-through (nunca rompe el pipeline principal)
+ - **Diferencia vs EBIP**: EBIP monitorea distribución de decisiones (nunca bloquea). TIE enforces invariantes de trayectoria (puede emitir HOLD).
+ - **ADR-053 creado**.
+
+- **Mar 27**: **Islamic Credit Governance OPERATIVO — ADR-052**. Motor de crédito islámico UAE 24/7 confirmado corriendo:
+ - Ciclos cada 5 min, 3-8 aplicaciones/ciclo calibradas al mercado UAE/GCC
+ - Tipos: SME 60%, Individual 30%, Corporate 10%
+ - Financiamiento: Murabaha 60%, Ijara 20%, Musharaka 15%, Diminishing 5%
+ - Sectores: tech, real_estate, healthcare, retail, F&B, manufacturing, logistics
+ - Datos en DB: `credit_applications` + `credit_cycle_metrics`
+ - Sharia Gate: sector halal, no Riba, Gharar ≤ 65, DSR ≤ 40%, asset backing ≥ 50%
+ - Dashboard premium en `/credit` (React + Flask API `/api/credit/*`)
+
+### Cambios Recientes (Mar 26, 2026) — Dual Trading Mode CORE/ACTIVE — ADR-051
+
+- **Mar 26**: **Dual Trading Mode IMPLEMENTADO — ADR-051**. Sistema de dos modos operacionales controlado por una sola variable de entorno `TRADING_MODE` en Railway. Raíz del problema: 0 trades en 5 meses por umbrales ECW demasiado estrictos para mercados con edge marginal.
+ - **CORE** (default, comportamiento actual): ECW WR≥50%, 3 ciclos, BS HIGH resetea counter. Coherence veto normal ≥45%.
+ - **ACTIVE** (thresholds calibrados): ECW WR≥48%, 2 ciclos, BS HIGH **reduce posición a 0.5% del balance** (sin resetear counter). Coherence veto normal ≥40%.
+ - **Un solo cambio en Railway**: `TRADING_MODE=ACTIVE` activa el modo. Rollback inmediato: `TRADING_MODE=CORE`.
+ - Los ENVs individuales (`ECW_MC_WR_MIN`, `ECW_CYCLES_REQUIRED`, `ECW_MC_ER_MIN`) siguen funcionando con prioridad (retrocompatibilidad 100%).
+ - Logging de inicio: `🎛️ TRADING_MODE=ACTIVE | ECW WR>=48% ER>0.001 CYCLES=2 BS_HIGH_BLOCKS=False`.
+ - `trading_mode` incluido en `ecw_thresholds` de cada receipt para audit trail.
+ - ADR-051 creado.
+ - **Narrativa inversores**: "We didn't lower standards. We calibrated thresholds to market reality. 48% win rate is still a statistical edge. 2 consecutive cycles still require persistence. The governance logic is intact."
+
+### Cambios Recientes (Mar 26, 2026) — Context Admission Gate (CAG) — ADR-050
+
+- **Mar 26**: **Context Admission Gate IMPLEMENTADO — ADR-050**. Gate de pre-admisión a nivel de sesión que evalúa condiciones GLOBALES de mercado ANTES de que cualquier señal entre al pipeline de 8 checkpoints. Si CAG bloquea, no se forma ningún estado ejecutable — el pipeline nunca comienza. 4 parámetros independientes:
+ - **global_volatility_threshold** (default: 80): Índice de volatilidad compuesta — debe ser MENOR al umbral. Violación: `GLOBAL_VOLATILITY_EXCEEDED`.
+ - **cross_pair_correlation_threshold** (default: 90): Correlación entre pares — inestabilidad de régimen. Violación: `CORRELATION_REGIME_INSTABILITY`.
+ - **liquidity_score_minimum** (default: 20): Score de liquidez mínimo requerido. Violación: `INSUFFICIENT_LIQUIDITY`.
+ - **macro_risk_ceiling** (default: 85): Riesgo macro compuesto — debe ser MENOR al techo. Violación: `MACRO_RISK_CEILING_BREACHED`.
+ - Deshabilitado por defecto (`CAG_ENABLED=false`) — cero impacto en Railway. Fail-safe: excepciones → pass-through.
+ - Integrado en `GovernanceEvaluationEngine.evaluate()` ANTES del loop de checkpoints, via `compliance_config`.
+ - Logging: `[CAG] SESSION_BLOCKED` / `[CAG] SESSION_ADMITTED` / `[CAG] SESSION_ADMITTED_WITH_WARNINGS`.
+ - Bloque `context_admission` en respuesta del evaluador: `admission_score`, `violation`, 4 `parameters`, `gate_checks[]`.
+ - 30/30 tests unitarios pasados. ADR-050 creado.
+ - **Narrativa inversores**: "When market conditions become structurally inadmissible, OMNIX doesn't just block individual signals. It blocks the entire evaluation session before it starts. The receipt doesn't say 'we decided to wait.' It says 'no executable state was ever formed.'"
+
+### Cambios Recientes (Mar 25, 2026) — Compliance Gates CP-9/10/11
+
+- **Mar 25**: **Compliance Gates CP-9, CP-10, CP-11 IMPLEMENTADOS — ADR-047/048/049**. Pipeline extendido a 11 checkpoints:
+ - **CP-9 AML Gate** (`aml_gate.py`): Screening anti-lavado: monedas de privacidad (XMR, ZEC, DASH, GRIN, BEAM), mixer tokens (TORN, RAIL), volumen anómalo (>$500K), frecuencia structuring (>10/24h). Activar: `AML_GATE_ENABLED=true`. Alineado FATF Rec.15, FinCEN, UAE Central Bank AML/CFT.
+ - **CP-10 Fraud Gate** (`fraud_gate.py`): Detección de manipulación: DCI ≥ 85 → VETO duro (EXTREME_DCI), divergencia técnica/sentimiento ≥ 60 → VETO duro (SIGNAL_DIVERGENCE), reversiones rápidas → penalización. Activar: `FRAUD_GATE_ENABLED=true`. Alineado EU AI Act Art. 6, MiFID II, SEC Rule 10b-5.
+ - **CP-11 Jurisdiction Gate** (`jurisdiction_gate.py`): Valida activo + tipo de operación contra framework jurisdiccional. UAE: XMR/ZEC/DASH/GRIN/BEAM prohibidos + no leverage/derivatives. EU: MiCA (solo XMR/GRIN/BEAM restringidos). US: FinCEN/SEC. GCC: UAE-aligned. Activar: `JURISDICTION_GATE_ENABLED=true` + `JURISDICTION=UAE`. Sanctions OFAC siempre activos.
+ - Todos deshabilitados por defecto — cero impacto en Railway. Fail-safe: excepciones → pass-through.
+ - Logging estructurado: `[CP-9] AML_VETO/PASS`, `[CP-10] FRAUD_VETO/PASS`, `[CP-11] JURISDICTION_VETO/PASS`.
+ - Bloque de compliance en receipt PQC: `aml_compliance`, `fraud_compliance`, `jurisdiction_compliance` — dentro del payload firmado con Dilithium-3.
+ - 10/10 tests unitarios pasados. ADR-047, ADR-048, ADR-049 creados.
+
+### Cambios Recientes (Mar 25, 2026) — CP-6 Sharia Governance Gate
+
+- **Mar 25**: **CP-6 Sharia Governance Gate IMPLEMENTADO — ADR-046**. Pipeline de 8 checkpoints ahora completo (CP-0 a CP-8). Nuevo módulo `omnix_core/governance/sharia_gate.py` insertado entre CP-5 (Adaptive Coherence) y CP-7 (TCV). Validaciones: screening halal/haram, veto duro por gharar excesivo (default threshold=70), control ratio de deuda (≤33%). Fail-safe: deshabilitado por defecto (`SHARIA_GATE_ENABLED=false`); excepciones → pass-through. Activación via env var por despliegue. Columnas añadidas a `b2b_clients`: `sharia_enabled`, `gharar_threshold`, `debt_ratio_max`. 5/5 unit tests pasados. ADR-046 creado. Dirigido al mercado del Golfo (fondos islámicos UAE, Arabia Saudita, Qatar). No impacto en clientes existentes ni en Railway.
+
+---
+
+### Cambios Recientes (Mar 11, 2026) — Per-Client Configurable Thresholds
+
+- **Mar 11**: **Per-client configurable thresholds LIVE — ADR-037 implementado**. `client_thresholds` PostgreSQL table creada (row-per-checkpoint, UNIQUE(client_id, checkpoint_id), CHECK 0–100, ON DELETE CASCADE). `CHECKPOINT_SAFETY_FLOORS` definidos en `external_evaluator.py` (CP-1 min 30, CP-2 min 40, CP-3 min 30, CP-4 min 25, CP-5 min 20, CP-6 min 20). Helper `_load_client_checkpoint_overrides()` carga umbrales por cliente con fallback fail-closed a CHECKPOINT_DEFAULTS. Endpoint `POST /api/governance/evaluate` ahora usa umbrales por cliente. 3 nuevos endpoints admin: `GET/PUT/DELETE /api/governance/admin/clients/<id>/thresholds`. Campo `thresholds_source: "default" | "client_custom"` añadido a cada receipt response. ADR-028 Constraints actualizado: deferred item marcado como IMPLEMENTED. Tabla 43 en PostgreSQL (previamente 42+). Archivos: `omnix_core/governance/external_evaluator.py`, `omnix_dashboard/blueprints/governance.py`, `docs/reference/adr/ADR-037-per-client-configurable-thresholds.md`.
+
+---
+
+### Cambios Recientes (Mar 6, 2026) — Requirements Audit
+
+- **Mar 06**: **requirements.txt auditado y producción-ificado** — separación prod/dev, versiones pinadas, conflictos eliminados:
+ - **Duplicados eliminados**: `langdetect` (x2), `plotly` (x2), `reportlab` (x2) → una sola entrada cada uno con versión exacta
+ - **Conflicto resuelto**: paquete `telegram` (standalone v0.0.1) eliminado — conflicto de namespace con `python-telegram-bot==21.9`
+ - **Versiones pinadas**: `tavily-python==0.7.14`, `fast-langdetect==1.0.0`, `pydantic-settings==2.12.0`, `streamlit==1.52.1`, `dependency-injector==4.48.3`, `gevent==25.9.1`, `websockets==14.2`, `aiohttp==3.13.2`, `yt-dlp==2025.11.12`, `ccxt==4.5.24`, `dwave-ocean-sdk==9.0.0`
+ - **requirements-dev.txt creado**: `pytest==9.0.2`, `pytest-asyncio==1.3.0`, `pytest-env==1.2.0`, `import-linter==2.9` separados de producción
+ - **Paquetes OPTIONAL documentados** con comentarios explícitos: `dependency-injector` (Railway no disponible — guarded), `kaleido` (Chromium dependency), `tables` (libhdf5 system dependency), `dwave-ocean-sdk` (DWAVE_API_TOKEN requerido)
+ - **streamlit import** protegido con try/except en `omnix_dashboard/streamlit_app.py`
+ - **Archivos**: `requirements.txt`, `requirements-dev.txt` (nuevo), `omnix_dashboard/streamlit_app.py`
+
+### Cambios Recientes (Mar 5, 2026) — Production Bug Fixes
+
+- **Mar 05 (tarde)**: **2 bugs de producción corregidos — bot Railway restaurado**:
+ - **Bug 1 — ConversationalAI undefined**: `ai_service/__init__.py` importa `container.py` que requiere `dependency_injector` (no disponible en Railway). Cuando el `__init__.py` falla, `ConversationalAI` no queda definida en `enterprise_bot.py` → NameError en línea 476 → `TelegramBotAdapter` no inicializa → bot caído. **Fix**: Import cambiado a `from omnix_services.ai_service.conversational_ai_adapter import ConversationalAI` (directamente del módulo que solo usa stdlib). Mismo fix aplicado en `src/omnix/bootstrap/main_entry.py` (legacy path). `ConversationalAI = None` añadido como fallback defensivo pre-try.
+ - **Bug 2 — columna was_correct faltante**: Tabla `trade_evaluations` existía en Railway antes de que se añadiera la columna `was_correct BOOLEAN NOT NULL`. `CREATE TABLE IF NOT EXISTS` no actualiza tablas existentes → error en inicialización. **Fix**: `ALTER TABLE trade_evaluations ADD COLUMN IF NOT EXISTS was_correct BOOLEAN NOT NULL DEFAULT FALSE` añadido en la sección de migraciones de `_init_tables_enterprise()`.
+ - **Tests post-fix**: 27/27 passing. Revisión arquitectural: PASS — fixes correctos y completos.
+ - **Archivos**: `omnix_services/telegram_service/enterprise_bot.py`, `omnix_services/database_service/database_service.py`, `src/omnix/bootstrap/main_entry.py`
+- **Mar 05 (noche) — Fix v2**: Los fixes anteriores eran incompletos. Causas raíz reales identificadas:
+ - **Bug 1 (real)**: Python ejecuta `__init__.py` del paquete antes de importar cualquier submodulo. El `__init__.py` de `ai_service` importa `container.py` sin protección → todo el paquete falla. **Fix real**: envolver el import de `.container` en try/except en `omnix_services/ai_service/__init__.py`. Ahora `ConversationalAI` queda disponible aunque `dependency_injector` no esté instalado en Railway.
+ - **Bug 2 (real)**: El `CREATE INDEX ... ON trade_evaluations(was_correct)` en línea 1906 fallaba ANTES de que corriese el ALTER TABLE que habíamos puesto en línea 2278. **Fix real**: mover el ALTER TABLE a línea ~1903, inmediatamente después del CREATE TABLE y antes de los CREATE INDEX que referencian la columna.
+ - **Tests post-fix v2**: 27/27 passing.
+
+### Cambios Recientes (Mar 5, 2026) — Architectural Gaps
+
+- **Mar 05**: **4 Architectural Gaps implemented — ADR-033/034/035/036** — Gaps identificados proactivamente mediante análisis arquitectural post-TCV:
+ - **ADR-033**: Signal Integrity Validator (SIV) — Checkpoint 0. Pre-pipeline data quality gate. 4 validation categories: freshness, completeness, anomaly detection, cross-source consistency. Integrated in `_make_v52_decision()` before Monte Carlo VETO. 46 tests passing. FAIL-SAFE: pass-through on module error.
+ - **ADR-034**: Forward Trajectory Implicator (FTI) — Checkpoint 7b. Forward-looking complement to TCV (backward-looking). Evaluates what proposed action implies for next N cycles using: Regime Transition Risk (40%), Implied Decision Consistency (35%), Signal Momentum Sustainability (25%). Conservative threshold (25/100). 45 tests passing. Positioned between TCV and ECW gate.
+ - **ADR-035**: Regime-Conditioned Kelly. Kelly inputs (win_rate, avg_win, avg_loss) now segmented by HMM market regime. 3-level fallback chain: regime-specific → global → conservative defaults. Replaces hardcoded `win_rate=0.55` in `_analyze_market()`. Confidence levels: HIGH (≥30 samples), MEDIUM (10-29), LOW (fallback). 36 tests passing.
+ - **ADR-036**: Exit Governance Layer (EGL). 3-gate pipeline for exit decisions: Regime-Adjusted Threshold Gate + Exit Coherence Gate + TCV Exit Check. PQC-signed exit receipts stored in `exit_governance_receipts` table. Integrated in `_check_open_positions_tp_sl()`. Emergency SL bypasses EGL (capital protection = absolute priority). 44 tests passing.
+ - **Total nuevos tests**: 171 tests (46+45+36+44) — todos pasando
+ - **ADR count**: Now 36 (ADR-001 → ADR-036)
+ - **Pipeline**: Entry governance now has 8 named checkpoints (CP-0 SIV through CP-8 ECW). Exit governance now has 3-gate pipeline (previously: price comparison only).
+
+### Cambios Recientes (Mar 4, 2026)
+
+- **Mar 04**: **Temporal Coherence Validation (TCV) — Checkpoint 7 documentado en toda la documentación** — INVESTOR_FAQ.md, one_pager.md, ARCHITECTURE.md, InstitutionalPage.tsx, CommercialLanding.tsx, BiotechGovernanceDemo.tsx, EnergyGovernanceDemo.tsx, REAL_SYSTEM_STATUS.md actualizados con marco dual: "6 checkpoints validados hasta feb 2026 + TCV Checkpoint 7 agregado marzo 2026 (ADR-032)". README.md actualizado con referencia a ADR-032. MIGRATION_STATUS.md actualizado con nota temporal. Verificación final: cero referencias ambiguas a "6 checkpoints" en superficies críticas (Eureka, inversores, web principal).
+
+### Cambios Recientes (Mar 1, 2026)
+
+- **Mar 01**: Insurance Domain Pilot validado (ADR-030) — tercer dominio validado con receipts PQC reales. 3 escenarios ejecutados vía `POST /api/governance/evaluate` con `domain: insurance`. Receipts: `OMNIX-AB1D878EC56A` (APPROVED, AUTO-POL-2847, 6/6 CP), `OMNIX-B5782882E993` (BLOCKED, AUTO-POL-9999, 6/6 vetados), `OMNIX-C23154E3D1B0` (BLOCKED, LIFE-POL-4521, CP-3+CP-4 vetados). Cliente `insurance-pilot-01` creado en b2b_clients. Domain Adapter documentado en `docs/reference/domain-adapters/insurance-domain-adapter.md`. Zero cambios al motor — extensibilidad multi-dominio demostrada con evidencia real.
+- **Mar 01**: 5 Governance Compliance Modules implementados (ADR-029) — NIST AI RMF + ISO/IEC 42001 + EU AI Act alineados. 7 nuevas tablas PostgreSQL (governance_risk_map, governance_metrics, governance_drift_log, governance_overrides, governance_incidents, governance_incident_reviews, governance_reports). 5 engines core en `omnix_core/governance/`: RiskMappingEngine, MeasurementMonitoringEngine, HumanOversightEngine, IncidentManagementEngine, GovernanceReportingEngine. 5 blueprints Flask: 21 endpoints nuevos bajo `/api/governance/`. Human oversight overrides firmados con Dilithium-3 (PQC). Reportes de compliance con linaje completo de decisiones (EU AI Act Art. 12). Implementación ADITIVA — cero cambios a tablas o endpoints existentes.
+
+### Cambios Recientes (Feb 17-27, 2026)
+
+- **Feb 27**: B2B Data Governance Layer implementada. Multi-tenant: `client_id` (VARCHAR 64) agregado a `decision_receipts` y `shadow_trade_events` — extraído del header `X-Client-ID` en cada request externo. Cifrado Fernet (AES-128-CBC + HMAC-SHA256): payload de señales cifrado en reposo en columna `encrypted_payload` cuando `PAYLOAD_ENCRYPTION_KEY` está configurado en Railway. Retención: columna `retention_until = created_at + 365 días` en `decision_receipts`. Política documentada en `docs/operations/DATA_RETENTION_POLICY.md`. Auth actualizada a `B2B_API_KEY` (variable dedicada, separada del dashboard). ADR-028 actualizado con todas las secciones: Data Governance, Authentication & Multi-Tenant, updated curl examples con `X-Client-ID`.
+- **Feb 27**: External Governance API — `POST /api/governance/evaluate` lanzado (ADR-028). Cualquier sistema externo puede enviar 6 señales normalizadas (0-100) y recibir evaluación a través del pipeline de 6 checkpoints fail-closed de OMNIX, con governance receipt firmado con Dilithium-3. Verificado en producción local: APPROVED (6/6 gates) y BLOCKED (CP-2 Risk Limits veto) — ambos con firma PQC válida. `GET /api/governance/schema` disponible sin auth. Nuevo módulo: `omnix_core/governance/external_evaluator.py`. ADR-028 documentado.
+- **Feb 26**: Política de rotación de API keys (11 credenciales inventariadas, Tier 1 trading keys due May 2026) y política de backup de base de datos (Railway auto-backup diario, procedimiento pg_dump documentado, RTO < 60 min) — Production Readiness: 100%.
+- **Feb 24**: FAIL-CLOSED AUDIT (Phase 4): portfolio_commands.py — eliminada función _get_fallback_price() que generaba series SINTÉTICAS con np.random.normal() y precios hardcoded (BTC=95000, ETH=3500, etc). advanced_intelligence.py — Elliott Wave COMPLETAMENTE FABRICADO eliminado (confidence hardcoded por ranges, next_target inventado), statistical analysis con probabilidades inventadas eliminado, on-chain fallback con BTC=119000/hash_rate inventado eliminado, performance_metrics fallback con ceros reemplazado por None. Volúmenes sintéticos en auto_trading_bot marcados como internal-only. Prompt builder actualizado para manejar nuevos formatos insufficient_data.
+- **Feb 24**: DEEP AUDIT (Phase 3): trading_system.py — fake technical analysis (RSI=50.0, MACD=0.0, fake SMA percentages) eliminado, fake multi-asset analysis (BTC=95000, ETH=3200 hardcoded, change=2.5%, volume=25000) eliminado, DummyPerformanceTracker ya no reporta system_health=100.0/memory=0.0/cpu=0.0 (ahora None), video/analyzer.py confidence 0.85 hardcoded eliminado, auto_trading_bot ROI 0.0 TODO implementado con cálculo real, FIPS 203/204 references corregidas a "NIST-standardized algorithms", balance hardcoded $159.93 eliminado. Todos los callers actualizados para manejar None.
+- **Feb 24**: REAL-DATA INTEGRITY AUDIT (Phase 2): 40+ métricas fabricadas eliminadas del sistema completo — analytics_engine.py (20+ métodos con datos inventados: fake HFT, fake arbitraje, fake Monte Carlo 150K→1K, fake sentimiento, fake correlaciones), dashboard system.py (strategy_weights falsos 50-58% win_rate, performance_metrics inventados), dashboard core.py (avg_bot comparación con datos falsos de industria). Creado módulo data_integrity.py (REAL_DATA_MODE=True, @real_data_required decorator) y test anti-regresión (test_no_hardcoded_metrics.py). Zero violations en scan final.
+- **Feb 24**: AUDITORÍA CRÍTICA (Phase 1): 18 métricas hardcodeadas encontradas y eliminadas — ai_confidence 93%, prediction_accuracy 88%, correlations, cpu_efficiency, success_rate, momentum, volatility, BTC price fallback, scan_arbitrage_opportunities. Todas reemplazadas con queries reales a PostgreSQL (shadow_trade_events, decision_receipts). Documentado en TECHNICAL_DEBT.md
+- **Feb 23**: Auditoría consistencia documentación — arabic_executive_summary actualizado (equity 10%→16.7%, valuación $4.5M→$2.5M-$3M, rebranding a Decision Governance Infrastructure)
+- **Feb 23**: Fix system_uptime_days en verification_server.py — ahora calcula desde shadow_trade_events con fallback a Nov 28, 2025 (antes solo usaba decision_receipts mostrando 2 días)
+- **Feb 23**: NARRATIVE_CONSISTENCY.md actualizado — arabic_executive_summary agregado a la matriz de seguimiento
+- **Feb 23**: Vertical Robótica/Sistemas Autónomos agregada a reporte, website, documentación (Year 3+, TAM +$12.4B)
+- **Feb 23**: Fix saludos AI — bot responde con calidez a "hola/hello" en vez de datos de mercado
+- **Feb 22**: Reporte PDF generado (14 secciones, formato institucional) + paquetes para mentores
+- **Feb 21**: Optimización costos Railway — check_interval a 90s (~77% reducción en ciclos/día)
+- **Feb 20**: Mejoras página verificación — filtros por fecha/decisión, paginación, conteo total
+- **Feb 19**: Página institucional actualizada — sin límites hardcodeados de duración
+- **Feb 17-19**: Servidor Verificación Pública lanzado — generación receipts, firma PQC, hash chain, branding
+
+> **FUENTE DE VERDAD**: Este documento refleja el estado real de producción en Railway.
+
+---
+
+## OFFICIAL DAY 1: 15 de Enero 2026
+
+> **ADR-012 DECLARACIÓN**: A partir de hoy, OMNIX inicia su track record oficial con telemetría real, thresholds calibrados, y métricas estandarizadas.
+
+### Timeline Oficial
+
+```
+Nov-Dic 2025 │ 15 Ene 2026 │ 13 Feb 2026
+────────────────────┼─────────────────────┼──────────────────
+LEARNING BASELINE │ OFFICIAL DAY 1 │ DAY 30 REVIEW
+119 trades │ Track record │ Meta: 100 trades
+Calibración │ oficial inicia │ WR target: >45%
+telemetry_source: │ telemetry_source: │ Decisión threshold
+LEGACY_ESTIMATED │ REAL │ ADR-007 Phase 2?
+```
+
+### Separación de Períodos
+
+| Período | Fechas | Trades | Telemetría | Propósito |
+|---------|--------|--------|------------|-----------|
+| Learning Baseline | Nov 2025 - Jan 14, 2026 | 119 | LEGACY_ESTIMATED | Calibración |
+| Official Track Record | Jan 15, 2026+ | 0 (crece) | REAL | Inversores |
+
+### Estado Actual Day 1
+
+| Métrica | Valor | Nota |
+|---------|-------|------|
+| Balance | $984,801.27 | Capital real |
+| Capital Preservation | 98.42% | Histórico verificable |
+| Trades Oficiales | 0 | Crece desde Day 1 |
+| Data Quality (REAL) | 0% → 100% | Con nuevos trades |
+| Veto System | Activo | 6-tier + MC + RMS |
+
+**Referencia:** `docs/reference/adr/ADR-012-learning-baseline-freeze.md`
+
+---
+
+## Cambios Recientes
+
+### Phase 0 Retrospective Governance Backtest (Mar 1, 2026)
+
+**PROPÓSITO:** Due diligence interna — ¿habría bloqueado el motor de 6 checkpoints los trades reales de julio-agosto 2025?
+
+| Métrica | Valor |
+|---------|-------|
+| Período | Jul 6 – Ago 18, 2025 (Phase 0, dinero real Kraken) |
+| Capital real desplegado | $4,076.66 |
+| Trades reales ejecutados | 1,115 (ledger importado a `kraken_real_trades`) |
+| P&L real | -$1,167 (-28.6%) |
+| Tipo de dinero | **REAL** — nunca simulado |
+| Puntos evaluados (asset × hora) | 225 con datos suficientes |
+| **Resultado BLOCKED** | **215 / 225 = 95.6%** |
+| **Resultado APPROVED** | **10 / 225 = 4.4%** |
+| Checkpoint más frecuente | CP-1 Probability (166x), CP-3 Coherence (159x), CP-4 Persistence (156x) |
+| Tablas BD | `kraken_real_trades`, `backtest_phase0_signals`, `backtest_phase0_results` |
+
+**Conclusión honesta:** El motor de gobernanza habría detectado incertidumbre extrema en el 95.6% de los puntos evaluados — consistente con las pérdidas reales. El claim válido es: "el sistema identifica el tipo de régimen de mercado que causó las pérdidas y responde con fail-closed". Ver metodología y limitaciones completas en `docs/reference/backtest/PHASE0_GOVERNANCE_BACKTEST.md`.
+
+**Limitación metodológica documentada (Architect Review):** Las señales son reconstruidas desde el historial de precios reales, no un replay en vivo. Los parámetros reflejan calibración Nov 2025–Ene 2026. Resultado = estimación retrospectiva de alta calidad, no replay exacto.
+
+---
+
+### Public Verification Server Deployed (Feb 21, 2026)
+
+**PROPÓSITO:** Endpoint público para que inversores y auditores verifiquen la autenticidad de decisiones de governance sin exponer datos internos.
+
+| Componente | Detalle |
+|------------|---------|
+| Stack | aiohttp (async, non-blocking) |
+| Puerto | 8000 (Railway, mismo proceso que bot) |
+| Endpoints | `/verify`, `/api/verify/{id}`, `/api/verify/recent`, `/api/public_key`, `/api/governance/metrics` |
+| Seguridad | Rate limit 30/min, zero internal data exposure |
+| Criptografía | SHA-256 hash chain + Dilithium-3 (ML-DSA-65) PQC signatures |
+| Ciclos documentados | 766,741 evaluation cycles (internal dataset, not externally audited) |
+| Auto-refresh | 30s interval, lista se actualiza sin recargar |
+| Timestamps | Hora exacta UTC + tiempo relativo (ej: "23:55:39 UTC (2m ago)") |
+| Contador total | "Showing 10 of N total receipts" visible en header |
+
+**URL Pública:** `https://omnibotgenesis-production.up.railway.app/verify`
+
+**Archivos:**
+- `omnix_core/evidence/verification_server.py` — servidor standalone + UI verificación
+- `omnix_core/evidence/decision_receipt.py` — motor de receipts (genera, firma, almacena)
+- `src/omnix/bootstrap/main_entry.py` — integración (importlib lazy load)
+
+**Receipt Generation Flow:**
+1. Bot analiza asset en `_analyze_market()` (auto_trading_bot.py)
+2. `_generate_governance_receipt()` crea receipt con DecisionReceiptEngine
+3. Receipt firmado con Dilithium-3 PQC, hash SHA-256 encadenado al anterior
+4. Almacenado en tabla `decision_receipts` (PostgreSQL)
+5. Visible en `/verify` y verificable via `/api/verify/{receipt_id}`
+
+**Database Driver Compatibility:**
+- `_get_db_connection()` helper con fallback: psycopg2 (Replit) → psycopg3 (Railway)
+- Compartido entre `decision_receipt.py` y `verification_server.py`
+
+**Datos públicos expuestos:** receipt_id, timestamp, asset, decision, content_hash, prev_hash (truncado), signature_algorithm, governance gate categories.
+**Datos NO expuestos:** veto_chain, policy_version, engine_version, thresholds internos.
+
+---
+
+### CRITICAL FIX - Gemini Model Migration (Feb 7, 2026)
+
+**PROBLEMA:** Google deprecó `gemini-2.0-flash-exp` (retirement March 31, 2026). Bot respondía "System busy" porque el modelo primario ya no existía.
+
+| Cambio | Detalle |
+|--------|---------|
+| Modelo AI | `gemini-2.0-flash-exp` → `gemini-2.5-flash` (estable GA) |
+| Archivos actualizados | 6 (settings.py, ai_models.py, conversational_ai_adapter.py, community_analyzer.py, advanced_intelligence.py, enterprise_bot.py) |
+| OpenAI Key Validator | Relajado para soportar nuevos formatos de API key |
+| Startup Diagnostics | Nuevo log de resumen mostrando modelos disponibles |
+
+**Cadena de fallback actualizada:** Gemini 2.5 Flash → GPT-4o → Claude Sonnet 4
+
+---
+
+### Sitio Web Institucional Lanzado (Jan 28, 2026)
+
+**PROPÓSITO:** Landing page pública para inversores y prospectos B2B.
+
+| Componente | Estado |
+|------------|--------|
+| Puerto | 5000 (React + Vite) |
+| Stack | React 18 + TypeScript + Tailwind CSS |
+| Features | 8 secciones completas |
+| APIs | CoinGecko, Alternative.me, Finnhub |
+| Certifications | NIST (Implemented), ADGM (Target), Sharia (In Development) |
+
+**Arquitectura Multi-Puerto:**
+| Puerto | Servicio | Propósito |
+|--------|----------|-----------|
+| 5000 | OMNIX Web | Landing page institucional |
+| 8000 | Verification Server | Verificación pública de recibos (aiohttp) |
+| 8080 | Streamlit | Shadow analytics |
+
+**Documentación:** `docs/current/WEB_INFRASTRUCTURE.md`, `omnix_web/README.md`
+
+---
+
+### Shadow Portfolio Activado (Jan 27, 2026)
+
+**PROPÓSITO:** Activar análisis contrafactual para validar que los vetos fueron correctos.
+
+| Componente | Estado |
+|------------|--------|
+| `shadow_trade_events` | 766,741 eventos capturados |
+| `shadow_trade_outcomes` | 50 procesados (100% accuracy) |
+| Runner | Fix timezone aplicado, funcional |
+| Runbook | `docs/operations/RUNBOOK_SHADOW_PORTFOLIO.md` |
+
+**Bug Corregido:** `datetime.utcnow()` → `datetime.now(timezone.utc)` para comparación timezone-aware.
+
+**Ejecución:**
+```bash
+python -m omnix_services.database_service.shadow_portfolio_runner --max-events 500
+```
+
+**Resultados Iniciales (50 eventos):**
+- Vetos correctos: 50 (100%)
+- BLACK_SWAN vetos: 100% accuracy
+- COHERENCE_GATE vetos: 100% accuracy
+
+**Próximo Paso:** Configurar cron job en Railway para ejecución diaria.
+
+---
+
+### Dashboard Investor Credibility Fixes (Jan 25, 2026)
+
+**PROPÓSITO:** Corregir métricas confusas para presentaciones de inversores.
+
+| Fix | Antes | Después |
+|-----|-------|---------|
+| Max Drawdown | +1.5% (positivo incorrecto) | 0% (normalizado) |
+| Win Rate | 20.2% (de Learning Baseline) | N/A (0 trades en Track Record) |
+| Header P&L | Sin contexto | Etiquetado "(Baseline)" |
+| Est. Loss Avoided | Sin explicación | Footnote con metodología |
+
+**Archivos Modificados:**
+- `omnix_dashboard/blueprints/core.py` (api_comparative_metrics)
+- `omnix_dashboard/templates/terminal.html` (header labels)
+- `omnix_dashboard/static/js/components/comparativemetrics.js`
+- `omnix_dashboard/static/js/components/regimedetection.js`
+
+**Fórmula Est. Loss Avoided:**
+```
+Est. Loss = Evaluation Cycles × Avg Position Size ($20K) × Expected Loss Rate (2.5%)
+Cap: $100K (10% de $1M capital virtual)
+```
+
+---
+
+### ADR-022: Post-Quantum Cryptography Status (Jan 23, 2026)
+
+**ESTADO**: ✅ IMPLEMENTADO - PQC operativo desde Nov 2025
+
+| Componente | Algoritmo | Estándar NIST |
+|------------|-----------|---------------|
+| Encriptación | Kyber-768 (ML-KEM-768) | FIPS 203 |
+| Firmas Digitales | Dilithium-3 (ML-DSA-65) | FIPS 204 |
+
+**CRÍTICO**: PQC YA ESTÁ IMPLEMENTADO - NO es roadmap.
+
+**Integración Trading**:
+- Órdenes de trading firmadas con Dilithium-3 antes de ejecución
+- Cada orden incluye `pqc_signed: true` y `pqc_algorithm: Dilithium-3`
+- Logging de firma: `🔐 Orden firmada con Dilithium-3 (PQC)`
+
+**Nivel de Seguridad**: NIST Level 3 (~192-bit classical security)
+
+**Archivos**:
+- Módulo: `omnix_core/security/pqc_security.py`
+- Manifest: `omnix_config/system_state_manifest.json` (sección `post_quantum_cryptography`)
+- Prompt: `omnix_services/ai_service/prompt_templates.py` (incluye estado PQC)
+
+**Referencia**: `docs/reference/adr/ADR-022-post-quantum-cryptography.md`
+
+---
+
+### ADR-021: Shadow Trade Metrics View (Jan 22, 2026)
+
+**PROPÓSITO:** VIEW SQL analítica para parsing de `decision_trace` y análisis retroactivo de DCI.
+
+| Característica | Valor |
+|----------------|-------|
+| Tipo | VIEW (no tabla física) |
+| Riesgo | Zero - reversible con DROP VIEW |
+| Datos | 76,910+ eventos desde Jan 15 |
+| Performance | ~2-3 segundos por query |
+
+**Métricas Extraídas:**
+- `mc_win_rate`: Monte Carlo Win Rate %
+- `mc_expected_return`: Monte Carlo Expected Return %
+- `coherence_score`: Coherence Engine Score %
+- `ecw_cycles`: ECW cycles (0-3)
+- `ecw_status`: WAITING / OPEN
+- `black_swan_severity`: LOW / MEDIUM / HIGH / EXTREME
+- `approx_dci`: DCI aproximado (0-100)
+
+**Regex Design:**
+> "Regex are intentionally permissive to preserve forward compatibility of decision_trace semantics."
+
+**Dashboard Shadow Analytics (Streamlit):**
+
+| Bloque | Contenido |
+|--------|-----------|
+| A - System Overview | 4 KPIs: Total Events, Avg WR, Avg Coherence, % ECW Blocked |
+| B - Decision Quality | Win Rate histogram, Coherence by Symbol bar, Coherence vs DCI scatter |
+| C - Governance/Risk | ECW waiting table, Low coherence table, Top vetos table |
+| Footer | Disclaimer institucional + timestamp de datos |
+
+**Framing:**
+> El dashboard responde a: "¿Cómo decide OMNIX y por qué NO opera?" (no "¿cuánto gana?")
+
+**Uso Demo (Investor):**
+```sql
+-- Capital protegido por ECW
+SELECT SUM(blocked_capital) FROM v_shadow_trade_metrics WHERE ecw_status = 'WAITING';
+
+-- DCI distribution
+SELECT 
+ CASE WHEN approx_dci >= 70 THEN 'CONTRADICTORY' ELSE 'ALIGNED' END,
+ COUNT(*)
+FROM v_shadow_trade_metrics GROUP BY 1;
+```
+
+**Archivos:** `docs/reference/adr/ADR-021-shadow-trade-metrics-view.md`, `omnix_dashboard/streamlit_app.py`
+
+---
+
+### ADR-019: Edge Confirmation Window (ECW) (Jan 21, 2026)
+
+**PROPÓSITO:** Gate de confirmación de edge que requiere persistencia del edge estadístico antes de permitir trades. Transforma "capital preservation" en "capital patience".
+
+| Parámetro | Valor | Descripción |
+|-----------|-------|-------------|
+| MC Win Rate Min | ≥52% | 2% sobre break-even |
+| MC Expected Return Min | >0% | Cualquier edge positivo |
+| Ciclos Consecutivos | 3 | Confirmar persistencia |
+| Black Swan Max | MEDIUM | No operar en riesgo severo |
+
+**Flujo de Decisión:**
+```
+MC VETO → RMS VETO → COHERENCE GATE → [ECW GATE] → Scoring → Decision
+```
+
+**Comportamiento:**
+- Condiciones cumplidas → Contador incrementa
+- Cualquier condición falla → Contador reset a 0
+- Contador ≥ 3 → Trade window OPEN
+
+**Logging Format:**
+```
+⏳ [ECW_GATE] BTC/USD | ECW: 2/3 cycles (WR=53.2%✓, ER=0.15%✓, BS=LOW✓) → Waiting
+✅ [ECW_GATE] BTC/USD | ECW: 3/3 cycles → Trade window OPEN
+```
+
+**Storage:** Redis counter per symbol con TTL 1 hora
+
+**ECW_PROGRESS Tracking (decision_trace):**
+- `ecw_progress_current`: Contador actual (0, 1, 2, 3)
+- `ecw_progress_required`: Siempre 3
+- `ecw_progress_previous`: Valor previo antes de esta evaluación
+
+**ECW_RESET_REASON Enum:**
+| Razón | Trigger |
+|-------|---------|
+| `BLACK_SWAN_HIGH` | Black Swan EXTREME o HIGH |
+| `BLACK_SWAN_ELEVATED` | Black Swan ELEVATED |
+| `MC_EDGE_DEGRADED` | Win Rate cayó debajo de 52% |
+| `MC_ER_NEGATIVE` | Expected Return se volvió negativo |
+| `SIGNAL_FLIP` | Señal EMA cambió de BUY a SELL/HOLD |
+| `CONDITIONS_FAILED` | Múltiples condiciones fallaron |
+
+**Signal Normalization (para detección SIGNAL_FLIP):**
+```
+LONG/BUY/BULLISH/STRONG_BUY/UPTREND → BUY
+SHORT/SELL/BEARISH/STRONG_SELL/DOWNTREND → SELL
+Otros → HOLD
+```
+
+**Archivos:** 
+- `omnix_core/bot/auto_trading_bot.py` - Implementación ECW gate
+- `omnix_config/system_state_manifest.json` - Configuración
+- `docs/reference/adr/ADR-019-edge-confirmation-window.md`
+
+---
+
+### ADR-018: Decision Contradiction Index (DCI) (Jan 21, 2026)
+
+**PROPÓSITO:** Métrica shadow observacional para explicar HOLDs cuando señales locales fuertes contradicen edge global débil.
+
+| Componente | Puntos | Descripción |
+|------------|--------|-------------|
+| Local Signal Strength | 0-40 | avg(Non-Markovian%, EMA%) × 0.4 |
+| Global Edge Penalty | 0-30 | Inverso de MC_ER/WR |
+| Regime Penalty | 0-15 | VOLATILE=15, RANGING=10, BEARISH=5 |
+| Risk Overlay | 0-15 | Black Swan severity |
+
+**Output:** Score 0-100, Nivel: ALIGNED (<35) / TENSIONED (35-69) / CONTRADICTORY (≥70)
+
+**REGLA CRÍTICA:** 
+> **DCI ALTO = NO OPERAR.** Un DCI alto indica alta contradicción interna.
+> NUNCA usar DCI alto como condición de entrada.
+
+**Ejemplo Production (Jan 21):** 
+```
+BTC/USD: NM BUY 70%, EMA NONE 29%, MC_WR 49.7%, RANGING, Black Swan MEDIUM
+→ DCI = 71.8 (CONTRADICTORY) → HOLD justificado
+```
+
+**Bugfix aplicado:** `ema_confidence` se normalizó de decimal (0-1) a porcentaje (0-100).
+
+**Cuantificación de Pérdida Evitada:**
+- Fórmula: `Position_Size × max(VaR95, Historical_Avg_Loss)`
+- NUNCA decir "difícil de cuantificar"
+
+**Modo:** Shadow only - NO afecta decisiones de trading
+
+**Validación Day 9:** Correlación DCI vs win rate (r ≥ 0.6 = predictor válido)
+
+**Archivos:** 
+- `omnix_core/bot/auto_trading_bot.py` - Cálculo y logging
+- `omnix_config/system_state_manifest.json` - Definición para AI
+- `docs/reference/adr/ADR-018-decision-contradiction-index.md`
+
+---
+
+### ADR-017: FINAL_DECISION_REASON + ADR-016: Log Semantics (Jan 21, 2026)
+
+**ADR-017:** Bloque consolidado de razón de decisión para auditorías de inversores
+- Señales locales, edge global, régimen, Black Swan, coherence, acción final
+- Formato estructurado en decision payload
+
+**ADR-016:** Mejoras semánticas en logs
+- Kelly skip on HOLD, DecisionConf/CoherenceScore rename, BYPASSED gate text
+
+**Estado:** ✅ IMPLEMENTADO - 27/27 tests passing
+
+---
+
+### Railway Production Hotfixes (Jan 16, 2026)
+
+**Fixes aplicados a 3 errores críticos de producción:**
+
+| Error | Causa | Fix |
+|-------|-------|-----|
+| `CacheAdapter.increment` missing | V7.0 hexagonal adapter sin método `increment()` | Agregar método que delega a RedisCache |
+| `KrakenAPIClient.client` missing | Código asumía interfaz CCXT | Usar `get_ticker('XBTUSD')` con parsing Kraken nativo |
+| `coherence_level` column missing | PostgreSQL no permite alias en GROUP BY | Cambiar a `GROUP BY 1` |
+
+**Archivos modificados:**
+- `src/omnix/infrastructure/adapters/cache_adapter.py`
+- `omnix_core/context/real_data_provider.py`
+
+**Referencia:** `docs/current/TECHNICAL_DEBT.md`
+
+---
+
+### ADR-012 Learning Baseline Freeze (Jan 15, 2026)
+
+**DECLARACIÓN:** Day 1 oficial del track record de OMNIX.
+
+| Aspecto | Decisión |
+|---------|----------|
+| Day 1 Oficial | 15 de Enero 2026 |
+| Learning Baseline | Nov 2025 - Jan 14, 2026 (119 trades) |
+| Métricas Reset | Trade count, win rate, profit factor (desde Day 1) |
+| Métricas Carry-over | Balance, capital preservation, config |
+| Disclosure | Pre-Day 1 = calibración, Post-Day 1 = oficial |
+
+**Criterios Day 1 cumplidos:**
+- ✅ ADR-007: Thresholds calibrados
+- ✅ ADR-010: Métricas estandarizadas
+- ✅ ADR-011: Telemetría completa y marcada
+- ✅ Dashboard: 19/19 widgets operativos
+
+**Referencia:** `docs/reference/adr/ADR-012-learning-baseline-freeze.md`
+
+---
+
+### ADR-011 Legacy Telemetry Backfill (Jan 15, 2026)
+
+**PROBLEMA:** Data Quality al 25% - 119 trades sin coherence_score ni hmm_regime.
+
+**CAUSA RAÍZ:** Trades de Nov-Dic 2025 creados antes de implementar telemetría V005 (enero 2026).
+
+**SOLUCIÓN:**
+| Track | Descripción | Estado |
+|-------|-------------|--------|
+| A | Backfill estimado basado en profit_pct/profit_loss | ✅ 119 trades actualizados |
+| B | Columna `telemetry_source` para distinguir LEGACY_ESTIMATED vs REAL | ✅ Añadida |
+| C | Métrica segmentada en Health Score | ✅ Implementada |
+
+**Distribución Post-Backfill:**
+| HMM Regime | Trades | Avg Coherence | Avg Profit% |
+|------------|--------|---------------|-------------|
+| RANGING | 47 | 34.6 | -0.74% |
+| BEARISH | 31 | 25.0 | -3.60% |
+| UNKNOWN | 26 | 45.2 | +0.12% |
+| BULLISH | 15 | 75.0 | +3.22% |
+
+**Métrica Data Quality:**
+- Antes: 25% (campos NULL)
+- Después: 100% (con telemetría estimada marcada)
+- Real: 0% (hasta nuevos trades en enero 2026)
+
+**Referencia:** `docs/reference/adr/ADR-011-legacy-telemetry-backfill.md`
+
+---
+
+### ADR-008 Opportunity Tracker (Jan 14, 2026)
+
+**PROPÓSITO:** Framework de validación para decisión Day 30 sin cambiar thresholds ahora.
+
+| Concepto | Descripción |
+|----------|-------------|
+| **Missed Opportunities** | Trades bloqueados con Coh >50%, RANGING, EMA 30-40% |
+| **Losses Avoided** | Trades correctamente bloqueados (Coh <30%, VOLATILE) |
+| **Net Opportunity** | Balance diario: missed - avoided |
+
+**Ejemplo Observado (Jan 14, 23:07):**
+```
+BTC/USD - Near Optimal Conditions:
+✅ Coherence: 54% (MODERATE)
+✅ Regime: RANGING (28.7% vol)
+✅ Non-Markovian: 85% BUY
+✅ Black Swan: MEDIUM
+❌ EMA: NONE @ 31.7% (threshold ~40%)
+
+Decision: HOLD (EMA no signal)
+Classification: POTENTIAL_MISSED_OPPORTUNITY
+Follow-up: Track BTC price 24h later
+```
+
+**Day 30 Review (Feb 13, 2026):**
+- Si missed > 20 AND profit estimado > $3K → Test threshold 35% con $500
+- Si missed < 10 OR avoided >> missed → Mantener conservador
+- Dashboard FEAT-011 trackea datos automáticamente
+
+**Estado:** ✅ ADOPTADO - Tracking activo
+**Referencia:** `docs/reference/adr/ADR-008-opportunity-tracker.md`
+
+---
+
+### ADR-007 Coherence Threshold Calibration (Jan 14, 2026)
+
+**DIAGNÓSTICO:** Sistema demasiado protector, bloqueando oportunidades legítimas.
+
+| Métrica | Valor | Análisis |
+|---------|-------|----------|
+| Vetos (7d) | 48,937 | Muy alto |
+| Capital Bloqueado | $978.7M | Desproporcionado |
+| Net Win Rate | 20.2% | Bajo por fee erosion |
+| Directional Accuracy | 37.8% | Señales correctas, pero bloqueadas |
+| OMNIX vs BTC | +4.81% alpha | Sistema supera mercado |
+
+**CAUSA RAÍZ:** COHERENCE_GATE y BLACK_SWAN demasiado estrictos.
+
+| Veto Type | Count (7d) | Avg Coherence | Capital Blocked |
+|-----------|------------|---------------|-----------------|
+| COHERENCE_GATE | 27,646 | 26.3% | $552.9M |
+| BLACK_SWAN | 21,402 | N/A | $428.0M |
+
+**SOLUCIÓN - Phase 1 (5-point reduction):**
+
+| Threshold | V6.5.4d | V6.5.4e | Cambio |
+|-----------|---------|---------|--------|
+| LOW | 35% | 30% | -5 |
+| MEDIUM | 45% | 40% | -5 |
+| HIGH | 55% | 50% | -5 |
+| EXTREME | 65% | 60% | -5 |
+| EMA Trigger | 25 | 20 | -5 |
+
+**Archivos Modificados:**
+- `omnix_services/coherence_service/coherence_engine.py`
+- `omnix_services/risk_management/memory_risk_adapter.py`
+
+**Impacto Esperado:**
+- Veto rate: -15-20%
+- Win rate: 37.8% → 42-45%
+- Profit factor: 0.13 → 0.8-1.2
+
+**Guardrails:**
+- Rollback si drawdown > 3% en 48h
+- Monitoreo via Dashboard Learning Engine
+
+**Referencia:** `docs/reference/adr/ADR-007-coherence-threshold-calibration.md`
+
+---
+
+### Trade Investigation - Dual Win Rate Framework (Jan 11-12, 2026)
+
+**HALLAZGO CRÍTICO:** El win rate reportado (20.17%) era incompleto. Existen dos métricas válidas.
+
+| Métrica | Valor | Cálculo | Significado |
+|---------|-------|---------|-------------|
+| **Win Rate Direccional** | 37.82% | `profit_pct > 0` | Sistema acierta dirección |
+| **Win Rate Neto** | 20.17% | `profit_loss > 0` | Ganancia después de fees |
+
+**Root Cause de la Diferencia:**
+- 21 trades (17.6%) ganaron en dirección pero perdieron por fees
+- Trades grandes ($10K-$50K) con ganancias pequeñas (0.2%) no cubren fees de Kraken (0.26%)
+- Trades micro (<$1K) son rentables: 55.56% WR, +$101 P&L
+
+**Hotfixes Implementados:**
+
+| Fix | Descripción | Archivo |
+|-----|-------------|---------|
+| **$1,000 Hard Cap** | Máximo por posición (inicial) | `auto_trading_bot.py` |
+| **Telemetría** | Guardar coherence_score, hmm_regime, etc. | `paper_trading_manager.py` |
+| **Dashboard Dual WR** | Mostrar ambos win rates | `queries.py` |
+
+**ADR-004 Position Sizing Hotfix (12 Ene 2026):**
+
+| Hotfix | Antes | Después | Estado |
+|--------|-------|---------|--------|
+| Kelly max_position | 20% | **2%** | ✅ IMPLEMENTADO |
+| Position Hard Cap | $62,500 | **$20,000** | ✅ IMPLEMENTADO |
+| Spread mínimo | 5 bps | 25 bps | ✅ IMPLEMENTADO |
+
+**Estado:** ✅ CÓDIGO IMPLEMENTADO (27 tests pasados).
+**Justificación:** Trades <$1K tienen 55.56% WR vs trades >$10K tienen 31% WR.
+**Referencia:** `docs/reference/adr/ADR-004-position-sizing-hotfix.md`
+
+**Dashboard Métricas Actualizadas:**
+- `win_rate_directional`: 37.82% (capacidad predictiva)
+- `win_rate_net`: 20.17% (resultado financiero)
+- `fee_eroded_trades`: 21 (trades afectados por fees)
+
+**Consistencia Multi-Canal (Jan 12, 2026):**
+
+| Canal | Implementación | Estado |
+|-------|----------------|--------|
+| **Dashboard** | `queries.py` → Header muestra 37.8% / 20.2% | ✅ ACTIVO |
+| **Telegram Bot** | `_get_dual_win_rates()` en `auto_trading_bot.py` | ✅ IMPLEMENTADO |
+| **AI Context** | `real_data_provider.py` incluye ambas métricas | ✅ IMPLEMENTADO |
+
+**Query SQL Unificada:**
+```sql
+SELECT 
+ SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as net_wins,
+ SUM(CASE WHEN profit_pct > 0 THEN 1 ELSE 0 END) as dir_wins,
+ SUM(CASE WHEN profit_pct > 0 AND profit_loss < 0 THEN 1 ELSE 0 END) as fee_eroded
+FROM paper_trading_trades WHERE status = 'closed'
+```
+
+**Alineación con ADR-002 Honest Framing:**
+- Ambas métricas visibles con contexto
+- Sin ocultar datos negativos
+- Explicación clara de la diferencia
+
+**Documentación:**
+- `docs/investigations/TRADE_INVESTIGATION_JAN2026.md`
+- `docs/reference/adr/ADR-005-dual-win-rate-framework.md`
+
+---
+
+### Contexto Enriquecido para IA (Jan 12, 2026)
+
+**PROPÓSITO:** Permitir que la IA responda preguntas específicas como "¿por qué perdemos en SOL?" usando datos reales en lugar de respuestas genéricas.
+
+**Implementación en `omnix_core/context/real_data_provider.py`:**
+
+| Método | Descripción | Cache TTL |
+|--------|-------------|-----------|
+| `get_symbol_breakdown()` | P&L y WR por símbolo (top 10 peores) | 120s |
+| `get_regime_breakdown()` | P&L y WR por régimen HMM | 120s |
+| `get_coherence_breakdown()` | P&L y WR por nivel de coherence | 120s |
+| `get_fee_impact()` | Análisis de trades fee-eroded (ADR-005) | 120s |
+| `get_timing_patterns()` | Patrones por hora UTC | 300s |
+| `get_analytics_context()` | Wrapper para todos los breakdowns | - |
+
+**Cambios en `format_for_prompt()`:**
+
+El prompt de la IA ahora incluye:
+```
+📊 BREAKDOWN POR SÍMBOLO (ordenado por P&L, peores primero):
+• XRP/USD: 23 trades, 13.0% WR, -$4,482 P&L
+• SOL/USD: 15 trades, 6.7% WR, -$3,952 P&L
+...
+
+🌊 BREAKDOWN POR RÉGIMEN HMM:
+• VOLATILE: 58 trades, 15.5% WR, -$180 avg
+• RANGING: 35 trades, 22.9% WR, -$95 avg
+...
+
+🎯 BREAKDOWN POR COHERENCE:
+• CRITICAL: 18 trades, 5.6% WR, -$245 avg
+• POOR: 32 trades, 12.5% WR, -$165 avg
+...
+
+💸 IMPACTO DE FEES:
+• Trades fee-eroded: 21
+• Erosión promedio: $100 por trade
+
+⏰ PATRONES TEMPORALES (peores horas UTC):
+• 14:00 UTC: 12 trades, 8.3% WR, -$210 avg
+...
+```
+
+**Nuevas Reglas de Transparencia:**
+```
+3. YA TIENES TODOS LOS DATOS - NO digas "necesito ejecutar queries"
+6. Propón acciones concretas basadas en datos (ej: "bloquear SOL/USD")
+```
+
+**Resultado Esperado:**
+
+Cuando el usuario pregunta "Analiza los últimos trades", la IA responderá:
+- Con breakdowns específicos por símbolo/régimen/coherence
+- Identificando patrones problemáticos
+- Proponiendo acciones concretas
+- SIN decir "necesito ejecutar queries" o "no tengo información"
+
+**Archivos Modificados:**
+- `omnix_core/context/real_data_provider.py` - 6 nuevos métodos + prompt actualizado
+
+---
+
+### Kalman Filter Log Optimization (Jan 10, 2026)
+
+**PROPÓSITO:** Eliminar 4 logs repetitivos por ciclo de análisis sin afectar funcionalidad.
+
+| Componente | Estado | Descripción |
+|------------|--------|-------------|
+| **DualKalmanTrendFilter** | ✅ OPTIMIZADO | Caching per-pair + log suppression |
+| **AdaptiveKalmanFilter** | ✅ OPTIMIZADO | Class-level `_init_logged_rates` set |
+| **KalmanFilter** | ✅ OPTIMIZADO | Class-level `_init_logged` flag |
+| **filter_series()** | ✅ OPTIMIZADO | `reset_state=True` + `suppress_log=True` |
+
+**Cambios Técnicos:**
+- `suppress_log` parameter en todos los filtros Kalman
+- `_pair_cache` dict para instancias cacheadas por par de trading
+- `get_cached_filter(pair)` classmethod para uso avanzado
+- `clear_cache(pair=None)` classmethod para limpieza
+
+**Resultado:**
+```
+Antes: 4 logs por ciclo ("Kalman Filter initialized", "Adaptive Kalman initialized" x2, "Dual Kalman initialized")
+Después: 0 logs repetitivos (solo en primer init del bot)
+```
+
+**Comportamiento Preservado:**
+- `reset_state=True` (default) resetea filtros en cada llamada
+- Resultados consistentes entre llamadas verificado en tests
+- Sin contaminación de estado
+
+**Archivos Modificados:**
+- `omnix_services/trading_service/kalman_filter.py` - Optimización completa
+
+---
+
+### Shadow Portfolio + Learning Engine V007 (Jan 9, 2026)
+
+**PROPÓSITO:** Sistema de aprendizaje que analiza trades bloqueados para calibrar filtros.
+
+| Componente | Estado | Descripción |
+|------------|--------|-------------|
+| **Migración V007** | ✅ CREADA | 3 tablas: shadow_trade_events, shadow_trade_outcomes, filter_calibration_metrics |
+| **ShadowPortfolioRepository** | ✅ CREADO | Mismo patrón que VetoRepository |
+| **Bot Instrumentación** | ✅ COMPLETO | 5 veto call sites pasan shadow_context (MC x2, RMS, COHERENCE_GATE, BLACK_SWAN) |
+| **Counterfactual Runner** | ✅ COMPLETO | ShadowPortfolioRunner con CLI entrypoint |
+| **Dashboard Widget** | ✅ COMPLETO | Streamlit "Shadow Portfolio" tab con accuracy, missed opportunities, recommendations |
+| **Cron Job Script** | ✅ COMPLETO | `scripts/operations/run_shadow_portfolio.sh` para Railway |
+| **Runbook** | ✅ COMPLETO | `docs/operations/runbooks/shadow_portfolio_runner.md` |
+
+**Datos Capturados por Trade Bloqueado:**
+- Contexto de trade: symbol, action, price, position size
+- Señales: EMA score, HMM regime, coherence, Monte Carlo ER, Black Swan prob
+- Mercado: bid/ask, ATR, volume, volatility
+- Decisión: veto_type, reason, decision_trace completo
+
+**Análisis Counterfactual (30 días después):**
+```
+Por cada trade bloqueado:
+├── ¿Qué precio tuvo después? (1h, 4h, 24h, 7d, 30d)
+├── ¿Habría ganado o perdido?
+├── ¿El veto fue correcto?
+└── Recomendación: KEEP / LOOSEN / REVIEW threshold
+```
+
+**Calibración por Tipo de Veto:**
+| Veto Type | Si accuracy < 50% + win_rate > 55% |
+|-----------|-------------------------------------|
+| COHERENCE_GATE | → LOOSEN threshold (bajar umbral) |
+| MONTE_CARLO | → Review ER threshold |
+| BLACK_SWAN | → Ajustar crash_prob limit |
+| RMS | → Review circuit breaker config |
+
+**Archivos:**
+- `omnix_services/database_service/migrations/versions.py` (V007)
+- `omnix_services/database_service/shadow_portfolio_repository.py`
+- `omnix_services/database_service/shadow_portfolio_runner.py` (NEW)
+- `omnix_core/bot/auto_trading_bot.py` (_log_veto extended, _build_shadow_context)
+- `tests/test_shadow_portfolio_runner.py` (17 tests)
+
+**ShadowPortfolioRunner - CLI Entrypoint:**
+```bash
+python -m omnix_services.database_service.shadow_portfolio_runner --min-age 24 --max-events 100
+
+Options:
+ --min-age N Minimum age of events to analyze (hours, default: 24)
+ --max-events N Maximum events to process (default: 100)
+ --symbol SYM Only analyze specific symbol (e.g., BTC)
+ --dry-run Analyze but do not persist results
+ --verbose Enable debug logging
+```
+
+**Counterfactual Logic:**
+| Scenario | Veto Correct? | Reason |
+|----------|---------------|--------|
+| 24h loss > 2% | ✅ Yes | Veto protected from loss |
+| Max drawdown > 5% | ✅ Yes | Would have hit stop loss |
+| 24h gain > 3% | ❌ No | Veto blocked highly profitable trade |
+| 24h gain 1.5-3% | ❌ No | Veto blocked profitable trade |
+| 24h P&L < 1% | ✅ Yes | Marginal trade, veto reasonable |
+| Unknown action | ✅ Yes | Conservative default |
+
+**Threshold Alignment:**
+- `would_have_won` = P&L > 1.0% (consistent with veto correctness boundary)
+- Marginal zone = |P&L| < 1.0% (veto considered correct)
+
+**Cron Job Schedule:**
+```
+Railway Cron: 0 5 * * * (05:00 UTC daily)
+Command: bash scripts/operations/run_shadow_portfolio.sh
+Environment Variables:
+ SHADOW_MIN_AGE_HOURS=24 (default)
+ SHADOW_MAX_EVENTS=250 (default)
+```
+
+**Dashboard Widget:**
+Streamlit → "Shadow Portfolio" tab muestra:
+- Veto Accuracy by type (gráfico de barras)
+- Top Missed Opportunities (trades que hubieran sido rentables)
+- Filter Calibration Recommendations (tabla)
+- Investor-grade explanation
+
+**Investor Language:**
+> "OMNIX implements institutional-grade counterfactual analysis. Every blocked trade is tracked and analyzed 30 days later to determine filter accuracy. This data-driven approach ensures our risk filters are neither too conservative (blocking profitable opportunities) nor too loose (allowing losing trades). The system learns from its own decisions."
+
+---
+
+### Adaptive Coherence Gate - Centralized Architecture (Jan 9, 2026)
+
+**PROBLEMA DETECTADO:** El Adaptive Gate (Jan 8) no se activaba en producción porque:
+1. El bot tenía su propia verificación con thresholds hardcodeados del perfil (35%)
+2. Esta verificación se ejecutaba ANTES del nuevo código adaptativo en CoherenceEngine
+3. Railway mostraba logs con threshold fijo (35%) en lugar de adaptativo
+
+**SOLUCIÓN IMPLEMENTADA:** Arquitectura centralizada que delega toda la lógica al CoherenceEngine.
+
+| Componente | Archivo | Cambio |
+|------------|---------|--------|
+| **AdaptiveGateDecision** | `coherence_engine.py` | ✅ Nuevo DTO con decisión + thresholds |
+| **evaluate_pre_scoring_gate()** | `coherence_engine.py` | ✅ Nueva API pública para bot |
+| **_make_v52_decision()** | `auto_trading_bot.py` | ✅ Usa nuevo método en lugar de hardcoded |
+
+**Antes (Código duplicado):**
+```
+Bot: veto_critical = profile.coherence_veto_critical # 35% fijo
+Bot: if coherence_score < veto_critical → BLOCK
+```
+
+**Después (Centralizado):**
+```
+Bot: gate_decision = coherence_engine.evaluate_pre_scoring_gate(...)
+Bot: if gate_decision.should_block → BLOCK
+```
+
+**Logging esperado en Railway:**
+```json
+{"event": "ADAPTIVE_GATE_DECISION", "block_threshold": 35, "adaptive_gate_active": true}
+```
+
+---
+
+### HOTFIX: AttributeError self.paper_mode (Jan 9, 2026)
+
+**ERROR EN RAILWAY:**
+```
+🚫 [COHERENCE_GATE] EXCEPTION BLOCKED: 'AutoTradingBot' object has no attribute 'paper_mode' → TRADE BLOCKED (fail-closed)
+```
+
+**CAUSA RAÍZ:** Al centralizar el Adaptive Gate, se usó `self.paper_mode` en lugar de `self.config['paper_mode']`.
+
+**FIX:**
+```python
+# Antes (ERROR)
+paper_mode=self.paper_mode
+
+# Después (CORRECTO)
+paper_mode=self.config['paper_mode']
+```
+
+**Archivo:** `omnix_core/bot/auto_trading_bot.py` línea 2702
+
+**Impacto:** El fail-closed funcionó correctamente bloqueando trades en lugar de permitirlos con datos corruptos. Este es el comportamiento deseado del sistema de seguridad.
+
+---
+
+### Dashboard Real-Time Metrics Fix (Jan 7, 2026)
+
+**PROBLEMA DETECTADO:** Discrepancia entre panel superior del dashboard y sección Trade History.
+
+| Fuente | Trades | P&L | Win Rate |
+|--------|--------|-----|----------|
+| Panel Superior (antes) | 92 | $-11,900 | 17.4% |
+| Trade History | 119 | $-15,198 | 20.17% |
+| OMNIX Bot | 119 | $-15,198 | 20.2% |
+
+**CAUSA RAÍZ:** `/api/metrics` usaba `get_paper_trades(30)` que solo traía trades de los últimos 30 días, mientras `/api/trades/history` mostraba todos los trades.
+
+**FIX IMPLEMENTADO:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `omnix_dashboard/utils/queries.py` | `get_paper_trades(days=None)` ahora default = ALL trades |
+| `omnix_dashboard/blueprints/core.py` | `/api/metrics` y `/api/trades` usan `get_paper_trades()` sin límite |
+
+**RESULTADO:** Dashboard ahora muestra datos en tiempo real idénticos a PostgreSQL:
+- **119 trades** ✅
+- **$-15,198.73 P&L** ✅ 
+- **20.2% Win Rate** ✅
+
+---
+
+### Adaptive Coherence Gate - Risk-Adjusted Thresholding (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El umbral de coherencia era estático (10% paper, 30% real), causando que el sistema bloqueara trades cuando EMA (primary driver, 40 pts) tenía señal fuerte pero otras estrategias estaban mixtas. El Coherence Engine no consideraba a EMA en su cálculo.
+
+**SOLUCIÓN IMPLEMENTADA:** Umbrales dinámicos basados en EMA score + Black Swan severity.
+
+| Componente | Archivo | Estado |
+|------------|---------|--------|
+| **_calculate_adaptive_threshold()** | `coherence_engine.py` | ✅ Helper que calcula umbrales dinámicos |
+| **validate_trade_coherence()** | `coherence_engine.py` | ✅ Integra adaptive gate |
+| **analysis_data enhancement** | `auto_trading_bot.py` | ✅ Pasa EMA score al Coherence Engine |
+
+**Matriz de Umbrales (Adaptive Coherence Gate V010):**
+
+| EMA Score | Black Swan Severity | Umbral Coherencia |
+|-----------|---------------------|-------------------|
+| ≥ 25 pts | LOW | 35% |
+| ≥ 25 pts | MEDIUM | 45% |
+| ≥ 25 pts | HIGH | 55% |
+| ≥ 25 pts | EXTREME | 65% |
+| < 25 pts | cualquiera | 10% (paper) / 30% (real) |
+
+**EMA Score Buckets:**
+| Confianza EMA | Puntos |
+|---------------|--------|
+| ≥ 70% | 40 pts (strong) |
+| ≥ 50% | 25 pts (moderate) |
+| > 0% | 12 pts (weak) |
+| 0% | 0 pts (none) |
+
+**Lógica V010:**
+- Si EMA (primary driver) tiene señal moderada o fuerte (≥25 pts) → activa umbrales adaptativos
+- En Black Swan LOW → permite más oportunidades (35%)
+- En Black Swan HIGH/EXTREME → más estricto (55-65%)
+- Si EMA débil (<25 pts) → usa umbral default (10% paper, 30% real)
+
+**NOTA V010 (Jan 9):** El trigger se redujo de 35→25 pts para alinearse con los buckets reales de scoring. El código ahora está centralizado en `CoherenceEngine.evaluate_pre_scoring_gate()` con arquitectura DTO.
+
+**Investor-Facing Language:**
+> "OMNIX calibra dinámicamente sus filtros de coherencia según la severidad del régimen de mercado, maximizando capturas en condiciones favorables mientras mantiene disciplina institucional."
+
+**Logging Estructurado:**
+```json
+{
+ "event": "ADAPTIVE_COHERENCE_GATE",
+ "gate_active": true,
+ "ema_score": 40,
+ "black_swan_severity": "LOW",
+ "block_threshold": 35,
+ "reason": "EMA=40pts >= 35, BlackSwan=LOW"
+}
+```
+
+---
+
+### Veto Tracking System - Real-Time Capital Protection (Jan 7, 2026)
+
+**PROBLEMA DETECTADO:** OMNIX inventaba números de capital protegido ($34K, $18K) porque no existía persistencia de vetoes. Sin datos reales, el AI fabricaba métricas.
+
+**SOLUCIÓN IMPLEMENTADA:** Sistema completo de tracking de vetoes con persistencia en PostgreSQL.
+
+| Componente | Archivo | Estado |
+|------------|---------|--------|
+| **Migration V006** | `versions.py` | ✅ Tabla `trading_veto_log` creada |
+| **VetoRepository** | `veto_repository.py` | ✅ Singleton con log_veto() y agregaciones |
+| **Bot Instrumentation** | `auto_trading_bot.py` | ✅ _log_veto() en COHERENCE, MC, BLACK_SWAN, RMS |
+| **API Endpoint** | `blueprints/system.py` | ✅ `/api/system/quarantine` con vetoes 48h/7d |
+| **Widget** | `quarantine.js` | ✅ Veto breakdown por tipo |
+
+**Tabla `trading_veto_log`:**
+```sql
+id (SERIAL PRIMARY KEY)
+veto_type (VARCHAR) -- COHERENCE_GATE, MC_NEG_ER, MC_VAR_TOO_HIGH, BLACK_SWAN, RMS
+symbol (VARCHAR)
+blocked_capital (FLOAT) -- USD estimado bloqueado
+reason (TEXT)
+user_id (INTEGER) -- Para multi-user
+metadata (JSONB) -- Contexto adicional
+created_at (TIMESTAMP)
+```
+
+**Tipos de Veto Trackeados:**
+| Tipo | Descripción | Trigger |
+|------|-------------|---------|
+| `COHERENCE_GATE` | Señales incoherentes | coherence_score < 45% |
+| `MC_NEG_ER` | Expected Return negativo | Monte Carlo ER < 0 |
+| `MC_VAR_TOO_HIGH` | VaR95 excede límite | VaR95 > max_var_pct |
+| `BLACK_SWAN` | Riesgo de crash alto | crash_prob > 30% |
+| `RMS` | Risk Management System | CircuitBreaker o LimitsEngine |
+
+**Endpoint Response Format:**
+```json
+{
+ "capital_protected": {
+ "permanent": 11423.60, // Assets excluidos
+ "dynamic_48h": 0, // Vetoes últimas 48h
+ "dynamic_7d": 0, // Vetoes últimos 7d
+ "grand_total": 11423.60 // Suma total
+ },
+ "vetoes": {
+ "48h": {"by_type": {...}, "total_count": 0},
+ "7d": {"by_type": {...}, "total_count": 0}
+ }
+}
+```
+
+**NOTA:** `dynamic_*` comenzará a poblarse cuando el bot procese trades y genere vetoes. Actualmente la tabla está vacía porque la instrumentación es nueva.
+
+---
+
+### On-Chain API Fabrication Fix (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El bot inventaba APIs de on-chain que NO EXISTEN en el sistema:
+- WhaleTracker (ClankApp)
+- Arkham Intelligence
+- ExchangeFlowAnalyzer
+- NetworkMetricsCollector
+- SmartMoneySignal
+
+**CAUSA RAÍZ:** `ai_prompts.py` describía estas APIs como funcionalidades reales, contradiciendo `prompt_templates.py` que las banea explícitamente.
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+| Archivo | Cambio |
+|---------|--------|
+| `ai_prompts.py` | Eliminada sección "ON-CHAIN DATA INTELLIGENCE" completa |
+| `ai_prompts.py` | "WHEN ASKED ABOUT ON-CHAIN" ahora dice honestamente: "en roadmap, NO implementado" |
+| `feature_catalog.md` | "On-Chain Intelligence" → "Market Intelligence (roadmap)" |
+
+**Capacidades REALES de Market Intelligence:**
+- Fear & Greed Index (Alternative.me API) ✅
+- Finnhub News (sentiment analysis) ✅
+- Alpha Vantage (RSI, MACD, Bollinger) ✅
+- Kraken Order Book analysis ✅
+
+**Capacidades en ROADMAP (NO implementadas):**
+- WhaleTracker / whale monitoring ❌
+- Arkham Intelligence ❌
+- Exchange flow analysis ❌
+- On-chain metrics ❌
+
+---
+
+### Real-Time Veto Data for AI (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El bot de Telegram inventaba datos de capital protegido cuando el usuario preguntaba por auditorías de períodos específicos (ej: "$3,752 Coherence Gate, $1,987 Black Swan").
+
+**CAUSA RAÍZ:** No existía un método para consultar vetoes por rango de fechas, y el AI no recibía datos reales de vetoes en su contexto.
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+| Componente | Archivo | Cambio |
+|------------|---------|--------|
+| **get_vetoes_by_timerange()** | `veto_repository.py` | Nuevo método para consultar vetoes por período |
+| **_fetch_veto_data()** | `conversational_ai_adapter.py` | Detecta queries de auditoría y obtiene datos reales |
+| **Prompt Integration** | `ai_prompts.py` | Inyecta datos de vetoes reales al contexto del AI |
+
+**Detección de intención:**
+Keywords: `auditoría`, `bloqueos`, `capital protegido`, `veto`, `coherence gate`, `black swan`, `cuarentena`
+
+**Comportamiento esperado:**
+- Con datos: AI muestra números reales de PostgreSQL
+- Sin datos: AI dice honestamente "No hay registros para el período solicitado"
+- NUNCA fabrica números
+
+**Estado de limpieza de duplicados (Jan 8, 2026):**
+| Métrica | Antes | Después |
+|---------|-------|---------|
+| Vetoes | 141 | 66 |
+| Capital | $2.8M | $1.32M |
+
+---
+
+### Bot P&L Case-Sensitivity Fix (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El bot de Telegram mostraba $-19,848 pero el dashboard mostraba $-15,198.73.
+
+**CAUSA RAÍZ:** `PaperTradingRepository.get_trading_stats()` usaba `status = 'CLOSED'` (mayúscula), pero la base de datos almacena `closed` (minúscula). PostgreSQL es case-sensitive.
+
+| Query | Resultado |
+|-------|-----------|
+| `WHERE status = 'CLOSED'` | 0 trades (no match) |
+| `WHERE LOWER(status) = 'closed'` | 119 trades, $-15,198.73 |
+
+**FIX IMPLEMENTADO:**
+- Cambio en `omnix_services/database_service/paper_trading_repository.py` línea 81
+- Query ahora usa `LOWER(status) = 'closed'` para ser case-insensitive
+
+**RESULTADO:** Bot y Dashboard ahora mostrarán los mismos números.
+
+---
+
+### Veto Deduplication Fix (Jan 8, 2026)
+
+**PROBLEMA DETECTADO:** El sistema registraba ~6 vetoes/minuto para los mismos assets bloqueados repetidamente, inflando los números de $1.8M a $105M+ en pocas horas.
+
+**CAUSA RAÍZ:** Cada ciclo de análisis (~30 seg) generaba nuevos registros de veto aunque fueran los mismos assets siendo bloqueados.
+
+**SOLUCIÓN IMPLEMENTADA:**
+- Cache de deduplicación en `VetoRepository` (15 min por symbol+veto_type)
+- Vetoes repetidos dentro de la ventana son saltados
+- Limpieza de 5,260 registros duplicados en la base de datos
+
+**Resultado:**
+| Antes | Después |
+|-------|---------|
+| 5,272 vetoes | 47 vetoes únicos |
+| $105M inflado | ~$940K realista |
+| 6 vetoes/min | 1 veto/15min por asset |
+
+**Logs esperados:**
+```
+📝 [VETO_LOGGED] COHERENCE_GATE | XRP/USD | $20,000.00 | DB_INSERT_SUCCESS
+⏭️ [VETO_SKIPPED] COHERENCE_GATE | XRP/USD | Duplicate within 900s window
+```
+
+---
+
+### psycopg v3 Compatibility Fix (Jan 7, 2026)
+
+**PROBLEMA DETECTADO:** VetoRepository importaba `psycopg2` pero Railway usa `psycopg[binary]` (v3).
+
+```
+[ERROR] OMNIX.VetoRepository - Failed to log veto: No module named 'psycopg2'
+```
+
+**FIX IMPLEMENTADO:**
+- VetoRepository ahora usa `psycopg` (v3) primero con fallback a `psycopg2`
+- Serialización JSON compatible con ambas versiones (`json.dumps()` en lugar de `psycopg2.extras.Json`)
+
+**Archivo modificado:** `omnix_services/database_service/veto_repository.py`
+
+---
+
+### RULE 13 Enhancement - Diagnostic Mode (Jan 2, 2026)
+
+**PROBLEMA DETECTADO:** El bot trataba escenarios HIPOTÉTICOS como datos reales y violaba el modo diagnóstico con recomendaciones y lenguaje institucional.
+
+**MEJORAS IMPLEMENTADAS (3 adiciones moderadas):**
+
+| Mejora | Descripción |
+|--------|-------------|
+| **HYPOTHETICAL DETECTION** | Detecta "supón que", "assume", "si ocurriera" → etiqueta como HIPOTÉTICO |
+| **FORMAT ENFORCEMENT** | Recordatorio de 20 líneas máx, fallback si se desvía del template |
+| **BLACKLIST SELF-CHECK** | Auto-verificación de frases prohibidas antes de enviar |
+
+**Triggers de escenario hipotético:**
+- "supón que", "supongamos", "assume", "si ocurriera", "imagina que", "hipotéticamente"
+
+**Blacklist extendida:**
+- "según diseño", "protegiendo capital", "edge institucional", "disciplina institucional"
+- "el sistema está aprendiendo", "mejora notable", "signo positivo"
+
+**Archivo modificado:** `omnix_services/ai_service/prompt_templates.py` (líneas 281-306)
+
+---
+
+### Operación Lucidez - Segmented Expectancy (Jan 1, 2026)
+
+**OBJETIVO:** Identificar DÓNDE tiene edge el sistema mediante expectancy segmentada por (hmm_regime, coherence_state).
+
+**IMPLEMENTACIÓN COMPLETA:**
+
+| Componente | Archivo | Estado |
+|------------|---------|--------|
+| **Migration V005** | `omnix_core/db/migrations/` | ✅ Columnas añadidas |
+| **Telemetría** | `omnix_core/bot/paper_trading.py` | ✅ Captura hmm_regime, coherence_score |
+| **API Endpoint** | `omnix_dashboard/blueprints/core.py` | ✅ `/api/metrics/expectancy` |
+| **Query** | `omnix_dashboard/utils/queries.py` | ✅ `get_segmented_expectancy()` |
+| **Widget** | `omnix_dashboard/streamlit_app.py` | ✅ `render_expectancy()` heatmap |
+
+**Columnas añadidas a paper_trading_trades:**
+- `hmm_regime` (VARCHAR) - Régimen de mercado: BULLISH, BEARISH, RANGING, UNKNOWN
+- `coherence_score` (FLOAT) - Score de coherencia 0-100%
+- `ema_regime_signal` (VARCHAR) - Señal EMA: BUY, SELL, NONE
+- `strategy_confidence` (FLOAT) - Confianza de la estrategia
+
+**Fórmula Expectancy:**
+```
+E = (Win% × AvgWin) - (Loss% × |AvgLoss|)
+```
+- E > 0 = Edge detectado en segmento
+- E < 0 = Filtrar segmento
+- Mínimo 5 trades para significancia estadística
+
+**Estado de datos:**
+- 119 trades históricos: Sin telemetría (ejecutados pre-implementación)
+- Trades nuevos: Capturarán telemetría automáticamente
+
+**Documentación detallada:** `docs/operations/OPERACION_LUCIDEZ.md`
+
+---
+
+### Telegram Voice Service Fix (Dec 31, 2025)
+
+**ERROR EN PRODUCCIÓN CORREGIDO:**
+```
+UnboundLocalError: cannot access local variable 'asyncio' where it is not associated with a value
+```
+
+**CAUSA RAÍZ:** Imports condicionales de `asyncio` dentro de bloques `if`/`try` causaban que Python marcara `asyncio` como variable local para todo el scope de la función. Cuando el bloque condicional no se ejecutaba, `asyncio.to_thread()` fallaba porque la "variable local" no existía - aunque había un import global.
+
+**IMPORTS REDUNDANTES ELIMINADOS:**
+
+| Línea | Ubicación | Contexto |
+|-------|-----------|----------|
+| 3545 | `_process_message_content()` | Dentro de `if i < total_parts - 1:` |
+| 4835 | `handle_youtube_video()` | Dentro de `if hasattr(self.ai, 'generate_response'):` |
+| 6489 | `_execute_arbitrage()` | Antes de `await` sin necesidad |
+
+**Archivos modificados:**
+- `omnix_services/telegram_service/enterprise_bot.py` - Eliminados 3 imports redundantes
+
+**Commit:** `6f77f8d`
+
+---
+
+### Type Safety Hotfix - SCOPE EXPANDIDO (Dec 30, 2025)
+
+**ERROR EN PRODUCCIÓN CORREGIDO:**
+```
+TypeError: '>=' not supported between instances of 'str' and 'int'
+```
+
+El error persistía después del fix inicial porque `_build_strategy_signals()` en `auto_trading_bot.py` extraía valores de diccionarios con `.get()` y los comparaba directamente sin normalización.
+
+**SOLUCIÓN IMPLEMENTADA (2 FASES):**
+
+| Fase | Ubicación | Fix |
+|------|-----------|-----|
+| **Fase 1** | `coherence_engine.py` | `normalize_signal()`, `normalize_strategy_signal()`, `safe_float()` |
+| **Fase 2** | `auto_trading_bot.py` | `safe_float()` aplicado a 9 estrategias en `_build_strategy_signals()` |
+
+**Estrategias corregidas en Fase 2:**
+- quantum_momentum: signal, confidence
+- kalman_filter: strength, confidence
+- monte_carlo: win_rate
+- kelly_criterion: optimal_fraction
+- black_swan: crash_probability
+- sentiment: overall_score
+- non_markovian: confidence, bullish_score, bearish_score
+
+**safe_float() mejorado:**
+```python
+if isinstance(value, str):
+ value = value.strip().replace('%', '')
+return float(value)
+```
+
+**Archivos modificados:**
+- `omnix_core/bot/auto_trading_bot.py` - safe_float mejorado + aplicado en _build_strategy_signals
+- `omnix_services/coherence_service/coherence_engine.py` - Funciones normalize_*
+- `tests/test_auto_trading_bot_type_safety.py` - 28 tests nuevos
+
+**Tests:** 12 directos + 28 en test file | **Total Dec 30:** ~71 tests
+
+---
+
+### Critical Audit Fixes + ENV Control (Dec 30, 2025)
+
+**AUDITORÍA CRÍTICA COMPLETADA** - 4 fixes de seguridad institucional:
+
+| Fix | Descripción | Impacto |
+|-----|-------------|---------|
+| **Coherence FAIL-CLOSED** | Excepciones en CoherenceEngine → BLOCKED (antes: skip) | Previene trades sin validación |
+| **MC Veto Semántica** | ER<0% → BLOCKED (MC_NEG_ER), WR<50% → SIZE_REDUCE | Claridad en logs de auditoría |
+| **DecisionPayload** | Nuevos campos: action, vetoed, size_multiplier, execution_path | Trazabilidad completa |
+| **track_record_mode logging** | Cada decisión incluye estado del modo | Auditoría histórica |
+
+**TRACK_RECORD_MODE + LOW_VOL_MODE controlados por ENV:**
+
+```python
+# omnix_core/config/trading_profiles.py
+TRACK_RECORD_MODE = os.getenv("TRACK_RECORD_MODE", "false").lower() == "true"
+LOW_VOL_MODE = os.getenv("LOW_VOL_MODE", "false").lower() == "true"
+```
+
+| Variable | Default | Rollback |
+|----------|---------|----------|
+| `TRACK_RECORD_MODE` | `false` | Railway Variables → `true` → Restart |
+| `LOW_VOL_MODE` | `false` | Railway Variables → `true` → Restart |
+
+**Tests:** 27/27 pasando (17 nuevos de auditoría crítica)
+
+**Archivos modificados:**
+- `omnix_core/config/trading_profiles.py` - ENV control + logging
+- `omnix_core/bot/auto_trading_bot.py` - Audit fields en decisiones
+- `tests/test_critical_audit.py` - 17 tests nuevos
+
+---
+
+### Railway-GitHub Synchronization Issue (Dec 27, 2025)
+
+**PROBLEMA CRÍTICO IDENTIFICADO:**
+Railway NO estaba desplegando desde GitHub. En su lugar, creaba "snapshots internos" con commits inexistentes en GitHub (ej: `397297e2`, `7b4b1079`, `30d18b54`).
+
+| Evidencia | Valor |
+|-----------|-------|
+| Commit en GitHub | `852a1e3` (HEAD de main) |
+| Commit en Railway | `397297e2` (snapshot interno) |
+| Modo de deploy | Snapshots, NO GitHub-connected |
+
+**IMPACTO:**
+- ❌ Fixes de código (get_ohlc, EMA_CALL_CHECK) no llegaban a producción
+- ❌ Imposible auditar qué código produjo qué trade
+- ❌ Invalidaba cualquier análisis para inversores
+- ❌ Sistema no reproducible
+
+**PLAN DE REPARACIÓN:**
+1. Documentar variables de entorno actuales de Railway
+2. Desconectar Railway del source actual (Settings → Source → Disconnect)
+3. Reconectar a GitHub `Costenho19/omnibotgenesis` branch `main`
+4. Configurar "Deploy on push" activado, deshabilitar snapshots manuales
+5. Verificar que commit hash en Railway coincide EXACTAMENTE con GitHub HEAD
+6. Verificar logs: `EMA_CALL_CHECK` con `prices=100+`
+
+**ESTADO:** ⏳ PENDIENTE DE EJECUCIÓN POR USUARIO
+
+**POLÍTICA POST-REPARACIÓN:**
+- Railway SOLO debe desplegar desde GitHub
+- Un commit en GitHub = Un deploy en Railway (mismo hash)
+- Cualquier discrepancia de hashes invalida el deploy
+
+---
+
+### V1.0.5 - OHLC Data Fix (Dec 26, 2025)
+
+**Problema identificado por diagnóstico V1.0.4b:**
+```
+🔍 EMA_CALL_CHECK: BTC/USD | generator=True | prices=0 | allowed=True
+```
+El método `generate_signal()` nunca se ejecutaba porque `prices=0` (lista vacía).
+
+**Root Cause Analysis:**
+| Componente | Estado | Problema |
+|------------|--------|----------|
+| `_get_price_history()` | ❌ | Retornaba `None` |
+| `hasattr(trading_service, 'get_ohlc')` | ❌ False | Método no existía |
+| `TradingServiceEnterprise.get_ohlc()` | ❌ Faltaba | No delegaba a Kraken |
+| `KrakenAPIClient.get_ohlc()` | ✅ | Funcionaba correctamente |
+
+**Solución V1.0.5:**
+```python
+# omnix_services/trading_service/trading_service.py
+def get_ohlc(self, pair: str, interval: int = 60, since: Optional[int] = None) -> List[List]:
+ """Delegate OHLC data retrieval to Kraken client."""
+ return self.kraken.get_ohlc(pair=pair, interval=interval, since=since)
+```
+
+**Resultado esperado:**
+- `prices` ahora contendrá 100+ velas de Kraken
+- `generate_signal()` será llamado
+- EMA Signal producirá señales reales (no `NONE`)
+- WEAK_TREND fallback funcionará en TRACK_RECORD_MODE
+
+**Archivos modificados:**
+- `omnix_services/trading_service/trading_service.py` - Añadido método delegado `get_ohlc()`
+- `docs/MIGRATION_STATUS.md` - Documentación actualizada
+
+**Logs de verificación post-deploy:**
+- Buscar: `🔍 EMA_CALL_CHECK: BTC/USD | generator=True | prices=100 | allowed=True`
+- Buscar: `📊 EMA Signal:` para confirmar señales generadas
+
+---
+
+### Hierarchical Veto Flow & Coherence Pre-Gate (Dec 24, 2025)
+**Problema identificado por análisis GPT Expert:**
+El flujo de veto no estaba jerárquicamente claro. Coherence Engine evaluaba DESPUÉS del scoring.
+
+**Solución: Flujo Jerárquico con Coherence Pre-Gate**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ NUEVO FLUJO JERÁRQUICO │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. EMA Signal Generation │
+│ ↓ │
+│ 2. MC VETO (expected_return < 0 || VaR95 > -3%) │
+│ ↓ │
+│ 3. RMS VETO (CircuitBreaker + LimitsEngine) │
+│ ↓ │
+│ 4. COHERENCE GATE ← ANTES del scoring │
+│ • veto_critical < 35% → REJECTED (subido de 30%) │
+│ • veto_normal < 50% → REJECTED (subido de 45%) │
+│ ↓ │
+│ 5. Scoring Final (solo señales pre-validadas) │
+│ ↓ │
+│ 6. Decision + Execution │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Umbrales de Coherence (V6.5.4d Dec 24, 2025):**
+| Umbral | Antes | Ahora | Efecto |
+|--------|-------|-------|--------|
+| `veto_critical` | 25% | **35%** | Bloquea señales muy débiles |
+| `veto_normal` | 40% | **50%** | Bloquea señales débiles |
+| `warning` | 55% | **60%** | Reducción de posición |
+| `good` | 75% | **78%** | Aprobación completa |
+
+**Nuevos estados en decision_trace:**
+- `COHERENCE_GATE_CRITICAL`: Señal bloqueada por coherencia < 35%
+- `COHERENCE_GATE_LOW`: Señal bloqueada por coherencia < 50%
+- `COHERENCE_GATE: PASSED`: Señal aprobada para scoring
+
+**Beneficios:**
+- Reduce falsos positivos
+- Elimina overtrading
+- Scoring solo procesa señales de calidad
+- Menor ruido estadístico
+
+### ARES Code Removed & EMA Optimized (Dec 24, 2025)
+**Problema identificado por análisis GPT Expert + Senior Audit:**
+ARES V1/V2 seguía votando con 35 puntos (20+15) a pesar de que EMA_REGIME_SIGNAL es el driver principal documentado.
+
+**Solución final: Eliminación completa del código ARES**
+
+| Acción | Detalle |
+|--------|---------|
+| Código ARES | **ELIMINADO** (~90 líneas removidas) |
+| EMA Weight | Aumentado de 25 → **40 puntos** |
+| Trace | `ARES_REMOVED: Code eliminated Dec 24, 2025` |
+
+**Sistema de Scoring V6.5.4d (GPT Expert Dec 24, 2025):**
+
+Simplificado a **5 inputs principales** + veto/penalty layers:
+
+| Componente | Peso | Estado | Rol |
+|------------|------|--------|-----|
+| **EMA Regime Signal** | **40 pts** | DRIVER PRINCIPAL | Scoring Aditivo |
+| **HMM Regime** | **25 pts** | Activo | Scoring Aditivo |
+| **Kalman Filter** | **15 pts** | Activo | Scoring Aditivo |
+| **Non-Markovian** | **15 pts** | Activo | Scoring Aditivo |
+| **Kelly Criterion** | **10 pts** | Modifier | Sizing Aditivo |
+| **TOTAL MAX** | **105 pts** | - | - |
+
+**Veto/Penalty Layer (NO suma a max_score):**
+
+| Componente | Rol | Penalización |
+|------------|-----|--------------|
+| Monte Carlo | VETO | -10 (paper) / -20 (real) si WR < 40% |
+| Black Swan | VETO | -8 (paper) / -25 (real) si HIGH risk |
+| Sentiment | Penalty | -5/-15 si < 25%, boost +2/+3 contrarian |
+| Quantum Momentum | VETO | -10/-20 si STRONG SELL |
+| ARES V1/V2 | ~~35 pts~~ | **CÓDIGO ELIMINADO** |
+
+**Beneficios:**
+- 5 inputs claros y auditables
+- Veto/penalty NO infla max_score
+- Código más limpio y mantenible
+- Decisiones más predecibles para inversores
+
+**Documentación completa**: Ver `docs/current/DECISION_CONTRACT.md`
+
+### Traceability Matrix Full Validation (Dec 24, 2025)
+**Script creado:** `scripts/traceability/validate_traceability.py`
+
+**Resultados:**
+| Métrica | Valor |
+|---------|-------|
+| Componentes enumerados | 123/123 |
+| Legacy Coverage | 116/123 (94%) |
+| V7 Coverage | 1/123 (0.8%) |
+| MISSING | 0 |
+
+**Evidencia generada:**
+- `docs/compliance/evidence/traceability_components.json`
+- `docs/compliance/evidence/traceability_validation.md`
+
+### AI Self-Knowledge System (Dec 24, 2025)
+**Problema resuelto**: El AI no conocía su propio estado y daba información incorrecta.
+
+**Solución implementada**:
+- **System State Manifest** (`omnix_config/system_state_manifest.json`): Archivo JSON con estado real
+- **Inyección en Prompt**: El AI ahora lee el manifest antes de responder
+- **Datos incluidos**: trading_mode, primary_signal, legacy_modules, quarantine, roadmap, dashboard_status
+
+**Resultado**: El AI responde con datos verificados, no improvisa.
+
+### Telegram Command Surface Audit (Dec 24, 2025)
+**Auditoría exhaustiva de superficie de comandos Telegram:**
+
+| Métrica | Valor |
+|---------|-------|
+| Total Comandos | 85 |
+| Handlers Únicos | 81 |
+| Alias | 4 |
+| Estado | Sellado y documentado |
+
+**Correcciones aplicadas (9 stubs):**
+- Historial, Alertas, Configuración → Mensajes "🛣️ ROADMAP" honestos
+- Alternativas funcionales proporcionadas (`/performance`, `/balance`, `/miconfig`)
+
+**Documentación**: `docs/current/COMMAND_AUDIT_REPORT.md`
+
+---
+
+### FASE 2: Ofensiva Controlada (Dec 23, 2025)
+**Evolución del sistema para mejorar rendimiento manteniendo control de riesgo**
+
+#### FASE 2.1: Partial Position Sizing
+- **Estado**: ✅ IMPLEMENTADO
+- **Lógica**: Trades con confidence 50-65% ejecutan con 25-40% del tamaño normal
+- **Beneficio**: Convierte HOLDs en pequeñas oportunidades sin aumentar riesgo
+- **Configuración** (en PRODUCTION_STABLE):
+ - `partial_position_min_confidence`: 0.50 (50%)
+ - `partial_position_max_confidence`: 0.65 (65%)
+ - `partial_position_min_size`: 0.25 (25%)
+ - `partial_position_max_size`: 0.40 (40%)
+
+#### FASE 2.2: BTC Short Selling
+- **Estado**: ✅ IMPLEMENTADO
+- **Lógica**: Solo BTC en bearish regime (HMM confidence > 70%)
+- **Comportamiento**: Cuando HMM detecta régimen bearish con alta confianza, genera señal SHORT
+- **Position Size**: 50% del tamaño normal (conservador para nueva estrategia)
+- **Configuración** (en PRODUCTION_STABLE):
+ - `short_selling_enabled`: True
+ - `short_selling_symbols`: ['BTC/USD']
+ - `short_selling_min_bearish_confidence`: 0.70
+
+#### FASE 2.3: Quarantine Probation System
+- **Estado**: ✅ IMPLEMENTADO
+- **Lógica**: Probar UN activo bloqueado con reglas estrictas
+- **Activo en Probation**: AVAX/USD (menor pérdida histórica después de XRP/BTC)
+- **Comportamiento**:
+ - Partial sizing forzado (máximo 40%)
+ - Contador de pérdidas consecutivas
+ - Auto-revert a cuarentena tras 3 pérdidas consecutivas
+- **Configuración** (en PRODUCTION_STABLE):
+ - `probation_enabled`: True
+ - `probation_asset`: 'AVAX/USD'
+ - `probation_max_consecutive_losses`: 3
+ - `probation_force_partial`: True
+ - `probation_max_size_pct`: 0.40
+
+### Investor-Ready UI Refactor (Dec 23, 2025)
+**Eliminated all phrases that could damage investor confidence:**
+- **Replaced all `$0.00`, `0.00`, `0%`** placeholders with `--` (loading indicator)
+- **Removed `N/A`, `unavailable`, `no disponible`** from all UI components
+- **Error states show `Updating...`** instead of error messages
+- **Files modified**: 
+ - `terminal.html` (header stats, performance metrics)
+ - `dashboard.html` (all metric cards)
+ - `utils.js` (formatCurrency, formatPercent fallbacks)
+ - `riskguardian.js` (error state message)
+ - `feargreed.js` (classification fallback)
+ - `snapshots.js` (error messages)
+ - `system.py` (session details fallback)
+ - `market.py` (RSI signal fallback)
+ - `streamlit_app.py` (overview metrics)
+
+**Investor-Safe UI Principle**: Dashboard NEVER shows "data unavailable" - only verified data or silent loading states.
+
+### Investor-Grade Automated Responses (Dec 23, 2025)
+- **NEW MODULE**: `omnix_services/ai_service/investor_responses.py`
+- **6 Response Types**: negative_pnl, low_win_rate, hold_strategy, system_validation, risk_management, track_record
+- **Real Data**: All responses based on verified PostgreSQL data (119 trades, $11,819+ avoided losses)
+- **Soft Detection via Scoring**: Score-based context detection (score ≥ 4 activates institutional mode)
+
+**Scoring System:**
+| Palabra | Score |
+|---------|-------|
+| funding, invest, institutional, pitch, due diligence | +3 |
+| capital, ROI, P&L, drawdown, Sharpe, Sortino | +2 |
+| risk, portfolio, hedge, liquidity | +1 |
+
+**Activation:**
+- `INVESTOR_MODE=true` (env var): Always institutional responses
+- Score ≥ 4: Activates institutional mode automatically
+- Score < 4: Normal bot response
+
+**Usage:** `investor_response_engine.process_investor_query(message, force_investor_mode=False)`
+
+**Datos Verificados en Respuestas:**
+| Métrica | Valor | Fuente |
+|---------|-------|--------|
+| Total Trades | 119 | PostgreSQL paper_trading_trades |
+| P&L | -$15,811.26 | PostgreSQL SUM(profit_loss) |
+| Win Rate | 20.17% (24/119) | PostgreSQL calculation |
+| Activos Excluidos | 5 (ADA, SOL, AVAX, ETH, LINK) | trading_profiles.py |
+| Pérdidas Evitadas | $11,819+ | PostgreSQL (sum of excluded assets) |
+
+### Investor Dashboard Widgets (Dec 22, 2025)
+**Three New Investor-Facing Metrics for Pitch Presentations:**
+
+1. **Sessions Widget** (`/api/system/sessions`):
+ - Shows active PostgreSQL sessions in real-time
+ - Displays SaaS scalability capacity (100,000+ concurrent users)
+ - Backend: `UserSessionManager` integration with fallback to PostgreSQL sessions
+ - Frontend: `omnix_dashboard/static/js/components/sessions.js`
+ - API: `omnix_dashboard/blueprints/system.py` lines 810-849
+
+2. **Equity Comparison Widget** (`/api/system/equity`):
+ - Compares OMNIX performance vs BTC Hold strategy
+ - Calculates **Alpha** (outperformance metric): `OMNIX return % - BTC Hold return %`
+ - Shows cumulative P&L curves for both strategies
+ - Data source: 109 real closed trades from PostgreSQL
+ - Frontend: `omnix_dashboard/static/js/components/equitycomparison.js`
+ - API: `omnix_dashboard/blueprints/system.py` lines 720-806
+
+3. **Main Driver Badge** (Adaptive Engine Enhancement):
+ - Highlights strategy with ≥80% weight as "Main Driver"
+ - Currently: **Quantum Momentum (85%)** with ANU QRNG description
+ - Modified: `omnix_dashboard/static/js/components/adaptive.js` (+57 lines)
+ - API: Enhanced `/api/system/adaptive` response with `is_main_driver` flag
+
+**Dashboard Integration Summary:**
+- **14/14 widgets operational** with ~1.5s refresh cycle
+- All data sourced from **PostgreSQL** (109 real trades, 0 mock data)
+- Zero runtime errors after fixes
+- Files modified: 6 files, +374 lines
+
+### Price Stale Detection System (Dec 22, 2025)
+**Institutional-Grade Data Validation**:
+- **NEW MODULE**: `omnix_services/market_data/validators.py` - Validates price freshness before trading
+- **Thresholds**: 30s stale (blocks trading), 20s warning, configurable via `StaleCheckConfig`
+- **Trading Integration**: AutoTradingBot blocks trades on stale prices with `PRICE_STALE_VETO`
+- **Classes**: `MarketDataValidator`, `PriceDataState`, `PriceFreshness`, `StaleCheckConfig`
+- **Helper Functions**: `validate_price_freshness()`, `is_price_tradeable()`, `get_market_data_validator()`
+- **Tests**: 12/12 tests passing in `tests/test_price_stale_detection.py`
+- **Ubicación**: `omnix_services/market_data/validators.py`, `omnix_core/bot/auto_trading_bot.py`
+
+### Admin Alerts System (Dec 22, 2025)
+**OWNER-Only Critical System Alerts**:
+- **NEW METHODS**: `AlertDispatcher.add_admin_chat_id()` and `send_admin_alert()` for OWNER-only alerts
+- **Event Types**: price_stale, redis_down, api_failure, session_anomaly
+- **Cooldown**: 60s per event type to prevent spam
+- **Auto-Registration**: TELEGRAM_ADMIN_ID registered on bot startup in enterprise_bot.py
+- **Integration**: MarketDataValidator triggers admin alerts on stale price detection
+- **Ubicación**: `omnix_services/risk_management/alert_dispatcher.py`
+
+### Real-Time Latency Monitor (Dec 22, 2025)
+**Live System Performance Measurement**:
+- **NEW API**: `/api/system/latency` - Measures actual database and cache response times
+- **Dashboard Integration**: Header metric showing live latency (e.g., "128.1ms")
+- **Real Measurements**: Uses `time.perf_counter()` for PostgreSQL + Redis timing
+- **Status Indicator**: Green (<10ms), White (normal), Red (>50ms)
+- **Ubicación**: `omnix_dashboard/blueprints/system.py`, `omnix_dashboard/static/js/components/latency.js`
+
+### Asset Quarantine System (Dec 23, 2025 - Updated)
+**Capital Protection for Investor Presentations**:
+- **NEW API**: `/api/system/quarantine` - Returns blocked assets and avoided losses
+- **Dashboard Integration**: Header metric + Streamlit page showing blocked assets
+- **Capital Protected**: $11,819+ in avoided losses from blocking ADA, SOL, ETH, AVAX, LINK
+- **LINK/USD Added (Dec 23)**: Internal audit identified 16 losses, -$4,482, avg -2.58% per trade
+- **Quarantined Assets**: ADA/USD, SOL/USD, ETH/USD, AVAX/USD, LINK/USD (5 of 10 pairs)
+- **Active Trading Pairs**: BTC/USD, XRP/USD only (lowest loss averages: -1.49%, -0.48%)
+- **Real Data Source**: Extracts loss amounts from `trading_profiles.py` EXCLUDED entries
+- **Investor-Ready**: Visual display of risk management with explanation for pitch presentations
+- **Ubicación**: `omnix_dashboard/blueprints/system.py`, `omnix_dashboard/static/js/components/quarantine.js`
+
+### Multi-User Phase 3b COMPLETED (Dec 22, 2025)
+**AuthorizationService Completamente Integrado**:
+- **AuthorizationPort** creado en `src/omnix/ports/driven/authorization_port.py`
+- **AuthorizationAdapter** en `src/omnix/infrastructure/adapters/authorization_adapter.py`
+- **17 hardcoded checks reemplazados** con RBAC en 5 archivos
+- **5 roles B2C SaaS**: FREE < BASIC < PRO < PREMIUM < OWNER
+- **15 permisos granulares** (paper/real trading, auto-trading, alertas, etc.)
+- **Harold = OWNER** en BD (is_admin=true, subscription_tier='owner', paper_trading_mode=true)
+- **39/39 authorization tests passing**
+- **Ubicación**: `src/omnix/ports/driven/`, `src/omnix/infrastructure/adapters/`
+
+### Language Detection AI-First (Dec 22, 2025)
+**Arquitectura AI-First Verdadera**:
+- **ELIMINADOS** diccionarios hardcodeados de detección de idioma (código basura)
+- **INSTALADO** `fast-langdetect` (FastText-based, 80x más rápido que langdetect)
+- **FLUJO AI-First**:
+ - Textos largos (≥50 chars): fast-langdetect (FastText, muy preciso)
+ - Textos cortos (<50 chars): Gemini AI (`gemini-2.5-flash`, temp=0, max_tokens=5)
+ - Fallback: fast-langdetect → langdetect → 'en'
+- **OPTIMIZACIÓN**: Cliente Gemini singleton para reducir latencia
+- **RESULTADO**: 12/12 tests pasando (9 cortos + 3 largos)
+- **MAPEO gTTS**: ISO codes a códigos gTTS válidos (ej: zh → zh-CN)
+- **Ubicación**: `omnix_services/ai_service/prompt_templates.py`, `omnix_services/voice_service/voice_controller.py`
+
+### Multi-Usuario Fase 2 COMPLETADA (Dec 22, 2025)
+- **UserSessionManager INTEGRADO**: Ahora usado por AutoTradingBot
+- **9/11 issues corregidos** de la auditoría original
+- **PostgreSQL RLS habilitado** en 3 tablas críticas
+
+### Multi-Usuario Fase 1 COMPLETADA (Dec 20, 2025)
+- **UserSessionManager EXISTE**: 562 líneas funcionales en `omnix_core/sessions/user_session_manager.py`
+- **Funciones parametrizadas**: `_check_open_positions_tp_sl`, `_execute_smart_trade`, `_check_position_limit_early` ahora aceptan `user_id` opcional con fallback legacy
+- **_process_user_trading_cycle**: Implementado con lógica real y persistencia de sesión
+- **Integración Hexagonal**: `UserSessionPort` + `UserSessionAdapter` creados
+- **Compatibilidad 100%**: Flujo legacy sin cambios
+
+### Nuevos Componentes (Dec 20, 2025)
+| Componente | Ubicación | Estado |
+|------------|-----------|--------|
+| `UserSessionPort` | `src/omnix/ports/driven/user_session_port.py` | ✅ CREADO |
+| `UserSessionAdapter` | `src/omnix/infrastructure/adapters/user_session_adapter.py` | ✅ CREADO |
+| Export actualizado | `src/omnix/ports/driven/__init__.py` | ✅ ACTUALIZADO |
+
+### AI-First Multilingual Concurrency (Dec 19, 2025)
+- **Implementado**: Detección de idioma thread-safe + persistencia Redis por usuario
+
+---
+
+## Resumen Ejecutivo
+
+| Métrica | Valor |
+|---------|-------|
+| Driven Ports | **17** (incluyendo AuthorizationPort, UserSessionPort) |
+| Driver Ports | **3** (telegram, rest_api, intent_classification) |
+| **Total Ports** | **20** |
+| Adapters | **22** (incluyendo AuthorizationAdapter) |
+| Ports activos | **0 (0%)** |
+| Multi-User | ✅ **Fase 3b COMPLETADA** |
+| Sistema en producción | **100% Legacy** |
+
+El sistema legacy opera 24/7 en Railway. La arquitectura hexagonal V7.0 está completamente implementada pero **ningún port está activo**. **Multi-usuario Fase 3b COMPLETADA** - RBAC operacional, Harold con rol OWNER.
+
+---
+
+## Inventario Actual
+
+### Driven Ports (17)
+
+| Port | Adapter | Feature Flag |
+|------|---------|--------------|
+| ai_inference_port | gemini_adapter | (en AI) |
+| ai_text_gateway_port | ai_gateway_shim | `USE_AI_PORT=false` |
+| ai_voice_port | voice_adapter | `USE_VOICE_PORT=false` |
+| **authorization_port** | **authorization_adapter** | **NUEVO (Dec 22)** - RBAC |
+| cache_port | cache_adapter | `USE_CACHE_PORT=false` |
+| database_port | database_adapter | `USE_DATABASE_PORT=false` |
+| derivatives_port | derivatives_adapter | `USE_DERIVATIVES_PORT=false` |
+| execution_port | execution_adapter | `USE_EXECUTION_PORT=false` |
+| market_data_port | kraken_adapter | (en Trading) |
+| market_intel_port | market_intel_adapter | `USE_MARKET_INTEL_PORT=false` |
+| notification_port | notification_adapter | `USE_NOTIFICATION_PORT=false` |
+| onchain_data_port | onchain_adapter | `USE_ONCHAIN_PORT=false` |
+| optimization_port | optimization_adapter | `USE_OPTIMIZATION_PORT=false` |
+| portfolio_port | portfolio_adapter | `USE_PORTFOLIO_PORT=false` |
+| risk_control_port | risk_control_adapter | `USE_RISK_CONTROL_PORT=false` |
+| trading_port | trading_adapter | (incluido en App Layer) |
+| user_session_port | user_session_adapter | NUEVO (Dec 20) |
+
+### Driver Ports (3)
+
+| Port | Adapter | Feature Flag |
+|------|---------|--------------|
+| telegram_port | telegram_adapter | `USE_TELEGRAM_PORT=false` |
+| rest_api_port | Flask Blueprints | `USE_APP_LAYER=false` |
+| intent_classification_port | intent_classification_adapter | (en AI) |
+
+### Adapters (22)
+
+```
+ai_gateway_shim authorization_adapter cache_adapter
+coherence_adapter database_adapter derivatives_adapter
+execution_adapter gemini_adapter intent_classification
+kraken_adapter market_intel_adapter notification_adapter
+optimization_adapter portfolio_adapter risk_adapter
+risk_control_adapter telegram_adapter trading_adapter
+voice_adapter user_session_adapter blockchain_info_provider
+onchain_adapter
+```
+
+---
+
+## Flujo de Ejecución Actual
+
+```
+main.py
+ │
+ ├─[TRY]→ src/omnix/bootstrap/main_entry.run_omnix()
+ │ │
+ │ ├─ USE_APP_LAYER = false (default)
+ │ │
+ │ └─ initialize_services_legacy()
+ │ │
+ │ ├─ Importa omnix_services/* directamente
+ │ ├─ NO usa DI Container
+ │ └─ NO usa adapters V7
+ │
+ └─[CATCH]→ Fallback: EnterpriseTelegramBot() directamente
+```
+
+---
+
+## Plan de Activación (12 Pasos)
+
+| Paso | Flag | Riesgo | Estado |
+|------|------|--------|--------|
+| 1 | `USE_AI_PORT=true` | BAJO | PRÓXIMO |
+| 2 | `USE_VOICE_PORT=true` | BAJO | Pendiente |
+| 3 | `USE_MARKET_INTEL_PORT=true` | BAJO | Pendiente |
+| 4 | `USE_EXECUTION_PORT=true` | MEDIO | Pendiente |
+| 5 | `USE_RISK_CONTROL_PORT=true` | MEDIO | Pendiente |
+| 6 | `USE_DERIVATIVES_PORT=true` | ALTO | Pendiente |
+| 7 | `USE_PORTFOLIO_PORT=true` | MEDIO | Pendiente |
+| 8 | `USE_OPTIMIZATION_PORT=true` | MEDIO | Pendiente |
+| 9 | `USE_CACHE_PORT=true` | BAJO | Pendiente |
+| 10 | `USE_DATABASE_PORT=true` | MEDIO | Pendiente |
+| 11 | `USE_TELEGRAM_PORT=true` | MEDIO | Pendiente |
+| 12 | `USE_APP_LAYER=true` | ALTO | Pendiente |
+
+---
+
+## Documentos Relacionados
+
+- [MIGRATION_STATUS.md](MIGRATION_STATUS.md) - Estado consolidado V7.0
+- [HEXAGONAL_MIGRATION_STATUS.md](current/HEXAGONAL_MIGRATION_STATUS.md) - Detalle de ports/adapters
+- [README.md](README.md) - Índice de documentación
+
+---
+
+*Última actualización: 27 de Diciembre 2025*

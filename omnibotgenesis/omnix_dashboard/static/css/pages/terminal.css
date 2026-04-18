@@ -1,0 +1,307 @@
+/**
+ * OMNIX Dashboard V6.5.4 - Terminal Page Styles
+ * Page-specific overrides for terminal.html
+ */
+
+/* ================================
+   TERMINAL BODY OVERRIDE
+   ================================ */
+body.page-terminal {
+    background: var(--bg-terminal);
+    color: var(--text-terminal-primary);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: auto;
+}
+
+body.page-terminal * {
+    font-family: var(--font-mono);
+}
+
+/* ================================
+   DAY 1 WELCOME MODAL
+   ================================ */
+.day1-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day1-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+}
+
+.day1-modal-content {
+    position: relative;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #00ff88;
+    border-radius: 12px;
+    max-width: 560px;
+    width: 90%;
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.15);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.day1-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.day1-modal-icon {
+    width: 48px;
+    height: 48px;
+    background: transparent;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.day1-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.day1-modal-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #00ff88;
+}
+
+.day1-modal-body {
+    padding: 20px 24px;
+}
+
+.day1-fact-box {
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.day1-fact-box h3 {
+    margin: 0 0 12px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #00ff88;
+}
+
+.day1-fact-box p {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: #ccc;
+    line-height: 1.5;
+}
+
+.day1-fact-box ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.day1-fact-box li {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 6px;
+}
+
+.day1-timeline {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 10px;
+}
+
+.day1-timeline-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.day1-timeline-item::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+}
+
+.day1-timeline-item.past::before {
+    background: #666;
+}
+
+.day1-timeline-item.current::before {
+    background: #00ff88;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.6);
+}
+
+.day1-timeline-item.future::before {
+    background: transparent;
+    border: 2px solid #666;
+}
+
+.day1-timeline-date {
+    margin-top: 32px;
+    font-size: 11px;
+    color: #888;
+}
+
+.day1-timeline-label {
+    font-size: 10px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.day1-timeline-item.current .day1-timeline-label {
+    color: #00ff88;
+    font-weight: 600;
+}
+
+.day1-disclosure {
+    font-size: 11px;
+    color: #888;
+    text-align: center;
+    margin: 0;
+    font-style: italic;
+}
+
+.day1-modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px 24px;
+    justify-content: flex-end;
+}
+
+.day1-btn-secondary {
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid #666;
+    color: #aaa;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.day1-btn-secondary:hover {
+    border-color: #888;
+    color: #fff;
+}
+
+.day1-btn-primary {
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+    border: none;
+    color: #000;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.day1-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+}
+
+/* ================================
+   DAY 30 COUNTDOWN BADGE
+   ================================ */
+.day30-countdown {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: help;
+}
+
+.day30-icon {
+    font-size: 14px;
+}
+
+.day30-text {
+    font-size: 11px;
+    color: #ff9800;
+    font-weight: 600;
+}
+
+/* ================================
+   TELEMETRY TOGGLE
+   ================================ */
+.telemetry-toggle {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 3px;
+    border-radius: 6px;
+}
+
+.telemetry-btn {
+    padding: 4px 10px;
+    font-size: 10px;
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.telemetry-btn:hover {
+    color: #fff;
+}
+
+.telemetry-btn.active {
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+    color: #000;
+    font-weight: 600;
+}
+
+.telemetry-indicator {
+    font-size: 10px;
+    color: #888;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}

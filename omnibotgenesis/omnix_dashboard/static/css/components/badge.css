@@ -1,0 +1,115 @@
+/**
+ * OMNIX Dashboard V6.5.4 - Badge Component
+ * BEM Naming: .badge, .badge--active, .badge--crypto
+ */
+
+/* ================================
+   BASE BADGE
+   ================================ */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ================================
+   STATUS BADGES
+   ================================ */
+.badge--open,
+.status-open {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--accent-blue-bright);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge--closed,
+.status-closed {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--accent-green-bright);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ================================
+   ASSET BADGES
+   ================================ */
+.badge--crypto,
+.badge-crypto {
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--accent-purple-bright);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.badge--stock,
+.badge-stock {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--accent-blue-bright);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* ================================
+   STRATEGY BADGES
+   ================================ */
+.strategy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+.strategy-badge--active,
+.strategy-active {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--accent-green-bright);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.strategy-badge--inactive,
+.strategy-inactive {
+    background: rgba(100, 116, 139, 0.15);
+    color: var(--text-secondary);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* ================================
+   INTELLIGENCE BADGES
+   ================================ */
+.intelligence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.intel-active {
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--accent-green-terminal);
+}
+
+.intel-inactive {
+    background: rgba(255, 51, 102, 0.15);
+    color: var(--accent-red-terminal);
+}

@@ -1,0 +1,252 @@
+/* OMNIX Dashboard V6.5.4 - Audited Snapshots Styles */
+
+.snapshots-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.snapshots-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888899;
+}
+
+.snapshots-icon {
+    font-size: 14px;
+}
+
+.chain-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chain-summary {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+}
+
+.chain-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.chain-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: #ffffff;
+}
+
+.chain-stat-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666677;
+    margin-top: 2px;
+}
+
+.snapshots-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.snapshot-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    margin-bottom: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.snapshot-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.snapshot-status {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 1px solid;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.snapshot-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.snapshot-date {
+    font-size: 12px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.snapshot-type {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666677;
+}
+
+.snapshot-metrics {
+    text-align: right;
+}
+
+.snapshot-equity {
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: #ffffff;
+}
+
+.snapshot-pnl {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.snapshot-pnl.positive {
+    color: #00ff88;
+}
+
+.snapshot-pnl.negative {
+    color: #ff4444;
+}
+
+.snapshot-chain {
+    font-size: 14px;
+    opacity: 0.6;
+}
+
+.no-snapshots {
+    padding: 24px;
+    text-align: center;
+    color: #666677;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.snapshots-error {
+    padding: 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 68, 68, 0.05);
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.snapshots-error .error-icon {
+    font-size: 32px;
+}
+
+.snapshots-error .error-message {
+    color: #ff4444;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.snapshots-error .error-hint {
+    color: #666677;
+    font-size: 10px;
+}
+
+.snapshots-error .retry-btn {
+    margin-top: 8px;
+    padding: 8px 16px;
+    border-color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+    color: #ff4444;
+}
+
+.snapshots-error .retry-btn:hover {
+    background: rgba(255, 68, 68, 0.2);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.snapshots-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.snapshot-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.snapshot-btn:hover {
+    background: rgba(0, 255, 136, 0.2);
+}
+
+.snapshot-btn.secondary {
+    border-color: #666677;
+    background: rgba(102, 102, 119, 0.1);
+    color: #888899;
+}
+
+.snapshot-btn.secondary:hover {
+    background: rgba(102, 102, 119, 0.2);
+}

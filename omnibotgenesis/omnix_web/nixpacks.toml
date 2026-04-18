@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["python311", "nodejs_20"]
+
+[phases.install]
+cmds = [
+  "python3 -m venv /opt/venv",
+  "/opt/venv/bin/pip install -r requirements.txt",
+  "npm install"
+]
+
+[phases.build]
+cmds = ["rm -rf dist node_modules/.vite .vite && npm run build"]
+
+[start]
+cmd = "/opt/venv/bin/gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --worker-connections 1000 --keep-alive 5"

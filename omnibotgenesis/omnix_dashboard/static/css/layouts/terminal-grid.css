@@ -1,0 +1,75 @@
+/**
+ * OMNIX Dashboard V6.5.4 - Terminal Grid Layout
+ */
+
+/* ================================
+   TERMINAL WRAPPER
+   ================================ */
+.terminal-wrapper {
+    min-width: 1280px;
+    width: 100%;
+}
+
+/* ================================
+   TERMINAL GRID
+   ================================ */
+.terminal-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    grid-template-rows: auto auto auto auto auto;
+    gap: 2px;
+    min-height: auto;
+    background: var(--border-terminal);
+}
+
+/* Full-width rows */
+.terminal-grid__header,
+.terminal-grid__ticker,
+.terminal-grid__status {
+    grid-column: 1 / -1;
+}
+
+/* ================================
+   TICKER ROW
+   ================================ */
+.ticker-row {
+    grid-column: 1 / -1;
+}
+
+/* ================================
+   STATUS BAR
+   ================================ */
+.status-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 16px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-terminal);
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.status-bar__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-bar__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.status-bar__dot--online { background: var(--accent-green-terminal); }
+.status-bar__dot--warning { background: var(--accent-yellow-terminal); }
+.status-bar__dot--offline { background: var(--accent-red-terminal); }
+
+/* Legacy support */
+.status-item { display: flex; align-items: center; gap: 6px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; }
+.status-online { background: var(--accent-green-terminal); }
+.status-warning { background: var(--accent-yellow-terminal); }
+.status-offline { background: var(--accent-red-terminal); }
