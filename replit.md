@@ -762,3 +762,47 @@ Señales: diagnostic_confidence → probability_score, patient_risk → risk_exp
 > **Arquitectura completa:** `docs/current/ARCHITECTURE.md`
 > **Operations:** `docs/operations/DEPLOYMENT.md`
 > **Paper académico:** Zenodo/SSRN — 11-checkpoint pipeline alineado con `b9d6606f`
+
+---
+
+## ADR-SRG-001 — Stablecoin Reserve Governance (Vertical 9)
+
+**Fecha**: 2026-04-18 | **Status**: ACTIVE | **Mercado objetivo**: $150B stablecoins + $16T RWA tokenization
+
+### Descripción
+9º vertical de OMNIX Quantum. Gobernanza de reservas de stablecoins con cumplimiento MiCA.
+Prefix de recibo: `OMNIX-SRG-{12HEX}` | Color: `#8B5CF6` (violet) | Icono: 🪙
+
+### Archivos Principales
+| Archivo | Descripción |
+|---|---|
+| `omnix_core/stablecoin/stablecoin_signal_adapter.py` | 6 señales, 6 hard blocks (peg>2%, coverage<100%, liquid<60% MiCA, AML, sanctions, counterparty_default) |
+| `omnix_core/stablecoin/stablecoin_simulator.py` | 24/7 background simulator — ciclos 240s, 3–7 decisiones/ciclo, 8 assets, 6 jurisdicciones |
+| `omnix_dashboard/blueprints/stablecoin_governance.py` | 9 REST endpoints: /metrics, /decisions, /by-type, /by-asset, /by-jurisdiction, /timeline, /live-feed, /evaluate, /health |
+| `omnix_web/src/pages/StablecoinDashboard.tsx` | Live dashboard React |
+| `omnix_web/src/pages/StablecoinGovernanceDemo.tsx` | Demo interactivo 11-checkpoints |
+
+### Señales de Gobernanza
+1. `peg_stability` — Desviación del peg (hard block >2%)
+2. `reserve_coverage` — Cobertura de reservas (hard block <100% MiCA)
+3. `liquidity_ratio` — Liquidez inmediata (hard block <60%)
+4. `counterparty_risk` — Riesgo de contraparte
+5. `regulatory_compliance` — AML/KYC/sanciones (hard block)
+6. `market_depth` — Profundidad de mercado
+
+### Assets soportados
+USDC, USDT, BUSD, PYUSD, EURC, GUSD, FRAX, DAI
+
+### Jurisdicciones
+EU (MiCA), UK (FCA), US (OCC), UAE (CBUAE), Singapore (MAS), International
+
+### Rutas React
+- `/stablecoin` — Live Governance Dashboard
+- `/governance-demo-stablecoin` — Interactive 11-Checkpoint Demo
+
+### Integración Backend
+- Blueprint registrado en `omnix_dashboard/blueprints/__init__.py`
+- Tablas inicializadas en `omnix_dashboard/app.py`
+- Simulador iniciado en background thread al arranque
+- Receipt prefix `"stablecoin": "SRG"` en `decision_receipt.py`
+- Proxy Vite `/api/stablecoin` → `:5000` en `vite.config.ts`

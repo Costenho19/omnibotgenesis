@@ -223,6 +223,7 @@ class DecisionReceiptEngine:
         "autonomous_agent":  "AGT",
         "real_estate":       "REP",
         "energy_governance": "EGV",
+        "stablecoin":        "SRG",
     }
 
     @classmethod

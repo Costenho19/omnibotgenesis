@@ -62,7 +62,7 @@ def create_app():
         governance_sandbox_bp, governance_alerts_bp,
         public_sandbox_bp, public_verify_bp,
     )
-    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp, medical_bp, agents_bp, real_estate_bp, energy_bp
+    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp, medical_bp, agents_bp, real_estate_bp, energy_bp, stablecoin_bp
     from omnix_dashboard.blueprints.live_metrics import live_metrics_bp
     from omnix_dashboard.blueprints.receipt_verification import receipt_pki_bp
 
@@ -75,6 +75,7 @@ def create_app():
     app.register_blueprint(agents_bp)
     app.register_blueprint(real_estate_bp)
     app.register_blueprint(energy_bp)
+    app.register_blueprint(stablecoin_bp)
     app.register_blueprint(views_bp)
     app.register_blueprint(core_bp)
     app.register_blueprint(market_bp)
@@ -213,6 +214,27 @@ def create_app():
         logger.info("✅ [Energy] Energy Governance engine started (24/7 simulation)")
     except Exception as _egy_err:
         logger.warning(f"[Energy] Simulation engine startup skipped: {_egy_err}")
+
+    # Initialize Stablecoin Reserve Governance tables
+    try:
+        import psycopg2 as _psycopg2
+        _db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
+        if _db_url:
+            from omnix_core.stablecoin.stablecoin_simulator import _create_stablecoin_tables
+            _srg_conn = _psycopg2.connect(_db_url)
+            _create_stablecoin_tables(_srg_conn)
+            _srg_conn.close()
+            logger.info("✅ [Stablecoin] Tables initialized")
+    except Exception as _srg_tbl_err:
+        logger.warning(f"[Stablecoin] Table init skipped: {_srg_tbl_err}")
+
+    # Start Stablecoin Reserve Governance simulation engine in background
+    try:
+        from omnix_core.stablecoin.stablecoin_simulator import start_background_simulator as _srg_start
+        _srg_start()
+        logger.info("✅ [Stablecoin] Reserve Governance engine started (24/7 simulation)")
+    except Exception as _srg_err:
+        logger.warning(f"[Stablecoin] Simulation engine startup skipped: {_srg_err}")
 
     try:
         from scripts.initialize_avm_baselines import initialize_avm_baselines

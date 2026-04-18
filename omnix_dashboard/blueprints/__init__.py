@@ -28,6 +28,7 @@ from .medical_governance import medical_bp
 from .agents_governance import agents_bp
 from .real_estate_governance import real_estate_bp
 from .energy_governance import energy_bp
+from .stablecoin_governance import stablecoin_bp
 
 __all__ = [
     'views_bp',
@@ -55,4 +56,5 @@ __all__ = [
     'agents_bp',
     'real_estate_bp',
     'energy_bp',
+    'stablecoin_bp',
 ]

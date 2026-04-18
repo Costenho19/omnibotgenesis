@@ -58,16 +58,17 @@ const DOMAIN_LABELS: Record<string, string> = {
   autonomous_agent:  'Autonomous Agents',
   real_estate:       'Real Estate Governance',
   energy_governance: 'Energy Governance',
+  stablecoin:        'Stablecoin Reserve Governance',
 }
 const DOMAIN_ICONS: Record<string, string> = {
   trading: '📈', credit: '🕌', insurance: '🛡️', robotics: '🤖',
   medical_ai: '🏥', autonomous_agent: '🧠', real_estate: '🏢',
-  energy_governance: '⚡',
+  energy_governance: '⚡', stablecoin: '🪙',
 }
 const DOMAIN_COLORS: Record<string, string> = {
   trading: '#C9A227', credit: '#a78bfa', insurance: '#60a5fa', robotics: '#34d399',
   medical_ai: '#f472b6', autonomous_agent: '#fb923c', real_estate: '#38bdf8',
-  energy_governance: '#00B4D8',
+  energy_governance: '#00B4D8', stablecoin: '#8B5CF6',
 }
 const FW_COLORS: Record<string, string> = {
   EU_AI_ACT: '#3B82F6', DORA: '#8B5CF6', NIST_AI_RMF: '#10B981',
