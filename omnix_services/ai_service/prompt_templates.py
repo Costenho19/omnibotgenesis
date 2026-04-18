@@ -1314,16 +1314,15 @@ class LanguageContextManager:
         
         clean_text = text.strip()
         
-        # LANGUAGES ALLOWED: only these can override Spanish as default
-        _OVERRIDE_LANGS = {'en', 'ar', 'zh', 'fr', 'de', 'ja', 'ko', 'ru', 'hi'}
+        # For SHORT messages (<50 chars), pt/it/gl/ca are too easily confused with
+        # typo-ridden Spanish → reclassify as Spanish. For long clear text, trust detector.
+        is_short = len(clean_text) < 50
 
         def _safe_lang(detected):
-            """Portuguese/Italian/ambiguous → Spanish. Unknown → Spanish."""
             if not detected or detected not in self.supported_languages:
                 return None
-            # pt and it are too easily confused with Spanish typos → force Spanish
-            if detected in ('pt', 'it', 'gl', 'ca'):
-                logger.info(f"🌍 Language '{detected}' reclassified → 'es' (Spanish bias)")
+            if is_short and detected in ('pt', 'it', 'gl', 'ca'):
+                logger.info(f"🌍 Short msg: '{detected}' reclassified → 'es' (Spanish/typo bias)")
                 return 'es'
             return detected
 
@@ -1349,8 +1348,8 @@ class LanguageContextManager:
                 logger.info(f"🌍 Language detected (langdetect fallback): {detected} for '{text[:30]}'")
                 return detected
 
-            logger.debug(f"🌍 Could not detect language, defaulting to Spanish")
-            return 'es'
+            logger.debug(f"🌍 Could not detect language, defaulting to English")
+            return 'en'
     
     def _detect_with_gemini(self, text: str) -> Optional[str]:
         """
