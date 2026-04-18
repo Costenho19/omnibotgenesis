@@ -760,17 +760,19 @@ export default function CommercialLanding() {
                 borderRadius:16, padding:'22px',
                 display:'flex', flexDirection:'column', gap:0,
               }}>
-                <div style={{display:'flex', alignItems:'flex-start', gap:10, marginBottom:12}}>
+                {/* Row 1: icon + domain + company + year */}
+                <div style={{display:'flex', alignItems:'flex-start', gap:10, marginBottom:8}}>
                   <span style={{fontSize:'1.3rem', flexShrink:0, marginTop:2}}>{item.icon}</span>
-                  <div style={{flex:1}}>
+                  <div style={{flex:1, minWidth:0}}>
                     <div style={{fontSize:'0.68rem', fontWeight:700, color:item.color, textTransform:'uppercase', letterSpacing:'0.1em'}}>{item.domain}</div>
                     <div style={{fontSize:'0.88rem', fontWeight:700, color:'#E2E8F0'}}>{item.company}</div>
                     <div style={{fontSize:'0.72rem', color:'#64748B'}}>{item.year}</div>
                   </div>
-                  <div style={{textAlign:'right', flexShrink:0}}>
-                    <div style={{fontSize:'0.95rem', fontWeight:900, color:'#ef4444'}}>{item.loss}</div>
-                    <div style={{fontSize:'0.65rem', color:'#64748B'}}>{item.time}</div>
-                  </div>
+                </div>
+                {/* Row 2: loss amount — full width so it never overflows */}
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:'0.95rem', fontWeight:900, color:'#ef4444', wordBreak:'break-word', lineHeight:1.35}}>{item.loss}</div>
+                  <div style={{fontSize:'0.65rem', color:'#64748B', marginTop:2}}>{item.time}</div>
                 </div>
                 <p style={{fontSize:'0.76rem', color:'#94A3B8', lineHeight:1.55, marginBottom:10, flex:1}}>{item.cause}</p>
                 <div style={{borderTop:`1px solid ${item.color}20`, paddingTop:10}}>
