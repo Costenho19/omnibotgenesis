@@ -352,11 +352,16 @@ _ensure_vertical_tables()
 # ── Startup: activate all 8 vertical governance simulators in background ───────
 def _start_vertical_simulators():
     """
-    Arranca los 4 motores de gobernanza pendientes en threads de background.
-    Se ejecuta al iniciar el servidor en Railway (stellar-hope).
+    Arranca los motores de gobernanza en threads de background.
+    Se ejecuta al iniciar el servidor en Railway (stellar-hope), proceso único.
     Los simuladores escriben continuamente en la misma PostgreSQL via DATABASE_URL.
-    Cada uno es idempotente — si ya está corriendo, no arranca una segunda instancia.
+    Cada uno es idempotente via _started + threading.Lock() — safe para el proceso.
     """
+    # Skip entirely in test mode
+    if os.environ.get("TESTING") or os.environ.get("PYTEST_CURRENT_TEST"):
+        print("[simulators] TESTING mode — simulators skipped")
+        return
+
     db_url = (
         os.environ.get("DATABASE_URL") or
         os.environ.get("OMNIX_DB_URL") or
