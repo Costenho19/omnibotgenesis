@@ -790,13 +790,13 @@ export default function CommercialLanding() {
             textAlign:'center',
           }}>
             <p style={{fontSize:'1rem', color:'#94A3B8', marginBottom:6}}>
-              The cost of <span style={{color:'#ef4444', fontWeight:700}}>one governance failure</span> in any of these domains
+              The cost of <span style={{color:'#ef4444', fontWeight:700}}>one governance failure</span> in any of these 9 domains
             </p>
             <p style={{fontSize:'2.4rem', fontWeight:900, color:'#ef4444', marginBottom:4, letterSpacing:'-0.02em'}}>
-              $440M – $3.9B
+              $440M – $130B
             </p>
             <p style={{fontSize:'0.85rem', color:'#64748B', marginBottom:24}}>
-              in fines, operational losses, or irreversible reputational damage
+              across 9 documented headline failures — fines, operational losses, or irreversible reputational damage
             </p>
             <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'wrap'}}>
               <div>
@@ -807,7 +807,7 @@ export default function CommercialLanding() {
               <div style={{fontSize:'1.8rem', color:'#475569', fontWeight:300}}>vs</div>
               <div>
                 <p style={{fontSize:'0.85rem', color:'#94A3B8', marginBottom:2}}>Cost of ONE failure without it</p>
-                <p style={{fontSize:'1.8rem', fontWeight:900, color:'#ef4444', letterSpacing:'-0.02em'}}>$440,000,000+</p>
+                <p style={{fontSize:'1.8rem', fontWeight:900, color:'#ef4444', letterSpacing:'-0.02em'}}>$130,000,000,000+</p>
                 <p style={{fontSize:'0.72rem', color:'#64748B', marginTop:2}}>Non-recoverable · Regulatory + operational + reputational</p>
               </div>
             </div>
