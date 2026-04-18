@@ -1314,30 +1314,43 @@ class LanguageContextManager:
         
         clean_text = text.strip()
         
+        # LANGUAGES ALLOWED: only these can override Spanish as default
+        _OVERRIDE_LANGS = {'en', 'ar', 'zh', 'fr', 'de', 'ja', 'ko', 'ru', 'hi'}
+
+        def _safe_lang(detected):
+            """Portuguese/Italian/ambiguous → Spanish. Unknown → Spanish."""
+            if not detected or detected not in self.supported_languages:
+                return None
+            # pt and it are too easily confused with Spanish typos → force Spanish
+            if detected in ('pt', 'it', 'gl', 'ca'):
+                logger.info(f"🌍 Language '{detected}' reclassified → 'es' (Spanish bias)")
+                return 'es'
+            return detected
+
         with _language_detection_lock:
             if len(clean_text) >= 50:
-                detected = self._detect_with_fastlangdetect(clean_text)
-                if detected and detected in self.supported_languages:
+                detected = _safe_lang(self._detect_with_fastlangdetect(clean_text))
+                if detected:
                     logger.info(f"🌍 Language detected (fast-langdetect): {detected} for '{text[:30]}'")
                     return detected
-            
-            detected = self._detect_with_gemini(clean_text)
-            if detected and detected in self.supported_languages:
+
+            detected = _safe_lang(self._detect_with_gemini(clean_text))
+            if detected:
                 logger.info(f"🌍 Language detected (Gemini AI): {detected} for '{text[:30]}'")
                 return detected
-            
-            detected = self._detect_with_fastlangdetect(clean_text)
-            if detected and detected in self.supported_languages:
+
+            detected = _safe_lang(self._detect_with_fastlangdetect(clean_text))
+            if detected:
                 logger.info(f"🌍 Language detected (fast-langdetect fallback): {detected} for '{text[:30]}'")
                 return detected
-            
-            detected = self._detect_with_langdetect(clean_text)
-            if detected and detected in self.supported_languages:
+
+            detected = _safe_lang(self._detect_with_langdetect(clean_text))
+            if detected:
                 logger.info(f"🌍 Language detected (langdetect fallback): {detected} for '{text[:30]}'")
                 return detected
-            
-            logger.debug(f"🌍 Could not detect language, defaulting to English")
-            return 'en'
+
+            logger.debug(f"🌍 Could not detect language, defaulting to Spanish")
+            return 'es'
     
     def _detect_with_gemini(self, text: str) -> Optional[str]:
         """
