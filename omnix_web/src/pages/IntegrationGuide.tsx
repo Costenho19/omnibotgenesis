@@ -153,6 +153,10 @@ const domainSignals: Record<string, { code: string; color: string; signals: stri
     code: 'EGV', color: '#00B4D8',
     signals: ['lmp_confidence', 'mw_concentration', 'day_ahead_spread', 'load_accuracy', 'renewable_buffer', 'carbon_intensity'],
   },
+  stablecoin_reserve: {
+    code: 'SRG', color: '#2dd4bf',
+    signals: ['peg_deviation', 'reserve_coverage', 'liquidity_ratio', 'redemption_risk', 'regulatory_compliance', 'market_depth'],
+  },
 }
 
 const endpoints = [
@@ -160,7 +164,7 @@ const endpoints = [
   { method: 'GET',  path: '/api/governance/receipt/:id',             auth: true,  desc: 'Retrieve a specific signed receipt by ID.' },
   { method: 'GET',  path: '/api/governance/receipts',                auth: true,  desc: 'List receipts with filters: domain, date range, decision, asset.' },
   { method: 'GET',  path: '/api/governance/due-diligence-report',    auth: true,  desc: 'Generate governance report — JSON or PDF. Supports ?format=pdf&days=30.' },
-  { method: 'GET',  path: '/api/governance/regulatory/catalog',      auth: false, desc: 'All 8 regulatory frameworks and their checkpoint mapping.' },
+  { method: 'GET',  path: '/api/governance/regulatory/catalog',      auth: false, desc: 'All regulatory frameworks and their checkpoint mapping across 9 domains.' },
   { method: 'GET',  path: '/api/receipts/public-key',                auth: false, desc: 'Active PQC public key — verify signatures independently.' },
   { method: 'POST', path: '/api/receipts/verify',                    auth: false, desc: 'Cryptographic signature verification (ADR-079).' },
   { method: 'GET',  path: '/verify/:receipt_id',                     auth: false, desc: 'Public human-readable receipt verification page.' },
@@ -315,9 +319,9 @@ export default function IntegrationGuide() {
           />
         </section>
 
-        {/* ── 8 Domains ── */}
+        {/* ── 9 Domains ── */}
         <section style={{ marginBottom: 64 }}>
-          <SectionTitle>8 Governance Domains</SectionTitle>
+          <SectionTitle>9 Governance Domains</SectionTitle>
           <p style={{ fontSize: 13, color: '#888', marginBottom: 24, lineHeight: 1.7 }}>
             Each domain maps your business signals to OMNIX's 6-signal governance schema.
             The engine applies the same 11-checkpoint pipeline regardless of domain.

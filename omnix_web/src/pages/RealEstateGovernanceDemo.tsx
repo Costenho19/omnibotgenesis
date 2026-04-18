@@ -848,7 +848,7 @@ export default function RealEstateGovernanceDemo() {
             background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
             fontSize: 11, color: '#334155', lineHeight: 1.6,
           }}>
-            ADR-RES-001 · OMNIX Real Estate Governance Vertical · Same 11-checkpoint engine as Trading, Islamic Credit, Insurance, Robotics, Medical AI, and Autonomous Agents · Receipt prefix: OMNIX-REP · PQC: CRYSTALS-Dilithium3 (NIST FIPS 204)
+            ADR-RES-001 · OMNIX Real Estate Governance Vertical · Same 11-checkpoint engine across all 9 domains: Trading, Islamic Credit, Insurance, Robotics, Medical AI, Autonomous Agents, Energy, Real Estate, Stablecoin Reserve · Receipt prefix: OMNIX-REP · PQC: CRYSTALS-Dilithium3 (NIST FIPS 204)
           </div>
         </div>
       </div>

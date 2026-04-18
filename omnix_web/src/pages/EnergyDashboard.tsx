@@ -912,7 +912,7 @@ export default function EnergyDashboard() {
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <footer className="text-center space-y-1 pb-6">
           <p className="text-[10px] text-slate-700">
-            OMNIX Energy Governance · ADR-ENG-001 · Receipt prefix OMNIX-EGV · Internal environment — not for public distribution
+            OMNIX Energy Governance · ADR-ENG-001 · Receipt prefix OMNIX-EGV · Live production system — continuously verified
           </p>
           <p className="text-[10px] text-slate-800">
             Decisions governed by 11-checkpoint fail-closed pipeline · PQC-signed with CRYSTALS-Dilithium3

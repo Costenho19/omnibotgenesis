@@ -88,7 +88,7 @@ export default function TechnicalStack() {
             {[
               { v: '11', l: 'Checkpoints' },
               { v: '8', l: 'Regulatory Frameworks' },
-              { v: '8', l: 'Industry Domains' },
+              { v: '9', l: 'Industry Domains' },
               { v: 'W3C VC', l: 'Receipt Format' },
             ].map(({ v, l }) => (
               <div key={l} style={{ background: '#111830', border: `1px solid ${GOLD}22`, borderRadius: 12, padding: '16px 24px', textAlign: 'center', minWidth: 100 }}>
@@ -187,6 +187,7 @@ export default function TechnicalStack() {
               { name: 'Autonomous Agents', link: '/agents' },
               { name: 'Energy Governance', link: '/energy' },
               { name: 'Real Estate & PropTech', link: '/real-estate' },
+              { name: 'Stablecoin Reserve Governance', link: '/stablecoin' },
             ].map(d => (
               <a key={d.name} href={d.link} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0D1E35', border: `1px solid ${GOLD}22`, borderRadius: 12, padding: '16px 18px', textDecoration: 'none' }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#ddd' }}>{d.name}</span>
