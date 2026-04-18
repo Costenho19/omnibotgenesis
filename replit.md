@@ -15,7 +15,7 @@
 5. [APIs Usadas — Gratis vs Pagado](#5-apis-usadas--gratis-vs-pagado)
 6. [Onboarding B2B — Cómo dar acceso a un cliente](#6-onboarding-b2b--cómo-dar-acceso-a-un-cliente)
 7. [Despliegue Railway](#7-despliegue-railway)
-8. [Verticales de Gobernanza (8 activos)](#8-verticales-de-gobernanza-8-activos)
+8. [Verticales de Gobernanza (9 activos)](#8-verticales-de-gobernanza-9-activos)
 9. [Seguridad Enterprise](#9-seguridad-enterprise)
 10. [ADRs — Architecture Decision Records](#10-adrs--architecture-decision-records)
 11. [Roadmap](#11-roadmap)
@@ -517,6 +517,7 @@ Cada vertical tiene su propio snapshot de calibración:
 | AGL-AGT-001 | Autonomous Agent Governance Full Stack | ✅ |
 | ADR-RES-001 | Real Estate Property Governance Internal | ✅ |
 | ADR-ENG-001 | Energy Governance Internal | ✅ |
+| ADR-SRG-001 | Stablecoin Reserve Governance Internal | ✅ |
 
 ### Detalles ADR por Sección
 
@@ -805,4 +806,14 @@ EU (MiCA), UK (FCA), US (OCC), UAE (CBUAE), Singapore (MAS), International
 - Tablas inicializadas en `omnix_dashboard/app.py`
 - Simulador iniciado en background thread al arranque
 - Receipt prefix `"stablecoin": "SRG"` en `decision_receipt.py`
+- **server.py (puerto 8080 producción Railway):** tablas en `_ensure_vertical_tables`, simulador en `_start_vertical_simulators`, 6 rutas `/api/stablecoin/*` (metrics, live-feed, by-type, by-asset, by-jurisdiction, timeline)
+
+### Dashboard React (StablecoinDashboard.tsx) — v2 completo (Abr 2026)
+- 8 KPIs: Volume Governed, Approved Volume, Decisions/24h, Peg Deviation, Reserve Coverage, Liquid Reserves, Hard Blocks, Gov Score
+- PegGauge SVG semicircular, CoverageMeter, LiquidRatio bar, SignalStrip pipeline health
+- Reserve Asset Breakdown (8 assets con iconos y colores), Jurisdiction Breakdown (6 jurisdicciones con banderas y barras)
+- Decision Type Performance grid (5 tipos)
+- Hard Block Alerts section (MiCA / AML / sanciones)
+- Live Decision Feed tabla (12 columnas: ID, tipo, asset, jurisdicción, monto, peg, coverage, liquid, score, veredicto, receipt, tiempo)
+- Auto-refresh cada 10s, helper `pct()` para normalizar rates decimal/porcentaje de PostgreSQL
 - Proxy Vite `/api/stablecoin` → `:5000` en `vite.config.ts`

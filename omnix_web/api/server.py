@@ -284,6 +284,52 @@ def _ensure_vertical_tables():
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         )
         """,
+        # ── Stablecoin Reserve Governance (ADR-SRG-001) ───────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS stablecoin_decisions (
+            id                          SERIAL PRIMARY KEY,
+            decision_id                 VARCHAR(64)   NOT NULL UNIQUE,
+            decision_type               VARCHAR(32)   NOT NULL DEFAULT '',
+            reserve_asset               VARCHAR(32)   NOT NULL DEFAULT '',
+            jurisdiction                VARCHAR(16)   NOT NULL DEFAULT '',
+            transaction_amount_usd      FLOAT         NOT NULL DEFAULT 0,
+            total_supply_usd            FLOAT         NOT NULL DEFAULT 0,
+            peg_deviation_pct           FLOAT         NOT NULL DEFAULT 0,
+            reserve_coverage_ratio      FLOAT         NOT NULL DEFAULT 100,
+            liquid_reserve_ratio        FLOAT         NOT NULL DEFAULT 80,
+            crypto_exposure_pct         FLOAT         NOT NULL DEFAULT 0,
+            decision                    VARCHAR(10)   NOT NULL DEFAULT 'PENDING',
+            decision_score              FLOAT,
+            block_reason                TEXT,
+            hard_block_reason           TEXT,
+            probability_score           FLOAT,
+            risk_exposure               FLOAT,
+            signal_coherence            FLOAT,
+            trend_persistence           FLOAT,
+            stress_resilience           FLOAT,
+            logic_consistency           FLOAT,
+            trajectory_score            FLOAT,
+            transaction_risk_usd        FLOAT         DEFAULT 0,
+            receipt_id                  VARCHAR(64),
+            domain                      VARCHAR(32)   DEFAULT 'stablecoin',
+            created_at                  TIMESTAMPTZ   DEFAULT NOW()
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS stablecoin_cycle_metrics (
+            id                  SERIAL PRIMARY KEY,
+            cycle_id            VARCHAR(64) NOT NULL,
+            total_decisions     INTEGER     NOT NULL DEFAULT 0,
+            approved            INTEGER     NOT NULL DEFAULT 0,
+            blocked             INTEGER     NOT NULL DEFAULT 0,
+            held                INTEGER     NOT NULL DEFAULT 0,
+            total_volume_usd    FLOAT       DEFAULT 0,
+            approved_volume_usd FLOAT       DEFAULT 0,
+            blocked_volume_usd  FLOAT       DEFAULT 0,
+            duration_ms         INTEGER     DEFAULT 0,
+            created_at          TIMESTAMPTZ DEFAULT NOW()
+        )
+        """,
     ]
 
     try:
@@ -379,6 +425,14 @@ def _start_vertical_simulators():
         print("[simulators] ✅ Autonomous Agents Governance — started")
     except Exception as e:
         print(f"[simulators] ⚠️  Agents: {e}")
+
+    # ── Stablecoin Reserve Governance (ADR-SRG-001) ───────────────────────────
+    try:
+        from omnix_core.stablecoin.stablecoin_simulator import start_background_simulator as _srg
+        _srg()
+        print("[simulators] ✅ Stablecoin Reserve Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Stablecoin: {e}")
 
 
 _start_vertical_simulators()
@@ -2914,6 +2968,152 @@ def agents_by_type():
             FROM agent_decisions GROUP BY decision_type ORDER BY total DESC
         """)
         return jsonify({"success": True, "by_decision_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ── STABLECOIN RESERVE GOVERNANCE (ADR-SRG-001) ───────────────────────────────
+
+@app.route('/api/stablecoin/metrics')
+@app.route('/api/stablecoin/metrics.json')
+def stablecoin_metrics():
+    try:
+        t = _db_one("""
+            SELECT COUNT(*) as total_decisions,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                COUNT(*) FILTER (WHERE decision='HOLD') as held,
+                COALESCE(SUM(transaction_amount_usd),0) as total_volume,
+                COALESCE(SUM(transaction_amount_usd) FILTER (WHERE decision='APPROVED'),0) as approved_volume,
+                COALESCE(SUM(transaction_amount_usd) FILTER (WHERE decision='BLOCKED'),0) as blocked_volume,
+                COALESCE(AVG(peg_deviation_pct),0) as avg_peg_deviation,
+                COALESCE(AVG(reserve_coverage_ratio),0) as avg_reserve_coverage,
+                COALESCE(AVG(liquid_reserve_ratio),0) as avg_liquid_ratio,
+                COALESCE(AVG(crypto_exposure_pct),0) as avg_crypto_exposure,
+                COALESCE(AVG(decision_score),0) as avg_decision_score,
+                COALESCE(AVG(transaction_risk_usd),0) as avg_transaction_risk,
+                COUNT(*) FILTER (WHERE hard_block_reason IS NOT NULL AND hard_block_reason != '') as hard_blocks,
+                COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as decisions_24h,
+                COUNT(DISTINCT reserve_asset) as assets_active,
+                COUNT(DISTINCT jurisdiction) as jurisdictions_active
+            FROM stablecoin_decisions
+        """)
+        cyc = _db_one("SELECT COUNT(*) as cycles FROM stablecoin_cycle_metrics")
+        total = _si(t.get("total_decisions")) or 1
+        blocked = _si(t.get("blocked"))
+        return jsonify({"success": True, "metrics": {
+            "total_decisions":       _si(t.get("total_decisions")),
+            "decisions_approved":    _si(t.get("approved")),
+            "decisions_blocked":     blocked,
+            "decisions_held":        _si(t.get("held")),
+            "approval_rate":         round(_si(t.get("approved")) / total, 4),
+            "block_rate":            round(blocked / total, 4),
+            "total_volume_usd":      round(_sf(t.get("total_volume")), 2),
+            "approved_volume_usd":   round(_sf(t.get("approved_volume")), 2),
+            "blocked_volume_usd":    round(_sf(t.get("blocked_volume")), 2),
+            "avg_peg_deviation":     round(_sf(t.get("avg_peg_deviation")), 4),
+            "avg_reserve_coverage":  round(_sf(t.get("avg_reserve_coverage")), 4),
+            "avg_liquid_ratio":      round(_sf(t.get("avg_liquid_ratio")), 4),
+            "avg_crypto_exposure":   round(_sf(t.get("avg_crypto_exposure")), 4),
+            "avg_decision_score":    round(_sf(t.get("avg_decision_score")), 4),
+            "avg_transaction_risk":  round(_sf(t.get("avg_transaction_risk")), 2),
+            "hard_blocks":           _si(t.get("hard_blocks")),
+            "decisions_last_24h":    _si(t.get("decisions_24h")),
+            "assets_active":         _si(t.get("assets_active")),
+            "jurisdictions_active":  _si(t.get("jurisdictions_active")),
+            "simulation_cycles":     _si(cyc.get("cycles")),
+        }})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/stablecoin/live-feed')
+def stablecoin_live_feed():
+    try:
+        limit = min(int(request.args.get("limit", 50)), 200)
+        rows = _db_query("""
+            SELECT decision_id, decision_type, reserve_asset, jurisdiction,
+                transaction_amount_usd, total_supply_usd,
+                peg_deviation_pct, reserve_coverage_ratio, liquid_reserve_ratio,
+                crypto_exposure_pct, transaction_risk_usd,
+                decision, decision_score, block_reason, hard_block_reason, receipt_id,
+                probability_score, risk_exposure, signal_coherence,
+                trend_persistence, stress_resilience, logic_consistency,
+                trajectory_score, created_at
+            FROM stablecoin_decisions ORDER BY created_at DESC LIMIT %s
+        """, [limit])
+        for r in rows:
+            r["created_at"] = str(r.get("created_at", ""))
+        return jsonify({"success": True, "decisions": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/stablecoin/by-type')
+def stablecoin_by_type():
+    try:
+        rows = _db_query("""
+            SELECT decision_type, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(SUM(transaction_amount_usd)::numeric,2) as total_volume_usd,
+                ROUND(AVG(decision_score)::numeric,4) as avg_score
+            FROM stablecoin_decisions GROUP BY decision_type ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_type": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/stablecoin/by-asset')
+def stablecoin_by_asset():
+    try:
+        rows = _db_query("""
+            SELECT reserve_asset, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(SUM(transaction_amount_usd)::numeric,2) as total_volume_usd,
+                ROUND(AVG(reserve_coverage_ratio)::numeric,2) as avg_coverage,
+                ROUND(AVG(liquid_reserve_ratio)::numeric,2) as avg_liquid_ratio,
+                ROUND(AVG(crypto_exposure_pct)::numeric,2) as avg_crypto_exposure
+            FROM stablecoin_decisions GROUP BY reserve_asset ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_asset": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/stablecoin/by-jurisdiction')
+def stablecoin_by_jurisdiction():
+    try:
+        rows = _db_query("""
+            SELECT jurisdiction, COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(AVG(CASE WHEN decision='APPROVED' THEN 1.0 ELSE 0.0 END)*100,1) as approval_rate,
+                ROUND(SUM(transaction_amount_usd)::numeric,2) as total_volume_usd,
+                ROUND(AVG(reserve_coverage_ratio)::numeric,2) as avg_coverage,
+                ROUND(AVG(peg_deviation_pct)::numeric,4) as avg_peg_deviation
+            FROM stablecoin_decisions GROUP BY jurisdiction ORDER BY total DESC
+        """)
+        return jsonify({"success": True, "by_jurisdiction": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/stablecoin/timeline')
+def stablecoin_timeline():
+    try:
+        rows = _db_query("""
+            SELECT DATE_TRUNC('hour', created_at) as hour,
+                COUNT(*) as total,
+                COUNT(*) FILTER (WHERE decision='APPROVED') as approved,
+                COUNT(*) FILTER (WHERE decision='BLOCKED') as blocked,
+                ROUND(SUM(transaction_amount_usd)::numeric,2) as volume_usd
+            FROM stablecoin_decisions
+            WHERE created_at > NOW() - INTERVAL '24 hours'
+            GROUP BY 1 ORDER BY 1
+        """)
+        for r in rows:
+            r["hour"] = str(r.get("hour", ""))
+        return jsonify({"success": True, "timeline": rows})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
