@@ -31,6 +31,206 @@ const liveStatStyle = (animKey: number): React.CSSProperties => ({
 })
 
 
+const DEMO_SCENARIOS = [
+  {
+    domain: 'TRADING', icon: '📈', color: '#C9A227',
+    asset: 'BTC/USD Long · $4.2M',
+    desc: 'Hedge fund requests $4.2M BTC/USD long. +38% in 72h, declining on-chain metrics, 2.4× volume anomaly.',
+    blockAt: 2, verdict: 'BLOCK' as const,
+    receipt: 'OMNIX-TRD-A7F2B1C9E5D3',
+    reason: 'CP-2 · Drawdown risk 67% above threshold — execution blocked before order reaches exchange',
+  },
+  {
+    domain: 'INSURANCE', icon: '🛡️', color: '#a78bfa',
+    asset: 'Cat Bond Policy · £2.4M',
+    desc: 'P&C insurer requests binding of a £2.4M catastrophe bond. Claim probability 78%, reserve adequacy -12%.',
+    blockAt: 5, verdict: 'BLOCK' as const,
+    receipt: 'OMNIX-INS-F3E9D4A1B8C2',
+    reason: 'CP-5 · Reserve shortfall confirmed — binding blocked before loss exposure',
+  },
+  {
+    domain: 'STABLECOIN', icon: '🪙', color: '#2dd4bf',
+    asset: 'Reserve Rebalancing · USDC',
+    desc: 'Stablecoin issuer requests rebalancing. Peg ±0.8%, liquid reserve 58% — below MiCA Art. 45 minimum.',
+    blockAt: 4, verdict: 'HOLD' as const,
+    receipt: 'OMNIX-SRG-B2C8E5F31A74',
+    reason: 'CP-4 · MiCA liquid reserve below 60% minimum — escalated for manual review',
+  },
+] as const
+
+const CP_NAMES = [
+  'Signal Integrity','Probability Check','Risk Limits','Signal Coherence','Trajectory',
+  'Tail Risk','Contradiction','Regime','Confirmation','AML Gate','Fraud Detection',
+]
+
+function GovernanceLiveDemo() {
+  const [si, setSi] = useState(0)
+  const [cp, setCp] = useState(-1)
+  const [done, setDone] = useState(false)
+  const scen = DEMO_SCENARIOS[si]
+  const TICK = 180
+
+  useEffect(() => { setSi(0); setCp(-1); setDone(false) }, [])
+
+  useEffect(() => {
+    setDone(false); setCp(-1)
+    const t = setTimeout(() => setCp(0), 400)
+    return () => clearTimeout(t)
+  }, [si])
+
+  useEffect(() => {
+    if (cp < 0 || done) return
+    if (cp >= CP_NAMES.length) { setDone(true); return }
+    const t = setTimeout(() => setCp(c => c + 1), TICK)
+    return () => clearTimeout(t)
+  }, [cp, done])
+
+  useEffect(() => {
+    if (!done) return
+    const t = setTimeout(() => setSi(s => (s + 1) % DEMO_SCENARIOS.length), 3200)
+    return () => clearTimeout(t)
+  }, [done])
+
+  const cpState = (i: number): 'pending'|'pass'|'block'|'hold' => {
+    if (cp < 0 || i > cp) return 'pending'
+    if (!done) return i < cp ? 'pass' : 'pending'
+    if (scen.verdict === 'BLOCK' && i === scen.blockAt) return 'block'
+    if (scen.verdict === 'HOLD' && i === scen.blockAt) return 'hold'
+    return 'pass'
+  }
+
+  return (
+    <div style={{
+      background:'linear-gradient(135deg,#060F1E 0%,#080E1C 100%)',
+      border:'1px solid rgba(201,162,39,0.25)', borderRadius:20, overflow:'hidden',
+      maxWidth:920, margin:'0 auto',
+      boxShadow:'0 0 60px rgba(201,162,39,0.07), 0 24px 64px rgba(0,0,0,0.55)',
+    }}>
+      <div style={{
+        background:'rgba(201,162,39,0.06)', borderBottom:'1px solid rgba(201,162,39,0.15)',
+        padding:'12px 24px', display:'flex', alignItems:'center', justifyContent:'space-between',
+      }}>
+        <div style={{display:'flex', alignItems:'center', gap:10}}>
+          <div style={{width:8,height:8,borderRadius:'50%',background:'#10b981'}} />
+          <span style={{fontSize:11,fontWeight:700,color:'#10b981',letterSpacing:'0.1em'}}>LIVE GOVERNANCE PIPELINE</span>
+        </div>
+        <div style={{display:'flex',gap:6}}>
+          {DEMO_SCENARIOS.map((s,i)=>(
+            <button key={i} onClick={()=>setSi(i)} style={{
+              width:8,height:8,borderRadius:'50%',border:'none',cursor:'pointer',padding:0,
+              background:i===si?s.color:'rgba(255,255,255,0.15)', transition:'background 0.3s',
+            }}/>
+          ))}
+        </div>
+      </div>
+      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:0}}>
+        <div style={{padding:'24px', borderRight:'1px solid rgba(255,255,255,0.06)'}}>
+          <div style={{
+            background:`${scen.color}10`, border:`1px solid ${scen.color}30`,
+            borderRadius:12, padding:'14px 16px', marginBottom:18,
+          }}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+              <span style={{fontSize:'1.1rem'}}>{scen.icon}</span>
+              <span style={{fontSize:10,fontWeight:800,color:scen.color,letterSpacing:'0.1em'}}>{scen.domain}</span>
+            </div>
+            <div style={{fontSize:13,fontWeight:700,color:'#E2E8F0',marginBottom:4}}>{scen.asset}</div>
+            <div style={{fontSize:11,color:'#94A3B8',lineHeight:1.5}}>{scen.desc}</div>
+          </div>
+          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:5}}>
+            {CP_NAMES.map((name,i)=>{
+              const st = cpState(i)
+              const col = st==='block'?'#ef4444':st==='hold'?'#f59e0b':st==='pass'?'#10b981':'#334155'
+              const bg = st==='block'?'rgba(239,68,68,0.1)':st==='hold'?'rgba(245,158,11,0.1)':st==='pass'?'rgba(16,185,129,0.08)':'rgba(255,255,255,0.02)'
+              const icon = st==='block'?'✗':st==='hold'?'◆':st==='pass'?'✓':cp===i&&!done?'●':'○'
+              return (
+                <div key={i} style={{
+                  display:'flex',alignItems:'center',gap:6,
+                  background:bg,border:`1px solid ${col}30`,borderRadius:7,padding:'5px 8px',
+                  transition:'all 0.2s ease',
+                }}>
+                  <span style={{fontSize:11,fontWeight:800,color:col,minWidth:12,textAlign:'center'}}>{icon}</span>
+                  <div>
+                    <div style={{fontSize:9,color:'#475569',letterSpacing:'0.05em'}}>CP-{i}</div>
+                    <div style={{fontSize:10,color:st==='pending'?'#475569':'#CBD5E1',fontWeight:st!=='pending'?600:400}}>{name}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+        <div style={{padding:'24px',display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:'#475569',letterSpacing:'0.1em',marginBottom:14}}>GOVERNANCE DECISION</div>
+            {!done ? (
+              <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:20}}>
+                <div style={{
+                  background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:12,padding:'20px',textAlign:'center',
+                }}>
+                  <div style={{fontSize:11,color:'#334155',marginBottom:8}}>Evaluating…</div>
+                  <div style={{display:'flex',gap:3,justifyContent:'center'}}>
+                    {[0,1,2].map(i=>(
+                      <div key={i} style={{width:6,height:6,borderRadius:'50%',background:'#C9A227'}}/>
+                    ))}
+                  </div>
+                  <div style={{fontSize:11,color:'#475569',marginTop:10}}>
+                    {cp>=0&&cp<CP_NAMES.length?`Running ${CP_NAMES[Math.min(cp,10)]}…`:'Initialising pipeline…'}
+                  </div>
+                </div>
+                <div style={{background:'rgba(255,255,255,0.04)',borderRadius:99,height:4}}>
+                  <div style={{
+                    height:'100%',borderRadius:99,
+                    background:`linear-gradient(90deg,${scen.color},${scen.color}99)`,
+                    width:`${Math.max(0,cp/11*100)}%`,transition:'width 0.2s ease',
+                  }}/>
+                </div>
+                <div style={{fontSize:10,color:'#334155',textAlign:'center'}}>{Math.max(0,cp)} / 11 checkpoints</div>
+              </div>
+            ) : (
+              <div>
+                <div style={{
+                  background:scen.verdict==='BLOCK'?'rgba(239,68,68,0.1)':'rgba(245,158,11,0.1)',
+                  border:`2px solid ${scen.verdict==='BLOCK'?'#ef4444':'#f59e0b'}`,
+                  borderRadius:12,padding:'18px',textAlign:'center',marginBottom:14,
+                }}>
+                  <div style={{
+                    fontSize:'1.8rem',fontWeight:900,
+                    color:scen.verdict==='BLOCK'?'#ef4444':'#f59e0b',
+                    letterSpacing:'0.08em',marginBottom:6,
+                  }}>{scen.verdict}</div>
+                  <div style={{fontSize:11,color:'#94A3B8',lineHeight:1.5}}>{scen.reason}</div>
+                </div>
+                <div style={{
+                  background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.08)',
+                  borderRadius:10,padding:'12px 14px',
+                }}>
+                  <div style={{fontSize:9,color:'#475569',letterSpacing:'0.1em',marginBottom:4}}>PQC RECEIPT · CRYSTALS-Dilithium3</div>
+                  <div style={{fontSize:11,fontFamily:'monospace',color:'#C9A227',wordBreak:'break-all'}}>{scen.receipt}</div>
+                  <div style={{fontSize:9,color:'#334155',marginTop:4}}>Independently verifiable · W3C VC format</div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div style={{marginTop:16}}>
+            <Link to="/try" style={{
+              display:'block',textAlign:'center',
+              background:'rgba(201,162,39,0.1)',border:'1px solid rgba(201,162,39,0.3)',
+              borderRadius:10,padding:'10px 16px',
+              fontSize:12,fontWeight:700,color:'#C9A227',
+              textDecoration:'none',letterSpacing:'0.05em',
+            }}>
+              Run your own scenario →
+            </Link>
+            <div style={{fontSize:10,color:'#334155',textAlign:'center',marginTop:8}}>
+              No login required · Real pipeline · PQC receipt issued
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const REFERRAL_OPTIONS = [
   'Facebook', 'WhatsApp', 'Instagram', 'Telegram',
   'LinkedIn', 'Google', 'Recomendación', 'Otro'
@@ -157,6 +357,26 @@ export default function CommercialLanding() {
               Run your first decision through OMNIX
             </Link>
           </div>
+        </section>
+
+        {/* ── LIVE GOVERNANCE PIPELINE DEMO ── */}
+        <section className="mb-16">
+          <div className="text-center mb-8">
+            <span style={{
+              display:'inline-block',
+              background:'rgba(201,162,39,0.08)',
+              border:'1px solid rgba(201,162,39,0.3)',
+              borderRadius:99, padding:'6px 18px',
+              fontSize:'0.8rem', fontWeight:700,
+              color:'#C9A227', letterSpacing:'0.12em',
+              textTransform:'uppercase', marginBottom:16,
+            }}>Live Pipeline Demo</span>
+            <h2 className="heading-lg text-white mb-3">See OMNIX in Action</h2>
+            <p className="text-muted text-lg max-w-2xl mx-auto">
+              The 11-checkpoint governance pipeline intercepting a high-risk decision in real time — cryptographic receipt issued on every evaluation.
+            </p>
+          </div>
+          <GovernanceLiveDemo />
         </section>
 
         {/* ── PRODUCT DEMO VIDEO ── */}
