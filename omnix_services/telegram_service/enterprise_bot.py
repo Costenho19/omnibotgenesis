@@ -820,10 +820,11 @@ class EnterpriseTelegramBot:
                 return False
                 
             request = HTTPXRequest(
+                connection_pool_size=16,
                 connect_timeout=30.0,
-                read_timeout=30.0,
-                write_timeout=30.0,
-                pool_timeout=30.0,
+                read_timeout=60.0,
+                write_timeout=60.0,
+                pool_timeout=60.0,
             )
             self.application = Application.builder().token(token).request(request).build()
             
