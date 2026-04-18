@@ -436,8 +436,8 @@ async def send_message_with_retry(message_obj, text: str, max_retries: int = 3, 
             if attempt < max_retries - 1:
                 await asyncio.sleep(wait_time)
             else:
-                logger.error(f"❌ Telegram TimedOut después de {max_retries} intentos")
-                raise
+                logger.error(f"❌ Telegram TimedOut después de {max_retries} intentos — mensaje no enviado, bot continúa")
+                return None
         except RetryAfter as e:
             logger.warning(f"⚠️ Telegram RetryAfter: {e.retry_after}s")
             await asyncio.sleep(e.retry_after)
@@ -447,7 +447,15 @@ async def send_message_with_retry(message_obj, text: str, max_retries: int = 3, 
             if attempt < max_retries - 1:
                 await asyncio.sleep(wait_time)
             else:
-                raise
+                logger.error(f"❌ Telegram NetworkError después de {max_retries} intentos — mensaje no enviado, bot continúa")
+                return None
+        except Exception as e:
+            logger.warning(f"⚠️ Telegram error inesperado (intento {attempt+1}/{max_retries}): {type(e).__name__}: {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep((attempt + 1) * 2)
+            else:
+                logger.error(f"❌ Error inesperado después de {max_retries} intentos — mensaje no enviado, bot continúa")
+                return None
     return None
 
 
@@ -3821,11 +3829,28 @@ Usa: `/autotrading activar ACEPTO`"""
             # 2. IA procesa sin prisa
             # 3. Respuesta llega como mensaje nuevo (no edit que puede fallar)
             
-            # ACK INMEDIATO - Sale en <100ms
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text="🧠 Procesando tu mensaje..."
-            )
+            # ACK INMEDIATO - Sale en <100ms (con retry para nunca perder el ack)
+            try:
+                from telegram.error import TimedOut, NetworkError, RetryAfter
+                for _ack_attempt in range(4):
+                    try:
+                        await context.bot.send_message(
+                            chat_id=update.effective_chat.id,
+                            text="🧠 Procesando tu mensaje..."
+                        )
+                        break
+                    except (TimedOut, NetworkError) as _ack_err:
+                        if _ack_attempt < 3:
+                            await asyncio.sleep((_ack_attempt + 1) * 2)
+                        else:
+                            logger.warning(f"⚠️ ACK no enviado tras 4 intentos (continuando): {_ack_err}")
+                    except RetryAfter as _ra:
+                        await asyncio.sleep(_ra.retry_after)
+                    except Exception as _ack_generic:
+                        logger.warning(f"⚠️ ACK error (continuando sin ack): {_ack_generic}")
+                        break
+            except Exception:
+                pass  # El bot NUNCA muere por un ACK fallido
             
             try:
                 logger.info(f"🧠 AI_CALL_START: Llamando a generate_response_async para {user_name}")
@@ -3950,8 +3975,11 @@ Usa: `/autotrading activar ACEPTO`"""
                 
             except Exception as ai_error:
                 logger.error(f"❌ Error IA superinteligencia: {ai_error}")
-                fallback_response = f"🧠 OMNIX Decision Governance operativo, {user_name}. Tu mensaje '{user_message}' recibido correctamente."
-                await update.message.reply_text(fallback_response)
+                fallback_response = f"🧠 OMNIX Decision Governance operativo, {user_name}. Tu mensaje recibido correctamente."
+                try:
+                    await send_message_with_retry(update.message, fallback_response)
+                except Exception as _fb_err:
+                    logger.error(f"❌ Fallback IA también falló: {_fb_err}")
             
         except Exception as e:
             import traceback
@@ -6268,17 +6296,34 @@ Trades: {balance['total_trades']}"""
                 return False
             
             async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-                """Handler async para errores con logging detallado."""
-                logger.error(f"❌ Error en update: {context.error}")
+                """Handler global — el bot NUNCA cae por errores de red o de usuario."""
+                from telegram.error import TimedOut, NetworkError, RetryAfter, Forbidden, BadRequest
+                err = context.error
+                err_name = type(err).__name__
+
+                # Errores de red — recuperables, solo log
+                if isinstance(err, (TimedOut, NetworkError)):
+                    logger.warning(f"⚠️ [ErrorHandler] Red recuperable ({err_name}): {err} — bot sigue activo")
+                    return
+                if isinstance(err, RetryAfter):
+                    logger.warning(f"⚠️ [ErrorHandler] RetryAfter {err.retry_after}s — bot sigue activo")
+                    return
+                # Usuario bloqueó el bot — no es un crash
+                if isinstance(err, Forbidden):
+                    logger.warning(f"⚠️ [ErrorHandler] Bot bloqueado por usuario: {err}")
+                    return
+                # Mensaje inválido — no es un crash
+                if isinstance(err, BadRequest):
+                    logger.warning(f"⚠️ [ErrorHandler] BadRequest (mensaje inválido): {err}")
+                    return
+                # PoolTimeout de httpcore (viene envuelto a veces como Exception genérico)
+                if 'PoolTimeout' in err_name or 'pool' in str(err).lower():
+                    logger.warning(f"⚠️ [ErrorHandler] PoolTimeout detectado — bot sigue activo: {err}")
+                    return
+                # Cualquier otro error — loguear pero NUNCA propagar para que el bot no caiga
+                logger.error(f"🔴 [ErrorHandler] Error inesperado ({err_name}): {err} — bot continúa")
                 if update:
-                    logger.error(f"📝 Update que causó error: {update}")
-                
-                if hasattr(context, 'error') and context.error:
-                    error_name = type(context.error).__name__
-                    if error_name in ['TimedOut', 'NetworkError', 'RetryAfter']:
-                        logger.warning(f"⚠️ Error de red recuperable: {error_name}. Reconexión automática...")
-                    else:
-                        logger.error(f"🔴 Error no recuperable: {error_name} - {context.error}")
+                    logger.error(f"📝 Update: {update}")
             
             self.application.add_error_handler(error_handler)
             
