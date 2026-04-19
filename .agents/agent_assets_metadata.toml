@@ -234,3 +234,21 @@ id = "kJaRuddNw0PMcDbSyYDof"
 uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_011_PROVISIONAL.pdf"
 type = "pdf"
 title = "F11 — Crypto-Agility Provider Architecture + Hybrid KEM (OMNIX-PAT-2026-011)"
+
+[[outputs]]
+id = "8a5o3K1xyUpAVDgGG9zvc"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_012_PROVISIONAL.pdf"
+type = "pdf"
+title = "F12 — Trajectory Invariant Engine (OMNIX-PAT-2026-012)"
+
+[[outputs]]
+id = "D_hG9WqffRDukUv3r47fz"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_013_PROVISIONAL.pdf"
+type = "pdf"
+title = "F13 — Exit Governance Layer (OMNIX-PAT-2026-013)"
+
+[[outputs]]
+id = "AQPX7yg8m063QEhs7bCSa"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_014_PROVISIONAL.pdf"
+type = "pdf"
+title = "F14 — Bidirectional Temporal Admissibility (OMNIX-PAT-2026-014)"
