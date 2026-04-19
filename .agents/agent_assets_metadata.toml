@@ -264,3 +264,9 @@ id = "IwGThgJ98LDQMjuiOvcxf"
 uri = "file://docs/ip/OMNIX_IPO_MEDIATION_SUBMISSION.pdf"
 type = "pdf"
 title = "IPO Mediation Submission — Patentes Corregidas"
+
+[[outputs]]
+id = "OnS0MSGMXnwcoxvn_AyFu"
+uri = "file://docs/ip/OMNIX_EVIDENCE_ANNEX.pdf"
+type = "pdf"
+title = "OMNIX_EVIDENCE_ANNEX.pdf — LinkedIn Evidence Annex (83 screenshots)"
