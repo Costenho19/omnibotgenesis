@@ -252,3 +252,9 @@ id = "AQPX7yg8m063QEhs7bCSa"
 uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_014_PROVISIONAL.pdf"
 type = "pdf"
 title = "F14 — Bidirectional Temporal Admissibility (OMNIX-PAT-2026-014)"
+
+[[outputs]]
+id = "Csaz2TNoinVZMmCmd-Tjn"
+uri = "file://docs/ip/OMNIX_GIT_EVIDENCE_TIMELINE.pdf"
+type = "pdf"
+title = "Cronología de Evidencia Git — OMNIX vs VITT"
