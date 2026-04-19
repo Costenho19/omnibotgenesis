@@ -192,7 +192,31 @@ Set calendar reminders for 11 months from each filing date (one month before dea
 
 ---
 
-*Master Index prepared: April 2026*
+---
+
+### FAMILY 15 — OMNIX-PAT-2026-015
+**Title:** Structural Admissibility Engine for Automated Decision Governance Systems with Pre-Pipeline Schema Validation, Enumerated Constraint Encoding, and Zero-Bypass Boundary Enforcement
+
+**Core Inventions:**
+- Layer 0 Structural Admissibility Engine (SAE) — pre-pipeline boundary that enforces admissibility at input construction, not at runtime evaluation
+- Structural Constraint Schema encoding jurisdiction-asset, jurisdiction-operation, ethical (Sharia/ESG/sanctions), and client-specific constraints
+- Zero-Bypass Property — EvaluationRequest object constructible exclusively via the Structural Admissibility Validator; no code path bypasses Layer 0
+- Structured Rejection with Constraint Provenance — machine-readable rejection record identifying violated constraint, regulatory source, input fields, and resolution guidance
+- Composable Cross-Domain Constraint Architecture — constraint classes composable via unified registry without runtime branching
+- Four-Layer Governance Architecture: Layer 0 (SAE) → Layer 1 (Runtime Pipeline) → Layer 2 (TIE) → Layer 3 (Evidence/Receipt)
+- Multi-domain applicability: financial trading, insurance, medical AI, real estate, energy, autonomous agents
+
+**Key Phrase:** *"OMNIX does not only block invalid decisions — it decides which decisions can exist."*
+
+**Estimated Patentability:** HIGH (novel application of structural admissibility as a pre-pipeline governance layer with regulatory constraint encoding and zero-bypass guarantee; no prior art combining schema-level admissibility, regulatory constraint provenance, and zero-bypass architecture for automated decision governance)
+**Filing Fee:** $60.00 (Micro Entity Provisional)
+**Docket Reference:** OMNIX-PAT-2026-015
+**Date Prepared:** April 19, 2026
+**Related:** OMNIX-PAT-2026-001, OMNIX-PAT-2026-011, OMNIX-PAT-2026-014
+
+---
+
+*Master Index prepared: April 2026 — Updated April 19, 2026 (Family 15 added)*
 *Inventor: Harold Alberto Nunes Rodelo*
 *Company: OMNIX Quantum Ltd, United Kingdom*
 *© 2026 OMNIX Quantum Ltd. All rights reserved. CONFIDENTIAL.*
