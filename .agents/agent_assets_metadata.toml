@@ -210,3 +210,15 @@ id = "T8ITVkUArXknZ7EWfl1VN"
 uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_003_PROVISIONAL.pdf"
 type = "pdf"
 title = "OMNIX-PAT-2026-003 — Sharia Compliance + PQC Voice Auth"
+
+[[outputs]]
+id = "7-xNztRfr62lHgyH7ZXJP"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_004_PROVISIONAL.pdf"
+type = "pdf"
+title = "OMNIX-PAT-2026-004 — Assumption Validity Monitor (AVM)"
+
+[[outputs]]
+id = "-GoFMpjnvVT8DdopDOsKI"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_006_PROVISIONAL.pdf"
+type = "pdf"
+title = "OMNIX-PAT-2026-006 — Context Admission Gate (CAG)"
