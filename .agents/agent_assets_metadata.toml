@@ -174,3 +174,9 @@ id = "KMXMBJKBq__SsyRBh8uvb"
 uri = "file://attached_assets/screenshots/omnixquantum_net_verify.png"
 type = "image"
 title = "omnixquantum.net/verify — LIVE ahora"
+
+[[outputs]]
+id = "wB9tvEcrA-QA1iwlAkuu5"
+uri = "file://docs/ip/provisional_applications/family_1/SPECIFICATION_FAMILY1.md"
+type = "text"
+title = "Familia 1 — Governance Control Architecture (Especificación Completa)"
