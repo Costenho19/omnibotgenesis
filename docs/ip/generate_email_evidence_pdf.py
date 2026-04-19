@@ -208,10 +208,10 @@ def build_pdf():
         ("2. Unsolicited Contact",
          "Mushtaque Ahmed Rajput initiated unsolicited contact with Harold Nunes. "
          "At no point did Harold seek, request, or adopt VITT Protocol methodology into OMNIX architecture."),
-        ("3. Smoking Gun — March 24, 4:29 AM Email",
+        ("3. Key Email — March 24, 4:29 AM",
          "Mushtaque explicitly wrote: 'I just need the written record on my end so our IP trail is clean "
-         "going into April.' This constitutes an unambiguous admission of intent to manufacture an artificial "
-         "IP trail before April investor activities — not a good-faith IP claim."),
+         "going into April.' This statement can be reasonably interpreted as an attempt to establish an IP "
+         "record timed to coincide with Harold's investor activities, rather than a pre-existing good-faith claim."),
         ("4. Written Acceptance of OMNIX Independence — March 25, 3:31 AM",
          "Mushtaque explicitly accepted Harold's position in writing: 'I fully appreciate the strategic need "
          "to keep OMNIX Quantum's architecture and IP independent.' This acceptance was voluntary and unequivocal."),
@@ -223,10 +223,10 @@ def build_pdf():
          "and shared with Mushtaque. The VITT references in that document were included by Harold as a courtesy "
          "reference to ongoing exploratory discussions — not as an architectural integration. "
          "Mushtaque's prior email on March 14 demanding IP ownership predates any claim that OMNIX 'incorporated' VITT."),
-        ("7. Charlin's Coordinated Claim",
-         "Jorge Andrés Charlin Mardones wrote independently on March 26 making the same demands — "
-         "citing the same Terra/LUNA report. This coordination between Mushtaque and Charlin demonstrates "
-         "a joint campaign rather than independent good-faith IP concerns."),
+        ("7. Charlin's Communication — March 26",
+         "Jorge Andrés Charlin Mardones wrote to Harold on March 26 making similar demands — "
+         "citing the same Terra/LUNA report. The timing and content of both communications "
+         "indicates coordinated communication between Mushtaque and Charlin."),
     ]
 
     for title, body in facts:
@@ -286,22 +286,21 @@ def build_pdf():
     # SECTION 3 — "IP Trail" Request (March 24, 4:29 AM)
     # ═══════════════════════════════════════════════════════════════════════
     story += section_banner(
-        "SECTION 3 — EXPLICIT \"IP TRAIL\" REQUEST (March 24, 2026 — 4:29 AM) — SMOKING GUN",
+        "SECTION 3 — \"IP TRAIL\" REQUEST (March 24, 2026 — 4:29 AM) — KEY DOCUMENT",
         RED,
-        "24 March 2026, 4:29 AM — From: Mushtaque Ahmed Rajput To: Harold Nunes + Charlin",
+        "24 March 2026, 4:29 AM — From: Mushtaque Ahmed Rajput To: Harold Nunes",
         "Mushtaque asks Harold for a written confirmation before March 31 to 'keep the IP trail clean going into April.' "
         "He adds: 'No changes to your investor narrative, no public disclosure, this stays between us.' "
-        "This email is the central smoking-gun document: explicit admission of intent to manufacture an artificial "
-        "IP trail before Harold's investor activities."
+        "This email can be reasonably interpreted as an attempt to establish an IP record ahead of Harold's "
+        "March 31 investor activities, rather than a reflection of a pre-existing formal IP claim."
     )
     story.append(img_flowable("image_1776630484213.png", max_h_cm=14))
     story.append(Spacer(1, 6))
     story.append(highlight_box(
-        "SMOKING GUN — EXACT QUOTE: \"I just need the written record on my end so our IP trail is clean "
+        "KEY DOCUMENT — EXACT QUOTE: \"I just need the written record on my end so our IP trail is clean "
         "going into April. One paragraph from you is enough.\"\n\n"
-        "This is not a good-faith IP claim. It is an explicit request to create a fabricated paper trail "
-        "timed to coincide with Harold's March 31 investor pitch. The phrase 'stays between us' confirms "
-        "the concealment intent.",
+        "This statement, read in context, can be reasonably interpreted as an attempt to establish an IP "
+        "record timed to April investor activities. Harold declined this request in writing on the same day.",
         colour=RED, bg=colors.HexColor("#FAF0F0")
     ))
     story.append(PageBreak())
@@ -337,15 +336,15 @@ def build_pdf():
         "In direct response to Harold's March 24 decline, Mushtaque writes: 'Thank you for the clarity. "
         "I fully appreciate the strategic need to keep OMNIX Quantum's architecture and IP independent.' "
         "He confirms VITT will remain 'a clearly defined, independent architectural layer.' "
-        "This constitutes a binding written acceptance of OMNIX independence."
+        "This constitutes a written acknowledgment of OMNIX independence."
     )
     story.append(img_flowable("image_1776630558114.png", max_h_cm=14))
     story.append(Spacer(1, 6))
     story.append(highlight_box(
-        "BINDING ACCEPTANCE — EXACT QUOTE: \"I fully appreciate the strategic need to keep OMNIX Quantum's "
+        "WRITTEN ACKNOWLEDGMENT — EXACT QUOTE: \"I fully appreciate the strategic need to keep OMNIX Quantum's "
         "architecture and IP independent... I will ensure that the VITT Protocol remains a clearly defined, "
         "independent architectural layer.\"\n\n"
-        "This acceptance was voluntary, explicit, and unequivocal. It directly contradicts any subsequent "
+        "This written acknowledgment, made voluntarily and explicitly, is inconsistent with any subsequent "
         "claim that OMNIX wrongfully appropriated VITT methodology.",
         colour=GREEN, bg=colors.HexColor("#F0FAF3")
     ))
@@ -369,10 +368,10 @@ def build_pdf():
     story.append(img_flowable("image_1776630365902.png", max_h_cm=10))
     story.append(Spacer(1, 6))
     story.append(highlight_box(
-        "KEY POINT — 46 MINUTE CONTRADICTION: At 3:31 AM Mushtaque accepted OMNIX independence. "
-        "At 4:17 AM — 46 minutes later — he sent a FORMAL NOTICE with demands and a co-conspirator copied. "
-        "This sequence demonstrates the acceptance was not genuine and that the formal notice was pre-drafted. "
-        "The inclusion of Charlin confirms coordinated legal pressure strategy.",
+        "KEY POINT — 46 MINUTE SEQUENCE: At 3:31 AM Mushtaque provided a written acknowledgment of OMNIX "
+        "independence. At 4:17 AM — 46 minutes later — he sent a FORMAL NOTICE with Charlin copied. "
+        "The proximity of these two communications raises questions about the basis and timing of the "
+        "formal notice, which followed immediately after a written acknowledgment of independence.",
         colour=RED, bg=colors.HexColor("#FAF0F0")
     ))
     story.append(PageBreak())
@@ -388,7 +387,7 @@ def build_pdf():
         "Charlin writes independently to Harold claiming the Terra/LUNA report (March 13) incorporates VITT "
         "as a methodology within its framework without attribution. He cites the Zenodo DOI "
         "(10.5281/zenodo.18685499) and requests written acknowledgment. "
-        "This coordinated outreach — the day after the FORMAL NOTICE — confirms a joint campaign."
+        "The timing of this outreach — the day after the FORMAL NOTICE — indicates coordinated communication."
     )
     story.append(img_flowable("image_1776630630490.png", max_h_cm=10))
     story.append(Spacer(1, 6))
@@ -399,10 +398,10 @@ def build_pdf():
     story.append(img_flowable("image_1776630686608.png", max_h_cm=10))
     story.append(Spacer(1, 6))
     story.append(highlight_box(
-        "KEY POINT: Charlin's email arrives the day after Mushtaque's FORMAL NOTICE, making the same claims "
-        "about the same document. This is not coincidental independent concern — it is a coordinated joint "
-        "campaign. Charlin identifies as 'Lead Author, VITT Protocol' — the same role Mushtaque uses — "
-        "confirming they are acting in concert.",
+        "KEY POINT: Charlin's email arrives the day after Mushtaque's FORMAL NOTICE, making similar claims "
+        "about the same document. The timing and alignment of both communications indicates coordinated "
+        "communication between the two parties. Charlin identifies as 'Lead Author, VITT Protocol' — "
+        "the same paper co-authored with Mushtaque.",
         colour=ORANGE, bg=colors.HexColor("#FFF5EB")
     ))
     story.append(PageBreak())
@@ -462,11 +461,11 @@ def build_pdf():
     story.append(PageBreak())
 
     # ═══════════════════════════════════════════════════════════════════════
-    # EXHIBIT A — Terra/LUNA Report Full Text
+    # EXHIBIT A — Only the 4 quotes Charlin cited from the Terra/LUNA Report
     # ═══════════════════════════════════════════════════════════════════════
     exh_hdr_data = [[Paragraph(
-        "EXHIBIT A — OMNIX TERRA/LUNA FORENSIC SIMULATION REPORT (Full Text)\n"
-        "Generated: March 13, 2026 at 21:54 UTC | Framework: OMNIX DGI v6.5.4e",
+        "EXHIBIT A — VERBATIM PASSAGES CITED BY CHARLIN FROM THE TERRA/LUNA REPORT\n"
+        "Report: OMNIX DGI — Terra/LUNA Forensic Simulation | Generated: March 13, 2026",
         sSecHdr
     )]]
     exh_hdr = Table(exh_hdr_data, colWidths=[USABLE_W])
@@ -479,147 +478,72 @@ def build_pdf():
     story.append(exh_hdr)
     story.append(Spacer(1, 6))
     story.append(highlight_box(
-        "This exhibit contains the full text of the Terra/LUNA Forensic Simulation Report as referenced "
-        "by Charlin in Section 9. Presented to demonstrate: (a) the OMNIX-native architecture of all core "
-        "components; (b) that VITT references appear only in descriptive/methodology fields as courtesy "
-        "mentions of exploratory discussions, not as integrated architectural components; "
-        "(c) that the report was generated by OMNIX and shared WITH Mushtaque — not authored by him.",
+        "This exhibit reproduces only the four verbatim passages that Jorge Charlin cited in his email "
+        "of 27 March 2026 (Section 9), along with the contextual clarification for each. "
+        "These passages were already disclosed to both Mushtaque Ahmed Rajput (March 13, 2026) "
+        "and to Charlin by his own quotation. No additional technical content is disclosed here.",
         colour=BLUE, bg=colors.HexColor("#EBF0FA")
     ))
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 10))
 
-    report_text = """OMNIX — Decision Governance Infrastructure
-FORENSIC SIMULATION REPORT — Terra/LUNA Collapse — May 2022
-3-Phase Pre-Collapse Governance Reconstruction
+    quoted_passages = [
+        (
+            "Quote 1 — Cover Page, Methodology Field",
+            "\"8-Checkpoint Fail-Closed Pipeline + 3-Phase VITT Forensic Alignment\"",
+            "Context: This is the methodology descriptor field on the report cover page. "
+            "It reflects the exploratory framing of the simulation at the time it was drafted "
+            "and shared with Mushtaque on March 13. The 8-Checkpoint Fail-Closed Pipeline is "
+            "an OMNIX-native architecture. The VITT reference in this field was a courtesy "
+            "descriptor for an exploratory discussion that Harold subsequently declined to formalise "
+            "in writing (March 24, 6:46 PM)."
+        ),
+        (
+            "Quote 2 — Executive Summary, Page 2",
+            "\"OMNIX's 8-checkpoint fail-closed governance pipeline, combined with the VITT "
+            "framework's Forensic Invariance methodology\"",
+            "Context: This passage appears in the executive summary of an exploratory simulation "
+            "document. It does not constitute a formal integration agreement, a co-authorship "
+            "declaration, or an acknowledgment of IP rights. The document was generated by OMNIX "
+            "and shared with Mushtaque. Mushtaque's own written acknowledgment of March 25 "
+            "confirms VITT remains 'a clearly defined, independent architectural layer.'"
+        ),
+        (
+            "Quote 3 — Framework Comparison Table, Page 7 (Column Header)",
+            "\"OMNIX + VITT (Forensic Governance)\"",
+            "Context: This is a column header in a comparative table within an exploratory "
+            "simulation report. It was used as a descriptive label for the purposes of the "
+            "simulation only. It does not reflect a formal architectural integration, a licensing "
+            "arrangement, or any agreed IP relationship between OMNIX and VITT Protocol."
+        ),
+        (
+            "Quote 4 — Conclusion, Page 8",
+            "\"Forensic governance — as embodied in the OMNIX + VITT framework alignment\"",
+            "Context: This phrase appears in the conclusion of the exploratory simulation. "
+            "The word 'alignment' was used in the context of a hypothetical exploratory scenario, "
+            "not as confirmation of a formal agreement. Harold declined to provide any such "
+            "written confirmation when requested by Mushtaque on March 24, 2026."
+        ),
+    ]
 
-Report Type: Forensic Simulation — Historical Reconstruction
-Asset Under Analysis: LUNA/USD (Terra Classic)
-Collapse Event: May 11, 2022 — Total Market Capitalization Loss
-Analysis Window: 2022-05-08 → 2022-05-11
-Framework: OMNIX Decision Governance Infrastructure v6.5.4e
-Methodology: 8-Checkpoint Fail-Closed Pipeline + 3-Phase VITT Forensic Alignment
-Classification: Institutional Research — Forensic Certainty Demonstration
-Generated: March 13, 2026 at 21:54 UTC
-
-────────────────────────────────────────────────────────────
-
-1. EXECUTIVE SUMMARY
-
-The Terra/LUNA collapse of May 2022 was not a black swan event. It was a Topological Collapse — a systematic
-failure where the market's reasoning manifold had decoupled from structural reality while surface signals
-remained deceptively clean. Every probabilistic governance system in the market failed because they were
-measuring confidence, not validating it forensically.
-
-This simulation demonstrates that OMNIX's 8-checkpoint fail-closed governance pipeline, combined with the
-VITT framework's Forensic Invariance methodology, would have detected the anomaly and issued a BLOCKED
-governance decision at each of the three critical pre-collapse intervals.
-
-Critical Timestamp  | LUNA Price | Governance Decision | Primary Trigger
-2022-05-08 00:00 UTC| $68.84     | WARNING ISSUED      | Regime Transition Detected
-2022-05-10 00:00 UTC| $18.14     | BLOCKED             | Temporal Coherence Failure
-2022-05-10 18:00 UTC| $4.60      | BLOCKED + RECEIPT   | Sovereign Gate Activated
-2022-05-11 00:00 UTC| $1.73      | — COLLAPSE —        | All Systems Failed (no OMNIX)
-
-────────────────────────────────────────────────────────────
-
-3. 3-PHASE FORENSIC RECONSTRUCTION
-
-Phase 1 — Forensic Baseline (T - 72 Hours)
-Timestamp: 2022-05-08 00:00 | LUNA Price: $68.84 | CP-0 SIV: 88.9/100 | CP-4: 77.7/100 | CP-7: 56.8/100
-Decision: WARNING
-
-The surface signal was deceptively clean. LUNA was trading with strong momentum from 18 months of sustained
-upward regime. No probabilistic system flagged risk. However, OMNIX's Signal Integrity Validator (CP-0)
-detected the first anomaly: momentum was no longer consistent with the structural regime. The system's
-Manufactured Confidence Index exceeded 70% — the threshold at which inherited confidence becomes forensically
-suspect. Governance Outcome: CP-0 SIV Warning — Structural Brittleness Detected
-
-Phase 2 — Reverse Interrogation (T - 24 Hours)
-Timestamp: 2022-05-10 00:00 | LUNA Price: $18.14 | CP-0 SIV: 51.3/100 | CP-4: 28.4/100 | CP-7: 39.9/100
-Decision: BLOCKED
-
-The UST depeg had begun accelerating. Probabilistic systems were still processing stale confidence. OMNIX's
-Temporal Coherence Validation checkpoint (CP-7) evaluated the signal against its own 7-day historical
-trajectory and found it Forensically Inconsistent: the decision was executing against a ghost of the previous
-regime. The signal was declared to carry Manufactured Confidence — confidence inherited rather than earned.
-The CP-4 Coherence Engine dropped below the 65-point block threshold. BLOCKED decision issued.
-Governance Outcome: CP-7 TCV Failure — Manufactured Confidence Confirmed
-
-Phase 3 — Sovereign Gate Activation (T - 6 Hours)
-Timestamp: 2022-05-10 18:00 | LUNA Price: $4.60 | CP-0 SIV: 51.8/100 | CP-4: 23.9/100 | CP-7: 46.1/100
-Decision: BLOCKED + RECEIPT
-
-Six hours before the irreversible collapse became undeniable to the market, all three OMNIX governance layers
-were simultaneously below threshold. The fail-closed pipeline activated the Sovereign Logic Gate: execution
-was blocked with a cryptographically signed governance receipt. No action could proceed.
-Governance Outcome: Sovereign Gate Activated — Signed Receipt Issued — Execution Blocked
-
-────────────────────────────────────────────────────────────
-
-5. CRYPTOGRAPHIC GOVERNANCE RECEIPT
-
-Decision: BLOCKED
-Asset: LUNA/USD
-Timestamp (UTC): 2022-05-10T18:00:00+00:00
-Price at Gate: $4.6044
-CP-0 SIV Score: 51.76 / 100
-CP-4 Coherence: 23.94 / 100
-CP-7 TCV Score: 46.14 / 100
-Block Threshold: 65.0 / 100
-Regime: CRASH
-Failure Reason: TEMPORAL_COHERENCE_VIOLATION + SIGNAL_INTEGRITY_FAILURE
-Manuf. Confidence: 49.64%
-SHA-256 Hash: 3e2020dac7bc4e75265b454c98009ddd4fa87d73b4eef603...
-Chain Hash: ef62e3c4ac1bcb40d6d3c365e81957a5fdb7bd2b97fe85bf...
-PQC Signature: 9cb36965e5ef90a93ddf456c1e45010a7fcc11c6eb20fdbb919f...
-Receipt Type: FORENSIC_SIMULATION
-Framework: OMNIX Decision Governance Infrastructure v6.5.4e
-
-────────────────────────────────────────────────────────────
-
-6. FRAMEWORK COMPARISON — Probabilistic vs. Forensic Governance
-
-[OMNIX + VITT column represents an EXPLORATORY comparison label used in this demonstration report.
-It does not constitute formal architectural integration of VITT into OMNIX.]
-
-Dimension | Probabilistic Systems | OMNIX + VITT (Forensic Governance)
-Signal Validation | Checks if data is statistically clean | Forces signal to prove Logical Authenticity
-Confidence Model  | Inherits confidence from history | Detects Manufactured Confidence
-Regime Awareness  | Static thresholds, regime-agnostic | HMM continuous regime estimation
-Temporal Coherence| Point-in-time validation only | Full 7-day trajectory coherence (CP-7 TCV)
-Failure Mode      | Executed against LUNA ghost regime | Blocked at T-6h with signed receipt
-Auditability      | Post-hoc log analysis only | Immutable PQC-signed receipt per decision
-LUNA Outcome      | FAILED — $40B+ in losses | BLOCKED ✓ — Sovereign Gate at T-6h
-
-────────────────────────────────────────────────────────────
-
-7. CONCLUSION — ARCHITECTURAL CERTAINTY
-
-This forensic reconstruction demonstrates that the Terra/LUNA collapse was not undetectable. It was invisible
-to probabilistic systems but structurally legible to forensic governance architecture.
-
-The distinction is fundamental: probabilistic governance measures whether a signal is statistically likely.
-Forensic governance — as embodied in the OMNIX + VITT framework alignment — forces the signal to prove its
-Logical Authenticity against the live structural state of the system before any execution is permitted.
-
-OMNIX governance checkpoints would have issued a BLOCKED decision at T-6h before the Terra/LUNA collapse —
-6 hours before the irreversible unwinding began. Capital would have been preserved. The event would have been
-logged with a cryptographically signed receipt. This is Architectural Certainty.
-
-OMNIX Decision Governance Infrastructure — omnixquantum.net"""
-
-    for para in report_text.split("\n"):
-        line = para.strip()
-        if not line:
-            story.append(Spacer(1, 3))
-            continue
-        if line.startswith("────"):
-            story.append(HRFlowable(width=USABLE_W, thickness=0.4, color=MGRAY))
-            story.append(Spacer(1, 3))
-        elif line.isupper() and len(line) < 80:
-            story.append(Paragraph(line, sExhHdr))
-        else:
-            story.append(Paragraph(line, sExhCode))
+    for title, quote, context in quoted_passages:
+        story.append(Paragraph(f"<b>{title}</b>", sExhHdr))
+        quote_data = [[Paragraph(quote, S("q", fontName="Courier-Bold", fontSize=8.5,
+                                          textColor=NAVY, alignment=TA_LEFT, leading=13))]]
+        quote_tbl = Table(quote_data, colWidths=[USABLE_W])
+        quote_tbl.setStyle(TableStyle([
+            ("BACKGROUND",    (0,0), (-1,-1), LGRAY),
+            ("LEFTPADDING",   (0,0), (-1,-1), 12),
+            ("RIGHTPADDING",  (0,0), (-1,-1), 12),
+            ("TOPPADDING",    (0,0), (-1,-1), 8),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 8),
+            ("BOX",           (0,0), (-1,-1), 0.8, MGRAY),
+        ]))
+        story.append(quote_tbl)
+        story.append(Spacer(1, 4))
+        story.append(Paragraph(f"<b>Contextual clarification:</b> {context}", sExhBody))
+        story.append(Spacer(1, 10))
+        story.append(HRFlowable(width=USABLE_W, thickness=0.4, color=MGRAY))
+        story.append(Spacer(1, 8))
 
     story.append(PageBreak())
 
