@@ -312,3 +312,21 @@ id = "MeCBSi1R1dWK3Ux18EA8n"
 uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_004_F15_StructuralAdmissibilityEngine.pdf"
 type = "pdf"
 title = "OMNIX-PAT-2026-015 — Versión Final (12 Claims, nivel USPTO elite)"
+
+[[outputs]]
+id = "mIwfd1-CzaE88PmST3g1c"
+uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_001_TIE_TrajectoryInvariantEngine_NuevaDimension.pdf"
+type = "pdf"
+title = "F1 — Governance Control Architecture (TIE) — Diagramas vectoriales"
+
+[[outputs]]
+id = "ijSOzrHpOdvazkxjDbste"
+uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_003_F10_MerkleEvidencia_NuevaDimension.pdf"
+type = "pdf"
+title = "F10 — Merkle Transparency Chain — Diagramas vectoriales"
+
+[[outputs]]
+id = "xhc5ZT24ps9E3vTARnBQ3"
+uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_002_F14_BidirectionalTemporal_NuevaDimension.pdf"
+type = "pdf"
+title = "F14 — Bidirectional Temporal Admissibility — Diagramas vectoriales"
