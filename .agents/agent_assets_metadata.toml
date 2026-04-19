@@ -186,3 +186,9 @@ id = "YUXczJsQGx31HJJjEz3Lm"
 uri = "file://docs/ip/provisional_applications/family_2/SPECIFICATION_FAMILY2.md"
 type = "text"
 title = "Familia 2 — Non-Markovian Memory Kernel + CAES (Especificación Completa)"
+
+[[outputs]]
+id = "083qUEYg-K1bR5nEFYQWc"
+uri = "file://docs/ip/provisional_applications/family_3/SPECIFICATION_FAMILY3.md"
+type = "text"
+title = "Familia 3 — Sharia Compliance + PQC Voice Auth (Especificación Completa)"
