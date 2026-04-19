@@ -258,3 +258,9 @@ id = "Csaz2TNoinVZMmCmd-Tjn"
 uri = "file://docs/ip/OMNIX_GIT_EVIDENCE_TIMELINE.pdf"
 type = "pdf"
 title = "Cronología de Evidencia Git — OMNIX vs VITT"
+
+[[outputs]]
+id = "IwGThgJ98LDQMjuiOvcxf"
+uri = "file://docs/ip/OMNIX_IPO_MEDIATION_SUBMISSION.pdf"
+type = "pdf"
+title = "IPO Mediation Submission — OMNIX vs VITT (English)"
