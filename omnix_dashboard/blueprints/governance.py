@@ -22,12 +22,17 @@ ADR-051: Client Usage Reporting & Billing Audit Trail
 import json
 import logging
 import os
+import re
 import sys
 import time
 import threading
 import urllib.request
 import urllib.error
 import uuid
+
+_SAFE_DECISION_VALUES = frozenset({"APPROVED", "BLOCKED", "HOLD", "REJECT", "VETO", "PASS", "WARN", "REVIEW"})
+_CLIENT_ID_RE = re.compile(r'^[a-zA-Z0-9_\-]{1,64}$')
+_ASSET_RE      = re.compile(r'^[a-zA-Z0-9_.:\-]{1,40}$')
 from collections import defaultdict
 
 import psycopg2
@@ -742,6 +747,10 @@ def api_governance_receipts():
         return jsonify({'error': 'limit and offset must be integers', 'status': 400}), 400
 
     decision_filter = request.args.get('decision')
+    if decision_filter:
+        decision_filter = decision_filter.upper()
+        if decision_filter not in _SAFE_DECISION_VALUES:
+            return jsonify({'error': 'invalid decision filter value', 'status': 400}), 400
 
     try:
         conn = _get_db_conn()
@@ -752,7 +761,7 @@ def api_governance_receipts():
 
         if decision_filter:
             where_clause += " AND decision = %s"
-            params.append(decision_filter.upper())
+            params.append(decision_filter)
 
         cur.execute(
             f"""
@@ -1093,6 +1102,8 @@ def admin_usage_summary():
         months = 3
 
     filter_client_id = request.args.get('client_id')
+    if filter_client_id and not _CLIENT_ID_RE.match(filter_client_id):
+        return jsonify({'error': 'invalid client_id format', 'status': 400}), 400
 
     try:
         conn = _get_db_conn()

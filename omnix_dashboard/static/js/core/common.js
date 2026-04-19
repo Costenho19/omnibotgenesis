@@ -143,3 +143,22 @@ const OmnixCommon = (function() {
 if (typeof window !== 'undefined') {
     window.OmnixCommon = OmnixCommon;
 }
+
+/**
+ * OMNIX Security: HTML escape utility.
+ * Use escHtml(value) instead of raw ${value} in all innerHTML templates
+ * to prevent stored XSS via API data injection.
+ * Example: container.innerHTML = `<span>${escHtml(data.status)}</span>`;
+ */
+(function() {
+    'use strict';
+    const _div = document.createElement('div');
+    function escHtml(val) {
+        if (val === null || val === undefined) return '';
+        _div.textContent = String(val);
+        return _div.innerHTML;
+    }
+    if (typeof window !== 'undefined') {
+        window.escHtml = escHtml;
+    }
+})();
