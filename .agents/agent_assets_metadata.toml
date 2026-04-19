@@ -276,3 +276,27 @@ id = "EbjcnHq_NexiTYRbuq2j8"
 uri = "file://docs/ip/OMNIX_EMAIL_EVIDENCE_ANNEX.pdf"
 type = "pdf"
 title = "3. Evidencia Email — 17 screenshots + Exhibit Terra/LUNA (1.6 MB)"
+
+[[outputs]]
+id = "S8-F3aq2VVfDKFdaWmzw7"
+uri = "file://docs/ip/provisional_applications/family_15/COVER_SHEET_FAMILY15.md"
+type = "text"
+title = "Cover Sheet — OMNIX-PAT-2026-015"
+
+[[outputs]]
+id = "bKGru_ZO7uUt-rGakRqsQ"
+uri = "file://docs/ip/provisional_applications/family_15/SPECIFICATION_FAMILY15.md"
+type = "text"
+title = "Specification — Structural Admissibility Engine (principal)"
+
+[[outputs]]
+id = "lQw3ho4cpxxXXXRTzKtSA"
+uri = "file://docs/ip/provisional_applications/family_15/INVENTORSHIP_MEMO_FAMILY15.md"
+type = "text"
+title = "Inventorship Memo — Familia 15 (interno)"
+
+[[outputs]]
+id = "Jp4ubPmRAKiy1waxor5MR"
+uri = "file://docs/ip/provisional_applications/family_15/EVIDENCE_PACK_FAMILY15.md"
+type = "text"
+title = "Evidence Pack — Familia 15 (interno)"
