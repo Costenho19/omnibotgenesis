@@ -22,6 +22,7 @@ from PIL import Image as PILImage
 # ── Paths ──────────────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ASSETS_DIR = os.path.join(BASE_DIR, "attached_assets")
+LOGO_PATH  = os.path.join(BASE_DIR, "docs", "omnix_quantum_logo.png")
 OUTPUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)), "OMNIX_EMAIL_EVIDENCE_ANNEX.pdf")
 
 # ── Page geometry ──────────────────────────────────────────────────────────
@@ -145,16 +146,24 @@ def build_pdf():
     story = []
 
     # ── COVER PAGE ─────────────────────────────────────────────────────────
-    cover_data = [[
-        Paragraph("OMNIX QUANTUM LTD", sTitle),
-    ]]
+    logo_w = 3.8 * cm
+    logo_h = logo_w * (438 / 599)
+    logo_img = RLImage(LOGO_PATH, width=logo_w, height=logo_h) if os.path.exists(LOGO_PATH) else Spacer(1, logo_h)
+
+    cover_data = [
+        [logo_img],
+        [Paragraph("OMNIX QUANTUM LTD", sTitle)],
+    ]
     cover = Table(cover_data, colWidths=[USABLE_W])
     cover.setStyle(TableStyle([
         ("BACKGROUND",    (0,0), (-1,-1), NAVY),
-        ("TOPPADDING",    (0,0), (-1,-1), 30),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 10),
+        ("TOPPADDING",    (0,0), (0,0), 22),
+        ("BOTTOMPADDING", (0,0), (0,0), 6),
+        ("TOPPADDING",    (1,0), (1,0), 0),
+        ("BOTTOMPADDING", (1,0), (1,0), 12),
         ("LEFTPADDING",   (0,0), (-1,-1), 20),
         ("RIGHTPADDING",  (0,0), (-1,-1), 20),
+        ("ALIGN",         (0,0), (-1,-1), "CENTER"),
     ]))
     story.append(cover)
     story.append(Spacer(1, 0.3*cm))
@@ -276,8 +285,8 @@ def build_pdf():
     story.append(Spacer(1, 6))
     story.append(highlight_box(
         "KEY POINT: Mushtaque's formal IP claim came within 24 hours of receiving the Terra/LUNA exploratory report. "
-        "He had never previously asserted formal IP ownership. This reactive pattern demonstrates opportunistic "
-        "IP construction, not a pre-existing good-faith claim.",
+        "He had never previously asserted formal IP ownership. This sequence is consistent with a reactive "
+        "IP claim following disclosure of an exploratory report, rather than a pre-existing good-faith claim.",
         colour=RED, bg=colors.HexColor("#FAF0F0")
     ))
     story.append(PageBreak())
@@ -546,6 +555,16 @@ def build_pdf():
         story.append(Spacer(1, 8))
 
     story.append(PageBreak())
+
+    # ── TECHNICAL CLOSING STATEMENT ────────────────────────────────────────
+    story.append(highlight_box(
+        "TECHNICAL CLOSING STATEMENT: No evidence of VITT methodology implementation exists in OMNIX, "
+        "either in code, architecture, or deployment. OMNIX Decision Governance Infrastructure operates "
+        "exclusively on its own proprietary framework, independently developed and documented prior to "
+        "any contact with Mushtaque Ahmed Rajput or Jorge Andrés Charlin Mardones.",
+        colour=NAVY, bg=LGRAY
+    ))
+    story.append(Spacer(1, 0.4*cm))
 
     # ── ATTESTATION ────────────────────────────────────────────────────────
     att_hdr_data = [[Paragraph("ATTESTATION", sSecHdr)]]

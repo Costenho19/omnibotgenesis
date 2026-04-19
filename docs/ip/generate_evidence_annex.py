@@ -22,6 +22,7 @@ from PIL import Image as PILImage
 # ── Paths ──────────────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ASSETS_DIR = os.path.join(BASE_DIR, "attached_assets")
+LOGO_PATH  = os.path.join(BASE_DIR, "docs", "omnix_quantum_logo.png")
 OUTPUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)), "OMNIX_EVIDENCE_ANNEX.pdf")
 
 # ── Page geometry ──────────────────────────────────────────────────────────
@@ -358,17 +359,24 @@ style_warning = ParagraphStyle(
 
 def make_cover():
     """Navy cover page."""
-    cover_data = [[
-        Paragraph("OMNIX QUANTUM LTD", style_cover_title),
-    ]]
+    logo_w = 3.8 * cm
+    logo_h = logo_w * (438 / 599)
+    logo_img = RLImage(LOGO_PATH, width=logo_w, height=logo_h) if os.path.exists(LOGO_PATH) else Spacer(1, logo_h)
+
+    cover_data = [
+        [logo_img],
+        [Paragraph("OMNIX QUANTUM LTD", style_cover_title)],
+    ]
     cover_table = Table(cover_data, colWidths=[USABLE_W])
     cover_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), NAVY),
-        ("TOPPADDING",    (0, 0), (-1, -1), 60),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 20),
+        ("BACKGROUND",    (0, 0), (-1, -1), NAVY),
+        ("TOPPADDING",    (0, 0), (0, 0), 22),
+        ("BOTTOMPADDING", (0, 0), (0, 0), 6),
+        ("TOPPADDING",    (1, 0), (1, 0), 0),
+        ("BOTTOMPADDING", (1, 0), (1, 0), 14),
         ("LEFTPADDING",   (0, 0), (-1, -1), 20),
         ("RIGHTPADDING",  (0, 0), (-1, -1), 20),
-        ("ROUNDEDCORNERS", (0, 0), (-1, -1), [8, 8, 8, 8]),
+        ("ALIGN",         (0, 0), (-1, -1), "CENTER"),
     ]))
 
     elements = [
