@@ -192,3 +192,21 @@ id = "083qUEYg-K1bR5nEFYQWc"
 uri = "file://docs/ip/provisional_applications/family_3/SPECIFICATION_FAMILY3.md"
 type = "text"
 title = "Familia 3 — Sharia Compliance + PQC Voice Auth (Especificación Completa)"
+
+[[outputs]]
+id = "9VuL47cvkDA_vFRiqDwWD"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_001_PROVISIONAL.pdf"
+type = "pdf"
+title = "OMNIX-PAT-2026-001 — Governance Control Architecture"
+
+[[outputs]]
+id = "Slsx_BGsfi1gYibG7TiBN"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_002_PROVISIONAL.pdf"
+type = "pdf"
+title = "OMNIX-PAT-2026-002 — Non-Markovian Memory Kernel + CAES"
+
+[[outputs]]
+id = "T8ITVkUArXknZ7EWfl1VN"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_003_PROVISIONAL.pdf"
+type = "pdf"
+title = "OMNIX-PAT-2026-003 — Sharia Compliance + PQC Voice Auth"
