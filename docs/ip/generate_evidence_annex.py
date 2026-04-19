@@ -359,24 +359,15 @@ style_warning = ParagraphStyle(
 
 def make_cover():
     """Navy cover page."""
-    logo_w = 3.8 * cm
-    logo_h = logo_w * (438 / 599)
-    logo_img = RLImage(LOGO_PATH, width=logo_w, height=logo_h) if os.path.exists(LOGO_PATH) else Spacer(1, logo_h)
-
-    cover_data = [
-        [logo_img],
-        [Paragraph("OMNIX QUANTUM LTD", style_cover_title)],
-    ]
+    cover_data = [[Paragraph("OMNIX QUANTUM LTD", style_cover_title)]]
     cover_table = Table(cover_data, colWidths=[USABLE_W])
     cover_table.setStyle(TableStyle([
-        ("BACKGROUND",    (0, 0), (-1, -1), NAVY),
-        ("TOPPADDING",    (0, 0), (0, 0), 22),
-        ("BOTTOMPADDING", (0, 0), (0, 0), 6),
-        ("TOPPADDING",    (1, 0), (1, 0), 0),
-        ("BOTTOMPADDING", (1, 0), (1, 0), 14),
+        ("BACKGROUND", (0, 0), (-1, -1), NAVY),
+        ("TOPPADDING",    (0, 0), (-1, -1), 60),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 20),
         ("LEFTPADDING",   (0, 0), (-1, -1), 20),
         ("RIGHTPADDING",  (0, 0), (-1, -1), 20),
-        ("ALIGN",         (0, 0), (-1, -1), "CENTER"),
+        ("ROUNDEDCORNERS", (0, 0), (-1, -1), [8, 8, 8, 8]),
     ]))
 
     elements = [

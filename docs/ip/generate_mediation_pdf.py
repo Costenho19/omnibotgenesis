@@ -124,30 +124,24 @@ def on_page(canvas, doc, styles):
     canvas.saveState()
 
     canvas.setFillColor(NAVY)
-    canvas.rect(0, H - 80*mm, W, 80*mm, fill=1, stroke=0)
+    canvas.rect(0, H - 72*mm, W, 72*mm, fill=1, stroke=0)
 
     canvas.setStrokeColor(GOLD)
     canvas.setLineWidth(2)
-    canvas.line(20*mm, H - 80*mm, W - 20*mm, H - 80*mm)
-
-    if os.path.exists(LOGO_PATH):
-        logo_w = 28*mm
-        logo_h = logo_w * (438 / 599)
-        canvas.drawImage(LOGO_PATH, (W - logo_w) / 2, H - logo_h - 6*mm,
-                         width=logo_w, height=logo_h, mask='auto')
+    canvas.line(20*mm, H - 72*mm, W - 20*mm, H - 72*mm)
 
     canvas.setFillColor(GOLD)
     canvas.setFont("Helvetica-Bold", 22)
-    canvas.drawCentredString(W / 2, H - 38*mm, "OMNIX QUANTUM LTD")
+    canvas.drawCentredString(W / 2, H - 28*mm, "OMNIX QUANTUM LTD")
 
     canvas.setFillColor(GOLD)
     canvas.setFont("Helvetica", 11)
-    canvas.drawCentredString(W / 2, H - 49*mm, "IP Mediation Submission — Intellectual Property Office (UK)")
+    canvas.drawCentredString(W / 2, H - 38*mm, "IP Mediation Submission — Intellectual Property Office (UK)")
 
     canvas.setFillColor(colors.HexColor("#AAAAAA"))
     canvas.setFont("Helvetica", 9)
-    canvas.drawCentredString(W / 2, H - 59*mm, "Prepared by: Harold Alberto Nunes Rodelo  |  omnixquantum.net  |  April 2026")
-    canvas.drawCentredString(W / 2, H - 67*mm, "CONFIDENTIAL — FOR MEDIATION PURPOSES ONLY")
+    canvas.drawCentredString(W / 2, H - 48*mm, "Prepared by: Harold Alberto Nunes Rodelo  |  omnixquantum.net  |  April 2026")
+    canvas.drawCentredString(W / 2, H - 56*mm, "CONFIDENTIAL — FOR MEDIATION PURPOSES ONLY")
 
     canvas.setFillColor(colors.HexColor("#EEEEEE"))
     canvas.rect(0, 0, W, 16*mm, fill=1, stroke=0)
@@ -168,7 +162,7 @@ def build_pdf():
         pagesize=A4,
         leftMargin=22*mm,
         rightMargin=22*mm,
-        topMargin=88*mm,
+        topMargin=80*mm,
         bottomMargin=22*mm,
         title="OMNIX QUANTUM — IP Mediation Submission",
         author="Harold Alberto Nunes Rodelo",
