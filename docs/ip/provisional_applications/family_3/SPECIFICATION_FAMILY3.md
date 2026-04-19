@@ -304,9 +304,11 @@ The combined feature set characterizes the biometric identity of the speaker in 
 
 #### III.C. Similarity Score Computation (334)
 
-The Similarity Score Computation Engine compares the extracted feature set against the stored voice signature associated with the requesting user. The similarity score is computed as a weighted combination:
+The Similarity Score Computation Engine compares the extracted feature set against the stored voice signature associated with the requesting user. In one embodiment, the similarity score is computed as a weighted combination of two feature components:
 
 **similarity_score = 0.70 × spectral_match + 0.30 × temporal_match**
+
+In other embodiments, the weighting between spectral and temporal components may be configured to any values appropriate to the deployment context, the characteristics of the enrolled user population, and the acoustic environment. Alternative embodiments may incorporate additional biometric feature dimensions (e.g., pitch envelope, formant trajectories, rhythm patterns) with corresponding configurable weights. The structural requirement — that the similarity score be derived from a plurality of independent acoustic feature dimensions combined into a single scalar score for comparison against a threshold — is preserved across all embodiments regardless of the specific weighting scheme.
 
 where:
 - **spectral_match** is the cosine similarity between the extracted MFCC feature vector and the stored voice signature MFCC vector, normalized to [0.0, 1.0]
@@ -511,7 +513,7 @@ A proposed transaction clears both the Sharia Compliance Engine and the voice bi
 
 **Claim 7 (Specific — Session Key)** — The method of Claim 5, further comprising establishing a secure session between user device and server using Kyber-768 (ML-KEM-768) as specified in NIST FIPS 203.
 
-**Claim 8 (Specific — Similarity Score Weighting)** — The method of Claim 5, wherein the similarity score is computed as 0.70 × spectral feature match + 0.30 × temporal feature match.
+**Claim 8 (Specific — Similarity Score Weighting)** — The method of Claim 5, wherein, in one embodiment, the similarity score is computed as 0.70 × spectral feature match + 0.30 × temporal feature match; and wherein in other embodiments the weighting coefficients are configurable to any values appropriate to the deployment context, provided that the similarity score is derived from a plurality of independent acoustic feature dimensions combined into a single scalar value for threshold comparison.
 
 **Claim 9 (Broad — Unified Pipeline)** — A computer-implemented system enforcing ethical compliance and quantum-resistant identity authorization in a single sequential pre-execution pipeline, wherein compliance clearance and biometric authorization are each independently required for execution, and wherein failure of either independently blocks the proposed transaction.
 
@@ -527,7 +529,7 @@ A proposed transaction clears both the Sharia Compliance Engine and the voice bi
 
 ## ABSTRACT
 
-A computer-implemented Ethical and Quantum-Secure Execution Framework provides pre-execution enforcement of two independent requirements for digital asset transactions. An Automated Sharia Compliance Engine evaluates proposed transactions against a seven-tier compliance database derived from Islamic jurisprudence criteria — riba, gharar, and maysir prohibitions — and enforces compliance through an asset quarantine mechanism that categorically blocks all transactions involving quarantined assets pending compliance resolution. A Dual-Layer Transaction Authorization system requires sequential voice biometric authentication (similarity score against stored voice signature, 70% spectral + 30% temporal weighting) and post-quantum digital signature generation using Dilithium-3 (ML-DSA-65, NIST FIPS 204), with session establishment via Kyber-768 (ML-KEM-768, NIST FIPS 203). Both components are connected through a unified sequential execution pipeline in which compliance clearance and identity authorization are each independently required and neither can substitute for the other. A combined post-quantum-sealed audit receipt documents the compliance evaluation, authentication, and signature for every processed transaction. To the inventor's knowledge, this is the first system combining voice biometric authentication with NIST FIPS 204-compliant post-quantum digital signatures for financial transaction authorization.
+A computer-implemented Ethical and Quantum-Secure Execution Framework provides pre-execution enforcement of two independent requirements for digital asset transactions. An Automated Sharia Compliance Engine evaluates proposed transactions against a seven-tier compliance database derived from Islamic jurisprudence criteria — riba, gharar, and maysir prohibitions — and enforces compliance through an asset quarantine mechanism that categorically blocks all transactions involving quarantined assets pending compliance resolution. A Dual-Layer Transaction Authorization system requires sequential voice biometric authentication (similarity score against stored voice signature; in one embodiment: 70% spectral + 30% temporal weighting, configurable in other embodiments) and post-quantum digital signature generation using Dilithium-3 (ML-DSA-65, NIST FIPS 204), with session establishment via Kyber-768 (ML-KEM-768, NIST FIPS 203). Both components are connected through a unified sequential execution pipeline in which compliance clearance and identity authorization are each independently required and neither can substitute for the other. A combined post-quantum-sealed audit receipt documents the compliance evaluation, authentication, and signature for every processed transaction. To the inventor's knowledge, this is the first system combining voice biometric authentication with NIST FIPS 204-compliant post-quantum digital signatures for financial transaction authorization.
 
 ---
 
