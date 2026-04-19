@@ -222,3 +222,15 @@ id = "-GoFMpjnvVT8DdopDOsKI"
 uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_006_PROVISIONAL.pdf"
 type = "pdf"
 title = "OMNIX-PAT-2026-006 — Context Admission Gate (CAG)"
+
+[[outputs]]
+id = "of-hV0f8Ka_1Jbg_TPhQz"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_010_PROVISIONAL.pdf"
+type = "pdf"
+title = "F10 — PQC Merkle Transparency Chain (OMNIX-PAT-2026-010)"
+
+[[outputs]]
+id = "kJaRuddNw0PMcDbSyYDof"
+uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_011_PROVISIONAL.pdf"
+type = "pdf"
+title = "F11 — Crypto-Agility Provider Architecture + Hybrid KEM (OMNIX-PAT-2026-011)"
