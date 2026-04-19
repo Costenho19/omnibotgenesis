@@ -306,3 +306,9 @@ id = "7LE-qj4t4KI4XkTBQq6Rq"
 uri = "file://docs/ip/provisional_applications/pdf_exports/OMNIX_PAT_2026_015_PROVISIONAL.pdf"
 type = "pdf"
 title = "OMNIX-PAT-2026-015 — Structural Admissibility Engine (completa)"
+
+[[outputs]]
+id = "MeCBSi1R1dWK3Ux18EA8n"
+uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_004_F15_StructuralAdmissibilityEngine.pdf"
+type = "pdf"
+title = "PRIORIDAD 1 — OMNIX-PAT-2026-015 (versión elite, ajustes aplicados)"
