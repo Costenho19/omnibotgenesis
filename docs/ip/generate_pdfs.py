@@ -410,7 +410,7 @@ def build_cover(family, styles):
         ["Entity Status:", "Micro Entity (37 C.F.R. § 1.29)"],
         ["Filing Basis:", "35 U.S.C. § 111(b) — Provisional Application"],
         ["Date Prepared:", TODAY],
-        ["Date of Filing:", "[TO BE COMPLETED AT USPTO]"],
+        ["Date of Filing:", "April 19, 2026"],
     ]
     meta_style = [
         ("FONTNAME",      (0, 0), (0, -1), "Helvetica-Bold"),
