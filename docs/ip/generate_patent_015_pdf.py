@@ -567,7 +567,10 @@ prior_art = [
      'VARA regulations, or that a LEVERAGED operation is PROHIBITED in UK for retail clients '
      'under FCA rules, or that a specific asset is HARAM under Sharia compliance criteria. '
      'These determinations require regulatory constraint encoding, not data structure validation. '
-     'The present invention performs regulatory admissibility determination, not schema validation.'),
+     'The present invention performs regulatory admissibility determination, not schema validation. '
+    'Schema validation systems operate solely on structural data conformity and do not encode '
+    'domain-specific admissibility constraints derived from regulatory, jurisdictional, or '
+    'ethical frameworks.'),
     ('Type Systems in Programming Languages',
      'The principle "make illegal states unrepresentable" is known in functional programming '
      'and type-theoretic literature (Minsky, 2010; Wadler, 1989). It has been applied to '
@@ -606,6 +609,12 @@ story.append(Paragraph(
     'The present invention provides a Structural Admissibility Engine comprising five components '
     'that together enforce the principle that inadmissible decision requests cannot be represented '
     'as valid system objects:', body))
+story.append(Paragraph(
+    '<b>The invention establishes a constitutive boundary rather than an evaluative boundary, '
+    'such that admissibility is determined prior to system state instantiation rather than '
+    'through post-construction evaluation.</b> This is the fundamental architectural '
+    'distinction from all prior art: prior systems evaluate decisions that exist; the present '
+    'invention determines what decisions may exist.', bold_b))
 
 components_full = [
     ('Component A', 'Structural Constraint Schema (SCS)',
@@ -823,6 +832,9 @@ story.append(Paragraph(
 story.append(Spacer(1, 3*mm))
 
 story.append(Paragraph(
+    'The SRCP is configured to support regulatory audit, compliance reporting, and '
+    'machine-verifiable traceability of constraint enforcement decisions \u2014 making every '
+    'Layer 0 rejection an auditable, attributable, and reproducible governance event. '
     'The SRCP serves three purposes: (i) <b>Regulatory Audit</b> \u2014 complete machine-readable '
     'trail of why the decision was rejected, which regulatory source mandated the constraint, '
     'and which input fields produced the violation; (ii) <b>Client Communication</b> \u2014 the '
@@ -981,6 +993,21 @@ claims = [
      'provenance and not constructing any EvaluationRequest object; and (e) enforcing '
      'a zero-bypass property by restricting EvaluationRequest object construction to '
      'the Structural Admissibility Validator.'),
+
+    ('11.', 'The system of claim 1, wherein the Structural Admissibility Engine enforces '
+     'that any decision request violating at least one structural constraint is prevented '
+     'from being instantiated as a system object, such that no inadmissible decision state '
+     'is representable within the system at any point during system operation, and wherein '
+     'this prevention is architectural rather than evaluative \u2014 arising from the '
+     'impossibility of constructing the inadmissible state rather than from the detection '
+     'and interception of an already-constructed inadmissible state.'),
+
+    ('12.', 'The system of claim 1, wherein the construction of any decision object within '
+     'the governance system is restricted to a single validation pathway enforcing structural '
+     'admissibility, such that no alternate construction path exists within the system by '
+     'which a decision object may be created without passing through complete constraint '
+     'evaluation, and wherein any attempt to construct a decision object through an alternate '
+     'path results in an immediate, unrecoverable construction failure.'),
 ]
 
 for num, text in claims:
@@ -1012,7 +1039,10 @@ story.append(Paragraph(
     'runtime interception systems where governance guarantees are contingent on every intercepting '
     'component being operational and correctly implemented. The SAE is domain-agnostic and applies '
     'to financial trading, insurance underwriting, medical AI, real estate, energy governance, '
-    'and autonomous agent systems.', body))
+    'and autonomous agent systems. '
+    'The invention eliminates latent invalid system states and removes dependency on runtime '
+    'interception mechanisms, providing a governance guarantee that is architectural rather '
+    'than operational \u2014 holding regardless of the state of any downstream component.', body))
 
 story.append(Spacer(1, 6*mm))
 story.append(HRFlowable(width='100%', thickness=0.5, color=MGRAY, spaceAfter=5))
