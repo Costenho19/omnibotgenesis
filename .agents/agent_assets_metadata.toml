@@ -330,3 +330,21 @@ id = "xhc5ZT24ps9E3vTARnBQ3"
 uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_002_F14_BidirectionalTemporal_NuevaDimension.pdf"
 type = "pdf"
 title = "F14 — Bidirectional Temporal Admissibility — Diagramas vectoriales"
+
+[[outputs]]
+id = "vDTDrHWr9atW3c5t9m_Ey"
+uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_001_F1_GovernanceArchitecture.pdf"
+type = "pdf"
+title = "F1 — Governance Architecture (58 KB)"
+
+[[outputs]]
+id = "1kjLl7YVyVWStRpC-hKk6"
+uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_005_F10_MerkleTransparency.pdf"
+type = "pdf"
+title = "F10 — Merkle Transparency Chain (29 KB)"
+
+[[outputs]]
+id = "w-ZlnZuZAkKAWF1QK3l56"
+uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_006_F14_BidirectionalTemporal.pdf"
+type = "pdf"
+title = "F14 — Bidirectional Temporal (29 KB)"
