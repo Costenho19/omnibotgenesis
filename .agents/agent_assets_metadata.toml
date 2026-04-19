@@ -180,3 +180,9 @@ id = "wB9tvEcrA-QA1iwlAkuu5"
 uri = "file://docs/ip/provisional_applications/family_1/SPECIFICATION_FAMILY1.md"
 type = "text"
 title = "Familia 1 — Governance Control Architecture (Especificación Completa)"
+
+[[outputs]]
+id = "YUXczJsQGx31HJJjEz3Lm"
+uri = "file://docs/ip/provisional_applications/family_2/SPECIFICATION_FAMILY2.md"
+type = "text"
+title = "Familia 2 — Non-Markovian Memory Kernel + CAES (Especificación Completa)"
