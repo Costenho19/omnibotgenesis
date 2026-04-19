@@ -261,7 +261,7 @@ def build_pdf():
         ["Architecture", "11-checkpoint governance pipeline", "Not publicly defined"],
         ["Core function", "Decision traceability + institutional accountability", "Claimed: forensic invariance"],
         ["Codebase", "Documented in Git since July 13, 2025", "No public repository exists"],
-        ["IP registration", "10 provisional patent applications (USPTO)", "No filing identified"],
+        ["IP registration", "10 provisional patent applications (USPTO) — prepared for filing", "No filing identified"],
         ["Technical artefacts", "Python, TypeScript, PostgreSQL, Flask, React", "None provided or accessible"],
         ["Forensic simulation", "OMNIX Forensic Simulation (commit 08879d68, March 13 2026)", "Not documented independently"],
         ["Origin", "Independent creation by Harold A. Nunes Rodelo", "Unverified claim by opposing party"],
@@ -342,8 +342,8 @@ def build_pdf():
          "The opposing party has not provided — and OMNIX QUANTUM LTD has never received — any code, algorithm, dataset, specification, or documented methodology constituting 'VITT intellectual property.' No IP transfer occurred because no IP was ever shared in technical form."),
         ("Fact 5 — Live site is clean",
          "As of 19 April 2026, omnixquantum.net contains zero references to VITT, Mushtaque Ahmed Rajput, or any claimed methodology. This was independently verified via grep across the full codebase."),
-        ("Fact 6 — OMNIX architecture is original and patented",
-         "OMNIX has filed 10 provisional patent applications with the USPTO (Micro Entity, April 2026) covering its 11-checkpoint governance pipeline, TIE scoring, forensic simulation framework, and institutional decision infrastructure. These filings establish prior art entirely independent of any VITT claim."),
+        ("Fact 6 — OMNIX architecture is original, documented, and patent-ready",
+         "OMNIX has prepared 10 provisional patent applications for filing with the USPTO (Micro Entity) covering its 11-checkpoint governance pipeline, TIE scoring, forensic simulation framework, and institutional decision infrastructure. These applications are ready for submission and establish prior art entirely independent of any VITT claim."),
     ]
     for title_text, detail_text in facts:
         story.append(Paragraph(f"<b>{title_text}</b>", S["body"]))
