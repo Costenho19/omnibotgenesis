@@ -557,15 +557,28 @@ prior_art = [
      'determinations. These systems operate entirely within the runtime interception model. They '
      'are powerful but do not prevent invalid requests from being formulated.'),
     ('Web API Schema Validation (JSON Schema, OpenAPI)',
-     'These systems validate that input data conforms to a structural specification \u2014 that '
-     'a field contains a string or falls within a numeric range. They validate data structure, '
-     'not decision admissibility. Regulatory, jurisdictional, and ethical constraints are not '
-     'encoded at the schema level.'),
+     'Web API schema validation systems (JSON Schema, OpenAPI Specification, Pydantic) validate '
+     'that input data conforms to a <i>structural</i> specification: that a field named "asset" '
+     'contains a string, that a numeric field falls within a range, that required fields are '
+     'present. <b>This is categorically distinct from decision admissibility.</b> JSON Schema '
+     'answers: "Is this input well-formed data?" The SAE answers: "Is this decision '
+     'admissible under the applicable regulatory, jurisdictional, and ethical framework?" '
+     'JSON Schema cannot determine that XMR (Monero) is PROHIBITED in UAE jurisdiction under '
+     'VARA regulations, or that a LEVERAGED operation is PROHIBITED in UK for retail clients '
+     'under FCA rules, or that a specific asset is HARAM under Sharia compliance criteria. '
+     'These determinations require regulatory constraint encoding, not data structure validation. '
+     'The present invention performs regulatory admissibility determination, not schema validation.'),
     ('Type Systems in Programming Languages',
-     'The principle "make illegal states unrepresentable" is known in type-theoretic literature. '
-     'It has been applied to data modeling in software applications but has not been '
-     'systematically applied as an architectural governance layer with regulatory constraint '
-     'encoding for automated decision systems.'),
+     'The principle "make illegal states unrepresentable" is known in functional programming '
+     'and type-theoretic literature (Minsky, 2010; Wadler, 1989). It has been applied to '
+     'data modeling in general software applications. <b>Critically, this principle has never '
+     'been applied as a dedicated architectural layer within automated decision governance '
+     'systems.</b> No prior art encodes regulatory constraints (jurisdiction-asset, '
+     'jurisdiction-operation, Sharia, ESG, sanctions) at the type or schema level within a '
+     'governance pipeline, nor provides the zero-bypass architectural guarantee, nor produces '
+     'structured rejection with regulatory constraint provenance. The present invention is the '
+     'first application of structural admissibility as a constitutive governance boundary '
+     'for automated decision systems operating under regulatory frameworks.'),
     ('Access Control Frameworks (OAuth, RBAC, ABAC)',
      'Authorization frameworks control whether an entity is permitted to submit a request. '
      'They operate at the identity and permission level, not at the decision content level. '
@@ -574,11 +587,16 @@ prior_art = [
 for title, text in prior_art:
     story.append(Paragraph(f'<b>{title}.</b> {text}', body))
 story.append(Paragraph(
-    '<b>No prior art combines:</b> (a) schema-level structural validation; (b) regulatory, '
-    'jurisdictional, and ethical constraint encoding; (c) zero-bypass architectural guarantee; '
-    '(d) structured rejection with constraint provenance; and (e) composable cross-domain '
-    'constraint architecture \u2014 as a unified pre-pipeline governance layer for automated '
-    'decision systems.', body))
+    '<b>The critical distinction:</b> JSON Schema validates whether data is well-formed. '
+    'Type systems prevent invalid data states in general software. Access control determines '
+    'who may submit a request. <b>None of these determine whether a proposed decision is '
+    'admissible under a regulatory, jurisdictional, or ethical framework — and none provide '
+    'a zero-bypass architectural guarantee that inadmissible decisions cannot be constructed '
+    'as system objects in a governance pipeline.</b> The present invention is the first system '
+    'to apply structural admissibility as a constitutive pre-pipeline governance boundary '
+    'with regulatory constraint encoding, zero-bypass enforcement, and structured rejection '
+    'with constraint provenance for automated decision systems operating under regulatory '
+    'frameworks across multiple domains.', body))
 
 story.append(PageBreak())
 
