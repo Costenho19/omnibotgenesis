@@ -237,7 +237,7 @@ def _normalize_cache_key(prefix: str, func_name: str, args: tuple, kwargs: dict)
         key_hash = hashlib.sha256(key_json.encode()).hexdigest()[:16]
         return f"{prefix}:{func_name}:{key_hash}"
     except Exception:
-        fallback_hash = hashlib.md5(f"{args}:{kwargs}".encode()).hexdigest()[:12]
+        fallback_hash = hashlib.sha256(f"{args}:{kwargs}".encode()).hexdigest()[:12]
         return f"{prefix}:{func_name}:{fallback_hash}"
 
 
