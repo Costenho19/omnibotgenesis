@@ -113,7 +113,9 @@ The accompanying drawings, which are incorporated in and constitute a part of th
 
 Referring to FIG. 1, the Governance Control Architecture (hereinafter "the System" or "OMNIX Governance Engine") comprises four primary subsystems operating in sequence: (1) a Domain Adapter Module (110); (2) a Sequential Checkpoint Pipeline (120) comprising a plurality of independent checkpoints (CP-0 through CP-11); (3) a Decision Trace Generator (130); and (4) a Counterfactual Shadow Portfolio System (140). The System further comprises a Decision Contradiction Index (DCI) Module (150), which operates as an integrated component of the Sequential Checkpoint Pipeline at a designated checkpoint position.
 
-The System is designed to be deployed as a governance enforcement layer between a decision generation subsystem (e.g., a machine learning model, an algorithmic trading engine, a credit scoring model, or any automated recommendation system) and the execution environment (e.g., a trading exchange interface, a loan origination system, a claims processing system, or any system that converts a recommendation into a real-world action). The System does not replace the decision generation subsystem; it governs whether the outputs of the decision generation subsystem are permitted to proceed to execution.
+**Execution Boundary Principle:** The System is designed to operate at the execution boundary — the precise computational point at which a proposed action would transition from a computed recommendation into an irreversible real-world commitment. This placement is architecturally fundamental and distinguishes the present invention from all prior art approaches that apply governance at the model training stage, the model deployment stage, or through post-hoc audit mechanisms. Governance at the execution boundary means that every proposed action — regardless of its source, its confidence, or its prior validation history — must satisfy all checkpoint criteria at the moment it is about to become real, not at any earlier or later point. A proposed action that was valid at time T may be inadmissible at time T+1 if conditions have changed; the System enforces admissibility at T+1, not at T.
+
+The System is designed to be deployed as a governance enforcement layer between a decision generation subsystem and an execution environment. The decision generation subsystem may be any automated system that produces recommendations or instructions, including but not limited to: machine learning models, algorithmic trading engines, credit scoring models, clinical decision support systems, autonomous supply chain management systems, insurance underwriting engines, legal contract execution systems, energy grid management systems, or any other automated system that generates actions with real-world consequences. The execution environment may be any system that converts a recommendation into a real-world action, including but not limited to: financial exchange interfaces, loan origination systems, claims processing systems, clinical order entry systems, procurement systems, or any system that commits resources or obligations based on automated recommendations. The System does not replace the decision generation subsystem; it governs whether the outputs of the decision generation subsystem are permitted to cross the execution boundary.
 
 ### II. DOMAIN ADAPTER MODULE (110)
 
@@ -176,7 +178,7 @@ Threshold: Configurable per deployment context. In trading applications, CP-1 ev
 **CP-2: Probability Threshold Gate**
 Evaluates: Probability Score (P).
 Purpose: Ensures that the estimated probability of a favorable outcome from the proposed action meets a minimum threshold. Actions with insufficient estimated win probability are blocked.
-Threshold (default): P ≥ 0.52 (i.e., estimated win probability must exceed 52%). Configurable.
+Threshold: In one embodiment, P ≥ 0.52 (estimated win probability exceeding 52%). This threshold value is configurable and domain-specific; in other embodiments the threshold may be set to any value appropriate to the deployment context, risk tolerance of the deploying institution, and characteristics of the decision domain. The structural requirement — that a minimum probability threshold must be satisfied for the action to proceed — is preserved across all embodiments.
 
 **CP-3: Temporal Coherence Gate**
 Evaluates: Trend Persistence Score (T); trajectory consistency against historical decision baseline.
@@ -191,12 +193,12 @@ Threshold: R ≤ maximum configured exposure limit. In trading applications, thi
 **CP-5: Signal Coherence Gate**
 Evaluates: Signal Coherence Score (C).
 Purpose: Evaluates the degree of agreement among independent analytical signals. Actions motivated by signals that disagree with one another are blocked or held, as signal disagreement indicates analytical uncertainty that is not captured by any single signal's probability estimate.
-Threshold: C ≥ 0.60.
+Threshold: In one embodiment, C ≥ 0.60. This threshold is configurable; in other embodiments, the minimum coherence requirement may be set to any value appropriate to the deployment context and the number of independent signal sources contributing to the coherence score.
 
 **CP-6: Decision Contradiction Index (DCI) Gate**
 Evaluates: Logic Consistency Score (L), computed by the DCI Module (described in Section VI).
-Purpose: Detects internal signal contradiction among independent signal sources as a distinct veto condition. Issues a BLOCK verdict when the DCI score exceeds the CONTRADICTORY threshold (≥ 70), regardless of the values of any other governance signals.
-Threshold: DCI score < 70 required to pass. DCI ≥ 70 → BLOCK. DCI 35–69 → TENSIONED (degraded confidence mode). DCI < 35 → ALIGNED.
+Purpose: Detects internal signal contradiction among independent signal sources as a distinct veto condition. Issues a BLOCK verdict when the DCI score exceeds the CONTRADICTORY threshold, regardless of the values of any other governance signals.
+Threshold: In one embodiment, DCI score < 70 is required to pass, with DCI ≥ 70 classified as CONTRADICTORY (BLOCK), DCI 35–69 classified as TENSIONED (degraded confidence mode), and DCI < 35 classified as ALIGNED. The specific threshold values are configurable; in other embodiments, the classification boundaries may be set to any values appropriate to the deployment context, provided that the three-tier classification structure (aligned / tensioned / contradictory) and the mandatory BLOCK behavior at the contradictory threshold are preserved.
 
 **CP-7: Evidence Integrity Gate**
 Evaluates: Quality, completeness, and provenance of the evidence base underlying the proposed action.

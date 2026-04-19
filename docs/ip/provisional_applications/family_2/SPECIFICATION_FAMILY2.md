@@ -182,6 +182,8 @@ where:
 
 - **Ω (omega)** is the oscillation frequency parameter, controlling the period of the oscillatory memory reinforcement. The oscillation period is 2π/Ω. In the preferred embodiment, Ω is calibrated to approximately π/6 radians per hour, corresponding to an oscillation period of 12 hours, which captures the morning-to-close intraday periodicity observed in financial markets.
 
+**Execution Boundary Integration:** The Non-Markovian Memory Kernel and CAES do not themselves make execution decisions. Their output — a regime classification, a confidence score, and a set of calibrated decision magnitude parameters — is submitted to the governance checkpoint pipeline (OMNIX-PAT-2026-001) for evaluation at the execution boundary. A high-confidence regime classification does not independently authorize execution; it constitutes one signal among multiple independent signals that must collectively satisfy admissibility criteria at the execution boundary before any action is permitted to proceed. This design ensures that the regime-adaptive position sizing capabilities of the CAES cannot bypass execution boundary governance.
+
 #### II.B. Properties of the Kernel Function
 
 The memory kernel K(t−s) has the following mathematical properties that make it suitable for financial regime detection:
@@ -193,6 +195,8 @@ The memory kernel K(t−s) has the following mathematical properties that make i
 3. **Periodic reinforcement:** The factor [1 + ε × cos(Ω(t−s))] causes the kernel weight to be periodically enhanced for historical observations at temporal offsets that are multiples of the oscillation period 2π/Ω. This models the empirical phenomenon of periodic market memory.
 
 4. **Parameter calibratability:** All three parameters (τ, ε, Ω) are configurable, allowing the kernel to be calibrated for different time-series domains (e.g., different financial instruments, different market environments, or non-financial application domains).
+
+**Parameter Flexibility:** In one embodiment, τ is calibrated to approximately 12 hours, ε is calibrated to approximately 0.35, and Ω is calibrated to approximately π/6 radians per time unit. These values reflect empirical calibration against financial time-series data. In other embodiments, the parameters may be set to any values appropriate to the deployment domain and data characteristics. For example, in an energy grid demand forecasting application, τ may be calibrated to reflect daily or weekly demand cycles; in a healthcare patient monitoring application, τ may be calibrated to reflect physiological signal periodicities. The functional form of the kernel is preserved across all embodiments regardless of parameter values.
 
 #### II.C. On-Chain Data Integration
 

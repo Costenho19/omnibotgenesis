@@ -110,7 +110,9 @@ A real-time compliance enforcement system that evaluates proposed digital asset 
 
 A transaction authorization system that requires two sequential, independent verifications before a transaction is authorized for execution: (1) biometric identity verification through voice sample analysis and comparison against a stored voice signature; and (2) generation of a post-quantum digital signature over the transaction payload using Dilithium-3 (ML-DSA-65) as specified in NIST FIPS 204. Session establishment uses Kyber-768 (ML-KEM-768) as specified in NIST FIPS 203.
 
-### Unified Execution Pipeline
+### Unified Execution Pipeline — Execution Boundary Enforcement
+
+**Execution Boundary Principle:** Both components of the Framework operate exclusively at the execution boundary — the precise computational point at which a proposed transaction would transition from an intent or recommendation into an irreversible real-world financial commitment. This placement is the defining architectural characteristic of the Framework. Compliance evaluation performed at the time of model training, at the time of system deployment, or through periodic organizational review does not constitute execution boundary enforcement. Identity verification performed through session login credentials or API key authentication does not constitute execution boundary enforcement at the transaction level. The present invention enforces both ethical compliance and identity authorization at the transaction level, at the moment of execution commitment, for every proposed transaction individually — not once per session, not once per day, but at the execution boundary of each individual proposed action.
 
 The two components are connected through a unified execution pipeline that enforces the following sequence for every proposed transaction:
 
@@ -314,7 +316,7 @@ A similarity score of 1.0 indicates a perfect match; a similarity score of 0.0 i
 
 #### III.D. Authentication Decision Gate (335)
 
-The Authentication Decision Gate evaluates the similarity score against a configurable authentication threshold. In the preferred embodiment, the threshold is set at 0.75, meaning that a similarity score of at least 0.75 is required for authentication to succeed. If the similarity score falls below the threshold, the authentication attempt is rejected and the proposed transaction is blocked.
+The Authentication Decision Gate evaluates the similarity score against a configurable authentication threshold. In one embodiment, the threshold is set at 0.75, meaning that a similarity score of at least 0.75 is required for authentication to succeed. In other embodiments, this threshold may be set to any value appropriate to the security requirements of the deployment context, the sensitivity of the transaction types being authorized, and the biometric characteristics of the enrolled user population. The structural requirement — that authentication must succeed before the PQC signature layer is invoked — is preserved across all embodiments regardless of the specific threshold value. If the similarity score falls below the configured threshold, the authentication attempt is rejected and the proposed transaction is blocked.
 
 In a preferred embodiment, the Voice Signature Database (333) stores voice signatures in an encrypted biometric vault using post-quantum encryption. The system additionally requires periodic re-enrollment of voice signatures at predetermined intervals (e.g., every 90 days) to account for natural voice changes over time.
 
