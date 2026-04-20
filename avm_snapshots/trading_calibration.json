@@ -1,24 +1,23 @@
 {
-  "snapshot_id": "AVM-78A1FCF775",
-  "parameter_version": "1.78a1fcf775",
+  "snapshot_id": "AVM-EC8AA43333",
+  "parameter_version": "1.ec8aa43333",
   "domain": "trading",
-  "calibrated_at": "2026-04-20T22:29:42.315541+00:00",
-  "calibrated_at_epoch": 1776724182.315541,
+  "calibrated_at": "2026-04-20T22:45:11.036612+00:00",
+  "calibrated_at_epoch": 1776725111.036612,
   "baseline_signals": {
-    "probability_score": 72.0,
-    "signal_coherence": 70.0,
+    "probability_score": 74.0,
+    "signal_coherence": 72.0,
     "risk_exposure": 42.0,
-    "stress_resilience": 65.0,
-    "trend_persistence": 67.0,
-    "logic_consistency": 74.0
+    "stress_resilience": 62.0,
+    "trend_persistence": 58.0,
+    "logic_consistency": 76.0
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Initial calibration baseline \u2014 trading \u2014 ADR-076 compliant",
+  "description": "Baseline production \u2014 trading standard v1.0",
   "tags": [
-    "initial-calibration",
-    "v6.5.4e",
-    "adr-076"
+    "production",
+    "initial"
   ]
 }

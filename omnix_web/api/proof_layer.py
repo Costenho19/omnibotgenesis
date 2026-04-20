@@ -256,17 +256,26 @@ def institutional_verify(receipt_id: str):
             evl = _lookup_evl_receipt(receipt_id)
         if evl:
             gs = evl.get("governance_summary", {})
+            evl_decision = (evl.get("status") or "UNKNOWN").upper()
+            evl_reason_code = "GOVERNANCE_PASS" if evl_decision == "APPROVED" else "GOVERNANCE_BLOCK"
+            if evl_decision == "BLOCKED" and gs.get("layer0_status") == "BLOCKED":
+                evl_reason_code = "LAYER0_STRUCTURAL_VIOLATION"
             return jsonify({
                 "receipt_id":       evl["receipt_id"],
                 "status":           "VALID",
                 "source":           "evaluate_cache",
                 "signature_mode":   gs.get("signature_mode", "PQC_STRICT"),
                 "timestamp_issued": evl["evaluated_at"],
+                "decision":         evl_decision,
+                "reason_code":      evl_reason_code,
+                "hash_valid":       None,
+                "signature_valid":  None,
+                "chain_valid":      None,
                 "decision_trace": {
                     "asset":               gs.get("asset"),
                     "domain":              "trading",
                     "action":              gs.get("action"),
-                    "decision":            evl["status"],
+                    "decision":            evl_decision,
                     "checkpoints_passed":  gs.get("checkpoints_passed", 0),
                     "checkpoints_total":   gs.get("checkpoints_total", 0),
                     "layer0":              gs.get("layer0_status"),
@@ -275,9 +284,9 @@ def institutional_verify(receipt_id: str):
                     "ethical_flags":       gs.get("ethical_flags", []),
                 },
                 "integrity": {
-                    "hash_valid":      True,
-                    "signature_valid": True,
-                    "chain_valid":     True,
+                    "hash_valid":      None,
+                    "signature_valid": None,
+                    "chain_valid":     None,
                 },
                 "verify_url": evl.get("verify_url", f"{_BASE_URL}/verify/{receipt_id}"),
                 "issuer":     _ISSUER_DID,
@@ -317,7 +326,7 @@ def institutional_verify(receipt_id: str):
             recomputed = hashlib.sha256(
                 json.dumps(payload_for_hash, sort_keys=True).encode()
             ).hexdigest()
-            hash_valid = (recomputed == content_hash) or True
+            hash_valid = (recomputed == content_hash)
         except Exception:
             hash_valid = None
 
@@ -335,7 +344,6 @@ def institutional_verify(receipt_id: str):
             "signature":           signature,
             "signature_algorithm": sig_algo,
             "public_key":          public_key,
-            "signing_provider":    signing_provider,
         }
         verification = ReceiptEngine.verify_receipt(receipt_obj)
         sig_valid  = verification.get("signature_valid")
@@ -350,10 +358,25 @@ def institutional_verify(receipt_id: str):
     )
     status = "VALID" if overall_valid else "INVALID"
 
+    decision_upper = (decision or "UNKNOWN").upper()
+
+    # Derive reason_code from veto chain and decision
+    reason_code = "GOVERNANCE_PASS"
+    if decision_upper == "BLOCKED":
+        layer0_blocked = any(
+            c.get("checkpoint") in ("LAYER_0", "LAYER0", "SAE")
+            for c in checkpoints
+        )
+        reason_code = "LAYER0_STRUCTURAL_VIOLATION" if layer0_blocked else "GOVERNANCE_BLOCK"
+    elif decision_upper == "APPROVED":
+        reason_code = "GOVERNANCE_PASS"
+    elif decision_upper == "ERROR":
+        reason_code = "EVALUATION_ERROR"
+
     decision_trace = {
         "asset":               asset,
         "domain":              domain or "trading",
-        "decision":            (decision or "UNKNOWN").upper(),
+        "decision":            decision_upper,
         "checkpoints_passed":  passed,
         "checkpoints_blocked": blocked,
         "checkpoints_total":   total if total > 0 else None,
@@ -361,19 +384,27 @@ def institutional_verify(receipt_id: str):
         "engine_version":      engine_ver,
     }
 
+    chain_valid = bool(prev_hash) if prev_hash else None
+
     integrity = {
         "hash_valid":      hash_valid,
         "signature_valid": sig_valid,
-        "chain_valid":     bool(prev_hash) if prev_hash else None,
+        "chain_valid":     chain_valid,
     }
 
     return jsonify({
         "receipt_id":       rid,
         "status":           status,
+        "source":           "db",
         "signature_mode":   sig_mode,
         "signature_algorithm": sig_algo or "NONE",
         "timestamp_issued": ts_issued,
         "timestamp_stored": ts_created,
+        "decision":         decision_upper,
+        "reason_code":      reason_code,
+        "hash_valid":       hash_valid,
+        "signature_valid":  sig_valid,
+        "chain_valid":      chain_valid,
         "decision_trace":   decision_trace,
         "integrity":        integrity,
         "verify_url":       f"{_BASE_URL}/verify/{rid}",

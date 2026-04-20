@@ -304,6 +304,29 @@ class AssumptionValidityMonitor:
         except Exception as e:
             logger.warning(f"[AVM] Could not persist snapshot to disk: {e} — in-memory only")
 
+        # ── Version history: every recalibration appends an immutable entry ────
+        # This ensures all previous baselines are traceable and snapshots cannot
+        # be silently overwritten without audit trail.
+        try:
+            history_path = AVM_SNAPSHOTS_DIR / f"{domain}_history.jsonl"
+            history_entry = {
+                "snapshot_id":      snapshot.snapshot_id,
+                "parameter_version": snapshot.parameter_version,
+                "domain":           snapshot.domain,
+                "calibrated_at":    snapshot.calibrated_at,
+                "description":      snapshot.description,
+                "tags":             snapshot.tags,
+                "baseline_signals": snapshot.baseline_signals,
+            }
+            with open(history_path, "a") as hf:
+                hf.write(json.dumps(history_entry) + "\n")
+            logger.info(
+                f"[AVM] History entry appended — domain={domain} | "
+                f"id={snapshot.snapshot_id} | history_file={history_path}"
+            )
+        except Exception as he:
+            logger.warning(f"[AVM] Could not append to history log: {he}")
+
         return snapshot
 
     def load_snapshot(self, domain: str) -> CalibrationSnapshot | None:
