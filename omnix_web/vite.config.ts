@@ -25,6 +25,18 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/evaluate': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        proxyTimeout: 15000,
+        timeout: 15000,
+      },
+      '/verify': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        proxyTimeout: 15000,
+        timeout: 15000,
+      },
       '/api/public/sandbox': {
         target: 'http://localhost:8080',
         changeOrigin: true,

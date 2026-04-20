@@ -199,78 +199,30 @@ def _parse_veto_chain(raw) -> list[dict]:
         return []
 
 
-def _extract_reason_code(veto_raw, decision_upper: str) -> str:
+def _extract_reason_code(veto_chain) -> str:
     """
-    Extract a specific, machine-readable reason code from the stored veto_chain.
+    First-VETO-wins rule (deterministic, auditor-grade).
 
-    Rule: return the FIRST entry whose result is VETO/BLOCKED/INADMISSIBLE.
+    Accepts a list[dict] — callers must parse JSON before calling.
 
-    Precedence (first-VETO-wins):
-      1. Layer 0 block   → constraint_id from SAE  (e.g. JA-UAE-XMR-001,
-                           SN-OFAC-TORNADO-001, JO-UAE-LEVERAGED-001)
-      2. Checkpoint VETO → CP-N-SIGNAL_NAME        (e.g. CP-2-RISK_EXPOSURE)
-                           signal is uppercased and spaces replaced with _
-      3. CAG block       → CAG-SESSION_BLOCKED
-      4. AVM block       → AVM-STALE_BLOCK
-      5. Approved        → GOVERNANCE_PASS
-      6. Fallback        → GOVERNANCE_BLOCK        (specific data unavailable)
+    Precedence:
+      1. First entry with result="VETO" or "INADMISSIBLE"
+         a. has constraint_id → return constraint_id.upper()  (Layer 0 / SAE)
+         b. starts CP-N       → return f"{cp_id}-{signal.upper()._replace(' ','_')}"
+      2. No blocking entry found → "GOVERNANCE_PASS"
     """
-    if decision_upper == "APPROVED":
-        return "GOVERNANCE_PASS"
-    if decision_upper == "ERROR":
-        return "EVALUATION_ERROR"
-
-    if not veto_raw:
-        return "GOVERNANCE_BLOCK"
-
-    try:
-        items = json.loads(veto_raw) if isinstance(veto_raw, str) else veto_raw
-        if not isinstance(items, list):
-            return "GOVERNANCE_BLOCK"
-
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-
-            result_val = str(item.get("result", "")).upper()
-            cp_id = str(item.get("checkpoint_id", item.get("checkpoint", ""))).upper()
-
-            # Detect blocking result — covers strict values AND engine-specific
-            # variants such as SESSION_BLOCKED (CAG) and STALE_BLOCK (AVM).
-            _is_blocked = (
-                result_val in ("VETO", "BLOCKED", "INADMISSIBLE")
-                or "BLOCK" in result_val  # SESSION_BLOCKED, STALE_BLOCK, etc.
-                or "VETO" in result_val   # safety net for composite values
-            )
-            if not _is_blocked:
-                continue  # only process entries that actually blocked
-
-            # Layer 0 — use the actual SAE constraint_id directly
-            if cp_id in ("LAYER_0", "LAYER0", "SAE") or "constraint_id" in item:
-                cid = item.get("constraint_id")
-                if cid:
-                    return str(cid).upper()
-                return "LAYER0_STRUCTURAL_VIOLATION"
-
-            # Checkpoint pipeline VETO — build CP-N-SIGNAL_NAME format
-            if cp_id.startswith("CP-"):
-                signal = item.get("signal", "")
-                if signal:
-                    return f"{cp_id}-{signal.upper().replace(' ', '_')}"
-                return cp_id
-
-            # Context Admission Gate block
-            if cp_id == "CAG":
-                return "CAG-SESSION_BLOCKED"
-
-            # Assumption Validity Monitor block
-            if cp_id == "AVM":
-                return "AVM-STALE_BLOCK"
-
-    except Exception:
-        pass
-
-    return "GOVERNANCE_BLOCK"
+    for e in (veto_chain or []):
+        r = str(e.get("result", "")).upper()
+        if r not in ("VETO", "INADMISSIBLE"):
+            continue
+        if "constraint_id" in e:
+            return str(e["constraint_id"]).upper()
+        cp  = str(e.get("checkpoint_id", "CP"))
+        sig = (e.get("signal") or "").upper().replace(" ", "_")
+        if sig:
+            return f"{cp}-{sig}"
+        return cp
+    return "GOVERNANCE_PASS"
 
 
 # ── P1: GET /verify/<receipt_id> ────────────────────────────────────────────────
@@ -330,22 +282,29 @@ def institutional_verify(receipt_id: str):
             evl = _lookup_evl_receipt(receipt_id)
         if evl:
             gs = evl.get("governance_summary", {})
-            evl_decision = (evl.get("status") or "UNKNOWN").upper()
-
-            # reason_code — use the same structured extraction as the DB path.
-            # _veto_chain is stored alongside the public response in the EVL cache
-            # (internal field, underscore prefix, not returned to clients).
-            # This guarantees DB-path and cache-path produce identical reason_codes.
-            evl_veto_raw = evl.get("_veto_chain")
-            evl_reason_code = _extract_reason_code(evl_veto_raw, evl_decision)
+            # Paridad DB vs cache: reason_code y decision se leen directamente;
+            # nunca se recalculan para garantizar respuesta idéntica en ambas rutas.
+            evl_decision    = (evl.get("decision") or evl.get("status") or "UNKNOWN").upper()
+            evl_reason_code = (
+                evl.get("reason_code")
+                or _extract_reason_code(evl.get("_veto_chain") or [])
+            )
+            _sig_mode = gs.get("signature_mode", "PQC_STRICT")
             return jsonify({
                 "receipt_id":       evl["receipt_id"],
                 "status":           "VALID",
                 "source":           "evaluate_cache",
-                "signature_mode":   gs.get("signature_mode", "PQC_STRICT"),
-                "timestamp_issued": evl["evaluated_at"],
                 "decision":         evl_decision,
                 "reason_code":      evl_reason_code,
+                "timestamp_issued": evl["evaluated_at"],
+                "signature": {
+                    "valid": None,
+                    "mode":  _sig_mode,
+                },
+                "integrity": {
+                    "hash_valid":  None,
+                    "chain_valid": None,
+                },
                 "hash_valid":       None,
                 "signature_valid":  None,
                 "chain_valid":      None,
@@ -360,11 +319,6 @@ def institutional_verify(receipt_id: str):
                     "jurisdiction":        gs.get("jurisdiction"),
                     "operation":           gs.get("operation"),
                     "ethical_flags":       gs.get("ethical_flags", []),
-                },
-                "integrity": {
-                    "hash_valid":      None,
-                    "signature_valid": None,
-                    "chain_valid":     None,
                 },
                 "validation_policy": {
                     "hash":      "strict",
@@ -448,23 +402,30 @@ def institutional_verify(receipt_id: str):
     # Until ADR-096 ships, returning None is the honest, auditor-safe value:
     # it signals "no chain data available" rather than asserting a verification
     # that was never performed.
-    chain_valid = None  # ADR-096: implement WAL chain verification loop
+    chain_valid = None  # ADR-096: WAL chain verification loop (not yet implemented)
+    # None = recibo EVL autónomo; True/False reservado para ADR-096
 
-    # Status rule — explicit boolean conditions:
-    #   hash_valid=False  → receipt was tampered after issuance → INVALID
-    #   sig_valid=False   → cryptographic signature failed → INVALID
-    #   chain_valid=False → continuity chain broken → INVALID
-    #   None on any field → data unavailable, not evidence of failure → does NOT invalidate
-    overall_valid = (
-        hash_valid is not False       # False=tampered; None=hash absent (no content_hash stored)
-        and sig_valid is not False    # False=bad sig; None=sig not present (EVL receipts)
-        and chain_valid is not False  # False=chain broken; None=standalone receipt (EVL)
-        and decision is not None
+    # Status rule — determinista, primer fallo gana:
+    #   hash_valid=False   → recibo alterado post-emisión       → INVALID
+    #   sig_valid=False    → firma criptográfica inválida        → INVALID
+    #   chain_valid=False  → cadena de continuidad rota         → INVALID
+    #   None en cualquier campo → dato no disponible, no es evidencia de fallo
+    if hash_valid is False:
+        status = "INVALID"
+    elif sig_valid is False:
+        status = "INVALID"
+    elif chain_valid is False:
+        status = "INVALID"
+    else:
+        status = "VALID"
+
+    # reason_code — first-VETO-wins sobre lista parseada
+    _veto_list = (
+        json.loads(veto_raw)
+        if isinstance(veto_raw, str) and veto_raw
+        else (veto_raw or [])
     )
-    status = "VALID" if overall_valid else "INVALID"
-
-    # reason_code — extracted from raw veto_chain for maximum specificity
-    reason_code = _extract_reason_code(veto_raw, decision_upper)
+    reason_code = _extract_reason_code(_veto_list)
 
     decision_trace = {
         "asset":               asset,
@@ -477,27 +438,26 @@ def institutional_verify(receipt_id: str):
         "engine_version":      engine_ver,
     }
 
-    integrity = {
-        "hash_valid":      hash_valid,
-        "signature_valid": sig_valid,
-        "chain_valid":     chain_valid,
-    }
-
     return jsonify({
         "receipt_id":       rid,
         "status":           status,
         "source":           "db",
-        "signature_mode":   sig_mode,
-        "signature_algorithm": sig_algo or "NONE",
-        "timestamp_issued": ts_issued,
-        "timestamp_stored": ts_created,
         "decision":         decision_upper,
         "reason_code":      reason_code,
+        "timestamp_issued": ts_issued,
+        "timestamp_stored": ts_created,
+        "signature": {
+            "valid": sig_valid,
+            "mode":  sig_mode,
+        },
+        "integrity": {
+            "hash_valid":  hash_valid,
+            "chain_valid": chain_valid,
+        },
         "hash_valid":       hash_valid,
         "signature_valid":  sig_valid,
         "chain_valid":      chain_valid,
         "decision_trace":   decision_trace,
-        "integrity":        integrity,
         "validation_policy": {
             "hash":      "strict",
             "signature": "optional",
@@ -723,11 +683,17 @@ def simple_evaluate():
         },
     }
 
-    # Store _veto_chain alongside the public response for /verify cache-path parity.
-    # This internal field (underscore prefix) is NOT included in the JSON returned
-    # to the client — it is only used by _extract_reason_code when the DB row is
-    # unavailable and /verify must fall back to the in-memory EVL cache.
-    _cache_evl_receipt(receipt_id, {**response, "_veto_chain": veto_chain})
+    # Paridad DB vs cache:
+    #   reason_code y decision se computan UNA SOLA VEZ aquí y se guardan en caché.
+    #   /verify los lee directamente sin recalcular — garantiza respuesta idéntica
+    #   venga de DB o de caché en memoria.
+    _cache_reason_code = _extract_reason_code(veto_chain)
+    _cache_evl_receipt(receipt_id, {
+        **response,
+        "decision":    overall_status,
+        "reason_code": _cache_reason_code,
+        "_veto_chain": veto_chain,
+    })
 
     _persist_evl_receipt(
         receipt_id=receipt_id,

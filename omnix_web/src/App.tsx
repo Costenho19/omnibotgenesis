@@ -30,6 +30,7 @@ import TechnicalStack from './pages/TechnicalStack'
 import IntegrationGuide from './pages/IntegrationGuide'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import ProofLayer from './pages/ProofLayer'
 import './index.css'
 
 function App() {
@@ -66,6 +67,7 @@ function App() {
           <Route path="/stack" element={<TechnicalStack />} />
           <Route path="/integration" element={<IntegrationGuide />} />
           <Route path="/my-report" element={<ClientReportDownload />} />
+          <Route path="/proof" element={<ProofLayer />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />
