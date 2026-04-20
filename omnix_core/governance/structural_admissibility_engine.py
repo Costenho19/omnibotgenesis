@@ -34,8 +34,10 @@ See also: docs/adr/ADR-092-structural-admissibility-engine.md
 from __future__ import annotations
 
 import logging
+import threading
 import time
 import uuid
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -66,6 +68,21 @@ class EvaluationMode(str, Enum):
     FULL_AUDIT = "FULL_AUDIT"
 
 
+class SAEOverride(str, Enum):
+    """
+    Internal-only feature flag for Layer 0.
+
+    UNSET     — default: honour compliance_config.layer0_enabled / SAE_ENABLED env var
+    FORCE_ON  — Layer 0 always active regardless of what any API caller passes
+    FORCE_OFF — Layer 0 always inactive (emergency operator bypass)
+
+    Only settable via set_sae_override() — not exposed through any API endpoint.
+    """
+    UNSET     = "UNSET"
+    FORCE_ON  = "FORCE_ON"
+    FORCE_OFF = "FORCE_OFF"
+
+
 class Domain(str, Enum):
     FINANCIAL_TRADING = "FINANCIAL_TRADING"
     INSURANCE         = "INSURANCE"
@@ -75,6 +92,100 @@ class Domain(str, Enum):
     AUTONOMOUS_AGENT  = "AUTONOMOUS_AGENT"
     STABLECOIN        = "STABLECOIN"
     GENERIC           = "GENERIC"
+
+
+# ── Layer 0 Business Metrics ────────────────────────────────────────────────────
+
+class Layer0Metrics:
+    """
+    Thread-safe in-memory counters for Layer 0 business reporting.
+
+    Tracks per-domain admission and block rates — the raw material for investor
+    dashboards and regulatory audit arguments.
+
+    Usage:
+        from omnix_core.governance.structural_admissibility_engine import get_layer0_metrics
+        m = get_layer0_metrics()
+        report = m.snapshot()  → dict keyed by domain
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._total:   dict[str, int] = defaultdict(int)
+        self._blocked: dict[str, int] = defaultdict(int)
+        self._blocked_by_class: dict[str, dict[str, int]] = defaultdict(
+            lambda: defaultdict(int)
+        )
+
+    def record_admitted(self, domain: str) -> None:
+        domain = domain.upper()
+        with self._lock:
+            self._total[domain] += 1
+
+    def record_blocked(self, domain: str, constraint_class: str) -> None:
+        domain = domain.upper()
+        with self._lock:
+            self._total[domain] += 1
+            self._blocked[domain] += 1
+            self._blocked_by_class[domain][constraint_class] += 1
+
+    def snapshot(self) -> dict[str, Any]:
+        """Return a point-in-time copy of all metrics."""
+        with self._lock:
+            result: dict[str, Any] = {}
+            for domain in sorted(self._total):
+                total   = self._total[domain]
+                blocked = self._blocked[domain]
+                result[domain] = {
+                    "total":            total,
+                    "admitted":         total - blocked,
+                    "blocked":          blocked,
+                    "block_rate_pct":   round(100.0 * blocked / total, 2) if total else 0.0,
+                    "blocked_by_class": dict(self._blocked_by_class[domain]),
+                }
+            return result
+
+    def reset(self) -> None:
+        """Reset all counters (e.g., between test runs or daily roll-overs)."""
+        with self._lock:
+            self._total.clear()
+            self._blocked.clear()
+            self._blocked_by_class.clear()
+
+
+# Module-level singletons — access via get_layer0_metrics() / get/set_sae_override()
+_layer0_metrics  = Layer0Metrics()
+_sae_override    = SAEOverride.UNSET
+_sae_override_lock = threading.Lock()
+
+
+def get_layer0_metrics() -> Layer0Metrics:
+    """Return the shared Layer 0 metrics instance."""
+    return _layer0_metrics
+
+
+def set_sae_override(override: SAEOverride) -> None:
+    """
+    Set the internal Layer 0 activation override.
+
+    INTERNAL USE ONLY. Must never be called from an API handler —
+    it is only for server initialisation and operator control.
+
+    SAEOverride.FORCE_ON  → Layer 0 active for ALL requests, ignoring caller flags.
+    SAEOverride.FORCE_OFF → Layer 0 inactive for ALL requests (emergency bypass).
+    SAEOverride.UNSET     → restore normal behaviour (compliance_config / SAE_ENABLED env).
+    """
+    global _sae_override
+    with _sae_override_lock:
+        prev = _sae_override
+        _sae_override = override
+    logger.info(f"[SAE] Override changed: {prev.value} → {override.value}")
+
+
+def get_sae_override() -> SAEOverride:
+    """Return the current internal Layer 0 override state."""
+    with _sae_override_lock:
+        return _sae_override
 
 
 # ── Exceptions ──────────────────────────────────────────────────────────────────
@@ -830,12 +941,47 @@ class StructuralAdmissibilityEngine:
         Layer 0 entry point. Accepts ProposedRequest or a dict for convenience.
 
         Returns:
-            EvaluationRequest   — structurally admissible, ready for Layer 1.
-            StructuredRejectionRecord — inadmissible, must not enter Layer 1.
+            EvaluationRequest         — admissible, ready for Layer 1.
+            StructuredRejectionRecord — inadmissible, Layer 1 must never receive this.
+
+        Side-effects:
+            - Emits [LAYER_0] ADMITTED / REJECTED log at INFO / WARNING level.
+            - Records per-domain metrics in the shared Layer0Metrics instance.
         """
         if isinstance(proposed, dict):
             proposed = ProposedRequest(**proposed)
-        return self._validator.validate_and_construct(proposed, mode)
+
+        domain = (proposed.domain or "GENERIC").upper()
+        _t0 = time.perf_counter()
+        result = self._validator.validate_and_construct(proposed, mode)
+        elapsed_ms = (time.perf_counter() - _t0) * 1000.0
+
+        if isinstance(result, StructuredRejectionRecord):
+            v = result.primary_violation
+            _layer0_metrics.record_blocked(
+                domain,
+                v.constraint_class.value if v else "UNKNOWN",
+            )
+            logger.warning(
+                "[LAYER_0] REJECTED | subject=%s op=%s jur=%s domain=%s | "
+                "constraint=%s class=%s | audit_id=%s | elapsed=%.2fms",
+                proposed.subject, proposed.operation, proposed.jurisdiction, domain,
+                v.constraint_id if v else "?",
+                v.constraint_class.value if v else "?",
+                result.audit_id,
+                elapsed_ms,
+            )
+        else:
+            _layer0_metrics.record_admitted(domain)
+            logger.info(
+                "[LAYER_0] ADMITTED | subject=%s op=%s jur=%s domain=%s | "
+                "eval_id=%s | elapsed=%.2fms",
+                proposed.subject, proposed.operation, proposed.jurisdiction, domain,
+                result.evaluation_id,
+                elapsed_ms,
+            )
+
+        return result
 
     def register_constraint(
         self,

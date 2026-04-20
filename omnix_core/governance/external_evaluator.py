@@ -62,7 +62,10 @@ try:
         StructuredRejectionRecord,
         ProposedRequest,
         EvaluationMode,
+        SAEOverride,
         get_sae,
+        get_sae_override,
+        get_layer0_metrics,
     )
     _SAE_AVAILABLE = True
 except Exception as _sae_exc:
@@ -287,10 +290,16 @@ class GovernanceEvaluationEngine:
         # Enabled when compliance_config includes layer0_enabled=True or
         # SAE_ENABLED env var is "true". Default: OFF (backward compatibility).
         if _SAE_AVAILABLE:
-            _sae_enabled = cfg.get(
-                "layer0_enabled",
-                os.environ.get("SAE_ENABLED", "false").lower() == "true"
-            )
+            _sae_override = get_sae_override()
+            if _sae_override == SAEOverride.FORCE_OFF:
+                _sae_enabled = False
+            elif _sae_override == SAEOverride.FORCE_ON:
+                _sae_enabled = True
+            else:
+                _sae_enabled = cfg.get(
+                    "layer0_enabled",
+                    os.environ.get("SAE_ENABLED", "false").lower() == "true",
+                )
             if _sae_enabled:
                 try:
                     _sae_subject     = asset

@@ -24,10 +24,14 @@ from omnix_core.governance.structural_admissibility_engine import (
     EvaluationMode,
     EvaluationRequest,
     ProposedRequest,
+    SAEOverride,
     StructuralAdmissibilityEngine,
     StructuralAdmissibilityViolation,
     StructuredRejectionRecord,
+    get_layer0_metrics,
     get_sae,
+    get_sae_override,
+    set_sae_override,
 )
 
 
@@ -36,8 +40,12 @@ from omnix_core.governance.structural_admissibility_engine import (
 @pytest.fixture(autouse=True)
 def reset_sae_singleton():
     StructuralAdmissibilityEngine.reset_instance()
+    set_sae_override(SAEOverride.UNSET)
+    get_layer0_metrics().reset()
     yield
     StructuralAdmissibilityEngine.reset_instance()
+    set_sae_override(SAEOverride.UNSET)
+    get_layer0_metrics().reset()
 
 
 def _sae() -> StructuralAdmissibilityEngine:
@@ -513,3 +521,166 @@ class TestSAESingleton:
         assert isinstance(r1, EvaluationRequest)
         assert isinstance(r2, EvaluationRequest)
         assert r1.evaluation_id != r2.evaluation_id
+
+
+# ── Feature flag: SAEOverride ──────────────────────────────────────────────────
+
+class TestSAEOverride:
+    def test_default_override_is_unset(self):
+        assert get_sae_override() == SAEOverride.UNSET
+
+    def test_force_on_activates_layer0_regardless_of_caller_flag(self):
+        set_sae_override(SAEOverride.FORCE_ON)
+        assert get_sae_override() == SAEOverride.FORCE_ON
+
+    def test_force_off_deactivates_layer0_regardless_of_caller_flag(self):
+        set_sae_override(SAEOverride.FORCE_OFF)
+        assert get_sae_override() == SAEOverride.FORCE_OFF
+
+    def test_override_reverts_to_unset(self):
+        set_sae_override(SAEOverride.FORCE_ON)
+        set_sae_override(SAEOverride.UNSET)
+        assert get_sae_override() == SAEOverride.UNSET
+
+    def test_override_values_are_strings(self):
+        assert SAEOverride.FORCE_ON.value  == "FORCE_ON"
+        assert SAEOverride.FORCE_OFF.value == "FORCE_OFF"
+        assert SAEOverride.UNSET.value     == "UNSET"
+
+    def test_override_sae_is_independent_of_compliance_config(self):
+        set_sae_override(SAEOverride.FORCE_ON)
+        assert get_sae_override() == SAEOverride.FORCE_ON
+        set_sae_override(SAEOverride.FORCE_OFF)
+        assert get_sae_override() == SAEOverride.FORCE_OFF
+
+
+# ── Business Metrics: Layer0Metrics ───────────────────────────────────────────
+
+class TestLayer0Metrics:
+    def test_metrics_start_empty(self):
+        m = get_layer0_metrics()
+        assert m.snapshot() == {}
+
+    def test_admitted_request_increments_total_and_admitted(self):
+        sae = _sae()
+        sae.validate(_admissible("BTC", "SPOT", "GLOBAL", domain="FINANCIAL_TRADING"))
+        m = get_layer0_metrics().snapshot()
+        assert "FINANCIAL_TRADING" in m
+        assert m["FINANCIAL_TRADING"]["total"]    == 1
+        assert m["FINANCIAL_TRADING"]["admitted"] == 1
+        assert m["FINANCIAL_TRADING"]["blocked"]  == 0
+        assert m["FINANCIAL_TRADING"]["block_rate_pct"] == 0.0
+
+    def test_rejected_request_increments_total_blocked_and_class(self):
+        sae = _sae()
+        sae.validate(ProposedRequest(
+            subject="XMR", operation="SPOT", jurisdiction="UAE",
+            domain="FINANCIAL_TRADING",
+        ))
+        m = get_layer0_metrics().snapshot()
+        assert "FINANCIAL_TRADING" in m
+        stat = m["FINANCIAL_TRADING"]
+        assert stat["total"]   == 1
+        assert stat["blocked"] == 1
+        assert stat["admitted"] == 0
+        assert stat["block_rate_pct"] == 100.0
+        assert "JURISDICTION_ASSET" in stat["blocked_by_class"]
+
+    def test_block_rate_calculated_correctly(self):
+        sae = _sae()
+        domain = "TEST_DOMAIN"
+        sae.validate(_admissible("BTC", "SPOT", "GLOBAL", domain=domain))
+        sae.validate(_admissible("ETH", "SPOT", "EU",     domain=domain))
+        sae.validate(ProposedRequest("XMR", "SPOT", "UAE", domain=domain))
+        m = get_layer0_metrics().snapshot()
+        stat = m[domain.upper()]
+        assert stat["total"]   == 3
+        assert stat["admitted"] == 2
+        assert stat["blocked"] == 1
+        assert stat["block_rate_pct"] == pytest.approx(33.33, abs=0.1)
+
+    def test_metrics_are_per_domain(self):
+        sae = _sae()
+        sae.validate(_admissible("BTC", "SPOT", "GLOBAL", domain="TRADING"))
+        sae.validate(ProposedRequest("XMR", "SPOT", "UAE", domain="INSURANCE"))
+        m = get_layer0_metrics().snapshot()
+        assert "TRADING"   in m
+        assert "INSURANCE" in m
+        assert m["TRADING"]["admitted"]  == 1
+        assert m["TRADING"]["blocked"]   == 0
+        assert m["INSURANCE"]["blocked"] == 1
+
+    def test_blocked_by_class_counts_per_constraint_class(self):
+        sae = _sae()
+        sae.validate(ProposedRequest("XMR",        "SPOT",      "UAE",    domain="D"))
+        sae.validate(ProposedRequest("BTC",        "LEVERAGED", "UAE",    domain="D"))
+        sae.validate(ProposedRequest("TORNADO_CASH","SPOT",     "GLOBAL", domain="D"))
+        m = get_layer0_metrics().snapshot()["D"]
+        assert m["blocked"] == 3
+        by_class = m["blocked_by_class"]
+        assert "JURISDICTION_ASSET"    in by_class
+        assert "JURISDICTION_OPERATION" in by_class
+        assert "SANCTIONS"             in by_class
+
+    def test_metrics_reset_clears_all_counters(self):
+        sae = _sae()
+        sae.validate(_admissible("BTC", "SPOT", "GLOBAL", domain="X"))
+        assert get_layer0_metrics().snapshot() != {}
+        get_layer0_metrics().reset()
+        assert get_layer0_metrics().snapshot() == {}
+
+    def test_snapshot_is_a_copy_not_a_reference(self):
+        sae = _sae()
+        sae.validate(_admissible("BTC", "SPOT", "GLOBAL", domain="COPY_TEST"))
+        s1 = get_layer0_metrics().snapshot()
+        sae.validate(_admissible("ETH", "SPOT", "EU", domain="COPY_TEST"))
+        s2 = get_layer0_metrics().snapshot()
+        assert s1["COPY_TEST"]["total"] == 1
+        assert s2["COPY_TEST"]["total"] == 2
+
+
+# ── Logging: [LAYER_0] ADMITTED / REJECTED ────────────────────────────────────
+
+class TestLayer0Logging:
+    def test_admitted_emits_info_log(self, caplog):
+        import logging
+        sae = _sae()
+        with caplog.at_level(logging.INFO, logger="OMNIX.SAE"):
+            sae.validate(_admissible("BTC", "SPOT", "GLOBAL", domain="TRADING"))
+        admitted_logs = [r for r in caplog.records if "[LAYER_0] ADMITTED" in r.message]
+        assert len(admitted_logs) == 1
+        assert "BTC" in admitted_logs[0].message
+        assert "SPOT" in admitted_logs[0].message
+        assert "GLOBAL" in admitted_logs[0].message
+        assert "eval_id" in admitted_logs[0].message
+        assert "elapsed" in admitted_logs[0].message
+
+    def test_rejected_emits_warning_log(self, caplog):
+        import logging
+        sae = _sae()
+        with caplog.at_level(logging.WARNING, logger="OMNIX.SAE"):
+            sae.validate(ProposedRequest("XMR", "SPOT", "UAE", domain="TRADING"))
+        rejected_logs = [r for r in caplog.records if "[LAYER_0] REJECTED" in r.message]
+        assert len(rejected_logs) == 1
+        msg = rejected_logs[0].message
+        assert "XMR"  in msg
+        assert "UAE"  in msg
+        assert "constraint=" in msg
+        assert "audit_id="   in msg
+        assert "elapsed="    in msg
+
+    def test_admitted_log_level_is_info_not_warning(self, caplog):
+        import logging
+        sae = _sae()
+        with caplog.at_level(logging.DEBUG, logger="OMNIX.SAE"):
+            sae.validate(_admissible("BTC", "SPOT", "GLOBAL"))
+        admitted = [r for r in caplog.records if "[LAYER_0] ADMITTED" in r.message]
+        assert all(r.levelno == logging.INFO for r in admitted)
+
+    def test_rejected_log_level_is_warning(self, caplog):
+        import logging
+        sae = _sae()
+        with caplog.at_level(logging.DEBUG, logger="OMNIX.SAE"):
+            sae.validate(ProposedRequest("XMR", "SPOT", "UAE"))
+        rejected = [r for r in caplog.records if "[LAYER_0] REJECTED" in r.message]
+        assert all(r.levelno == logging.WARNING for r in rejected)

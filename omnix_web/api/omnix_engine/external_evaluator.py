@@ -58,7 +58,10 @@ try:
         StructuredRejectionRecord,
         ProposedRequest,
         EvaluationMode,
+        SAEOverride,
         get_sae,
+        get_sae_override,
+        get_layer0_metrics,
     )
     _SAE_AVAILABLE = True
 except Exception as _sae_exc:
@@ -278,10 +281,16 @@ class GovernanceEvaluationEngine:
 
         # ── Layer 0: Structural Admissibility Engine — ADR-092 / OMNIX-PAT-2026-015 ─
         if _SAE_AVAILABLE:
-            _sae_enabled = cfg.get(
-                "layer0_enabled",
-                os.environ.get("SAE_ENABLED", "false").lower() == "true"
-            )
+            _sae_override = get_sae_override()
+            if _sae_override == SAEOverride.FORCE_OFF:
+                _sae_enabled = False
+            elif _sae_override == SAEOverride.FORCE_ON:
+                _sae_enabled = True
+            else:
+                _sae_enabled = cfg.get(
+                    "layer0_enabled",
+                    os.environ.get("SAE_ENABLED", "false").lower() == "true",
+                )
             if _sae_enabled:
                 try:
                     _sae = get_sae()
