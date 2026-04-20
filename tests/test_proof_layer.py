@@ -171,6 +171,21 @@ class TestExtractReasonCode:
         # Same: None veto_chain (absent from legacy DB row) → GOVERNANCE_PASS
         assert _extract_reason_code(None) == "GOVERNANCE_PASS"
 
+    def test_legacy_checkpoint_key_fallback(self):
+        # Older entries used "checkpoint" instead of "checkpoint_id"
+        chain = [{"checkpoint": "CP-7", "result": "VETO", "signal": "logic_consistency"}]
+        assert _extract_reason_code(chain) == "CP-7-LOGIC_CONSISTENCY"
+
+    def test_legacy_cp_key_fallback(self):
+        # Even older entries used "cp" as short form
+        chain = [{"cp": "CP-3", "result": "BLOCKED"}]
+        assert _extract_reason_code(chain) == "CP-3"
+
+    def test_checkpoint_id_preferred_over_checkpoint_fallback(self):
+        # checkpoint_id takes precedence over checkpoint/cp
+        chain = [{"checkpoint_id": "CP-2", "checkpoint": "CP-9", "result": "VETO"}]
+        assert _extract_reason_code(chain) == "CP-2"
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. Status logic — determinista, primer fallo gana

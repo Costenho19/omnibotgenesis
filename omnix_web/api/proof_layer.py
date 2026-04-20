@@ -227,7 +227,12 @@ def _extract_reason_code(veto_chain) -> str:
             continue
         if "constraint_id" in e:
             return str(e["constraint_id"]).upper()
-        cp  = str(e.get("checkpoint_id", "CP"))
+        cp = str(
+            e.get("checkpoint_id")
+            or e.get("checkpoint")
+            or e.get("cp")
+            or "CP"
+        ).upper()
         sig = (e.get("signal") or "").upper().replace(" ", "_")
         if sig:
             return f"{cp}-{sig}"
