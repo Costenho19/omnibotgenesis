@@ -61,10 +61,16 @@ class TestAMLGate:
 
     def test_load_aml_config_from_env_defaults(self):
         from omnix_core.governance.aml_gate import load_aml_config_from_env
-        cfg = load_aml_config_from_env()
-        assert cfg.enabled is False
-        assert cfg.block_privacy_coins is True
-        assert cfg.block_mixer_tokens is True
+        # AML is enabled when OMNIX_DB_URL is present (premium mode — by design).
+        # When AML_GATE_ENABLED is explicitly "false", it overrides to disabled.
+        os.environ["AML_GATE_ENABLED"] = "false"
+        try:
+            cfg = load_aml_config_from_env()
+            assert cfg.enabled is False
+            assert cfg.block_privacy_coins is True
+            assert cfg.block_mixer_tokens is True
+        finally:
+            del os.environ["AML_GATE_ENABLED"]
 
     def test_env_enabled_flag(self):
         from omnix_core.governance.aml_gate import load_aml_config_from_env

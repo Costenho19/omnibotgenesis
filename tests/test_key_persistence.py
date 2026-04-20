@@ -68,7 +68,10 @@ class TestEphemeralMode(unittest.TestCase):
 
     def test_K2_key_mode_is_ephemeral_dev(self):
         engine = self._make_engine_ephemeral()
-        self.assertEqual(engine.key_mode, "ephemeral_dev")
+        # ADR-085: process-scoped stable key may exist when module already loaded;
+        # both "ephemeral_dev" (first init) and "stable_process" (reuse) are valid
+        # ephemeral (non-persisted) modes.
+        self.assertIn(engine.key_mode, ("ephemeral_dev", "stable_process"))
 
     def test_K3_active_since_is_set(self):
         engine = self._make_engine_ephemeral()
@@ -202,9 +205,11 @@ class TestSelfTest(unittest.TestCase):
             "OMNIX_SIGNING_PUBLIC_KEY_B64": _b64(pk1),
         }
         engine = _fresh_engine(env)
-        # Should have fallen back to ephemeral generation
+        # Should have fallen back to ephemeral generation.
+        # ADR-085: process-scoped stable key may exist when module already loaded;
+        # "stable_process" is also a valid non-persisted fallback mode.
         self.assertIsNotNone(engine._signing_keys)
-        self.assertEqual(engine.key_mode, "ephemeral_dev")
+        self.assertIn(engine.key_mode, ("ephemeral_dev", "stable_process"))
 
 
 # ── T002-K5: Receipt includes signing_key_id ──────────────────────────────────

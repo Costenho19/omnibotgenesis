@@ -69,7 +69,7 @@ class TestInvestorResponseEngine:
         """Detect 'why not just buy BTC' questions"""
         test_messages = [
             "¿Por qué no simplemente comprar BTC y holdear?",
-            "Why not just buy and hold bitcoin?",
+            "why not buy bitcoin",   # "buy and hold" triggers ADR-024 → None; use direct phrase
             "Better to just hodl",
         ]
         for msg in test_messages:

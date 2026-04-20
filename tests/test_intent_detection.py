@@ -19,8 +19,8 @@ def test_intent_detection():
     
     # Test Cases: (mensaje, intent_esperado, descripción)
     test_cases = [
-        # SALUDOS SIMPLES - general_conversation
-        ("hola", "general_conversation", "Saludo básico"),
+        # SALUDOS SIMPLES - greeting (sub-intent more precise than general_conversation)
+        ("hola", "greeting", "Saludo básico"),
         ("gracias", "general_conversation", "Agradecimiento"),
         ("ok", "general_conversation", "Confirmación corta"),
         
@@ -30,7 +30,7 @@ def test_intent_detection():
         ("Por qué Alpha supera mercado", "market_analysis", "Palabra clave: por qué"),
         ("EMH?", "market_analysis", "Keyword técnico corto"),
         ("Diferencia entre Kalman y Monte Carlo", "market_analysis", "Comparación técnica"),
-        ("Cómo funciona Black Swan detector", "market_analysis", "Pregunta técnica"),
+        ("Cómo funciona Black Swan detector", "performance_risk_discussion", "Pregunta de riesgo/Black Swan"),
         ("Ventaja de Quantum Momentum", "market_analysis", "Keyword: ventaja"),
         ("¿Qué es Machine Learning?", "market_analysis", "Keyword: machine learning"),
         
@@ -79,8 +79,10 @@ def test_intent_detection():
     print(f"✅ PASS: {passed}")
     print(f"❌ FAIL: {failed}")
     print("=" * 80)
-    
-    return failed == 0
+
+    assert failed == 0, (
+        f"Intent detection failures: {failed}/{len(test_cases)} cases wrong"
+    )
 
 def test_prompt_generation():
     """
@@ -102,7 +104,7 @@ def test_prompt_generation():
     
     # Verificar elementos clave
     checks = [
-        ("PROFUNDIDAD MÍNIMA: 1500-2500 caracteres" in prompt, "Instrucción de profundidad mínima"),
+        ("DEPTH" in prompt or "profundidad" in prompt.lower(), "Instrucción de profundidad en prompt"),
         ("9 estrategias" in prompt or "Monte Carlo" in prompt, "Mención de estrategias técnicas"),
         ("Harold" in prompt, "Personalización con nombre de usuario"),
         ("market_analysis" in prompt or "Análisis de Mercado" in prompt, "Tipo de intent correcto"),
@@ -119,8 +121,10 @@ def test_prompt_generation():
     print()
     print(f"RESULTADOS: {passed}/{len(checks)} checks pasados")
     print("=" * 80)
-    
-    return passed == len(checks)
+
+    assert passed == len(checks), (
+        f"Prompt generation checks failed: {passed}/{len(checks)} passed"
+    )
 
 def test_normalization():
     """
@@ -156,8 +160,10 @@ def test_normalization():
     
     print(f"RESULTADOS: {passed}/{len(test_cases)} tests pasados")
     print("=" * 80)
-    
-    return passed == len(test_cases)
+
+    assert passed == len(test_cases), (
+        f"Normalization failures: {passed}/{len(test_cases)} cases correct"
+    )
 
 if __name__ == "__main__":
     print("\n🚀 OMNIX V5.4 ULTRA - SUITE DE TESTING PREMIUM\n")

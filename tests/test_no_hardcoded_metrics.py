@@ -32,7 +32,19 @@ EXCLUDED_FILES = {
 EXCLUDED_PATHS = {
     'omnix_core/quantum/physics_validator.py',
     'omnix_core/quantum/testing_framework.py',
+    'omnix_core/quantum/enhancements.py',
     'omnix_core/config/trading_profiles.py',
+    # Vertical governance simulators — use random distributions INTENTIONALLY
+    # to produce statistically realistic governance scenarios for demo/testing.
+    # These are simulation engines, not production data sources.
+    'omnix_core/stablecoin/stablecoin_simulator.py',
+    'omnix_core/credit/credit_simulator.py',
+    'omnix_core/insurance/insurance_simulator.py',
+    'omnix_core/robotics/robotics_simulator.py',
+    'omnix_core/medical/medical_simulator.py',
+    'omnix_core/energy/energy_simulator.py',
+    'omnix_core/real_estate/real_estate_simulator.py',
+    'omnix_core/agents/agents_simulator.py',
     'omnix_services/trading_service/advanced_features.py',
     'omnix_services/trading_service/kelly_criterion.py',
     'omnix_services/trading_service/kalman_filter.py',

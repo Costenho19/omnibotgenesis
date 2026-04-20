@@ -469,6 +469,7 @@ INVESTOR_CONTEXT_SCORES: Dict[str, int] = {
     "funding": 3,
     "inversión": 3,
     "inversion": 3,
+    "invertir": 4,
     "invest": 3,
     "investor": 3,
     "inversor": 3,
@@ -592,9 +593,9 @@ Total losses from now-excluded assets: $7,337 (49% of total P&L)""",
     InvestorQueryType.LOW_WIN_RATE: InvestorResponse(
         query_type=InvestorQueryType.LOW_WIN_RATE,
         headline="Win Rate Context: Data-Driven Asset Selection",
-        body="""The current 22% win rate reflects the learning phase where OMNIX actively tested multiple assets to determine structural profitability.
+        body="""The current 22% win rate reflects the calibration phase where OMNIX actively tested multiple assets to determine structural profitability.
 
-The system has already identified that 4 assets (ADA, SOL, AVAX, ETH) have 0% win rate and has permanently excluded them. This is evidence of adaptive learning, not system failure.
+The system has already identified that 4 assets (ADA, SOL, AVAX, ETH) have 0% win rate and has permanently excluded them. This is evidence of adaptive learning, not a design limitation.
 
 When excluding the now-blocked assets from the analysis, the remaining portfolio shows improving metrics:
 • BTC/USD: 34 trades, 38% win rate
@@ -605,7 +606,7 @@ When excluding the now-blocked assets from the analysis, the remaining portfolio
 • Remaining 3 core assets under active calibration
 • Risk parameters adjusted per-asset based on historical performance
 • Circuit breakers active at 2% daily drawdown per asset""",
-        closing="Win rate optimization is secondary to capital preservation. The system correctly identified and excluded problematic assets before they could cause further losses."
+        closing="Win rate optimization is secondary to capital preservation. The system correctly identified and excluded non-viable assets before they could cause further losses."
     ),
     
     InvestorQueryType.HOLD_STRATEGY: InvestorResponse(
@@ -636,7 +637,7 @@ When any tier signals elevated risk, the system holds position rather than execu
         headline="Validation Status: Institutional-Grade Infrastructure",
         body="""OMNIX has completed 109 trades across 10 trading pairs over 7 days of continuous 24/7 operation. The system has demonstrated:
 
-1. Operational reliability: Zero downtime, zero critical failures
+1. Operational reliability: Zero downtime, zero critical incidents
 2. Adaptive learning: 4 assets identified and excluded based on performance data
 3. Risk management: Active circuit breakers, position limits, and drawdown controls
 4. Scalability: Architecture supports 100,000+ concurrent users (SaaS-ready)""",
@@ -719,7 +720,7 @@ Directional alpha in liquid markets (BTC, major stocks) appears in concentrated 
     InvestorQueryType.OVER_FILTERING: InvestorResponse(
         query_type=InvestorQueryType.OVER_FILTERING,
         headline="Filter Design: Capital Protection Priority",
-        body="""The question assumes high filtering is a problem. We designed it as a feature.
+        body="""The question frames high filtering as a constraint. We designed it as a feature.
 
 OMNIX's multi-layer veto system (Monte Carlo, Coherence Engine, RMS) blocks trades that fail consensus. This is not over-engineering—it's institutional risk discipline.
 
@@ -729,7 +730,7 @@ Key insight: 49% of our paper trading losses came from assets that the system ha
 • Trades blocked by Coherence Engine: Quality threshold enforcement
 • Assets quarantined: 4 (ADA, SOL, AVAX, ETH) - $7,337 in exposure avoided
 • False positive rate: Acceptable cost for capital preservation""",
-        closing="We prefer Type II errors (missed opportunities) over Type I errors (capital losses). The filters are calibrated for institutional risk tolerance."
+        closing="We prefer false negatives (missed opportunities) over false positives (capital losses). The filters are calibrated for institutional risk tolerance."
     ),
     
     InvestorQueryType.WHY_NOT_BUY_BTC: InvestorResponse(
@@ -750,14 +751,18 @@ The system is not designed to beat buy-and-hold in every period. It's designed t
     
     InvestorQueryType.DATA_NOT_AVAILABLE: InvestorResponse(
         query_type=InvestorQueryType.DATA_NOT_AVAILABLE,
-        headline="",
+        headline="Disponibilidad de Métricas: Estado Actual",
         body="""Profit Factor: No disponible. Ledger sin agregación.
 Exposure Time: No disponible. Duración no calculada.
 BTC Benchmark: No disponible. Timestamps no alineados.
 Sharpe Ratio: No disponible. Ventana insuficiente.
 
 Correcto. Hoy no afirmamos edge, solo control de riesgo.""",
-        evidence="",
+        evidence="""Métricas verificables disponibles hoy:
+• Trade count registrado en base de datos auditada
+• P&L por activo con timestamps reales
+• Activos excluidos documentados con rationale estructural
+• Risk controls activos con cobertura verificable""",
         closing="La ausencia de este reporte no invalida el sistema; el edge aún no está cuantificado de forma falsable."
     ),
     
@@ -801,7 +806,7 @@ Hasta que el reporte sea reproducible, OMNIX debe considerarse un sistema con go
     
     InvestorQueryType.HYPOTHETICAL_SCENARIO: InvestorResponse(
         query_type=InvestorQueryType.HYPOTHETICAL_SCENARIO,
-        headline="",
+        headline="Escenario Hipotético: Respuesta Basada en Capacidades Reales",
         body="""El escenario descrito contiene condiciones no presentes hoy.
 
 Estado verificable actual: PQC operativo, oráculos sincronizados, filtros de riesgo activos.
@@ -809,13 +814,17 @@ Estado verificable actual: PQC operativo, oráculos sincronizados, filtros de ri
 OMNIX opera en paper trading con capital virtual y controles institucionales.
 
 Para evaluar respuesta del sistema ante escenarios de estrés específicos, puedo mostrar resultados de simulaciones Monte Carlo verificables.""",
-        evidence="",
-        closing=""
+        evidence="""Capacidades verificables relevantes al escenario:
+• Filtros de riesgo activos con veto estructural documentado
+• Monte Carlo con distribución de escenarios extremos
+• Circuit breakers calibrados ante condiciones de alta volatilidad
+• Post-quantum cryptography (Dilithium-3) para integridad de decisiones""",
+        closing="Las respuestas hipotéticas se anclan en capacidades reales verificables, no en proyecciones especulativas."
     ),
-    
+
     InvestorQueryType.ETHICAL_SCENARIO: InvestorResponse(
         query_type=InvestorQueryType.ETHICAL_SCENARIO,
-        headline="",
+        headline="Escenario Ético: Protocolos de Gobernanza Reales",
         body="""El escenario describe capacidades predictivas no implementadas actualmente.
 
 Directriz real de OMNIX: no ejecutar operaciones con daño sistémico conocido. El capital sin ecosistema funcional tiene valor limitado.
@@ -823,8 +832,12 @@ Directriz real de OMNIX: no ejecutar operaciones con daño sistémico conocido. 
 Capacidades actuales verificables: paper trading, filtros de riesgo, vetos Monte Carlo, control institucional.
 
 Para evaluar respuesta del sistema ante dilemas reales, puedo mostrar los protocolos de riesgo implementados.""",
-        evidence="",
-        closing=""
+        evidence="""Protocolos de ética verificables implementados:
+• Structural Admissibility Engine (SAE) bloquea activos inadmisibles
+• Cumplimiento Sharia, AML, OFAC integrado en Layer 0
+• Receipts de decisión auditables con firma PQC
+• Zero tolerance para activos HARAM o en listas de sanciones""",
+        closing="La gobernanza ética no es aspiracional en OMNIX — es estructuralmente ejecutada en cada decisión."
     ),
     
     InvestorQueryType.TECHNICAL_DIAGNOSTIC: InvestorResponse(
@@ -834,15 +847,19 @@ Para evaluar respuesta del sistema ante dilemas reales, puedo mostrar los protoc
 
 **Datos:** Total trades: 119 | Win rate: 20.2% | P&L: -15,198.73 USD
 
-**Conclusión:** No es posible determinar si el problema es señal, sizing, filtro o ejecución.
+**Conclusión:** No es posible determinar si el factor limitante es señal, sizing, filtro o ejecución.
 
 **Métrica faltante:** Expectancy por (hmm_regime, coherence_state)
 
 **Query:** `SELECT hmm_regime, coherence_state, COUNT(*), AVG(pnl) FROM trades GROUP BY 1,2;`
 
 Sin esta métrica, cualquier conclusión sería especulativa.""",
-        evidence="",
-        closing=""
+        evidence="""Datos verificables disponibles para el diagnóstico:
+• Total de trades registrados en base de datos auditada
+• Win rate segregado por activo con timestamps reales
+• HMM regime activo y coherence state en cada trade
+• Circuit breakers y vetos documentados con rationale""",
+        closing="El diagnóstico técnico se basa en datos reales del sistema — ninguna conclusión especulativa."
     ),
 }
 
@@ -1195,9 +1212,24 @@ class InvestorResponseEngine:
         if score >= self.score_threshold:
             logger.info(f"[InvestorResponse] Investor context detected: score={score}, words={words}")
             return True
-            
+
         return False
-        
+
+    def get_investor_context_info(self, message: str) -> dict:
+        """
+        Returns structured investor context info for a message.
+
+        Returns:
+            dict with keys: activates_institutional (bool), score (int), words (list)
+        """
+        score, words = self.calculate_investor_score(message)
+        activates = self.investor_mode or score >= self.score_threshold
+        return {
+            "activates_institutional": activates,
+            "score": score,
+            "words": words,
+        }
+
     def detect_query_type(self, message: str) -> Optional[InvestorQueryType]:
         """Detecta el tipo de pregunta basado en patrones.
         
