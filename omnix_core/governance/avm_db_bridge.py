@@ -24,6 +24,12 @@ from typing import Optional
 
 logger = logging.getLogger("OMNIX.AVM.DBBridge")
 
+# Imported lazily to avoid circular import; used only in load_all_snapshots().
+# We access _SIGNAL_SCHEMA_SET from assumption_validity_monitor at runtime.
+def _get_schema_set():  # type: ignore[return]
+    from omnix_core.governance.assumption_validity_monitor import _SIGNAL_SCHEMA_SET
+    return _SIGNAL_SCHEMA_SET
+
 
 # ── SQL ────────────────────────────────────────────────────────────────────────
 
@@ -282,6 +288,43 @@ class AVMDatabaseBridge:
                 else:
                     integrity_status = "LEGACY_NO_HASH"
                     logger.warning(f"[AVM.DB] domain={domain} has no baseline_hash — legacy snapshot")
+
+                # ── ADR-076: Schema validation on DB load ────────────────────────
+                # A snapshot with correct hash but wrong signal keys is structurally
+                # corrupt — someone inserted it directly into DB bypassing AVM API.
+                try:
+                    schema_set = _get_schema_set()
+                    loaded_keys = frozenset(baseline_signals.keys())
+                    if loaded_keys and loaded_keys != schema_set:
+                        missing = sorted(schema_set - loaded_keys)
+                        extra   = sorted(loaded_keys - schema_set)
+                        logger.error(
+                            f"[AVM.DB] SCHEMA_MISMATCH on load — domain={domain} | "
+                            f"snapshot_id={d.get('snapshot_id', '?')} | "
+                            f"missing={missing} | extra={extra} | "
+                            "Drift detection will be disabled for this domain. "
+                            "Recalibrate with correct SIGNAL_SCHEMA keys (ADR-076)."
+                        )
+                        if integrity_status == "OK":
+                            integrity_status = "SCHEMA_MISMATCH"
+                        try:
+                            from omnix_core.governance.avm_alerts import fire_avm_alert
+                            fire_avm_alert(
+                                event_type="SCHEMA_MISMATCH_DB",
+                                domain=domain,
+                                detail=(
+                                    f"Snapshot loaded from DB has wrong signal keys.\n"
+                                    f"Missing: {missing}\nExtra: {extra}\n"
+                                    "Drift detection DISABLED for this domain. "
+                                    "Recalibrate immediately."
+                                ),
+                                snapshot_id=d.get("snapshot_id", "UNKNOWN"),
+                            )
+                        except Exception:
+                            pass
+                except Exception as schema_exc:
+                    logger.warning(f"[AVM.DB] Could not validate schema on load for domain={domain}: {schema_exc}")
+                # ────────────────────────────────────────────────────────────────
 
                 result[domain] = {
                     "snapshot_id":          d["snapshot_id"],

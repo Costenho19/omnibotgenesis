@@ -323,6 +323,22 @@ class AssumptionValidityMonitor:
             with open(path) as f:
                 data = json.load(f)
             snapshot = CalibrationSnapshot.from_dict(data)
+
+            # ── ADR-076: Schema validation on disk load ──────────────────────────
+            loaded_keys = frozenset(snapshot.baseline_signals.keys())
+            if loaded_keys and loaded_keys != _SIGNAL_SCHEMA_SET:
+                missing = sorted(_SIGNAL_SCHEMA_SET - loaded_keys)
+                extra   = sorted(loaded_keys - _SIGNAL_SCHEMA_SET)
+                logger.error(
+                    f"[AVM] SCHEMA_MISMATCH on disk load — domain={domain} | "
+                    f"snapshot={snapshot.snapshot_id} | "
+                    f"missing={missing} | extra={extra} | "
+                    "Snapshot rejected — drift detection will not arm for this domain. "
+                    "Recalibrate with SIGNAL_SCHEMA keys (ADR-076)."
+                )
+                return None
+            # ────────────────────────────────────────────────────────────────────
+
             self._memory_store[domain] = snapshot
             return snapshot
         except Exception as e:
@@ -574,6 +590,22 @@ class AssumptionValidityMonitor:
                 f"do not overlap with SIGNAL_SCHEMA. Drift detection is disabled. "
                 "Recalibrate with SIGNAL_SCHEMA-compliant keys."
             )
+            try:
+                from omnix_core.governance.avm_alerts import fire_avm_alert
+                fire_avm_alert(
+                    event_type="SCHEMA_ANOMALY_NONE",
+                    domain=domain,
+                    detail=(
+                        f"AVM_SCHEMA_MATCH=NONE: zero baseline signal keys overlap "
+                        f"with SIGNAL_SCHEMA.\n"
+                        f"Baseline keys: {sorted(baseline_key_set)}\n"
+                        f"Expected: {sorted(_SIGNAL_SCHEMA_SET)}\n"
+                        "Drift detection is DISABLED. Recalibrate immediately."
+                    ),
+                    snapshot_id=snapshot.snapshot_id,
+                )
+            except Exception:
+                pass
         elif schema_match.startswith("PARTIAL"):
             logger.warning(
                 f"[AVM] SCHEMA_ANOMALY — domain={domain} | AVM_SCHEMA_MATCH={schema_match} | "
@@ -585,6 +617,20 @@ class AssumptionValidityMonitor:
                 f"AVM_SCHEMA_MATCH={schema_match} for domain='{domain}': "
                 f"partial key overlap detected. Drift score may be unreliable."
             )
+            try:
+                from omnix_core.governance.avm_alerts import fire_avm_alert
+                fire_avm_alert(
+                    event_type="SCHEMA_ANOMALY_PARTIAL",
+                    domain=domain,
+                    detail=(
+                        f"AVM_SCHEMA_MATCH={schema_match}: partial key overlap.\n"
+                        f"Missing: {sorted(_SIGNAL_SCHEMA_SET - schema_overlap)}\n"
+                        "Drift score may be artificially amplified."
+                    ),
+                    snapshot_id=snapshot.snapshot_id,
+                )
+            except Exception:
+                pass
         # ───────────────────────────────────────────────────────────────────────
 
         # ── Drift computation ───────────────────────────────────────────────────
@@ -608,6 +654,21 @@ class AssumptionValidityMonitor:
                 f"AVM_SCHEMA_MATCH={schema_match} — likely schema key mismatch, "
                 f"not genuine drift. Recalibrate snapshot. snapshot={snapshot.snapshot_id}"
             )
+            try:
+                from omnix_core.governance.avm_alerts import fire_avm_alert
+                fire_avm_alert(
+                    event_type="DRIFT_ANOMALY",
+                    domain=domain,
+                    detail=(
+                        f"drift_score=100.0 with AVM_SCHEMA_MATCH={schema_match}.\n"
+                        "This is likely a schema key mismatch, not genuine drift.\n"
+                        f"Baseline keys: {sorted(baseline_key_set)}\n"
+                        "Recalibrate snapshot immediately."
+                    ),
+                    snapshot_id=snapshot.snapshot_id,
+                )
+            except Exception:
+                pass
 
         # ── Drift threshold check ───────────────────────────────────────────────
         if drift_score > effective_threshold:
