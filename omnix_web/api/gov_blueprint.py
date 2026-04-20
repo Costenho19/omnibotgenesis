@@ -18,6 +18,7 @@ PUT  /api/governance/admin/clients/<client_id>/thresholds             — Set pe
 DELETE /api/governance/admin/clients/<client_id>/thresholds           — Revert client thresholds to defaults (admin only).
 GET  /api/governance/admin/usage                                      — Monthly usage summary for all clients (admin only).
 GET  /api/governance/admin/usage/<client_id>                          — Monthly usage detail for one client (admin only).
+GET  /api/governance/admin/layer0/metrics                             — Layer 0 (SAE) admission metrics — global + per-domain (admin only). ADR-092.
 
 ADR-028: External Signal Evaluation API
 ADR-037: Per-Client Configurable Thresholds
@@ -125,6 +126,22 @@ except ImportError:
     except ImportError:
         _DUE_DILIGENCE_AVAILABLE = False
         def generate_due_diligence_pdf(*a, **kw): return b""
+
+# ── STRUCTURAL ADMISSIBILITY ENGINE — Layer 0 Metrics (ADR-092) ───────────────
+try:
+    from omnix_core.governance.structural_admissibility_engine import (
+        get_layer0_metrics as _get_layer0_metrics,
+        get_sae_override   as _get_sae_override,
+    )
+    _SAE_METRICS_AVAILABLE = True
+except ImportError:
+    _SAE_METRICS_AVAILABLE = False
+    def _get_layer0_metrics():
+        class _Stub:
+            def snapshot(self): return {}
+        return _Stub()
+    def _get_sae_override():
+        return None
 
 logger = logging.getLogger(__name__)
 
@@ -2589,6 +2606,92 @@ def _build_executive_summary(decision: str, outcomes: list) -> str:
         return f"This decision was BLOCKED. {first}"
     total = len(outcomes)
     return f"This decision was APPROVED after passing all {total} institutional governance checkpoints."
+
+
+# ── Layer 0 Metrics — admin view (ADR-092) ────────────────────────────────────
+
+@governance_bp.route('/api/governance/admin/layer0/metrics', methods=['GET'])
+def admin_layer0_metrics():
+    """
+    GET /api/governance/admin/layer0/metrics
+    Real-time Layer 0 (Structural Admissibility Engine) admission metrics.
+    Admin only.  ADR-092.
+
+    Returns per-domain counters:
+      total         — total requests evaluated at Layer 0
+      admitted      — requests passed to pipeline
+      blocked       — requests rejected before Layer 0
+      block_rate_pct — blocked / total × 100
+      blocked_by_class — {constraint_class: count} breakdown
+      top_constraint_classes — sorted list of (class, count) for the GLOBAL rollup
+
+    Always-on: metrics accumulate from process start in memory (thread-safe).
+    They reset on process restart; a future ADR may add persistence.
+    """
+    caller, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    try:
+        snapshot = _get_layer0_metrics().snapshot()
+        override  = _get_sae_override()
+
+        # ── per-domain rows ────────────────────────────────────────────────────
+        domains = []
+        global_total    = 0
+        global_admitted = 0
+        global_blocked  = 0
+        global_by_class: dict = {}
+
+        for domain, stat in snapshot.items():
+            domains.append({
+                "domain":             domain,
+                "total":              stat["total"],
+                "admitted":           stat["admitted"],
+                "blocked":            stat["blocked"],
+                "block_rate_pct":     round(stat["block_rate_pct"], 2),
+                "blocked_by_class":   stat["blocked_by_class"],
+            })
+            global_total    += stat["total"]
+            global_admitted += stat["admitted"]
+            global_blocked  += stat["blocked"]
+            for cls, cnt in stat["blocked_by_class"].items():
+                global_by_class[cls] = global_by_class.get(cls, 0) + cnt
+
+        domains.sort(key=lambda d: d["blocked"], reverse=True)
+
+        top_constraint_classes = sorted(
+            [{"class": k, "count": v} for k, v in global_by_class.items()],
+            key=lambda x: x["count"],
+            reverse=True,
+        )
+
+        global_block_rate = round(
+            (global_blocked / global_total * 100) if global_total else 0.0,
+            2,
+        )
+
+        return jsonify({
+            "success":   True,
+            "sae_module_available": _SAE_METRICS_AVAILABLE,
+            "operator_override":    override.value if override is not None else "UNSET",
+            "global": {
+                "total":                 global_total,
+                "admitted":              global_admitted,
+                "blocked":               global_blocked,
+                "block_rate_pct":        global_block_rate,
+                "top_constraint_classes": top_constraint_classes,
+            },
+            "domains":   domains,
+            "note": (
+                "Metrics accumulate from process start (in-memory). "
+                "Reset on process restart. ADR-092."
+            ),
+        })
+
+    except Exception as exc:
+        logger.exception("admin_layer0_metrics error: %s", exc)
+        return jsonify({"success": False, "error": str(exc)}), 500
 
 
 @governance_bp.route('/api/governance/audit/decisions', methods=['GET'])
