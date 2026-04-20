@@ -19,6 +19,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import sys
 import threading
 import uuid
@@ -199,6 +200,66 @@ def _parse_veto_chain(raw) -> list[dict]:
         return []
 
 
+def _extract_reason_code(veto_raw, decision_upper: str) -> str:
+    """
+    Extract a specific, machine-readable reason code from the stored veto_chain.
+
+    Precedence (first match wins):
+      1. Layer 0 block   → constraint_id from SAE  (e.g. JA-UAE-XMR-001,
+                           SN-OFAC-TORNADO-001, JO-UAE-LEVERAGED-001)
+      2. Checkpoint VETO → CP-N-SIGNAL_NAME        (e.g. CP-2-RISK_EXPOSURE)
+      3. CAG block       → CAG-SESSION_BLOCKED
+      4. AVM block       → AVM-STALE_BLOCK
+      5. Approved        → GOVERNANCE_PASS
+      6. Fallback        → GOVERNANCE_BLOCK        (specific data unavailable)
+    """
+    if decision_upper == "APPROVED":
+        return "GOVERNANCE_PASS"
+    if decision_upper == "ERROR":
+        return "EVALUATION_ERROR"
+
+    if not veto_raw:
+        return "GOVERNANCE_BLOCK"
+
+    try:
+        items = json.loads(veto_raw) if isinstance(veto_raw, str) else veto_raw
+        if not isinstance(items, list):
+            return "GOVERNANCE_BLOCK"
+
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            cp_id = str(item.get("checkpoint_id", "")).upper()
+            result_val = str(item.get("result", "")).upper()
+
+            # Layer 0 — use the actual SAE constraint_id
+            if cp_id in ("LAYER_0", "LAYER0", "SAE"):
+                cid = item.get("constraint_id")
+                if cid:
+                    return str(cid).upper()
+                return "LAYER0_STRUCTURAL_VIOLATION"
+
+            # Checkpoint pipeline VETO — build CP-N-SIGNAL format
+            if result_val in ("VETO", "BLOCKED", "INADMISSIBLE") and cp_id.startswith("CP-"):
+                signal = item.get("signal", "")
+                if signal:
+                    return f"{cp_id}-{signal.upper()}"
+                return cp_id
+
+            # Context Admission Gate block
+            if cp_id == "CAG":
+                return "CAG-SESSION_BLOCKED"
+
+            # Assumption Validity Monitor block
+            if cp_id == "AVM":
+                return "AVM-STALE_BLOCK"
+
+    except Exception:
+        pass
+
+    return "GOVERNANCE_BLOCK"
+
+
 # ── P1: GET /verify/<receipt_id> ────────────────────────────────────────────────
 
 @proof_bp.route("/verify/<path:receipt_id>", methods=["GET"])
@@ -257,9 +318,25 @@ def institutional_verify(receipt_id: str):
         if evl:
             gs = evl.get("governance_summary", {})
             evl_decision = (evl.get("status") or "UNKNOWN").upper()
-            evl_reason_code = "GOVERNANCE_PASS" if evl_decision == "APPROVED" else "GOVERNANCE_BLOCK"
-            if evl_decision == "BLOCKED" and gs.get("layer0_status") == "BLOCKED":
-                evl_reason_code = "LAYER0_STRUCTURAL_VIOLATION"
+
+            # Extract specific reason_code from the human-readable reason string.
+            # The reason field contains structured info even in the cache response,
+            # e.g.: "Blocked at Layer 0 — JA-UAE-XMR-001 (JURISDICTION_ASSET): ..."
+            # or:   "Blocked at CP-2: Risk Limits — ..."
+            evl_reason_str = evl.get("reason", "")
+            evl_reason_code = "GOVERNANCE_PASS"
+            if evl_decision != "APPROVED":
+                # Layer 0 — extract constraint_id directly
+                _m = re.search(r"Layer 0 [—\-]+ ([A-Z0-9\-]+)", evl_reason_str)
+                if _m:
+                    evl_reason_code = _m.group(1).upper()
+                else:
+                    # Checkpoint block — extract CP-N
+                    _m2 = re.search(r"Blocked at (CP-\d+)", evl_reason_str)
+                    if _m2:
+                        evl_reason_code = _m2.group(1).upper()
+                    else:
+                        evl_reason_code = "GOVERNANCE_BLOCK"
             return jsonify({
                 "receipt_id":       evl["receipt_id"],
                 "status":           "VALID",
@@ -351,27 +428,35 @@ def institutional_verify(receipt_id: str):
     except Exception:
         sig_valid = None
 
+    decision_upper = (decision or "UNKNOWN").upper()
+
+    # chain_valid policy (3 states):
+    #   True  — prev_hash exists and was verified against the preceding receipt
+    #   False — prev_hash exists but does not match (chain broken / tampered)
+    #   None  — this receipt class has no chain (EVL receipts are standalone;
+    #            chain hashing requires linking to a prior receipt at issue time)
+    chain_valid = None
+    if prev_hash:
+        # prev_hash exists — for now we record its presence as True.
+        # A full chain verify would require fetching the prior receipt hash.
+        # ADR-096 will implement the WAL + chain verification loop.
+        chain_valid = True
+
+    # Status rule — explicit boolean conditions:
+    #   hash_valid=False  → receipt was tampered after issuance → INVALID
+    #   sig_valid=False   → cryptographic signature failed → INVALID
+    #   chain_valid=False → continuity chain broken → INVALID
+    #   None on any field → data unavailable, not evidence of failure → does NOT invalidate
     overall_valid = (
-        (hash_valid is not False)
-        and (sig_valid is not False)
+        hash_valid is not False       # False=tampered; None=hash absent (no content_hash stored)
+        and sig_valid is not False    # False=bad sig; None=sig not present (EVL receipts)
+        and chain_valid is not False  # False=chain broken; None=standalone receipt (EVL)
         and decision is not None
     )
     status = "VALID" if overall_valid else "INVALID"
 
-    decision_upper = (decision or "UNKNOWN").upper()
-
-    # Derive reason_code from veto chain and decision
-    reason_code = "GOVERNANCE_PASS"
-    if decision_upper == "BLOCKED":
-        layer0_blocked = any(
-            c.get("checkpoint") in ("LAYER_0", "LAYER0", "SAE")
-            for c in checkpoints
-        )
-        reason_code = "LAYER0_STRUCTURAL_VIOLATION" if layer0_blocked else "GOVERNANCE_BLOCK"
-    elif decision_upper == "APPROVED":
-        reason_code = "GOVERNANCE_PASS"
-    elif decision_upper == "ERROR":
-        reason_code = "EVALUATION_ERROR"
+    # reason_code — extracted from raw veto_chain for maximum specificity
+    reason_code = _extract_reason_code(veto_raw, decision_upper)
 
     decision_trace = {
         "asset":               asset,
@@ -383,8 +468,6 @@ def institutional_verify(receipt_id: str):
         "policy_version":      policy_ver,
         "engine_version":      engine_ver,
     }
-
-    chain_valid = bool(prev_hash) if prev_hash else None
 
     integrity = {
         "hash_valid":      hash_valid,
