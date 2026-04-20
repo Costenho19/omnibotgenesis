@@ -473,6 +473,13 @@ try:
 except Exception as _gov_err:
     print(f"[server] WARNING: governance_bp not loaded: {_gov_err}")
 
+try:
+    from api.proof_layer import proof_bp
+    app.register_blueprint(proof_bp)
+    print("[server] proof_bp registered — /verify/* and /evaluate active")
+except Exception as _proof_err:
+    print(f"[server] WARNING: proof_bp not loaded: {_proof_err}")
+
 
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')
