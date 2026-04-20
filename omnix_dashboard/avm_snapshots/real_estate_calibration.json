@@ -1,24 +1,26 @@
 {
-  "snapshot_id": "AVM-9EDAB76822",
-  "parameter_version": "1.9edab76822",
+  "snapshot_id": "AVM-EFCB730444",
+  "parameter_version": "1.efcb730444",
   "domain": "real_estate",
   "baseline_signals": {
-    "risk_exposure": 38.0,
-    "financial_health": 66.0,
-    "legal_compliance": 80.0,
-    "market_liquidity": 60.0,
-    "property_valuation": 68.0,
-    "documentation_quality": 74.0
+    "risk_exposure": 19.9,
+    "signal_coherence": 62.8,
+    "logic_consistency": 86.6,
+    "probability_score": 69.8,
+    "stress_resilience": 60.4,
+    "trend_persistence": 63.8
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Baseline calibration \u2014 real estate governance Q2 2026",
+  "description": "Recalibraci\u00f3n definitiva Q2 2026 \u2014 se\u00f1ales corregidas a SIGNAL_WEIGHTS, promedio 13,245 decisiones reales 2026-04-20",
   "tags": [
-    "initial",
+    "recalibrated",
     "q2-2026",
-    "real-estate"
+    "real-estate",
+    "2026-04-20",
+    "signal-keys-fixed"
   ],
-  "calibrated_at": "2026-04-15T07:05:07.383233+00:00",
-  "calibrated_at_epoch": 1776236707.383233
+  "calibrated_at": "2026-04-20T07:28:06.772372+00:00",
+  "calibrated_at_epoch": 1776670086.772372
 }
