@@ -241,8 +241,7 @@ class EMARegimeSignal:
         rationale = []
         confidence_factors = []
         
-        # V1.0.4 DEBUG: Log method entry
-        logger.info(f"📊 {symbol} generate_signal() CALLED with {len(prices) if prices else 0} prices")
+        logger.debug(f"📊 {symbol} generate_signal() called with {len(prices) if prices else 0} prices")
         
         if not prices or len(prices) < 30:
             logger.warning(f"📊 {symbol}: INSUFFICIENT_DATA early return ({len(prices) if prices else 0} precios < 30 required)")
@@ -315,8 +314,7 @@ class EMARegimeSignal:
             # TRACK_RECORD_MODE: Convert NONE to WEAK_TREND for scoring
             # Dec 26, 2025: Allows partial scoring without forcing direction
             # ============================================================
-            # DEBUG: Log condition values (INFO level for visibility)
-            logger.info(f"🔍 {symbol} WEAK_TREND_CHECK: dir={direction}, TRACK_RECORD={TRACK_RECORD_MODE}, LOW_VOL={self.LOW_VOL_MODE}")
+            logger.debug(f"🔍 {symbol} WEAK_TREND_CHECK: dir={direction}, TRACK_RECORD={TRACK_RECORD_MODE}, LOW_VOL={self.LOW_VOL_MODE}")
             if TRACK_RECORD_MODE and self.LOW_VOL_MODE and direction == "NONE":
                 # ============================================================
                 # TRACK_RECORD_MODE: Use raw EMA slope for weak direction
