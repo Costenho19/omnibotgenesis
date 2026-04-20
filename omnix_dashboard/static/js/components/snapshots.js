@@ -289,7 +289,7 @@ const AuditedSnapshots = (function() {
     }
 
     function formatNumber(num) {
-        if (num === null || num === undefined) return '0';
+        if (num === null || num === undefined || isNaN(num)) return 'N/A';
         return Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
