@@ -83,6 +83,81 @@ def _get_db_connection():
         return None
 
 
+def _compute_content_hash(receipt_id: str, timestamp: str, asset: str, decision: str) -> str:
+    payload = json.dumps(
+        {"receipt_id": receipt_id, "timestamp": timestamp, "asset": asset, "decision": decision},
+        sort_keys=True,
+    ).encode()
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _persist_evl_receipt(
+    receipt_id: str,
+    timestamp_utc: str,
+    asset: str,
+    decision: str,
+    veto_chain: list,
+    checkpoints_passed: int,
+    checkpoints_total: int,
+    layer0_status: str,
+    jurisdiction: str,
+    operation: str,
+    ethical_flags: list,
+    action: str,
+) -> bool:
+    """
+    Persist an evaluate receipt to decision_receipts table.
+    Returns True on success, False on failure (non-fatal — cache is the fallback).
+    """
+    conn = _get_db_connection()
+    if not conn:
+        return False
+    try:
+        content_hash = _compute_content_hash(receipt_id, timestamp_utc, asset, decision)
+        veto_json = json.dumps(veto_chain)
+        metadata = json.dumps({
+            "source": "POST /evaluate",
+            "action": action,
+            "jurisdiction": jurisdiction,
+            "operation": operation,
+            "ethical_flags": ethical_flags,
+            "checkpoints_passed": checkpoints_passed,
+            "checkpoints_total": checkpoints_total,
+            "layer0_status": layer0_status,
+            "issuer": _ISSUER_DID,
+        })
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO decision_receipts
+                (receipt_id, timestamp_utc, asset, decision, veto_chain,
+                 policy_version, engine_version, content_hash,
+                 signature_algorithm, public_key, client_id, domain,
+                 encrypted_payload, created_at)
+            VALUES (%s, %s, %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s, %s, %s,
+                    %s, NOW())
+            ON CONFLICT (receipt_id) DO NOTHING
+            """,
+            (
+                receipt_id, timestamp_utc, asset, decision, veto_json,
+                "EVL-1.0", "6.5.4e", content_hash,
+                "SHA256_SUMMARY", _ISSUER_DID, "PUBLIC_EVALUATE", "trading",
+                metadata,
+            ),
+        )
+        conn.commit()
+        cur.close()
+        logger.info(f"[/evaluate] Receipt persisted to DB: {receipt_id}")
+        return True
+    except Exception as exc:
+        logger.warning(f"[/evaluate] DB persist failed (cache active): {exc}")
+        return False
+    finally:
+        conn.close()
+
+
 def _detect_signature_mode(sig_algo: str | None, sig_format: str | None) -> str:
     if not sig_algo or sig_algo == "NONE":
         return "NONE"
@@ -160,7 +235,7 @@ def institutional_verify(receipt_id: str):
                        veto_chain, policy_version, engine_version,
                        prev_hash, content_hash, signature,
                        signature_algorithm,
-                       public_key, signing_provider, domain, client_id,
+                       public_key, domain, client_id,
                        created_at
                 FROM decision_receipts
                 WHERE receipt_id = %s OR content_hash = %s
@@ -217,7 +292,7 @@ def institutional_verify(receipt_id: str):
     (rid, ts_utc, asset, decision, veto_raw,
      policy_ver, engine_ver, prev_hash, content_hash,
      signature, sig_algo,
-     public_key, signing_provider, domain, client_id,
+     public_key, domain, client_id,
      created_at) = row
 
     ts_issued  = ts_utc.isoformat() if hasattr(ts_utc, "isoformat") else str(ts_utc)
@@ -414,13 +489,14 @@ def simple_evaluate():
     ethical_flags = [ethical_mode] if ethical_mode in ("SHARIA", "ESG") else []
 
     evaluated_at = datetime.now(timezone.utc).isoformat()
-    receipt_id   = f"EVL-{uuid.uuid4().hex[:12].upper()}"
+    receipt_id   = f"OMNIX-EVL-{uuid.uuid4().hex[:16].upper()}"
 
     layer0_status  = "DISABLED"
     layer0_detail  = None
     overall_status = "APPROVED"
     reason         = "All governance checkpoints passed."
     gate_results   = []
+    veto_chain     = []
     checkpoints_passed  = 0
     checkpoints_total   = 0
 
@@ -521,6 +597,21 @@ def simple_evaluate():
     }
 
     _cache_evl_receipt(receipt_id, response)
+
+    _persist_evl_receipt(
+        receipt_id=receipt_id,
+        timestamp_utc=evaluated_at,
+        asset=asset,
+        decision=overall_status,
+        veto_chain=veto_chain,
+        checkpoints_passed=checkpoints_passed,
+        checkpoints_total=checkpoints_total,
+        layer0_status=layer0_status,
+        jurisdiction=jurisdiction,
+        operation=operation,
+        ethical_flags=ethical_flags,
+        action=action,
+    )
 
     return jsonify(response), 200, {
         "Access-Control-Allow-Origin": "*",

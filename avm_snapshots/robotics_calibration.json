@@ -1,26 +1,24 @@
 {
-  "snapshot_id": "AVM-337323464D",
-  "parameter_version": "1.337323464d",
+  "snapshot_id": "AVM-1F4C91B088",
+  "parameter_version": "1.1f4c91b088",
   "domain": "robotics",
+  "calibrated_at": "2026-04-20T22:29:42.320979+00:00",
+  "calibrated_at_epoch": 1776724182.320979,
   "baseline_signals": {
-    "risk_exposure": 39.7,
-    "signal_coherence": 83.0,
-    "logic_consistency": 72.3,
-    "probability_score": 66.1,
-    "stress_resilience": 62.5,
-    "trend_persistence": 63.5
+    "probability_score": 77.0,
+    "signal_coherence": 75.0,
+    "risk_exposure": 18.0,
+    "stress_resilience": 80.0,
+    "trend_persistence": 70.0,
+    "logic_consistency": 78.0
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
+  "description": "Initial calibration baseline \u2014 robotics \u2014 ADR-076 compliant",
   "tags": [
-    "recalibrated",
-    "q2-2026",
-    "robotics",
-    "2026-04-20",
-    "signal-keys-fixed"
-  ],
-  "calibrated_at": "2026-04-20T07:36:02.868004+00:00",
-  "calibrated_at_epoch": 1776670562.868004
+    "initial-calibration",
+    "v6.5.4e",
+    "adr-076"
+  ]
 }

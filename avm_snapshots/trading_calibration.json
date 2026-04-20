@@ -1,26 +1,24 @@
 {
-  "snapshot_id": "AVM-EEEDB2BF18",
-  "parameter_version": "1.eeedb2bf18",
+  "snapshot_id": "AVM-78A1FCF775",
+  "parameter_version": "1.78a1fcf775",
   "domain": "trading",
+  "calibrated_at": "2026-04-20T22:29:42.315541+00:00",
+  "calibrated_at_epoch": 1776724182.315541,
   "baseline_signals": {
-    "risk_exposure": 32.0,
-    "signal_coherence": 72.0,
-    "logic_consistency": 78.0,
-    "probability_score": 65.0,
-    "stress_resilience": 60.0,
-    "trend_persistence": 58.0
+    "probability_score": 72.0,
+    "signal_coherence": 70.0,
+    "risk_exposure": 42.0,
+    "stress_resilience": 65.0,
+    "trend_persistence": 67.0,
+    "logic_consistency": 74.0
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
+  "description": "Initial calibration baseline \u2014 trading \u2014 ADR-076 compliant",
   "tags": [
-    "recalibrated",
-    "q2-2026",
-    "trading",
-    "2026-04-20",
-    "signal-keys-fixed"
-  ],
-  "calibrated_at": "2026-04-20T07:36:08.097576+00:00",
-  "calibrated_at_epoch": 1776670568.097576
+    "initial-calibration",
+    "v6.5.4e",
+    "adr-076"
+  ]
 }

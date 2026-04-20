@@ -1,26 +1,24 @@
 {
-  "snapshot_id": "AVM-9D32AF4C5D",
-  "parameter_version": "1.9d32af4c5d",
+  "snapshot_id": "AVM-97532FC472",
+  "parameter_version": "1.97532fc472",
   "domain": "autonomous_agent",
+  "calibrated_at": "2026-04-20T22:29:42.317742+00:00",
+  "calibrated_at_epoch": 1776724182.317742,
   "baseline_signals": {
-    "risk_exposure": 50.2,
-    "signal_coherence": 66.7,
-    "logic_consistency": 46.8,
-    "probability_score": 50.1,
-    "stress_resilience": 65.9,
-    "trend_persistence": 71.7
+    "probability_score": 74.0,
+    "signal_coherence": 72.0,
+    "risk_exposure": 28.0,
+    "stress_resilience": 75.0,
+    "trend_persistence": 65.0,
+    "logic_consistency": 76.0
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
+  "description": "Initial calibration baseline \u2014 autonomous_agent \u2014 ADR-076 compliant",
   "tags": [
-    "recalibrated",
-    "q2-2026",
-    "autonomous_agent",
-    "2026-04-20",
-    "signal-keys-fixed"
-  ],
-  "calibrated_at": "2026-04-20T07:36:04.587941+00:00",
-  "calibrated_at_epoch": 1776670564.587941
+    "initial-calibration",
+    "v6.5.4e",
+    "adr-076"
+  ]
 }

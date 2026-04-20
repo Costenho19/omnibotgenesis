@@ -1,26 +1,24 @@
 {
-  "snapshot_id": "AVM-D7955570CB",
-  "parameter_version": "1.d7955570cb",
+  "snapshot_id": "AVM-958EC3DD5D",
+  "parameter_version": "1.958ec3dd5d",
   "domain": "medical_ai",
+  "calibrated_at": "2026-04-20T22:29:42.316472+00:00",
+  "calibrated_at_epoch": 1776724182.316472,
   "baseline_signals": {
-    "risk_exposure": 51.3,
-    "signal_coherence": 71.4,
-    "logic_consistency": 57.5,
-    "probability_score": 75.5,
-    "stress_resilience": 64.2,
-    "trend_persistence": 59.3
+    "probability_score": 78.0,
+    "signal_coherence": 76.0,
+    "risk_exposure": 22.0,
+    "stress_resilience": 72.0,
+    "trend_persistence": 68.0,
+    "logic_consistency": 80.0
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
+  "description": "Initial calibration baseline \u2014 medical_ai \u2014 ADR-076 compliant",
   "tags": [
-    "recalibrated",
-    "q2-2026",
-    "medical_ai",
-    "2026-04-20",
-    "signal-keys-fixed"
-  ],
-  "calibrated_at": "2026-04-20T07:35:59.380413+00:00",
-  "calibrated_at_epoch": 1776670559.380413
+    "initial-calibration",
+    "v6.5.4e",
+    "adr-076"
+  ]
 }

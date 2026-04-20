@@ -92,12 +92,18 @@ class CreditMacroDataProvider:
         try:
             return self._fetch_from_alpha_vantage()
         except Exception as e:
-            logger.warning(f"Alpha Vantage fetch failed: {e} — trying FRED fallback")
+            logger.warning(
+                f"DATA_SOURCE_FALLBACK: alpha_vantage → fred | reason={e} | "
+                "macro signals will use FRED data — decisions may differ from AV baseline"
+            )
 
         try:
             return self._fetch_from_fred()
         except Exception as e:
-            logger.warning(f"FRED fetch failed: {e} — using calibrated defaults")
+            logger.warning(
+                f"DATA_SOURCE_FALLBACK: fred → calibrated_defaults | reason={e} | "
+                "macro signals will use static calibrated defaults — monitor for drift"
+            )
 
         return self._calibrated_defaults()
 
