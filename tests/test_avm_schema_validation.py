@@ -336,3 +336,84 @@ class TestDomainBaselinesRegression:
                 assert 0.0 <= val <= 100.0, (
                     f"domain='{domain}' signal '{key}'={val} is outside [0, 100]"
                 )
+
+
+# ── 6. Alert fallback and rate limiting ────────────────────────────────────────
+
+class TestAVMAlerts:
+    def setup_method(self):
+        from omnix_core.governance import avm_alerts
+        avm_alerts._rate_history.clear()
+
+    def test_critical_log_emitted_when_channel_not_configured(self):
+        import io, logging
+        from unittest.mock import patch
+
+        buf = io.StringIO()
+        handler = logging.StreamHandler(buf)
+        handler.setLevel(logging.CRITICAL)
+        alert_logger = logging.getLogger("OMNIX.AVM.Alerts")
+        alert_logger.setLevel(logging.DEBUG)
+        alert_logger.addHandler(handler)
+        alert_logger.propagate = False
+
+        try:
+            with patch.dict(os.environ, {
+                "TESTING": "false",
+                "TELEGRAM_BOT_TOKEN": "",
+                "OMNIX_ADMIN_CHAT_ID": "",
+            }):
+                from omnix_core.governance.avm_alerts import fire_avm_alert
+                fire_avm_alert(
+                    event_type="SCHEMA_ANOMALY_NONE",
+                    domain="test_domain",
+                    detail="Canal no configurado",
+                    snapshot_id="AVM-TEST",
+                )
+            logs = buf.getvalue()
+            assert "ALERT_NOT_SENT" in logs or "CRITICAL" in logs.upper(), (
+                "Debe emitir CRITICAL cuando no hay canal configurado"
+            )
+        finally:
+            alert_logger.removeHandler(handler)
+            alert_logger.propagate = True
+
+    def test_rate_limit_suppresses_excess_alerts(self):
+        import io, logging, time
+        from unittest.mock import patch
+
+        buf = io.StringIO()
+        handler = logging.StreamHandler(buf)
+        handler.setLevel(logging.WARNING)
+        alert_logger = logging.getLogger("OMNIX.AVM.Alerts")
+        alert_logger.setLevel(logging.DEBUG)
+        alert_logger.addHandler(handler)
+        alert_logger.propagate = False
+
+        try:
+            with patch.dict(os.environ, {
+                "TESTING": "false",
+                "TELEGRAM_BOT_TOKEN": "",
+                "OMNIX_ADMIN_CHAT_ID": "",
+                "AVM_ALERT_MAX_PER_MINUTE": "3",
+                "AVM_ALERT_WINDOW_SECONDS": "60",
+            }):
+                from omnix_core.governance.avm_alerts import fire_avm_alert
+                from omnix_core.governance import avm_alerts
+                avm_alerts._rate_history.clear()
+
+                for i in range(5):
+                    fire_avm_alert(
+                        event_type="DRIFT_ANOMALY",
+                        domain="loop_domain",
+                        detail=f"loop iter {i}",
+                        snapshot_id="AVM-LOOP",
+                    )
+
+            logs = buf.getvalue()
+            assert "RATE_LIMITED" in logs, (
+                "Debe emitir RATE_LIMITED cuando se supera el límite por minuto"
+            )
+        finally:
+            alert_logger.removeHandler(handler)
+            alert_logger.propagate = True
