@@ -138,6 +138,39 @@ class TestExtractReasonCode:
         ]
         assert _extract_reason_code(chain) == "LAYER_0"
 
+    # ── Legacy / robustness formats ──────────────────────────────────────────
+
+    def test_string_entries_in_chain_are_skipped_no_attribute_error(self):
+        # Legacy receipts serialised veto_chain entries as plain strings.
+        # Must not raise AttributeError — strings are silently skipped.
+        chain = ["VETO", "BLOCKED", {"checkpoint_id": "CP-3", "result": "VETO"}]
+        assert _extract_reason_code(chain) == "CP-3"
+
+    def test_all_string_entries_returns_governance_pass(self):
+        # All non-dict entries → no blocking dict found → GOVERNANCE_PASS
+        chain = ["VETO", "INADMISSIBLE", "BLOCKED"]
+        assert _extract_reason_code(chain) == "GOVERNANCE_PASS"
+
+    def test_none_mixed_with_dict_entries_are_skipped(self):
+        chain = [None, {"checkpoint_id": "CP-4", "result": "VETO", "signal": "risk_exposure"}]
+        assert _extract_reason_code(chain) == "CP-4-RISK_EXPOSURE"
+
+    def test_empty_dict_entry_does_not_match_blocking(self):
+        # {} has no "result" key → result = "" → not in _BLOCKING → skipped
+        chain = [{}, {"checkpoint_id": "CP-5", "result": "VETO"}]
+        assert _extract_reason_code(chain) == "CP-5"
+
+    def test_blocked_decision_with_empty_veto_chain_returns_governance_pass(self):
+        # Decision field is determined separately from reason_code.
+        # If veto_chain is empty for a BLOCKED receipt (incomplete data),
+        # reason_code falls back to GOVERNANCE_PASS — callers must check
+        # the decision field to determine block/approval state.
+        assert _extract_reason_code([]) == "GOVERNANCE_PASS"
+
+    def test_blocked_decision_with_none_veto_chain_returns_governance_pass(self):
+        # Same: None veto_chain (absent from legacy DB row) → GOVERNANCE_PASS
+        assert _extract_reason_code(None) == "GOVERNANCE_PASS"
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. Status logic — determinista, primer fallo gana

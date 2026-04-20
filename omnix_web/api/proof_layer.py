@@ -220,6 +220,8 @@ def _extract_reason_code(veto_chain) -> str:
     """
     _BLOCKING = {"VETO", "INADMISSIBLE", "BLOCKED", "STALE_BLOCK", "SESSION_BLOCKED"}
     for e in (veto_chain or []):
+        if not isinstance(e, dict):
+            continue
         r = str(e.get("result", "")).upper()
         if r not in _BLOCKING:
             continue
@@ -427,12 +429,18 @@ def institutional_verify(receipt_id: str):
     else:
         status = "VALID"
 
-    # reason_code — first-VETO-wins sobre lista parseada
-    _veto_list = (
-        json.loads(veto_raw)
-        if isinstance(veto_raw, str) and veto_raw
-        else (veto_raw or [])
-    )
+    # reason_code — first-blocking-entry-wins sobre lista parseada
+    # Safe parse: malformed/legacy veto_raw must never 500 /verify.
+    try:
+        _veto_list: list = (
+            json.loads(veto_raw)
+            if isinstance(veto_raw, str) and veto_raw
+            else (veto_raw or [])
+        )
+        if not isinstance(_veto_list, list):
+            _veto_list = []
+    except Exception:
+        _veto_list = []
     reason_code = _extract_reason_code(_veto_list)
 
     decision_trace = {

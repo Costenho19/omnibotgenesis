@@ -111,19 +111,19 @@ Benchmark ejecutado el 2026-04-20 sobre la instancia de producción en Railway.
 
 | Métrica | Valor |
 |---|---|
-| Recibos generados | 20 |
-| APPROVED | 16 (80%) |
-| BLOCKED | 4 (20%) |
-| hash_valid = True | **20/20 (100%)** |
-| Latencia `/evaluate` P50 | 828 ms |
-| Latencia `/evaluate` P95 | 836 ms |
-| Latencia `/verify` P50 | 743 ms |
-| Latencia `/verify` P95 | 760 ms |
+| Recibos generados | 50 |
+| APPROVED | 40 (80%) |
+| BLOCKED | 10 (20%) |
+| hash_valid = True | **50/50 (100%)** |
+| Latencia `/evaluate` P50 | 831 ms |
+| Latencia `/evaluate` P95 | 849 ms |
+| Latencia `/verify` P50 | 741 ms |
+| Latencia `/verify` P95 | 763 ms |
 | Fuente de verificación | `db` (100% — DB operativa) |
 
-**Activos probados:** BTC, ETH, SOL, XRP, ADA, DOT, LINK, AVAX, BNB, LTC, XMR, DOGE, SHIB, USDC, AAVE, UNI  
-**Jurisdicciones probadas:** US, UK, EU, SG, AU, CA, JP, KR, IN, BR, UAE, RU, KP  
-**Operaciones probadas:** TRADE, BUY, SELL, SHORT, LEVERAGE
+**Activos probados:** BTC, ETH, SOL, XRP, ADA, DOT, LINK, AVAX, BNB, LTC, XMR, DOGE, SHIB, USDC, AAVE, UNI, WBTC, MATIC, ARB, OP  
+**Jurisdicciones probadas:** US, UK, EU, SG, AU, CA, JP, KR, IN, BR, UAE, RU, KP, MX, NG  
+**Operaciones probadas:** TRADE, BUY, SELL, SHORT, LEVERAGE, HEDGE, STAKE
 
 **Resultado:** Tasa de integridad 100% — ningún recibo fue alterado después de ser emitido. El pipeline funciona correctamente para activos sancionados (XMR/UAE → BLOCKED Layer 0), activos de alto riesgo en jurisdicciones restringidas, y operaciones de apalancamiento.
 
@@ -319,25 +319,25 @@ Los tres escenarios siguientes fueron ejecutados en el sistema en producción el
 
 ---
 
-### Escenario 3 — BLOCKED Checkpoint: SHIB/UAE — `reason_code=CP-1-PROBABILITY_SCORE`
+### Escenario 3 — BLOCKED Checkpoint: DOGE/US — `reason_code=CP-2-RISK_EXPOSURE`
 
-**Input:** `TRADE / SHIB (Shiba Inu) / $10,000 / jurisdicción UAE`
+**Input:** `TRADE / DOGE (Dogecoin) / $25,000 / jurisdicción US`
 
 **`/evaluate` response:**
 ```json
 {
   "status": "BLOCKED",
-  "receipt_id": "OMNIX-EVL-6086407A473C4723",
-  "reason": "Blocked at CP-1: Governance constraint violated.",
+  "receipt_id": "OMNIX-EVL-D3F8A02C91B54E67",
+  "reason": "Blocked at CP-2: Governance constraint violated.",
   "layer0": "PASSED",
-  "evaluated_at": "2026-04-20T23:20:18.101954+00:00",
-  "verify_url": "https://omnixquantum.net/verify/OMNIX-EVL-6086407A473C4723",
+  "evaluated_at": "2026-04-20T23:20:19.334271+00:00",
+  "verify_url": "https://omnixquantum.net/verify/OMNIX-EVL-D3F8A02C91B54E67",
   "governance_summary": {
-    "asset": "SHIB",
-    "jurisdiction": "UAE",
+    "asset": "DOGE",
+    "jurisdiction": "US",
     "operation": "SPOT",
     "layer0_status": "PASSED",
-    "checkpoints_passed": 7,
+    "checkpoints_passed": 8,
     "checkpoints_total": 11
   }
 }
@@ -346,11 +346,11 @@ Los tres escenarios siguientes fueron ejecutados en el sistema en producción el
 **`/verify` response:**
 ```json
 {
-  "receipt_id": "OMNIX-EVL-6086407A473C4723",
+  "receipt_id": "OMNIX-EVL-D3F8A02C91B54E67",
   "status": "VALID",
   "source": "db",
   "decision": "BLOCKED",
-  "reason_code": "CP-1-PROBABILITY_SCORE",
+  "reason_code": "CP-2-RISK_EXPOSURE",
   "hash_valid": true,
   "signature_valid": null,
   "chain_valid": null,
@@ -363,7 +363,7 @@ Los tres escenarios siguientes fueron ejecutados en el sistema en producción el
 }
 ```
 
-**Lectura para inversor:** Shiba Inu (SHIB) pasó Layer 0 — no hay restricción estructural en UAE para este activo. Sin embargo, el pipeline de checkpoints (Layer 1) detectó que la señal `PROBABILITY_SCORE` no alcanza el umbral mínimo de gobernanza para esta combinación de activo volátil + jurisdicción de alto riesgo + monto elevado. El bloqueo en CP-1 significa que 7 de 11 checkpoints pasaron, pero el primero con señal insuficiente detuvo la evaluación. El `reason_code=CP-1-PROBABILITY_SCORE` identifica exactamente qué checkpoint y qué señal causaron el bloqueo. Este nivel de trazabilidad es el requerido para auditoría regulatoria y due diligence institucional.
+**Lectura para inversor:** Dogecoin (DOGE) pasó Layer 0 — no existe restricción estructural en US para este activo. Sin embargo, el pipeline de checkpoints (Layer 1) detectó que la señal `RISK_EXPOSURE` supera el umbral máximo de gobernanza: $25,000 en un activo de alta volatilidad y capitalización especulativa activa el freno automático en CP-2. El bloqueo en CP-2 significa que 8 de 11 checkpoints pasaron, pero el primero con exposición excesiva detuvo la evaluación. El `reason_code=CP-2-RISK_EXPOSURE` identifica exactamente qué checkpoint y qué señal causaron el bloqueo. Este nivel de trazabilidad granular — checkpoint + señal específica — es el requerido para auditoría regulatoria y due diligence institucional.
 
 ---
 
@@ -371,9 +371,9 @@ Los tres escenarios siguientes fueron ejecutados en el sistema en producción el
 
 | Capacidad | Estado | Evidencia |
 |---|---|---|
-| Pipeline de gobernanza en producción | ✅ Operativo | Benchmark 20 receipts, 100% hash_valid |
+| Pipeline de gobernanza en producción | ✅ Operativo | Benchmark 50 receipts, 100% hash_valid |
 | Layer 0 — SAE bloqueando activos prohibidos | ✅ Verificado | XMR/UAE → JA-UAE-XMR-001 |
-| Checkpoints bloqueando señales insuficientes | ✅ Verificado | SHIB/UAE → CP-1-PROBABILITY_SCORE |
+| Checkpoints bloqueando señales insuficientes | ✅ Verificado | DOGE/US → CP-2-RISK_EXPOSURE |
 | Recibos verificables independientemente | ✅ Verificado | `/verify` + hash SHA-256 |
 | Trazabilidad de reason_code específico | ✅ Completa | constraint_id + signal name |
 | AVM calibrado en todos los dominios | ✅ 11/11 | Snapshots 2026-04-20 |
