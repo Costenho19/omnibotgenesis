@@ -37,7 +37,7 @@ import logging
 import threading
 import time
 import uuid
-from collections import defaultdict
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -153,15 +153,135 @@ class Layer0Metrics:
             self._blocked_by_class.clear()
 
 
+# ── Layer 0 Snapshot Store ───────────────────────────────────────────────────────
+
+_LAYER0_DEMO_TAGLINE = (
+    "Layer 0 doesn't block decisions — "
+    "it prevents invalid decisions from ever existing."
+)
+
+_SNAPSHOT_MAX_ENTRIES = 288   # 24 h at 5-min intervals
+
+class Layer0SnapshotStore:
+    """
+    Ring-buffer that records periodic Layer 0 metric snapshots.
+
+    A background daemon thread (started at module import, disabled in TESTING mode)
+    calls record() every `interval_minutes` and stores the result in a bounded deque.
+    History is available via history() — ready for time-series charts, pitch decks,
+    and regulatory audit packages.
+    """
+
+    def __init__(self, max_entries: int = _SNAPSHOT_MAX_ENTRIES) -> None:
+        self._lock     = threading.Lock()
+        self._entries: deque = deque(maxlen=max_entries)
+
+    def record(self, metrics: Layer0Metrics) -> None:
+        """Capture a timestamped snapshot and append to the ring buffer."""
+        raw = metrics.snapshot()
+        if not raw:
+            return
+
+        gt = 0; ga = 0; gb = 0; gbc: dict = {}
+        for stat in raw.values():
+            gt += stat["total"];  ga += stat["admitted"];  gb += stat["blocked"]
+            for cls, cnt in stat["blocked_by_class"].items():
+                gbc[cls] = gbc.get(cls, 0) + cnt
+
+        entry = {
+            "recorded_at":     datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            "global": {
+                "total":         gt,
+                "admitted":      ga,
+                "blocked":       gb,
+                "block_rate_pct": round(100.0 * gb / gt, 2) if gt else 0.0,
+                "blocked_by_class": dict(sorted(gbc.items(), key=lambda x: -x[1])),
+            },
+            "domains": {
+                domain: {
+                    "total":          stat["total"],
+                    "admitted":       stat["admitted"],
+                    "blocked":        stat["blocked"],
+                    "block_rate_pct": stat["block_rate_pct"],
+                }
+                for domain, stat in raw.items()
+            },
+        }
+        with self._lock:
+            self._entries.append(entry)
+
+    def history(self, last_n: int | None = None) -> list[dict]:
+        """Return stored snapshots (oldest first).  Pass last_n to limit count."""
+        with self._lock:
+            entries = list(self._entries)
+        return entries if last_n is None else entries[-last_n:]
+
+    def clear(self) -> None:
+        with self._lock:
+            self._entries.clear()
+
+
 # Module-level singletons — access via get_layer0_metrics() / get/set_sae_override()
-_layer0_metrics  = Layer0Metrics()
-_sae_override    = SAEOverride.UNSET
+_layer0_metrics    = Layer0Metrics()
+_layer0_snapshots  = Layer0SnapshotStore()
+_sae_override      = SAEOverride.UNSET
 _sae_override_lock = threading.Lock()
+_snapshot_interval_minutes: int = 5
 
 
 def get_layer0_metrics() -> Layer0Metrics:
     """Return the shared Layer 0 metrics instance."""
     return _layer0_metrics
+
+
+def get_layer0_snapshot_history(last_n: int | None = None) -> list[dict]:
+    """
+    Return recorded Layer 0 metric snapshots, oldest first.
+
+    Each entry: {recorded_at, global: {total, admitted, blocked, block_rate_pct,
+    blocked_by_class}, domains: {DOMAIN: {...}}}
+
+    Args:
+        last_n: if given, return only the most recent N snapshots.
+    """
+    return _layer0_snapshots.history(last_n)
+
+
+def _snapshot_scheduler(interval_minutes: int) -> None:
+    """Daemon thread: records a Layer 0 snapshot every `interval_minutes`."""
+    interval_secs = interval_minutes * 60
+    while True:
+        time.sleep(interval_secs)
+        try:
+            _layer0_snapshots.record(_layer0_metrics)
+        except Exception:
+            pass
+
+
+def _start_snapshot_scheduler(interval_minutes: int = 5) -> None:
+    """
+    Start the background snapshot thread.
+
+    Called once at module import.  Skipped in TESTING mode so pytest runs
+    do not keep threads alive between test sessions.
+    """
+    import os as _os
+    if _os.environ.get("TESTING", "").lower() in ("1", "true", "yes"):
+        return
+    t = threading.Thread(
+        target=_snapshot_scheduler,
+        args=(interval_minutes,),
+        daemon=True,
+        name="SAE-Layer0-SnapshotScheduler",
+    )
+    t.start()
+    logger.info(
+        f"[SAE] Layer0 snapshot scheduler started — interval={interval_minutes}min "
+        f"max_entries={_SNAPSHOT_MAX_ENTRIES}"
+    )
+
+
+_start_snapshot_scheduler(_snapshot_interval_minutes)
 
 
 def set_sae_override(override: SAEOverride) -> None:

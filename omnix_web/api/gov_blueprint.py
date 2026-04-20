@@ -130,16 +130,22 @@ except ImportError:
 # ── STRUCTURAL ADMISSIBILITY ENGINE — Layer 0 Metrics (ADR-092) ───────────────
 try:
     from omnix_core.governance.structural_admissibility_engine import (
-        get_layer0_metrics as _get_layer0_metrics,
-        get_sae_override   as _get_sae_override,
+        get_layer0_metrics         as _get_layer0_metrics,
+        get_layer0_snapshot_history as _get_layer0_snapshot_history,
+        get_sae_override            as _get_sae_override,
+        _LAYER0_DEMO_TAGLINE,
+        _snapshot_interval_minutes  as _SNAPSHOT_INTERVAL_MIN,
     )
     _SAE_METRICS_AVAILABLE = True
 except ImportError:
     _SAE_METRICS_AVAILABLE = False
+    _LAYER0_DEMO_TAGLINE   = ""
+    _SNAPSHOT_INTERVAL_MIN = 5
     def _get_layer0_metrics():
         class _Stub:
             def snapshot(self): return {}
         return _Stub()
+    def _get_layer0_snapshot_history(last_n=None): return []
     def _get_sae_override():
         return None
 
@@ -2671,21 +2677,31 @@ def admin_layer0_metrics():
             2,
         )
 
+        snapshot_history = _get_layer0_snapshot_history(last_n=12)
+
         return jsonify({
-            "success":   True,
+            "success":              True,
             "sae_module_available": _SAE_METRICS_AVAILABLE,
             "operator_override":    override.value if override is not None else "UNSET",
+            "demo_tagline":         _LAYER0_DEMO_TAGLINE,
             "global": {
-                "total":                 global_total,
-                "admitted":              global_admitted,
-                "blocked":               global_blocked,
-                "block_rate_pct":        global_block_rate,
+                "total":                  global_total,
+                "admitted":               global_admitted,
+                "blocked":                global_blocked,
+                "block_rate_pct":         global_block_rate,
                 "top_constraint_classes": top_constraint_classes,
             },
-            "domains":   domains,
+            "domains":              domains,
+            "snapshot_history":     snapshot_history,
+            "snapshot_config": {
+                "interval_minutes": _SNAPSHOT_INTERVAL_MIN,
+                "max_entries":      _SNAPSHOT_MAX_ENTRIES,
+                "stored":           len(snapshot_history),
+            },
             "note": (
-                "Metrics accumulate from process start (in-memory). "
-                "Reset on process restart. ADR-092."
+                "Metrics accumulate from process start (in-memory, thread-safe). "
+                "Snapshots recorded every 5 min — history available for charts. "
+                "ADR-092."
             ),
         })
 
