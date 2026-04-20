@@ -1401,7 +1401,7 @@ def api_governance_evaluate():
         }), 400
 
     # ── Body-level schema validation — ADR-080 ──────────────────────────────
-    _ALLOWED_EVALUATE_KEYS = {'signals', 'asset', 'domain', 'metadata'}
+    _ALLOWED_EVALUATE_KEYS = {'signals', 'asset', 'domain', 'metadata', 'compliance_config'}
     unknown_keys = set(body.keys()) - _ALLOWED_EVALUATE_KEYS
     if unknown_keys:
         return jsonify({
@@ -1447,6 +1447,20 @@ def api_governance_evaluate():
     domain = _domain_raw[:32]
     metadata = _metadata_raw if isinstance(_metadata_raw, dict) else {}
 
+    # ── compliance_config: optional Layer 0 + gate params from caller ────────
+    _compliance_raw = body.get('compliance_config', {})
+    if not isinstance(_compliance_raw, dict):
+        return jsonify({'error': '"compliance_config" must be a JSON object or omitted.', 'status': 400}), 400
+    _ALLOWED_CC_KEYS = {
+        'layer0_enabled', 'layer0_full_audit', 'operation_type', 'jurisdiction',
+        'ethical_flags', 'client_id',
+        'avm_enabled', 'cag_enabled', 'jurisdiction_enabled',
+    }
+    _unknown_cc = set(_compliance_raw.keys()) - _ALLOWED_CC_KEYS
+    if _unknown_cc:
+        return jsonify({'error': f'compliance_config contains unrecognised fields: {sorted(_unknown_cc)}', 'status': 400}), 400
+    compliance_config = {**_compliance_raw, 'client_id': client_id}
+
     try:
         checkpoint_overrides = _load_client_checkpoint_overrides(client_id)
         thresholds_source = "client_custom" if any(
@@ -1454,7 +1468,10 @@ def api_governance_evaluate():
         ) else "default"
         clean_overrides = [{k: v for k, v in cp.items() if k != "_source"} for cp in checkpoint_overrides]
         engine = _GovernanceEvaluationEngine(checkpoint_overrides=clean_overrides if clean_overrides else None)
-        evaluation = engine.evaluate(signals=signals, asset=asset, domain=domain, metadata=metadata)
+        evaluation = engine.evaluate(
+            signals=signals, asset=asset, domain=domain,
+            metadata=metadata, compliance_config=compliance_config,
+        )
     except Exception as e:
         ref_id = str(uuid.uuid4())[:8]
         logger.error(f"Governance evaluation error ref={ref_id}: {e}")

@@ -53,6 +53,18 @@ try:
 except Exception:
     _CAG_AVAILABLE = False
 
+try:
+    from omnix_core.governance.structural_admissibility_engine import (
+        StructuredRejectionRecord,
+        ProposedRequest,
+        EvaluationMode,
+        get_sae,
+    )
+    _SAE_AVAILABLE = True
+except Exception as _sae_exc:
+    _SAE_AVAILABLE = False
+    logger.warning(f"[Layer 0] SAE not available: {_sae_exc} — pass-through")
+
 # Safety floors: absolute min/max each client is allowed to set per checkpoint.
 # Prevents clients from disabling governance by setting trivially permissive thresholds.
 # operator 'gte' checkpoints: threshold cannot be below min (would make it too easy to pass)
@@ -263,6 +275,70 @@ class GovernanceEvaluationEngine:
         decision_trace = []
         overall_blocked = False
         cfg = compliance_config or {}
+
+        # ── Layer 0: Structural Admissibility Engine — ADR-092 / OMNIX-PAT-2026-015 ─
+        if _SAE_AVAILABLE:
+            _sae_enabled = cfg.get(
+                "layer0_enabled",
+                os.environ.get("SAE_ENABLED", "false").lower() == "true"
+            )
+            if _sae_enabled:
+                try:
+                    _sae = get_sae()
+                    _proposed = ProposedRequest(
+                        subject=asset,
+                        operation=str(cfg.get("operation_type",
+                            os.environ.get("JURISDICTION_OP_TYPE", "SPOT"))).upper(),
+                        jurisdiction=str(cfg.get("jurisdiction",
+                            os.environ.get("JURISDICTION", "GLOBAL"))).upper(),
+                        domain=domain.upper(),
+                        client_id=str(cfg.get("client_id", "GENERIC")),
+                        ethical_flags=list(cfg.get("ethical_flags", [])),
+                        metadata=metadata,
+                    )
+                    _layer0_result = _sae.validate(
+                        _proposed,
+                        mode=(EvaluationMode.FULL_AUDIT
+                              if cfg.get("layer0_full_audit", False)
+                              else EvaluationMode.FAST_FAIL),
+                    )
+                    if isinstance(_layer0_result, StructuredRejectionRecord):
+                        logger.warning(
+                            f"[Layer 0] INADMISSIBLE — {_layer0_result} | "
+                            f"asset={asset} domain={domain}"
+                        )
+                        all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
+                        return {
+                            "decision": "BLOCKED",
+                            "asset": asset,
+                            "domain": domain,
+                            "layer": "LAYER_0_STRUCTURAL_ADMISSIBILITY",
+                            "layer_0": _layer0_result.to_dict(),
+                            "gate_results": [],
+                            "veto_chain": [{
+                                "checkpoint_id": "LAYER_0",
+                                "checkpoint_name": "Structural Admissibility Engine",
+                                "result": "INADMISSIBLE",
+                                "constraint_id": (
+                                    _layer0_result.primary_violation.constraint_id
+                                    if _layer0_result.primary_violation else "UNKNOWN"
+                                ),
+                                "constraint_class": (
+                                    _layer0_result.primary_violation.constraint_class.value
+                                    if _layer0_result.primary_violation else "UNKNOWN"
+                                ),
+                                "description": str(_layer0_result),
+                                "audit_id": _layer0_result.audit_id,
+                            }],
+                            "scores": {s: signals.get(s, 0.0) for s in all_signals},
+                            "decision_trace": [f"LAYER_0 INADMISSIBLE: {_layer0_result}"],
+                            "metadata": metadata,
+                            "checkpoints_total": 0,
+                            "checkpoints_passed": 0,
+                            "checkpoints_blocked": 1,
+                        }
+                except Exception as _sae_err:
+                    logger.warning(f"[Layer 0] SAE error: {_sae_err} — pass-through")
 
         # ── CAG: Context Admission Gate — session-level pre-admission ──────────
         # Runs BEFORE any signal enters the checkpoint pipeline.

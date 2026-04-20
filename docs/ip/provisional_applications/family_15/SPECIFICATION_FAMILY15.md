@@ -55,7 +55,7 @@ No prior art combines: (a) schema-level structural validation; (b) regulatory, j
 
 The present invention provides a Structural Admissibility Engine (SAE) comprising:
 
-**Component A — Structural Constraint Schema (SCS):** A declarative, machine-readable specification of all constraints that determine whether a proposed decision request is structurally admissible. Constraints are organized into four classes: (i) Jurisdiction-Asset Constraints, encoding which asset classes are permissible within each regulatory jurisdiction; (ii) Jurisdiction-Operation Constraints, encoding which operation types are permissible within each regulatory jurisdiction; (iii) Ethical Compliance Constraints, encoding asset and operation restrictions derived from ethical frameworks including Sharia compliance, ESG restrictions, and sanctions lists; and (iv) Client-Specific Constraints, encoding per-client overrides and restrictions negotiated at client onboarding.
+**Component A — Structural Constraint Schema (SCS):** A declarative, machine-readable specification of all constraints that determine whether a proposed decision request is structurally admissible. Constraints are organized into six classes evaluated in priority order: (i) Sanctions Constraints, encoding assets and entities appearing on OFAC, EU, or UN sanctions lists, which are unconditionally prohibited in all jurisdictions and for all clients; (ii) Jurisdiction-Asset Constraints, encoding which asset classes are permissible within each regulatory jurisdiction; (iii) Jurisdiction-Operation Constraints, encoding which operation types are permissible within each regulatory jurisdiction; (iv) Ethical Sharia Constraints, encoding asset and operation restrictions derived from AAOIFI Sharia compliance standards; (v) Ethical ESG Constraints, encoding asset restrictions derived from ESG screening criteria per UN PRI and SFDR; and (vi) Client-Specific Constraints, encoding per-client overrides and restrictions negotiated at client onboarding.
 
 **Component B — Structural Admissibility Validator (SAV):** A pre-construction validator that evaluates a proposed decision request against the Structural Constraint Schema before constructing the EvaluationRequest object that would represent that request in the governance pipeline. If the proposed request violates any constraint in any constraint class, the SAV does not construct the EvaluationRequest object. The invalid request is rejected at the boundary — it never becomes a valid system object.
 
@@ -160,13 +160,14 @@ If ADMISSIBILITY(P) = ADMISSIBLE, the SAV constructs and returns an EvaluationRe
 
 #### 3.2 Constraint Evaluation Order
 
-Constraints are evaluated in the following priority order, with evaluation halting at the first INADMISSIBLE determination (fast-fail) or continuing to collect all violations (full-audit mode, configurable):
+Constraints are evaluated in the following priority order, with evaluation halting at the first INADMISSIBLE determination (fast-fail mode, default) or continuing to collect all violations (full-audit mode, configurable):
 
-1. Sanctions constraints (highest priority — unconditional PROHIBITED)
-2. Jurisdiction-Asset constraints
-3. Jurisdiction-Operation constraints
-4. Ethical compliance constraints (Sharia, ESG)
-5. Client-specific constraints
+1. **Sanctions** (highest priority — unconditional PROHIBITED in all jurisdictions; OFAC SDN, EU Consolidated List, UN Security Council)
+2. **Jurisdiction-Asset** (per-jurisdiction asset class prohibitions)
+3. **Jurisdiction-Operation** (per-jurisdiction operation type restrictions: LEVERAGED, DERIVATIVES, SHORT)
+4. **Ethical Sharia** (AAOIFI-derived HALAL/HARAM determinations — active only when `ethical_flags` includes `"SHARIA"`)
+5. **Ethical ESG** (UN PRI / SFDR screening — active only when `ethical_flags` includes `"ESG"`)
+6. **Client-Specific** (per-client onboarding constraints — further restrict only, never expand)
 
 In full-audit mode, all violated constraints are collected and reported in the Structured Rejection Record.
 
@@ -189,40 +190,55 @@ The zero-bypass property is the defining architectural characteristic that disti
 
 #### 4.1 Structural Enforcement
 
-In the implementation of the present invention, the EvaluationRequest type is defined with a private constructor. The only public interface for constructing an EvaluationRequest object is the SAV's `validate_and_construct()` method, which performs the full constraint evaluation described in Section III before constructing the object.
+In the implementation of the present invention, the EvaluationRequest type is defined with a private constructor enforced by a module-level sentinel token (`_SAV_TOKEN`). The only public interface for constructing an EvaluationRequest object is the `StructuralAdmissibilityEngine.validate()` method, which performs the full constraint evaluation described in Section III before constructing the object. The EvaluationRequest object is immutable after construction — any attempt to modify its attributes after initialization raises an immediate exception.
 
 ```python
 class EvaluationRequest:
     """
     Structural admissibility-enforced evaluation request.
-    Only constructible via StructuralAdmissibilityValidator.validate_and_construct().
-    Direct instantiation is prohibited.
+    Only constructible via StructuralAdmissibilityEngine.validate().
+    Direct instantiation raises StructuralAdmissibilityViolation.
+    Immutable after construction — __setattr__ raises AttributeError.
     """
-    _SAV_CONSTRUCTION_TOKEN = object()  # Private sentinel
+    _SAV_TOKEN = object()  # Private module-level sentinel
 
-    def __init__(self, _token, asset, operation, jurisdiction, 
-                 client_id, metadata):
-        if _token is not self._SAV_CONSTRUCTION_TOKEN:
+    def __init__(self, _token, proposed: "ProposedRequest", validated_at: str):
+        if _token is not EvaluationRequest._SAV_TOKEN:
             raise StructuralAdmissibilityViolation(
                 "EvaluationRequest must be constructed via "
-                "StructuralAdmissibilityValidator.validate_and_construct()"
+                "StructuralAdmissibilityEngine.validate(). "
+                "Direct instantiation is prohibited."
             )
-        self.asset = asset
-        self.operation = operation
-        self.jurisdiction = jurisdiction
-        self.client_id = client_id
-        self.metadata = metadata
+        object.__setattr__(self, "subject",      proposed.subject)
+        object.__setattr__(self, "operation",    proposed.operation)
+        object.__setattr__(self, "jurisdiction", proposed.jurisdiction)
+        object.__setattr__(self, "domain",       proposed.domain)
+        object.__setattr__(self, "client_id",    proposed.client_id)
+        object.__setattr__(self, "ethical_flags",proposed.ethical_flags)
+        object.__setattr__(self, "metadata",     proposed.metadata)
+        object.__setattr__(self, "validated_at", validated_at)
+        object.__setattr__(self, "evaluation_id", _new_evaluation_id())
 
-class StructuralAdmissibilityValidator:
-    def validate_and_construct(self, proposed_request):
-        violations = self._evaluate_all_constraints(proposed_request)
+    def __setattr__(self, name, value):
+        raise AttributeError(
+            "EvaluationRequest is immutable after construction."
+        )
+
+class StructuralAdmissibilityEngine:
+    def validate(
+        self,
+        proposed: "ProposedRequest | dict",
+        mode: EvaluationMode = EvaluationMode.FAST_FAIL,
+    ) -> "EvaluationRequest | StructuredRejectionRecord":
+        if isinstance(proposed, dict):
+            proposed = ProposedRequest(**proposed)
+        violations = self._evaluate_all_constraints(proposed, mode)
         if violations:
-            raise StructuralAdmissibilityViolation(
-                constraint_provenance=violations
-            )
+            return StructuredRejectionRecord(proposed=proposed, violations=violations)
         return EvaluationRequest(
-            _token=EvaluationRequest._SAV_CONSTRUCTION_TOKEN,
-            **proposed_request
+            _token=EvaluationRequest._SAV_TOKEN,
+            proposed=proposed,
+            validated_at=_utcnow_iso(),
         )
 ```
 
@@ -244,19 +260,20 @@ When the SAV determines that a proposed request is structurally inadmissible, it
 {
   "admissibility": "INADMISSIBLE",
   "rejected_at": "LAYER_0_STRUCTURAL_ADMISSIBILITY",
+  "audit_id": "A3F2B9C1D0E4",
   "violations": [
     {
       "constraint_class": "JURISDICTION_ASSET",
       "constraint_id": "JA-UAE-XMR-001",
       "description": "Asset XMR (Monero) is prohibited in UAE jurisdiction under VARA regulations",
       "regulatory_source": "UAE VARA Virtual Assets and Related Activities Regulations 2023, Schedule 1",
-      "input_fields": ["asset", "jurisdiction"],
-      "input_values": {"asset": "XMR", "jurisdiction": "UAE"},
+      "input_fields": ["subject", "jurisdiction"],
+      "input_values": {"subject": "XMR", "jurisdiction": "UAE"},
       "resolution": "Select a VARA-compliant asset for UAE jurisdiction. Permitted categories: BTC, ETH, ADA, DOT (spot only)."
     }
   ],
   "pipeline_entry": false,
-  "layer_0_processing_time_ms": 0.8
+  "layer_0_processing_ms": 0.8
 }
 ```
 
