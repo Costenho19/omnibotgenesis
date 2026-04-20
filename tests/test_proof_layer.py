@@ -110,10 +110,25 @@ class TestExtractReasonCode:
         ]
         assert _extract_reason_code(chain) == "CP-4-TREND_PERSISTENCE"
 
-    def test_blocked_result_not_matched_only_veto_and_inadmissible(self):
-        # "BLOCKED" is NOT one of the exact matches — only "VETO" and "INADMISSIBLE"
+    def test_blocked_result_recognised_as_blocking(self):
+        # "BLOCKED" is a normalised form emitted by _parse_veto_chain and legacy receipts.
+        # Must be recognised to prevent older DB receipts returning GOVERNANCE_PASS.
         chain = [
             {"checkpoint_id": "CP-2", "result": "BLOCKED", "signal": "risk_exposure"},
+        ]
+        assert _extract_reason_code(chain) == "CP-2-RISK_EXPOSURE"
+
+    def test_stale_block_from_avm_recognised_as_blocking(self):
+        chain = [{"checkpoint_id": "AVM", "result": "STALE_BLOCK"}]
+        assert _extract_reason_code(chain) == "AVM"
+
+    def test_session_blocked_from_cag_recognised_as_blocking(self):
+        chain = [{"checkpoint_id": "CAG", "result": "SESSION_BLOCKED"}]
+        assert _extract_reason_code(chain) == "CAG"
+
+    def test_pass_result_still_skipped_not_a_blocking_value(self):
+        chain = [
+            {"checkpoint_id": "CP-2", "result": "PASS", "signal": "risk_exposure"},
         ]
         assert _extract_reason_code(chain) == "GOVERNANCE_PASS"
 

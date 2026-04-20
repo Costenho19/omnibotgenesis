@@ -201,19 +201,27 @@ def _parse_veto_chain(raw) -> list[dict]:
 
 def _extract_reason_code(veto_chain) -> str:
     """
-    First-VETO-wins rule (deterministic, auditor-grade).
+    First-blocking-entry-wins rule (deterministic, auditor-grade).
 
     Accepts a list[dict] — callers must parse JSON before calling.
 
-    Precedence:
-      1. First entry with result="VETO" or "INADMISSIBLE"
-         a. has constraint_id → return constraint_id.upper()  (Layer 0 / SAE)
-         b. starts CP-N       → return f"{cp_id}-{signal.upper()._replace(' ','_')}"
-      2. No blocking entry found → "GOVERNANCE_PASS"
+    Recognized blocking result values (all checked case-insensitively):
+      - "VETO"            — checkpoint pipeline block (external_evaluator.py standard)
+      - "INADMISSIBLE"    — Layer 0 SAE structural rejection
+      - "BLOCKED"         — normalised result (legacy receipts / _parse_veto_chain output)
+      - "STALE_BLOCK"     — AVM assumption-drift block
+      - "SESSION_BLOCKED" — CAG context-admission block
+
+    Precedence for reason_code value:
+      1. has constraint_id  → return constraint_id.upper()  (Layer 0 / SAE)
+      2. checkpoint_id CP-N + signal → return "{CP-N}-{SIGNAL_UPPER_WITH_UNDERSCORES}"
+      3. checkpoint_id alone → return checkpoint_id.upper()
+    Fallback (no blocking entry): "GOVERNANCE_PASS"
     """
+    _BLOCKING = {"VETO", "INADMISSIBLE", "BLOCKED", "STALE_BLOCK", "SESSION_BLOCKED"}
     for e in (veto_chain or []):
         r = str(e.get("result", "")).upper()
-        if r not in ("VETO", "INADMISSIBLE"):
+        if r not in _BLOCKING:
             continue
         if "constraint_id" in e:
             return str(e["constraint_id"]).upper()
