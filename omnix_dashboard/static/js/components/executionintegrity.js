@@ -64,9 +64,9 @@ const ExecutionIntegrityWidget = (function () {
         const alertCfg   = ALERT_COLORS[alertLevel] || ALERT_COLORS.NOMINAL_DEFAULT;
         const riskLevel  = cp.predicted_risk || 'INSUFFICIENT_DATA';
         const riskColor  = RISK_COLORS[riskLevel] || '#6b7280';
-        const violations = data.recent_consistency_violations_24h ?? 0;
+        const violations = data.recent_consistency_violations_24h != null ? data.recent_consistency_violations_24h : 0;
         const dist       = nav.distribution || {};
-        const total      = nav.total_decisions ?? 0;
+        const total      = nav.total_decisions != null ? nav.total_decisions : 0;
 
         const scoreColor = score >= 90 ? '#00d4aa' : score >= 70 ? '#ffc107' : '#ff4444';
         const circumference = 2 * Math.PI * 38;

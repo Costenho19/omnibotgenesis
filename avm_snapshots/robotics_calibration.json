@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-337323464D",
   "parameter_version": "1.337323464d",
   "domain": "robotics",
-  "calibrated_at": "2026-04-20T07:36:02.868004+00:00",
-  "calibrated_at_epoch": 1776670562.868004,
   "baseline_signals": {
-    "probability_score": 66.1,
-    "signal_coherence": 83.0,
     "risk_exposure": 39.7,
+    "signal_coherence": 83.0,
+    "logic_consistency": 72.3,
+    "probability_score": 66.1,
     "stress_resilience": 62.5,
-    "trend_persistence": 63.5,
-    "logic_consistency": 72.3
+    "trend_persistence": 63.5
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -22,5 +20,7 @@
     "robotics",
     "2026-04-20",
     "signal-keys-fixed"
-  ]
+  ],
+  "calibrated_at": "2026-04-20T07:36:02.868004+00:00",
+  "calibrated_at_epoch": 1776670562.868004
 }

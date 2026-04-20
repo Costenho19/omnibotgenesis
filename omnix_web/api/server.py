@@ -4,6 +4,14 @@ Serves real-time data from PostgreSQL for the public web dashboard
 Also serves the built React frontend (dist/) as static files for Railway deployment
 """
 import os
+import sys
+
+# ── Path bootstrap — make omnix_core importable regardless of how the server
+# is launched (Railway PYTHONPATH, Replit workflow, direct python call).
+_WORKSPACE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _WORKSPACE_ROOT not in sys.path:
+    sys.path.insert(0, _WORKSPACE_ROOT)
+
 import json
 import smtplib
 import ssl
