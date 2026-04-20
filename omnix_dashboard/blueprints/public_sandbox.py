@@ -23,6 +23,20 @@ _rate_limit_store: dict = {}
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 5
 
+_rate_limit_hourly_store: dict = {}
+RATE_LIMIT_HOURLY_WINDOW = 3600
+RATE_LIMIT_HOURLY_MAX = 20
+
+_rate_limit_daily_store: dict = {}
+RATE_LIMIT_DAILY_WINDOW = 86400
+RATE_LIMIT_DAILY_MAX = 50
+
+_RATE_STORE_MAX_IPS = 10_000
+
+# Global circuit breaker — caps total sandbox calls per day regardless of IP rotation
+_global_daily_counter: dict = {'date': '', 'count': 0}
+GLOBAL_DAILY_MAX = 2000
+
 EXAMPLE_SCENARIOS = [
     {
         "text": "FTX exchange wants to approve withdrawal of $8B from customer funds to cover trading losses in Alameda Research. Strong brand reputation, celebrity endorsements, high liquidity perception. Hidden: $8B balance sheet hole, commingled customer funds, no independent risk controls.",
@@ -58,15 +72,64 @@ EXAMPLE_SCENARIOS = [
 ]
 
 
-def _check_rate_limit(ip: str) -> bool:
+def _evict_stale_ips(store: dict, window: float) -> None:
+    """Prevent unbounded memory growth — evict IPs with no recent activity."""
+    if len(store) < _RATE_STORE_MAX_IPS:
+        return
     now = time.time()
-    if ip not in _rate_limit_store:
-        _rate_limit_store[ip] = []
+    stale = [ip for ip, ts in store.items() if not any(now - t < window for t in ts)]
+    for ip in stale:
+        store.pop(ip, None)
+
+
+def _check_global_daily() -> bool:
+    """
+    Global circuit breaker — blocks all sandbox traffic if the server-wide
+    daily quota is exceeded. Resets at UTC midnight. Protects Gemini API cost
+    regardless of IP rotation or VPN abuse.
+    """
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    if _global_daily_counter['date'] != today:
+        _global_daily_counter['date'] = today
+        _global_daily_counter['count'] = 0
+    if _global_daily_counter['count'] >= GLOBAL_DAILY_MAX:
+        return False
+    _global_daily_counter['count'] += 1
+    return True
+
+
+def _check_rate_limit(ip: str) -> tuple[bool, str]:
+    """
+    Three-tier per-IP rate limiter: per-minute, per-hour, per-day.
+    Returns (allowed: bool, reason: str).
+    """
+    now = time.time()
+
+    # --- per-minute ---
+    _evict_stale_ips(_rate_limit_store, RATE_LIMIT_WINDOW)
+    _rate_limit_store.setdefault(ip, [])
     _rate_limit_store[ip] = [t for t in _rate_limit_store[ip] if now - t < RATE_LIMIT_WINDOW]
     if len(_rate_limit_store[ip]) >= RATE_LIMIT_MAX:
-        return False
+        return False, f'Rate limit exceeded. Maximum {RATE_LIMIT_MAX} evaluations per minute per IP.'
     _rate_limit_store[ip].append(now)
-    return True
+
+    # --- per-hour ---
+    _evict_stale_ips(_rate_limit_hourly_store, RATE_LIMIT_HOURLY_WINDOW)
+    _rate_limit_hourly_store.setdefault(ip, [])
+    _rate_limit_hourly_store[ip] = [t for t in _rate_limit_hourly_store[ip] if now - t < RATE_LIMIT_HOURLY_WINDOW]
+    if len(_rate_limit_hourly_store[ip]) >= RATE_LIMIT_HOURLY_MAX:
+        return False, f'Hourly quota reached. Maximum {RATE_LIMIT_HOURLY_MAX} evaluations per hour per IP.'
+    _rate_limit_hourly_store[ip].append(now)
+
+    # --- per-day ---
+    _evict_stale_ips(_rate_limit_daily_store, RATE_LIMIT_DAILY_WINDOW)
+    _rate_limit_daily_store.setdefault(ip, [])
+    _rate_limit_daily_store[ip] = [t for t in _rate_limit_daily_store[ip] if now - t < RATE_LIMIT_DAILY_WINDOW]
+    if len(_rate_limit_daily_store[ip]) >= RATE_LIMIT_DAILY_MAX:
+        return False, f'Daily quota reached. Maximum {RATE_LIMIT_DAILY_MAX} evaluations per day per IP.'
+    _rate_limit_daily_store[ip].append(now)
+
+    return True, ''
 
 
 def _call_gemini(prompt: str, model_name: str) -> str:
@@ -1082,14 +1145,24 @@ def _log_sandbox_interaction(receipt_id, scenario_text, company_name, language,
 
 @public_sandbox_bp.route('/api/public/sandbox/evaluate', methods=['POST'])
 def public_sandbox_evaluate():
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr or '0.0.0.0')
     if client_ip and ',' in client_ip:
         client_ip = client_ip.split(',')[0].strip()
 
-    if not _check_rate_limit(client_ip):
+    # Global circuit breaker — checked before per-IP limits
+    if not _check_global_daily():
+        logger.warning(f"SANDBOX global daily quota reached — blocking all traffic (ip={client_ip})")
         return jsonify({
-            'error': 'Rate limit exceeded. Maximum 5 evaluations per minute.',
-            'error_es': 'Límite de velocidad excedido. Máximo 5 evaluaciones por minuto.',
+            'error': 'Sandbox daily quota reached. Please try again tomorrow.',
+            'error_es': 'Cuota diaria del sandbox alcanzada. Intente de nuevo mañana.',
+        }), 429
+
+    # Per-IP three-tier rate limiting (minute / hour / day)
+    allowed, reason = _check_rate_limit(client_ip)
+    if not allowed:
+        return jsonify({
+            'error': reason,
+            'error_es': reason,
         }), 429
 
     data = request.get_json(silent=True)

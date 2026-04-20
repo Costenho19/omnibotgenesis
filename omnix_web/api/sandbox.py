@@ -26,7 +26,15 @@ _rate_limit_hourly_store: dict = {}
 RATE_LIMIT_HOURLY_WINDOW = 3600
 RATE_LIMIT_HOURLY_MAX = 20
 
+_rate_limit_daily_store: dict = {}
+RATE_LIMIT_DAILY_WINDOW = 86400
+RATE_LIMIT_DAILY_MAX = 50
+
 _RATE_STORE_MAX_IPS = 5000
+
+# Global circuit breaker — total daily cap across all IPs/VPNs
+_global_daily_counter: dict = {'date': '', 'count': 0}
+GLOBAL_DAILY_MAX = 2000
 
 
 def _sanitize_input(text: str) -> str:
@@ -439,6 +447,35 @@ def _check_rate_limit_hourly(ip: str) -> bool:
     if len(_rate_limit_hourly_store[ip]) >= RATE_LIMIT_HOURLY_MAX:
         return False
     _rate_limit_hourly_store[ip].append(now)
+    return True
+
+
+def _check_rate_limit_daily(ip: str) -> bool:
+    """Per-IP daily cap — 50 evaluations per 24h window per IP."""
+    now = time.time()
+    _evict_stale_ips(_rate_limit_daily_store, RATE_LIMIT_DAILY_WINDOW)
+    _rate_limit_daily_store.setdefault(ip, [])
+    _rate_limit_daily_store[ip] = [
+        t for t in _rate_limit_daily_store[ip] if now - t < RATE_LIMIT_DAILY_WINDOW
+    ]
+    if len(_rate_limit_daily_store[ip]) >= RATE_LIMIT_DAILY_MAX:
+        return False
+    _rate_limit_daily_store[ip].append(now)
+    return True
+
+
+def _check_global_daily() -> bool:
+    """
+    Global circuit breaker — server-wide daily cap of 2000 sandbox calls.
+    Resets at UTC midnight. Protects Gemini API cost against VPN/IP rotation abuse.
+    """
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    if _global_daily_counter['date'] != today:
+        _global_daily_counter['date'] = today
+        _global_daily_counter['count'] = 0
+    if _global_daily_counter['count'] >= GLOBAL_DAILY_MAX:
+        return False
+    _global_daily_counter['count'] += 1
     return True
 
 
@@ -2318,20 +2355,37 @@ def register_sandbox_routes(app):
 
     @app.route('/api/public/sandbox/evaluate', methods=['POST'])
     def public_sandbox_evaluate():
-        client_ip = flask_request.headers.get('X-Forwarded-For', flask_request.remote_addr)
+        client_ip = flask_request.headers.get('X-Forwarded-For', flask_request.remote_addr or '0.0.0.0')
         if client_ip and ',' in client_ip:
             client_ip = client_ip.split(',')[0].strip()
 
-        if not _check_rate_limit(client_ip):
+        # Global circuit breaker — checked first to stop VPN/IP-rotation floods
+        if not _check_global_daily():
+            logger.warning(f"SANDBOX global daily quota reached — blocking (ip={client_ip})")
             return flask_jsonify({
-                'error': 'Rate limit exceeded. Maximum 5 evaluations per minute.',
-                'error_es': 'Límite de velocidad excedido. Máximo 5 evaluaciones por minuto.',
+                'error': 'Sandbox daily quota reached. Please try again tomorrow.',
+                'error_es': 'Cuota diaria del sandbox alcanzada. Intente de nuevo mañana.',
             }), 429
 
+        # Per-IP: minute
+        if not _check_rate_limit(client_ip):
+            return flask_jsonify({
+                'error': f'Rate limit exceeded. Maximum {RATE_LIMIT_MAX} evaluations per minute.',
+                'error_es': f'Límite de velocidad excedido. Máximo {RATE_LIMIT_MAX} evaluaciones por minuto.',
+            }), 429
+
+        # Per-IP: hour
         if not _check_rate_limit_hourly(client_ip):
             return flask_jsonify({
-                'error': 'Hourly limit reached. Maximum 20 evaluations per hour per IP.',
-                'error_es': 'Límite horario alcanzado. Máximo 20 evaluaciones por hora por IP.',
+                'error': f'Hourly limit reached. Maximum {RATE_LIMIT_HOURLY_MAX} evaluations per hour per IP.',
+                'error_es': f'Límite horario alcanzado. Máximo {RATE_LIMIT_HOURLY_MAX} evaluaciones por hora por IP.',
+            }), 429
+
+        # Per-IP: day
+        if not _check_rate_limit_daily(client_ip):
+            return flask_jsonify({
+                'error': f'Daily limit reached. Maximum {RATE_LIMIT_DAILY_MAX} evaluations per day per IP.',
+                'error_es': f'Límite diario alcanzado. Máximo {RATE_LIMIT_DAILY_MAX} evaluaciones por día por IP.',
             }), 429
 
         data = flask_request.get_json(silent=True)
