@@ -1,24 +1,26 @@
 {
-  "snapshot_id": "AVM-A9DB7E5FC7",
-  "parameter_version": "1.a9db7e5fc7",
+  "snapshot_id": "AVM-EEEDB2BF18",
+  "parameter_version": "1.eeedb2bf18",
   "domain": "trading",
+  "calibrated_at": "2026-04-20T07:36:08.097576+00:00",
+  "calibrated_at_epoch": 1776670568.097576,
   "baseline_signals": {
-    "volume_score": 70.0,
-    "momentum_score": 65.0,
-    "coherence_score": 78.0,
-    "liquidity_score": 72.0,
-    "macro_risk_score": 40.0,
-    "volatility_score": 55.0
+    "probability_score": 65.0,
+    "signal_coherence": 72.0,
+    "risk_exposure": 32.0,
+    "stress_resilience": 60.0,
+    "trend_persistence": 58.0,
+    "logic_consistency": 78.0
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Baseline calibration \u2014 Q1 2026 moderate market conditions",
+  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
   "tags": [
-    "initial",
-    "q1-2026",
-    "trading"
-  ],
-  "calibrated_at": "2026-04-09T20:43:14.447129+00:00",
-  "calibrated_at_epoch": 1775767394.447129
+    "recalibrated",
+    "q2-2026",
+    "trading",
+    "2026-04-20",
+    "signal-keys-fixed"
+  ]
 }
