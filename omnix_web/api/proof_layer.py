@@ -233,10 +233,17 @@ def _extract_reason_code(veto_raw, decision_upper: str) -> str:
                 continue
 
             result_val = str(item.get("result", "")).upper()
-            if result_val not in ("VETO", "BLOCKED", "INADMISSIBLE"):
-                continue  # only process entries that actually blocked
-
             cp_id = str(item.get("checkpoint_id", item.get("checkpoint", ""))).upper()
+
+            # Detect blocking result — covers strict values AND engine-specific
+            # variants such as SESSION_BLOCKED (CAG) and STALE_BLOCK (AVM).
+            _is_blocked = (
+                result_val in ("VETO", "BLOCKED", "INADMISSIBLE")
+                or "BLOCK" in result_val  # SESSION_BLOCKED, STALE_BLOCK, etc.
+                or "VETO" in result_val   # safety net for composite values
+            )
+            if not _is_blocked:
+                continue  # only process entries that actually blocked
 
             # Layer 0 — use the actual SAE constraint_id directly
             if cp_id in ("LAYER_0", "LAYER0", "SAE") or "constraint_id" in item:
