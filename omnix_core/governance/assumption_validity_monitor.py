@@ -93,8 +93,12 @@ AVM_MAX_AGE_HOURS_DEFAULT = 168.0  # 7 days
 # If calibration is older than this, treat as critical stale (block regardless of drift).
 AVM_CRITICAL_AGE_HOURS_DEFAULT = 720.0  # 30 days
 
-# Signal weights for drift computation (must sum to 1.0).
-# Higher weight = that signal's drift contributes more to total drift score.
+# ── Canonical signal schema (ADR-076) ──────────────────────────────────────────
+# SINGLE SOURCE OF TRUTH for all AVM signal key names.
+# All calibration snapshots, simulators, and DB tables MUST use these exact keys.
+# Changing a key here REQUIRES updating: save_calibration_snapshot calls,
+# all *_calibration.json files, and DB column names.
+# See: docs/adr/ADR-076-avm-signal-schema-standardization.md
 SIGNAL_WEIGHTS: dict[str, float] = {
     "probability_score":  0.25,
     "signal_coherence":   0.25,
@@ -103,6 +107,11 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     "trend_persistence":  0.10,
     "logic_consistency":  0.05,
 }
+
+# SIGNAL_SCHEMA: canonical ordered list of signal keys, derived from SIGNAL_WEIGHTS.
+# Import this constant anywhere signal keys are needed — never hardcode the list.
+SIGNAL_SCHEMA: list[str] = list(SIGNAL_WEIGHTS.keys())
+_SIGNAL_SCHEMA_SET: frozenset[str] = frozenset(SIGNAL_SCHEMA)
 
 
 # ── Data structures ────────────────────────────────────────────────────────────
@@ -246,7 +255,26 @@ class AssumptionValidityMonitor:
 
         Returns:
             The saved CalibrationSnapshot.
+
+        Raises:
+            ValueError: If baseline_signals keys do not match SIGNAL_SCHEMA (ADR-076).
         """
+        # ── ADR-076: Schema validation (fail-fast) ──────────────────────────────
+        provided_keys = frozenset(baseline_signals.keys())
+        if provided_keys != _SIGNAL_SCHEMA_SET:
+            missing  = sorted(_SIGNAL_SCHEMA_SET - provided_keys)
+            extra    = sorted(provided_keys - _SIGNAL_SCHEMA_SET)
+            msg = (
+                f"[AVM] SCHEMA_VIOLATION — domain={domain} | "
+                f"baseline_signals keys do not match SIGNAL_SCHEMA. "
+                f"Missing={missing} | Extra={extra}. "
+                f"Required keys: {sorted(SIGNAL_SCHEMA)}. "
+                "See ADR-076: AVM Signal Schema Standardization."
+            )
+            logger.error(msg)
+            raise ValueError(msg)
+        # ───────────────────────────────────────────────────────────────────────
+
         now = datetime.now(timezone.utc)
         unique_id = uuid.uuid4().hex[:10].upper()
         snapshot = CalibrationSnapshot(
@@ -510,6 +538,55 @@ class AssumptionValidityMonitor:
                 pass_through=False,
             )
 
+        # ── ADR-076: Schema match audit (before drift computation) ─────────────
+        # Compares snapshot baseline keys against SIGNAL_SCHEMA to detect
+        # misalignment that would silently disable or distort drift detection.
+        baseline_key_set  = frozenset(snapshot.baseline_signals.keys())
+        incoming_key_set  = frozenset(signals.keys())
+        schema_overlap    = baseline_key_set & _SIGNAL_SCHEMA_SET & incoming_key_set
+        n_overlap         = len(schema_overlap)
+        n_schema          = len(_SIGNAL_SCHEMA_SET)
+
+        if n_overlap == n_schema:
+            schema_match = "FULL"
+        elif n_overlap > 0:
+            schema_match = f"PARTIAL({n_overlap}/{n_schema})"
+        else:
+            schema_match = "NONE"
+
+        logger.info(
+            f"[AVM] AVM_SCHEMA_MATCH={schema_match} | domain={domain} | "
+            f"snapshot={snapshot.snapshot_id} | age={age_hours:.1f}h"
+        )
+
+        # Anomaly detection: NONE or PARTIAL match indicates a schema drift bug.
+        # These conditions silently corrupt drift calculation; surface them loudly.
+        if schema_match == "NONE":
+            logger.error(
+                f"[AVM] SCHEMA_ANOMALY — domain={domain} | AVM_SCHEMA_MATCH=NONE | "
+                f"baseline_keys={sorted(baseline_key_set)} | "
+                f"expected={sorted(_SIGNAL_SCHEMA_SET)} | "
+                f"drift detection DISABLED — recalibrate snapshot with correct keys "
+                f"(see ADR-076). snapshot={snapshot.snapshot_id}"
+            )
+            warnings.append(
+                f"AVM_SCHEMA_MATCH=NONE for domain='{domain}': baseline keys "
+                f"do not overlap with SIGNAL_SCHEMA. Drift detection is disabled. "
+                "Recalibrate with SIGNAL_SCHEMA-compliant keys."
+            )
+        elif schema_match.startswith("PARTIAL"):
+            logger.warning(
+                f"[AVM] SCHEMA_ANOMALY — domain={domain} | AVM_SCHEMA_MATCH={schema_match} | "
+                f"Only {n_overlap}/{n_schema} SIGNAL_SCHEMA keys matched. "
+                f"Missing: {sorted(_SIGNAL_SCHEMA_SET - schema_overlap)} | "
+                f"Drift score may be artificially amplified. snapshot={snapshot.snapshot_id}"
+            )
+            warnings.append(
+                f"AVM_SCHEMA_MATCH={schema_match} for domain='{domain}': "
+                f"partial key overlap detected. Drift score may be unreliable."
+            )
+        # ───────────────────────────────────────────────────────────────────────
+
         # ── Drift computation ───────────────────────────────────────────────────
         drift_score, drift_components = self._compute_drift(
             snapshot.baseline_signals, signals
@@ -523,6 +600,14 @@ class AssumptionValidityMonitor:
                     f"(baseline={snapshot.baseline_signals.get(sig, '?'):.1f}, "
                     f"current={signals.get(sig, '?'):.1f})"
                 )
+
+        # Drift anomaly: score pinned at extremes often signals a systemic bug
+        if drift_score >= 99.9 and schema_match != "FULL":
+            logger.error(
+                f"[AVM] DRIFT_ANOMALY — domain={domain} | drift=100.0 with "
+                f"AVM_SCHEMA_MATCH={schema_match} — likely schema key mismatch, "
+                f"not genuine drift. Recalibrate snapshot. snapshot={snapshot.snapshot_id}"
+            )
 
         # ── Drift threshold check ───────────────────────────────────────────────
         if drift_score > effective_threshold:

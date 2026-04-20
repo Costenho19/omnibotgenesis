@@ -13,7 +13,11 @@ Called automatically by the Flask dashboard on startup.
 """
 import logging
 import os
-from omnix_core.governance.assumption_validity_monitor import AssumptionValidityMonitor
+from omnix_core.governance.assumption_validity_monitor import (
+    AssumptionValidityMonitor,
+    SIGNAL_SCHEMA,
+    _SIGNAL_SCHEMA_SET,
+)
 from omnix_core.governance.avm_db_bridge import AVMDatabaseBridge
 
 logger = logging.getLogger("OMNIX.AVM.Init")
@@ -133,6 +137,31 @@ DOMAIN_BASELINES = {
         "tags": ["initial", "q2-2026", "stablecoin"],
     },
 }
+
+
+# ── ADR-076: Startup schema guard ──────────────────────────────────────────────
+# Validate DOMAIN_BASELINES keys at import time so misconfiguration is caught
+# before any snapshot is written — not silently at runtime during evaluation.
+def _validate_domain_baselines() -> None:
+    violations = []
+    for domain, cfg in DOMAIN_BASELINES.items():
+        provided = frozenset(cfg["signals"].keys())
+        if provided != _SIGNAL_SCHEMA_SET:
+            missing = sorted(_SIGNAL_SCHEMA_SET - provided)
+            extra   = sorted(provided - _SIGNAL_SCHEMA_SET)
+            violations.append(
+                f"  domain='{domain}': missing={missing} extra={extra}"
+            )
+    if violations:
+        raise ValueError(
+            "[AVM.Init] DOMAIN_BASELINES SCHEMA_VIOLATION — "
+            "Signal keys must match SIGNAL_SCHEMA exactly (ADR-076):\n"
+            + "\n".join(violations)
+            + f"\nRequired keys: {sorted(SIGNAL_SCHEMA)}"
+        )
+
+_validate_domain_baselines()
+# ───────────────────────────────────────────────────────────────────────────────
 
 
 def initialize_avm_baselines(
