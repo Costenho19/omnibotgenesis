@@ -56,6 +56,19 @@ try:
 except Exception:
     _AVM_AVAILABLE = False
 
+try:
+    from omnix_core.governance.structural_admissibility_engine import (
+        StructuralAdmissibilityEngine,
+        StructuredRejectionRecord,
+        ProposedRequest,
+        EvaluationMode,
+        get_sae,
+    )
+    _SAE_AVAILABLE = True
+except Exception as _sae_exc:
+    _SAE_AVAILABLE = False
+    logger.warning(f"[Layer 0] SAE not available: {_sae_exc} — pass-through")
+
 # Safety floors: absolute min/max each client is allowed to set per checkpoint.
 # Prevents clients from disabling governance by setting trivially permissive thresholds.
 # operator 'gte' checkpoints: threshold cannot be below min (would make it too easy to pass)
@@ -267,8 +280,98 @@ class GovernanceEvaluationEngine:
         overall_blocked = False
         cfg = compliance_config or {}
 
+        # ── Layer 0: Structural Admissibility Engine — pre-construction gate ─────
+        # Runs BEFORE everything else — constitutive, not evaluative.
+        # If the request is structurally inadmissible, no EvaluationRequest is
+        # constructed and the pipeline is never entered. ADR-092 / OMNIX-PAT-2026-015.
+        # Enabled when compliance_config includes layer0_enabled=True or
+        # SAE_ENABLED env var is "true". Default: OFF (backward compatibility).
+        if _SAE_AVAILABLE:
+            _sae_enabled = cfg.get(
+                "layer0_enabled",
+                os.environ.get("SAE_ENABLED", "false").lower() == "true"
+            )
+            if _sae_enabled:
+                try:
+                    _sae_subject     = asset
+                    _sae_operation   = str(cfg.get(
+                        "operation_type",
+                        os.environ.get("JURISDICTION_OP_TYPE", "SPOT")
+                    )).upper()
+                    _sae_jurisdiction = str(cfg.get(
+                        "jurisdiction",
+                        os.environ.get("JURISDICTION", "GLOBAL")
+                    )).upper()
+                    _sae_client_id   = str(cfg.get("client_id", "GENERIC"))
+                    _sae_eth_flags   = list(cfg.get("ethical_flags", []))
+                    _sae_domain      = domain.upper()
+
+                    _sae = get_sae()
+                    _proposed = ProposedRequest(
+                        subject=_sae_subject,
+                        operation=_sae_operation,
+                        jurisdiction=_sae_jurisdiction,
+                        domain=_sae_domain,
+                        client_id=_sae_client_id,
+                        ethical_flags=_sae_eth_flags,
+                        metadata=metadata,
+                    )
+                    _layer0_mode = (
+                        EvaluationMode.FULL_AUDIT
+                        if cfg.get("layer0_full_audit", False)
+                        else EvaluationMode.FAST_FAIL
+                    )
+                    _layer0_result = _sae.validate(_proposed, mode=_layer0_mode)
+
+                    if isinstance(_layer0_result, StructuredRejectionRecord):
+                        logger.warning(
+                            f"[Layer 0] INADMISSIBLE — {_layer0_result} | "
+                            f"asset={asset} op={_sae_operation} jur={_sae_jurisdiction}"
+                        )
+                        all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
+                        return {
+                            "decision": "BLOCKED",
+                            "asset": asset,
+                            "domain": domain,
+                            "layer": "LAYER_0_STRUCTURAL_ADMISSIBILITY",
+                            "layer_0": _layer0_result.to_dict(),
+                            "gate_results": [],
+                            "veto_chain": [{
+                                "checkpoint_id": "LAYER_0",
+                                "checkpoint_name": "Structural Admissibility Engine",
+                                "result": "INADMISSIBLE",
+                                "constraint_id": (
+                                    _layer0_result.primary_violation.constraint_id
+                                    if _layer0_result.primary_violation else "UNKNOWN"
+                                ),
+                                "constraint_class": (
+                                    _layer0_result.primary_violation.constraint_class.value
+                                    if _layer0_result.primary_violation else "UNKNOWN"
+                                ),
+                                "description": str(_layer0_result),
+                                "audit_id": _layer0_result.audit_id,
+                            }],
+                            "scores": {s: signals.get(s, 0.0) for s in all_signals},
+                            "decision_trace": [
+                                f"LAYER_0 INADMISSIBLE: {_layer0_result}"
+                            ],
+                            "metadata": metadata,
+                            "checkpoints_total": 0,
+                            "checkpoints_passed": 0,
+                            "checkpoints_blocked": 1,
+                        }
+                    logger.debug(
+                        f"[Layer 0] ADMISSIBLE — {_layer0_result} "
+                        f"→ proceeding to Layer 1"
+                    )
+                except Exception as _sae_err:
+                    logger.warning(
+                        f"[Layer 0] SAE error: {_sae_err} — pass-through to Layer 1 "
+                        "(fail-open only for SAE internal errors, not constraint violations)"
+                    )
+
         # ── AVM: Assumption Validity Monitor — pre-pipeline drift gate ─────────
-        # Runs FIRST — before CAG, before any checkpoint.
+        # Runs after Layer 0 — before CAG, before any checkpoint.
         # If calibration assumptions have drifted beyond tolerance, no evaluation
         # is performed and no receipt can be certified. ADR-064.
         avm_block: dict[str, Any] | None = None
