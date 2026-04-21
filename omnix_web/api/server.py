@@ -1943,8 +1943,9 @@ def public_verify_receipt(receipt_id):
             cp      = e.get('checkpoint_id') or e.get('checkpoint') or e.get('cp') or 'LAYER_0'
             constraint = e.get('constraint_id', '')
             cls        = e.get('constraint_class', '')
-            label = f"{constraint} ({cls})" if constraint else cp
-            return {'code': cp, 'label_en': label, 'label_es': label, 'result': result, 'metric_label': None, 'metric_value': None, 'raw': label}
+            label = f"{constraint} — {cls.replace('_', ' ').title()}" if constraint else cp
+            display_code = None if constraint else cp
+            return {'code': display_code, 'label_en': label, 'label_es': label, 'result': result, 'metric_label': None, 'metric_value': None, 'raw': label}
         return _parse_veto_entry(str(e))
 
     checkpoints = [_parse_entry(e) for e in veto_list]
