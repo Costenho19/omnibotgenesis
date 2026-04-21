@@ -232,18 +232,25 @@ class ConversationalAIService:
                         if provider:
                             status = provider.get_auto_trading_status()
                             if status.get('available'):
-                                total_trades = status.get('total_trades', total_trades)
-                                win_rate = status.get('win_rate', win_rate)
-                                pnl = status.get('profit_loss', pnl)
+                                total_trades = status.get('total_trades') or total_trades
+                                win_rate = status.get('win_rate') or win_rate
+                                pnl = status.get('profit_loss') or pnl
                                 logger.info(f"🔬 [DIAGNOSTIC_MODE] Real metrics: trades={total_trades}, win_rate={win_rate}%, pnl=${pnl}")
                     except Exception as e:
                         logger.warning(f"⚠️ [DIAGNOSTIC_MODE] Could not get real metrics: {e}")
                 
                 # Or try to get from market_data if passed
+                # Use `or fallback` (not `.get(key, fallback)`) so None values don't
+                # silently override the hardcoded fallbacks.
                 if market_data:
-                    total_trades = market_data.get('total_trades', total_trades)
-                    win_rate = market_data.get('win_rate', win_rate)
-                    pnl = market_data.get('pnl', market_data.get('profit_loss', pnl))
+                    total_trades = market_data.get('total_trades') or total_trades
+                    win_rate = market_data.get('win_rate') or win_rate
+                    pnl = market_data.get('pnl') or market_data.get('profit_loss') or pnl
+                
+                # Safe format — guard against None surviving the fallback chain
+                _trades_str = str(int(total_trades)) if total_trades is not None else "119"
+                _wr_str = f"{float(win_rate):.1f}" if win_rate is not None else "20.2"
+                _pnl_str = f"${float(pnl):,.2f}" if pnl is not None else "$-15,198.73"
                 
                 system_state = get_system_state_prompt()
                 system_prompt = f"""
@@ -252,9 +259,9 @@ class ConversationalAIService:
 {system_state}
 
 **DATOS ACTUALES DEL SISTEMA (USAR ESTOS VALORES EXACTOS):**
-- Total trades: {total_trades}
-- Win rate: {win_rate}%
-- P&L: ${pnl:,.2f} USD
+- Total trades: {_trades_str}
+- Win rate: {_wr_str}%
+- P&L: {_pnl_str} USD
 
 **PREGUNTA DEL USUARIO:**
 {user_message}
