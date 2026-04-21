@@ -816,7 +816,7 @@ export default function CommercialLanding() {
 
             <div className="mt-1.5 rounded-lg border border-[#1E293B] bg-[#0A1628]/60 px-6 py-4 text-center">
               <div className="text-white font-bold text-sm mb-1">EXECUTION BOUNDARY</div>
-              <div className="text-[#64748B] text-xs">Trading · Credit · Insurance · Robotics · Medical · Agents · Real Estate · Energy</div>
+              <div className="text-[#64748B] text-xs">Trading · Credit · Insurance · Robotics · Medical · Agents · Real Estate · Energy · Stablecoin</div>
             </div>
           </div>
 
