@@ -482,7 +482,11 @@ except Exception as _proof_err:
 
 
 def get_db_connection():
-    database_url = os.environ.get('DATABASE_URL')
+    database_url = (
+        os.environ.get('DATABASE_URL') or
+        os.environ.get('OMNIX_DB_URL') or
+        os.environ.get('POSTGRES_URL')
+    )
     if not database_url:
         return None
     return psycopg2.connect(database_url)

@@ -434,7 +434,7 @@ class TestVerifyEndpointCachePath:
             pytest.skip("Flask app not available")
         rid = "OMNIX-EVL-TESTAPPROVED0001"
         self._seed(proof_layer_module, rid, "APPROVED", [])
-        r = proof_client.get(f"/verify/{rid}")
+        r = proof_client.get(f"/api/verify/{rid}")
         assert r.status_code == 200
         d = r.get_json()
         assert d["status"]      == "VALID"
@@ -450,7 +450,7 @@ class TestVerifyEndpointCachePath:
         rid = "OMNIX-EVL-TESTBLOCKED0001"
         chain = [{"checkpoint_id": "CP-2", "result": "VETO", "signal": "risk_exposure"}]
         self._seed(proof_layer_module, rid, "BLOCKED", chain, "SHIB")
-        r = proof_client.get(f"/verify/{rid}")
+        r = proof_client.get(f"/api/verify/{rid}")
         d = r.get_json()
         assert d["status"]      == "VALID"
         assert d["decision"]    == "BLOCKED"
@@ -465,14 +465,14 @@ class TestVerifyEndpointCachePath:
         chain = [{"checkpoint_id": "LAYER_0", "result": "INADMISSIBLE",
                   "constraint_id": "JO-UAE-LEVERAGED-001"}]
         self._seed(proof_layer_module, rid, "BLOCKED", chain)
-        r = proof_client.get(f"/verify/{rid}")
+        r = proof_client.get(f"/api/verify/{rid}")
         d = r.get_json()
         assert d["reason_code"] == "JO-UAE-LEVERAGED-001"
 
     def test_not_found_returns_404(self, proof_client, proof_layer_module):
         if proof_client is None:
             pytest.skip("Flask app not available")
-        r = proof_client.get("/verify/OMNIX-EVL-DOESNOTEXIST9999")
+        r = proof_client.get("/api/verify/OMNIX-EVL-DOESNOTEXIST9999")
         assert r.status_code == 404
 
     def test_response_has_validation_policy(
@@ -482,7 +482,7 @@ class TestVerifyEndpointCachePath:
             pytest.skip("Flask app not available")
         rid = "OMNIX-EVL-TESTPOLICY0001"
         self._seed(proof_layer_module, rid, "APPROVED", [])
-        d = proof_client.get(f"/verify/{rid}").get_json()
+        d = proof_client.get(f"/api/verify/{rid}").get_json()
         vp = d.get("validation_policy", {})
         assert vp.get("hash")      == "strict"
         assert vp.get("signature") == "optional"
@@ -495,7 +495,7 @@ class TestVerifyEndpointCachePath:
             pytest.skip("Flask app not available")
         rid = "OMNIX-EVL-TESTSIG000001"
         self._seed(proof_layer_module, rid, "APPROVED", [])
-        d = proof_client.get(f"/verify/{rid}").get_json()
+        d = proof_client.get(f"/api/verify/{rid}").get_json()
         assert "signature" in d
         assert d["signature"]["valid"] is None
 
@@ -506,7 +506,7 @@ class TestVerifyEndpointCachePath:
             pytest.skip("Flask app not available")
         rid = "OMNIX-EVL-TESTINT000001"
         self._seed(proof_layer_module, rid, "APPROVED", [])
-        d = proof_client.get(f"/verify/{rid}").get_json()
+        d = proof_client.get(f"/api/verify/{rid}").get_json()
         assert "integrity" in d
         assert d["integrity"]["hash_valid"]  is None
         assert d["integrity"]["chain_valid"] is None
@@ -519,7 +519,7 @@ class TestVerifyEndpointCachePath:
             pytest.skip("Flask app not available")
         rid = "OMNIX-EVL-TESTCHAIN0001"
         self._seed(proof_layer_module, rid, "APPROVED", [])
-        d = proof_client.get(f"/verify/{rid}").get_json()
+        d = proof_client.get(f"/api/verify/{rid}").get_json()
         assert d["status"]      == "VALID"
         assert d["chain_valid"] is None
 

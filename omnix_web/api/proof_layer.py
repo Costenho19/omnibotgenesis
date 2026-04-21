@@ -240,9 +240,12 @@ def _extract_reason_code(veto_chain) -> str:
     return "GOVERNANCE_PASS"
 
 
-# ── P1: GET /verify/<receipt_id> ────────────────────────────────────────────────
+# ── P1: GET /api/verify/<receipt_id> ────────────────────────────────────────────
+# NOTE: Route is /api/verify/ (not /verify/) so the React SPA handles the
+# user-facing /verify/:receiptId URL and renders the visual receipt page.
+# Machine/API callers use /api/verify/<receipt_id> directly.
 
-@proof_bp.route("/verify/<path:receipt_id>", methods=["GET"])
+@proof_bp.route("/api/verify/<path:receipt_id>", methods=["GET"])
 def institutional_verify(receipt_id: str):
     """
     Institutional-grade receipt verification.
