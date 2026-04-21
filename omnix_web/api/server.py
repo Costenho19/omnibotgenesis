@@ -1997,8 +1997,8 @@ def public_verify_receipt(receipt_id):
         en_sum = f"Decision APPROVED — all {passed} governance checkpoints passed{_context}."
         es_sum = f"Decisión APROBADA — {passed} puntos de control de gobernanza pasaron{_context}."
     elif dec == 'BLOCKED':
-        en_sum = f"Decision BLOCKED — proposal halted before execution{_context}. OFAC/Jurisdiction compliance failure."
-        es_sum = f"Decisión BLOQUEADA — propuesta detenida antes de ejecución{_context}. Incumplimiento OFAC/Jurisdicción."
+        en_sum = f"Decision BLOCKED{_context} — halted before the 11-checkpoint governance pipeline. OFAC/Jurisdiction compliance failure."
+        es_sum = f"Decisión BLOQUEADA{_context} — detenida antes del pipeline de 11 puntos de control. Incumplimiento OFAC/Jurisdicción."
     else:
         en_sum = f"Decision {dec}{_context} — {passed} checkpoints passed, {blocked} blocked."
         es_sum = f"Decisión {dec}{_context} — {passed} pasaron, {blocked} bloqueados."
