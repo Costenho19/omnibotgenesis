@@ -464,7 +464,9 @@ export default function PublicDecisionVerify() {
                 {[
                   { label: 'Asset / Domain', value: `${data.asset} · ${data.domain}` },
                   { label: 'Decision Time', value: formatTimestamp(data.timestamp_utc) },
-                  { label: 'Checkpoints', value: `${data.checkpoints_passed} / ${data.checkpoints_total} passed` },
+                  { label: 'Checkpoints', value: data.decision === 'BLOCKED'
+                    ? `${data.checkpoints_blocked} blocked`
+                    : `${data.checkpoints_passed} / ${data.checkpoints_total} passed` },
                   { label: 'Policy Version', value: data.policy_version },
                 ].map(f => (
                   <div key={f.label}>
@@ -486,7 +488,7 @@ export default function PublicDecisionVerify() {
                     Safety Checkpoint Pipeline
                   </div>
                   <div style={{ display: 'flex', gap: '8px', fontSize: '0.75rem' }}>
-                    <span style={{ color: '#22c55e' }}>✓ {data.checkpoints_passed} passed</span>
+                    {data.checkpoints_passed > 0 && <span style={{ color: '#22c55e' }}>✓ {data.checkpoints_passed} passed</span>}
                     {data.checkpoints_blocked > 0 && <span style={{ color: '#ef4444' }}>✗ {data.checkpoints_blocked} blocked</span>}
                   </div>
                 </div>
