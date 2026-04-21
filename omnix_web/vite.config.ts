@@ -31,7 +31,7 @@ export default defineConfig({
         proxyTimeout: 15000,
         timeout: 15000,
       },
-      '/verify': {
+      '/api/verify': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         proxyTimeout: 15000,
