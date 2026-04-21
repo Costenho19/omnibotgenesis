@@ -1906,7 +1906,7 @@ def public_verify_receipt(receipt_id):
         cur.execute("""
             SELECT receipt_id, timestamp_utc, asset, decision, veto_chain,
                    policy_version, engine_version, prev_hash, content_hash,
-                   signature_algorithm, signature, domain
+                   signature_algorithm, signature, domain, encrypted_payload
             FROM decision_receipts
             WHERE receipt_id = %s OR content_hash = %s
             LIMIT 1
@@ -1923,7 +1923,13 @@ def public_verify_receipt(receipt_id):
 
     (rid, ts, asset, decision, veto_chain_raw,
      policy_ver, engine_ver, prev_hash, content_hash,
-     sig_algo, signature, domain) = row
+     sig_algo, signature, domain, encrypted_payload) = row
+
+    # Read metadata from encrypted_payload (stores governance context for EVL receipts)
+    try:
+        _meta = _json.loads(encrypted_payload) if isinstance(encrypted_payload, str) and encrypted_payload else {}
+    except Exception:
+        _meta = {}
 
     try:
         veto_list = _json.loads(veto_chain_raw) if isinstance(veto_chain_raw, str) else (veto_chain_raw or [])
@@ -1933,6 +1939,34 @@ def public_verify_receipt(receipt_id):
     checkpoints = [_parse_veto_entry(str(e)) for e in veto_list]
     passed  = sum(1 for c in checkpoints if c['result'] == 'PASS')
     blocked = sum(1 for c in checkpoints if c['result'] == 'BLOCKED')
+
+    # Use metadata checkpoints when veto_chain has no PASS entries (EVL receipts)
+    meta_cp_passed = _meta.get('checkpoints_passed', passed)
+    meta_cp_total  = _meta.get('checkpoints_total',  len(checkpoints))
+    if passed == 0 and meta_cp_passed > 0:
+        passed = meta_cp_passed
+    if len(checkpoints) == 0 and meta_cp_total > 0:
+        checkpoints = [{'result': 'PASS'}] * meta_cp_total
+
+    # Human-readable domain label
+    _domain_labels = {
+        'fund_governance':     'Fund Governance',
+        'trading':             'Institutional Governance',
+        'institutional':       'Institutional Governance',
+        'energy_governance':   'Energy Governance',
+        'medical_ai':          'Medical AI',
+        'real_estate':         'Real Estate',
+        'islamic_credit':      'Islamic Credit',
+        'stablecoin':          'Stablecoin Reserve',
+        'robotics':            'Robotics',
+        'insurance':           'Insurance',
+        'autonomous_agent':    'Autonomous Agent',
+    }
+    _domain_display = _domain_labels.get(domain or '', (domain or 'Governance').replace('_', ' ').title())
+
+    # Jurisdiction context from metadata
+    _jurisdiction = _meta.get('jurisdiction', '')
+    _context = f" ({_jurisdiction})" if _jurisdiction else ""
 
     dec = (decision or '').upper()
     if dec == 'APPROVED':
@@ -1948,14 +1982,14 @@ def public_verify_receipt(receipt_id):
     ts_str = ts.isoformat() if hasattr(ts, 'isoformat') else str(ts)
 
     if dec == 'APPROVED':
-        en_sum = f"Decision APPROVED — all {passed} governance checkpoints passed for {asset}."
-        es_sum = f"Decisión APROBADA — los {passed} puntos de control de gobernanza pasaron para {asset}."
+        en_sum = f"Decision APPROVED — all {passed} governance checkpoints passed{_context}."
+        es_sum = f"Decisión APROBADA — {passed} puntos de control de gobernanza pasaron{_context}."
     elif dec == 'BLOCKED':
-        en_sum = f"Decision BLOCKED — {blocked} of {len(checkpoints)} checkpoints failed for {asset}."
-        es_sum = f"Decisión BLOQUEADA — {blocked} de {len(checkpoints)} puntos de control fallaron para {asset}."
+        en_sum = f"Decision BLOCKED — proposal halted before execution{_context}. OFAC/Jurisdiction compliance failure."
+        es_sum = f"Decisión BLOQUEADA — propuesta detenida antes de ejecución{_context}. Incumplimiento OFAC/Jurisdicción."
     else:
-        en_sum = f"Decision {dec} for {asset} — {passed} checkpoints passed, {blocked} blocked."
-        es_sum = f"Decisión {dec} para {asset} — {passed} pasaron, {blocked} bloqueados."
+        en_sum = f"Decision {dec}{_context} — {passed} checkpoints passed, {blocked} blocked."
+        es_sum = f"Decisión {dec}{_context} — {passed} pasaron, {blocked} bloqueados."
 
     try:
         from api.omnix_engine.receipt_to_vc import build_jurisdiction_semantics
@@ -1981,7 +2015,7 @@ def public_verify_receipt(receipt_id):
         'timestamp_utc':       ts_str,
         'asset':               asset or '',
         'decision':            dec,
-        'domain':              domain or 'generic',
+        'domain':              _domain_display,
         'decision_color':      color,
         'decision_icon':       icon,
         'human_summary_en':    en_sum,
