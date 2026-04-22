@@ -366,3 +366,9 @@ id = "yZwr4hAPNmACKalCmBOeq"
 uri = "file://docs/partners/velos/OMNIX_Velos_Pipeline_Log_v1.pdf"
 type = "pdf"
 title = "OMNIX × Velos — Pipeline Log v1.0 (PDF)"
+
+[[outputs]]
+id = "NfHs-CCBsS5GhsNvieymh"
+uri = "file://docs/partners/skilligen/OMNIX_Skilligen_Simulation_LifeInsurance_v1.pdf"
+type = "pdf"
+title = "OMNIX × Skilligen — Simulation Report: Life Insurance Underwriting"
