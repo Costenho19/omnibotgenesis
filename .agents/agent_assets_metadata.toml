@@ -360,3 +360,9 @@ id = "q4K0OeSvh7-FV1qfqJc8U"
 uri = "file://docs/partners/velos/OMNIX_Velos_Pipeline_Log_v1.md"
 type = "text"
 title = "OMNIX × Velos — Pipeline Log v1.0"
+
+[[outputs]]
+id = "yZwr4hAPNmACKalCmBOeq"
+uri = "file://docs/partners/velos/OMNIX_Velos_Pipeline_Log_v1.pdf"
+type = "pdf"
+title = "OMNIX × Velos — Pipeline Log v1.0 (PDF)"
