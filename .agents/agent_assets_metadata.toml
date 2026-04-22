@@ -348,3 +348,9 @@ id = "w-ZlnZuZAkKAWF1QK3l56"
 uri = "file://docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_006_F14_BidirectionalTemporal.pdf"
 type = "pdf"
 title = "F14 — Bidirectional Temporal (29 KB)"
+
+[[outputs]]
+id = "hoCVlK12LKuYkMC7PhLlB"
+uri = "file://docs/partners/velos/OMNIX_Velos_Pipeline_Log.csv"
+type = "table"
+title = "OMNIX × Velos — Pipeline Log"
