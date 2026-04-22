@@ -64,23 +64,18 @@ S = {
 story = []
 
 # ── HEADER ──────────────────────────────────────────────────────────────────
-hdr = Table([[
-    Paragraph("<b>OMNIX</b> QUANTUM", S["logo"]),
-    Paragraph("omnixquantum.net  ·  Decision Governance Infrastructure", S["tagr"]),
-]], colWidths=[90*mm, None])
-hdr.setStyle(TableStyle([("VALIGN",(0,0),(-1,-1),"MIDDLE"),
-                          ("BOTTOMPADDING",(0,0),(-1,-1),0),
-                          ("TOPPADDING",(0,0),(-1,-1),0)]))
-story.append(hdr)
-story.append(Paragraph("Decision Governance Infrastructure", S["tag"]))
-story.append(Spacer(1,2*mm))
-story.append(HRFlowable(width="100%", thickness=1, color=GOLD, spaceAfter=4))
+story.append(Paragraph("<b>OMNIX</b> QUANTUM", S["logo"]))
+story.append(Spacer(1,1*mm))
+story.append(Paragraph("Decision Governance Infrastructure  ·  omnixquantum.net", S["tag"]))
+story.append(Spacer(1,4*mm))
+story.append(HRFlowable(width="100%", thickness=1, color=GOLD, spaceAfter=6))
 
 story.append(Paragraph("GOVERNANCE SIMULATION REPORT", S["title"]))
+story.append(Spacer(1,1*mm))
 story.append(Paragraph(
     "Domain: Life Insurance Underwriting  ·  Scenario Design: Dr. Amanulla Khan, Skilligen HDI  ·  "
     "Executed by: Harold Nunes, OMNIX Quantum Ltd  ·  Date: 22 April 2026", S["sub"]))
-story.append(Spacer(1,3*mm))
+story.append(Spacer(1,4*mm))
 
 # ── SCENARIO CONTEXT ────────────────────────────────────────────────────────
 story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#1E2D45"), spaceAfter=3))
