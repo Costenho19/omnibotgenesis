@@ -45,6 +45,27 @@ _EVL_CACHE: dict[str, dict] = {}
 _EVL_CACHE_LOCK = threading.Lock()
 _EVL_CACHE_MAX = 500
 
+# ── In-memory rate limiter for /evaluate (public endpoint) ───────────────────
+# 30 requests per minute per IP — prevents DoS and computational abuse.
+# No external dependency needed; mirrors the pattern in gov_blueprint.py.
+_EVL_RATE_STORE: dict[str, list] = {}
+_EVL_RATE_LOCK  = threading.Lock()
+_EVL_RATE_LIMIT = 30
+_EVL_RATE_WINDOW = 60
+
+def _is_evl_rate_limited(client_ip: str) -> bool:
+    now = time.time()
+    window_start = now - _EVL_RATE_WINDOW
+    with _EVL_RATE_LOCK:
+        timestamps = _EVL_RATE_STORE.get(client_ip, [])
+        timestamps = [ts for ts in timestamps if ts > window_start]
+        if len(timestamps) >= _EVL_RATE_LIMIT:
+            _EVL_RATE_STORE[client_ip] = timestamps
+            return True
+        timestamps.append(now)
+        _EVL_RATE_STORE[client_ip] = timestamps
+        return False
+
 
 def _cache_evl_receipt(receipt_id: str, data: dict) -> None:
     with _EVL_CACHE_LOCK:
@@ -992,7 +1013,8 @@ def simple_evaluate():
           "asset":        "BTC",
           "amount":       1000,
           "jurisdiction": "UAE",
-          "ethical_mode": "SHARIA" | "ESG" | null    (optional)
+          "ethical_mode":       "SHARIA" | "ESG" | null         (optional, single string)
+          "ethical_frameworks": ["SHARIA"] | ["ESG"] | ["SHARIA","ESG"]  (optional, list)
         }
 
     Output:
@@ -1006,6 +1028,17 @@ def simple_evaluate():
           "governance_summary": {...}
         }
     """
+    client_ip = (
+        request.headers.get("X-Forwarded-For", request.remote_addr or "unknown")
+        .split(",")[0].strip()
+    )
+    if _is_evl_rate_limited(client_ip):
+        return jsonify({
+            "error": "Rate limit exceeded",
+            "limit": f"{_EVL_RATE_LIMIT} requests per {_EVL_RATE_WINDOW}s",
+            "retry_after_seconds": _EVL_RATE_WINDOW,
+        }), 429
+
     body = request.get_json(silent=True)
     if not body:
         return jsonify({"error": "JSON body required"}), 400
@@ -1014,6 +1047,18 @@ def simple_evaluate():
     asset        = str(body.get("asset",  "BTC")).upper().strip()
     jurisdiction = str(body.get("jurisdiction", "GLOBAL")).upper().strip()
     ethical_mode = str(body.get("ethical_mode", "") or "").upper().strip()
+
+    _ethical_frameworks_raw = body.get("ethical_frameworks", [])
+    if isinstance(_ethical_frameworks_raw, list):
+        _frameworks_from_list = [
+            str(f).upper().strip() for f in _ethical_frameworks_raw
+            if isinstance(f, str) and str(f).upper().strip() in ("SHARIA", "ESG", "HALAL")
+        ]
+        _frameworks_from_list = [
+            "SHARIA" if f == "HALAL" else f for f in _frameworks_from_list
+        ]
+    else:
+        _frameworks_from_list = []
 
     try:
         amount = float(body.get("amount", 1000))
@@ -1025,8 +1070,12 @@ def simple_evaluate():
     if not asset.replace("/", "").replace("-", "").isalnum():
         return jsonify({"error": "Invalid asset identifier"}), 400
 
+    if len(asset) > 32:
+        return jsonify({"error": "Asset identifier too long (max 32 chars)"}), 400
+
     operation = _ACTION_TO_OPERATION.get(action, "SPOT")
-    ethical_flags = [ethical_mode] if ethical_mode in ("SHARIA", "ESG") else []
+    _mode_flag = [ethical_mode] if ethical_mode in ("SHARIA", "ESG") else []
+    ethical_flags = list(dict.fromkeys(_mode_flag + _frameworks_from_list))
 
     execution_nanosecond = time.time_ns()
     evaluated_at = datetime.now(timezone.utc).isoformat()

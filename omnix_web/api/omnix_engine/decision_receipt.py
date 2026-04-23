@@ -34,15 +34,42 @@ _STABLE_SIGNING_KEYS: Optional[Tuple[bytes, bytes]] = None
 _STABLE_PUBLIC_KEY_B64: Optional[str] = None
 
 if PQC_AVAILABLE and _active_provider is not None:
-    try:
-        _STABLE_SIGNING_KEYS = _active_provider.generate_keypair()
-        _STABLE_PUBLIC_KEY_B64 = _active_provider.serialize_public_key(_STABLE_SIGNING_KEYS[0])
-        logger.info(
-            f"Stable deployment signing keys generated "
-            f"({_active_provider.algorithm_name()}) — all receipts this deployment share this key."
+    _ENV_PRIV_B64 = os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64", "").strip()
+    _ENV_PUB_B64  = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64",  "").strip()
+
+    if _ENV_PRIV_B64 and _ENV_PUB_B64:
+        try:
+            _priv_bytes = base64.b64decode(_ENV_PRIV_B64)
+            _pub_bytes  = base64.b64decode(_ENV_PUB_B64)
+            _STABLE_SIGNING_KEYS    = (_pub_bytes, _priv_bytes)
+            _STABLE_PUBLIC_KEY_B64  = _ENV_PUB_B64
+            logger.info(
+                f"Persistent signing keys loaded from env "
+                f"(OMNIX_SIGNING_SECRET_KEY_B64 + OMNIX_SIGNING_PUBLIC_KEY_B64) — "
+                f"receipts verifiable across restarts."
+            )
+        except Exception as _e:
+            logger.error(f"Failed to load persistent signing keys from env: {_e} — falling back to ephemeral.")
+            try:
+                _STABLE_SIGNING_KEYS   = _active_provider.generate_keypair()
+                _STABLE_PUBLIC_KEY_B64 = _active_provider.serialize_public_key(_STABLE_SIGNING_KEYS[0])
+            except Exception as _e2:
+                logger.error(f"Failed to generate fallback ephemeral signing keys: {_e2}")
+    else:
+        logger.critical(
+            "⚠️  OMNIX_SIGNING_SECRET_KEY_B64 / OMNIX_SIGNING_PUBLIC_KEY_B64 are NOT set. "
+            "Ephemeral signing keys will be generated — existing receipts will fail verification "
+            "after any server restart. Set both env vars in Railway for institutional-grade persistence."
         )
-    except Exception as _e:
-        logger.error(f"Failed to generate stable signing keys: {_e}")
+        try:
+            _STABLE_SIGNING_KEYS   = _active_provider.generate_keypair()
+            _STABLE_PUBLIC_KEY_B64 = _active_provider.serialize_public_key(_STABLE_SIGNING_KEYS[0])
+            logger.warning(
+                f"Ephemeral deployment signing keys generated "
+                f"({_active_provider.algorithm_name()}) — receipts will NOT survive server restart."
+            )
+        except Exception as _e:
+            logger.error(f"Failed to generate ephemeral signing keys: {_e}")
 
 
 def _get_db_connection(db_url: str):

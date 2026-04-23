@@ -1483,6 +1483,7 @@ def api_governance_evaluate():
     if _unknown_cc:
         return jsonify({'error': f'compliance_config contains unrecognised fields: {sorted(_unknown_cc)}', 'status': 400}), 400
     compliance_config = {**_compliance_raw, 'client_id': client_id}
+    compliance_config['layer0_enabled'] = True  # Layer 0 is always active — clients cannot disable
 
     try:
         checkpoint_overrides = _load_client_checkpoint_overrides(client_id)

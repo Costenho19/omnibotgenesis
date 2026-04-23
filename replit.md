@@ -47,9 +47,9 @@
 | Decisiones gobernadas | 327,000+ |
 | Verticales activos | **9** (Trading, Credit, Insurance, Robotics, Medical AI, Energy, Real Estate, Agents, **Stablecoin Reserve**) |
 | Dominios públicos anunciados | 9 |
-| ADRs publicados | 80+ (incl. ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
+| ADRs publicados | 29 formalizados (incl. ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
 | TAM total cubierto | $212B+ |
-| Tests pasando | 70/70 |
+| Tests pasando | 94+ (73 SAE + 21 E2E) |
 | Cobertura PQC | Dilithium-3 (CRYSTALS) + Kyber-768 |
 | AVM snapshots activos | 9 (1 por dominio) |
 
