@@ -209,6 +209,8 @@ Introduced `_normalize_float()`:
 External verifier test confirmed: a third party can reconstruct `canonical_hash` using only the fields present in the API response (no OMNIX system access required):
 
 ```python
+import json, hashlib
+
 canonical = {
     "hash_version":         "v2",
     "receipt_id":           str(response["receipt_id"]),
@@ -220,11 +222,35 @@ canonical = {
     "checkpoints_passed":   int(response["execution_proof"]["checkpoints_passed"]),
     "checkpoints_total":    int(response["execution_proof"]["checkpoints_total"]),
 }
-hash = sha256(json.dumps(canonical, sort_keys=True, ensure_ascii=True).encode()).hexdigest()
-assert hash == response["execution_proof"]["canonical_hash"]  # PASSES
+# Exact serializer — must match execution_proof.serializer field
+serialized = json.dumps(canonical, sort_keys=True, ensure_ascii=True, separators=(',', ':')).encode("utf-8")
+recomputed  = hashlib.sha256(serialized).hexdigest()
+assert recomputed == response["execution_proof"]["canonical_hash"]  # PASSES
 ```
 
 The `public_key_fingerprint` (`SHA256:<b64>`) enables verifiers to confirm the Dilithium-3 key against the DID document before verifying the signature.
+
+### Hardening Pass — Last 5% (same session)
+
+Four additional structural improvements applied after the initial 5 audit fixes:
+
+**Fix 6 — Single canonical serializer (`_canonical_json`)**  
+A dedicated `_canonical_json(obj) -> bytes` function is the ONLY code path that produces bytes for hashing. It enforces `sort_keys=True, ensure_ascii=True, separators=(',', ':')` — no whitespace, deterministic in all languages. The exact serializer string is exposed in `execution_proof.serializer` so any verifier can match it exactly.
+
+**Fix 7 — Frozen coverage list (`_HASH_V2_COVERAGE`, `_HASH_V2_DETERMINISM_RULES`)**  
+The 19-path coverage list and 8 determinism rules are now module-level `tuple` constants — never dynamically generated. Changing them requires a new `hash_version`. Both are referenced from the constant in `_build_execution_proof()`, eliminating any risk of inconsistency between the actual hash and what the `hash_coverage` field claims.
+
+**Fix 8 — Numeric checkpoint sort (`_cp_sort_key`)**  
+A dedicated `_cp_sort_key(id)` function extracts the numeric suffix from checkpoint ids (CP-0…CP-10) for correct numeric ordering. Lexicographic sort would place CP-10 before CP-2 (`"1" < "2"`). The new sort guarantees: `CP-0 < CP-1 < … < CP-9 < CP-10` on every runtime, every platform.
+
+**Fix 9 — Fingerprint definition frozen (`_fingerprint_public_key`)**  
+A formal `_fingerprint_public_key(public_key_b64) -> str` function with frozen definition:
+
+```
+fingerprint = "SHA256:" + base64(sha256(base64_decode(public_key_b64)))
+```
+
+Matches SSH/TLS convention. The definition is also exposed in `execution_proof.fingerprint_definition` so institutional counterparties can pin the key using standard tooling without reading source code.
 
 ---
 

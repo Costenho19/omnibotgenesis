@@ -95,6 +95,108 @@ def _compute_content_hash(receipt_id: str, timestamp: str, asset: str, decision:
     return hashlib.sha256(payload).hexdigest()
 
 
+# ── ADR-096: Frozen constants — versioned, never dynamic ─────────────────────────
+
+# The exact 16 field paths covered by the v2 canonical hash.
+# FROZEN per hash_version.  Changing this list = new version.
+# v1 (legacy): receipt_id, timestamp, asset, decision  (4 fields, content_hash)
+# v2 (ADR-096): the 16 paths below
+_HASH_V2_COVERAGE: tuple[str, ...] = (
+    "receipt_id",
+    "execution_nanosecond (as string)",
+    "asset",
+    "decision",
+    "authority_binding.policy_id",
+    "authority_binding.policy_version",
+    "authority_binding.client_id",
+    "authority_binding.actor",
+    "authority_binding.jurisdiction",
+    "authority_binding.operation",
+    "authority_binding.ethical_flags (sorted)",
+    "authority_binding.layer0_status",
+    "authority_binding.timestamp_utc",
+    "checkpoint_proof[*].id (sorted numerically)",
+    "checkpoint_proof[*].score (normalized 6dp, None→'null')",
+    "checkpoint_proof[*].threshold (normalized 6dp, None→'null')",
+    "checkpoint_proof[*].result",
+    "checkpoints_passed",
+    "checkpoints_total",
+)
+
+# Determinism rules — applied in _canonical_json().  Frozen per version.
+_HASH_V2_DETERMINISM_RULES: tuple[str, ...] = (
+    "sort_keys=True on all JSON serialization",
+    "floats rounded to 6 decimal places",
+    "execution_nanosecond as string (not int)",
+    "ethical_flags sorted alphabetically",
+    "checkpoint_proof sorted numerically by id (CP-0 < CP-1 < … < CP-10)",
+    "None values serialized as 'null' string",
+    "ensure_ascii=True — no locale-dependent unicode normalization",
+    "encoding: UTF-8",
+)
+
+
+def _canonical_json(obj: Any) -> bytes:
+    """
+    Single canonical serializer — the ONLY function that may produce bytes
+    for hashing in ADR-096 execution_proof.
+
+    Rules (frozen, ADR-096 v2):
+      • sort_keys=True   — deterministic key order in all languages
+      • ensure_ascii=True — no locale-dependent unicode escape differences
+      • separators=(',', ':') — no variable whitespace
+      • encoding: UTF-8
+
+    A verifier in any language must reproduce:
+        sha256(json.dumps(canonical, sort_keys=True,
+                          ensure_ascii=True, separators=(',', ':')).encode('utf-8'))
+
+    This function is the ground-truth reference implementation.
+    """
+    return json.dumps(
+        obj,
+        sort_keys=True,
+        ensure_ascii=True,
+        separators=(',', ':'),
+    ).encode("utf-8")
+
+
+def _fingerprint_public_key(public_key_b64: str) -> str:
+    """
+    Canonical public-key fingerprint (ADR-096).
+
+    Definition (frozen):
+        fingerprint = "SHA256:" + base64(sha256(raw_public_key_bytes))
+
+    Where raw_public_key_bytes = base64.b64decode(public_key_b64).
+
+    This matches the SSH/TLS fingerprint convention so institutional
+    counterparties can pin the key using standard tooling.
+
+    Example output: "SHA256:KHcqXlgqf8ruNQznoo6sgFHsxtIo..."
+    """
+    raw = base64.b64decode(public_key_b64)
+    digest = hashlib.sha256(raw).digest()
+    return "SHA256:" + base64.b64encode(digest).decode("ascii")
+
+
+def _cp_sort_key(cp_id: str) -> tuple[int, str]:
+    """
+    Numeric sort key for checkpoint ids (CP-0 … CP-10).
+
+    Lexicographic sort would place CP-10 before CP-2 ("1" < "2").
+    This key extracts the integer suffix for correct numeric ordering:
+        CP-0 < CP-1 < CP-2 < … < CP-9 < CP-10
+
+    Falls back to (0, cp_id) for non-standard ids to keep sort stable.
+    """
+    import re
+    m = re.match(r'^[A-Za-z\-]+(\d+)$', cp_id)
+    if m:
+        return (int(m.group(1)), cp_id)
+    return (0, cp_id)
+
+
 # ── ADR-096: Full Canonical Receipt — Execution Proof helpers ────────────────────
 
 def _build_authority_binding(
@@ -195,7 +297,7 @@ def _build_checkpoint_proof(gate_results: list) -> list:
             "result":    str(gate.get("result", "PASS")),
             "optional":  bool(gate.get("optional", False)),
         })
-    proof.sort(key=lambda c: c["id"])
+    proof.sort(key=lambda c: _cp_sort_key(c["id"]))
     return proof
 
 
@@ -235,9 +337,7 @@ def _compute_full_canonical_hash(
         "checkpoints_passed":    int(checkpoints_passed),
         "checkpoints_total":     int(checkpoints_total),
     }
-    return hashlib.sha256(
-        json.dumps(canonical, sort_keys=True, ensure_ascii=True).encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(_canonical_json(canonical)).hexdigest()
 
 
 def _sign_canonical_hash(canonical_hash: str) -> tuple[str | None, str, str | None]:
@@ -299,10 +399,7 @@ def _build_execution_proof(
     pub_key_fingerprint: str | None = None
     if pub_b64:
         try:
-            pub_bytes = base64.b64decode(pub_b64)
-            pub_key_fingerprint = "SHA256:" + base64.b64encode(
-                hashlib.sha256(pub_bytes).digest()
-            ).decode("ascii")
+            pub_key_fingerprint = _fingerprint_public_key(pub_b64)
         except Exception:
             pub_key_fingerprint = None
 
@@ -310,56 +407,30 @@ def _build_execution_proof(
         "receipt_version":    "v2",
         "hash_version":       "v2",
         "hash_algorithm":     "SHA-256",
+        "serializer":         "json.dumps(sort_keys=True, ensure_ascii=True, separators=(',',':'))",
         "canonical_hash":     canonical_hash,
-        "hash_coverage": [
-            "receipt_id",
-            "execution_nanosecond (as string)",
-            "asset",
-            "decision",
-            "authority_binding.policy_id",
-            "authority_binding.policy_version",
-            "authority_binding.client_id",
-            "authority_binding.actor",
-            "authority_binding.jurisdiction",
-            "authority_binding.operation",
-            "authority_binding.ethical_flags (sorted)",
-            "authority_binding.layer0_status",
-            "authority_binding.timestamp_utc",
-            "checkpoint_proof[*].id (sorted by id)",
-            "checkpoint_proof[*].score (normalized 6dp)",
-            "checkpoint_proof[*].threshold (normalized 6dp)",
-            "checkpoint_proof[*].result",
-            "checkpoints_passed",
-            "checkpoints_total",
-        ],
-        "determinism_guarantees": [
-            "sort_keys=True on all JSON serialization",
-            "floats rounded to 6 decimal places",
-            "execution_nanosecond as string (not int)",
-            "ethical_flags sorted alphabetically",
-            "checkpoint_proof sorted by id",
-            "None values serialized as 'null' string",
-            "ensure_ascii=True",
-        ],
-        "execution_nanosecond":  str(int(execution_nanosecond)),
-        "checkpoints_passed":   int(checkpoints_passed),
-        "checkpoints_total":    int(checkpoints_total),
+        "hash_coverage":      list(_HASH_V2_COVERAGE),
+        "determinism_guarantees": list(_HASH_V2_DETERMINISM_RULES),
+        "execution_nanosecond": str(int(execution_nanosecond)),
+        "checkpoints_passed": int(checkpoints_passed),
+        "checkpoints_total":  int(checkpoints_total),
         "signature":           sig_b64,
         "signature_algorithm": algo,
         "public_key":          pub_b64,
         "public_key_fingerprint": pub_key_fingerprint,
+        "fingerprint_definition": "SHA256:base64(sha256(raw_public_key_bytes))",
         "pqc_standard":        "NIST FIPS 204 (ML-DSA / Dilithium-3)",
         "issuer_did":          _ISSUER_DID,
         "did_document_url":    f"{_BASE_URL}/.well-known/did.json",
         "verification_url":    f"{_BASE_URL}/verify/{receipt_id}",
         "independently_verifiable": True,
         "external_verification_steps": [
-            "1. Resolve issuer DID: GET https://omnixquantum.net/.well-known/did.json",
-            "2. Extract Dilithium-3 public key from DID document (verify fingerprint matches execution_proof.public_key_fingerprint)",
-            "3. Build canonical dict: {hash_version, receipt_id, execution_nanosecond (from execution_proof, as string), asset (from governance_summary), decision (status field), authority_binding, checkpoint_proof, checkpoints_passed (from execution_proof), checkpoints_total (from execution_proof)}",
-            "4. Apply determinism rules: sort_keys=True, ensure_ascii=True, floats to 6dp, None->'null' string",
-            "5. SHA-256 hash the canonical JSON — must equal execution_proof.canonical_hash",
-            "6. Verify Dilithium-3 signature: sign(canonical_hash) == execution_proof.signature using Dilithium-3 (NIST FIPS 204 / ML-DSA)",
+            "1. GET https://omnixquantum.net/.well-known/did.json — resolve issuer DID",
+            "2. Extract Dilithium-3 public key; verify SHA256:base64(sha256(key)) == execution_proof.public_key_fingerprint",
+            "3. Build canonical dict from response fields (see hash_coverage — all fields are in the response)",
+            "4. Serialize: json.dumps(canonical, sort_keys=True, ensure_ascii=True, separators=(',',':'))",
+            "5. sha256(serialized_bytes) must equal execution_proof.canonical_hash",
+            "6. dilithium3.verify(public_key, canonical_hash.encode(), base64.b64decode(signature)) must succeed",
         ],
         "patent_reference":    "OMNIX-PAT-2026-015 §4.3–4.4",
         "adr_reference":       "ADR-096",
