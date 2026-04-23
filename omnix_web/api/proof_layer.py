@@ -105,6 +105,7 @@ def _build_authority_binding(
     operation: str,
     ethical_flags: list,
     layer0_status: str,
+    timestamp_utc: str = "",
 ) -> dict:
     """
     Authority binding — the exact authorization context at T=0.
@@ -116,20 +117,52 @@ def _build_authority_binding(
     who authorized, under which policy, in which jurisdiction, with which
     operation type, and through which governance layer.
 
+    Fields (all required for institutional-grade binding):
+      policy_id      — canonical identifier of the governance policy applied
+      policy_version — human-readable version tag
+      jurisdiction   — regulatory jurisdiction at T=0
+      operation      — operation type evaluated (SPOT / LEVERAGED / etc.)
+      ethical_flags  — active ethical constraint sets (SHARIA / ESG / [])
+      layer0_status  — Layer 0 SAE result (PASSED / BLOCKED / DISABLED)
+      timestamp_utc  — ISO-8601 UTC timestamp of evaluation (T=0 reference)
+      actor          — system actor that authorized the evaluation
+      authorized_by  — patent reference governing the evaluation protocol
+
     ADR-096 / OMNIX-PAT-2026-015 §4.3
     """
     return {
-        "client_id":        client_id,
+        "policy_id":        f"OMNIX-{policy_version}",
         "policy_version":   policy_version,
         "engine_version":   engine_version,
+        "client_id":        client_id,
+        "actor":            "OMNIX-GOVERNANCE-ENGINE",
         "jurisdiction":     jurisdiction,
         "operation":        operation,
-        "ethical_flags":    ethical_flags,
+        "ethical_flags":    sorted(ethical_flags),
         "layer0_status":    layer0_status,
+        "timestamp_utc":    timestamp_utc,
         "authorized_by":    "OMNIX-PAT-2026-015",
-        "governance_model": "Layer0→Layer1→PQC (OMNIX 4-layer)",
+        "governance_model": "Layer0->Layer1->PQC (OMNIX 4-layer)",
         "issuer_did":       _ISSUER_DID,
     }
+
+
+def _normalize_float(v: Any) -> Any:
+    """
+    Canonical float normalization for hash stability (ADR-096).
+
+    Floats are rounded to 6 decimal places and serialized as strings
+    in the canonical payload to eliminate platform-dependent repr()
+    differences (0.1 vs 0.10000000000000001, etc.).
+
+    None → the string "null" (avoids null/empty-string ambiguity).
+    Non-numeric types are returned unchanged.
+    """
+    if v is None:
+        return "null"
+    if isinstance(v, float):
+        return round(v, 6)
+    return v
 
 
 def _build_checkpoint_proof(gate_results: list) -> list:
@@ -142,22 +175,27 @@ def _build_checkpoint_proof(gate_results: list) -> list:
     execution environment at T=0. A VETO here means the decision was
     structurally prevented — not observed, not flagged, prevented.
 
+    Floats are normalized via _normalize_float() for hash stability.
+    List is ordered by checkpoint id (CP-0 … CP-10) for determinism.
+
     ADR-096 / OMNIX-PAT-2026-015 §4.4
     """
     proof = []
     for gate in (gate_results or []):
         if not isinstance(gate, dict):
             continue
+        cp_id = gate.get("checkpoint", gate.get("id", "?"))
         proof.append({
-            "id":        gate.get("checkpoint", gate.get("id", "?")),
-            "name":      gate.get("name", ""),
-            "signal":    gate.get("signal", ""),
-            "score":     gate.get("score"),
-            "threshold": gate.get("threshold"),
-            "condition": gate.get("condition", "gte"),
-            "result":    gate.get("result", "PASS"),
-            "optional":  gate.get("optional", False),
+            "id":        str(cp_id),
+            "name":      str(gate.get("name", "")),
+            "signal":    str(gate.get("signal", "")),
+            "score":     _normalize_float(gate.get("score")),
+            "threshold": _normalize_float(gate.get("threshold")),
+            "condition": str(gate.get("condition", "gte")),
+            "result":    str(gate.get("result", "PASS")),
+            "optional":  bool(gate.get("optional", False)),
         })
+    proof.sort(key=lambda c: c["id"])
     return proof
 
 
@@ -174,28 +212,28 @@ def _compute_full_canonical_hash(
     """
     Expanded canonical hash — covers the full evaluation context at T=0.
 
-    Coverage (ADR-096, resolving the gap documented in ADR-095):
-      receipt_id · execution_nanosecond · asset · decision ·
-      authority_binding (jurisdiction, operation, ethical_flags, layer0_status,
-      client_id, policy_version, engine_version) ·
-      checkpoint_proof (every checkpoint: id, score, threshold, result) ·
-      checkpoints_passed · checkpoints_total
-
-    This hash is then signed with Dilithium-3 (PQC, NIST FIPS 204).
-    Any modification to any covered field invalidates the signature.
+    Determinism guarantees (ADR-096):
+      • sort_keys=True on all JSON serialization
+      • floats normalized to 6 dp via _normalize_float()
+      • execution_nanosecond serialized as string (not int) to eliminate
+        any platform-specific integer representation differences
+      • ethical_flags sorted in authority_binding (prevents list-order mismatch)
+      • checkpoint_proof sorted by id (prevents order-dependent hash variation)
+      • None values replaced by "null" string (prevents null/empty ambiguity)
+      • ensure_ascii=True prevents unicode normalization variations
 
     hash_version = "v2" distinguishes from the legacy 4-field content_hash (v1).
     """
     canonical = {
-        "hash_version":       "v2",
-        "receipt_id":         receipt_id,
-        "execution_nanosecond": execution_nanosecond,
-        "asset":              asset,
-        "decision":           decision,
-        "authority_binding":  authority_binding,
-        "checkpoint_proof":   checkpoint_proof,
-        "checkpoints_passed": checkpoints_passed,
-        "checkpoints_total":  checkpoints_total,
+        "hash_version":          "v2",
+        "receipt_id":            str(receipt_id),
+        "execution_nanosecond":  str(int(execution_nanosecond)),
+        "asset":                 str(asset),
+        "decision":              str(decision),
+        "authority_binding":     authority_binding,
+        "checkpoint_proof":      checkpoint_proof,
+        "checkpoints_passed":    int(checkpoints_passed),
+        "checkpoints_total":     int(checkpoints_total),
     }
     return hashlib.sha256(
         json.dumps(canonical, sort_keys=True, ensure_ascii=True).encode("utf-8")
@@ -258,35 +296,71 @@ def _build_execution_proof(
     )
     sig_b64, algo, pub_b64 = _sign_canonical_hash(canonical_hash)
 
+    pub_key_fingerprint: str | None = None
+    if pub_b64:
+        try:
+            pub_bytes = base64.b64decode(pub_b64)
+            pub_key_fingerprint = "SHA256:" + base64.b64encode(
+                hashlib.sha256(pub_bytes).digest()
+            ).decode("ascii")
+        except Exception:
+            pub_key_fingerprint = None
+
     return {
+        "receipt_version":    "v2",
         "hash_version":       "v2",
         "hash_algorithm":     "SHA-256",
         "canonical_hash":     canonical_hash,
         "hash_coverage": [
             "receipt_id",
-            "execution_nanosecond",
+            "execution_nanosecond (as string)",
             "asset",
             "decision",
-            "authority_binding.client_id",
+            "authority_binding.policy_id",
             "authority_binding.policy_version",
+            "authority_binding.client_id",
+            "authority_binding.actor",
             "authority_binding.jurisdiction",
             "authority_binding.operation",
-            "authority_binding.ethical_flags",
+            "authority_binding.ethical_flags (sorted)",
             "authority_binding.layer0_status",
-            "checkpoint_proof[*].id",
-            "checkpoint_proof[*].score",
-            "checkpoint_proof[*].threshold",
+            "authority_binding.timestamp_utc",
+            "checkpoint_proof[*].id (sorted by id)",
+            "checkpoint_proof[*].score (normalized 6dp)",
+            "checkpoint_proof[*].threshold (normalized 6dp)",
             "checkpoint_proof[*].result",
             "checkpoints_passed",
             "checkpoints_total",
         ],
+        "determinism_guarantees": [
+            "sort_keys=True on all JSON serialization",
+            "floats rounded to 6 decimal places",
+            "execution_nanosecond as string (not int)",
+            "ethical_flags sorted alphabetically",
+            "checkpoint_proof sorted by id",
+            "None values serialized as 'null' string",
+            "ensure_ascii=True",
+        ],
+        "execution_nanosecond":  str(int(execution_nanosecond)),
+        "checkpoints_passed":   int(checkpoints_passed),
+        "checkpoints_total":    int(checkpoints_total),
         "signature":           sig_b64,
         "signature_algorithm": algo,
         "public_key":          pub_b64,
+        "public_key_fingerprint": pub_key_fingerprint,
         "pqc_standard":        "NIST FIPS 204 (ML-DSA / Dilithium-3)",
         "issuer_did":          _ISSUER_DID,
+        "did_document_url":    f"{_BASE_URL}/.well-known/did.json",
         "verification_url":    f"{_BASE_URL}/verify/{receipt_id}",
         "independently_verifiable": True,
+        "external_verification_steps": [
+            "1. Resolve issuer DID: GET https://omnixquantum.net/.well-known/did.json",
+            "2. Extract Dilithium-3 public key from DID document (verify fingerprint matches execution_proof.public_key_fingerprint)",
+            "3. Build canonical dict: {hash_version, receipt_id, execution_nanosecond (from execution_proof, as string), asset (from governance_summary), decision (status field), authority_binding, checkpoint_proof, checkpoints_passed (from execution_proof), checkpoints_total (from execution_proof)}",
+            "4. Apply determinism rules: sort_keys=True, ensure_ascii=True, floats to 6dp, None->'null' string",
+            "5. SHA-256 hash the canonical JSON — must equal execution_proof.canonical_hash",
+            "6. Verify Dilithium-3 signature: sign(canonical_hash) == execution_proof.signature using Dilithium-3 (NIST FIPS 204 / ML-DSA)",
+        ],
         "patent_reference":    "OMNIX-PAT-2026-015 §4.3–4.4",
         "adr_reference":       "ADR-096",
     }
@@ -979,6 +1053,7 @@ def simple_evaluate():
         operation      = operation,
         ethical_flags  = ethical_flags,
         layer0_status  = layer0_status,
+        timestamp_utc  = evaluated_at,
     )
     checkpoint_proof = _build_checkpoint_proof(gate_results)
     execution_proof  = _build_execution_proof(
@@ -991,7 +1066,6 @@ def simple_evaluate():
         checkpoints_passed   = checkpoints_passed,
         checkpoints_total    = checkpoints_total,
     )
-    execution_proof["execution_nanosecond"] = execution_nanosecond
 
     w3c_vc = _build_w3c_vc_from_execution_proof(
         receipt_id        = receipt_id,

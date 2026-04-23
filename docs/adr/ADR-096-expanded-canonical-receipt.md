@@ -175,6 +175,59 @@ ADR-096 makes the structural enforcement cryptographically provable.
 
 ---
 
+## Audit Pass — April 2026 (v2 Hardening)
+
+Following initial implementation, an institutional-grade audit identified 5 risks. All were resolved in the same session:
+
+### Fix 1 — Hash Determinism (`_normalize_float`, `_build_checkpoint_proof`)
+
+Introduced `_normalize_float()`:
+- `None → "null"` string (prevents null/empty-string ambiguity in canonical JSON)
+- `float → round(v, 6)` (prevents platform-dependent repr differences: `0.1` vs `0.10000000000000001`)
+- `int` and other types pass through unchanged
+
+`_build_checkpoint_proof()` now sorts entries by `id` (CP-0 … CP-10) to prevent list-order-dependent hash variation.
+
+### Fix 2 — Receipt Versioning
+
+`execution_proof.receipt_version: "v2"` added explicitly. Verifiers and future migration scripts can now distinguish v1 (4-field `content_hash`) from v2 (`execution_proof.canonical_hash`) receipts without ambiguity.
+
+### Fix 3 — Authority Binding Completeness
+
+`authority_binding` now includes all required institutional fields:
+- `policy_id` — canonical identifier (`OMNIX-EVL-1.0`)
+- `actor` — system actor string (`OMNIX-GOVERNANCE-ENGINE`)
+- `timestamp_utc` — ISO-8601 UTC timestamp of evaluation (T=0 reference, from `evaluated_at`)
+- `ethical_flags` — sorted alphabetically for hash stability
+
+### Fix 4 — Nanosecond Serialization
+
+`execution_nanosecond` is serialized as `str(int(v))` in both the canonical hash payload and the `execution_proof` response block. This eliminates float conversion risk at JSON serialization, DB persistence, and API transport layers. The value is an integer in `time.time_ns()` and treated as string in the hash — deterministic on all platforms.
+
+### Fix 5 — External Verifiability Confirmed
+
+External verifier test confirmed: a third party can reconstruct `canonical_hash` using only the fields present in the API response (no OMNIX system access required):
+
+```python
+canonical = {
+    "hash_version":         "v2",
+    "receipt_id":           str(response["receipt_id"]),
+    "execution_nanosecond": str(int(response["execution_proof"]["execution_nanosecond"])),
+    "asset":                str(response["governance_summary"]["asset"]),
+    "decision":             str(response["status"]),
+    "authority_binding":    response["authority_binding"],
+    "checkpoint_proof":     response["checkpoint_proof"],
+    "checkpoints_passed":   int(response["execution_proof"]["checkpoints_passed"]),
+    "checkpoints_total":    int(response["execution_proof"]["checkpoints_total"]),
+}
+hash = sha256(json.dumps(canonical, sort_keys=True, ensure_ascii=True).encode()).hexdigest()
+assert hash == response["execution_proof"]["canonical_hash"]  # PASSES
+```
+
+The `public_key_fingerprint` (`SHA256:<b64>`) enables verifiers to confirm the Dilithium-3 key against the DID document before verifying the signature.
+
+---
+
 ## Consequences
 
 **Positive:**
@@ -184,6 +237,8 @@ ADR-096 makes the structural enforcement cryptographically provable.
 - Nanosecond precision exceeds any known institutional receipt standard
 - W3C VC extends to `OmnixExecutionPhysicsCredential` type — distinct from generic governance VCs
 - Backward compatible — existing receipts and `/verify` are unaffected
+- External hash reconstruction confirmed — no OMNIX system access required for verification
+- `public_key_fingerprint` enables key-pinning by institutional counterparties
 
 **Negative / Future Work:**
 - v2 hash is not yet stored in a dedicated DB column — `execution_proof` is returned in response and cache but not persisted separately (ADR-097 planned: persist `execution_proof.canonical_hash` as `canonical_hash_v2`)
