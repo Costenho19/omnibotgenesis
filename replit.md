@@ -47,7 +47,7 @@
 | Decisiones gobernadas | 327,000+ |
 | Verticales activos | **9** (Trading, Credit, Insurance, Robotics, Medical AI, Energy, Real Estate, Agents, **Stablecoin Reserve**) |
 | Dominios públicos anunciados | 9 |
-| ADRs publicados | 30 formalizados (incl. ADR-116 Fail-Closed Enforcement Policy, ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
+| ADRs publicados | 31 formalizados (incl. ADR-117 Meta-Coherence Monitor, ADR-116 Fail-Closed Enforcement Policy, ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
 | TAM total cubierto | $212B+ |
 | Tests pasando | **158** (code_verification×7 + critical_audit×20 + compliance_gates×112 + diagnostic_mode+fail-closed×22 − conteo anterior T011×16 pre-sesión) |
 | Cobertura PQC | Dilithium-3 (CRYSTALS) + Kyber-768 |
@@ -57,6 +57,7 @@
 
 | Fecha | Fix | Commit |
 |---|---|---|
+| 24 Abr 2026 | **MCM (ADR-117)** — Meta-Coherence Monitor implementado: detecta cuando el marco evaluador mismo deriva. Primera corrida real detectó BLOCK_RATE_COLLAPSE trading (13.7%→0.4%) y RECALIBRATION_ANCHORING_RISK. 3 señales persistidas en governance_drift_log. | — |
 | 24 Abr 2026 | **AUDIT REPAIR COMPLETA (T001–T013)** — Ver sección "Audit Repair 24 Abr 2026" abajo | — |
 | 24 Abr 2026 | **DIAGNOSTIC MODE + HMM REGIME FIXES**: (1) `auto_trading_bot.py` — `hmm_regime=NULL` en DB resuelto: fallback a `v52_analysis.market_regime` → `'UNKNOWN'` en lugar de NULL; (2) `conversational_ai_adapter.py` — path legacy ahora inyecta datos reales del Track Record Oficial (37 trades, 54.05%, +$2,054) en `diagnostic_mode=True`; (3) `ai_service.py` — system prompt diagnóstico actualizado con etiqueta del período y nota de separación vs Learning Baseline; (4) `prompt_templates.py` — query `ROUND(AVG(profit_loss))` corregida con cast `::numeric` para PostgreSQL; `InvestorDataProvider.get_basic_trading_stats()` retorna datos reales por período | pendiente push |
 | 24 Abr 2026 | **AUDIT CRÍTICA — 8 bugs corregidos**: SAE ON por defecto, CAG ON por defecto, SAE error→fail-closed, FORCE_OFF eliminado (Zero-Bypass garantizado), PQC fail→raise, AML error→fail-closed, Fraud error→fail-closed, Dashboard metrics→503 real (sin números inventados) | pendiente push |
