@@ -846,7 +846,22 @@ class GovernanceEvaluationEngine:
                         f"Invariants: {[v.invariant_id for v in tie_result.violations]}"
                     )
             except Exception as _tie_exc:
-                logger.debug(f"[TIE] Pass-through for {asset}: {_tie_exc}")
+                # ADR-116: TIE exceptions are FAIL-CLOSED — decision reverts to HOLD.
+                # Silently passing through a broken TIE is a hidden governance risk.
+                logger.error(
+                    f"[TIE] FAIL-CLOSED for {asset} ({domain}): {_tie_exc} — "
+                    "decision changed to HOLD (ADR-116 §TIE_FAIL_CLOSED)"
+                )
+                decision = "HOLD"
+                overall_blocked = True
+                decision_trace.append(f"TIE_FAIL_CLOSED: {_tie_exc}")
+                veto_chain.append({
+                    "checkpoint_id": "TIE",
+                    "checkpoint_name": "Trajectory Invariant Engine",
+                    "result": "HOLD",
+                    "violations": ["TIE_INTERNAL_ERROR"],
+                    "description": str(_tie_exc),
+                })
 
         all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
         result: dict[str, Any] = {

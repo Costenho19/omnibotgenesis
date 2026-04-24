@@ -368,6 +368,42 @@ def _ensure_vertical_tables():
 _ensure_vertical_tables()
 
 
+# ── Startup: restore AVM calibration baselines from PostgreSQL ────────────────
+def _initialize_avm_from_db():
+    """
+    Restores AVM calibration snapshots from PostgreSQL to local JSON at startup.
+    Without this call the AVM has no baselines and silently passes through all
+    evaluations — defeating the drift-detection guarantee (ADR-064 / ADR-116).
+
+    Safe: never overwrites existing snapshots that have valid DB state (integrity=OK).
+    Called once per process start so in-memory + disk baselines are always current.
+    """
+    try:
+        db_url = (
+            os.environ.get("DATABASE_URL") or
+            os.environ.get("OMNIX_DB_URL") or
+            os.environ.get("POSTGRES_URL")
+        )
+        if not db_url:
+            print("[startup] No database URL — skipping AVM baseline restore")
+            return
+        import sys, os as _os
+        _root = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from omnix_core.governance.avm_db_bridge import AVMDatabaseBridge
+        bridge = AVMDatabaseBridge(db_url=db_url)
+        restored, tampered = bridge.restore_to_json()
+        if tampered:
+            print(f"[startup] ⚠️  AVM: {tampered} tampered baseline(s) detected — NOT restored")
+        print(f"[startup] AVM: {restored} baseline(s) restored from PostgreSQL")
+    except Exception as e:
+        print(f"[startup] AVM baseline restore failed: {e} — evaluations will use pass-through")
+
+
+_initialize_avm_from_db()
+
+
 # ── Startup: activate all 9 vertical governance simulators in background ───────
 def _start_vertical_simulators():
     """

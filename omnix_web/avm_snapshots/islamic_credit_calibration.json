@@ -1,0 +1,26 @@
+{
+  "snapshot_id": "AVM-39FFC6F4D7",
+  "parameter_version": "1.39ffc6f4d7",
+  "domain": "islamic_credit",
+  "baseline_signals": {
+    "risk_exposure": 28.0,
+    "signal_coherence": 74.0,
+    "logic_consistency": 70.0,
+    "probability_score": 68.0,
+    "stress_resilience": 66.0,
+    "trend_persistence": 55.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
+  "tags": [
+    "recalibrated",
+    "q2-2026",
+    "islamic_credit",
+    "2026-04-20",
+    "signal-keys-fixed"
+  ],
+  "calibrated_at": "2026-04-20T07:36:09.846082+00:00",
+  "calibrated_at_epoch": 1776670569.846082
+}
