@@ -894,3 +894,103 @@ EU (MiCA), UK (FCA), US (OCC), UAE (CBUAE), Singapore (MAS), International
 - Live Decision Feed tabla (12 columnas: ID, tipo, asset, jurisdicción, monto, peg, coverage, liquid, score, veredicto, receipt, tiempo)
 - Auto-refresh cada 10s, helper `pct()` para normalizar rates decimal/porcentaje de PostgreSQL
 - Proxy Vite `/api/stablecoin` → `:5000` en `vite.config.ts`
+
+---
+
+## FEATURES ARQUITECTURALES — Insight Amanulla Khan (Abr 2026)
+
+Motivados por la conversación sobre "observador capturado por el sistema": cuando el entorno que degrada también procesa las señales que deberían detectar la degradación, se necesita observación longitudinal **fuera** de la lógica compensatoria local.
+
+### P1 — Verificación WAL Chain en `/verify/:receipt_id` (ADR-096)
+
+**Archivo:** `omnix_web/api/proof_layer.py`
+
+**Función:** `_query_chain_validity(rid)` (antes de `institutional_verify`)
+
+```python
+# Antes (línea ~968):
+chain_valid = None  # ADR-096: WAL chain verification loop (not yet implemented)
+
+# Después:
+chain_valid = _query_chain_validity(rid)
+```
+
+La función consulta `governance_transparency_log` para el `receipt_id`, verifica que `prev_log_hash` exista como `log_id` de una entrada previa. Retorna:
+- `True` — cadena íntegra
+- `False` — `prev_log_hash` roto/alterado
+- `None` — no hay entrada en log (recibo legacy / cadena inactiva)
+
+**Respuesta JSON enriquecida:**
+```json
+{
+  "integrity": {
+    "hash_valid": true,
+    "chain_valid": true,
+    "chain_source": "governance_transparency_log"
+  }
+}
+```
+
+### P2 — AVM Genesis Anchor (Baseline Inmutable por Dominio)
+
+**Archivo:** `omnix_core/governance/avm_db_bridge.py`
+
+**DDL añadido:**
+```sql
+ALTER TABLE avm_calibration_snapshots
+ADD COLUMN IF NOT EXISTS is_genesis BOOLEAN NOT NULL DEFAULT FALSE;
+ADD COLUMN IF NOT EXISTS genesis_snapshot_id VARCHAR(32) DEFAULT NULL;
+ADD COLUMN IF NOT EXISTS genesis_calibrated_at VARCHAR(64) DEFAULT NULL;
+```
+
+**Lógica `save_snapshot()`:** En el primer INSERT para un dominio, `is_genesis=TRUE` y `genesis_snapshot_id` + `genesis_calibrated_at` se graban. En el `ON CONFLICT DO UPDATE`, estos campos están **excluidos** del SET — nunca se sobrescriben aunque haya recalibración.
+
+**Métodos nuevos:**
+- `get_genesis_snapshot(domain)` — retorna el baseline original inmutable
+- `compute_genesis_drift(domain, current_signals)` — calcula drift actual vs genesis (observador externo fuera de la lógica compensatoria local)
+
+El campo `is_genesis` también se incluye ahora en el dict que retorna `load_all_snapshots()`.
+
+### P3 — Layer 0 Status en Respuesta `/verify` (P3 combinado con P1)
+
+**Archivo:** `omnix_web/api/proof_layer.py`
+
+El campo `layer0_status` se extrae del `encrypted_payload` del recibo y se expone en:
+1. La respuesta JSON raíz: `"layer0_status": "ADMITTED" | "BLOCKED" | null`
+2. El sub-objeto `decision_trace.layer0_status`
+
+Esto permite auditoría externa del estado Layer 0 sin acceso directo a la DB.
+
+### P4 — Endpoint `GET /api/governance/layer0-stats` (ADR-096)
+
+**Archivo:** `omnix_dashboard/blueprints/governance.py` (línea ~1432)
+
+**Parámetros:** `?hours=N` (default 24, max 168)
+
+**Consultas:**
+1. `governance_transparency_log` — total entries, chained entries, unique receipts, ventana temporal
+2. `decision_receipts` — distribución `layer0_status` (BLOCKED / APPROVED / unknown), block_rate_pct
+3. Distribución de `signing_provider` (top 10)
+
+**Respuesta:**
+```json
+{
+  "status": "ok",
+  "window_hours": 24,
+  "layer0_stats": {
+    "receipts": {"total": N, "layer0_blocked": N, "block_rate_pct": 3.2},
+    "transparency_log": {"total_entries": N, "chain_coverage_pct": 87.5},
+    "signing_providers": [{"signing_provider": "dilithium3", "count": N}]
+  },
+  "adr_reference": "ADR-096"
+}
+```
+
+### Estado Post-Implementación
+
+| Feature | Archivo | Tests | Estado |
+|---|---|---|---|
+| P1 WAL chain verify | `proof_layer.py` | 27 passed | ✅ COMPLETO |
+| P2 AVM genesis anchor | `avm_db_bridge.py` | 27 passed | ✅ COMPLETO |
+| P3 Layer 0 en /verify | `proof_layer.py` | 27 passed | ✅ COMPLETO |
+| P4 layer0-stats endpoint | `governance.py` | 27 passed | ✅ COMPLETO |

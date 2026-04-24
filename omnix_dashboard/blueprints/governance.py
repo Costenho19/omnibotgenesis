@@ -1424,3 +1424,136 @@ def public_audit_demo():
         },
         'items': items,
     }), 200
+
+
+# ─── Layer 0 Block Rate Stats (ADR-096 / Amanulla insight) ────────────────────
+
+@governance_bp.route('/api/governance/layer0-stats', methods=['GET'])
+def api_layer0_stats():
+    """
+    GET /api/governance/layer0-stats
+
+    Returns Layer 0 governance transparency-log statistics:
+    - Total entries in governance_transparency_log
+    - Block rate = receipts where encrypted_payload contains layer0_status=BLOCKED
+      vs total receipts in decision_receipts
+    - Chain integrity: count of entries with prev_log_hash vs total
+    - Time window configurable via ?hours=N (default 24, max 168)
+
+    Used by the OMNIX Dashboard to expose longitudinal governance health
+    (Amanulla insight: observer outside local compensatory logic).
+    No authentication required — read-only aggregated telemetry.
+    """
+    try:
+        hours_raw = request.args.get('hours', '24')
+        try:
+            hours = max(1, min(168, int(hours_raw)))
+        except (ValueError, TypeError):
+            hours = 24
+
+        db_url = os.environ.get('OMNIX_DB_URL', '')
+        if not db_url:
+            return jsonify({
+                'status': 'unavailable',
+                'reason': 'DB not configured',
+                'layer0_stats': None,
+            }), 503
+
+        with psycopg2.connect(db_url) as conn:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+
+                # ── 1. governance_transparency_log totals ──
+                cur.execute("""
+                    SELECT
+                        COUNT(*)                                        AS total_log_entries,
+                        COUNT(*) FILTER (WHERE prev_log_hash IS NOT NULL
+                                          AND prev_log_hash <> '')      AS chained_entries,
+                        COUNT(DISTINCT receipt_id)                      AS unique_receipts_logged,
+                        MIN(ts_utc)                                     AS oldest_entry,
+                        MAX(ts_utc)                                     AS newest_entry
+                    FROM governance_transparency_log
+                    WHERE ts_utc >= NOW() - (%s * INTERVAL '1 hour')
+                """, (hours,))
+                log_row = cur.fetchone()
+
+                # ── 2. decision_receipts: layer0_status distribution ──
+                cur.execute("""
+                    SELECT
+                        COUNT(*)                                           AS total_receipts,
+                        COUNT(*) FILTER (
+                            WHERE encrypted_payload::text ILIKE '%%layer0_status%%BLOCKED%%'
+                        )                                                  AS layer0_blocked,
+                        COUNT(*) FILTER (
+                            WHERE encrypted_payload::text ILIKE '%%layer0_status%%APPROVED%%'
+                        )                                                  AS layer0_approved,
+                        COUNT(*) FILTER (
+                            WHERE encrypted_payload IS NULL
+                               OR NOT (encrypted_payload::text ILIKE '%%layer0_status%%')
+                        )                                                  AS layer0_unknown
+                    FROM decision_receipts
+                    WHERE created_at >= NOW() - (%s * INTERVAL '1 hour')
+                """, (hours,))
+                receipts_row = cur.fetchone()
+
+                # ── 3. Signing provider distribution ──
+                cur.execute("""
+                    SELECT signing_provider, COUNT(*) AS count
+                    FROM governance_transparency_log
+                    WHERE ts_utc >= NOW() - (%s * INTERVAL '1 hour')
+                    GROUP BY signing_provider
+                    ORDER BY count DESC
+                    LIMIT 10
+                """, (hours,))
+                providers = [dict(r) for r in cur.fetchall()]
+
+        total_receipts  = int(receipts_row['total_receipts']  or 0)
+        layer0_blocked  = int(receipts_row['layer0_blocked']  or 0)
+        layer0_approved = int(receipts_row['layer0_approved'] or 0)
+        layer0_unknown  = int(receipts_row['layer0_unknown']  or 0)
+        total_log       = int(log_row['total_log_entries']    or 0)
+        chained         = int(log_row['chained_entries']      or 0)
+
+        block_rate_pct = (
+            round(layer0_blocked / total_receipts * 100, 2)
+            if total_receipts > 0 else None
+        )
+        chain_coverage_pct = (
+            round(chained / total_log * 100, 2)
+            if total_log > 0 else None
+        )
+
+        return jsonify({
+            'status': 'ok',
+            'window_hours': hours,
+            'layer0_stats': {
+                'receipts': {
+                    'total':          total_receipts,
+                    'layer0_blocked': layer0_blocked,
+                    'layer0_approved': layer0_approved,
+                    'layer0_unknown': layer0_unknown,
+                    'block_rate_pct': block_rate_pct,
+                },
+                'transparency_log': {
+                    'total_entries':       total_log,
+                    'chained_entries':     chained,
+                    'unique_receipts':     int(log_row['unique_receipts_logged'] or 0),
+                    'chain_coverage_pct':  chain_coverage_pct,
+                    'oldest_entry':        str(log_row['oldest_entry']) if log_row['oldest_entry'] else None,
+                    'newest_entry':        str(log_row['newest_entry']) if log_row['newest_entry'] else None,
+                },
+                'signing_providers': providers,
+            },
+            'adr_reference': 'ADR-096',
+            'note': (
+                'block_rate_pct = % of receipts where Layer 0 recorded a BLOCKED status. '
+                'chain_coverage_pct = % of transparency log entries linked to a prior entry.'
+            ),
+        }), 200
+
+    except Exception as e:
+        logger.warning(f"api_layer0_stats error: {e}")
+        return jsonify({
+            'status': 'error',
+            'reason': str(e),
+            'layer0_stats': None,
+        }), 500

@@ -692,6 +692,78 @@ def _extract_reason_code(veto_chain) -> str:
     return "GOVERNANCE_PASS"
 
 
+def _query_chain_validity(receipt_id: str) -> "bool | None":
+    """
+    ADR-096: WAL chain verification for a single receipt.
+
+    Queries governance_transparency_log to verify that this receipt's chain
+    entry correctly links back to a real prior entry — i.e., the chain has
+    not been tampered with, truncated, or reordered.
+
+    Returns:
+        True  — chain entry exists AND prev_log_hash found in a prior entry (intact)
+        False — chain entry exists BUT prev_log_hash not found (broken / tampered)
+        None  — no chain entry for this receipt (legacy receipt or chain not yet active)
+    """
+    try:
+        conn = _get_db_connection()
+        if not conn:
+            return None
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT log_id, payload_hash, prev_log_hash, ts_utc
+                FROM governance_transparency_log
+                WHERE receipt_id = %s
+                ORDER BY ts_utc ASC
+                LIMIT 1
+                """,
+                (receipt_id,),
+            )
+            entry = cur.fetchone()
+            if not entry:
+                cur.close()
+                conn.close()
+                return None
+
+            log_id, payload_hash, prev_log_hash, ts_utc = entry
+
+            if not prev_log_hash:
+                cur.close()
+                conn.close()
+                return True
+
+            cur.execute(
+                """
+                SELECT COUNT(*)
+                FROM governance_transparency_log
+                WHERE payload_hash = %s AND ts_utc < %s
+                """,
+                (prev_log_hash, ts_utc),
+            )
+            row = cur.fetchone()
+            cur.close()
+            conn.close()
+            if row and int(row[0]) > 0:
+                return True
+            logger.warning(
+                f"[ChainVerify] receipt={receipt_id} log={log_id} "
+                f"prev_hash={str(prev_log_hash)[:12]}... NOT FOUND — chain broken"
+            )
+            return False
+        except Exception as qexc:
+            logger.warning(f"[ChainVerify] query error: {qexc}")
+            try:
+                conn.close()
+            except Exception:
+                pass
+            return None
+    except Exception as cexc:
+        logger.warning(f"[ChainVerify] connection error: {cexc}")
+        return None
+
+
 # ── P1: GET /api/verify/<receipt_id> ────────────────────────────────────────────
 # NOTE: Route is /api/verify/ (not /verify/) so the React SPA handles the
 # user-facing /verify/:receiptId URL and renders the visual receipt page.
@@ -732,7 +804,7 @@ def institutional_verify(receipt_id: str):
                        prev_hash, content_hash, signature,
                        signature_algorithm,
                        public_key, domain, client_id,
-                       created_at
+                       created_at, encrypted_payload
                 FROM decision_receipts
                 WHERE receipt_id = %s OR content_hash = %s
                 LIMIT 1
@@ -809,7 +881,19 @@ def institutional_verify(receipt_id: str):
      policy_ver, engine_ver, prev_hash, content_hash,
      signature, sig_algo,
      public_key, domain, client_id,
-     created_at) = row
+     created_at, _encrypted_payload_raw) = row
+
+    _layer0_status: "str | None" = None
+    if _encrypted_payload_raw:
+        try:
+            _meta = (
+                json.loads(_encrypted_payload_raw)
+                if isinstance(_encrypted_payload_raw, str)
+                else _encrypted_payload_raw
+            )
+            _layer0_status = _meta.get("layer0_status")
+        except Exception:
+            pass
 
     ts_issued  = ts_utc.isoformat() if hasattr(ts_utc, "isoformat") else str(ts_utc)
     ts_created = created_at.isoformat() if hasattr(created_at, "isoformat") else None
@@ -878,20 +962,12 @@ def institutional_verify(receipt_id: str):
 
     decision_upper = (decision or "UNKNOWN").upper()
 
-    # chain_valid policy (3 states):
-    #   True  — prev_hash present AND verified to match the preceding receipt hash
-    #   False — prev_hash present but does NOT match (chain broken / tampered)
-    #   None  — no chain verification performed (all EVL receipts; also used when
-    #            prev_hash is absent, meaning this is the first receipt in a session)
-    #
-    # CURRENT STATE: chain_valid is always None.
-    # Rationale: setting True requires fetching the prior receipt and comparing hashes.
-    # That WAL-based verification loop is specified in ADR-096 (not yet implemented).
-    # Until ADR-096 ships, returning None is the honest, auditor-safe value:
-    # it signals "no chain data available" rather than asserting a verification
-    # that was never performed.
-    chain_valid = None  # ADR-096: WAL chain verification loop (not yet implemented)
-    # None = recibo EVL autónomo; True/False reservado para ADR-096
+    # chain_valid policy (ADR-096 — WAL chain verification):
+    #   True  — governance_transparency_log entry found AND prev_log_hash
+    #            links correctly to a prior entry (chain intact)
+    #   False — log entry found BUT prev_log_hash not found (broken / tampered)
+    #   None  — no log entry for this receipt (legacy receipt or chain not yet active)
+    chain_valid = _query_chain_validity(rid)
 
     # Status rule — determinista, primer fallo gana:
     #   hash_valid=False   → recibo alterado post-emisión       → INVALID
@@ -930,6 +1006,7 @@ def institutional_verify(receipt_id: str):
         "checkpoints_total":   total if total > 0 else None,
         "policy_version":      policy_ver,
         "engine_version":      engine_ver,
+        "layer0_status":       _layer0_status,
     }
 
     return jsonify({
@@ -940,6 +1017,7 @@ def institutional_verify(receipt_id: str):
         "reason_code":      reason_code,
         "timestamp_issued": ts_issued,
         "timestamp_stored": ts_created,
+        "layer0_status":    _layer0_status,
         "signature": {
             "valid": sig_valid,
             "mode":  sig_mode,
@@ -947,6 +1025,7 @@ def institutional_verify(receipt_id: str):
         "integrity": {
             "hash_valid":  hash_valid,
             "chain_valid": chain_valid,
+            "chain_source": "governance_transparency_log" if chain_valid is not None else None,
         },
         "hash_valid":       hash_valid,
         "signature_valid":  sig_valid,
