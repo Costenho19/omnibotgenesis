@@ -1235,33 +1235,59 @@ class MetaCoherenceMonitor:
             conn = psycopg2.connect(self._db_url)
             cur  = conn.cursor()
 
-            # Pull per-period verdict counts using integer date bucketing.
-            # We floor each created_at to the nearest granularity_days-day boundary
-            # so that results are stable regardless of query time.
-            cur.execute("""
-                SELECT
-                    TO_CHAR(
-                        DATE_TRUNC('day', created_at)
-                        - (EXTRACT(DOY FROM created_at)::int %% %(gran)s) * INTERVAL '1 day',
-                        'YYYY-MM-DD'
-                    )                                              AS period_start,
-                    COUNT(*)                                       AS total,
-                    SUM(CASE
-                        WHEN LOWER(TRIM(decision)) IN ('held', 'hold') THEN 1
-                        ELSE 0
-                    END)                                           AS holds
-                FROM decision_receipts
-                WHERE
-                    (domain = %(domain)s OR %(domain)s = 'all')
-                    AND created_at >= NOW() - INTERVAL '1 day' * %(lookback)s
-                    AND created_at <= NOW()
-                GROUP BY 1
-                ORDER BY 1
-            """, {
-                "domain":   domain,
-                "gran":     granularity_days,
-                "lookback": lookback_days,
-            })
+            # Pull per-period verdict counts using DATE_TRUNC for stable weekly
+            # boundaries. DATE_TRUNC('week') aligns to Monday, producing
+            # consistent 7-day buckets regardless of query time.
+            # For non-7-day granularity we fall back to epoch-based bucketing.
+            if granularity_days == 7:
+                period_trunc = "week"
+                cur.execute("""
+                    SELECT
+                        TO_CHAR(DATE_TRUNC('week', created_at), 'YYYY-MM-DD') AS period_start,
+                        COUNT(*)                                               AS total,
+                        SUM(CASE
+                            WHEN LOWER(TRIM(decision)) IN ('held', 'hold') THEN 1
+                            ELSE 0
+                        END)                                                   AS holds
+                    FROM decision_receipts
+                    WHERE
+                        (domain = %(domain)s OR %(domain)s = 'all')
+                        AND created_at >= NOW() - INTERVAL '1 day' * %(lookback)s
+                        AND created_at <= NOW()
+                    GROUP BY 1
+                    ORDER BY 1
+                """, {
+                    "domain":   domain,
+                    "lookback": lookback_days,
+                })
+            else:
+                # Epoch-bucket for non-weekly granularities
+                cur.execute("""
+                    SELECT
+                        TO_CHAR(
+                            TO_TIMESTAMP(
+                                FLOOR(EXTRACT(EPOCH FROM created_at)
+                                      / (%(gran)s * 86400)) * %(gran)s * 86400
+                            ),
+                            'YYYY-MM-DD'
+                        )                                              AS period_start,
+                        COUNT(*)                                       AS total,
+                        SUM(CASE
+                            WHEN LOWER(TRIM(decision)) IN ('held', 'hold') THEN 1
+                            ELSE 0
+                        END)                                           AS holds
+                    FROM decision_receipts
+                    WHERE
+                        (domain = %(domain)s OR %(domain)s = 'all')
+                        AND created_at >= NOW() - INTERVAL '1 day' * %(lookback)s
+                        AND created_at <= NOW()
+                    GROUP BY 1
+                    ORDER BY 1
+                """, {
+                    "domain":   domain,
+                    "gran":     granularity_days,
+                    "lookback": lookback_days,
+                })
 
             rows = cur.fetchall()
             conn.close()
