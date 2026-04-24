@@ -322,6 +322,7 @@ export default function InvestorCommandCenter() {
   const [isLive, setIsLive] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   const [_loading, setLoading] = useState(true)
+  const [apiUnavailable, setApiUnavailable] = useState(false)
   const [phraseIdx, setPhraseIdx] = useState(0)
   const mountedRef = useRef(true)
 
@@ -330,14 +331,18 @@ export default function InvestorCommandCenter() {
       const res = await fetch(`${API_BASE}/api/metrics/live?_t=${Date.now()}`, {
         cache: 'no-store',
       })
-      if (!res.ok) return
+      if (!res.ok) {
+        if (mountedRef.current) setApiUnavailable(true)
+        return
+      }
       const json: LiveMetricsResponse = await res.json()
       if (!json.success || !mountedRef.current) return
       setData(json)
       setIsLive(true)
+      setApiUnavailable(false)
       setLastUpdated(new Date().toLocaleTimeString())
     } catch {
-      // silent — keep showing last known data
+      if (mountedRef.current) setApiUnavailable(true)
     } finally {
       if (mountedRef.current) setLoading(false)
     }
@@ -401,6 +406,18 @@ export default function InvestorCommandCenter() {
           </button>
         </div>
       </nav>
+
+      {/* API UNAVAILABLE BANNER */}
+      {apiUnavailable && !isLive && (
+        <div style={{
+          background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.2)',
+          padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 8,
+          fontSize: 13, color: '#FCA5A5'
+        }}>
+          <span style={{ fontWeight: 700 }}>⚠</span>
+          <span>Métricas no disponibles — datos en tiempo real temporalmente inaccesibles. Los valores mostrados no reflejan el estado actual del sistema.</span>
+        </div>
+      )}
 
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '2rem 1.5rem' }}>
 

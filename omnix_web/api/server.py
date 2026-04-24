@@ -516,6 +516,15 @@ try:
 except Exception as _proof_err:
     print(f"[server] WARNING: proof_bp not loaded: {_proof_err}")
 
+# ── Startup: ensure b2b_clients has webhook columns (ADR-053) ────────────────
+try:
+    from api.gov_auth_rbac import _ensure_webhook_columns, _ensure_key_expiry_column
+    _ensure_key_expiry_column()
+    _ensure_webhook_columns()
+    print("[startup] b2b_clients webhook columns verified OK")
+except Exception as _wh_err:
+    print(f"[startup] WARNING: webhook columns check failed: {_wh_err}")
+
 
 def get_db_connection():
     database_url = (

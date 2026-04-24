@@ -920,8 +920,8 @@ class AutoTradingBot:
             if price > 0:
                 cache['current_price'] = price
             self._cag_signals_cache = cache
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f'[CAG_CACHE] cache update skipped: {e}')
 
     def _get_cag_market_params(self, symbol: str = "UNKNOWN") -> dict:
         """
@@ -1136,8 +1136,8 @@ class AutoTradingBot:
                 return balance * 0.02
             elif self.state.get('paper_balance', 0) > 0:
                 return self.state['paper_balance'] * 0.02
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f'[BALANCE_CALC] error calculando balance: {e}')
         return 0.0
 
     def _get_trade_frequency_24h(self) -> tuple:
@@ -1177,8 +1177,8 @@ class AutoTradingBot:
                 stats = self.database_service.get_paper_trades_stats()
                 if isinstance(stats, dict) and 'today_count' in stats:
                     return (int(stats['today_count']), "DB")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f'[TRADE_FREQ] DB query failed: {e}')
         return (0, "PROXY")
 
     def _get_recent_reversals(self, symbol: str, window: int = 4) -> tuple:
@@ -1207,8 +1207,8 @@ class AutoTradingBot:
                     and actions[i - 1] in ("BUY", "SELL")
                 )
                 return (reversals, "CACHE")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f'[REVERSALS_CACHE] cache read failed: {e}')
 
         try:
             if self.database_service and hasattr(self.database_service, 'get_recent_trades'):
@@ -1222,8 +1222,8 @@ class AutoTradingBot:
                         and actions[i - 1] in ("BUY", "SELL")
                     )
                     return (reversals, "DB")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f'[REVERSALS_DB] DB query failed: {e}')
 
         return (0, "PROXY")
 
@@ -1312,8 +1312,8 @@ class AutoTradingBot:
             history = self._recent_actions_cache.get(symbol, [])
             history.append(action)
             self._recent_actions_cache[symbol] = history[-max_history:]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f'[ACTIONS_CACHE] cache update failed: {e}')
 
     def _build_shadow_context(
         self,
@@ -4290,8 +4290,8 @@ class AutoTradingBot:
                     if _pos_usd <= 0:
                         _pos_usd = float(current_price) * 1.0
                     decision['estimated_value_usd'] = round(_pos_usd, 2)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f'[ESTIMATED_VALUE] calc error: {e}')
 
             if AML_GATE_AVAILABLE and AMLGate is not None:
                 try:
@@ -5877,8 +5877,8 @@ class AutoTradingBot:
                                 decision_id=decision_id,
                                 reason="Daily drawdown limit exceeded for pair"
                             )
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.debug(f'[VETO_RECORD] error registrando veto: {e}')
                     
                     return {
                         'success': False,
@@ -6378,8 +6378,8 @@ class AutoTradingBot:
                             ticker = self.trading_service.get_ticker(self.config['trading_pair'])
                             if ticker and 'last' in ticker:
                                 current_price = float(ticker['last'])
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.debug(f'[PRICE_UPDATE] error actualizando precio: {e}')
                     
                     if current_price and current_price > 0:
                         sniper_eval = sniper.evaluate_entry(
@@ -7298,8 +7298,8 @@ class AutoTradingBot:
                     try:
                         open_orders = self.trading_service.get_open_orders()
                         has_open_positions = bool(open_orders)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f'[OPEN_ORDERS] error verificando posiciones: {e}')
             
             if has_open_positions:
                 # Guardar parámetros para aplicar cuando no haya posiciones
@@ -7408,8 +7408,8 @@ class AutoTradingBot:
                         'current_spread': spread.get('spread', 0.001) if spread else 0.001,
                         'current_volume': spread.get('volume', 1000000) if spread else 1000000
                     }
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f'[SPREAD_FETCH] error obteniendo spread: {e}')
             
             # Procesar señal del kernel
             result = self.adaptive_engine.process_kernel_signal(

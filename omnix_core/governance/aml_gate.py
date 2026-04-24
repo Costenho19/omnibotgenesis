@@ -191,14 +191,14 @@ class AMLGate:
             return self._run_checks(symbol, proposed_action, volume_usd, trade_frequency_24h, freq_source)
 
         except Exception as exc:
-            logger.warning(f"[AML_GATE] Exception for {symbol}: {exc} → pass-through")
+            logger.error(f"[AML_GATE] ❌ Exception for {symbol}: {exc} → FAIL-CLOSED (ADR-116)")
             return AMLVetoResult(
-                admissible=True,
-                pass_through=True,
-                reason=f"CP-9 AML_FAILSAFE: score=0 reflects module error, not AML compliance — {exc}",
+                admissible=False,
+                pass_through=False,
+                reason=f"CP-9 AML_FAIL_CLOSED: module error — ejecución bloqueada por seguridad (ADR-116) — {exc}",
                 asset=symbol,
                 aml_score=0.0,
-                evaluation_state="FAILSAFE",
+                evaluation_state="FAIL_CLOSED",
             )
 
     def _run_checks(

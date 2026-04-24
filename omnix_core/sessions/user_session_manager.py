@@ -586,8 +586,8 @@ class UserSessionManager:
                 total_balance += session.paper_balance
                 total_trades += session.total_trades
                 total_profit += session.total_profit_loss
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f'[SESSION_AGG] error agregando sesión {user_id}: {e}')
         
         return {
             'active_users': len(active_users),

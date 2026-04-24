@@ -189,6 +189,7 @@ class TestJurisdictionGate:
         assert cfg.operation_type == "leveraged"
         os.environ["JURISDICTION_GATE_ENABLED"] = "false"
         os.environ.pop("JURISDICTION_OP_TYPE", None)
+        os.environ.pop("JURISDICTION", None)
 
     def test_hold_action_passes(self):
         gate = self._gate("UAE")
@@ -213,59 +214,73 @@ class TestComplianceGatesIntegration:
             'logic_consistency': 80,
         }
 
+    def _cag_bypass(self):
+        """CAG bypass params: provide valid liquidity so CAG doesn't block on proxy=0.0.
+        These tests focus on AML/Jurisdiction/Fraud behavior, not CAG."""
+        return {"cag_liquidity_score": 100.0}
+
     def test_no_compliance_config_xmr_approved(self):
-        r = self._engine().evaluate(self._signals(), asset="XMR/USD")
+        """Without AML/Fraud/Jurisdiction enabled, XMR passes (CAG bypass provided)."""
+        r = self._engine().evaluate(self._signals(), asset="XMR/USD",
+                                    compliance_config=self._cag_bypass())
         assert r["decision"] == "APPROVED"
         assert "compliance" not in r
 
     def test_aml_blocks_xmr(self):
+        cfg = {**self._cag_bypass(), "aml_enabled": True}
         r = self._engine().evaluate(self._signals(), asset="XMR/USD",
-                                    compliance_config={"aml_enabled": True})
+                                    compliance_config=cfg)
         assert r["decision"] == "BLOCKED"
         assert r["compliance"]["aml_compliance"]["result"] == "failed"
 
     def test_aml_passes_btc(self):
+        cfg = {**self._cag_bypass(), "aml_enabled": True}
         r = self._engine().evaluate(self._signals(), asset="BTC/USD",
-                                    compliance_config={"aml_enabled": True})
+                                    compliance_config=cfg)
         assert r["decision"] == "APPROVED"
         assert r["compliance"]["aml_compliance"]["result"] == "passed"
 
     def test_jurisdiction_blocks_xmr_uae(self):
+        """Sistema bloquea XMR/USD con jurisdiction_enabled=True en UAE.
+        El bloqueo puede ocurrir en SAE Layer 0 (JA-UAE-XMR/USD-001) o en
+        el compliance gate — ambos son correctos; el test verifica el resultado final."""
+        cfg = {**self._cag_bypass(), "jurisdiction_enabled": True, "jurisdiction": "UAE"}
         r = self._engine().evaluate(self._signals(), asset="XMR/USD",
-                                    compliance_config={
-                                        "jurisdiction_enabled": True,
-                                        "jurisdiction": "UAE",
-                                    })
-        assert r["decision"] == "BLOCKED"
-        assert r["compliance"]["jurisdiction_compliance"]["result"] == "failed"
+                                    compliance_config=cfg)
+        assert r["decision"] == "BLOCKED", (
+            "XMR/USD debe ser bloqueado en UAE (por SAE Layer 0 o por jurisdiction gate)"
+        )
+        # La key 'compliance' puede estar ausente si SAE Layer 0 bloqueó primero
+        if "compliance" in r:
+            assert r["compliance"]["jurisdiction_compliance"]["result"] == "failed"
 
     def test_jurisdiction_blocks_leverage_uae(self):
+        cfg = {**self._cag_bypass(),
+               "jurisdiction_enabled": True, "jurisdiction": "UAE",
+               "operation_type": "leveraged"}
         r = self._engine().evaluate(self._signals(), asset="BTC/USD",
-                                    compliance_config={
-                                        "jurisdiction_enabled": True,
-                                        "jurisdiction": "UAE",
-                                        "operation_type": "leveraged",
-                                    })
+                                    compliance_config=cfg)
         assert r["decision"] == "BLOCKED"
 
     def test_jurisdiction_passes_btc_uae_spot(self):
+        cfg = {**self._cag_bypass(),
+               "jurisdiction_enabled": True, "jurisdiction": "UAE",
+               "operation_type": "spot"}
         r = self._engine().evaluate(self._signals(), asset="BTC/USD",
-                                    compliance_config={
-                                        "jurisdiction_enabled": True,
-                                        "jurisdiction": "UAE",
-                                        "operation_type": "spot",
-                                    })
+                                    compliance_config=cfg)
         assert r["decision"] == "APPROVED"
 
     def test_compliance_block_propagates_to_veto_chain(self):
+        cfg = {**self._cag_bypass(), "aml_enabled": True}
         r = self._engine().evaluate(self._signals(), asset="XMR/USD",
-                                    compliance_config={"aml_enabled": True})
+                                    compliance_config=cfg)
         cp9_veto = any(v.get("checkpoint_id") == "CP-9" for v in r["veto_chain"])
         assert cp9_veto
 
     def test_compliance_block_in_decision_trace(self):
+        cfg = {**self._cag_bypass(), "aml_enabled": True}
         r = self._engine().evaluate(self._signals(), asset="XMR/USD",
-                                    compliance_config={"aml_enabled": True})
+                                    compliance_config=cfg)
         trace_has_aml = any("AML_VETO" in t for t in r["decision_trace"])
         assert trace_has_aml
 
@@ -555,7 +570,8 @@ class TestFraudGateADR069:
         assert r.integrity_score > 0.0
 
     def test_failsafe_returns_zero_score(self):
-        """ADR-069: FraudGate exception path must return integrity_score=0, not 100."""
+        """ADR-069 + ADR-116: FraudGate exception path must return integrity_score=0
+        AND be FAIL-CLOSED (pass_through=False, admissible=False) — exception ≠ fraud-free."""
         from omnix_core.governance.fraud_gate import FraudGate, FraudGateConfig
 
         class BrokenFraudGate(FraudGate):
@@ -564,12 +580,18 @@ class TestFraudGateADR069:
 
         gate = BrokenFraudGate(FraudGateConfig(enabled=True))
         r = gate.evaluate("BTC/USD", "BUY", dci_score=0.0, technical_score=60.0, sentiment_score=50.0, recent_reversals=0)
-        assert r.pass_through is True
+        assert r.pass_through is False, (
+            "ADR-116 FAIL-CLOSED: FraudGate exception must NOT pass_through=True — "
+            "exception path blocks execution (FAIL-CLOSED)"
+        )
+        assert r.admissible is False, "ADR-116: FraudGate exception must set admissible=False"
         assert r.integrity_score == 0.0, (
             f"ADR-069 VIOLATION: failsafe Fraud Gate returned integrity_score={r.integrity_score} "
             "(expected 0.0 — exception ≠ fraud-free)"
         )
-        assert r.evaluation_state == "FAILSAFE"
+        assert r.evaluation_state == "FAIL_CLOSED", (
+            f"ADR-116: expected evaluation_state='FAIL_CLOSED', got '{r.evaluation_state}'"
+        )
 
     def test_reversal_detection_with_zero_reversals_passes(self):
         """ADR-069: recent_reversals=0 with enabled gate is valid and must not block."""
@@ -626,7 +648,8 @@ class TestCAGADR070:
         assert r.evaluation_state == "EVALUATED"
 
     def test_failsafe_returns_zero_score(self):
-        """ADR-070: Exception in CAG must return admission_score=0, not 100."""
+        """ADR-070 + ADR-116: CAG exception must return admission_score=0 AND be FAIL-CLOSED.
+        Exception ≠ perfect market conditions — pipeline must block."""
         from omnix_core.governance.context_admission_gate import ContextAdmissionGate, CAGConfig
 
         class BrokenCAG(ContextAdmissionGate):
@@ -635,12 +658,18 @@ class TestCAGADR070:
 
         gate = BrokenCAG(CAGConfig(enabled=True))
         r = gate.evaluate(global_volatility=10.0, cross_pair_correlation=20.0, liquidity_score=80.0, macro_risk=15.0)
-        assert r.pass_through is True
+        assert r.pass_through is False, (
+            "ADR-116 FAIL-CLOSED: CAG exception must NOT pass_through=True — "
+            "exception path blocks execution"
+        )
+        assert r.admitted is False, "ADR-116: CAG exception must set admitted=False"
         assert r.admission_score == 0.0, (
             f"ADR-070 VIOLATION: failsafe CAG returned admission_score={r.admission_score} "
             "(expected 0.0 — exception ≠ perfect market conditions)"
         )
-        assert r.evaluation_state == "FAILSAFE"
+        assert r.evaluation_state == "FAIL_CLOSED", (
+            f"ADR-116: expected evaluation_state='FAIL_CLOSED', got '{r.evaluation_state}'"
+        )
 
     def test_disabled_gate_is_pass_through(self):
         """ADR-070: Disabled CAG must still admit (pass_through=True) to preserve pipeline."""

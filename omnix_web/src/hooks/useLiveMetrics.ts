@@ -24,7 +24,7 @@ const FALLBACK_METRICS: LiveMetrics = {
   ebip_score: 0,
 }
 
-const RAILWAY_PUBLIC_API = 'https://omnibotgenesis-production.up.railway.app'
+const RAILWAY_PUBLIC_API = import.meta.env.VITE_RAILWAY_API_URL || 'https://omnibotgenesis-production.up.railway.app'
 const LOCAL_API = import.meta.env.VITE_API_BASE || ''
 const FLASK_API = import.meta.env.VITE_FLASK_API_URL || ''
 

@@ -12,8 +12,11 @@ VERSION_BANNER = f"V{VERSION} {VERSION_NAME}"
 # ============================================================
 
 import os
+import logging
 from dataclasses import dataclass
 from typing import Optional
+
+_cfg_logger = logging.getLogger(__name__)
 
 # Import centralized env config
 from omnix_config.env_manager import env_config
@@ -104,7 +107,7 @@ class Settings:
     
     # Telegram
     TELEGRAM_TOKEN: str = env_config.get_required('TELEGRAM_BOT_TOKEN')
-    TELEGRAM_ADMIN_ID: str = env_config.get('TELEGRAM_ADMIN_USER_ID', default='7014748854')  # TODO: Move to Replit Secrets
+    TELEGRAM_ADMIN_ID: str = env_config.get('TELEGRAM_ADMIN_USER_ID', default='7014748854')
     
     # Rate Limiting
     RATE_LIMIT_PER_USER: int = 60  # requests per minute
@@ -143,6 +146,18 @@ class Settings:
         
         if errors:
             raise ValueError(f"Configuration errors: {', '.join(errors)}")
+
+        # Advertencias de seguridad (no bloquean arranque pero deben corregirse)
+        if cls.SECRET_KEY == 'omnix-enterprise-secret-key-change-in-prod':
+            _cfg_logger.warning(
+                "⚠️  SECRET_KEY usa el valor por defecto inseguro. "
+                "Configura SECRET_KEY en Railway env vars para producción."
+            )
+        if cls.TELEGRAM_ADMIN_ID == '7014748854':
+            _cfg_logger.warning(
+                "⚠️  TELEGRAM_ADMIN_USER_ID usa valor hardcoded. "
+                "Configura TELEGRAM_ADMIN_USER_ID en Railway env vars."
+            )
 
 
 # Global settings instance

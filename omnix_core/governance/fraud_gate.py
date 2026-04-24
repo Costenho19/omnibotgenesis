@@ -146,17 +146,16 @@ class FraudGate:
                 technical_score, sentiment_score, recent_reversals
             )
         except Exception as exc:
-            logger.warning(f"⚠️ [FRAUD_GATE] Exception for {symbol}: {exc} → pass-through")
+            logger.error(f"❌ [FRAUD_GATE] Exception for {symbol}: {exc} → FAIL-CLOSED (ADR-116)")
             return FraudVetoResult(
-                admissible=True,
-                pass_through=True,
+                admissible=False,
+                pass_through=False,
                 reason=(
-                    f"FRAUD_FAILSAFE: score=0 reflects module error, not absence of fraud — {exc}. "
-                    "Pass-through preserves pipeline flow. Investigate exception for reliability."
+                    f"CP-10 FRAUD_FAIL_CLOSED: module error — ejecución bloqueada por seguridad (ADR-116) — {exc}."
                 ),
                 asset=symbol,
                 integrity_score=0.0,
-                evaluation_state="FAILSAFE",
+                evaluation_state="FAIL_CLOSED",
             )
 
     def _run_checks(

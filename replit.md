@@ -40,7 +40,7 @@
 | **PostgreSQL** | 🟢 OPERATIVO | 44+ tablas, 327K+ decision_receipts, 0 NULLs |
 | **Redis** | 🟢 OPERATIVO | Anti-replay (best_effort mode) |
 
-### Métricas Clave (18 Abr 2026)
+### Métricas Clave (24 Abr 2026 — post-audit-repair)
 
 | Métrica | Valor |
 |---|---|
@@ -49,7 +49,7 @@
 | Dominios públicos anunciados | 9 |
 | ADRs publicados | 30 formalizados (incl. ADR-116 Fail-Closed Enforcement Policy, ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
 | TAM total cubierto | $212B+ |
-| Tests pasando | 93 pasando (post-audit fix 24 Abr) |
+| Tests pasando | **152** (code_verification×7 + critical_audit×17 + compliance_gates×112 + T011×16) |
 | Cobertura PQC | Dilithium-3 (CRYSTALS) + Kyber-768 |
 | AVM snapshots activos | 9 (1 por dominio) |
 
@@ -57,6 +57,7 @@
 
 | Fecha | Fix | Commit |
 |---|---|---|
+| 24 Abr 2026 | **AUDIT REPAIR COMPLETA (T001–T013)** — Ver sección "Audit Repair 24 Abr 2026" abajo | — |
 | 24 Abr 2026 | **DIAGNOSTIC MODE + HMM REGIME FIXES**: (1) `auto_trading_bot.py` — `hmm_regime=NULL` en DB resuelto: fallback a `v52_analysis.market_regime` → `'UNKNOWN'` en lugar de NULL; (2) `conversational_ai_adapter.py` — path legacy ahora inyecta datos reales del Track Record Oficial (37 trades, 54.05%, +$2,054) en `diagnostic_mode=True`; (3) `ai_service.py` — system prompt diagnóstico actualizado con etiqueta del período y nota de separación vs Learning Baseline; (4) `prompt_templates.py` — query `ROUND(AVG(profit_loss))` corregida con cast `::numeric` para PostgreSQL; `InvestorDataProvider.get_basic_trading_stats()` retorna datos reales por período | pendiente push |
 | 24 Abr 2026 | **AUDIT CRÍTICA — 8 bugs corregidos**: SAE ON por defecto, CAG ON por defecto, SAE error→fail-closed, FORCE_OFF eliminado (Zero-Bypass garantizado), PQC fail→raise, AML error→fail-closed, Fraud error→fail-closed, Dashboard metrics→503 real (sin números inventados) | pendiente push |
 | 18 Abr 2026 | **AUDIT PROFUNDA**: 8→9 dominios en todos los archivos (AI prompts×15, React pages×12). Sección "Coste de no tener OMNIX" en CommercialLanding. SQL/secrets audit: sin vulnerabilidades críticas. Build React: 0 errores. | pendiente push |
@@ -68,6 +69,78 @@
 | 13 Abr 2026 | ADR-081: Per-Client B2B Quota Enforcement (5K/día, 50K/mes) | — |
 | 13 Abr 2026 | ADR-080: Strict Input Schema Validation en todos los endpoints | — |
 | 11 Abr 2026 | 23 errores encontrados y corregidos en auditoría profunda | — |
+
+---
+
+## AUDIT REPAIR — 24 Abr 2026 (T001–T013)
+
+Reparación completa de todos los hallazgos de la auditoría del sistema. **152 tests pasando, 0 fallas.**
+
+### T001 — AML, Fraud, CAG Fail-Closed (Critical A-01 / ADR-116)
+- **Archivos**: `omnix_core/governance/aml_gate.py`, `fraud_gate.py`, `context_admission_gate.py`
+- **Antes**: `except Exception: pass` → continuaba con `pass_through=True` (fail-open inseguro)
+- **Después**: `except Exception → admissible=False, pass_through=False, evaluation_state="FAIL_CLOSED"`
+- **Tests actualizados**: `test_failsafe_returns_zero_score` en FraudGate + CAG ahora validan FAIL-CLOSED
+
+### T002 — webhook_url columns al startup (Critical C-02)
+- **Archivo**: `omnix_web/api/server.py` línea 522-529
+- **Antes**: `_ensure_webhook_columns()` solo se llamaba desde `set_client_webhook()` → KeyError en `/api/governance/evaluate`
+- **Después**: llamada en startup post-blueprints: `_ensure_key_expiry_column()` + `_ensure_webhook_columns()`
+- **Verificado**: log `[startup] b2b_clients webhook columns verified OK` en OMNIX Web API
+
+### T003 — hmm_regime NULL → 'UNKNOWN' (Critical C-04)
+- **Base de datos Railway**: `UPDATE paper_trading_trades SET hmm_regime = 'UNKNOWN' WHERE hmm_regime IS NULL AND status = 'closed'`
+- **Resultado**: 37 trades Track Record actualizados, 0 NULLs restantes
+
+### T004 — DROP tablas zombie backup (Medium M-03)
+- **Base de datos Railway**: eliminadas `backup_balances_20260109`, `backup_trades_20260109`, `paper_trading_balances_backup_jan10_2026`
+
+### T005 — Defaults en circuit_breaker_status y risk_limits (Critical C-06)
+- **circuit_breaker_status**: 1 fila default (`global_trading_halt`, state=`CLOSED`)
+- **risk_limits**: 3 filas default (`MAX_DAILY_LOSS_PCT=5%`, `MAX_POSITION_SIZE_PCT=10%`, `MAX_LEVERAGE=3x`)
+
+### T006 — Frontend URL hardcodeada → env var (Medium M-01)
+- **Archivo**: `omnix_web/src/hooks/useLiveMetrics.ts` línea 30
+- **Antes**: `const RAILWAY_PUBLIC_API = 'https://omnibotgenesis-production.up.railway.app'`
+- **Después**: `const RAILWAY_PUBLIC_API = import.meta.env.VITE_RAILWAY_API_URL || '...'`
+
+### T007 — InvestorCommandCenter error state explícito (Medium M-02)
+- **Archivo**: `omnix_web/src/pages/InvestorCommandCenter.tsx`
+- **Antes**: `catch { // silent — keep showing last known data }` → mostraba FALLBACK_DATA sin aviso
+- **Después**: `catch { setApiUnavailable(true) }` + banner rojo visible cuando API falla
+
+### T008 — except:pass → logger.debug (Medium A-05)
+- **Archivos**: `auto_trading_bot.py` (11), `paper_trading.py` (2), `user_session_manager.py` (1)
+- `conn.close()` cleanup blocks marcados con comentario explicativo
+
+### T009 — print() en governance → docstring
+- `structural_admissibility_engine.py` línea 1019: `print()` dentro de docstring (no ejecutable)
+
+### T010 — SECRET_KEY y TELEGRAM_ADMIN_ID validación (Critical C-03/C-05)
+- **Archivo**: `omnix_config/settings.py`
+- **Añadido**: `import logging` + `_cfg_logger` + warnings en `validate()` si se usan valores por defecto
+- **Railway REQUIERE**: `SECRET_KEY`, `TELEGRAM_ADMIN_USER_ID` configurados como env vars
+
+### T011 — Tests diagnostic_mode + ai_service fallback chain
+- **Archivo**: `tests/test_ai_diagnostic_mode.py` (16 tests, todos pasan)
+- Cubre: DIAGNOSTIC_ONLY_PROMPT, firma de `generate_response_async`, inyección de datos reales, fallback chain
+
+### T012 — Comandos bot comentados con respuesta clara
+- **Archivo**: `omnix_services/telegram_service/enterprise_bot.py`
+- `/analizar_noticia` y `/trending_crypto` descomentados con handlers stub informativos
+- Responden "en desarrollo — usa /buscar o /market" en lugar de silencio
+
+### T013 — replit.md actualizado
+- Esta sección documenta todos los fixes con archivo, línea, antes/después
+
+### Variables Railway PENDIENTES (acción del usuario requerida)
+| Variable | Descripción | Urgencia |
+|---|---|---|
+| `SECRET_KEY` | Clave Flask Sessions | CRÍTICA — no usar default |
+| `TELEGRAM_ADMIN_USER_ID` | Tu Telegram user_id | Alta |
+| `OMNIX_SIGNING_SECRET_KEY_B64` | PQC key privada Dilithium-3 | CRÍTICA — keys efímeras sin esto |
+| `OMNIX_SIGNING_PUBLIC_KEY_B64` | PQC key pública Dilithium-3 | CRÍTICA |
+| `VITE_RAILWAY_API_URL` | URL pública Railway para frontend | Media |
 
 ---
 

@@ -202,7 +202,7 @@ class TransparencyChain:
             try:
                 conn.close()
             except Exception:
-                pass
+                pass  # conn.close() cleanup — error en cierre es no-crítico
             return []
 
     def verify_chain_integrity(self, entries: List[Dict[str, Any]]) -> Dict[str, Any]:

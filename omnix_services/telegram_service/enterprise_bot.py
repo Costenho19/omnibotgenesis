@@ -879,9 +879,8 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("paper_sell", self.paper_sell_command))
             
             # 📰 News Scraper Commands - Análisis de Noticias
-            # TODO: Implementar estos comandos
-            # self.application.add_handler(CommandHandler("analizar_noticia", self.analyze_news_command))
-            # self.application.add_handler(CommandHandler("trending_crypto", self.trending_news_command))
+            self.application.add_handler(CommandHandler("analizar_noticia", self.analyze_news_command))
+            self.application.add_handler(CommandHandler("trending_crypto", self.trending_news_command))
             
             # 🔍 Web Search Command - Búsqueda en internet
             self.application.add_handler(CommandHandler("buscar", self.buscar_command))
@@ -1236,6 +1235,34 @@ Ejemplo: `/evaluar Meridian Capital $180M Murabaha, beneficial owner no divulgad
             
         except Exception as e:
             logger.error(f"❌ Error comando help: {e}")
+
+    async def analyze_news_command(self, update, context):
+        """Comando /analizar_noticia — stub informativo (en desarrollo)"""
+        try:
+            await update.message.reply_text(
+                "📰 *Análisis de Noticias — Próximamente*\n\n"
+                "Este comando está en desarrollo activo.\n"
+                "Mientras tanto, puedes usar:\n"
+                "• `/buscar [noticia]` — búsqueda web en tiempo real\n"
+                "• `/analisis` — análisis técnico de mercado",
+                parse_mode='Markdown'
+            )
+        except Exception as e:
+            logger.error(f"❌ Error en analyze_news_command: {e}")
+
+    async def trending_news_command(self, update, context):
+        """Comando /trending_crypto — stub informativo (en desarrollo)"""
+        try:
+            await update.message.reply_text(
+                "📈 *Trending Crypto — Próximamente*\n\n"
+                "Este comando está en desarrollo activo.\n"
+                "Mientras tanto, puedes usar:\n"
+                "• `/market` — resumen de mercado cripto\n"
+                "• `/precio [símbolo]` — precio en tiempo real",
+                parse_mode='Markdown'
+            )
+        except Exception as e:
+            logger.error(f"❌ Error en trending_news_command: {e}")
 
     async def buscar_command(self, update, context):
         """Comando /buscar - Búsqueda en internet con Tavily"""

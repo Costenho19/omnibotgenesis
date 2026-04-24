@@ -169,16 +169,15 @@ class ContextAdmissionGate:
                 macro_risk,
             )
         except Exception as exc:
-            logger.warning(f"⚠️ [CAG] Exception during admission check: {exc} → pass-through")
+            logger.error(f"❌ [CAG] Exception during admission check: {exc} → FAIL-CLOSED (ADR-116)")
             return CAGResult(
-                admitted=True,
-                pass_through=True,
+                admitted=False,
+                pass_through=False,
                 reason=(
-                    f"CAG_FAILSAFE: score=0 reflects module error, not perfect market conditions — {exc}. "
-                    "Pass-through preserves pipeline flow."
+                    f"CAG_FAIL_CLOSED: module error — sesión bloqueada por seguridad (ADR-116) — {exc}."
                 ),
                 admission_score=0.0,
-                evaluation_state="FAILSAFE",
+                evaluation_state="FAIL_CLOSED",
             )
 
     def _run_admission_checks(
@@ -359,7 +358,7 @@ def evaluate_session(
     Callers MUST supply a real or proxy value. See _get_cag_market_params() in the
     bot for the paper/live mode proxy mapping with ADR-073C trace documentation.
 
-    Fail-safe: any exception returns admitted=True, pass_through=True.
+    Fail-closed: any exception blocks the session (ADR-116 Zero-Bypass).
     """
     try:
         gate = ContextAdmissionGate(config or load_cag_config_from_env())
@@ -371,15 +370,15 @@ def evaluate_session(
         )
         return result
     except Exception as exc:
-        logger.warning(f"⚠️ [CAG] evaluate_session exception → pass-through: {exc}")
+        logger.error(f"❌ [CAG] evaluate_session exception → FAIL-CLOSED (ADR-116): {exc}")
         return SessionAdmissionResult(
-            admitted=True,
-            pass_through=True,
+            admitted=False,
+            pass_through=False,
             reason=(
-                f"CAG_FAILSAFE: score=0 reflects session-level error, not perfect market conditions — {exc}."
+                f"CAG_FAIL_CLOSED: module error — sesión bloqueada por seguridad (ADR-116) — {exc}."
             ),
             admission_score=0.0,
-            evaluation_state="FAILSAFE",
+            evaluation_state="FAIL_CLOSED",
         )
 
 
