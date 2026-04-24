@@ -345,6 +345,9 @@ def _generate_decision(
                     "reserve_coverage":      signals.reserve_coverage_ratio,
                     "liquid_reserve_ratio":  signals.liquid_reserve_ratio,
                 },
+                compliance_config={
+                    "cag_liquidity_score": round(signals.liquid_reserve_ratio * 100, 1),
+                },
             )
             decision      = result.get("decision", "BLOCKED")
             scores        = result.get("scores", sig_dict)

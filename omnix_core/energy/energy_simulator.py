@@ -334,6 +334,9 @@ def _generate_decision(
                     "capacity_margin_pct":  signals.capacity_margin_pct,
                     "frequency_deviation":  signals.frequency_deviation_hz,
                 },
+                compliance_config={
+                    "cag_liquidity_score": 100.0,
+                },
             )
             decision   = result.get("decision", "BLOCKED")
             scores     = result.get("scores", sig_dict)

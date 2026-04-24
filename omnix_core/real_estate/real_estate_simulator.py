@@ -435,6 +435,9 @@ def _evaluate_decision(decision_data: dict) -> dict:
                 "market_segment":  decision_data["market_segment"],
                 "decision_type":   decision_data["decision_type"],
             },
+            compliance_config={
+                "cag_liquidity_score": 75.0,
+            },
         )
         decision_outcome   = result.get("decision", "BLOCKED")
         receipt_id         = DecisionReceiptEngine.build_receipt_id("real_estate")

@@ -276,6 +276,9 @@ def _evaluate_claim(claim_data: dict) -> dict:
             asset=claim_data["insurance_type"],
             domain="insurance",
             metadata={"claimant_type": claim_data["claimant_type"]},
+            compliance_config={
+                "cag_liquidity_score": 80.0,
+            },
         )
         decision = result.get("decision", "BLOCKED")
         receipt_id = DecisionReceiptEngine.build_receipt_id("insurance")

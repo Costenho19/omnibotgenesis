@@ -312,6 +312,9 @@ def _evaluate_action(action_data: dict) -> dict:
                 "industry": action_data["industry"],
                 "environment": action_data["environment"],
             },
+            compliance_config={
+                "cag_liquidity_score": 100.0,
+            },
         )
         decision = result.get("decision", "BLOCKED")
         receipt_id = DecisionReceiptEngine.build_receipt_id("robotics")

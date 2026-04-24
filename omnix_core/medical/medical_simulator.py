@@ -330,6 +330,9 @@ def _evaluate_decision(decision_data: dict) -> dict:
                 "device_type":     decision_data["device_type"],
                 "off_label_use":   decision_data["off_label_use"],
             },
+            compliance_config={
+                "cag_liquidity_score": 100.0,
+            },
         )
         decision_outcome   = result.get("decision", "BLOCKED")
         receipt_id         = DecisionReceiptEngine.build_receipt_id("medical_ai")

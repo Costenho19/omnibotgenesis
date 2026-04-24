@@ -236,6 +236,7 @@ async def evaluate_credit_application(app, macro) -> Optional[dict]:
                 "sharia_sector": app.sector,
                 "sharia_gharar": app.gharar_score,
                 "sharia_debt_ratio": app.debt_service_ratio,
+                "cag_liquidity_score": 75.0,
             },
         )
 

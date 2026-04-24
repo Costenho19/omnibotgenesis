@@ -324,6 +324,9 @@ def _evaluate_decision(decision_data: dict) -> dict:
                 "data_sensitivity": decision_data["data_sensitivity"],
                 "cross_boundary":   decision_data["cross_boundary"],
             },
+            compliance_config={
+                "cag_liquidity_score": 100.0,
+            },
         )
         decision_outcome   = result.get("decision", "BLOCKED")
         receipt_id         = DecisionReceiptEngine.build_receipt_id("autonomous_agent")
