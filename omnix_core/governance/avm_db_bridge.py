@@ -421,7 +421,11 @@ class AVMDatabaseBridge:
         p.mkdir(parents=True, exist_ok=True)
 
         # Fields that exist in DB/bridge but NOT in CalibrationSnapshot dataclass
-        _BRIDGE_ONLY_FIELDS = {"baseline_hash", "integrity_status", "version", "is_active"}
+        _BRIDGE_ONLY_FIELDS = {
+            "baseline_hash", "integrity_status", "version", "is_active",
+            # P2 genesis anchor fields — immutable DB metadata, not part of AVM snapshot schema
+            "is_genesis", "genesis_snapshot_id", "genesis_calibrated_at",
+        }
 
         restored = 0
         tampered = 0
