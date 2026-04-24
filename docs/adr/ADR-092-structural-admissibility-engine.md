@@ -188,3 +188,37 @@ Constraint tables are loaded from jurisdiction_gate and sharia_gate at first use
 - `tests/test_structural_admissibility_engine.py` — Test suite
 - `docs/ip/provisional_applications/family_15/SPECIFICATION_FAMILY15.md` — Patent specification
 - `docs/ip/provisional_applications/pdf_exports/PRIORITY_1_URGENT/P1_004_F15_StructuralAdmissibilityEngine.pdf` — Patent PDF
+
+---
+
+## Amendment — 2026-04-24 (ADR-116: Fail-Closed Enforcement)
+
+Three changes to the original ADR-092 specification, effective 24 April 2026:
+
+### Amendment 1 — SAE is ON by default
+
+The original implementation defaulted `SAE_ENABLED` to `"false"` for backward compatibility. This meant every production deployment that did not explicitly configure the env var silently operated without Layer 0.
+
+**Change:** `SAE_ENABLED` now defaults to `"true"`. To disable Layer 0, an explicit `SAE_ENABLED=false` env var must be set. This change applies in both `omnix_web/api/omnix_engine/external_evaluator.py` and `omnix_core/governance/external_evaluator.py`.
+
+### Amendment 2 — SAEOverride.FORCE_OFF permanently removed
+
+`SAEOverride.FORCE_OFF` was an undocumented mechanism that could disable Layer 0 for all requests regardless of caller configuration. Its existence contradicted the Zero-Bypass guarantee stated in Component C (ZBE).
+
+**Change:** `SAEOverride.FORCE_OFF` is removed from the `SAEOverride` enum. The enum now contains only `UNSET` and `FORCE_ON`. The docstring and `set_sae_override()` function are updated accordingly. All test cases that verified `FORCE_OFF` behavior have been removed.
+
+There is no runtime mechanism to disable Layer 0 except the `SAE_ENABLED=false` env var, which is observable in startup logs.
+
+### Amendment 3 — SAE internal errors → BLOCKED (fail-closed)
+
+The original implementation handled SAE internal exceptions with a `logger.warning` and a pass-through to Layer 1. This violated the Zero-Bypass guarantee: an inadmissible request could reach Layer 1 if the SAE raised an exception.
+
+**Change:** SAE internal exceptions now produce a `BLOCKED` response with:
+- `layer: LAYER_0_STRUCTURAL_ADMISSIBILITY`
+- `veto_chain[0].result: SAE_INTERNAL_ERROR`
+- `veto_chain[0].description`: the exception message
+- `decision_trace`: `LAYER_0 FAIL-CLOSED: SAE internal error: <exc>`
+
+The exception is logged at `ERROR` level (not `WARNING`). Layer 1 is never reached on SAE internal errors.
+
+See **ADR-116** for the full fail-closed enforcement policy across all governance gates.

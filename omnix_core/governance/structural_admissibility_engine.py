@@ -72,15 +72,14 @@ class SAEOverride(str, Enum):
     """
     Internal-only feature flag for Layer 0.
 
-    UNSET     — default: honour compliance_config.layer0_enabled / SAE_ENABLED env var
-    FORCE_ON  — Layer 0 always active regardless of what any API caller passes
-    FORCE_OFF — Layer 0 always inactive (emergency operator bypass)
+    UNSET    — default: honour compliance_config.layer0_enabled / SAE_ENABLED env var
+    FORCE_ON — Layer 0 always active regardless of what any API caller passes
 
     Only settable via set_sae_override() — not exposed through any API endpoint.
+    FORCE_OFF has been permanently removed (ADR-092: Zero-Bypass guarantee).
     """
-    UNSET     = "UNSET"
-    FORCE_ON  = "FORCE_ON"
-    FORCE_OFF = "FORCE_OFF"
+    UNSET    = "UNSET"
+    FORCE_ON = "FORCE_ON"
 
 
 class Domain(str, Enum):
@@ -291,9 +290,9 @@ def set_sae_override(override: SAEOverride) -> None:
     INTERNAL USE ONLY. Must never be called from an API handler —
     it is only for server initialisation and operator control.
 
-    SAEOverride.FORCE_ON  → Layer 0 active for ALL requests, ignoring caller flags.
-    SAEOverride.FORCE_OFF → Layer 0 inactive for ALL requests (emergency bypass).
-    SAEOverride.UNSET     → restore normal behaviour (compliance_config / SAE_ENABLED env).
+    SAEOverride.FORCE_ON → Layer 0 active for ALL requests, ignoring caller flags.
+    SAEOverride.UNSET    → restore normal behaviour (compliance_config / SAE_ENABLED env).
+    (FORCE_OFF permanently removed — ADR-092: Zero-Bypass guarantee.)
     """
     global _sae_override
     with _sae_override_lock:

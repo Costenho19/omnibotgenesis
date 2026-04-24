@@ -77,7 +77,7 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     decisions_today:  0,
     receipts_total:   0,
     uptime_days:      _uptimeDays,
-    adr_count:        115,
+    adr_count:        116,
     checkpoint_count: 11,
     verticals_live:   9,
     tam_usd:          '212B+',
@@ -167,7 +167,7 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     'Every 3 minutes, a robot or medical AI is evaluated before it\'s permitted to act.',
     'Every governance decision generates a post-quantum cryptographic receipt — independently verifiable.',
     'We didn\'t build a product. We built infrastructure. The live data proves it.',
-    '115 Architecture Decision Records. 11 governance checkpoints. Zero compromise.',
+    '116 Architecture Decision Records. 11 governance checkpoints. Zero compromise.',
   ],
 }
 
@@ -421,7 +421,7 @@ export default function InvestorCommandCenter() {
             <span style={{ color: '#C9A227' }}>Decisions Governed</span>
           </h1>
           <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
-            9 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 115} Architecture Decision Records
+            9 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 116} Architecture Decision Records
           </p>
         </div>
 

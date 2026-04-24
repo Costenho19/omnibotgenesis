@@ -282,6 +282,10 @@ class TestLayer0AlwaysActive:
             "asset": "BTC",
             "jurisdiction": "GLOBAL",
             "amount": 1000,
+            "cag_liquidity_score": 80.0,
+            "cag_global_volatility": 10.0,
+            "cag_cross_pair_correlation": 20.0,
+            "cag_macro_risk": 15.0,
         })
         data = r.get_json()
         assert r.status_code == 200, data
@@ -294,6 +298,10 @@ class TestLayer0AlwaysActive:
             "asset": "BTC",
             "jurisdiction": "GLOBAL",
             "amount": 1000,
+            "cag_liquidity_score": 80.0,
+            "cag_global_volatility": 10.0,
+            "cag_cross_pair_correlation": 20.0,
+            "cag_macro_risk": 15.0,
         })
         data = r.get_json()
         assert r.status_code == 200, data

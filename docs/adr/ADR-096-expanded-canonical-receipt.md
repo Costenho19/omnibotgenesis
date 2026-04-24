@@ -281,3 +281,32 @@ Matches SSH/TLS convention. The definition is also exposed in `execution_proof.f
 - ADR-078: Signing Key Persistence (stable Dilithium-3 keypair)
 - OMNIX-PAT-2026-015: Structural Admissibility Engine (§4.3 authority binding, §4.4 checkpoint provenance)
 - NIST FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA / Dilithium-3)
+
+---
+
+## Amendment — 2026-04-24 (ADR-116: PQC No-Fallback Policy)
+
+### Amendment 1 — SHA-256-FALLBACK permanently removed
+
+The original `_sign_canonical_hash()` implementation silently fell back to a SHA-256 hex string when Dilithium-3 signing failed. This produced a receipt with `signature_algorithm: "SHA-256-FALLBACK"` — indistinguishable in the API response from a legitimate degraded state, with no error surfaced to the caller.
+
+**Problem:** A client that purchased institutional-grade PQC governance received a SHA-256 receipt without any notification that their quantum-resistant security guarantee had silently degraded.
+
+**Change:** `_sign_canonical_hash()` now raises `RuntimeError` when Dilithium-3 signing fails. No fallback is produced. The `RuntimeError` propagates to the `/evaluate` endpoint and surfaces as HTTP 500 with an explicit error message.
+
+```python
+# BEFORE — silent degradation:
+fallback_sig = hashlib.sha256(canonical_hash.encode("utf-8")).hexdigest()
+return fallback_sig, "SHA-256-FALLBACK", None
+
+# AFTER — explicit failure:
+raise RuntimeError(
+    f"PQC signing unavailable — institutional receipt cannot be issued: {_pqc_err}"
+) from _pqc_err
+```
+
+The `X-OMNIX-Sig-Mode` response header will never carry `SHA-256-FALLBACK` in production. If the signing infrastructure is unavailable, the endpoint returns HTTP 500, not a degraded receipt.
+
+**Prerequisite:** Persistent Dilithium-3 keys must be configured via `OMNIX_SIGNING_SECRET_KEY_B64` and `OMNIX_SIGNING_PUBLIC_KEY_B64` env vars (ADR-078). A deployment without these keys configured will fail to issue any receipt. This is intentional — an OMNIX deployment without signing keys is not a valid OMNIX deployment.
+
+See **ADR-116** for the full no-degradation policy context.

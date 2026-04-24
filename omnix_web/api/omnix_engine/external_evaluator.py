@@ -282,14 +282,12 @@ class GovernanceEvaluationEngine:
         # ── Layer 0: Structural Admissibility Engine — ADR-092 / OMNIX-PAT-2026-015 ─
         if _SAE_AVAILABLE:
             _sae_override = get_sae_override()
-            if _sae_override == SAEOverride.FORCE_OFF:
-                _sae_enabled = False
-            elif _sae_override == SAEOverride.FORCE_ON:
+            if _sae_override == SAEOverride.FORCE_ON:
                 _sae_enabled = True
             else:
                 _sae_enabled = cfg.get(
                     "layer0_enabled",
-                    os.environ.get("SAE_ENABLED", "false").lower() == "true",
+                    os.environ.get("SAE_ENABLED", "true").lower() != "false",
                 )
             if _sae_enabled:
                 try:
@@ -347,7 +345,31 @@ class GovernanceEvaluationEngine:
                             "checkpoints_blocked": 1,
                         }
                 except Exception as _sae_err:
-                    logger.warning(f"[Layer 0] SAE error: {_sae_err} — pass-through")
+                    logger.error(
+                        f"[Layer 0] SAE INTERNAL ERROR — failing closed: {_sae_err} | "
+                        f"asset={asset} domain={domain}"
+                    )
+                    all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
+                    return {
+                        "decision": "BLOCKED",
+                        "asset": asset,
+                        "domain": domain,
+                        "layer": "LAYER_0_STRUCTURAL_ADMISSIBILITY",
+                        "gate_results": [],
+                        "veto_chain": [{
+                            "checkpoint_id": "LAYER_0",
+                            "checkpoint_name": "Structural Admissibility Engine",
+                            "result": "SAE_INTERNAL_ERROR",
+                            "constraint_id": "SAE_ERROR",
+                            "description": f"SAE internal error — fail-closed: {_sae_err}",
+                        }],
+                        "scores": {s: signals.get(s, 0.0) for s in all_signals},
+                        "decision_trace": [f"LAYER_0 FAIL-CLOSED: SAE internal error: {_sae_err}"],
+                        "metadata": metadata,
+                        "checkpoints_total": 0,
+                        "checkpoints_passed": 0,
+                        "checkpoints_blocked": 1,
+                    }
 
         # ── CAG: Context Admission Gate — session-level pre-admission ──────────
         # Runs BEFORE any signal enters the checkpoint pipeline.
@@ -356,7 +378,7 @@ class GovernanceEvaluationEngine:
         if _CAG_AVAILABLE:
             try:
                 cag_enabled = cfg.get("cag_enabled",
-                    os.environ.get("CAG_ENABLED", "false").lower() == "true")
+                    os.environ.get("CAG_ENABLED", "true").lower() != "false")
                 if cag_enabled:
                     from omnix_core.governance.context_admission_gate import CAGConfig
                     cag_cfg = CAGConfig(
@@ -511,7 +533,12 @@ class GovernanceEvaluationEngine:
                     else:
                         decision_trace.append(f"CP-9 AML_PASS: score={aml_result.aml_score:.0f}/100")
                 except Exception as e:
-                    logger.warning(f"⚠️ [CP-9 AML] B2B exception for {asset}: {e} → pass-through")
+                    logger.error(f"⚠️ [CP-9 AML] INTERNAL ERROR — failing closed: {e} | asset={asset}")
+                    decision = "BLOCKED"
+                    overall_blocked = True
+                    decision_trace.append(f"CP-9 AML_ERROR_BLOCKED: {e}")
+                    veto_chain.append({"checkpoint_id": "CP-9", "checkpoint_name": "AML Gate",
+                                       "result": "AML_INTERNAL_ERROR", "violation": str(e)})
 
             if _FRAUD_AVAILABLE and cfg.get("fraud_enabled",
                     os.environ.get("FRAUD_GATE_ENABLED", "false").lower() == "true"):
@@ -543,7 +570,12 @@ class GovernanceEvaluationEngine:
                     else:
                         decision_trace.append(f"CP-10 FRAUD_PASS: integrity={fraud_result.integrity_score:.0f}/100")
                 except Exception as e:
-                    logger.warning(f"⚠️ [CP-10 FRAUD] B2B exception for {asset}: {e} → pass-through")
+                    logger.error(f"⚠️ [CP-10 FRAUD] INTERNAL ERROR — failing closed: {e} | asset={asset}")
+                    decision = "BLOCKED"
+                    overall_blocked = True
+                    decision_trace.append(f"CP-10 FRAUD_ERROR_BLOCKED: {e}")
+                    veto_chain.append({"checkpoint_id": "CP-10", "checkpoint_name": "Fraud Gate",
+                                       "result": "FRAUD_INTERNAL_ERROR", "violation": str(e)})
 
             if _JURISDICTION_AVAILABLE and cfg.get("jurisdiction_enabled",
                     os.environ.get("JURISDICTION_GATE_ENABLED", "false").lower() == "true"):

@@ -47,9 +47,9 @@
 | Decisiones gobernadas | 327,000+ |
 | Verticales activos | **9** (Trading, Credit, Insurance, Robotics, Medical AI, Energy, Real Estate, Agents, **Stablecoin Reserve**) |
 | Dominios públicos anunciados | 9 |
-| ADRs publicados | 29 formalizados (incl. ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
+| ADRs publicados | 30 formalizados (incl. ADR-116 Fail-Closed Enforcement Policy, ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
 | TAM total cubierto | $212B+ |
-| Tests pasando | 94+ (73 SAE + 21 E2E) |
+| Tests pasando | 93 pasando (post-audit fix 24 Abr) |
 | Cobertura PQC | Dilithium-3 (CRYSTALS) + Kyber-768 |
 | AVM snapshots activos | 9 (1 por dominio) |
 
@@ -57,6 +57,7 @@
 
 | Fecha | Fix | Commit |
 |---|---|---|
+| 24 Abr 2026 | **AUDIT CRÍTICA — 8 bugs corregidos**: SAE ON por defecto, CAG ON por defecto, SAE error→fail-closed, FORCE_OFF eliminado (Zero-Bypass garantizado), PQC fail→raise, AML error→fail-closed, Fraud error→fail-closed, Dashboard metrics→503 real (sin números inventados) | pendiente push |
 | 18 Abr 2026 | **AUDIT PROFUNDA**: 8→9 dominios en todos los archivos (AI prompts×15, React pages×12). Sección "Coste de no tener OMNIX" en CommercialLanding. SQL/secrets audit: sin vulnerabilidades críticas. Build React: 0 errores. | pendiente push |
 | 18 Abr 2026 | Fix idioma bot: detector pt→es en msgs cortos, política idioma correcta | `26c1b959` |
 | 17 Abr 2026 | Bot indestructible: pool×16, retry×4, error handler global sin re-raise | `fa8332ba` |
@@ -514,6 +515,7 @@ Cada vertical tiene su propio snapshot de calibración:
 | ADR-113 | Medical AI Governance Vertical | ✅ |
 | ADR-114 | Real Estate Property Governance | ✅ |
 | ADR-115 | Engine Unification (8 verticales) | ✅ |
+| ADR-116 | Fail-Closed Enforcement Policy (SAE ON por defecto, FORCE_OFF removido, AML/Fraud/PQC fail-closed) | ✅ |
 | AGL-MED-001 | Medical AI Governance Full Stack | ✅ |
 | AGL-AGT-001 | Autonomous Agent Governance Full Stack | ✅ |
 | ADR-RES-001 | Real Estate Property Governance Internal | ✅ |

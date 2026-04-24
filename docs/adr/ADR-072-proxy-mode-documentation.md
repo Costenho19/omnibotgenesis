@@ -122,3 +122,43 @@ The existing CAG_WARNING for all-defaults now reflects the new proxy default val
 - `test_get_recent_reversals_returns_proxy_when_no_cache`
 - `test_get_recent_reversals_returns_cache_when_history_present`
 - `test_track_recent_action_maintains_rolling_history`
+
+---
+
+## Amendment — 2026-04-24 (ADR-116: CAG Default ON + Param Forwarding)
+
+### Amendment 1 — CAG is ON by default
+
+The original implementation defaulted `CAG_ENABLED` to `"false"`. This meant a production deployment without explicit configuration silently operated without Context Admission Gate checks — volatility, correlation, liquidity, and macro risk were never evaluated.
+
+**Change:** `CAG_ENABLED` now defaults to `"true"`. To disable CAG, an explicit `CAG_ENABLED=false` env var must be set. Applied in both `omnix_web/api/omnix_engine/external_evaluator.py` and `omnix_core/governance/external_evaluator.py`.
+
+### Amendment 2 — CAG parameters forwarded from /evaluate request body
+
+The `/evaluate` public endpoint (`proof_layer.py`) previously built `compliance_config` without CAG parameters. CAG ran on proxy defaults (`liq=0.0, vol=0.0, corr=0.0, macro=0.0`) for every public evaluation, silently blocking sessions even when the caller had real market data available.
+
+**Change:** `proof_layer.py` now reads the following keys from the request body and forwards them to `compliance_config`:
+
+```
+cag_liquidity_score, cag_global_volatility, cag_cross_pair_correlation,
+cag_macro_risk, cag_enabled, cag_volatility_threshold,
+cag_correlation_threshold, cag_liquidity_minimum,
+cag_macro_risk_ceiling, cag_block_on_any_violation
+```
+
+When absent from the request body, CAG continues to use proxy defaults with `CAG_LIQUIDITY_PROXY_MODE` trace entries (as established in this ADR).
+
+**Caller guidance:** Provide real market data for best governance accuracy:
+```json
+{
+  "action": "TRADE",
+  "asset": "BTC",
+  "amount": 1000,
+  "cag_liquidity_score": 80.0,
+  "cag_global_volatility": 12.0,
+  "cag_cross_pair_correlation": 25.0,
+  "cag_macro_risk": 18.0
+}
+```
+
+See **ADR-116** for the full fail-closed policy context.

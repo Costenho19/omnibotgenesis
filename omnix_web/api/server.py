@@ -34,9 +34,9 @@ def _count_adrs_from_files() -> int:
         adr_dir = os.path.join(BASE_DIR, '..', 'docs', 'adr')
         nums = [int(re.search(r'ADR-(\d+)', f).group(1))
                 for f in os.listdir(adr_dir) if re.search(r'ADR-(\d+)', f)]
-        return max(nums) if nums else 115
+        return max(nums) if nums else 116
     except Exception:
-        return 115
+        return 116
 
 _ADR_FILE_COUNT = _count_adrs_from_files()
 
@@ -582,19 +582,11 @@ def get_live_metrics():
     except Exception as e:
         print(f"Error fetching live metrics: {e}")
         return jsonify({
-            'success': True,
+            'success': False,
             'live': False,
-            'metrics': {
-                'evaluation_cycles': 766741,
-                'pqc_signed_receipts': 82518,
-                'decisions_blocked': 9317,
-                'exit_receipts': 78,
-                'capital_preserved_pct': 98.42,
-                'verticals_demo': 9,
-                'system_uptime_days': 112,
-            },
+            'error': 'Metrics unavailable — database unreachable',
             'last_updated': datetime.now(timezone.utc).isoformat()
-        })
+        }), 503
 
 
 @app.route('/api/metrics/live', methods=['GET'])
@@ -865,9 +857,9 @@ def get_metrics_live():
                 import re as _re, os as _os
                 _adr_dir = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'docs', 'adr')
                 _nums = [int(_re.search(r'ADR-(\d+)', f).group(1)) for f in _os.listdir(_adr_dir) if _re.search(r'ADR-(\d+)', f)]
-                adr_count = max(_nums) if _nums else 115
+                adr_count = max(_nums) if _nums else 116
             except Exception:
-                adr_count = 115
+                adr_count = 116
 
         cur.close()
         conn.close()

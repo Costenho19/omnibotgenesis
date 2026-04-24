@@ -533,25 +533,20 @@ class TestSAEOverride:
         set_sae_override(SAEOverride.FORCE_ON)
         assert get_sae_override() == SAEOverride.FORCE_ON
 
-    def test_force_off_deactivates_layer0_regardless_of_caller_flag(self):
-        set_sae_override(SAEOverride.FORCE_OFF)
-        assert get_sae_override() == SAEOverride.FORCE_OFF
-
     def test_override_reverts_to_unset(self):
         set_sae_override(SAEOverride.FORCE_ON)
         set_sae_override(SAEOverride.UNSET)
         assert get_sae_override() == SAEOverride.UNSET
 
     def test_override_values_are_strings(self):
-        assert SAEOverride.FORCE_ON.value  == "FORCE_ON"
-        assert SAEOverride.FORCE_OFF.value == "FORCE_OFF"
-        assert SAEOverride.UNSET.value     == "UNSET"
+        assert SAEOverride.FORCE_ON.value == "FORCE_ON"
+        assert SAEOverride.UNSET.value    == "UNSET"
 
     def test_override_sae_is_independent_of_compliance_config(self):
         set_sae_override(SAEOverride.FORCE_ON)
         assert get_sae_override() == SAEOverride.FORCE_ON
-        set_sae_override(SAEOverride.FORCE_OFF)
-        assert get_sae_override() == SAEOverride.FORCE_OFF
+        set_sae_override(SAEOverride.UNSET)
+        assert get_sae_override() == SAEOverride.UNSET
 
 
 # ── Business Metrics: Layer0Metrics ───────────────────────────────────────────

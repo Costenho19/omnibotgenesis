@@ -384,10 +384,12 @@ def _sign_canonical_hash(canonical_hash: str) -> tuple[str | None, str, str | No
             pub_b64 = _STABLE_PUBLIC_KEY_B64
             return sig_b64, algo, pub_b64
     except Exception as _pqc_err:
-        logger.debug(f"[ADR-096] PQC sign unavailable: {_pqc_err} — SHA-256 fallback")
-
-    fallback_sig = hashlib.sha256(canonical_hash.encode("utf-8")).hexdigest()
-    return fallback_sig, "SHA-256-FALLBACK", None
+        logger.error(
+            f"[ADR-096] PQC signing FAILED — receipt cannot be issued without PQC signature: {_pqc_err}"
+        )
+        raise RuntimeError(
+            f"PQC signing unavailable — institutional receipt cannot be issued: {_pqc_err}"
+        ) from _pqc_err
 
 
 def _build_execution_proof(
@@ -1102,6 +1104,19 @@ def simple_evaluate():
             "ethical_flags":   ethical_flags,
             "client_id":       "PUBLIC_EVALUATE",
         }
+        _cag_keys = (
+            "cag_liquidity_score", "cag_global_volatility",
+            "cag_cross_pair_correlation", "cag_macro_risk",
+            "cag_enabled", "cag_volatility_threshold",
+            "cag_correlation_threshold", "cag_liquidity_minimum",
+            "cag_macro_risk_ceiling", "cag_block_on_any_violation",
+        )
+        for _k in _cag_keys:
+            if _k in body:
+                try:
+                    compliance_config[_k] = float(body[_k]) if _k.startswith("cag_") and _k not in ("cag_enabled", "cag_block_on_any_violation") else body[_k]
+                except (TypeError, ValueError):
+                    pass
 
         engine = GovernanceEvaluationEngine()
         result = engine.evaluate(
