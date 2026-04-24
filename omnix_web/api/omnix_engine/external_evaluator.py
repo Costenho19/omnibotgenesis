@@ -371,6 +371,76 @@ class GovernanceEvaluationEngine:
                         "checkpoints_blocked": 1,
                     }
 
+        # ── Inline Layer 0 fallback — when SAE/omnix_core unavailable ──────────
+        # Enforces critical structural admissibility rules (SHARIA + jurisdiction)
+        # without requiring omnix_core. ADR-092 standalone path.
+        if not _SAE_AVAILABLE:
+            _jurisdiction = str(cfg.get("jurisdiction", "GLOBAL")).upper()
+            _operation = str(
+                cfg.get("operation_type") or cfg.get("action") or "SPOT"
+            ).upper()
+            _ethical = [
+                str(f).upper()
+                for f in (
+                    cfg.get("ethical_flags")
+                    or cfg.get("ethical_frameworks")
+                    or []
+                )
+            ]
+            _inline_veto = None
+
+            _HARAM_OPERATIONS = {"LEVERAGED", "MARGIN", "SHORT", "CFD", "FUTURES"}
+            _HARAM_ASSETS_INLINE = {"XMR", "DOGE", "SHIB", "LUNA", "WBTC"}
+            _UAE_JURISDICTIONS = {"UAE", "AE"}
+            _LEVERAGED_BLOCKED_JURISDICTIONS = {"UAE", "AE", "CN", "CHINA"}
+            _asset_base = asset.split("/")[0].split("-")[0].upper()
+
+            if "SHARIA" in _ethical:
+                if _operation in _HARAM_OPERATIONS:
+                    _inline_veto = (
+                        f"SHARIA_VIOLATION: {_operation} operations are prohibited "
+                        "under Islamic finance — riba/gharar applies."
+                    )
+                elif _asset_base in _HARAM_ASSETS_INLINE:
+                    _inline_veto = (
+                        f"SHARIA_VIOLATION: {asset} is a prohibited asset "
+                        "under Islamic finance guidelines."
+                    )
+
+            if _inline_veto is None and _jurisdiction in _LEVERAGED_BLOCKED_JURISDICTIONS:
+                if _operation in {"LEVERAGED", "MARGIN"}:
+                    _inline_veto = (
+                        f"JURISDICTION_BLOCK: Leveraged crypto instruments are prohibited "
+                        f"in {_jurisdiction} (VARA/regulatory restriction)."
+                    )
+
+            if _inline_veto:
+                _all_sigs = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
+                logger.warning(
+                    f"[Layer 0 Inline] BLOCKED — {_inline_veto} | "
+                    f"asset={asset} domain={domain}"
+                )
+                return {
+                    "decision": "BLOCKED",
+                    "asset": asset,
+                    "domain": domain,
+                    "layer": "LAYER_0_STRUCTURAL_ADMISSIBILITY",
+                    "gate_results": [],
+                    "veto_chain": [{
+                        "checkpoint_id": "LAYER_0",
+                        "checkpoint_name": "Structural Admissibility Engine (Inline)",
+                        "result": "INADMISSIBLE",
+                        "constraint_id": _inline_veto.split(":")[0],
+                        "description": _inline_veto,
+                    }],
+                    "scores": {s: signals.get(s, 0.0) for s in _all_sigs},
+                    "decision_trace": [f"LAYER_0 INADMISSIBLE (inline): {_inline_veto}"],
+                    "metadata": metadata,
+                    "checkpoints_total": 0,
+                    "checkpoints_passed": 0,
+                    "checkpoints_blocked": 1,
+                }
+
         # ── CAG: Context Admission Gate — session-level pre-admission ──────────
         # Runs BEFORE any signal enters the checkpoint pipeline.
         # If CAG blocks, no executable state is formed — pipeline never starts.

@@ -221,6 +221,47 @@ class TestJurisdictionAssetConstraints:
                 f"{asset}/SPOT/GLOBAL should be admissible"
             )
 
+    @pytest.mark.parametrize("pair,jurisdiction", [
+        ("XMR/USD",  "UAE"),
+        ("XMR/USDT", "US"),
+        ("ZEC/USD",  "UAE"),
+        ("DASH/BTC", "US"),
+        ("GRIN/ETH", "EU"),
+    ])
+    def test_pair_format_privacy_coins_blocked(self, pair, jurisdiction):
+        """Symbol normalisation: 'XMR/USD' must resolve base 'XMR' and be blocked."""
+        sae = _sae()
+        result = sae.validate(ProposedRequest(
+            subject=pair, operation="SPOT", jurisdiction=jurisdiction
+        ))
+        assert isinstance(result, StructuredRejectionRecord), (
+            f"{pair} (pair format) should be INADMISSIBLE in {jurisdiction}"
+        )
+        assert result.primary_violation.constraint_class == ConstraintClass.JURISDICTION_ASSET
+
+    @pytest.mark.parametrize("pair", [
+        "BTC/USD", "ETH/USDT", "SOL/BTC", "ADA/USD", "DOT/ETH",
+    ])
+    def test_clean_pairs_admitted_in_global(self, pair):
+        """Pair format for clean assets in GLOBAL jurisdiction must be ADMITTED."""
+        sae = _sae()
+        result = sae.validate(ProposedRequest(
+            subject=pair, operation="SPOT", jurisdiction="GLOBAL"
+        ))
+        assert isinstance(result, EvaluationRequest), (
+            f"{pair}/SPOT/GLOBAL should be admissible"
+        )
+
+    def test_sharia_haram_asset_pair_format_blocked(self):
+        """XMR/USD flagged HARAM via SHARIA ethical_flag (pair normalisation)."""
+        sae = _sae()
+        result = sae.validate(ProposedRequest(
+            subject="XMR/USD", operation="SPOT", jurisdiction="GLOBAL",
+            ethical_flags=["SHARIA"]
+        ))
+        assert isinstance(result, StructuredRejectionRecord)
+        assert result.primary_violation.constraint_class == ConstraintClass.ETHICAL_SHARIA
+
 
 class TestJurisdictionOperationConstraints:
     @pytest.mark.parametrize("operation,jurisdiction", [

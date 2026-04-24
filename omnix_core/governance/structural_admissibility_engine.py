@@ -500,7 +500,8 @@ def _build_sanctions_constraints() -> list[dict]:
 
     def _check(proposed: ProposedRequest) -> ConstraintViolation | None:
         asset = proposed.subject
-        if asset in sanctioned or any(s in asset for s in ("MIXER", "TUMBLER")):
+        base  = asset.split("/")[0].split("-")[0].upper()
+        if asset in sanctioned or base in sanctioned or any(s in asset for s in ("MIXER", "TUMBLER")):
             return ConstraintViolation(
                 constraint_id=f"SN-OFAC-{asset}-001",
                 constraint_class=ConstraintClass.SANCTIONS,
@@ -539,11 +540,12 @@ def _build_jurisdiction_asset_constraints() -> list[dict]:
     def _check(proposed: ProposedRequest) -> ConstraintViolation | None:
         jur   = proposed.jurisdiction
         asset = proposed.subject
+        base  = asset.split("/")[0].split("-")[0].upper()
         rule  = rules.get(jur)
         if rule is None:
             return None
         prohibited: set[str] = rule.get("prohibited_assets", set())
-        if asset in prohibited:
+        if asset in prohibited or base in prohibited:
             return ConstraintViolation(
                 constraint_id=f"JA-{jur}-{asset}-001",
                 constraint_class=ConstraintClass.JURISDICTION_ASSET,
@@ -657,9 +659,10 @@ def _build_ethical_sharia_constraints() -> list[dict]:
         if "SHARIA" not in [f.upper() for f in proposed.ethical_flags]:
             return None
         asset = proposed.subject
+        base  = asset.split("/")[0].split("-")[0].upper()
         op    = proposed.operation
 
-        if asset in haram:
+        if asset in haram or base in haram:
             return ConstraintViolation(
                 constraint_id=f"ES-HARAM-ASSET-{asset}-001",
                 constraint_class=ConstraintClass.ETHICAL_SHARIA,

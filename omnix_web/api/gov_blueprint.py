@@ -1478,6 +1478,7 @@ def api_governance_evaluate():
         'layer0_enabled', 'layer0_full_audit', 'operation_type', 'jurisdiction',
         'ethical_flags', 'client_id',
         'avm_enabled', 'cag_enabled', 'jurisdiction_enabled',
+        'ethical_frameworks', 'action',
     }
     _unknown_cc = set(_compliance_raw.keys()) - _ALLOWED_CC_KEYS
     if _unknown_cc:
