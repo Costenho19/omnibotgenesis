@@ -822,41 +822,59 @@ def institutional_verify(receipt_id: str):
     total   = len(checkpoints)
 
     hash_valid: bool | None = None
-    if content_hash:
-        try:
-            payload_for_hash = {
-                "receipt_id": rid,
-                "timestamp":  ts_issued,
-                "asset":      asset,
-                "decision":   decision,
-            }
-            recomputed = hashlib.sha256(
-                json.dumps(payload_for_hash, sort_keys=True).encode()
-            ).hexdigest()
-            hash_valid = (recomputed == content_hash)
-        except Exception:
-            hash_valid = None
+    sig_valid:  bool | None = None
 
-    sig_valid: bool | None = None
     try:
-        from omnix_core.evidence.decision_receipt import ReceiptEngine
+        from omnix_web.api.omnix_engine.decision_receipt import ReceiptVerifier
         veto_list = json.loads(veto_raw) if isinstance(veto_raw, str) and veto_raw else (veto_raw or [])
+        _provider_id = "dilithium3" if sig_algo and "dilithium" in sig_algo.lower() else (
+            "sha256" if sig_algo and "sha" in sig_algo.lower() else None
+        )
         receipt_obj = {
             "receipt_id":          rid,
             "timestamp":           ts_issued,
             "asset":               asset,
             "decision":            decision,
             "veto_chain":          veto_list,
+            "policy_version":      policy_ver,
+            "engine_version":      engine_ver,
+            "prev_hash":           prev_hash,
             "content_hash":        content_hash,
             "signature":           signature,
             "signature_algorithm": sig_algo,
             "public_key":          public_key,
+            "signing_provider":    _provider_id,
         }
-        verification = ReceiptEngine.verify_receipt(receipt_obj)
+        verification = ReceiptVerifier.verify_receipt(receipt_obj)
         sig_valid  = verification.get("signature_valid")
-        hash_valid = verification.get("hash_valid", hash_valid)
+        hash_valid = verification.get("hash_valid")
     except Exception:
-        sig_valid = None
+        pass
+
+    if hash_valid is None and content_hash:
+        try:
+            from omnix_core.evidence.decision_receipt import ReceiptEngine as _CoreReceiptEngine
+            veto_list = json.loads(veto_raw) if isinstance(veto_raw, str) and veto_raw else (veto_raw or [])
+            receipt_obj_core = {
+                "receipt_id":          rid,
+                "timestamp":           ts_issued,
+                "asset":               asset,
+                "decision":            decision,
+                "veto_chain":          veto_list,
+                "policy_version":      policy_ver,
+                "engine_version":      engine_ver,
+                "prev_hash":           prev_hash,
+                "content_hash":        content_hash,
+                "signature":           signature,
+                "signature_algorithm": sig_algo,
+                "public_key":          public_key,
+            }
+            verification = _CoreReceiptEngine.verify_receipt(receipt_obj_core)
+            if sig_valid is None:
+                sig_valid  = verification.get("signature_valid")
+            hash_valid = verification.get("hash_valid")
+        except Exception:
+            pass
 
     decision_upper = (decision or "UNKNOWN").upper()
 

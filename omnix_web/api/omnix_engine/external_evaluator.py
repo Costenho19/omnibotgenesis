@@ -294,13 +294,17 @@ class GovernanceEvaluationEngine:
                     _sae = get_sae()
                     _proposed = ProposedRequest(
                         subject=asset,
-                        operation=str(cfg.get("operation_type",
-                            os.environ.get("JURISDICTION_OP_TYPE", "SPOT"))).upper(),
+                        operation=str(
+                            cfg.get("operation_type") or cfg.get("action") or
+                            os.environ.get("JURISDICTION_OP_TYPE", "SPOT")
+                        ).upper(),
                         jurisdiction=str(cfg.get("jurisdiction",
                             os.environ.get("JURISDICTION", "GLOBAL"))).upper(),
                         domain=domain.upper(),
                         client_id=str(cfg.get("client_id", "GENERIC")),
-                        ethical_flags=list(cfg.get("ethical_flags", [])),
+                        ethical_flags=list(
+                            cfg.get("ethical_flags") or cfg.get("ethical_frameworks") or []
+                        ),
                         metadata=metadata,
                     )
                     _layer0_result = _sae.validate(
