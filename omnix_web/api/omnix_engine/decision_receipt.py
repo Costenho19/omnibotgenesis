@@ -26,6 +26,54 @@ except ImportError:
     dilithium3 = None
 
 # ---------------------------------------------------------------------------
+# INLINE FALLBACK PROVIDER — used when omnix_core is not importable in the
+# Railway web container, but pypqc IS installed (ADR-096 standalone path).
+# Implements the same interface as CryptoProvider without requiring omnix_core.
+# ---------------------------------------------------------------------------
+class _Dilithium3DirectProvider:
+    def provider_id(self) -> str:
+        return "dilithium3"
+
+    def algorithm_name(self) -> str:
+        return "Dilithium-3 (ML-DSA-65)"
+
+    def generate_keypair(self) -> Optional[Tuple[bytes, bytes]]:
+        try:
+            return dilithium3.keypair()
+        except Exception as _e:
+            logger.error(f"[Dilithium3Direct] keypair failed: {_e}")
+            return None
+
+    def sign(self, message: bytes, secret_key: bytes) -> Optional[bytes]:
+        try:
+            return dilithium3.sign(message, secret_key)
+        except Exception as _e:
+            logger.error(f"[Dilithium3Direct] sign failed: {_e}")
+            return None
+
+    def verify(self, signature: bytes, message: bytes, public_key: bytes) -> bool:
+        try:
+            dilithium3.verify(signature, message, public_key)
+            return True
+        except Exception:
+            return False
+
+    def serialize_public_key(self, public_key: bytes) -> str:
+        return base64.b64encode(public_key).decode("utf-8")
+
+    def deserialize_public_key(self, data: str) -> bytes:
+        return base64.b64decode(data)
+
+
+if not PQC_AVAILABLE and _LEGACY_DILITHIUM3_AVAILABLE:
+    _active_provider = _Dilithium3DirectProvider()
+    PQC_AVAILABLE = True
+    logger.info(
+        "[decision_receipt] omnix_core unavailable — activating Dilithium3DirectProvider "
+        "(standalone path, ADR-096). PQC signing fully operational."
+    )
+
+# ---------------------------------------------------------------------------
 # STABLE DEPLOYMENT KEY — generated ONCE per server process (ADR-085 fix)
 # All receipts in the same deployment use the same keypair so the public key
 # in the trust registry always matches the key embedded in receipts.
