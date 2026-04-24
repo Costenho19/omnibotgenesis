@@ -222,3 +222,32 @@ The original implementation handled SAE internal exceptions with a `logger.warni
 The exception is logged at `ERROR` level (not `WARNING`). Layer 1 is never reached on SAE internal errors.
 
 See **ADR-116** for the full fail-closed enforcement policy across all governance gates.
+
+### Amendment 4 — B2B clients cannot disable Layer 0 via compliance_config (2026-04-24)
+
+**Gap identified (audit 2026-04-24):** The evaluator accepted `compliance_config.layer0_enabled = False` from any B2B caller to disable Layer 0. This created a structural bypass vector: a client could self-exempt from the pre-construction gate by including `layer0_enabled: false` in their request payload, circumventing the Zero-Bypass guarantee of Component C (ZBE).
+
+**Impact:** Any authenticated API caller could neutralize Layer 0 entirely — including for sanctioned assets (XMR/UAE, TORNADO) and prohibited operations (LEVERAGED/UAE). This contradicted both ADR-092 §ZBE and ADR-116 §LAYER_0_BYPASS_PREVENTION.
+
+**Change:** In both `omnix_web/api/omnix_engine/external_evaluator.py` and `omnix_core/governance/external_evaluator.py`:
+
+```python
+# Before (VULNERABLE):
+_sae_enabled = cfg.get("layer0_enabled", os.environ.get("SAE_ENABLED", "true").lower() != "false")
+
+# After (FIXED):
+# B2B Zero-Bypass guarantee (ADR-092 + ADR-116):
+# Client compliance_config CANNOT disable Layer 0.
+# Only SAE_ENABLED=false env var (operator-level) may disable it.
+_sae_enabled = os.environ.get("SAE_ENABLED", "true").lower() != "false"
+```
+
+**Control hierarchy (definitive):**
+
+| Level | Who | Mechanism | Can disable Layer 0? |
+|-------|-----|-----------|----------------------|
+| Override | Internal code | `SAEOverride.FORCE_ON` | No (forces ON) |
+| Operator | Infrastructure | `SAE_ENABLED=false` env var | Yes (observable in startup logs) |
+| B2B client | API caller | `compliance_config.layer0_enabled` | **No — field is now ignored** |
+
+The `layer0_enabled` field in `compliance_config` is no longer processed. Any existing client documentation referencing this field must be updated.

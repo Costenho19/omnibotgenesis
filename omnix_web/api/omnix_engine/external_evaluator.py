@@ -285,10 +285,10 @@ class GovernanceEvaluationEngine:
             if _sae_override == SAEOverride.FORCE_ON:
                 _sae_enabled = True
             else:
-                _sae_enabled = cfg.get(
-                    "layer0_enabled",
-                    os.environ.get("SAE_ENABLED", "true").lower() != "false",
-                )
+                # B2B Zero-Bypass guarantee (ADR-092 + ADR-116):
+                # Client compliance_config CANNOT disable Layer 0.
+                # Only SAE_ENABLED=false env var (operator-level) may disable it.
+                _sae_enabled = os.environ.get("SAE_ENABLED", "true").lower() != "false"
             if _sae_enabled:
                 try:
                     _sae = get_sae()

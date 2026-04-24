@@ -1,24 +1,26 @@
 {
-  "snapshot_id": "AVM-7B8A839351",
-  "parameter_version": "1.7b8a839351",
+  "snapshot_id": "AVM-58B855C1B0",
+  "parameter_version": "1.58b855c1b0",
   "domain": "stablecoin",
-  "calibrated_at": "2026-04-20T22:29:42.318263+00:00",
-  "calibrated_at_epoch": 1776724182.318263,
   "baseline_signals": {
-    "probability_score": 75.0,
-    "signal_coherence": 73.0,
-    "risk_exposure": 20.0,
-    "stress_resilience": 70.0,
-    "trend_persistence": 68.0,
-    "logic_consistency": 77.0
+    "risk_exposure": 14.3,
+    "signal_coherence": 83.2,
+    "logic_consistency": 67.0,
+    "probability_score": 75.1,
+    "stress_resilience": 69.3,
+    "trend_persistence": 63.9
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Initial calibration baseline \u2014 stablecoin \u2014 ADR-076 compliant",
+  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
   "tags": [
-    "initial-calibration",
-    "v6.5.4e",
-    "adr-076"
-  ]
+    "recalibrated",
+    "q2-2026",
+    "stablecoin",
+    "2026-04-20",
+    "signal-keys-fixed"
+  ],
+  "calibrated_at": "2026-04-20T07:36:06.340405+00:00",
+  "calibrated_at_epoch": 1776670566.340405
 }
