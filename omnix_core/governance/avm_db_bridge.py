@@ -239,8 +239,8 @@ class AVMDatabaseBridge:
                         is_first_save = False
                         current_version = int(row[0]) if row[0] else 1
                         new_version = current_version + 1 if action == "RECALIBRATE" else current_version
-        except Exception:
-            pass
+        except Exception as _ver_exc:
+            logger.warning(f"[AVM.DB] Could not read existing version/genesis for domain={domain}: {_ver_exc} — defaulting to version=1, is_first_save=True")
 
         calibrated_at = snapshot_dict.get("calibrated_at", datetime.now(timezone.utc).isoformat())
         _is_genesis         = is_first_save
@@ -363,8 +363,8 @@ class AVMDatabaseBridge:
                                 ),
                                 snapshot_id=d.get("snapshot_id", "UNKNOWN"),
                             )
-                        except Exception:
-                            pass
+                        except Exception as _alert_exc:
+                            logger.warning(f"[AVM.DB] fire_avm_alert(SCHEMA_MISMATCH_LOAD) failed: {_alert_exc}")
                 except Exception as schema_exc:
                     logger.warning(f"[AVM.DB] Could not validate schema on load for domain={domain}: {schema_exc}")
                 # ────────────────────────────────────────────────────────────────

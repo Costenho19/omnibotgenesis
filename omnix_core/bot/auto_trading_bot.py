@@ -1166,8 +1166,8 @@ class AutoTradingBot:
                 conn.close()
                 if row is not None:
                     return (int(row[0] or 0), "DB")
-        except Exception:
-            pass
+        except Exception as _db_exc:
+            logger.debug(f"[AutoBot] shadow_trade_events query failed, falling back to database_service: {_db_exc}")
         try:
             if self.database_service and hasattr(self.database_service, 'get_today_trade_stats'):
                 stats = self.database_service.get_today_trade_stats()

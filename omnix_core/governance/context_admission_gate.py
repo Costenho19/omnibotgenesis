@@ -16,7 +16,8 @@ Purpose:
       4. macro_risk_ceiling — composite macro risk must be below this ceiling
 
 Design:
-    - Fail-safe: if module errors or disabled → pass-through (pipeline continues)
+    - Fail-closed: if module errors → BLOCK (admitted=False, pass_through=False) — ADR-116
+    - Disabled path only → pass-through (pipeline continues without CAG check)
     - Default: DISABLED (CAG_ENABLED=false) — zero impact on existing clients
     - Session-level: one admission decision per evaluation window, not per signal
     - Output: CAGResult with structured reason for PQC receipt

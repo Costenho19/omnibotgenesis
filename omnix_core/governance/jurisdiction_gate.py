@@ -308,8 +308,8 @@ class JurisdictionGate:
                         "CP-11 evaluations blocked until list is refreshed (OFAC_LIST_DATE updated).",
                         age_days,
                     )
-        except Exception:
-            pass
+        except Exception as _ofac_exc:
+            logger.warning(f"[CP-11] Could not validate OFAC list age: {_ofac_exc}")
 
     def _run_checks(
         self,

@@ -627,8 +627,8 @@ class AssumptionValidityMonitor:
                     ),
                     snapshot_id=snapshot.snapshot_id,
                 )
-            except Exception:
-                pass
+            except Exception as _alert_exc:
+                logger.warning(f"[AVM] fire_avm_alert(SCHEMA_MISMATCH) failed: {_alert_exc}")
         elif schema_match.startswith("PARTIAL"):
             logger.warning(
                 f"[AVM] SCHEMA_ANOMALY — domain={domain} | AVM_SCHEMA_MATCH={schema_match} | "
@@ -652,8 +652,8 @@ class AssumptionValidityMonitor:
                     ),
                     snapshot_id=snapshot.snapshot_id,
                 )
-            except Exception:
-                pass
+            except Exception as _alert_exc:
+                logger.warning(f"[AVM] fire_avm_alert(SCHEMA_ANOMALY_PARTIAL) failed: {_alert_exc}")
         # ───────────────────────────────────────────────────────────────────────
 
         # ── Drift computation ───────────────────────────────────────────────────
@@ -690,8 +690,8 @@ class AssumptionValidityMonitor:
                     ),
                     snapshot_id=snapshot.snapshot_id,
                 )
-            except Exception:
-                pass
+            except Exception as _alert_exc:
+                logger.warning(f"[AVM] fire_avm_alert(DRIFT_ANOMALY) failed: {_alert_exc}")
 
         # ── Drift threshold check ───────────────────────────────────────────────
         if drift_score > effective_threshold:

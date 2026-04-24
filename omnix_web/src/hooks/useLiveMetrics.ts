@@ -24,7 +24,7 @@ const FALLBACK_METRICS: LiveMetrics = {
   ebip_score: 0,
 }
 
-const RAILWAY_PUBLIC_API = import.meta.env.VITE_RAILWAY_API_URL || 'https://omnibotgenesis-production.up.railway.app'
+const RAILWAY_PUBLIC_API = import.meta.env.VITE_RAILWAY_API_URL || ''
 const LOCAL_API = import.meta.env.VITE_API_BASE || ''
 const FLASK_API = import.meta.env.VITE_FLASK_API_URL || ''
 
@@ -60,6 +60,7 @@ export function useLiveMetrics(refreshIntervalMs = 10000) {
     }
 
     const fetchFromRailway = async (): Promise<boolean> => {
+      if (!RAILWAY_PUBLIC_API) return false
       try {
         const ts = Date.now()
         const response = await fetch(`${RAILWAY_PUBLIC_API}/api/governance/metrics?_t=${ts}`, NO_CACHE_OPTS)

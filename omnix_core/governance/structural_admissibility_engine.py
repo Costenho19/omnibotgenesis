@@ -253,8 +253,8 @@ def _snapshot_scheduler(interval_minutes: int) -> None:
         time.sleep(interval_secs)
         try:
             _layer0_snapshots.record(_layer0_metrics)
-        except Exception:
-            pass
+        except Exception as _snap_exc:
+            logger.warning(f"[SAE] Layer0 snapshot record failed: {_snap_exc}")
 
 
 def _start_snapshot_scheduler(interval_minutes: int = 5) -> None:

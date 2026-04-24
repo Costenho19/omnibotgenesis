@@ -12,7 +12,8 @@ Purpose:
       - Rapid consecutive decision reversals (flip-flopping pattern)
 
 Design:
-    - Fail-safe: if module errors or disabled → pass-through (pipeline continues)
+    - Fail-closed: if module errors → BLOCK (admissible=False, pass_through=False) — ADR-116
+    - Disabled path only → pass-through (pipeline continues without fraud check)
     - Activatable via FRAUD_GATE_ENABLED env var
     - Default: DISABLED (zero impact on existing Railway operation)
     - Regulatory alignment: EU AI Act Art. 6 (high-risk AI systems)

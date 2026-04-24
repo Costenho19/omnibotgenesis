@@ -212,3 +212,100 @@ class TestInvestorDataProviderInterface:
         assert "except" in source, (
             "No hay bloques except en investor_data_provider.py — sin manejo de errores DB"
         )
+
+
+# ─── T011-E: Fail-closed en AML, CAG, FraudGate (T001 bloqueaba T011) ────────
+
+class TestGatesFailClosed:
+    """
+    Verifica que AML, CAG y FraudGate están implementadas fail-closed:
+    cuando su método interno _run_checks/_run_admission_checks lanza excepción,
+    el gate debe devolver blocked/veto (no pass_through) — ADR-116.
+    """
+
+    def test_aml_gate_fail_closed_on_internal_exception(self):
+        """AMLGate → fail-closed: admissible=False, pass_through=False en error."""
+        from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig
+
+        class BrokenAMLGate(AMLGate):
+            def _run_checks(self, *args, **kwargs):
+                raise RuntimeError("Test: simulated AML internal failure")
+
+        gate = BrokenAMLGate(AMLGateConfig(enabled=True, db_url=None))
+        result = gate.evaluate("BTC/USD", "BUY", volume_usd=100.0, trade_frequency_24h=0)
+
+        assert result.admissible is False, "AMLGate con error debe bloquear (admissible=False)"
+        assert result.pass_through is False, "AMLGate con error NO debe usar pass_through=True"
+        assert result.evaluation_state == "FAIL_CLOSED", (
+            f"evaluation_state esperado FAIL_CLOSED, obtenido {result.evaluation_state!r}"
+        )
+
+    def test_cag_fail_closed_on_internal_exception(self):
+        """CAG → fail-closed: admitted=False, pass_through=False en error."""
+        from omnix_core.governance.context_admission_gate import ContextAdmissionGate, CAGConfig
+
+        class BrokenCAG(ContextAdmissionGate):
+            def _run_admission_checks(self, *args, **kwargs):
+                raise RuntimeError("Test: simulated CAG internal failure")
+
+        gate = BrokenCAG(CAGConfig(enabled=True))
+        result = gate.evaluate(global_volatility=50.0)
+
+        assert result.admitted is False, "CAG con error debe bloquear (admitted=False)"
+        assert result.pass_through is False, "CAG con error NO debe usar pass_through=True"
+        assert result.evaluation_state == "FAIL_CLOSED", (
+            f"evaluation_state esperado FAIL_CLOSED, obtenido {result.evaluation_state!r}"
+        )
+
+    def test_fraud_gate_fail_closed_on_internal_exception(self):
+        """FraudGate → fail-closed: admissible=False, pass_through=False en error."""
+        from omnix_core.governance.fraud_gate import FraudGate, FraudGateConfig
+
+        class BrokenFraudGate(FraudGate):
+            def _run_checks(self, *args, **kwargs):
+                raise RuntimeError("Test: simulated FraudGate internal failure")
+
+        gate = BrokenFraudGate(FraudGateConfig(enabled=True))
+        result = gate.evaluate("BTC/USD", "BUY")
+
+        assert result.admissible is False, "FraudGate con error debe bloquear (admissible=False)"
+        assert result.pass_through is False, "FraudGate con error NO debe usar pass_through=True"
+        assert result.evaluation_state == "FAIL_CLOSED", (
+            f"evaluation_state esperado FAIL_CLOSED, obtenido {result.evaluation_state!r}"
+        )
+
+    def test_aml_docstring_says_fail_closed(self):
+        """El docstring de aml_gate.py debe decir 'Fail-closed' (no 'Fail-safe')."""
+        import os
+        path = os.path.normpath(os.path.join(
+            os.path.dirname(__file__), "..",
+            "omnix_core", "governance", "aml_gate.py"
+        ))
+        with open(path, encoding="utf-8") as f:
+            source = f.read()
+        assert "Fail-closed" in source, "aml_gate.py docstring debe decir 'Fail-closed'"
+        assert "Fail-safe" not in source[:500], (
+            "aml_gate.py aún dice 'Fail-safe' en la sección Design — corregir docstring"
+        )
+
+    def test_cag_docstring_says_fail_closed(self):
+        """El docstring de context_admission_gate.py debe decir 'Fail-closed'."""
+        import os
+        path = os.path.normpath(os.path.join(
+            os.path.dirname(__file__), "..",
+            "omnix_core", "governance", "context_admission_gate.py"
+        ))
+        with open(path, encoding="utf-8") as f:
+            source = f.read()
+        assert "Fail-closed" in source, "context_admission_gate.py debe decir 'Fail-closed'"
+
+    def test_fraud_docstring_says_fail_closed(self):
+        """El docstring de fraud_gate.py debe decir 'Fail-closed'."""
+        import os
+        path = os.path.normpath(os.path.join(
+            os.path.dirname(__file__), "..",
+            "omnix_core", "governance", "fraud_gate.py"
+        ))
+        with open(path, encoding="utf-8") as f:
+            source = f.read()
+        assert "Fail-closed" in source, "fraud_gate.py debe decir 'Fail-closed'"

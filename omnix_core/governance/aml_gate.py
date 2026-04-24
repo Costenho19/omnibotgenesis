@@ -12,7 +12,8 @@ Purpose:
       - High-risk jurisdiction exposure
 
 Design:
-    - Fail-safe: if module errors or disabled → pass-through (pipeline continues)
+    - Fail-closed: if module errors → BLOCK (admissible=False, pass_through=False) — ADR-116
+    - Disabled path only → pass-through (pipeline continues without AML check)
     - Configurable per client or globally via AML_GATE_ENABLED env var
     - Default: ENABLED when OMNIX_DB_URL is available (premium mode)
     - Real-time trade frequency queried directly from DB (no proxy mode)
