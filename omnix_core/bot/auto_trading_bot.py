@@ -6434,6 +6434,13 @@ class AutoTradingBot:
                             telemetry_confidence = hmm_data.get('confidence', 0) * 100 if hmm_data.get('confidence') else None
                         elif isinstance(hmm_data, str):
                             telemetry_hmm_regime = hmm_data
+                    else:
+                        # Fallback: inferir régimen desde v52_analysis.market_regime
+                        _v52 = analysis.get('v52_analysis', {}) or {}
+                        _mr = (_v52.get('market_regime') or
+                               _v52.get('hmm_regime') or
+                               analysis.get('market_regime'))
+                        telemetry_hmm_regime = str(_mr).upper() if _mr else 'UNKNOWN'
                     
                     if analysis.get('coherence_report'):
                         coh_data = analysis['coherence_report']

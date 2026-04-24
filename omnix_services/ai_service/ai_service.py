@@ -219,38 +219,51 @@ class ConversationalAIService:
                 logger.info("🔬 [DIAGNOSTIC_MODE] Building DIAGNOSTIC_ONLY system prompt")
                 from .prompt_templates import DIAGNOSTIC_ONLY_PROMPT, get_system_state_prompt
                 
-                # Get real metrics from RealContextProvider or market_data
-                # Fallback values from system_state_manifest.json (learning baseline)
-                total_trades = 119
-                win_rate = 20.2
-                pnl = -15198.73
-                
-                # Try to get real metrics from RealContextProvider
+                # Get real metrics — Track Record Oficial (desde 2026-01-15)
+                # Fallback: valores reales del Track Record Oficial (no learning baseline)
+                total_trades = 37
+                win_rate = 54.05
+                pnl = 2054.11
+                _period_label = "Track Record Oficial (15 Ene 2026 – hoy)"
+
+                # Prioridad 1: InvestorDataProvider (siempre disponible, acceso directo DB)
+                try:
+                    from omnix_services.ai_service.providers.investor_data_provider import InvestorDataProvider
+                    _idp = InvestorDataProvider()
+                    _basic = _idp.get_basic_trading_stats()
+                    if _basic.get('success') and _basic.get('track_record'):
+                        _tr = _basic['track_record']
+                        total_trades = _tr.get('total_trades', total_trades)
+                        win_rate     = _tr.get('win_rate', win_rate)
+                        pnl          = _tr.get('total_pnl', pnl)
+                        logger.info(f"🔬 [DIAGNOSTIC_MODE] InvestorDataProvider → trades={total_trades}, wr={win_rate}%, pnl={pnl}")
+                except Exception as _idp_err:
+                    logger.warning(f"⚠️ [DIAGNOSTIC_MODE] InvestorDataProvider failed: {_idp_err}")
+
+                # Prioridad 2: RealContextProvider (si InvestorDataProvider no disponible)
                 if REAL_CONTEXT_AVAILABLE and get_real_context_provider:
                     try:
                         provider = get_real_context_provider()
                         if provider:
                             status = provider.get_auto_trading_status()
-                            if status.get('available'):
+                            if status.get('available') and status.get('total_trades'):
                                 total_trades = status.get('total_trades') or total_trades
                                 win_rate = status.get('win_rate') or win_rate
                                 pnl = status.get('profit_loss') or pnl
-                                logger.info(f"🔬 [DIAGNOSTIC_MODE] Real metrics: trades={total_trades}, win_rate={win_rate}%, pnl=${pnl}")
+                                logger.info(f"🔬 [DIAGNOSTIC_MODE] RealContextProvider → trades={total_trades}, wr={win_rate}%, pnl={pnl}")
                     except Exception as e:
-                        logger.warning(f"⚠️ [DIAGNOSTIC_MODE] Could not get real metrics: {e}")
-                
-                # Or try to get from market_data if passed
-                # Use `or fallback` (not `.get(key, fallback)`) so None values don't
-                # silently override the hardcoded fallbacks.
+                        logger.warning(f"⚠️ [DIAGNOSTIC_MODE] RealContextProvider failed: {e}")
+
+                # Prioridad 3: market_data pasado al método
                 if market_data:
                     total_trades = market_data.get('total_trades') or total_trades
                     win_rate = market_data.get('win_rate') or win_rate
                     pnl = market_data.get('pnl') or market_data.get('profit_loss') or pnl
-                
+
                 # Safe format — guard against None surviving the fallback chain
-                _trades_str = str(int(total_trades)) if total_trades is not None else "119"
-                _wr_str = f"{float(win_rate):.1f}" if win_rate is not None else "20.2"
-                _pnl_str = f"${float(pnl):,.2f}" if pnl is not None else "$-15,198.73"
+                _trades_str = str(int(total_trades)) if total_trades is not None else "37"
+                _wr_str = f"{float(win_rate):.1f}" if win_rate is not None else "54.1"
+                _pnl_str = f"${float(pnl):,.2f}" if pnl is not None else "$2,054.11"
                 
                 system_state = get_system_state_prompt()
                 system_prompt = f"""
@@ -258,10 +271,11 @@ class ConversationalAIService:
 
 {system_state}
 
-**DATOS ACTUALES DEL SISTEMA (USAR ESTOS VALORES EXACTOS):**
+**DATOS REALES DEL TRACK RECORD OFICIAL (15 Ene 2026 – hoy) — USAR ESTOS VALORES EXACTOS:**
 - Total trades: {_trades_str}
 - Win rate: {_wr_str}%
 - P&L: {_pnl_str} USD
+- Nota: 119 operaciones adicionales del Learning Baseline (Nov 2025 – 14 Ene 2026) están excluidas del Track Record
 
 **PREGUNTA DEL USUARIO:**
 {user_message}

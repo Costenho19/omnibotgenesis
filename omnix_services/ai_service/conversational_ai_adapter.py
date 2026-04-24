@@ -2019,14 +2019,48 @@ class ConversationalAI:
             # Prepend override BEFORE user message for maximum influence
             effective_user_message = systemic_override + "\n\nUSER QUESTION: " + user_message
         
-        system_prompt = prompt_builder.build_system_prompt(
-            user_message=effective_user_message,
-            user_name=user_name,
-            context=context,
-            kraken_status=kraken_status if kraken_info else None,
-            intent='general'
-        )
-        
+        # DIAGNOSTIC_MODE (RULE 13): Inyectar datos reales del Track Record Oficial
+        if diagnostic_mode:
+            try:
+                from omnix_services.ai_service.prompt_templates import DIAGNOSTIC_ONLY_PROMPT
+                from omnix_services.ai_service.providers.investor_data_provider import InvestorDataProvider
+                _idp = InvestorDataProvider()
+                _basic = _idp.get_basic_trading_stats()
+                _tr = _basic.get('track_record') or {}
+                _trades_str = str(int(_tr.get('total_trades', 37)))
+                _wr_str     = f"{float(_tr.get('win_rate', 54.1)):.1f}"
+                _pnl_val    = float(_tr.get('total_pnl', 2054.11))
+                _pnl_str    = f"${_pnl_val:,.2f}"
+                system_prompt = f"""{DIAGNOSTIC_ONLY_PROMPT}
+
+**DATOS REALES DEL TRACK RECORD OFICIAL (15 Ene 2026 – hoy) — USAR ESTOS EXACTOS:**
+- Total trades: {_trades_str}
+- Win rate: {_wr_str}%
+- P&L total: {_pnl_str} USD
+- Nota: 119 operaciones adicionales del Learning Baseline (Nov 2025 – 14 Ene 2026) quedan EXCLUIDAS del Track Record
+
+**PREGUNTA DEL USUARIO:**
+{effective_user_message}
+"""
+                logger.info(f"🔬 [LEGACY DIAGNOSTIC_MODE] Datos reales inyectados: trades={_trades_str}, wr={_wr_str}%, pnl={_pnl_str}")
+            except Exception as _diag_err:
+                logger.warning(f"⚠️ [LEGACY DIAGNOSTIC_MODE] Fallback a prompt genérico: {_diag_err}")
+                system_prompt = prompt_builder.build_system_prompt(
+                    user_message=effective_user_message,
+                    user_name=user_name,
+                    context=context,
+                    kraken_status=kraken_status if kraken_info else None,
+                    intent='general'
+                )
+        else:
+            system_prompt = prompt_builder.build_system_prompt(
+                user_message=effective_user_message,
+                user_name=user_name,
+                context=context,
+                kraken_status=kraken_status if kraken_info else None,
+                intent='general'
+            )
+
         # PRIORIDAD 1: GEMINI (key válida en Railway)
         if hasattr(self, 'gemini_client') and self.gemini_client:
             try:

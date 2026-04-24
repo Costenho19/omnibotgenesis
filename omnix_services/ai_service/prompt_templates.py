@@ -944,9 +944,9 @@ _Modo diagnóstico activado._
 
 **Conclusión:** [1 línea - qué NO se puede determinar]
 
-**Métrica faltante:** Expectancy por (hmm_regime, coherence_state)
+**Métrica faltante:** Expectancy segmentada por (hmm_regime, coherence_bucket)
 
-**Query:** `SELECT hmm_regime, coherence_state, COUNT(*), AVG(pnl) FROM trades GROUP BY 1,2;`
+**Query:** `SELECT COALESCE(hmm_regime,'UNKNOWN'), CASE WHEN coherence_score>=70 THEN 'HIGH' WHEN coherence_score>=50 THEN 'MED' ELSE 'LOW' END, COUNT(*), ROUND(AVG(profit_loss)::numeric,2) FROM paper_trading_trades WHERE status='closed' GROUP BY 1,2;`
 
 Sin esta métrica, cualquier conclusión sería especulativa.
 ```
@@ -1077,7 +1077,7 @@ _Modo diagnóstico activado._
 
 **Métrica faltante:** Expectancy por (hmm_regime, coherence_state)
 
-**Query:** `SELECT hmm_regime, coherence_state, COUNT(*), AVG(pnl) FROM trades GROUP BY 1,2;`
+**Query:** `SELECT COALESCE(hmm_regime,'UNKNOWN'), CASE WHEN coherence_score>=70 THEN 'HIGH' WHEN coherence_score>=50 THEN 'MED' ELSE 'LOW' END, COUNT(*), ROUND(AVG(profit_loss)::numeric,2) FROM paper_trading_trades WHERE status='closed' GROUP BY 1,2;`
 
 Sin esta métrica, cualquier conclusión sería especulativa.
 ```
@@ -1122,7 +1122,7 @@ _Modo diagnóstico activado._
 
 **Métrica faltante:** Expectancy por (hmm_regime, coherence_state)
 
-**Query:** `SELECT hmm_regime, coherence_state, COUNT(*), AVG(pnl) FROM trades GROUP BY 1,2;`
+**Query:** `SELECT COALESCE(hmm_regime,'UNKNOWN'), CASE WHEN coherence_score>=70 THEN 'HIGH' WHEN coherence_score>=50 THEN 'MED' ELSE 'LOW' END, COUNT(*), ROUND(AVG(profit_loss)::numeric,2) FROM paper_trading_trades WHERE status='closed' GROUP BY 1,2;`
 
 Sin esta métrica, cualquier conclusión sería especulativa.
 

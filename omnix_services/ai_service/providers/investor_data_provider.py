@@ -202,6 +202,65 @@ class InvestorDataProvider:
                 logger.error(f"Error getting segmented expectancy: {e}")
                 return {'success': False, 'error': str(e), 'segments': []}
     
+    def get_basic_trading_stats(self) -> Dict[str, Any]:
+        """
+        Estadísticas básicas de trading separadas en dos períodos:
+        - Learning Baseline: Nov 2025 – 14 Ene 2026 (fase de calibración)
+        - Track Record Oficial: 15 Ene 2026 – hoy (sistema recalibrado)
+
+        Usado por el modo diagnóstico para mostrar datos reales al usuario.
+        """
+        with _get_db_connection() as conn:
+            if not conn:
+                return {'success': False, 'error': 'No database connection'}
+            try:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT
+                        period,
+                        COUNT(*)                                                         AS total_trades,
+                        COUNT(*) FILTER (WHERE profit_loss > 0)                         AS winners,
+                        ROUND(100.0 * COUNT(*) FILTER (WHERE profit_loss > 0)
+                              / NULLIF(COUNT(*), 0), 2)                                 AS win_rate,
+                        ROUND(COALESCE(SUM(profit_loss), 0)::numeric, 2)               AS total_pnl,
+                        ROUND(COALESCE(AVG(profit_loss), 0)::numeric, 2)               AS avg_pnl,
+                        ROUND(COALESCE(MIN(profit_loss), 0)::numeric, 2)               AS worst_trade,
+                        ROUND(COALESCE(MAX(profit_loss), 0)::numeric, 2)               AS best_trade
+                    FROM (
+                        SELECT
+                            profit_loss,
+                            CASE
+                                WHEN opened_at >= '2026-01-15' THEN 'track_record'
+                                ELSE 'baseline'
+                            END AS period
+                        FROM paper_trading_trades
+                        WHERE status = 'closed'
+                          AND profit_loss IS NOT NULL
+                    ) sub
+                    GROUP BY period
+                """)
+                rows = cursor.fetchall()
+                cursor.close()
+
+                result = {'success': True, 'baseline': None, 'track_record': None}
+                for row in rows:
+                    period, total, winners, wr, total_pnl, avg_pnl, worst, best = row
+                    entry = {
+                        'total_trades': int(total),
+                        'winners':      int(winners),
+                        'win_rate':     float(wr or 0),
+                        'total_pnl':   float(total_pnl or 0),
+                        'avg_pnl':     float(avg_pnl or 0),
+                        'worst_trade': float(worst or 0),
+                        'best_trade':  float(best or 0),
+                    }
+                    result[period] = entry
+
+                return result
+            except Exception as e:
+                logger.error(f"Error in get_basic_trading_stats: {e}")
+                return {'success': False, 'error': str(e)}
+
     def get_fee_breakdown(self, days: int = 90) -> Dict[str, Any]:
         """
         Análisis de fees y break-even calculation.

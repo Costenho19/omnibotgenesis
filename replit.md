@@ -57,6 +57,7 @@
 
 | Fecha | Fix | Commit |
 |---|---|---|
+| 24 Abr 2026 | **DIAGNOSTIC MODE + HMM REGIME FIXES**: (1) `auto_trading_bot.py` — `hmm_regime=NULL` en DB resuelto: fallback a `v52_analysis.market_regime` → `'UNKNOWN'` en lugar de NULL; (2) `conversational_ai_adapter.py` — path legacy ahora inyecta datos reales del Track Record Oficial (37 trades, 54.05%, +$2,054) en `diagnostic_mode=True`; (3) `ai_service.py` — system prompt diagnóstico actualizado con etiqueta del período y nota de separación vs Learning Baseline; (4) `prompt_templates.py` — query `ROUND(AVG(profit_loss))` corregida con cast `::numeric` para PostgreSQL; `InvestorDataProvider.get_basic_trading_stats()` retorna datos reales por período | pendiente push |
 | 24 Abr 2026 | **AUDIT CRÍTICA — 8 bugs corregidos**: SAE ON por defecto, CAG ON por defecto, SAE error→fail-closed, FORCE_OFF eliminado (Zero-Bypass garantizado), PQC fail→raise, AML error→fail-closed, Fraud error→fail-closed, Dashboard metrics→503 real (sin números inventados) | pendiente push |
 | 18 Abr 2026 | **AUDIT PROFUNDA**: 8→9 dominios en todos los archivos (AI prompts×15, React pages×12). Sección "Coste de no tener OMNIX" en CommercialLanding. SQL/secrets audit: sin vulnerabilidades críticas. Build React: 0 errores. | pendiente push |
 | 18 Abr 2026 | Fix idioma bot: detector pt→es en msgs cortos, política idioma correcta | `26c1b959` |
