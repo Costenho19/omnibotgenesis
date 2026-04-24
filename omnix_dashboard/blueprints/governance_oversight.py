@@ -5,7 +5,10 @@ POST /api/governance/overrides                — Create PQC-signed override (ad
 GET  /api/governance/overrides                — List overrides with pagination
 GET  /api/governance/overrides/<override_id>  — Override detail + signature verification
 
-EU AI Act: Art. 14 | NIST AI RMF: MANAGE | ADR-029
+GET  /api/governance/meta-coherence           — MCM: second-order frame stability audit (ADR-117)
+GET  /api/governance/meta-coherence/<domain>  — MCM analysis for a specific domain
+
+EU AI Act: Art. 14 | NIST AI RMF: MANAGE | ADR-029 | ADR-117
 """
 
 import logging
@@ -148,4 +151,182 @@ def get_override(override_id: str):
         return jsonify(override), 200
     except Exception as e:
         logger.error(f"get_override error: {e}")
+        return jsonify({"error": "Internal error", "status": 500}), 500
+
+
+# ── Meta-Coherence Monitor endpoints (ADR-117) ─────────────────────────────────
+
+def _load_mcm():
+    """Lazy-load MetaCoherenceMonitor to avoid import cost on every request."""
+    try:
+        from omnix_core.governance.meta_coherence_monitor import MetaCoherenceMonitor
+        return MetaCoherenceMonitor
+    except ImportError as exc:
+        logger.warning(f"MetaCoherenceMonitor unavailable: {exc}")
+        return None
+
+
+def _report_to_dict(report) -> dict:
+    """Serialize a MetaCoherenceReport to a JSON-safe dict."""
+    def _vd(vd):
+        if not vd:
+            return None
+        return {
+            "sufficient_data":    vd.sufficient_data,
+            "error":              vd.error,
+            "ref_blocked_pct":    vd.ref_blocked_pct,
+            "cur_blocked_pct":    vd.cur_blocked_pct,
+            "ref_held_pct":       vd.ref_held_pct,
+            "cur_held_pct":       vd.cur_held_pct,
+            "composite_drift":    round(vd.composite_drift, 2),
+            "alert_level":        vd.alert_level,
+            "reference_total":    vd.reference_total,
+            "current_total":      vd.current_total,
+        }
+
+    def _vp(vp):
+        if not vp:
+            return None
+        return {
+            "error":           vp.error,
+            "asymmetry_score": round(vp.asymmetry_score, 2),
+            "silenced_gates":  vp.silenced_gates,
+            "amplified_gates": vp.amplified_gates,
+            "alert_level":     vp.alert_level,
+        }
+
+    def _rl(rl):
+        if not rl:
+            return None
+        return {
+            "error":                       rl.error,
+            "calibration_age_hours":       round(rl.calibration_age_hours, 1),
+            "max_age_hours":               rl.max_age_hours,
+            "age_fraction":                round(rl.age_fraction, 3),
+            "recalibration_anchoring_risk": rl.recalibration_anchoring_risk,
+            "alert_level":                 rl.alert_level,
+            "snapshot_id":                 rl.snapshot_id,
+        }
+
+    def _sig(s):
+        return {
+            "signal_id":   s.signal_id,
+            "severity":    s.severity,
+            "description": s.description,
+            "evidence":    s.evidence,
+        }
+
+    return {
+        "report_id":              report.report_id,
+        "domain":                 report.domain,
+        "generated_at":           report.generated_at,
+        "mcm_version":            report.mcm_version,
+        "alert_level":            report.alert_level,
+        "composite_score":        round(report.composite_score, 2),
+        "evaluation_frame_stable": report.evaluation_frame_stable,
+        "executive_summary":      report.executive_summary,
+        "verdict_distribution":   _vd(report.verdict_distribution),
+        "veto_pattern":           _vp(report.veto_pattern),
+        "reference_legitimacy":   _rl(report.reference_legitimacy),
+        "transition_signatures":  [_sig(s) for s in (report.transition_signatures or [])],
+        "adr": "ADR-117",
+    }
+
+
+@governance_oversight_bp.route("/api/governance/meta-coherence", methods=["GET"])
+def meta_coherence_all():
+    """
+    GET /api/governance/meta-coherence
+
+    Run Meta-Coherence Monitor across all active domains and return
+    a summary report + per-domain detail.
+
+    ADR-117 | Second-order governance perception stability audit.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    MCM = _load_mcm()
+    if not MCM:
+        return jsonify({"error": "MetaCoherenceMonitor unavailable", "status": 503}), 503
+
+    try:
+        monitor = MCM()
+        domains = monitor._get_active_domains()
+
+        reference_days = int(request.args.get("reference_days", 30))
+        current_days   = int(request.args.get("current_days",   14))
+        persist        = request.args.get("persist", "false").lower() == "true"
+
+        domain_reports = []
+        worst_alert    = "OK"
+        _order         = {"OK": 0, "WARNING": 1, "CRITICAL": 2, "UNKNOWN": -1}
+
+        for domain in domains:
+            report = monitor.run_full_analysis(
+                domain,
+                reference_days=reference_days,
+                current_days=current_days,
+            )
+            if persist:
+                monitor.persist_to_db(report)
+
+            domain_reports.append(_report_to_dict(report))
+            if _order.get(report.alert_level, -1) > _order.get(worst_alert, 0):
+                worst_alert = report.alert_level
+
+        return jsonify({
+            "status":          "ok",
+            "overall_alert":   worst_alert,
+            "domains_scanned": len(domain_reports),
+            "reference_days":  reference_days,
+            "current_days":    current_days,
+            "persisted":       persist,
+            "reports":         domain_reports,
+            "adr":             "ADR-117",
+        }), 200
+
+    except Exception as exc:
+        logger.error(f"meta_coherence_all error: {exc}")
+        return jsonify({"error": "Internal error", "status": 500}), 500
+
+
+@governance_oversight_bp.route("/api/governance/meta-coherence/<string:domain>", methods=["GET"])
+def meta_coherence_domain(domain: str):
+    """
+    GET /api/governance/meta-coherence/<domain>
+
+    Run Meta-Coherence Monitor for a single domain.
+    Optional query params: reference_days (default 30), current_days (default 14), persist (false).
+
+    ADR-117 | Second-order governance perception stability audit.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    MCM = _load_mcm()
+    if not MCM:
+        return jsonify({"error": "MetaCoherenceMonitor unavailable", "status": 503}), 503
+
+    try:
+        monitor = MCM()
+        reference_days = int(request.args.get("reference_days", 30))
+        current_days   = int(request.args.get("current_days",   14))
+        persist        = request.args.get("persist", "false").lower() == "true"
+
+        report = monitor.run_full_analysis(
+            domain,
+            reference_days=reference_days,
+            current_days=current_days,
+        )
+
+        if persist:
+            monitor.persist_to_db(report)
+
+        return jsonify(_report_to_dict(report)), 200
+
+    except Exception as exc:
+        logger.error(f"meta_coherence_domain({domain}) error: {exc}")
         return jsonify({"error": "Internal error", "status": 500}), 500
