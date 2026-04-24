@@ -1,6 +1,6 @@
 # ADR-117: Meta-Coherence Monitor — Second-Order Governance Perception Stability
 
-**Status:** ACCEPTED — Implemented 24 April 2026  
+**Status:** ACCEPTED — v1.1 Extended 24 April 2026 (DEFERRAL_TRAJECTORY signal added)  
 **Authors:** Harold Nunes, OMNIX QUANTUM LTD  
 **Supersedes:** N/A  
 **Related:** ADR-064 (AVM), ADR-075 (Non-Finite Signal Guard), ADR-116 (Fail-Closed Enforcement)
@@ -67,7 +67,7 @@ This isolation means the MCM's own evaluation frame cannot be contaminated by th
 pipeline state it is auditing. It is the "external reference point not trained on
 the same environment" that longitudinal observation requires.
 
-### 3.2 Three Detection Mechanisms
+### 3.2 Four Detection Mechanisms (v1.1)
 
 #### VERDICT_DISTRIBUTION_DRIFT
 
@@ -106,21 +106,83 @@ Validates the AVM calibration baseline against two criteria:
    low BLOCK rate (< 3%)? If so, the frozen reference may encode a degraded state,
    making it an unreliable validity anchor — the reference obsolescence problem.
 
+#### DEFERRAL_TRAJECTORY (MCM v1.1)
+
+Time-series analysis of the HOLD (deferral) rate across rolling weekly windows.
+Computes velocity (Δhold_rate/period), acceleration (Δvelocity/period), and
+volatility (standard deviation) to detect degradation trajectories **before**
+cross-window drift detection (VERDICT_DISTRIBUTION_DRIFT) fires.
+
+Inspired by Amanulla Khan (24 Apr 2026):
+
+> *"Instability may first redistribute itself into latency, hesitation, or
+> compensatory buffering dynamics before manifesting as overt failure.
+> Longitudinal changes in absorption patterns may reveal degradation
+> trajectories earlier than direct outcome analysis alone."*
+
+**Computed metrics per domain:**
+
+| Metric | Formula | Unit |
+|---|---|---|
+| `hold_rate` | HOLD / total × 100 | % per period |
+| `velocity` | Δhold_rate / period | pp/week |
+| `acceleration` | Δvelocity / period | pp/week² |
+| `hold_rate_std` | σ(hold_rates) | pp |
+| `sustained_increasing_periods` | max consecutive positive-velocity periods | N |
+
+**Thresholds:**
+
+| Threshold | Value | Meaning |
+|---|---|---|
+| `DEFERRAL_VELOCITY_WARNING` | 1.5 pp/week | Sustained growth requiring monitoring |
+| `DEFERRAL_VELOCITY_CRITICAL` | 4.0 pp/week | Rapid deferral accumulation |
+| `DEFERRAL_ACCELERATION_WARNING` | 0.5 pp/week² | Velocity itself increasing |
+| `DEFERRAL_VOLATILITY_HIGH` | 12.0 pp σ | Oscillation signature (unstable regime) |
+| `DEFERRAL_SUSTAINED_WARNING` | 3 periods | Early trend forming |
+| `DEFERRAL_SUSTAINED_CRITICAL` | 5 periods | Structural deferral trajectory |
+
+**First detection result — trading domain (24 Apr 2026):**
+
+```
+DEFERRAL_TRAJECTORY | CRITICAL | Score 74.3/100
+periods=7 (weekly, 56-day lookback)
+mean_hold = 89.1%
+velocity  = +4.85 pp/week  [CRITICAL — above 4.0 threshold]
+accel     = +0.83 pp/week² [WARNING — above 0.5 threshold]
+std       = 12.0 pp        [WARNING — at volatility boundary]
+
+[CRITICAL] DEFERRAL_VELOCITY_HIGH
+  HOLD rate growing at +4.85 pp/week — predates output distribution change
+
+[WARNING]  DEFERRAL_ACCELERATION
+  Velocity itself accelerating at +0.83 pp/week² — progressive frame shift
+
+[WARNING]  DEFERRAL_OSCILLATION
+  std=12.0 pp — high inter-period oscillation, not a stable deferral state
+```
+
 ### 3.3 Transition Signatures (Pre-Divergence Early Warning)
 
 Unlike the AVM which fires on threshold breach, the MCM surfaces signatures
 **before** divergence becomes explicit:
 
-| Signal ID | Severity | Description |
-|---|---|---|
-| `BLOCK_RATE_COLLAPSE` | CRITICAL | BLOCK rate < 25% of reference (>4x drop) |
-| `BLOCK_RATE_DECLINE` | WARNING | BLOCK rate < 50% of reference |
-| `HOLD_ABSORPTION` | WARNING | HOLD rising while BLOCK falling (deferral pattern) |
-| `GATE_SILENCE:<gate>` | WARNING | Gate frequency < 15% of reference rate |
-| `GATE_AMPLIFICATION:<gate>` | INFO | Gate frequency > 2× reference rate |
-| `REFERENCE_AGE_WARNING` | WARNING | Calibration > 75% through validity window |
-| `REFERENCE_AGE_EXCEEDED` | CRITICAL | Calibration past validity window |
-| `RECALIBRATION_ANCHORING_RISK` | CRITICAL | Last recal during BLOCK rate < 3% |
+| Signal ID | Source | Severity | Description |
+|---|---|---|---|
+| `BLOCK_RATE_COLLAPSE` | VDD | CRITICAL | BLOCK rate < 25% of reference (>4x drop) |
+| `BLOCK_RATE_DECLINE` | VDD | WARNING | BLOCK rate < 50% of reference |
+| `HOLD_ABSORPTION` | VDD | WARNING | HOLD rising while BLOCK falling (deferral pattern) |
+| `GATE_SILENCE:<gate>` | VPA | WARNING | Gate frequency < 15% of reference rate |
+| `GATE_AMPLIFICATION:<gate>` | VPA | INFO | Gate frequency > 2× reference rate |
+| `REFERENCE_AGE_WARNING` | RL | WARNING | Calibration > 75% through validity window |
+| `REFERENCE_AGE_EXCEEDED` | RL | CRITICAL | Calibration past validity window |
+| `RECALIBRATION_ANCHORING_RISK` | RL | CRITICAL | Last recal during BLOCK rate < 3% |
+| `DEFERRAL_VELOCITY_HIGH` | DT | CRITICAL | HOLD rate growing > 4.0 pp/week (v1.1) |
+| `DEFERRAL_VELOCITY_RISING` | DT | WARNING | HOLD rate growing > 1.5 pp/week (v1.1) |
+| `DEFERRAL_ACCELERATION` | DT | WARNING | Velocity itself increasing > 0.5 pp/week² (v1.1) |
+| `SUSTAINED_DEFERRAL_TREND` | DT | WARNING/CRITICAL | N consecutive periods of rising HOLD (v1.1) |
+| `DEFERRAL_OSCILLATION` | DT | WARNING | Std dev > 12 pp — unstable oscillation regime (v1.1) |
+
+*Sources: VDD=Verdict Distribution Drift, VPA=Veto Pattern Asymmetry, RL=Reference Legitimacy, DT=Deferral Trajectory*
 
 ### 3.4 Alert Levels
 
@@ -215,15 +277,28 @@ in OMNIX operational data.
 
 ---
 
-## 8. Next Steps
+## 8. Implementation Status
+
+| Feature | Status |
+|---|---|
+| VERDICT_DISTRIBUTION_DRIFT (3 signals) | ✅ v1.0 — live |
+| VETO_PATTERN_ASYMMETRY | ✅ v1.0 — live |
+| REFERENCE_LEGITIMACY | ✅ v1.0 — live |
+| DEFERRAL_TRAJECTORY (4 signals) | ✅ v1.1 — live |
+| REST endpoints (`/api/governance/meta-coherence[/<domain>]`) | ✅ v1.1 — live |
+| Tests (`tests/test_meta_coherence_monitor.py`) | ✅ 45 passing |
+| DB persistence (`governance_drift_log`) | ✅ 4 rows per trading run |
+
+## 9. Next Steps (ADR-118)
 
 1. **Proxy mode gate disambiguation:** Filter `_PROXY_MODE` gate entries from asymmetry
    analysis or classify them separately in the veto_chain format
-2. **Recalibration trigger:** When MCM alert_level = CRITICAL, automatically open a
-   recalibration review ticket
-3. **MCM dashboard widget:** Expose MCM scores in the Flask Dashboard governance panel
-4. **Multi-domain sweep:** Run `monitor.run_all_domains()` on a schedule and persist
-   comparative reports
+2. **Auto-remediation (ADR-118):** When MCM alert_level = CRITICAL, automatically
+   suspend recalibration and escalate to operator — requires governance authority decision
+3. **Scheduled sweep:** Run `monitor.run_all_domains()` on a cron schedule (daily)
+   and persist comparative cross-domain reports for trend tracking
+4. **Deferral window calibration:** Optimize `_TRAJECTORY_GRANULARITY_DAYS` per domain
+   (trading may require 3-day windows; insurance may work on 14-day windows)
 
 ---
 

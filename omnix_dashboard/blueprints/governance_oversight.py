@@ -216,6 +216,28 @@ def _report_to_dict(report) -> dict:
             "evidence":    s.evidence,
         }
 
+    def _dt(dt):
+        if not dt:
+            return None
+        return {
+            "error":                        dt.error,
+            "sufficient_data":              dt.sufficient_data,
+            "granularity_days":             dt.granularity_days,
+            "lookback_days":                dt.lookback_days,
+            "periods":                      len(dt.period_labels),
+            "period_labels":                dt.period_labels,
+            "hold_rates":                   dt.hold_rates,
+            "velocity_series":              dt.velocity_series,
+            "mean_hold_rate":               round(dt.mean_hold_rate, 2),
+            "hold_rate_std":                round(dt.hold_rate_std, 2),
+            "mean_velocity_pp_per_week":    round(dt.mean_velocity, 2),
+            "peak_velocity_pp_per_week":    round(dt.peak_velocity, 2),
+            "acceleration_pp_per_week_sq":  round(dt.acceleration, 2),
+            "sustained_increasing_periods": dt.sustained_increasing_periods,
+            "trajectory_score":             round(dt.trajectory_score, 2),
+            "alert_level":                  dt.alert_level,
+        }
+
     return {
         "report_id":              report.report_id,
         "domain":                 report.domain,
@@ -228,8 +250,10 @@ def _report_to_dict(report) -> dict:
         "verdict_distribution":   _vd(report.verdict_distribution),
         "veto_pattern":           _vp(report.veto_pattern),
         "reference_legitimacy":   _rl(report.reference_legitimacy),
+        "deferral_trajectory":    _dt(report.deferral_trajectory),
         "transition_signatures":  [_sig(s) for s in (report.transition_signatures or [])],
         "adr": "ADR-117",
+        "mcm_signals": 4,
     }
 
 

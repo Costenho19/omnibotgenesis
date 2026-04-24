@@ -247,3 +247,146 @@ class TestProxyGateFiltering:
         if hasattr(m, "_is_real_gate"):
             assert m._is_real_gate("AML_FREQUENCY_GATE")
             assert m._is_real_gate("SHARIA_COMPLIANCE_GATE")
+
+
+# ---------------------------------------------------------------------------
+# Tests — DeferralTrajectoryResult (MCM v1.1)
+# ---------------------------------------------------------------------------
+
+from omnix_core.governance.meta_coherence_monitor import (
+    DeferralTrajectoryResult,
+    _DEFERRAL_VELOCITY_WARNING,
+    _DEFERRAL_VELOCITY_CRITICAL,
+    _DEFERRAL_ACCELERATION_WARNING,
+    _DEFERRAL_VOLATILITY_HIGH,
+    _DEFERRAL_SUSTAINED_WARNING,
+    _DEFERRAL_SUSTAINED_CRITICAL,
+    _MIN_TRAJECTORY_PERIODS,
+    _TRAJECTORY_GRANULARITY_DAYS,
+)
+
+
+def _make_dt(
+    hold_rates=None,
+    velocity=None,
+    mean_velocity=2.5,
+    acceleration=0.6,
+    hold_std=14.0,
+    streak=4,
+    sufficient=True,
+    alert="WARNING",
+):
+    hold_rates = hold_rates or [86.0, 88.0, 91.0, 93.0, 97.0]
+    velocity   = velocity   or [2.0, 3.0, 2.0, 4.0]
+    labels     = [f"2026-03-{7*i+7:02d}" for i in range(len(hold_rates))]
+    return DeferralTrajectoryResult(
+        domain="trading",
+        period_labels=labels,
+        hold_rates=hold_rates,
+        period_totals=[18000] * len(hold_rates),
+        velocity_series=velocity,
+        mean_hold_rate=sum(hold_rates) / len(hold_rates),
+        hold_rate_std=hold_std,
+        mean_velocity=mean_velocity,
+        peak_velocity=max(velocity, key=abs),
+        acceleration=acceleration,
+        sustained_increasing_periods=streak,
+        trajectory_score=45.0,
+        sufficient_data=sufficient,
+        alert_level=alert,
+    )
+
+
+class TestDeferralTrajectoryConstants:
+    def test_velocity_warning_below_critical(self):
+        assert _DEFERRAL_VELOCITY_WARNING < _DEFERRAL_VELOCITY_CRITICAL
+
+    def test_sustained_warning_below_critical(self):
+        assert _DEFERRAL_SUSTAINED_WARNING < _DEFERRAL_SUSTAINED_CRITICAL
+
+    def test_min_periods_positive(self):
+        assert _MIN_TRAJECTORY_PERIODS >= 2
+
+    def test_granularity_seven_days(self):
+        assert _TRAJECTORY_GRANULARITY_DAYS == 7
+
+    def test_volatility_threshold_positive(self):
+        assert _DEFERRAL_VOLATILITY_HIGH > 0
+
+
+class TestDeferralTrajectoryResult:
+    def test_instantiation_with_data(self):
+        dt = _make_dt()
+        assert dt.domain == "trading"
+        assert dt.sufficient_data is True
+
+    def test_mean_hold_rate_computed(self):
+        dt = _make_dt(hold_rates=[90.0, 92.0, 94.0, 96.0, 98.0])
+        assert dt.mean_hold_rate == pytest.approx(94.0, abs=0.1)
+
+    def test_velocity_series_length(self):
+        dt = _make_dt()
+        assert len(dt.velocity_series) == len(dt.hold_rates) - 1
+
+    def test_insufficient_data_no_signal(self):
+        dt = _make_dt(sufficient=False, alert="OK")
+        assert not dt.sufficient_data
+        assert dt.alert_level == "OK"
+
+    def test_alert_level_valid_values(self):
+        for alert in ("OK", "WARNING", "CRITICAL", "UNKNOWN"):
+            dt = _make_dt(alert=alert)
+            assert dt.alert_level == alert
+
+    def test_trajectory_score_in_range(self):
+        dt = _make_dt()
+        assert 0 <= dt.trajectory_score <= 100
+
+
+class TestDeferralTrajectoryDBConstraint:
+    """Ensure trajectory alert levels also map correctly through _DB_ALERT_MAP."""
+
+    def test_trajectory_critical_maps_to_alert(self):
+        assert _DB_ALERT_MAP.get("CRITICAL") == "ALERT"
+
+    def test_trajectory_warning_preserved(self):
+        assert _DB_ALERT_MAP.get("WARNING") == "WARNING"
+
+    def test_trajectory_ok_preserved(self):
+        assert _DB_ALERT_MAP.get("OK") == "OK"
+
+
+class TestDeferralTrajectorySignatureThresholds:
+    """Regression guards: threshold values must stay within auditable bounds."""
+
+    def test_velocity_warning_reasonable(self):
+        assert 0.5 <= _DEFERRAL_VELOCITY_WARNING <= 3.0
+
+    def test_velocity_critical_reasonable(self):
+        assert 2.0 <= _DEFERRAL_VELOCITY_CRITICAL <= 10.0
+
+    def test_acceleration_threshold_reasonable(self):
+        assert 0.1 <= _DEFERRAL_ACCELERATION_WARNING <= 2.0
+
+    def test_volatility_threshold_reasonable(self):
+        assert 5.0 <= _DEFERRAL_VOLATILITY_HIGH <= 30.0
+
+
+class TestMCMReportV11:
+    """Verify MetaCoherenceReport correctly holds deferral_trajectory field."""
+
+    def test_report_has_deferral_trajectory_field(self):
+        r = MetaCoherenceReport(domain="trading")
+        assert hasattr(r, "deferral_trajectory")
+        assert r.deferral_trajectory is None
+
+    def test_report_accepts_deferral_trajectory(self):
+        dt = _make_dt()
+        r  = MetaCoherenceReport(domain="trading", deferral_trajectory=dt)
+        assert r.deferral_trajectory is not None
+        assert r.deferral_trajectory.domain == "trading"
+
+    def test_mcm_version_updated(self):
+        from omnix_core.governance.meta_coherence_monitor import MCM_VERSION
+        major, minor, patch = MCM_VERSION.split(".")
+        assert int(minor) >= 1, "MCM v1.1+ required for DEFERRAL_TRAJECTORY"

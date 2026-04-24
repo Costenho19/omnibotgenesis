@@ -106,7 +106,7 @@ logger = logging.getLogger("OMNIX.MCM")
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
-MCM_VERSION = "1.0.0"
+MCM_VERSION = "1.1.0"
 
 # Verdict normalization map — decision column is inconsistent across pipeline
 # versions (APPROVED/APPROVE, BLOCKED/BLOCK). Normalized to 3 categories.
@@ -149,6 +149,40 @@ _REFERENCE_AGE_WARNING_FRACTION = 0.75  # warn at 75% of max age
 
 # Minimum sample size to trust a distribution window.
 _MIN_SAMPLE_SIZE = 50
+
+# ── DEFERRAL_TRAJECTORY constants (MCM v1.1 — ADR-117 §3.4) ───────────────────
+#
+# Amanulla Khan insight (24 Apr 2026):
+#   "Instability may first redistribute itself into latency, hesitation, or
+#    compensatory buffering dynamics before manifesting as overt failure.
+#    Longitudinal changes in absorption patterns may reveal degradation
+#    trajectories earlier than direct outcome analysis."
+#
+# These constants govern the 4th MCM signal: time-series trajectory of the
+# deferral (HOLD) rate. We compute velocity (Δhold_rate/period) and
+# acceleration (Δvelocity/period) over rolling weekly windows.
+
+# Minimum number of weekly periods required for trajectory analysis.
+_MIN_TRAJECTORY_PERIODS = 4
+
+# Granularity for trajectory bucketing (days per period).
+_TRAJECTORY_GRANULARITY_DAYS = 7
+
+# Velocity thresholds: pp/period (percentage-points per week) of HOLD growth.
+_DEFERRAL_VELOCITY_WARNING  = 1.5   # ≥ 1.5 pp/week → sustained deferral growth
+_DEFERRAL_VELOCITY_CRITICAL = 4.0   # ≥ 4.0 pp/week → rapid deferral accumulation
+
+# Acceleration threshold: pp/period² — velocity itself increasing.
+_DEFERRAL_ACCELERATION_WARNING = 0.5  # ≥ 0.5 pp/week² → deferral intensifying
+
+# Volatility threshold: standard deviation of hold rates across periods.
+# High volatility indicates the system is oscillating between enforcement and
+# deferral — an unstable regime even if the mean looks acceptable.
+_DEFERRAL_VOLATILITY_HIGH    = 12.0  # ≥ 12 pp std — oscillation signature
+
+# Sustained trend thresholds: consecutive periods with positive velocity.
+_DEFERRAL_SUSTAINED_WARNING  = 3    # 3+ consecutive weeks rising → trend forming
+_DEFERRAL_SUSTAINED_CRITICAL = 5    # 5+ consecutive weeks rising → serious pattern
 
 
 # ── Dataclasses ────────────────────────────────────────────────────────────────
@@ -266,6 +300,57 @@ class ReferenceLegitimacyResult:
 
 
 @dataclass
+class DeferralTrajectoryResult:
+    """
+    Result of time-series trajectory analysis of the HOLD (deferral) rate.
+
+    Fourth MCM signal (v1.1) — answers Amanulla Khan's question (24 Apr 2026):
+
+        "Whether longitudinal changes in absorption patterns, escalation
+        density, or decision deferral behaviour may reveal degradation
+        trajectories earlier than direct outcome analysis alone."
+
+    Computes, per rolling time period (default: weekly):
+        - hold_rate        : HOLD decisions / total decisions (%)
+        - velocity         : Δhold_rate / period (pp/week)
+        - acceleration     : Δvelocity / period (pp/week²)
+
+    Key insight: HOLD rate velocity and acceleration carry predictive signal
+    before the cross-window HOLD delta detected by VERDICT_DISTRIBUTION_DRIFT.
+    This is the "pre-divergence early warning" layer.
+    """
+    domain:               str
+    granularity_days:     int   = _TRAJECTORY_GRANULARITY_DAYS
+    lookback_days:        int   = 56   # Total window analysed (8 weeks default)
+
+    # Time series: ISO date labels and corresponding HOLD rates (%)
+    period_labels:        list[str]   = field(default_factory=list)
+    hold_rates:           list[float] = field(default_factory=list)   # pp per period
+    period_totals:        list[int]   = field(default_factory=list)   # total decisions
+
+    # Velocity series: Δhold_rate per period (pp/period)
+    velocity_series:      list[float] = field(default_factory=list)
+
+    # Summary statistics
+    mean_hold_rate:       float = 0.0   # Mean HOLD rate across periods (pp)
+    hold_rate_std:        float = 0.0   # Std dev — high value = oscillation
+    mean_velocity:        float = 0.0   # Mean week-over-week HOLD growth (pp/period)
+    peak_velocity:        float = 0.0   # Maximum single-period HOLD growth observed
+    acceleration:         float = 0.0   # Mean of velocity deltas (pp/period²)
+
+    # Trend continuity: max number of consecutive periods with positive velocity
+    sustained_increasing_periods: int = 0
+
+    # Composite trajectory score (0-100): higher = more concerning trajectory
+    trajectory_score:     float = 0.0
+    sufficient_data:      bool  = False
+
+    alert_level:          str   = "UNKNOWN"
+    signatures:           list[TransitionSignature] = field(default_factory=list)
+    error:                str | None = None
+
+
+@dataclass
 class MetaCoherenceReport:
     """
     Composite second-order coherence report for a single domain.
@@ -279,10 +364,11 @@ class MetaCoherenceReport:
     generated_at:          str   = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     mcm_version:           str   = MCM_VERSION
 
-    # Sub-results
-    verdict_distribution:  VerdictDistributionResult | None = None
-    veto_pattern:          VetoPatternResult          | None = None
-    reference_legitimacy:  ReferenceLegitimacyResult  | None = None
+    # Sub-results (4 detection mechanisms)
+    verdict_distribution:  VerdictDistributionResult  | None = None
+    veto_pattern:          VetoPatternResult           | None = None
+    reference_legitimacy:  ReferenceLegitimacyResult   | None = None
+    deferral_trajectory:   DeferralTrajectoryResult    | None = None   # v1.1
 
     # Composite score (0-100) — higher = more concern about frame stability
     composite_score:       float = 0.0
@@ -388,6 +474,21 @@ class MetaCoherenceMonitor:
         except Exception as exc:
             logger.warning(f"[MCM] reference_legitimacy failed: {exc}")
             report.reference_legitimacy = ReferenceLegitimacyResult(
+                domain=domain,
+                error=str(exc),
+                alert_level="UNKNOWN",
+            )
+
+        try:
+            lookback = reference_days + current_days
+            report.deferral_trajectory = self._analyze_deferral_trajectory(
+                domain,
+                lookback_days=lookback,
+                granularity_days=_TRAJECTORY_GRANULARITY_DAYS,
+            )
+        except Exception as exc:
+            logger.warning(f"[MCM] deferral_trajectory failed: {exc}")
+            report.deferral_trajectory = DeferralTrajectoryResult(
                 domain=domain,
                 error=str(exc),
                 alert_level="UNKNOWN",
@@ -525,6 +626,44 @@ class MetaCoherenceMonitor:
                         rl.age_fraction * 100.0,
                         _REFERENCE_AGE_WARNING_FRACTION * 100.0,
                         _DB_ALERT_MAP.get(rl.alert_level, "OK"),
+                    ),
+                )
+                rows_written += 1
+
+            # Row 4: Deferral trajectory (v1.1)
+            if (report.deferral_trajectory
+                    and not report.deferral_trajectory.error
+                    and report.deferral_trajectory.sufficient_data):
+                dt = report.deferral_trajectory
+                cur.execute(
+                    """
+                    INSERT INTO governance_drift_log
+                        (client_id, signal_name, baseline_stats, current_stats,
+                         drift_score, threshold, alert_level, detected_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                    """,
+                    (
+                        f"MCM:{report.domain}",
+                        "DEFERRAL_TRAJECTORY",
+                        json.dumps({
+                            "periods":          len(dt.period_labels),
+                            "lookback_days":    dt.lookback_days,
+                            "granularity_days": dt.granularity_days,
+                            "period_labels":    dt.period_labels,
+                            "hold_rates":       dt.hold_rates,
+                        }),
+                        json.dumps({
+                            "mean_hold_rate":              dt.mean_hold_rate,
+                            "hold_rate_std":               dt.hold_rate_std,
+                            "mean_velocity_pp_per_week":   dt.mean_velocity,
+                            "peak_velocity_pp_per_week":   dt.peak_velocity,
+                            "acceleration_pp_per_week_sq": dt.acceleration,
+                            "sustained_increasing_periods": dt.sustained_increasing_periods,
+                            "velocity_series":             dt.velocity_series,
+                        }),
+                        dt.trajectory_score,
+                        _DEFERRAL_VELOCITY_WARNING,
+                        _DB_ALERT_MAP.get(dt.alert_level, "OK"),
                     ),
                 )
                 rows_written += 1
@@ -1052,6 +1191,298 @@ class MetaCoherenceMonitor:
             result.alert_level = "UNKNOWN"
             return result
 
+    # ── Analysis: Deferral Trajectory (MCM v1.1) ───────────────────────────────
+
+    def _analyze_deferral_trajectory(
+        self,
+        domain: str,
+        lookback_days: int = 56,
+        granularity_days: int = _TRAJECTORY_GRANULARITY_DAYS,
+    ) -> DeferralTrajectoryResult:
+        """
+        Time-series analysis of the HOLD (deferral) rate across rolling
+        weekly windows.
+
+        Computes:
+          - hold_rate per period (weekly %)
+          - velocity: Δhold_rate / period (pp/week)
+          - acceleration: Δvelocity / period (pp/week²)
+          - volatility: standard deviation of hold rates
+
+        Detects pre-divergence signatures:
+          - DEFERRAL_VELOCITY_HIGH    : sustained HOLD growth > threshold
+          - DEFERRAL_ACCELERATION     : velocity itself increasing
+          - SUSTAINED_DEFERRAL_TREND  : N consecutive rising periods
+          - DEFERRAL_OSCILLATION      : high std-dev (volatile, not stable)
+
+        Amanulla Khan (24 Apr 2026):
+            "Instability may first redistribute itself into latency, hesitation,
+             or compensatory buffering dynamics before manifesting as overt failure."
+        """
+        result = DeferralTrajectoryResult(
+            domain=domain,
+            granularity_days=granularity_days,
+            lookback_days=lookback_days,
+        )
+
+        if not self._db_url:
+            result.error = "No DB URL"
+            result.alert_level = "UNKNOWN"
+            return result
+
+        try:
+            import psycopg2
+            conn = psycopg2.connect(self._db_url)
+            cur  = conn.cursor()
+
+            # Pull per-period verdict counts using integer date bucketing.
+            # We floor each created_at to the nearest granularity_days-day boundary
+            # so that results are stable regardless of query time.
+            cur.execute("""
+                SELECT
+                    TO_CHAR(
+                        DATE_TRUNC('day', created_at)
+                        - (EXTRACT(DOY FROM created_at)::int %% %(gran)s) * INTERVAL '1 day',
+                        'YYYY-MM-DD'
+                    )                                              AS period_start,
+                    COUNT(*)                                       AS total,
+                    SUM(CASE
+                        WHEN LOWER(TRIM(decision)) IN ('held', 'hold') THEN 1
+                        ELSE 0
+                    END)                                           AS holds
+                FROM decision_receipts
+                WHERE
+                    (domain = %(domain)s OR %(domain)s = 'all')
+                    AND created_at >= NOW() - INTERVAL '1 day' * %(lookback)s
+                    AND created_at <= NOW()
+                GROUP BY 1
+                ORDER BY 1
+            """, {
+                "domain":   domain,
+                "gran":     granularity_days,
+                "lookback": lookback_days,
+            })
+
+            rows = cur.fetchall()
+            conn.close()
+
+            if not rows:
+                result.error = f"No decision data for domain '{domain}'"
+                result.alert_level = "OK"
+                return result
+
+            # Build time series — filter periods with enough data
+            labels:  list[str]   = []
+            rates:   list[float] = []
+            totals:  list[int]   = []
+
+            for period_start, total, holds in rows:
+                if total < 10:   # skip near-empty buckets (incomplete weeks)
+                    continue
+                hold_pct = round(holds * 100.0 / total, 2)
+                labels.append(str(period_start))
+                rates.append(hold_pct)
+                totals.append(int(total))
+
+            result.period_labels  = labels
+            result.hold_rates     = rates
+            result.period_totals  = totals
+            result.sufficient_data = len(rates) >= _MIN_TRAJECTORY_PERIODS
+
+            if not result.sufficient_data:
+                result.error = (
+                    f"Insufficient periods: {len(rates)} "
+                    f"(min={_MIN_TRAJECTORY_PERIODS})"
+                )
+                result.alert_level = "OK"
+                return result
+
+            # ── Statistics ────────────────────────────────────────────────────
+            n = len(rates)
+            result.mean_hold_rate = round(sum(rates) / n, 2)
+
+            variance = sum((r - result.mean_hold_rate) ** 2 for r in rates) / n
+            result.hold_rate_std  = round(math.sqrt(variance), 2)
+
+            # Velocity series: Δhold_rate between consecutive periods
+            velocity: list[float] = [
+                round(rates[i] - rates[i - 1], 2)
+                for i in range(1, n)
+            ]
+            result.velocity_series = velocity
+
+            if velocity:
+                result.mean_velocity = round(sum(velocity) / len(velocity), 2)
+                result.peak_velocity = round(max(velocity, key=abs), 2)
+
+            # Acceleration: mean of velocity deltas
+            if len(velocity) >= 2:
+                accel_series = [
+                    velocity[i] - velocity[i - 1]
+                    for i in range(1, len(velocity))
+                ]
+                result.acceleration = round(
+                    sum(accel_series) / len(accel_series), 2
+                )
+
+            # Sustained increasing trend: max consecutive positive-velocity periods
+            max_streak = cur_streak = 0
+            for v in velocity:
+                if v > 0:
+                    cur_streak += 1
+                    max_streak = max(max_streak, cur_streak)
+                else:
+                    cur_streak = 0
+            result.sustained_increasing_periods = max_streak
+
+            # ── Trajectory score (0-100) ──────────────────────────────────────
+            # Weighted: velocity component + acceleration component + volatility
+            vel_score   = min(abs(result.mean_velocity)  / _DEFERRAL_VELOCITY_CRITICAL * 100, 100)
+            accel_score = min(abs(result.acceleration)   / (_DEFERRAL_ACCELERATION_WARNING * 2) * 100, 100)
+            vol_score   = min(result.hold_rate_std       / (_DEFERRAL_VOLATILITY_HIGH * 2) * 100, 100)
+            trend_score = min(result.sustained_increasing_periods / _DEFERRAL_SUSTAINED_CRITICAL * 100, 100)
+
+            result.trajectory_score = round(
+                vel_score * 0.35 +
+                accel_score * 0.25 +
+                vol_score * 0.25 +
+                trend_score * 0.15,
+                1,
+            )
+
+            # ── Transition signatures ─────────────────────────────────────────
+            sigs = result.signatures
+
+            # 1. Deferral velocity — is HOLD rate growing rapidly?
+            if result.mean_velocity >= _DEFERRAL_VELOCITY_CRITICAL:
+                sigs.append(TransitionSignature(
+                    signal_id="DEFERRAL_VELOCITY_HIGH",
+                    description=(
+                        f"HOLD rate growing at {result.mean_velocity:+.1f} pp/week "
+                        f"(critical threshold: {_DEFERRAL_VELOCITY_CRITICAL} pp/week). "
+                        f"Mean HOLD rate: {result.mean_hold_rate:.1f}%. "
+                        "Decisions are accumulating in deferral at a rate that "
+                        "precedes structural output failure."
+                    ),
+                    severity="CRITICAL",
+                    metric_name="mean_velocity_pp_per_week",
+                    observed=result.mean_velocity,
+                    reference=_DEFERRAL_VELOCITY_CRITICAL,
+                    delta=result.mean_velocity - _DEFERRAL_VELOCITY_CRITICAL,
+                ))
+            elif result.mean_velocity >= _DEFERRAL_VELOCITY_WARNING:
+                sigs.append(TransitionSignature(
+                    signal_id="DEFERRAL_VELOCITY_RISING",
+                    description=(
+                        f"HOLD rate growing at {result.mean_velocity:+.1f} pp/week "
+                        f"(warning threshold: {_DEFERRAL_VELOCITY_WARNING} pp/week). "
+                        "Monitor for sustained growth toward critical threshold."
+                    ),
+                    severity="WARNING",
+                    metric_name="mean_velocity_pp_per_week",
+                    observed=result.mean_velocity,
+                    reference=_DEFERRAL_VELOCITY_WARNING,
+                    delta=result.mean_velocity - _DEFERRAL_VELOCITY_WARNING,
+                ))
+
+            # 2. Deferral acceleration — is the velocity itself increasing?
+            if result.acceleration >= _DEFERRAL_ACCELERATION_WARNING:
+                sigs.append(TransitionSignature(
+                    signal_id="DEFERRAL_ACCELERATION",
+                    description=(
+                        f"HOLD rate velocity is accelerating at "
+                        f"{result.acceleration:+.2f} pp/week² "
+                        f"(threshold: {_DEFERRAL_ACCELERATION_WARNING} pp/week²). "
+                        "The evaluation frame is progressively shifting toward "
+                        "deferral — the rate of deferral growth is itself growing."
+                    ),
+                    severity="WARNING",
+                    metric_name="deferral_acceleration_pp_per_week_sq",
+                    observed=result.acceleration,
+                    reference=_DEFERRAL_ACCELERATION_WARNING,
+                    delta=result.acceleration - _DEFERRAL_ACCELERATION_WARNING,
+                ))
+
+            # 3. Sustained increasing trend
+            if result.sustained_increasing_periods >= _DEFERRAL_SUSTAINED_CRITICAL:
+                sigs.append(TransitionSignature(
+                    signal_id="SUSTAINED_DEFERRAL_TREND",
+                    description=(
+                        f"HOLD rate increased for {result.sustained_increasing_periods} "
+                        f"consecutive periods (critical: {_DEFERRAL_SUSTAINED_CRITICAL}). "
+                        "Persistent unidirectional drift in deferral behaviour — "
+                        "not noise, a structural trajectory."
+                    ),
+                    severity="CRITICAL",
+                    metric_name="sustained_increasing_periods",
+                    observed=float(result.sustained_increasing_periods),
+                    reference=float(_DEFERRAL_SUSTAINED_CRITICAL),
+                    delta=float(result.sustained_increasing_periods - _DEFERRAL_SUSTAINED_CRITICAL),
+                ))
+            elif result.sustained_increasing_periods >= _DEFERRAL_SUSTAINED_WARNING:
+                sigs.append(TransitionSignature(
+                    signal_id="SUSTAINED_DEFERRAL_TREND",
+                    description=(
+                        f"HOLD rate increased for {result.sustained_increasing_periods} "
+                        f"consecutive periods (warning: {_DEFERRAL_SUSTAINED_WARNING}). "
+                        "Early sustained deferral trend forming."
+                    ),
+                    severity="WARNING",
+                    metric_name="sustained_increasing_periods",
+                    observed=float(result.sustained_increasing_periods),
+                    reference=float(_DEFERRAL_SUSTAINED_WARNING),
+                    delta=float(result.sustained_increasing_periods - _DEFERRAL_SUSTAINED_WARNING),
+                ))
+
+            # 4. High oscillation — std dev flags regime instability
+            if result.hold_rate_std >= _DEFERRAL_VOLATILITY_HIGH:
+                sigs.append(TransitionSignature(
+                    signal_id="DEFERRAL_OSCILLATION",
+                    description=(
+                        f"HOLD rate std dev: {result.hold_rate_std:.1f} pp "
+                        f"across {len(rates)} periods "
+                        f"(threshold: {_DEFERRAL_VOLATILITY_HIGH} pp). "
+                        "High oscillation between enforcement and deferral — "
+                        "the system is in an unstable regime, not a stable one. "
+                        "Amanulla pattern: instability redistributed into "
+                        "alternating latency buffers before overt failure."
+                    ),
+                    severity="WARNING",
+                    metric_name="hold_rate_std_pp",
+                    observed=result.hold_rate_std,
+                    reference=_DEFERRAL_VOLATILITY_HIGH,
+                    delta=result.hold_rate_std - _DEFERRAL_VOLATILITY_HIGH,
+                ))
+
+            # ── Alert level ───────────────────────────────────────────────────
+            has_critical = any(s.severity == "CRITICAL" for s in sigs)
+            has_warning  = any(s.severity == "WARNING"  for s in sigs)
+
+            if has_critical:
+                result.alert_level = "CRITICAL"
+            elif has_warning:
+                result.alert_level = "WARNING"
+            else:
+                result.alert_level = "OK"
+
+            logger.info(
+                f"[MCM] deferral_trajectory | domain={domain} | "
+                f"periods={len(rates)} | mean_hold={result.mean_hold_rate:.1f}% | "
+                f"vel={result.mean_velocity:+.2f}pp/wk | "
+                f"accel={result.acceleration:+.2f}pp/wk² | "
+                f"std={result.hold_rate_std:.1f}pp | "
+                f"score={result.trajectory_score:.1f} | "
+                f"alert={result.alert_level}"
+            )
+
+            return result
+
+        except Exception as exc:
+            result.error = str(exc)
+            result.alert_level = "UNKNOWN"
+            logger.warning(f"[MCM] deferral_trajectory error: {exc}")
+            return result
+
     # ── Report Composition ─────────────────────────────────────────────────────
 
     def _compose_report(self, report: MetaCoherenceReport) -> None:
@@ -1064,8 +1495,14 @@ class MetaCoherenceMonitor:
         all_sigs:   list[TransitionSignature] = []
         has_error   = False
 
-        # Collect scores and signatures from sub-results
-        for sub in [report.verdict_distribution, report.veto_pattern, report.reference_legitimacy]:
+        # Collect scores and signatures from all 4 sub-results
+        all_subs = [
+            report.verdict_distribution,
+            report.veto_pattern,
+            report.reference_legitimacy,
+            report.deferral_trajectory,
+        ]
+        for sub in all_subs:
             if sub is None:
                 continue
             if sub.error:
@@ -1081,6 +1518,11 @@ class MetaCoherenceMonitor:
 
         if report.reference_legitimacy and not report.reference_legitimacy.error:
             scores.append(report.reference_legitimacy.age_fraction * 100.0)
+
+        if (report.deferral_trajectory
+                and not report.deferral_trajectory.error
+                and report.deferral_trajectory.sufficient_data):
+            scores.append(report.deferral_trajectory.trajectory_score)
 
         # Sort signatures: CRITICAL first, then WARNING, then INFO
         severity_order = {"CRITICAL": 0, "WARNING": 1, "INFO": 2}
