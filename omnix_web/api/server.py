@@ -675,8 +675,8 @@ def get_live_metrics():
                 row = cur.fetchone()
                 if row and row[0]:
                     earliest_dates.append(row[0])
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         LAUNCH_FALLBACK = datetime(2025, 11, 28, tzinfo=timezone.utc)
         if earliest_dates:
@@ -792,8 +792,8 @@ def get_metrics_live():
             row = cur.fetchone()
             if row:
                 trading_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Credit vertical (credit_applications table) ───────────────────────
         credit_total = credit_approved = credit_blocked = credit_today = 0
@@ -816,8 +816,8 @@ def get_metrics_live():
                 row = cur.fetchone()
                 if row:
                     credit_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Insurance vertical (insurance_claims table) ───────────────────────
         ins_total = ins_approved = ins_blocked = ins_today = 0
@@ -835,8 +835,8 @@ def get_metrics_live():
             row = cur.fetchone()
             if row:
                 ins_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Robotics vertical (robot_actions table) ───────────────────────────
         rob_total = rob_approved = rob_blocked = rob_today = 0
@@ -854,8 +854,8 @@ def get_metrics_live():
             row = cur.fetchone()
             if row:
                 rob_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Medical vertical (medical_decisions table) ────────────────────────
         med_total = med_approved = med_blocked = med_today = 0
@@ -873,8 +873,8 @@ def get_metrics_live():
             row = cur.fetchone()
             if row:
                 med_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Energy vertical (energy_decisions table) ──────────────────────────
         ene_total = ene_approved = ene_blocked = ene_today = 0
@@ -897,8 +897,8 @@ def get_metrics_live():
                 row = cur.fetchone()
                 if row:
                     ene_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Real Estate vertical (property_decisions table) ───────────────────
         re_total = re_approved = re_blocked = re_today = 0
@@ -916,8 +916,8 @@ def get_metrics_live():
             row = cur.fetchone()
             if row:
                 re_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Autonomous Agents vertical (agent_decisions table) ─────────────────
         ag_total = ag_approved = ag_blocked = ag_today = 0
@@ -935,8 +935,8 @@ def get_metrics_live():
             row = cur.fetchone()
             if row:
                 ag_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Stablecoin Reserve Governance (ADR-SRG-001) ───────────────────────
         srg_total = srg_approved = srg_blocked = srg_today = 0
@@ -954,8 +954,8 @@ def get_metrics_live():
             row = cur.fetchone()
             if row:
                 srg_receipt_id = row[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         # ── Uptime ────────────────────────────────────────────────────────────
         try:
@@ -976,8 +976,8 @@ def get_metrics_live():
         try:
             cur.execute("SELECT COUNT(*) FROM architecture_decisions")
             adr_count = int(cur.fetchone()[0] or 0)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
         if adr_count == 0:
             try:
                 import re as _re, os as _os
@@ -1349,8 +1349,8 @@ def serve_did_document():
                         vm['publicKeyJwk']['x']   = runtime_key
                         vm['publicKeyJwk']['crv']  = algo.replace('-', '') if algo else 'Dilithium3'
                         vm['publicKeyJwk']['alg']  = 'CRYDI3'
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
         return app.response_class(
             response=_json.dumps(did_doc, indent=2),
             status=200,
@@ -1570,8 +1570,8 @@ def explorer_receipt(receipt_id: str):
                 except Exception:
                     continue
             cur.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
         finally:
             conn.close()
 
@@ -1611,8 +1611,8 @@ def explorer_receipt(receipt_id: str):
         try:
             from omnix_engine.federated_trust import independent_verify
             verification = independent_verify(receipt_for_verify)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
     return jsonify({
         'explorer_url':  f'https://omnixquantum.net/api/explorer/receipt/{receipt_id}',
@@ -1703,8 +1703,8 @@ def analytics_decisions():
                         if m:
                             cp_key = f'CP-{m.group(1)}'
                             cp_block_counts[cp_key] = cp_block_counts.get(cp_key, 0) + 1
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
         _cp_labels = {
             'CP-1': 'Signal Integrity Validator',
@@ -2327,7 +2327,7 @@ def send_receipt_email():
 
         return jsonify({'success': True})
     except Exception as e:
-        print(f'[EMAIL ERROR] {e}')
+        logger.error("[OMNIX.API] [send_receipt_email] %s: %s", type(e).__name__, e)
         return jsonify({'success': False, 'error': 'Failed to send email. Please try again.'}), 500
 
 

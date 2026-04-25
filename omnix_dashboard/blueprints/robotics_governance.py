@@ -98,7 +98,7 @@ def get_metrics():
         })
     except Exception as e:
         logger.error(f"Robotics metrics error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @robotics_bp.route("/actions")
@@ -151,7 +151,7 @@ def get_actions():
         })
     except Exception as e:
         logger.error(f"Robotics actions error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @robotics_bp.route("/by-industry")
@@ -176,7 +176,7 @@ def get_by_industry():
         return jsonify({"success": True, "by_industry": rows})
     except Exception as e:
         logger.error(f"Robotics by-industry error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @robotics_bp.route("/by-robot")
@@ -199,7 +199,7 @@ def get_by_robot():
         return jsonify({"success": True, "by_robot": rows})
     except Exception as e:
         logger.error(f"Robotics by-robot error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @robotics_bp.route("/fleet")
@@ -218,7 +218,7 @@ def get_fleet():
         return jsonify({"success": True, "fleet": rows, "total_robots": len(rows)})
     except Exception as e:
         logger.error(f"Robotics fleet error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @robotics_bp.route("/timeline")
@@ -241,7 +241,7 @@ def get_timeline():
         return jsonify({"success": True, "timeline": rows})
     except Exception as e:
         logger.error(f"Robotics timeline error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @robotics_bp.route("/evaluate", methods=["POST"])
@@ -280,7 +280,7 @@ def manual_evaluate():
         return jsonify({"success": True, "evaluation": result})
     except Exception as e:
         logger.error(f"Robotics manual evaluate error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @robotics_bp.route("/health")
@@ -302,4 +302,4 @@ def health():
             "last_cycle_at": last.get("created_at").isoformat() if last and last.get("created_at") else None,
         })
     except Exception as e:
-        return jsonify({"success": False, "status": "error", "error": str(e)}), 500
+        return jsonify({"success": False, "status": "error", "error": "Internal server error"}), 500

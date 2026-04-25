@@ -102,7 +102,7 @@ def get_metrics():
         })
     except Exception as e:
         logger.error(f"get_metrics error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @medical_bp.route("/decisions")
@@ -131,7 +131,7 @@ def get_decisions():
         return jsonify({"success": True, "decisions": rows})
     except Exception as e:
         logger.error(f"get_decisions error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @medical_bp.route("/live-feed")
@@ -152,7 +152,7 @@ def get_live_feed():
         return jsonify({"success": True, "decisions": rows})
     except Exception as e:
         logger.error(f"get_live_feed error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @medical_bp.route("/by-type")
@@ -174,7 +174,7 @@ def get_by_type():
         return jsonify({"success": True, "by_type": rows})
     except Exception as e:
         logger.error(f"get_by_type error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @medical_bp.route("/by-device")
@@ -197,7 +197,7 @@ def get_by_device():
         return jsonify({"success": True, "by_device": rows})
     except Exception as e:
         logger.error(f"get_by_device error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @medical_bp.route("/by-jurisdiction")
@@ -218,7 +218,7 @@ def get_by_jurisdiction():
         return jsonify({"success": True, "by_jurisdiction": rows})
     except Exception as e:
         logger.error(f"get_by_jurisdiction error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @medical_bp.route("/timeline")
@@ -242,7 +242,7 @@ def get_timeline():
         return jsonify({"success": True, "timeline": rows})
     except Exception as e:
         logger.error(f"get_timeline error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @medical_bp.route("/evaluate", methods=["POST"])
@@ -277,7 +277,7 @@ def manual_evaluate():
                         "recommendation": signals.recommendation})
     except Exception as e:
         logger.error(f"manual_evaluate error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @medical_bp.route("/health")
@@ -292,4 +292,4 @@ def health():
             "receipt_prefix": "OMNIX-MED"
         })
     except Exception as e:
-        return jsonify({"success": False, "status": "degraded", "error": str(e)}), 500
+        return jsonify({"success": False, "status": "degraded", "error": "Internal server error"}), 500

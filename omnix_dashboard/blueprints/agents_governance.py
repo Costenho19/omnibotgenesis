@@ -99,7 +99,7 @@ def get_metrics():
         })
     except Exception as e:
         logger.error(f"get_metrics error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @agents_bp.route("/decisions")
@@ -128,7 +128,7 @@ def get_decisions():
         return jsonify({"success": True, "decisions": rows})
     except Exception as e:
         logger.error(f"get_decisions error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @agents_bp.route("/live-feed")
@@ -149,7 +149,7 @@ def get_live_feed():
         return jsonify({"success": True, "decisions": rows})
     except Exception as e:
         logger.error(f"get_live_feed error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @agents_bp.route("/by-type")
@@ -171,7 +171,7 @@ def get_by_type():
         return jsonify({"success": True, "by_type": rows})
     except Exception as e:
         logger.error(f"get_by_type error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @agents_bp.route("/by-agent")
@@ -194,7 +194,7 @@ def get_by_agent():
         return jsonify({"success": True, "by_agent": rows})
     except Exception as e:
         logger.error(f"get_by_agent error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @agents_bp.route("/by-environment")
@@ -216,7 +216,7 @@ def get_by_environment():
         return jsonify({"success": True, "by_environment": rows})
     except Exception as e:
         logger.error(f"get_by_environment error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @agents_bp.route("/timeline")
@@ -240,7 +240,7 @@ def get_timeline():
         return jsonify({"success": True, "timeline": rows})
     except Exception as e:
         logger.error(f"get_timeline error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @agents_bp.route("/evaluate", methods=["POST"])
@@ -276,7 +276,7 @@ def manual_evaluate():
                         "recommendation": signals.recommendation})
     except Exception as e:
         logger.error(f"manual_evaluate error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @agents_bp.route("/health")
@@ -291,4 +291,4 @@ def health():
             "receipt_prefix": "OMNIX-AGT"
         })
     except Exception as e:
-        return jsonify({"success": False, "status": "degraded", "error": str(e)}), 500
+        return jsonify({"success": False, "status": "degraded", "error": "Internal server error"}), 500

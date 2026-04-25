@@ -94,7 +94,7 @@ def get_metrics():
         })
     except Exception as e:
         logger.error(f"Insurance metrics error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @insurance_bp.route("/claims")
@@ -143,7 +143,7 @@ def get_claims():
         })
     except Exception as e:
         logger.error(f"Insurance claims error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @insurance_bp.route("/by-type")
@@ -169,7 +169,7 @@ def get_by_type():
         return jsonify({"success": True, "by_type": rows})
     except Exception as e:
         logger.error(f"Insurance by-type error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @insurance_bp.route("/by-region")
@@ -192,7 +192,7 @@ def get_by_region():
         return jsonify({"success": True, "by_region": rows})
     except Exception as e:
         logger.error(f"Insurance by-region error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @insurance_bp.route("/timeline")
@@ -214,7 +214,7 @@ def get_timeline():
         return jsonify({"success": True, "timeline": rows})
     except Exception as e:
         logger.error(f"Insurance timeline error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @insurance_bp.route("/evaluate", methods=["POST"])
@@ -253,7 +253,7 @@ def manual_evaluate():
         return jsonify({"success": True, "evaluation": result})
     except Exception as e:
         logger.error(f"Insurance manual evaluate error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @insurance_bp.route("/health")
@@ -273,4 +273,4 @@ def health():
             "last_cycle_at": last.get("created_at").isoformat() if last and last.get("created_at") else None,
         })
     except Exception as e:
-        return jsonify({"success": False, "status": "error", "error": str(e)}), 500
+        return jsonify({"success": False, "status": "error", "error": "Internal server error"}), 500

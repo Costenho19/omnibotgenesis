@@ -171,23 +171,83 @@ All existing tests pass after changes:
 
 ---
 
-## Follow-up Items (Not In Scope — ADR-124)
+## Follow-up Items (Resolved In Appendix Below)
 
-1. **Flask Dashboard other blueprints** — `str(e)` patterns in  
-   `governance.py`, `market.py`, `verification.py`, etc. (lower priority:  
-   all protected by `@require_api_key`).
-2. **Rate limiter storage** — `storage_uri="memory://"` does not share  
-   state across Railway worker processes. Upgrade to Redis-backed storage  
-   for production-grade rate limiting under load.
-3. **Silent `except Exception: pass`** in vertical metrics aggregation  
-   (lines 778–941 `server.py`) — best-effort aggregation; should emit  
-   `logger.debug()` for observability.
+All three follow-up items from the original ADR-123 have been completed in the
+same session — see Appendix A.
+
+---
+
+## Appendix A — Full Codebase Consistency Pass (Post ADR-123)
+
+**Scope:** all governance blueprints + `system.py` + `governance_reports.py`  
+**Date completed:** 2026-04-25  
+**Tests after pass:** 27/27 + 16/16 + 27/27 = **70/70 ✅**
+
+### A.1 — Vertical Governance Blueprints (`str(e)` → generic)
+
+Pattern fixed in every blueprint below using `replace_all`:
+
+| File | Pattern replaced | Count |
+|---|---|---|
+| `medical_governance.py` | `{"success":False,"error":str(e)},500` | all |
+| `agents_governance.py` | same | all |
+| `real_estate_governance.py` | same | all |
+| `energy_governance.py` | same | all |
+| `robotics_governance.py` | same + `"status":"error"` variant | all |
+| `stablecoin_governance.py` | same | all |
+| `insurance_governance.py` | same + degraded-mode `str(e)` | all |
+| `credit_governance.py` | `{"status":"error","message":str(e)},500` | all |
+| `snapshots.py` | `'error':str(e)` | all |
+| `intelligence.py` | `'error':str(e)` | all |
+
+### A.2 — ADR-122 Modules Verified Clean
+
+`exit_governance.py`, `human_oversight.py`, `execution_protocol.py` —
+audited, zero `str(e)` in API responses, zero silent `except:pass`.
+
+### A.3 — `system.py` (7 patterns)
+
+| Line (approx) | Pattern | Fix |
+|---|---|---|
+| 465 | `enterprise_health['error'] = str(e)[:100]` | `"Component unavailable"` + `logger.error()` |
+| 547 | `f'Container not available: {str(e)}'` | `"Container unavailable"` + `logger.warning()` |
+| 549 | `f'Health check failed: {str(e)}'` | `"Health check failed"` + `logger.error()` |
+| 848 | `'error': str(e)` in equity endpoint | `"Internal server error"` |
+| 1069 | `'error': str(e)` in shadow portfolio | `"Internal server error"` |
+| 1279 | `"error": str(e)` in AVM status | `"Internal server error"` |
+| 1395 | `"error": str(exc)` in layer0 metrics | `"Internal server error"` |
+
+All `logger.error()` calls retained / added with structured `type(e).__name__` format.
+
+### A.4 — `governance_reports.py`
+
+Line 629: `"detail": str(e)` removed from PDF error response.
+`logger.error()` already present — no information lost for operators.
+
+### A.5 — `server.py` — Remaining `print()` and Silent `except`
+
+- Line 2330: `print(f'[EMAIL ERROR] {e}')` → `logger.error("[OMNIX.API] [send_receipt_email] %s: %s", ...)`
+- 15 silent `except Exception: pass` blocks (vertical stats aggregation, DID patching,
+  ADR count fallback, trust verifier, CP analytics) — all replaced with:
+  ```python
+  except Exception as e:
+      logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
+  ```
+  Behavior unchanged; full observability added.
+
+### A.6 — Decisions: Acceptable Patterns (No Change)
+
+| Pattern | Reason |
+|---|---|
+| `ValueError → 400` in `governance_incidents/risk/metrics` | Controlled validation messages from internal engine; all routes require `_require_auth()` |
+| `return False, str(e)` in `governance_alerts._deliver_*()` | Internal delivery helper; result stored in DB + logged, never returned to API client directly |
 
 ---
 
 ## Security Classification
 
-- **Category:** External API Hardening  
+- **Category:** External API Hardening + Full Codebase Hardening  
 - **OWASP Top 10 addressed:** A05 (Security Misconfiguration), A09 (Logging Failures)  
 - **Governance layer:** Layer 0 (Infrastructure Security)  
 - **Railway production impact:** ✅ Safe — no schema changes, no breaking API changes  

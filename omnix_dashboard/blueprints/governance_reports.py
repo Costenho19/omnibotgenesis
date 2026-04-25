@@ -625,8 +625,8 @@ def download_report_pdf():
     try:
         pdf_bytes = _build_pdf_bytes(client, period, from_dt, to_dt, metrics)
     except Exception as e:
-        logger.error(f"download_report_pdf PDF build error: {e}")
-        return jsonify({"error": "Could not generate PDF", "detail": str(e), "status": 500}), 500
+        logger.error("[governance_reports] PDF build error: %s: %s", type(e).__name__, e)
+        return jsonify({"error": "Could not generate PDF", "status": 500}), 500
 
     safe_id = client['client_id'].replace('/', '-').replace(' ', '_')
     filename = f"OMNIX-Report-{safe_id}-{period}.pdf"

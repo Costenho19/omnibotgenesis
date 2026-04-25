@@ -175,7 +175,7 @@ def get_metrics():
 
     except Exception as e:
         logger.error(f"[CreditAPI] metrics error: {e}", exc_info=True)
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ def get_applications():
 
     except Exception as e:
         logger.error(f"[CreditAPI] applications error: {e}", exc_info=True)
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -279,7 +279,7 @@ def get_sectors():
         ]
         return jsonify({"status": "ok", "sectors": typed})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -315,7 +315,7 @@ def get_timeline():
 
         return jsonify({"status": "ok", "timeline": formatted})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -387,7 +387,7 @@ def manual_evaluate():
 
     except Exception as e:
         logger.error(f"[CreditAPI] evaluate error: {e}", exc_info=True)
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -419,7 +419,7 @@ def get_macro():
             },
         })
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -455,4 +455,4 @@ def health():
             "vertical": "islamic_credit_v1",
         })
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500

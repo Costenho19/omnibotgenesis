@@ -462,7 +462,8 @@ def api_db_diagnostics():
     except ImportError:
         enterprise_health['error'] = 'Enterprise service not available'
     except Exception as e:
-        enterprise_health['error'] = str(e)[:100]
+        logger.error("[system] enterprise_health check: %s: %s", type(e).__name__, e)
+        enterprise_health['error'] = "Component unavailable"
     
     if pool_stats.get('status') == 'active' and enterprise_health.get('connected'):
         warnings.append("Two parallel DB services detected - consolidation recommended (see DATABASE_AUDIT_REPORT.md)")
@@ -544,9 +545,11 @@ def api_health_bootstrap():
         }
         
     except ImportError as e:
-        container_health['error'] = f'Container not available: {str(e)}'
+        logger.warning("[system] container_health ImportError: %s", e)
+        container_health['error'] = "Container unavailable"
     except Exception as e:
-        container_health['error'] = f'Health check failed: {str(e)}'
+        logger.error("[system] container_health: %s: %s", type(e).__name__, e)
+        container_health['error'] = "Health check failed"
     
     overall_healthy = (
         container_health['available'] and
@@ -842,10 +845,10 @@ def api_system_equity():
         })
         
     except Exception as e:
-        logger.error(f"Error in equity endpoint: {e}")
+        logger.error("[system] equity endpoint: %s: %s", type(e).__name__, e)
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': "Internal server error"
         }), 500
 
 
@@ -1063,10 +1066,10 @@ def api_shadow_portfolio():
             cursor.close()
     
     except Exception as e:
-        logger.error(f"Shadow portfolio query failed: {e}")
+        logger.error("[system] shadow_portfolio: %s: %s", type(e).__name__, e)
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'note': 'Tables may not exist yet - run migration V007',
             'shadow_portfolio': None,
             'timestamp': datetime.now().isoformat()
@@ -1273,10 +1276,10 @@ def api_avm_status():
         })
 
     except Exception as e:
-        logger.error(f"AVM status error: {e}")
+        logger.error("[system] AVM status: %s: %s", type(e).__name__, e)
         return jsonify({
             "success":       False,
-            "error":         str(e),
+            "error":         "Internal server error",
             "domains":       [],
             "degraded_mode": True,
             "timestamp":     datetime.now().isoformat(),
@@ -1392,6 +1395,6 @@ def api_layer0_metrics():
         logger.exception("api_layer0_metrics error: %s", exc)
         return jsonify({
             "success":   False,
-            "error":     str(exc),
+            "error":     "Internal server error",
             "timestamp": datetime.now().isoformat(),
         }), 500

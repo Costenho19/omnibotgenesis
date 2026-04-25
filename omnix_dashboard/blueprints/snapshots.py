@@ -117,7 +117,7 @@ def list_snapshots():
         except Exception as e:
             return jsonify({
                 'success': False,
-                'error': str(e),
+                'error': "Internal server error",
                 'snapshots': []
             })
 
@@ -280,7 +280,7 @@ def create_snapshot():
             logger.error(f"Snapshot creation failed: {str(e)}")
             return jsonify({
                 'success': False,
-                'error': str(e)
+                'error': "Internal server error"
             })
 
 
@@ -369,7 +369,7 @@ def verify_snapshot(snapshot_id):
             logger.error(f"Snapshot {snapshot_id} verification error: {str(e)}")
             return jsonify({
                 'success': False,
-                'error': str(e)
+                'error': "Internal server error"
             })
 
 
@@ -486,7 +486,7 @@ def verify_chain():
             logger.error(f"Chain verification error: {str(e)}")
             return jsonify({
                 'success': False,
-                'error': str(e)
+                'error': "Internal server error"
             })
 
 
@@ -561,7 +561,7 @@ def get_snapshot_audit(snapshot_id):
         except Exception as e:
             return jsonify({
                 'success': False,
-                'error': str(e)
+                'error': "Internal server error"
             })
 
 
@@ -626,5 +626,5 @@ def get_latest_snapshot():
         except Exception as e:
             return jsonify({
                 'success': False,
-                'error': str(e)
+                'error': "Internal server error"
             })

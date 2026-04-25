@@ -167,7 +167,7 @@ def api_fear_greed():
         logger.error(f"Error in fear-greed endpoint: {e}")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': "Internal server error"
         })
 
 
@@ -203,7 +203,7 @@ def api_finnhub_news():
         logger.error(f"Error in finnhub news endpoint: {e}")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': "Internal server error"
         })
 
 
@@ -238,7 +238,7 @@ def api_finnhub_sentiment(symbol):
         logger.error(f"Error in sentiment endpoint: {e}")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': "Internal server error"
         })
 
 
@@ -273,7 +273,7 @@ def api_alpha_vantage_technical(symbol):
         logger.error(f"Error in alpha vantage endpoint: {e}")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': "Internal server error"
         })
 
 
@@ -312,5 +312,5 @@ def api_intelligence_summary():
         logger.error(f"Error in intelligence summary: {e}")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': "Internal server error"
         })
