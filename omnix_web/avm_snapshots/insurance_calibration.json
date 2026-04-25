@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-FA035FEEDD",
   "parameter_version": "1.fa035feedd",
   "domain": "insurance",
-  "calibrated_at": "2026-04-25T07:34:57.617696+00:00",
-  "calibrated_at_epoch": 1777102497.617696,
   "baseline_signals": {
-    "probability_score": 52.72,
     "risk_exposure": 46.71,
     "signal_coherence": 74.88,
-    "trend_persistence": 45.88,
+    "logic_consistency": 52.71,
+    "probability_score": 52.72,
     "stress_resilience": 62.13,
-    "logic_consistency": 52.71
+    "trend_persistence": 45.88
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_8.5"
-  ]
+  ],
+  "calibrated_at": "2026-04-25T07:34:57.617696+00:00",
+  "calibrated_at_epoch": 1777102497.617696
 }

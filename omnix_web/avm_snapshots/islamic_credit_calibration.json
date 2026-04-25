@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-5813F12DC0",
   "parameter_version": "1.5813f12dc0",
   "domain": "islamic_credit",
-  "calibrated_at": "2026-04-25T07:34:59.387195+00:00",
-  "calibrated_at_epoch": 1777102499.387195,
   "baseline_signals": {
-    "probability_score": 53.81,
     "risk_exposure": 12.33,
     "signal_coherence": 76.49,
-    "trend_persistence": 57.7,
+    "logic_consistency": 100.0,
+    "probability_score": 53.81,
     "stress_resilience": 92.83,
-    "logic_consistency": 100.0
+    "trend_persistence": 57.7
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_13.1"
-  ]
+  ],
+  "calibrated_at": "2026-04-25T07:34:59.387195+00:00",
+  "calibrated_at_epoch": 1777102499.387195
 }
