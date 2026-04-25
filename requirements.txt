@@ -145,3 +145,4 @@ tables==3.9.2
 dwave-ocean-sdk==9.0.0
 
 # Railway cache bust: 2026-04-13-rebuild
+boto3>=1.28.0
