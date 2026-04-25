@@ -57,6 +57,7 @@ class AMLVetoResult:
     risk_score: float = 0.0
     aml_score: float = 100.0
     evaluation_state: str = "EVALUATED"
+    proxy_mode: bool = False          # True when DB frequency unavailable — structuring detection degraded
 
 
 @dataclass
@@ -189,7 +190,20 @@ class AMLGate:
                     trade_frequency_24h = 0
                     freq_source = "unavailable"
 
-            return self._run_checks(symbol, proposed_action, volume_usd, trade_frequency_24h, freq_source)
+            # ADR-119: Explicit proxy mode warning — structuring detection is degraded
+            # when trade frequency cannot be queried from DB. MCM detects this via
+            # GATE_AMPLIFICATION:AML_FREQUENCY_PROXY_MODE transition signature.
+            if freq_source == "unavailable":
+                logger.warning(
+                    f"[AML_GATE] ⚠️ PROXY_MODE ACTIVE for {symbol} — "
+                    f"DB frequency unavailable, structuring detection degraded. "
+                    f"frequency assumed=0 (conservative baseline). "
+                    f"Ensure OMNIX_DB_URL is set for full AML coverage."
+                )
+
+            result = self._run_checks(symbol, proposed_action, volume_usd, trade_frequency_24h, freq_source)
+            result.proxy_mode = (freq_source == "unavailable")
+            return result
 
         except Exception as exc:
             logger.error(f"[AML_GATE] ❌ Exception for {symbol}: {exc} → FAIL-CLOSED (ADR-116)")

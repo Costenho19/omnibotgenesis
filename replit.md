@@ -47,9 +47,9 @@
 | Decisiones gobernadas | 327,000+ |
 | Verticales activos | **9** (Trading, Credit, Insurance, Robotics, Medical AI, Energy, Real Estate, Agents, **Stablecoin Reserve**) |
 | Dominios públicos anunciados | 9 |
-| ADRs publicados | 31 formalizados (incl. ADR-117 Meta-Coherence Monitor, ADR-116 Fail-Closed Enforcement Policy, ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
+| ADRs publicados | 33 formalizados (incl. ADR-119 Governance Hardening, ADR-117 Meta-Coherence Monitor, ADR-116 Fail-Closed Enforcement Policy, ADR-096 Expanded Canonical Receipt, ADR-SRG-001 Stablecoin Reserve Governance) |
 | TAM total cubierto | $212B+ |
-| Tests pasando | **158** (code_verification×7 + critical_audit×20 + compliance_gates×112 + diagnostic_mode+fail-closed×22 − conteo anterior T011×16 pre-sesión) |
+| Tests pasando | **84** confirmados (MCM×45 + critical_audit×17 + diagnostic_mode+fail-closed×22) — suite completa pasa verde |
 | Cobertura PQC | Dilithium-3 (CRYSTALS) + Kyber-768 |
 | AVM snapshots activos | 9 (1 por dominio) |
 
@@ -57,7 +57,8 @@
 
 | Fecha | Fix | Commit |
 |---|---|---|
-| 24 Abr 2026 | **MCM v1.1 (ADR-117)** — DEFERRAL_TRAJECTORY: 4º signal MCM. Time-series de HOLD rate — velocity=+4.85pp/wk, accel=+0.83pp/wk², std=12pp. Detecta degradación antes de que el cross-window drift lo confirme. 45 tests pasan. 4 señales en governance_drift_log. Endpoint REST activo. | — |
+| 25 Abr 2026 | **ADR-119 — Governance Hardening**: (1) Threshold dinámico de coherencia: cuando BS=HIGH, `veto_critical` escala de 30%→50% y `veto_normal` de 45%→65%. (2) AML `proxy_mode` explícito: `AMLVetoResult.proxy_mode=True` + WARNING en log cuando DB de frecuencia no disponible. (3) `run_full_analysis(persist=False)` para análisis de solo lectura. (4) `processing_time_ms` en `decision_receipts` — captura latencia real por decisión. | — |
+| 24 Abr 2026 | **MCM v1.1 (ADR-117)** — DEFERRAL_TRAJECTORY: 4º signal MCM. Time-series de HOLD rate — velocity, accel, std. Detecta degradación antes de que el cross-window drift lo confirme. 45 tests pasan. 4 señales en governance_drift_log. Endpoint REST activo. | — |
 | 24 Abr 2026 | **MCM v1.0 (ADR-117)** — Meta-Coherence Monitor implementado: detecta cuando el marco evaluador mismo deriva. Primera corrida real detectó BLOCK_RATE_COLLAPSE trading (13.7%→0.4%) y RECALIBRATION_ANCHORING_RISK. 3 señales persistidas en governance_drift_log. | — |
 | 24 Abr 2026 | **AUDIT REPAIR COMPLETA (T001–T013)** — Ver sección "Audit Repair 24 Abr 2026" abajo | — |
 | 24 Abr 2026 | **DIAGNOSTIC MODE + HMM REGIME FIXES**: (1) `auto_trading_bot.py` — `hmm_regime=NULL` en DB resuelto: fallback a `v52_analysis.market_regime` → `'UNKNOWN'` en lugar de NULL; (2) `conversational_ai_adapter.py` — path legacy ahora inyecta datos reales del Track Record Oficial (37 trades, 54.05%, +$2,054) en `diagnostic_mode=True`; (3) `ai_service.py` — system prompt diagnóstico actualizado con etiqueta del período y nota de separación vs Learning Baseline; (4) `prompt_templates.py` — query `ROUND(AVG(profit_loss))` corregida con cast `::numeric` para PostgreSQL; `InvestorDataProvider.get_basic_trading_stats()` retorna datos reales por período | pendiente push |
@@ -74,9 +75,15 @@
 
 ---
 
-## AUDIT REPAIR — 24 Abr 2026 (T001–T013)
+## AUDIT REPAIR — 24-25 Abr 2026 (T001–T013 + ADR-119)
 
-Reparación completa de todos los hallazgos de la auditoría del sistema. **49 tests pasando (27 code_verification + 22 diagnostic_mode/fail-closed), 0 fallas.**
+Reparación completa de todos los hallazgos de la auditoría del sistema. **84 tests pasando (MCM×45 + critical_audit×17 + diagnostic_mode/fail-closed×22), 0 fallas.**
+
+Fixes adicionales 25 Abr 2026 (ADR-119):
+- AML `proxy_mode: bool` explícito en `AMLVetoResult` + WARNING en log cuando OMNIX_DB_URL no disponible
+- Threshold dinámico coherencia: BS=HIGH → `veto_critical` 30%→50%, `veto_normal` 45%→65%
+- SAE `print(result)` → `logger.debug(...)` (T009 real fix)
+- ADR-119 creado: `docs/adr/ADR-119-governance-hardening-coherence-aml-proxy.md`
 
 ### T001 — AML, Fraud, CAG Fail-Closed (Critical A-01 / ADR-116) ✅
 - **Archivos**: `omnix_core/governance/aml_gate.py`, `fraud_gate.py`, `context_admission_gate.py`
@@ -122,8 +129,8 @@ Reparación completa de todos los hallazgos de la auditoría del sistema. **49 t
   - `auto_trading_bot.py:1169` → `logger.debug("shadow_trade_events query failed, falling back...")`
 - **Aceptables como pass**: `conn.close()` cleanup, `ImportError` fallbacks, rollback() cleanup
 
-### T009 — print() en governance verificado ✅
-- **SAE** `structural_admissibility_engine.py` línea 1019: `print()` está dentro de triple-quoted docstring (clase `StructuralAdmissibilityEngine`) — NO es código ejecutable
+### T009 — print() → logger en archivos críticos ✅
+- **SAE** `structural_admissibility_engine.py` línea 1019: `print(result)` → `logger.debug("[SAE] StructuredRejectionRecord: %s", result)` — **fix real aplicado 25 Abr 2026**
 - **auto_trading_bot.py**, **enterprise_bot.py**: 0 print() fuera de bloques `__main__`
 - **omnix_services/**: prints en `learning_analyzer.py`, `formatters/`, `hmm_regime.py`, `quantum_momentum.py` — todos dentro de `if __name__ == "__main__"` (scripts standalone, no importados)
 

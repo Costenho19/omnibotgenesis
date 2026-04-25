@@ -1016,7 +1016,7 @@ class StructuralAdmissibilityEngine:
         result = sae.validate(proposed)
         if isinstance(result, StructuredRejectionRecord):
             # Structurally inadmissible — never enters Layer 1
-            print(result)
+            logger.debug("[SAE] StructuredRejectionRecord: %s", result)
         else:
             # result is an EvaluationRequest — pass to Layer 1 pipeline
             layer1_result = governance_engine.evaluate(result)

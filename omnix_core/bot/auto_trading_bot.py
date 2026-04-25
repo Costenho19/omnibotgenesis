@@ -5202,6 +5202,23 @@ class AutoTradingBot:
                     veto_normal = ACTIVE_PROFILE['coherence_veto_normal'] if TRADING_MODE == 'ACTIVE' else _profile_veto_normal
                     coherence_warning = safe_float(p.coherence_warning if p else 60.0, 60.0)
                     coherence_good = safe_float(p.coherence_good if p else 80.0, 80.0)
+
+                    # ADR-119: Dynamic coherence threshold escalation when Black Swan = HIGH
+                    # When crash probability is elevated, accepting POOR coherence (30%) is
+                    # insufficient. Escalate to 50% critical / 65% normal to require stronger
+                    # signal agreement before any non-HOLD action is permitted.
+                    _bs_raw = str((black_swan or {}).get('level', (black_swan or {}).get('risk_level', 'NONE'))).upper()
+                    if _bs_raw == 'HIGH':
+                        _old_c, _old_n = veto_critical, veto_normal
+                        veto_critical = max(veto_critical, 50.0)
+                        veto_normal   = max(veto_normal, 65.0)
+                        logger.warning(
+                            f"⚠️ BS_HIGH_COHERENCE_ESCALATION: veto_critical {_old_c:.0f}→{veto_critical:.0f}% | "
+                            f"veto_normal {_old_n:.0f}→{veto_normal:.0f}% (ADR-119)"
+                        )
+                        decision.setdefault('decision_trace', []).append(
+                            f"BS_HIGH_COHERENCE_ESCALATION: critical={veto_critical:.0f}% normal={veto_normal:.0f}%"
+                        )
                     
                     # FIX Dec 27, 2025: Asegurar que coherence_score sea float
                     coherence_score_value = safe_float(getattr(coherence_report, 'coherence_score', 0), 0.0)
