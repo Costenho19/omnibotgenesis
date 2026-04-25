@@ -46,13 +46,20 @@ class FraudVetoResult:
     """
     Result from the Fraud Detection Gate (CP-10).
 
-    ADR-069: integrity_score defaults to 0.0.
-    Disabled/failsafe paths set integrity_score=0.0 explicitly — absence of
-    fraud evaluation is NOT equivalent to perfect integrity.
-    evaluation_state distinguishes DISABLED / FAILSAFE / EVALUATED for audit dashboards.
+    ADR-116 Fail-Closed Enforcement Policy:
+      - admissible defaults to False — any unhandled code path BLOCKS rather than permits.
+      - pass_through=True ONLY when gate is DISABLED via config. It does NOT mean
+        the asset passed fraud checks. DISABLED ≠ CLEAN.
+      - integrity_score=0.0 on DISABLED/FAIL_CLOSED paths — absence of evaluation
+        is NOT equivalent to perfect integrity (ADR-069).
+
+    evaluation_state values:
+      "EVALUATED"   — gate ran; integrity_score reflects real fraud signal analysis
+      "DISABLED"    — gate not active; integrity_score=0 means not evaluated, not clean
+      "FAIL_CLOSED" — module exception; trade blocked by safety policy (ADR-116)
     """
-    admissible: bool = False          # Default fail-safe: not admitted unless explicitly set (ADR-116)
-    pass_through: bool = False
+    admissible: bool = False          # Fail-safe default: BLOCK unless explicitly admitted (ADR-116)
+    pass_through: bool = False        # True only when gate is DISABLED — not a clean fraud signal
     reason: str = ""
     asset: str = ""
     violation: str = ""

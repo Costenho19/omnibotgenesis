@@ -49,8 +49,27 @@ AML_FREQUENCY_THRESHOLD_DEFAULT: int = 10
 
 @dataclass
 class AMLVetoResult:
-    admissible: bool = False          # Default fail-safe: not admitted unless explicitly set
-    pass_through: bool = False
+    """
+    Result from the AML Gate evaluation (CP-9).
+
+    ADR-116 Fail-Closed Enforcement Policy:
+      - admissible defaults to False — if any code path fails to explicitly set it,
+        the result BLOCKS rather than permits. This is the safest possible default.
+      - pass_through=True ONLY when the gate is DISABLED via config. It does NOT mean
+        the asset passed AML checks — it means AML was not evaluated at all.
+        DISABLED ≠ CLEAN. External consumers must not treat pass_through=True as a
+        clean AML signal.
+      - proxy_mode=True means structuring detection is DEGRADED because the DB
+        frequency query failed. frequency assumed=0 (conservative) but coverage is
+        incomplete. MCM tracks this via GATE_AMPLIFICATION:AML_FREQUENCY_PROXY_MODE.
+
+    evaluation_state values:
+      "EVALUATED"  — gate ran; aml_score reflects real AML risk assessment
+      "DISABLED"   — gate not active; aml_score=0 means not evaluated, not zero risk
+      "FAIL_CLOSED"— module exception; trade blocked by safety policy (ADR-116)
+    """
+    admissible: bool = False          # Fail-safe default: BLOCK unless explicitly admitted
+    pass_through: bool = False        # True only when gate is DISABLED — not a clean AML signal
     reason: str = ""
     asset: str = ""
     violation: str = ""

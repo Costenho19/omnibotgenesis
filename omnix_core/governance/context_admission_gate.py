@@ -57,17 +57,22 @@ CAG_DEFAULT_MACRO_RISK_CEILING: float = 85.0
 @dataclass
 class CAGResult:
     """
-    Result from the Context Admission Gate evaluation.
+    Result from the Context Admission Gate evaluation (pre-session admission).
 
-    ADR-070: admission_score=0.0 default. Disabled/failsafe paths set it
-    explicitly to 0.0 — absence of session evaluation is NOT equivalent to
-    perfect market conditions. evaluation_state distinguishes:
-      "DISABLED"  — gate not active; score=0 means not evaluated
-      "FAILSAFE"  — module error; score=0 means not evaluated
-      "EVALUATED" — gate ran; score reflects actual market conditions checked
+    ADR-116 Fail-Closed Enforcement Policy:
+      - admitted defaults to False — any unhandled code path BLOCKS rather than permits.
+      - pass_through=True ONLY when gate is DISABLED via config. It does NOT mean
+        the market context is safe. DISABLED ≠ ADMITTED.
+      - admission_score=0.0 on DISABLED/FAILSAFE paths — absence of evaluation
+        is NOT equivalent to perfect market conditions (ADR-070).
+
+    evaluation_state values:
+      "EVALUATED" — gate ran; admission_score reflects actual market conditions
+      "DISABLED"  — gate not active; score=0 means not evaluated, not ideal conditions
+      "FAILSAFE"  — module error; session blocked by safety policy (ADR-116)
     """
-    admitted: bool = False            # Default fail-safe: not admitted unless explicitly set (ADR-116)
-    pass_through: bool = False
+    admitted: bool = False            # Fail-safe default: BLOCK unless explicitly admitted (ADR-116)
+    pass_through: bool = False        # True only when gate is DISABLED — not a safe-market signal
     reason: str = ""
     admission_score: float = 0.0
     violation: str = ""

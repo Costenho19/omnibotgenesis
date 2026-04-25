@@ -814,7 +814,24 @@ class AssumptionValidityMonitor:
                     continue
 
                 # Compute drift against live signals (this IS the current drift)
-                actual_drift, _ = self._compute_drift(snapshot.baseline_signals, live_signals)
+                actual_drift, drift_components = self._compute_drift(
+                    snapshot.baseline_signals, live_signals
+                )
+
+                # ── Signal schema validation (datos malos guard) ───────────────────
+                # If drift_components is empty but both dicts are non-empty, the signal
+                # schemas have NO overlap — recalibrating would anchor to an incoherent
+                # baseline that doesn't match SIGNAL_WEIGHTS. Block and warn.
+                baseline_keys = set(snapshot.baseline_signals.keys())
+                live_keys = set(live_signals.keys())
+                if not drift_components and baseline_keys and live_keys:
+                    logger.warning(
+                        f"[AVM.AUTO] ⚠️ {domain}: SIGNAL_SCHEMA_MISMATCH — "
+                        f"no overlapping signals between baseline {baseline_keys} "
+                        f"and live {live_keys} — skipping recalibration. "
+                        f"Investigate why evaluate() cached signals with different keys."
+                    )
+                    continue
 
                 needs_recalib_by_drift = actual_drift >= self.drift_threshold
 
