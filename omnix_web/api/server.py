@@ -724,6 +724,99 @@ except Exception as _ret_err:
     logger.warning("[startup] Data retention loop failed to start: %s", _ret_err)
 
 
+# ── ADR-126: Receipt Archival Daemon (HOT→WARM→COLD) ─────────────────────────
+def _receipt_archival_loop(
+    run_interval_hours: float = 6.0,
+    warmup_minutes: float = 10.0,
+) -> None:
+    """
+    Background daemon: moves decision_receipts across HOT/WARM/COLD tiers.
+
+    Schedule:
+      - warmup: 10 min after startup (lets retention loop & AVM recalib settle)
+      - cycle:  every 6 hours
+
+    HOT  (0–30d)  → WARM  (PostgreSQL archive table)
+    WARM (30d–1y) → COLD  (S3/R2 if configured; PostgreSQL fallback otherwise)
+
+    Decision flow is never touched.  Only receipts that have already been
+    written to decision_receipts are eligible for archival.
+
+    COLD_STORAGE_REQUIRED=true: ColdStorageRequiredError is logged as
+    CRITICAL and the daemon continues running (will retry next cycle).
+    """
+    import logging as _alog
+    import time as _atime
+    import os as _aos
+    import sys as _asys
+
+    _alog_ = _alog.getLogger("OMNIX.ReceiptArchivalDaemon")
+    _alog_.info(
+        "[ARCHIVAL] Daemon iniciado — warmup=%dmin, ciclo=%.1fh "
+        "(HOT>30d→WARM, WARM>12m→COLD, ADR-126)",
+        int(warmup_minutes), run_interval_hours,
+    )
+    _atime.sleep(warmup_minutes * 60)
+
+    _ws_root = _aos.path.dirname(
+        _aos.path.dirname(_aos.path.dirname(_aos.path.abspath(__file__)))
+    )
+    if _ws_root not in _asys.path:
+        _asys.path.insert(0, _ws_root)
+
+    while True:
+        try:
+            from omnix_core.evidence.receipt_archival import (
+                ReceiptArchivalService,
+                ColdStorageRequiredError,
+            )
+            _db_url = _aos.environ.get("OMNIX_DB_URL") or _aos.environ.get("DATABASE_URL")
+            svc = ReceiptArchivalService(db_url=_db_url)
+            summary = svc.run_archival_cycle()
+
+            if summary.get("error") == "ColdStorageRequiredError":
+                _alog_.critical(
+                    "[ARCHIVAL] ❌ COLD_STORAGE_REQUIRED=true pero credenciales S3/R2 ausentes. "
+                    "Configurar OMNIX_COLD_S3_BUCKET + AWS_ACCESS_KEY_ID + "
+                    "AWS_SECRET_ACCESS_KEY (o OMNIX_COLD_STORAGE_REQUIRED=false para staging)."
+                )
+            elif not summary.get("skipped"):
+                hw = summary.get("hot_to_warm", {})
+                wc = summary.get("warm_to_cold", {})
+                _alog_.info(
+                    "[ARCHIVAL] ✅ Ciclo completo — "
+                    "HOT→WARM: %d archivados, %d errores | "
+                    "WARM→COLD: %d archivados, %d errores | "
+                    "cold_backend=%s",
+                    hw.get("archived", 0), hw.get("errors", 0),
+                    wc.get("archived", 0), wc.get("errors", 0),
+                    summary.get("cold_backend", "?"),
+                )
+        except Exception as _arch_exc:
+            _alog_.error(
+                "[ARCHIVAL] ❌ Error en ciclo: %s: %s",
+                type(_arch_exc).__name__, _arch_exc,
+            )
+        _atime.sleep(run_interval_hours * 3600)
+
+
+try:
+    import threading as _arch_threading
+    _archival_thread = _arch_threading.Thread(
+        target=_receipt_archival_loop,
+        name="ReceiptArchival",
+        daemon=True,
+    )
+    _archival_thread.start()
+    logger.info(
+        "[startup] Receipt archival loop iniciado — "
+        "HOT>30d→WARM, WARM>1y→COLD, "
+        "primer ciclo en 10min, luego cada 6h (ADR-126)"
+    )
+except Exception as _arch_err:
+    logger.warning("[startup] Receipt archival loop failed to start: %s", _arch_err)
+
+
 def get_db_connection():
     database_url = (
         os.environ.get('DATABASE_URL') or

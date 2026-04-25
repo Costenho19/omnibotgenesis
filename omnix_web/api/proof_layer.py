@@ -108,6 +108,108 @@ def _get_db_connection():
         return None
 
 
+def _fetch_receipt_all_tiers(receipt_id_clean: str) -> "tuple[tuple | None, str | None]":
+    """
+    Search all storage tiers for a receipt — ADR-126.
+
+    Order: HOT (fast path) → WARM (PostgreSQL archive) → COLD (S3/R2 or PG fallback).
+    Returns (db_row_tuple, tier_label) or (None, None) if not found.
+
+    The row tuple matches the SELECT column order used in institutional_verify:
+        receipt_id, timestamp_utc, asset, decision, veto_chain,
+        policy_version, engine_version, prev_hash, content_hash, signature,
+        signature_algorithm, public_key, domain, client_id,
+        created_at, encrypted_payload
+    """
+    _VERIFY_COLS = (
+        "receipt_id", "timestamp_utc", "asset", "decision", "veto_chain",
+        "policy_version", "engine_version", "prev_hash", "content_hash", "signature",
+        "signature_algorithm", "public_key", "domain", "client_id",
+        "created_at", "encrypted_payload",
+    )
+    col_list = ", ".join(_VERIFY_COLS)
+
+    conn = _get_db_connection()
+    if not conn:
+        return None, None
+
+    try:
+        cur = conn.cursor()
+
+        # ── HOT ────────────────────────────────────────────────────────────────
+        cur.execute(
+            f"""
+            SELECT {col_list}
+            FROM decision_receipts
+            WHERE receipt_id = %s OR content_hash = %s
+            LIMIT 1
+            """,
+            (receipt_id_clean, receipt_id_clean),
+        )
+        row = cur.fetchone()
+        if row:
+            cur.close()
+            return row, "HOT"
+
+        # ── WARM ───────────────────────────────────────────────────────────────
+        try:
+            cur.execute(
+                f"""
+                SELECT {col_list}
+                FROM decision_receipts_warm
+                WHERE receipt_id = %s
+                LIMIT 1
+                """,
+                (receipt_id_clean,),
+            )
+            row = cur.fetchone()
+            if row:
+                cur.close()
+                return row, "WARM"
+        except Exception as _warm_exc:
+            logger.debug("[/verify] WARM table not available: %s", _warm_exc)
+
+        # ── COLD (via archival index) ──────────────────────────────────────────
+        try:
+            cur.execute(
+                """
+                SELECT tier, storage_location
+                FROM receipt_archival_index
+                WHERE receipt_id = %s AND tier = 'COLD' AND archival_status = 'ARCHIVED'
+                LIMIT 1
+                """,
+                (receipt_id_clean,),
+            )
+            idx = cur.fetchone()
+            if idx:
+                _, location = idx
+                from omnix_core.evidence.receipt_archival import (
+                    ReceiptArchivalService,
+                )
+                db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
+                svc    = ReceiptArchivalService(db_url=db_url)
+                receipt_dict, _ = svc.fetch_receipt_any_tier(conn, receipt_id_clean)
+                if receipt_dict:
+                    # Reconstruct tuple in the same column order
+                    row_dict = {k: receipt_dict.get(k) for k in _VERIFY_COLS}
+                    cur.close()
+                    return tuple(row_dict[c] for c in _VERIFY_COLS), "COLD"
+        except Exception as _cold_exc:
+            logger.debug("[/verify] COLD lookup error: %s", _cold_exc)
+
+        cur.close()
+        return None, None
+
+    except Exception as exc:
+        logger.error("[/verify] multi-tier lookup error: %s", exc)
+        return None, None
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
 def _compute_content_hash(receipt_id: str, timestamp: str, asset: str, decision: str) -> str:
     payload = json.dumps(
         {"receipt_id": receipt_id, "timestamp": timestamp, "asset": asset, "decision": decision},
@@ -791,32 +893,8 @@ def institutional_verify(receipt_id: str):
 
     receipt_id_clean = receipt_id.upper().strip()
 
-    conn = _get_db_connection()
-    row = None
-
-    if conn:
-        try:
-            cur = conn.cursor()
-            cur.execute(
-                """
-                SELECT receipt_id, timestamp_utc, asset, decision,
-                       veto_chain, policy_version, engine_version,
-                       prev_hash, content_hash, signature,
-                       signature_algorithm,
-                       public_key, domain, client_id,
-                       created_at, encrypted_payload
-                FROM decision_receipts
-                WHERE receipt_id = %s OR content_hash = %s
-                LIMIT 1
-                """,
-                (receipt_id_clean, receipt_id),
-            )
-            row = cur.fetchone()
-            cur.close()
-        except Exception as exc:
-            logger.error(f"[/verify] DB query error: {exc}")
-        finally:
-            conn.close()
+    # ── ADR-126: multi-tier lookup (HOT → WARM → COLD) ───────────────────────
+    row, _storage_tier = _fetch_receipt_all_tiers(receipt_id_clean)
 
     if not row:
         evl = _lookup_evl_receipt(receipt_id_clean)
@@ -1013,6 +1091,7 @@ def institutional_verify(receipt_id: str):
         "receipt_id":       rid,
         "status":           status,
         "source":           "db",
+        "storage_tier":     _storage_tier or "HOT",
         "decision":         decision_upper,
         "reason_code":      reason_code,
         "timestamp_issued": ts_issued,

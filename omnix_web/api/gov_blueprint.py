@@ -1783,18 +1783,65 @@ def api_governance_receipt_by_id(receipt_id: str):
     try:
         conn = _get_db_conn()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute(
-            """
-            SELECT receipt_id, timestamp_utc, asset, domain, decision,
-                   veto_chain, content_hash, signature, signature_algorithm,
-                   public_key, policy_version, engine_version,
-                   prev_hash, created_at
-            FROM decision_receipts
-            WHERE receipt_id = %s AND client_id = %s
-            """,
-            (sanitized_id, client_id),
+        # ── ADR-126: multi-tier lookup (HOT → WARM → COLD) ─────────────────
+        _RECEIPT_COLS = (
+            "receipt_id", "timestamp_utc", "asset", "domain", "decision",
+            "veto_chain", "content_hash", "signature", "signature_algorithm",
+            "public_key", "policy_version", "engine_version",
+            "prev_hash", "created_at",
         )
-        row = cur.fetchone()
+        col_list = ", ".join(_RECEIPT_COLS)
+
+        def _query_tier(table: str) -> "dict | None":
+            cur.execute(
+                f"""
+                SELECT {col_list}
+                FROM {table}
+                WHERE receipt_id = %s AND client_id = %s
+                """,
+                (sanitized_id, client_id),
+            )
+            r = cur.fetchone()
+            if r:
+                return dict(r)   # RealDictCursor returns dict-like row
+            return None
+
+        row = _query_tier("decision_receipts")
+        storage_tier = "HOT"
+
+        if row is None:
+            try:
+                row = _query_tier("decision_receipts_warm")
+                if row:
+                    storage_tier = "WARM"
+            except Exception as _warm_exc:
+                logger.debug("[receipts/<id>] WARM table unavailable: %s", _warm_exc)
+
+        if row is None:
+            try:
+                # Check archival_index for COLD tier
+                cur.execute(
+                    """
+                    SELECT storage_location
+                    FROM receipt_archival_index
+                    WHERE receipt_id = %s AND tier = 'COLD'
+                    AND archival_status = 'ARCHIVED'
+                    """,
+                    (sanitized_id,),
+                )
+                idx_row = cur.fetchone()
+                if idx_row:
+                    from omnix_core.evidence.receipt_archival import ReceiptArchivalService
+                    import os as _os
+                    svc = ReceiptArchivalService(db_url=_os.environ.get("OMNIX_DB_URL"))
+                    cold_dict, _ = svc.fetch_receipt_any_tier(conn, sanitized_id)
+                    # Enforce tenant isolation even from COLD
+                    if cold_dict and str(cold_dict.get("client_id", "")) == str(client_id):
+                        row = {k: cold_dict.get(k) for k in _RECEIPT_COLS}
+                        storage_tier = "COLD"
+            except Exception as _cold_exc:
+                logger.debug("[receipts/<id>] COLD lookup error: %s", _cold_exc)
+
         cur.close()
         conn.close()
 
@@ -1813,9 +1860,10 @@ def api_governance_receipt_by_id(receipt_id: str):
                     pass
 
         return jsonify({
-            'client_id': client_id,
-            'receipt': receipt_data,
-            'pqc_signed': receipt_data.get('signature') is not None,
+            'client_id':     client_id,
+            'receipt':       receipt_data,
+            'storage_tier':  storage_tier,
+            'pqc_signed':    receipt_data.get('signature') is not None,
             'verifiable_at': 'https://omnibotgenesis-production.up.railway.app/verify',
         }), 200
 
