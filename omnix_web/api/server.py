@@ -526,6 +526,70 @@ except Exception as _wh_err:
     print(f"[startup] WARNING: webhook columns check failed: {_wh_err}")
 
 
+# ── Startup: AVM auto-recalibration background loop (ADR-120) ─────────────────
+def _avm_auto_recalib_loop(
+    check_interval_hours: float = 24.0,
+    recalib_interval_hours: float = 72.0,
+    warmup_minutes: float = 30.0,
+) -> None:
+    """
+    ADR-120: Background thread that auto-recalibrates stale AVM domains.
+
+    Waits warmup_minutes before first check (allows governance engine to
+    process decisions and populate _last_seen_signals cache), then runs
+    every check_interval_hours.
+
+    Policy (see AssumptionValidityMonitor.auto_recalibrate_stale_domains):
+      - Recalibrates if snapshot age >= recalib_interval_hours (default 72h)
+      - OR if drift exceeded the threshold (DRIFT_BLOCK active)
+      - Skips domains with drift > 80% (potential crisis — human review needed)
+      - Uses last cached live signals as the new baseline
+    """
+    import logging as _logging
+    import time as _time
+    _logger = _logging.getLogger("OMNIX.AVM.AUTO")
+    _logger.info(
+        f"[AVM.AUTO] Loop iniciado — warmup={warmup_minutes:.0f}min, "
+        f"check_interval={check_interval_hours:.0f}h, "
+        f"recalib_interval={recalib_interval_hours:.0f}h (ADR-120)"
+    )
+    _time.sleep(warmup_minutes * 60)          # Espera warmup para acumular señales
+    while True:
+        try:
+            from omnix_core.governance.assumption_validity_monitor import get_avm_instance
+            avm = get_avm_instance()
+            _logger.info("[AVM.AUTO] Iniciando ciclo de auto-recalibración...")
+            recalibrated = avm.auto_recalibrate_stale_domains(
+                recalib_interval_hours=recalib_interval_hours,
+            )
+            if recalibrated:
+                _logger.warning(
+                    f"[AVM.AUTO] ✅ Auto-recalibrados {len(recalibrated)} dominios: "
+                    f"{recalibrated}"
+                )
+            else:
+                _logger.info("[AVM.AUTO] Ciclo OK — ningún dominio necesitó recalibración")
+        except Exception as _exc:
+            _logger.error(
+                f"[AVM.AUTO] ❌ Error en ciclo de recalibración: {_exc}"
+            )
+        _time.sleep(check_interval_hours * 3600)
+
+
+try:
+    import threading as _threading
+    _avm_recalib_thread = _threading.Thread(
+        target=_avm_auto_recalib_loop,
+        name="AVM-AutoRecalib",
+        daemon=True,                          # Muere con el proceso — no bloquea shutdown
+    )
+    _avm_recalib_thread.start()
+    print("[startup] AVM auto-recalibration loop iniciado (ADR-120) — "
+          "primer ciclo en 30min, luego cada 24h")
+except Exception as _arc_err:
+    print(f"[startup] WARNING: AVM auto-recalibration loop failed to start: {_arc_err}")
+
+
 def get_db_connection():
     database_url = (
         os.environ.get('DATABASE_URL') or

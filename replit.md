@@ -57,6 +57,7 @@
 
 | Fecha | Fix | Commit |
 |---|---|---|
+| 25 Abr 2026 | **ADR-120 — AVM Auto-Recalibración**: `evaluate()` cachea señales live en `_last_seen_signals[domain]`. Nuevo método `auto_recalibrate_stale_domains(interval_h=72, max_drift=80%)`. Hilo daemon `AVM-AutoRecalib` en `server.py`: warmup=30min, ciclo=24h. Políticas: (1) Skip si no hay señales cacheadas (no recalibra a ciegas). (2) Recalibra si `age>=72h` OR `drift>=threshold`. (3) Safety guard: drift>80% → skip + WARNING (posible crisis, requiere revisión humana). (4) Persiste en JSON + DB. Lógica completamente automática. | — |
 | 25 Abr 2026 | **ADR-119 — Governance Hardening**: (1) Threshold dinámico de coherencia: cuando BS=HIGH, `veto_critical` escala de 30%→50% y `veto_normal` de 45%→65%. (2) AML `proxy_mode` explícito: `AMLVetoResult.proxy_mode=True` + WARNING en log cuando DB de frecuencia no disponible. (3) `run_full_analysis(persist=False)` para análisis de solo lectura. (4) `processing_time_ms` en `decision_receipts` — captura latencia real por decisión. | — |
 | 24 Abr 2026 | **MCM v1.1 (ADR-117)** — DEFERRAL_TRAJECTORY: 4º signal MCM. Time-series de HOLD rate — velocity, accel, std. Detecta degradación antes de que el cross-window drift lo confirme. 45 tests pasan. 4 señales en governance_drift_log. Endpoint REST activo. | — |
 | 24 Abr 2026 | **MCM v1.0 (ADR-117)** — Meta-Coherence Monitor implementado: detecta cuando el marco evaluador mismo deriva. Primera corrida real detectó BLOCK_RATE_COLLAPSE trading (13.7%→0.4%) y RECALIBRATION_ANCHORING_RISK. 3 señales persistidas en governance_drift_log. | — |
@@ -75,9 +76,25 @@
 
 ---
 
-## AUDIT REPAIR — 24-25 Abr 2026 (T001–T013 + ADR-119)
+## AUDIT REPAIR — 24-25 Abr 2026 (T001–T013 + ADR-119 + ADR-120)
 
 Reparación completa de todos los hallazgos de la auditoría del sistema. **84 tests pasando (MCM×45 + critical_audit×17 + diagnostic_mode/fail-closed×22), 0 fallas.**
+
+### ADR-120 — AVM Auto-Recalibración ✅ (25 Abr 2026)
+**Problema**: AVM usaba recalibración manual — operador debía ejecutar `save_calibration_snapshot()` manualmente cuando snapshots envejecían o el drift superaba el threshold. El dominio `islamic_credit` tenía DRIFT_BLOCK activo (drift=37.2% > threshold=35.0%) con snapshot de ~117h de antigüedad.
+
+**Solución implementada (automática, sin intervención humana)**:
+- **`assumption_validity_monitor.py`**: `evaluate()` cachea señales live en `self._last_seen_signals[domain]` después de cada evaluación válida (schema completo). Thread-safe con `threading.Lock()`.
+- **Método `auto_recalibrate_stale_domains(recalib_interval_hours=72, max_drift_for_auto=80.0)`**: Itera todos los dominios con snapshots (memoria + disco). Recalibra si `age>=72h` OR `drift>=threshold`. Safety guard: si `drift>80%` → skip + WARNING (posible crisis real, requiere revisión humana). Si no hay señales cacheadas para el dominio → skip (no recalibra a ciegas con datos inventados). Persiste en JSON + DB (`AVMDatabaseBridge`).
+- **`server.py`**: Hilo daemon `AVM-AutoRecalib` (no bloquea shutdown). Warmup=30min (acumula señales), ciclo=24h. Visible en startup log: `[startup] AVM auto-recalibration loop iniciado (ADR-120)`.
+
+**Política de safety**:
+```
+drift < threshold  → no acción (dominio OK)
+drift >= threshold, drift <= 80%  → AUTO-RECALIBRA (ancla a señales live)
+drift > 80%  → WARNING + skip (posible crisis — revisión humana)
+sin caché de señales  → skip (no hay datos live aún)
+```
 
 Fixes adicionales 25 Abr 2026 (ADR-119):
 - AML `proxy_mode: bool` explícito en `AMLVetoResult` + WARNING en log cuando OMNIX_DB_URL no disponible

@@ -68,6 +68,8 @@ import json
 import logging
 import math
 import os
+import threading
+import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -216,6 +218,9 @@ class AssumptionValidityMonitor:
         self.critical_age_hours = critical_age_hours
         self._snapshots_dir = snapshots_dir or AVM_SNAPSHOTS_DIR
         self._memory_store: dict[str, CalibrationSnapshot] = {}
+        # ADR-120: cache of last-seen signals per domain — used by auto-recalibrator
+        self._last_seen_signals: dict[str, dict[str, float]] = {}
+        self._last_seen_lock = threading.Lock()
         self._ensure_snapshots_dir()
 
     def _ensure_snapshots_dir(self) -> None:
@@ -656,6 +661,18 @@ class AssumptionValidityMonitor:
                 logger.warning(f"[AVM] fire_avm_alert(SCHEMA_ANOMALY_PARTIAL) failed: {_alert_exc}")
         # ───────────────────────────────────────────────────────────────────────
 
+        # ADR-120: Cache the incoming signals for this domain so the auto-recalibrator
+        # can use them as the new baseline without needing to query the governance engine.
+        # Only cache when signals match SIGNAL_SCHEMA (schema_match != "NONE").
+        if schema_match != "NONE":
+            _schema_signals = {
+                k: float(v) for k, v in signals.items()
+                if k in _SIGNAL_SCHEMA_SET and isinstance(v, (int, float)) and math.isfinite(v)
+            }
+            if len(_schema_signals) == len(_SIGNAL_SCHEMA_SET):
+                with self._last_seen_lock:
+                    self._last_seen_signals[domain] = _schema_signals
+
         # ── Drift computation ───────────────────────────────────────────────────
         drift_score, drift_components = self._compute_drift(
             snapshot.baseline_signals, signals
@@ -735,6 +752,145 @@ class AssumptionValidityMonitor:
             warnings=warnings,
             pass_through=False,
         )
+
+
+    # ── ADR-120: Auto-recalibration ────────────────────────────────────────────
+
+    def auto_recalibrate_stale_domains(
+        self,
+        recalib_interval_hours: float = 72.0,
+        max_drift_for_auto: float = 80.0,
+    ) -> list[str]:
+        """
+        ADR-120: Automatically recalibrate domains whose AVM snapshot is stale
+        OR whose drift has exceeded the threshold, using the last-seen live signals.
+
+        Policy:
+          - Only recalibrates if we have cached signals for that domain (from a
+            previous evaluate() call). If the domain has NEVER been evaluated since
+            server start, we skip it — there is no live signal to anchor to.
+          - Recalibration is skipped when drift > max_drift_for_auto (80%), because
+            extreme drift likely indicates a genuine crisis, not normal market evolution.
+          - Tags snapshot with ["AUTO_RECALIBRATION"] for audit trail.
+          - Always persists to DB and JSON — same path as manual recalibration.
+
+        Returns:
+            List of domain names that were successfully recalibrated.
+        """
+        recalibrated: list[str] = []
+
+        # Collect all domains with snapshots (from memory store + disk)
+        domains = set(self._memory_store.keys())
+        try:
+            for p in self._snapshots_dir.glob("*_calibration.json"):
+                d = p.stem.replace("_calibration", "")
+                domains.add(d)
+        except Exception:
+            pass
+
+        if not domains:
+            logger.info("[AVM.AUTO] No snapshots found — nothing to recalibrate")
+            return recalibrated
+
+        for domain in sorted(domains):
+            try:
+                snapshot = self.load_snapshot(domain)
+                if snapshot is None:
+                    continue
+
+                age_hours = snapshot.age_hours()
+                needs_recalib_by_age = age_hours >= recalib_interval_hours
+
+                # Get cached live signals for this domain
+                with self._last_seen_lock:
+                    live_signals = self._last_seen_signals.get(domain)
+
+                if live_signals is None:
+                    if needs_recalib_by_age:
+                        logger.info(
+                            f"[AVM.AUTO] {domain}: stale ({age_hours:.0f}h) but no live "
+                            f"signals cached yet — skipping until first evaluate() call"
+                        )
+                    continue
+
+                # Compute drift against live signals (this IS the current drift)
+                actual_drift, _ = self._compute_drift(snapshot.baseline_signals, live_signals)
+
+                needs_recalib_by_drift = actual_drift >= self.drift_threshold
+
+                if not (needs_recalib_by_age or needs_recalib_by_drift):
+                    logger.debug(
+                        f"[AVM.AUTO] {domain}: age={age_hours:.0f}h drift={actual_drift:.1f}% — OK, no recalibration needed"
+                    )
+                    continue
+
+                # Safety guard: do NOT auto-recalibrate under extreme drift
+                if actual_drift > max_drift_for_auto:
+                    logger.warning(
+                        f"[AVM.AUTO] ⚠️ {domain}: drift={actual_drift:.1f}% > "
+                        f"max_drift_for_auto={max_drift_for_auto:.0f}% — "
+                        f"SKIPPING auto-recalibration (may be genuine crisis). "
+                        f"Manual review required."
+                    )
+                    continue
+
+                reason = []
+                if needs_recalib_by_age:
+                    reason.append(f"age={age_hours:.0f}h>={recalib_interval_hours:.0f}h")
+                if needs_recalib_by_drift:
+                    reason.append(f"drift={actual_drift:.1f}%>={self.drift_threshold:.0f}%")
+
+                description = (
+                    f"AUTO_RECALIBRATION (ADR-120): scheduled {recalib_interval_hours:.0f}h cycle — "
+                    + ", ".join(reason)
+                )
+
+                logger.warning(
+                    f"[AVM.AUTO] 🔄 Recalibrando {domain}: {', '.join(reason)} "
+                    f"→ anchoring to live signals"
+                )
+
+                self.save_calibration_snapshot(
+                    domain=domain,
+                    baseline_signals=live_signals,
+                    checkpoint_thresholds=snapshot.checkpoint_thresholds or {},
+                    description=description,
+                    tags=["AUTO_RECALIBRATION", f"interval_{recalib_interval_hours:.0f}h",
+                          f"prev_drift_{actual_drift:.1f}"],
+                )
+
+                # Also persist to DB
+                try:
+                    db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
+                    if db_url:
+                        from omnix_core.governance.avm_db_bridge import AVMDatabaseBridge
+                        bridge = AVMDatabaseBridge(db_url=db_url)
+                        new_snap = self.load_snapshot(domain)
+                        if new_snap:
+                            bridge.save_snapshot(
+                                snapshot_dict=new_snap.to_dict(),
+                                reason="AUTO_RECALIBRATION",
+                                actor="avm_auto_recalib",
+                                action="RECALIBRATE",
+                            )
+                except Exception as _db_exc:
+                    logger.warning(f"[AVM.AUTO] DB persist failed for {domain}: {_db_exc} — JSON OK")
+
+                recalibrated.append(domain)
+                logger.info(
+                    f"[AVM.AUTO] ✅ {domain}: recalibrated successfully "
+                    f"(prev_age={age_hours:.0f}h, prev_drift={actual_drift:.1f}%)"
+                )
+
+            except Exception as exc:
+                logger.error(f"[AVM.AUTO] ❌ {domain}: recalibration error — {exc}")
+
+        if recalibrated:
+            logger.info(f"[AVM.AUTO] Ciclo completo — recalibrados: {recalibrated}")
+        else:
+            logger.info("[AVM.AUTO] Ciclo completo — todos los dominios dentro de tolerancia")
+
+        return recalibrated
 
 
 # ── Singleton ──────────────────────────────────────────────────────────────────
