@@ -665,6 +665,16 @@ def _data_retention_loop(
             try:
                 with _conn:
                     with _conn.cursor() as _cur:
+                        # shadow_trade_outcomes primero (FK hacia shadow_trade_events)
+                        _cur.execute(
+                            "DELETE FROM shadow_trade_outcomes "
+                            "WHERE shadow_event_id IN ("
+                            "  SELECT id FROM shadow_trade_events "
+                            "  WHERE created_at < NOW() - INTERVAL '90 days'"
+                            ")"
+                        )
+                        _deleted_sto = _cur.rowcount
+
                         # shadow_trade_events — 90 días
                         _cur.execute(
                             "DELETE FROM shadow_trade_events "
@@ -681,9 +691,10 @@ def _data_retention_loop(
 
                 _logger.info(
                     "[RETENTION] ✅ Ciclo completo — "
+                    "shadow_trade_outcomes: %d eliminados, "
                     "shadow_trade_events: %d eliminados (>90d), "
                     "governance_transparency_log: %d eliminados (>180d)",
-                    _deleted_ste, _deleted_gtl,
+                    _deleted_sto, _deleted_ste, _deleted_gtl,
                 )
             finally:
                 _conn.close()
