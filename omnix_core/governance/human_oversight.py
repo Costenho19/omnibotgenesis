@@ -36,7 +36,13 @@ _RECEIPT_ENGINE = None
 
 
 def _get_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+    db_url = os.environ.get("DATABASE_URL") or os.environ.get("OMNIX_DB_URL")
+    if not db_url:
+        raise RuntimeError(
+            "DATABASE_URL not configured — HumanOversightEngine requires database access. "
+            "Set DATABASE_URL environment variable."
+        )
+    return psycopg2.connect(db_url)
 
 
 def _load_receipt_engine():

@@ -97,9 +97,14 @@ class ExitGovernanceResult:
         timestamp:                 ISO-8601 UTC evaluation timestamp.
     """
 
-    should_exit: bool
-    reason: str
-    confidence: float
+    # ADR-122 Fail-Safe Default Policy:
+    # should_exit=False means HOLD — the safe direction on uninitialized result.
+    # This default is only reached if ExitGovernanceEngine crashes before returning;
+    # normal paths always set this field explicitly.
+    # NOTE: EGL uses fail-THROUGH (not fail-closed) on error — see pass_through flag.
+    should_exit: bool = False
+    reason: str = "EGL_UNINITIALIZED"
+    confidence: float = 0.0
     regime_adjusted_tp: Optional[float] = None
     regime_adjusted_sl: Optional[float] = None
     gate1_threshold_verdict: bool = False
@@ -554,9 +559,16 @@ class ExitGovernanceEngine:
             import psycopg2
             return psycopg2.connect(self.db_url)
         except ImportError:
-            pass
+            logger.debug("[EGL] psycopg2 not available — trying psycopg3")
         try:
             import psycopg
             return psycopg.connect(self.db_url)
-        except Exception:
+        except Exception as exc:
+            logger.warning("[EGL] psycopg3 connection failed: %s", exc)
             return None
+
+
+# ── Canonical alias (ADR-122) ─────────────────────────────────────────────────
+# ExitGateResult is the preferred name in audit scripts and external tooling.
+# ExitGovernanceResult remains the primary class name for backward compatibility.
+ExitGateResult = ExitGovernanceResult

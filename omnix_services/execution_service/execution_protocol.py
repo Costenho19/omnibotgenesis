@@ -966,3 +966,9 @@ class ExecutionProtocol:
                 self._correlation_available
             ])
         }
+
+
+# ── Canonical alias (ADR-122) ─────────────────────────────────────────────────
+# ExecutionProtocolEngine is the preferred name in audit scripts and tooling.
+# ExecutionProtocol remains the primary class name for backward compatibility.
+ExecutionProtocolEngine = ExecutionProtocol
