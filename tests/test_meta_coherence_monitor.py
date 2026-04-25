@@ -12,7 +12,7 @@ os.environ.setdefault("TELEGRAM_BOT_TOKEN", "test-token")
 # Stub heavy dependencies so tests run offline
 # ---------------------------------------------------------------------------
 _STUBS = [
-    "psycopg2", "pqc", "pqc.sign", "pqc.sign.dilithium3",
+    "pqc", "pqc.sign", "pqc.sign.dilithium3",
     "omnix_core.authorization_adapter",
     "omnix_core.governance.systemic_router",
 ]
@@ -20,10 +20,16 @@ for _name in _STUBS:
     if _name not in sys.modules:
         sys.modules[_name] = MagicMock()
 
-# Stub psycopg2.connect so no real DB calls are made
-import psycopg2  # already a MagicMock
-psycopg2.connect.return_value.__enter__ = lambda s: s
-psycopg2.connect.return_value.__exit__ = MagicMock(return_value=False)
+# Force-stub psycopg2 regardless of whether it is already installed as a real
+# package. psycopg2 is present in the environment (it's a real module), so the
+# previous `if _name not in sys.modules` guard silently skipped the stub,
+# leaving psycopg2.connect as a real function with no `.return_value` attribute.
+# Fix: always overwrite with a MagicMock so context-manager protocol works. (ADR-121)
+_psycopg2_mock = MagicMock()
+sys.modules["psycopg2"] = _psycopg2_mock
+_psycopg2_mock.connect.return_value.__enter__ = lambda s: s
+_psycopg2_mock.connect.return_value.__exit__ = MagicMock(return_value=False)
+import psycopg2  # noqa: E402 — intentional re-import of the mock
 
 from omnix_core.governance.meta_coherence_monitor import (
     MetaCoherenceMonitor,

@@ -1105,6 +1105,63 @@ class StructuralAdmissibilityEngine:
 
         return result
 
+    def evaluate(
+        self,
+        proposed: ProposedRequest | dict,
+        mode: EvaluationMode = EvaluationMode.FAST_FAIL,
+    ) -> EvaluationRequest | StructuredRejectionRecord:
+        """
+        Canonical audit entry point — normalizes dict inputs before calling validate() (ADR-121).
+
+        Provides a uniform `evaluate()` interface consistent with AMLGate, FraudGate, CAG,
+        and other governance gates, enabling audit scripts to treat all gates uniformly.
+
+        Dict normalization (tolerant of common alternate key names used in audit tooling):
+          "asset"      → "subject"    (trading domain shorthand)
+          "action"     → "operation"  (trading domain shorthand)
+          "symbol"     → "subject"    (trading domain shorthand)
+          "ticker"     → "subject"    (trading domain shorthand)
+          "jur"        → "jurisdiction"
+          Unrecognized keys → stored in "metadata" dict
+
+        Missing required fields default to safe values:
+          subject      → "UNKNOWN"
+          operation    → "UNKNOWN"
+          jurisdiction → "GLOBAL"
+
+        Returns:
+            EvaluationRequest         — structurally admissible; ready for Layer 1.
+            StructuredRejectionRecord — structurally inadmissible; Layer 1 must never receive this.
+        """
+        if isinstance(proposed, dict):
+            normalized: dict = {}
+            meta: dict = {}
+            _KEY_MAP = {
+                "asset":   "subject",
+                "symbol":  "subject",
+                "ticker":  "subject",
+                "action":  "operation",
+                "jur":     "jurisdiction",
+            }
+            _KNOWN = {"subject", "operation", "jurisdiction", "domain",
+                      "client_id", "ethical_flags", "metadata"}
+            for k, v in proposed.items():
+                mapped = _KEY_MAP.get(k, k)
+                if mapped in _KNOWN:
+                    normalized[k if mapped == k else mapped] = v
+                else:
+                    meta[k] = v
+            if meta:
+                existing_meta = normalized.get("metadata", {})
+                if isinstance(existing_meta, dict):
+                    meta.update(existing_meta)
+                normalized["metadata"] = meta
+            normalized.setdefault("subject",      "UNKNOWN")
+            normalized.setdefault("operation",    "UNKNOWN")
+            normalized.setdefault("jurisdiction", "GLOBAL")
+            proposed = normalized
+        return self.validate(proposed, mode)
+
     def register_constraint(
         self,
         constraint_class: ConstraintClass,

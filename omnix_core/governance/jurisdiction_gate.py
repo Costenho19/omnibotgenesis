@@ -182,14 +182,33 @@ SUPPORTED_JURISDICTIONS: list[str] = [
 
 @dataclass
 class JurisdictionVetoResult:
-    admissible: bool
-    pass_through: bool = False
+    """
+    Result from the Jurisdiction Compliance Gate evaluation (CP-Jurisdiction).
+
+    ADR-116 Fail-Closed Enforcement Policy:
+      - admissible defaults to False — any unhandled code path BLOCKS rather than permits.
+      - pass_through=True ONLY when the gate is DISABLED via JurisdictionGateConfig.enabled=False.
+        DISABLED ≠ COMPLIANT. A disabled jurisdiction gate does not confirm regulatory clearance.
+      - compliance_score=100.0 on DISABLED/FAILSAFE paths reflects maximum uncertainty,
+        not perfect compliance. Absence of evaluation is NOT equivalent to regulatory approval.
+
+    evaluation_state values (ADR-066):
+      "EVALUATED"  — gate ran; compliance_score and jurisdiction reflect real analysis
+      "DISABLED"   — gate not active; scores are defaults, not compliance indicators
+      "FAILSAFE"   — module exception; decision blocked by safety policy (ADR-116)
+    """
+    admissible: bool = False          # Fail-safe default: BLOCK unless explicitly admitted (ADR-116)
+    pass_through: bool = False        # True only when gate is DISABLED — not a compliance signal
     reason: str = ""
     asset: str = ""
     violation: str = ""
     jurisdiction: str = "GLOBAL"
     compliance_score: float = 100.0
     evaluation_state: str = "EVALUATED"   # ADR-066: "DISABLED" | "FAILSAFE" | "EVALUATED"
+
+
+# Canonical alias — preferred name in audit scripts and external tooling (ADR-121)
+JurisdictionGateResult = JurisdictionVetoResult
 
 
 @dataclass

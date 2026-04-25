@@ -352,3 +352,29 @@ class TransparencyChain:
         except Exception as e:
             logger.error(f"[TransparencyChain] DB connection failed: {e}")
             return None
+
+    # ── Audit convenience API (ADR-121) ─────────────────────────────────────────
+
+    def append_entry(self, payload: dict) -> Optional[Dict[str, Any]]:
+        """
+        Convenience wrapper for append() that accepts a raw dict payload (ADR-121).
+
+        Extracts or generates the fields required by append() from the payload dict:
+          - receipt_id  → payload["receipt_id"] or auto-generated TC-<uuid>
+          - symbol      → payload["symbol"] or "SYSTEM"
+          - decision    → payload["decision"] or "AUDIT_ENTRY"
+          - payload_hash → SHA-256 of canonical JSON serialization of payload
+          - event_type  → payload["event_type"] or "audit"
+
+        Used by audit tooling to log arbitrary governance events without constructing
+        a full DecisionReceipt. Never raises — delegates to append() which is also
+        fail-safe.
+        """
+        receipt_id   = payload.get("receipt_id",  f"TC-{uuid.uuid4().hex[:12].upper()}")
+        symbol       = str(payload.get("symbol",   "SYSTEM"))
+        decision     = str(payload.get("decision", "AUDIT_ENTRY"))
+        event_type   = str(payload.get("event_type", "audit"))
+        payload_hash = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, default=str).encode()
+        ).hexdigest()
+        return self.append(receipt_id, symbol, decision, payload_hash, event_type)

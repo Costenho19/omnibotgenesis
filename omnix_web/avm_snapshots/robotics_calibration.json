@@ -1,26 +1,24 @@
 {
-  "snapshot_id": "AVM-337323464D",
-  "parameter_version": "1.337323464d",
+  "snapshot_id": "AVM-DF6B3E2AC3",
+  "parameter_version": "1.df6b3e2ac3",
   "domain": "robotics",
+  "calibrated_at": "2026-04-25T07:35:04.674380+00:00",
+  "calibrated_at_epoch": 1777102504.67438,
   "baseline_signals": {
-    "risk_exposure": 39.7,
-    "signal_coherence": 83.0,
-    "logic_consistency": 72.3,
-    "probability_score": 66.1,
-    "stress_resilience": 62.5,
-    "trend_persistence": 63.5
+    "probability_score": 58.48,
+    "risk_exposure": 26.98,
+    "signal_coherence": 89.66,
+    "trend_persistence": 17.0,
+    "stress_resilience": 57.92,
+    "logic_consistency": 81.19
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=120h>=72h",
   "tags": [
-    "recalibrated",
-    "q2-2026",
-    "robotics",
-    "2026-04-20",
-    "signal-keys-fixed"
-  ],
-  "calibrated_at": "2026-04-20T07:36:02.868004+00:00",
-  "calibrated_at_epoch": 1776670562.868004
+    "AUTO_RECALIBRATION",
+    "interval_72h",
+    "prev_drift_11.9"
+  ]
 }

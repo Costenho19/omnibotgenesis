@@ -211,6 +211,26 @@ class DecisionReceiptEngine:
         """ISO-8601 UTC timestamp when the current keys became active."""
         return self._active_since
 
+    @property
+    def signature(self) -> Optional[dict]:
+        """
+        Signing capability summary for audit validation (ADR-121).
+
+        Returns a dict with the active signing metadata if keys are loaded,
+        or None if the engine is operating in SHA-256 fallback mode.
+
+        Audit tooling can use `hasattr(receipt_engine, 'signature')` to confirm
+        that the engine has a signature property, and `receipt_engine.signature`
+        to inspect the active signing configuration.
+        """
+        return {
+            "key_id":       self.key_id,
+            "key_mode":     self._key_mode,
+            "active_since": self._active_since,
+            "public_key_b64": self.public_key_b64,
+            "pqc_available": bool(self._provider and self._signing_keys),
+        }
+
     _DEFAULT_TTL_MS: int = 30_000
 
     _DOMAIN_CODES: Dict[str, str] = {
@@ -563,3 +583,9 @@ class ReceiptVerifier:
             'length': len(receipts),
             'breaks': breaks
         }
+
+
+# ── Canonical aliases (ADR-121) ──────────────────────────────────────────────
+# DecisionReceipt is the preferred name in audit scripts and external tooling.
+# DecisionReceiptEngine remains the primary class name for backward compatibility.
+DecisionReceipt = DecisionReceiptEngine

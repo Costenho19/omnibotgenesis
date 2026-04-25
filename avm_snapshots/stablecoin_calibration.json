@@ -1,0 +1,26 @@
+{
+  "snapshot_id": "AVM-58B855C1B0",
+  "parameter_version": "1.58b855c1b0",
+  "domain": "stablecoin",
+  "baseline_signals": {
+    "risk_exposure": 14.3,
+    "signal_coherence": 83.2,
+    "logic_consistency": 67.0,
+    "probability_score": 75.1,
+    "stress_resilience": 69.3,
+    "trend_persistence": 63.9
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "Recalibraci\u00f3n Q2 2026 \u2014 claves SIGNAL_WEIGHTS corregidas \u2014 2026-04-20",
+  "tags": [
+    "recalibrated",
+    "q2-2026",
+    "stablecoin",
+    "2026-04-20",
+    "signal-keys-fixed"
+  ],
+  "calibrated_at": "2026-04-20T07:36:06.340405+00:00",
+  "calibrated_at_epoch": 1776670566.340405
+}

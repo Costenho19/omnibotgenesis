@@ -48,14 +48,35 @@ HARAM_SECTORS: set[str] = {
 
 @dataclass
 class ShariaVetoResult:
-    admissible: bool
-    pass_through: bool = False
+    """
+    Result from the Sharia Compliance Gate evaluation (CP-Sharia).
+
+    ADR-116 Fail-Closed Enforcement Policy:
+      - admissible defaults to False — any unhandled code path BLOCKS rather than permits.
+        This is the safest possible default for a religious compliance gate.
+      - pass_through=True ONLY when the gate is DISABLED via ShariaGateConfig.enabled=False.
+        DISABLED ≠ HALAL. External consumers must not treat pass_through=True as a
+        sharia-compliant signal.
+      - sharia_score=100.0 on DISABLED/FAILSAFE paths reflects maximum uncertainty,
+        not maximum compliance. Absence of evaluation is NOT equivalent to halal status.
+
+    evaluation_state values (ADR-066):
+      "EVALUATED"  — gate ran; gharar_score and sharia_score reflect real analysis
+      "DISABLED"   — gate not active; scores are defaults, not compliance indicators
+      "FAILSAFE"   — module exception; decision blocked by safety policy (ADR-116)
+    """
+    admissible: bool = False          # Fail-safe default: BLOCK unless explicitly admitted (ADR-116)
+    pass_through: bool = False        # True only when gate is DISABLED — not a halal signal
     reason: str = ""
     asset: str = ""
     violation: str = ""
     gharar_score: float = 0.0
     sharia_score: float = 100.0
     evaluation_state: str = "EVALUATED"   # ADR-066: "DISABLED" | "FAILSAFE" | "EVALUATED"
+
+
+# Canonical alias — preferred name in audit scripts and external tooling (ADR-121)
+ShariaGateResult = ShariaVetoResult
 
 
 @dataclass

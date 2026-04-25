@@ -341,3 +341,9 @@ def is_replay(receipt_id: str) -> bool:
 def get_store() -> AntiReplayStore:
     """Return the process-level singleton store (for stats, testing, etc.)."""
     return _default_store
+
+
+# ── Canonical alias (ADR-121) ────────────────────────────────────────────────
+# AntiReplayGuard is the preferred name in audit scripts and external tooling.
+# AntiReplayStore remains the primary class name for backward compatibility.
+AntiReplayGuard = AntiReplayStore

@@ -232,3 +232,9 @@ class PostQuantumSecurity:
             'production_ready': True,
             'operational_since': '2025-11',
         }
+
+
+# ── Canonical alias (ADR-121) ────────────────────────────────────────────────
+# PQCManager is the preferred name in audit scripts and external tooling.
+# PostQuantumSecurity remains the primary class name for backward compatibility.
+PQCManager = PostQuantumSecurity
