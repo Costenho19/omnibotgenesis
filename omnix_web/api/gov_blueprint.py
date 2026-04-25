@@ -1493,10 +1493,12 @@ def api_governance_evaluate():
         ) else "default"
         clean_overrides = [{k: v for k, v in cp.items() if k != "_source"} for cp in checkpoint_overrides]
         engine = _GovernanceEvaluationEngine(checkpoint_overrides=clean_overrides if clean_overrides else None)
+        _eval_t0 = time.perf_counter()
         evaluation = engine.evaluate(
             signals=signals, asset=asset, domain=domain,
             metadata=metadata, compliance_config=compliance_config,
         )
+        _processing_time_ms = round((time.perf_counter() - _eval_t0) * 1000)
     except Exception as e:
         ref_id = str(uuid.uuid4())[:8]
         logger.error(f"Governance evaluation error ref={ref_id}: {e}")
@@ -1521,7 +1523,11 @@ def api_governance_evaluate():
             'client_id': client_id,
             'encrypted_payload': encrypted_payload,
         }
-        receipt = receipt_engine.generate_receipt(decision_payload, prev_hash=prev_hash)
+        receipt = receipt_engine.generate_receipt(
+            decision_payload,
+            prev_hash=prev_hash,
+            processing_time_ms=_processing_time_ms,
+        )
         receipt['client_id'] = client_id
         receipt['encrypted_payload'] = encrypted_payload
         receipt_engine.store_receipt(receipt)

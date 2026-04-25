@@ -168,7 +168,7 @@ class DecisionReceiptEngine:
             return self._provider.serialize_public_key(self._signing_keys[0])
         return None
 
-    def generate_receipt(self, decision: Dict[str, Any], prev_hash: str = "") -> Dict[str, Any]:
+    def generate_receipt(self, decision: Dict[str, Any], prev_hash: str = "", processing_time_ms: Optional[int] = None) -> Dict[str, Any]:
         receipt_id = f"OMNIX-{uuid.uuid4().hex[:12].upper()}"
         timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -224,6 +224,9 @@ class DecisionReceiptEngine:
         public_payload['signature']           = signature_b64
         public_payload['signature_algorithm'] = alg_name if signature_b64 else 'NONE'
         public_payload['public_key']          = self.public_key_b64
+
+        if processing_time_ms is not None:
+            public_payload['processing_time_ms'] = processing_time_ms
 
         self._append_to_transparency_chain(receipt_id, public_payload)
 
@@ -284,8 +287,9 @@ class DecisionReceiptEngine:
                 (receipt_id, timestamp_utc, asset, decision, veto_chain, 
                  policy_version, engine_version, prev_hash, content_hash,
                  signature, signature_algorithm, public_key,
-                 client_id, encrypted_payload, retention_until, domain)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 client_id, encrypted_payload, retention_until, domain,
+                 processing_time_ms)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (receipt_id) DO NOTHING
             """, (
                 receipt['receipt_id'],
@@ -304,6 +308,7 @@ class DecisionReceiptEngine:
                 receipt.get('encrypted_payload'),
                 retention_until,
                 receipt.get('domain'),
+                receipt.get('processing_time_ms'),
             ))
             conn.commit()
             cur.close()
