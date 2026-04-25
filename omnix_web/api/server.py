@@ -623,6 +623,96 @@ except Exception as _arc_err:
     print(f"[startup] WARNING: AVM auto-recalibration loop failed to start: {_arc_err}")
 
 
+# ── Startup: Data retention background loop ────────────────────────────────────
+def _data_retention_loop(
+    run_interval_hours: float = 24.0,
+    warmup_minutes: float = 5.0,
+) -> None:
+    """
+    Background thread that enforces data retention policies on high-volume tables.
+
+    Policies:
+      - shadow_trade_events   → DELETE rows older than 90 days (simulated trades,
+                                no legal retention obligation)
+      - governance_transparency_log → DELETE rows older than 180 days (regulatory
+                                records, longer retention window)
+      - decision_receipts     → NOT touched automatically (legal/compliance records;
+                                manual archiving only)
+
+    Runs every run_interval_hours (default: 24h) after an initial warmup.
+    All deletions are logged with row count. Safe to run concurrently with live traffic.
+    """
+    import logging as _logging
+    import time as _time
+    import os as _os
+    _logger = _logging.getLogger("OMNIX.RETENTION")
+    _logger.info(
+        "[RETENTION] Loop iniciado — warmup=%dmin, intervalo=%dh",
+        int(warmup_minutes), int(run_interval_hours),
+    )
+    _time.sleep(warmup_minutes * 60)
+
+    while True:
+        try:
+            import psycopg2 as _psycopg2
+            _db_url = _os.environ.get("OMNIX_DB_URL") or _os.environ.get("DATABASE_URL")
+            if not _db_url:
+                _logger.warning("[RETENTION] No DB URL — ciclo omitido")
+                _time.sleep(run_interval_hours * 3600)
+                continue
+
+            _conn = _psycopg2.connect(_db_url)
+            try:
+                with _conn:
+                    with _conn.cursor() as _cur:
+                        # shadow_trade_events — 90 días
+                        _cur.execute(
+                            "DELETE FROM shadow_trade_events "
+                            "WHERE created_at < NOW() - INTERVAL '90 days'"
+                        )
+                        _deleted_ste = _cur.rowcount
+
+                        # governance_transparency_log — 180 días
+                        _cur.execute(
+                            "DELETE FROM governance_transparency_log "
+                            "WHERE ts_utc < NOW() - INTERVAL '180 days'"
+                        )
+                        _deleted_gtl = _cur.rowcount
+
+                _logger.info(
+                    "[RETENTION] ✅ Ciclo completo — "
+                    "shadow_trade_events: %d eliminados (>90d), "
+                    "governance_transparency_log: %d eliminados (>180d)",
+                    _deleted_ste, _deleted_gtl,
+                )
+            finally:
+                _conn.close()
+
+        except Exception as _ret_exc:
+            _logger.error(
+                "[RETENTION] ❌ Error en ciclo de retención: %s: %s",
+                type(_ret_exc).__name__, _ret_exc,
+            )
+        _time.sleep(run_interval_hours * 3600)
+
+
+try:
+    import threading as _ret_threading
+    _retention_thread = _ret_threading.Thread(
+        target=_data_retention_loop,
+        name="DataRetention",
+        daemon=True,
+    )
+    _retention_thread.start()
+    logger.info(
+        "[startup] Data retention loop iniciado — "
+        "shadow_trade_events >90d, governance_transparency_log >180d, "
+        "primer ciclo en 5min, luego cada 24h"
+    )
+except Exception as _ret_err:
+    logger.warning("[startup] Data retention loop failed to start: %s", _ret_err)
+
+
 def get_db_connection():
     database_url = (
         os.environ.get('DATABASE_URL') or
