@@ -1477,6 +1477,24 @@ def simple_evaluate():
         action=action,
     )
 
+    # ── ADR-127: Phase 3 — Filter Calibration Metrics (non-blocking) ─────────
+    try:
+        from omnix_core.governance.filter_calibration_metrics import (
+            extract_event_from_result,
+            get_global_service,
+        )
+        _proc_ms = (time.time_ns() - execution_nanosecond) // 1_000_000
+        _fcm_event = extract_event_from_result(
+            result,
+            domain             = "trading",
+            asset              = asset,
+            client_id          = "PUBLIC_EVALUATE",
+            processing_time_ms = int(_proc_ms),
+        )
+        get_global_service().record(_fcm_event)
+    except Exception as _fcm_exc:
+        logger.debug("[/evaluate] FCM record skipped: %s", _fcm_exc)
+
     return jsonify(response), 200, {
         "Access-Control-Allow-Origin": "*",
         "Cache-Control": "no-store",
