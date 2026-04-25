@@ -1,0 +1,24 @@
+{
+  "snapshot_id": "AVM-DF92F6C63B",
+  "parameter_version": "1.df92f6c63b",
+  "domain": "crisis",
+  "baseline_signals": {
+    "risk_exposure": 90.0,
+    "signal_coherence": 100.0,
+    "logic_consistency": 100.0,
+    "probability_score": 100.0,
+    "stress_resilience": 100.0,
+    "trend_persistence": 100.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 0h cycle \u2014 age=0h>=0h, drift=44.2%>=35%",
+  "tags": [
+    "AUTO_RECALIBRATION",
+    "interval_0h",
+    "prev_drift_44.2"
+  ],
+  "calibrated_at": "2026-04-25T04:20:36.589640+00:00",
+  "calibrated_at_epoch": 1777090836.58964
+}
