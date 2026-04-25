@@ -104,10 +104,56 @@ is_test_env = (
 
 ---
 
-## 6. Consequences
+## 6. Theoretical Foundation — Dual-Layer Governance Drift
+
+*The following conceptual framework was articulated by Dr. Amanulla Khan (Honorary Doctorate) in correspondence with OMNIX QUANTUM LTD, 25 Apr 2026. It provides the institutional governance theory that informs the AVM design decisions documented above.*
+
+---
+
+### The dual-layer drift problem
+
+In environments with multiple simultaneous governance layers — such as commercial compliance operating alongside a Sharia evaluative layer in UAE financial institutions — a stabilizing effect emerges when the secondary layer maintains genuine **reference independence** from the primary operational environment. The secondary layer generates evaluative friction: it slows normalization capture because decisions are being assessed through more than one legitimacy frame at the same time.
+
+The opposite risk, however, is equally real and harder to detect:
+
+> *"If both layers gradually adapt to the same operational incentives or continuity pressures, the organization can begin experiencing synchronized drift across multiple governance frames while still interpreting itself as highly governed because of the visible presence of dual oversight structures."*
+>
+> — Dr. Amanulla Khan
+
+This is the **synchronized capture failure mode**: an organization can accumulate cross-layer drift while maintaining the outward appearance of comprehensive governance. The multiplicity of layers increases *perceived* legitimacy without preserving *independent evaluative integrity*.
+
+The critical diagnostic signal for this failure mode is the **disappearance of tension** across layers. When all governance layers agree without friction, it is not necessarily because the environment is clean — it may be because all layers have already absorbed the same bias.
+
+---
+
+### Mapping to OMNIX AVM architecture
+
+| Institutional concept | OMNIX implementation |
+|---|---|
+| Secondary governance layer | `AssumptionValidityMonitor` — evaluates whether the statistical assumptions underlying trade decisions still hold |
+| Reference independence | AVM snapshot: calibrated at a fixed point in time, not updated on every decision cycle. The baseline is anchored to *past* market conditions, not the current operational frame |
+| Synchronized drift detection | `drift_threshold` comparison: AVM detects when live signals have moved away from the historical baseline, even when all other governance layers pass normally |
+| Tension preservation | The `max_drift_for_auto` guard (80%): when drift is extreme, auto-recalibration is blocked. The AVM refuses to "harmonize" with the current operational environment under crisis conditions — it preserves the tension rather than resolving it |
+| Normalization capture resistance | Auto-recalibration requires explicit human review when drift > 80%. The system does not silently absorb extreme drift by updating its own reference frame |
+| Signal schema validation | If `live_signals` has no overlapping keys with `baseline_signals`, recalibration is blocked with `SIGNAL_SCHEMA_MISMATCH`. The AVM will not anchor to a structurally different signal environment without audit trail |
+
+### Key design principle
+
+The AVM is not designed to always agree with the current market state. It is designed to **preserve disagreement** when the current state has drifted significantly from the calibrated baseline — because that disagreement is itself the governance signal.
+
+Auto-recalibration is permitted only within the 0–80% drift band, where normal market evolution is the most likely explanation. Beyond that threshold, the AVM remains out of step with the current environment intentionally — because agreement at extreme drift levels would indicate the secondary layer has been captured by the same operational frame it was designed to constrain.
+
+This is the structural implementation of what Dr. Khan describes as the condition that makes parallel governance systems genuinely stabilizing rather than merely visible:
+
+> *"Parallel governance systems seem stabilizing only as long as they preserve enough separation to generate unresolved tension when drift begins emerging in the primary execution environment."*
+
+---
+
+## 7. Consequences
 
 - AVM recalibration is now automatic and observable via logs
 - External audit tooling can call `AVMEngine` without AVM internal knowledge
 - All governance gate results are fail-safe by default (no implicit admission)
 - TESTING bypass cannot activate in Railway production deployments
 - 0 silent exception swallows remain in core governance path
+- AVM is architecturally designed to preserve governance tension, not resolve it — consistent with dual-layer governance theory
