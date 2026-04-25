@@ -415,9 +415,10 @@ class MetaCoherenceMonitor:
 
     def run_full_analysis(
         self,
-        domain: str,
+        domain: str = "trading",
         reference_days: int = 30,
         current_days:   int = 14,
+        persist: bool = True,
     ) -> MetaCoherenceReport:
         """
         Run all three MCM detection mechanisms for the given domain and
@@ -429,6 +430,8 @@ class MetaCoherenceMonitor:
                             This window starts at 2×current_days ago and
                             ends at current_days ago.
             current_days:   The recent window to compare against reference.
+            persist:        If True (default), persist findings to governance_drift_log.
+                            Set False for read-only analysis (audits, tests).
 
         Returns:
             MetaCoherenceReport with composite score, alert level, and all
@@ -503,6 +506,9 @@ class MetaCoherenceMonitor:
             f"stable={report.evaluation_frame_stable} | "
             f"signatures={len(report.transition_signatures)}"
         )
+
+        if persist:
+            self.persist_to_db(report)
 
         return report
 
