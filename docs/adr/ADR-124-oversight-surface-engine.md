@@ -90,6 +90,47 @@ The EQS is stored in `oversight_sessions` and is available via
 
 ---
 
+## ACTIVE CONTROL vs Observer — Enforcement Classification
+
+OSE is an **ACTIVE CONTROL module**, not an observer or monitoring layer.
+This distinction is critical for regulatory and operational classification.
+
+| Mechanism | Type | What happens if condition fails |
+|-----------|------|--------------------------------|
+| Deliberation Window | **Hard enforcement** | `submit_review()` raises HTTP 400, action is REJECTED. The reviewer cannot proceed until 30s have elapsed since `open_session()`. |
+| Override Friction | **Hard enforcement** | `submit_review()` raises HTTP 400, action is REJECTED. The reviewer cannot record an OVERRIDDEN decision without a ≥50-char justification. |
+| Framing Governance | **Measurement control** | Session creation is NOT blocked (fail-open for framing). Missing fields reduce `framing_score` (0.0–1.0) and penalize EQS. This is by design: framing quality is measured and surfaced, not gatekept. |
+
+**Active controls (deliberation + friction) are enforced at the API layer via HTTP 400 rejection.**
+They cannot be bypassed once a session is created — there is no admin override flag for them.
+
+**This module is not optional for sessions that exist.**
+Once an oversight session is opened with `open_session()`, the deliberation window
+and override friction rules apply unconditionally. Clients may choose not to create
+OSE sessions (integration is opt-in), but cannot selectively skip controls for sessions
+that do exist.
+
+---
+
+## Isolation Guarantee
+
+OSE is deliberately isolated from all existing OMNIX decision flows:
+
+- **Zero imports** of `oversight_surface` or `oversight_bp` exist in any vertical
+  governance module, trading engine, or dashboard blueprint.
+- **No existing decision** passes through OSE automatically — it must be explicitly
+  triggered via the API.
+- **No existing override flow** (`governance_overrides`, `human_oversight.py`,
+  dashboard override UI) is affected by OSE's override friction.
+- The deliberation window timer starts only when a client explicitly calls
+  `POST /api/oversight/sessions/<id>/open` — it is never triggered by normal
+  decision processing.
+
+This design ensures ADR-124 introduces zero regressions and can be adopted
+incrementally per governance domain.
+
+---
+
 ## Design Constraints
 
 - **Purely additive** — does not modify `decision_receipts`, `governance_overrides`,
@@ -193,3 +234,29 @@ PENDING → OPEN → SUBMITTED
 - **OWASP relevance:** A09 (Logging Failures — EQS provides oversight quality audit trail)  
 - **Governance layer:** Layer 0 (Infrastructure) + Layer 2 (Human Oversight)  
 - **Railway production impact:** ✅ Safe — additive table + new endpoints only
+
+### API Error Response Policy
+
+`oversight_bp.py` follows a two-tier exception handling pattern consistent with
+ADR-123 §A.6 (controlled validation messages, auth-gated):
+
+| Exception type | HTTP code | Response body | Rationale |
+|---------------|-----------|---------------|-----------|
+| `ValueError` | 400 / 404 | `{"error": str(e)}` — controlled message | All `ValueError` in the OSE engine are **manually crafted** strings (static text + computed numbers + client-provided IDs). They contain no stack traces, database internals, or secrets. Returning the message is intentional — it gives the B2B client actionable information (e.g., *"Please wait 18 more seconds"*, *"Justification too short: 23 chars"*). |
+| `Exception` (any other) | 500 | `{"error": "Internal server error"}` | Never exposes `str(e)`. Logged internally with `type(e).__name__`. |
+
+**Safety guarantee for ValueError:** `psycopg2.Error` and all other DB exceptions are NOT
+subclasses of `ValueError`. They always reach the `except Exception as e:` path and return
+the generic 500. No database error message can surface via the 400/404 path.
+
+### Data Stored in `oversight_sessions`
+
+No credentials, API keys, or secrets are stored. Fields:
+
+| Field | Sensitivity | Notes |
+|-------|-------------|-------|
+| `decision_snapshot` | Business data | Provided by the B2B client; they already have it. Stored as JSONB, returned only to the same auth'd client. |
+| `reviewer_id` | Business identifier | Human identifier (name/ID), not a credential. |
+| `justification` | Business audit trail | Human-authored text. Required for OVERRIDDEN audit. |
+| `session_id` | Non-sensitive | UUID-based, not guessable. |
+| `eqs_score` | Derived metric | Float 0.0–1.0, no sensitive content. |
