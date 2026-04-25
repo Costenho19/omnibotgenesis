@@ -533,6 +533,13 @@ try:
 except Exception as _proof_err:
     print(f"[server] WARNING: proof_bp not loaded: {_proof_err}")
 
+try:
+    from api.oversight_bp import oversight_bp
+    app.register_blueprint(oversight_bp)
+    logger.info("[server] oversight_bp registered — /api/oversight/* active (ADR-124)")
+except Exception as _ose_err:
+    logger.warning("[server] oversight_bp not loaded: %s", _ose_err)
+
 # ── Startup: ensure b2b_clients has webhook columns (ADR-053) ────────────────
 try:
     from api.gov_auth_rbac import _ensure_webhook_columns, _ensure_key_expiry_column
@@ -541,6 +548,15 @@ try:
     print("[startup] b2b_clients webhook columns verified OK")
 except Exception as _wh_err:
     print(f"[startup] WARNING: webhook columns check failed: {_wh_err}")
+
+try:
+    import os as _os, sys as _sys
+    _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))))
+    from omnix_core.governance.oversight_surface import OversightSurfaceEngine as _OSE
+    _OSE().ensure_schema()
+    logger.info("[startup] OversightSurfaceEngine schema verified OK (ADR-124)")
+except Exception as _ose_startup_err:
+    logger.warning("[startup] OSE schema init skipped: %s", _ose_startup_err)
 
 
 # ── Startup: AVM auto-recalibration background loop (ADR-120) ─────────────────
