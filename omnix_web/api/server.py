@@ -13,6 +13,7 @@ if _WORKSPACE_ROOT not in sys.path:
     sys.path.insert(0, _WORKSPACE_ROOT)
 
 import json
+import logging
 import smtplib
 import ssl
 import html
@@ -25,6 +26,8 @@ from flask_limiter.util import get_remote_address
 import psycopg2
 from datetime import datetime, timezone
 import re
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
@@ -42,6 +45,9 @@ _ADR_FILE_COUNT = _count_adrs_from_files()
 
 app = Flask(__name__)
 
+# ── ADR-123: Reject request bodies larger than 1 MB ──────────────────────────
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # 1 MB
+
 CORS(app, origins=[
     "https://omnixquantum.net",
     "https://www.omnixquantum.net",
@@ -52,7 +58,9 @@ CORS(app, origins=[
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=[],
+    # ADR-123: Default rate limit — all endpoints without explicit decorator
+    # are capped at 200 req/min to prevent abuse of unlisted routes.
+    default_limits=["200 per minute"],
     storage_uri="memory://",
 )
 
@@ -82,14 +90,23 @@ def add_security_headers(response):
 
 @app.errorhandler(500)
 def handle_500(e):
-    print(f"[500] Unhandled server error: {e}")
+    logger.error("[OMNIX.API] Unhandled 500: %s", e)
     return jsonify({'success': False, 'error': 'An internal server error occurred'}), 500
 
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-    print(f"[EXCEPTION] Unhandled exception: {type(e).__name__}: {e}")
+    logger.error("[OMNIX.API] Unhandled exception: %s: %s", type(e).__name__, e)
     return jsonify({'success': False, 'error': 'An internal server error occurred'}), 500
+
+
+# ── ADR-123: Safe internal error helper ──────────────────────────────────────
+# Logs the full exception internally and returns a GENERIC message to the client.
+# Never expose exception details (DB schema, module paths, stack traces) externally.
+def _api_error(exc: Exception, ctx: str = "") -> tuple:
+    logger.error("[OMNIX.API]%s %s: %s",
+                 f" [{ctx}]" if ctx else "", type(exc).__name__, exc)
+    return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 from api.sandbox import register_sandbox_routes
@@ -689,7 +706,7 @@ def get_live_metrics():
         })
 
     except Exception as e:
-        print(f"Error fetching live metrics: {e}")
+        logger.error("[OMNIX.API] [live_metrics] %s: %s", type(e).__name__, e)
         return jsonify({
             'success': False,
             'live': False,
@@ -1139,7 +1156,7 @@ def get_metrics_live():
         })
 
     except Exception as e:
-        print(f"[metrics/live] fallback: {e}")
+        logger.error("[OMNIX.API] [metrics/live] fallback: %s: %s", type(e).__name__, e)
         uptime_days = max(0, (datetime.now(timezone.utc) - LAUNCH_DATE).days)
         return jsonify({
             'success': True,
@@ -1218,7 +1235,7 @@ def get_metrics():
             'lastUpdate': datetime.now().isoformat()
         })
     except Exception as e:
-        print(f"Error fetching metrics: {e}")
+        logger.error("[OMNIX.API] [metrics] %s: %s", type(e).__name__, e)
         return jsonify({
             'evaluationCycles': 766741,
             'pqcSignedReceipts': 82518,
@@ -1263,7 +1280,7 @@ def get_news():
             })
         return jsonify(news)
     except Exception as e:
-        print(f"Error fetching news: {e}")
+        logger.error("[OMNIX.API] [news] %s: %s", type(e).__name__, e)
         return jsonify([])
 
 
@@ -1364,7 +1381,8 @@ def trust_registry():
             from omnix_engine.federated_trust import build_trust_registry
             registry = build_trust_registry()
         except Exception as e:
-            return jsonify({'error': f'Trust registry unavailable: {e}'}), 500
+            logger.error("[OMNIX.API] [trust_registry] %s: %s", type(e).__name__, e)
+            return jsonify({'error': 'Trust layer unavailable'}), 500
     return jsonify(registry), 200, {
         'Cache-Control': 'no-cache, must-revalidate',
         'Access-Control-Allow-Origin': '*',
@@ -1398,7 +1416,8 @@ def trust_verify():
             from omnix_engine.federated_trust import independent_verify
             result = independent_verify(receipt_or_vc)
         except Exception as e:
-            return jsonify({'error': f'Verifier unavailable: {e}'}), 500
+            logger.error("[OMNIX.API] [trust_verify] %s: %s", type(e).__name__, e)
+            return jsonify({'error': 'Verifier unavailable'}), 500
 
     return jsonify(result), 200, {'Access-Control-Allow-Origin': '*'}
 
@@ -1418,7 +1437,8 @@ def trust_frameworks():
             from omnix_engine.regulatory_mapping import get_full_framework_catalog
             catalog = get_full_framework_catalog()
         except Exception as e:
-            return jsonify({'error': f'Framework catalog unavailable: {e}'}), 500
+            logger.error("[OMNIX.API] [trust_frameworks] %s: %s", type(e).__name__, e)
+            return jsonify({'error': 'Framework catalog unavailable'}), 500
 
     return jsonify({
         'spec':        'OMNIX Regulatory Framework Catalog v1.0',
@@ -1471,7 +1491,8 @@ def trust_health():
             'note': 'Ephemeral key — refresh from /api/trust/registry before each verification batch.',
         }
     except Exception as e:
-        components['signing_key'] = {'status': 'error', 'detail': str(e)}
+        logger.error("[OMNIX.API] [trust_health] signing_key: %s: %s", type(e).__name__, e)
+        components['signing_key'] = {'status': 'error', 'detail': 'Component unavailable'}
 
     try:
         from api.omnix_engine.receipt_to_vc import ReceiptToVC
@@ -1748,8 +1769,8 @@ def analytics_decisions():
         })
 
     except Exception as e:
-        print(f"Analytics error: {e}")
-        return jsonify({'error': str(e), 'live': False}), 500
+        logger.error("[OMNIX.API] [analytics_decisions] %s: %s", type(e).__name__, e)
+        return jsonify({'error': 'Analytics unavailable', 'live': False}), 500
 
 
 def init_contact_leads_table():
@@ -1773,7 +1794,7 @@ def init_contact_leads_table():
         cur.close()
         conn.close()
     except Exception as e:
-        print(f"Warning: Could not initialize contact_leads table: {e}")
+        logger.warning("[OMNIX.API] [contact_leads_init] %s: %s", type(e).__name__, e)
 
 
 init_contact_leads_table()
@@ -1829,7 +1850,7 @@ def contact_lead():
         return jsonify({'success': True, 'message': 'Contact information saved successfully'})
 
     except Exception as e:
-        print(f"Error saving contact lead: {e}")
+        logger.error("[OMNIX.API] [contact] %s: %s", type(e).__name__, e)
         return jsonify({
             'success': False,
             'error': 'Failed to save contact information',
@@ -1898,8 +1919,8 @@ def sandbox_stats():
             'recent': recent,
         })
     except Exception as e:
-        print(f"Stats error: {e}")
-        return jsonify({'error': str(e)}), 500
+        logger.error("[OMNIX.API] [sandbox_stats] %s: %s", type(e).__name__, e)
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 
 _CP_NAMES = {
@@ -1977,7 +1998,7 @@ def public_recent_receipts():
         cur.close()
         conn.close()
     except Exception as e:
-        print(f"[verify/recent] DB error: {e}")
+        logger.error("[OMNIX.API] [verify/recent] DB error: %s: %s", type(e).__name__, e)
         return jsonify({'error': 'Failed to fetch receipts', 'receipts': []}), 500
 
     receipts = [
@@ -2016,7 +2037,7 @@ def public_verify_receipt(receipt_id):
         cur.close()
         conn.close()
     except Exception as e:
-        print(f"Verify DB error: {e}")
+        logger.error("[OMNIX.API] [public_verify_receipt] DB error: %s: %s", type(e).__name__, e)
         return jsonify({'found': False, 'error': 'Verification service temporarily unavailable'}), 500
 
     if not row:
@@ -2178,12 +2199,16 @@ def send_receipt_email():
     decision    = html.escape(str(data.get('decision', '')))
     explanation = html.escape(str(data.get('explanation', '')))
     scenario    = html.escape(str(data.get('scenario', '')))
-    language    = data.get('language', 'en')
-    gates       = data.get('gate_results', [])
-    receipt     = data.get('receipt', {})
-    cp_passed   = int(data.get('checkpoints_passed', 0))
-    cp_total    = int(data.get('checkpoints_total', 11))
-    cp_blocked  = int(data.get('checkpoints_blocked', 0))
+    language    = data.get('language', 'en') if data.get('language') in ('en', 'es') else 'en'
+    raw_gates   = data.get('gate_results', [])
+    gates       = raw_gates if isinstance(raw_gates, list) else []
+    receipt     = data.get('receipt', {}) if isinstance(data.get('receipt', {}), dict) else {}
+    try:
+        cp_passed  = int(data.get('checkpoints_passed', 0))
+        cp_total   = int(data.get('checkpoints_total', 11))
+        cp_blocked = int(data.get('checkpoints_blocked', 0))
+    except (ValueError, TypeError):
+        cp_passed, cp_total, cp_blocked = 0, 11, 0
     raw_verify  = data.get('verification_url') or f'https://omnixquantum.net/verify/{receipt_id}'
     verify_url  = html.escape(str(raw_verify))
     is_es       = language == 'es'
@@ -2418,7 +2443,7 @@ def credit_metrics():
             },
         })
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return _api_error(e)
 
 
 @app.route('/api/credit/applications')
@@ -2460,7 +2485,7 @@ def credit_applications():
         } for row in rows]
         return jsonify({"success": True, "status": "ok", "applications": formatted, "count": len(formatted)})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return _api_error(e)
 
 
 @app.route('/api/credit/sectors')
@@ -2488,7 +2513,7 @@ def credit_sectors():
         } for r in rows]
         return jsonify({"success": True, "status": "ok", "sectors": formatted})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return _api_error(e)
 
 
 @app.route('/api/credit/timeline')
@@ -2506,7 +2531,7 @@ def credit_timeline():
         formatted = [{**r, "hour": str(r.get("hour", ""))} for r in rows]
         return jsonify({"status": "ok", "timeline": formatted})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return _api_error(e)
 
 
 @app.route('/api/credit/macro')
@@ -2527,7 +2552,7 @@ def credit_macro():
             "as_of": str((row or {}).get("submitted_at") or ""),
         })
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return _api_error(e)
 
 
 @app.route('/api/credit/health')
@@ -2550,7 +2575,7 @@ def credit_health():
             "vertical": "islamic_credit_v1",
         })
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return _api_error(e)
 
 def _db_query(sql, params=None):
     db_url = os.environ.get('DATABASE_URL', '')
@@ -2608,7 +2633,7 @@ def insurance_metrics():
             "loss_avoided_usd": _sf(t.get("total_blocked_usd")),
         }})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/insurance/claims')
 def insurance_claims_list():
@@ -2631,7 +2656,7 @@ def insurance_claims_list():
             r["created_at"] = str(r.get("created_at", ""))
         return jsonify({"success": True, "claims": rows, "total": len(rows)})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/insurance/by-type')
 def insurance_by_type():
@@ -2652,7 +2677,7 @@ def insurance_by_type():
             r["blocked_usd"] = _sf(r["blocked_usd"])
         return jsonify({"success": True, "by_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/insurance/by-region')
 def insurance_by_region():
@@ -2670,7 +2695,7 @@ def insurance_by_region():
             r["approval_rate"] = round(_si(r["approved"]) / max(_si(r["total"]),1), 4)
         return jsonify({"success": True, "by_region": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 
 # ── ROBOTICS ─────────────────────────────────────────────────────────────────
@@ -2710,7 +2735,7 @@ def robotics_metrics():
             "simulation_cycles": _si(cyc.get("cycles")),
         }})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/robotics/actions')
 def robotics_actions():
@@ -2731,7 +2756,7 @@ def robotics_actions():
             r["created_at"] = str(r.get("created_at", ""))
         return jsonify({"success": True, "actions": rows, "total": len(rows)})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/robotics/fleet')
 def robotics_fleet():
@@ -2752,7 +2777,7 @@ def robotics_fleet():
             r["approval_rate"] = round(_si(r["approved"]) / max(_si(r["total_actions"]),1), 4)
         return jsonify({"success": True, "fleet": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/robotics/by-robot')
 def robotics_by_robot():
@@ -2767,7 +2792,7 @@ def robotics_by_robot():
         """)
         return jsonify({"success": True, "by_robot_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/robotics/by-industry')
 def robotics_by_industry():
@@ -2782,7 +2807,7 @@ def robotics_by_industry():
         """)
         return jsonify({"success": True, "by_industry": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 
 # ── MEDICAL ──────────────────────────────────────────────────────────────────
@@ -2825,7 +2850,7 @@ def medical_metrics():
             "simulation_cycles": _si(cyc.get("cycles")),
         }})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/medical/decisions')
 def medical_decisions_list():
@@ -2847,7 +2872,7 @@ def medical_decisions_list():
             r["created_at"] = str(r.get("created_at", ""))
         return jsonify({"success": True, "decisions": rows, "total": len(rows)})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/medical/by-type')
 def medical_by_type():
@@ -2862,7 +2887,7 @@ def medical_by_type():
         """)
         return jsonify({"success": True, "by_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/medical/by-jurisdiction')
 def medical_by_jurisdiction():
@@ -2876,7 +2901,7 @@ def medical_by_jurisdiction():
         """)
         return jsonify({"success": True, "by_jurisdiction": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 
 # ── ENERGY ───────────────────────────────────────────────────────────────────
@@ -2933,7 +2958,7 @@ def energy_metrics():
             "simulation_cycles": _si(cyc.get("cycles")),
         }})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/energy/live-feed')
 def energy_live_feed():
@@ -2953,7 +2978,7 @@ def energy_live_feed():
             r["created_at"] = str(r.get("created_at", ""))
         return jsonify({"success": True, "decisions": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/energy/by-source')
 def energy_by_source():
@@ -2969,7 +2994,7 @@ def energy_by_source():
         """)
         return jsonify({"success": True, "by_source": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/energy/by-region')
 def energy_by_region():
@@ -2984,7 +3009,7 @@ def energy_by_region():
         """)
         return jsonify({"success": True, "by_region": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/energy/by-type')
 def energy_by_type():
@@ -2998,7 +3023,7 @@ def energy_by_type():
         """)
         return jsonify({"success": True, "by_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 
 # ── REAL ESTATE ───────────────────────────────────────────────────────────────
@@ -3043,7 +3068,7 @@ def real_estate_metrics():
             "simulation_cycles": _si(cyc.get("cycles")),
         }})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/real-estate/live-feed')
 def real_estate_live_feed():
@@ -3067,7 +3092,7 @@ def real_estate_live_feed():
             r["created_at"] = str(r.get("created_at", ""))
         return jsonify({"success": True, "decisions": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/real-estate/by-type')
 def real_estate_by_type():
@@ -3081,7 +3106,7 @@ def real_estate_by_type():
         """)
         return jsonify({"success": True, "by_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/real-estate/by-property')
 def real_estate_by_property():
@@ -3096,7 +3121,7 @@ def real_estate_by_property():
         """)
         return jsonify({"success": True, "by_property_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/real-estate/by-jurisdiction')
 def real_estate_by_jurisdiction():
@@ -3111,7 +3136,7 @@ def real_estate_by_jurisdiction():
         """)
         return jsonify({"success": True, "by_jurisdiction": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 
 # ── AGENTS ───────────────────────────────────────────────────────────────────
@@ -3154,7 +3179,7 @@ def agents_metrics():
             "simulation_cycles": _si(cyc.get("cycles")),
         }})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/agents/decisions')
 def agents_decisions_list():
@@ -3175,7 +3200,7 @@ def agents_decisions_list():
             r["created_at"] = str(r.get("created_at", ""))
         return jsonify({"success": True, "decisions": rows, "total": len(rows)})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/agents/by-agent')
 def agents_by_agent():
@@ -3191,7 +3216,7 @@ def agents_by_agent():
         """)
         return jsonify({"success": True, "by_agent_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/agents/by-type')
 def agents_by_type():
@@ -3205,7 +3230,7 @@ def agents_by_type():
         """)
         return jsonify({"success": True, "by_decision_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 
 # ── STABLECOIN RESERVE GOVERNANCE (ADR-SRG-001) ───────────────────────────────
@@ -3260,7 +3285,7 @@ def stablecoin_metrics():
             "simulation_cycles":     _si(cyc.get("cycles")),
         }})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/stablecoin/live-feed')
 def stablecoin_live_feed():
@@ -3281,7 +3306,7 @@ def stablecoin_live_feed():
             r["created_at"] = str(r.get("created_at", ""))
         return jsonify({"success": True, "decisions": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/stablecoin/by-type')
 def stablecoin_by_type():
@@ -3297,7 +3322,7 @@ def stablecoin_by_type():
         """)
         return jsonify({"success": True, "by_type": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/stablecoin/by-asset')
 def stablecoin_by_asset():
@@ -3315,7 +3340,7 @@ def stablecoin_by_asset():
         """)
         return jsonify({"success": True, "by_asset": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/stablecoin/by-jurisdiction')
 def stablecoin_by_jurisdiction():
@@ -3332,7 +3357,7 @@ def stablecoin_by_jurisdiction():
         """)
         return jsonify({"success": True, "by_jurisdiction": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 @app.route('/api/stablecoin/timeline')
 def stablecoin_timeline():
@@ -3351,7 +3376,7 @@ def stablecoin_timeline():
             r["hour"] = str(r.get("hour", ""))
         return jsonify({"success": True, "timeline": rows})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return _api_error(e)
 
 
 @app.route('/', defaults={'path': ''})

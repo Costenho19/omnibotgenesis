@@ -96,7 +96,7 @@ def api_segmented_expectancy():
         logger.error(f"Error in segmented expectancy API: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'db_connected': DB_AVAILABLE,
             'segments': []
         })
@@ -304,7 +304,7 @@ def api_trades_history():
             logger.error(f"Trade history API error: {e}")
             return jsonify({
                 'success': False,
-                'error': str(e),
+                'error': "Internal server error",
                 'trades': []
             })
 
@@ -455,7 +455,7 @@ def api_portfolio():
             logger.error(f"Portfolio API error: {e}")
             return jsonify({
                 'success': False,
-                'error': str(e),
+                'error': "Internal server error",
                 'portfolio': None
             })
 
@@ -598,7 +598,7 @@ def api_positions():
             return jsonify({
                 'success': False,
                 'positions': [],
-                'error': str(e)
+                'error': "Internal server error"
             })
 
 
@@ -745,7 +745,7 @@ def api_institutional_metrics():
         logger.error(f"Error calculating institutional metrics: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'metrics': None
         }), 500
 
@@ -851,7 +851,7 @@ def api_generate_pdf_report():
         logger.error(f"Error generating PDF report: {e}")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': "Internal server error"
         }), 500
 
 
@@ -991,7 +991,7 @@ def api_health_score():
         logger.error(f"Health score calculation error: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'health_score': 0
         }), 500
 
@@ -1085,7 +1085,7 @@ def api_live_status():
         logger.error(f"Live status error: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'current_activity': {'status': 'ERROR', 'detail': 'Unable to fetch status'}
         }), 500
 
@@ -1210,7 +1210,7 @@ def api_quick_insights():
         logger.error(f"Quick insights error: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'insights': []
         }), 500
 
@@ -1341,7 +1341,7 @@ def calibration_progress():
         logger.error(f"Calibration progress error: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'phases': []
         }), 500
 
@@ -1473,7 +1473,7 @@ def recommended_actions():
         logger.error(f"Recommended actions error: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'actions': []
         }), 500
 
@@ -1684,7 +1684,7 @@ def api_comparative_metrics():
         logger.error(f"Comparative metrics error: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'comparison': None
         }), 500
 
@@ -1822,7 +1822,7 @@ def api_pnl_breakdown():
         logger.error(f"PnL breakdown error: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'breakdown': None
         }), 500
 
@@ -2071,7 +2071,7 @@ def api_regime_dashboard():
         logger.error(f"Regime dashboard error: {e}")
         return jsonify({
             'success': False,
-            'error': str(e),
+            'error': "Internal server error",
             'regime': None
         }), 500
 
@@ -2156,7 +2156,7 @@ def api_time_heatmap():
         
     except Exception as e:
         logger.error(f"Time heatmap error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': "Internal server error"}), 500
 
 
 @core_bp.route('/api/metrics/correlation')
@@ -2271,7 +2271,7 @@ def api_correlation_matrix():
         
     except Exception as e:
         logger.error(f"Correlation matrix error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': "Internal server error"}), 500
 
 
 def _calculate_opportunity_tracker(conn):
@@ -2570,7 +2570,7 @@ def api_learning_insights():
         
     except Exception as e:
         logger.error(f"Learning insights error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': "Internal server error"}), 500
 
 
 @core_bp.route('/api/live-metrics')
