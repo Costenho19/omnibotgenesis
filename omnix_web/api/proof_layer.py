@@ -152,6 +152,7 @@ def _fetch_receipt_all_tiers(receipt_id_clean: str) -> "tuple[tuple | None, str 
             return row, "HOT"
 
         # ── WARM ───────────────────────────────────────────────────────────────
+        _warm_failed = False
         try:
             cur.execute(
                 f"""
@@ -167,9 +168,23 @@ def _fetch_receipt_all_tiers(receipt_id_clean: str) -> "tuple[tuple | None, str 
                 cur.close()
                 return row, "WARM"
         except Exception as _warm_exc:
+            _warm_failed = True
             logger.debug("[/verify] WARM table not available: %s", _warm_exc)
+            # FIX-1: cursor is in undefined state after exception —
+            # close and open a fresh cursor so the COLD block is not affected.
+            try:
+                cur.close()
+            except Exception:
+                pass
+            try:
+                cur = conn.cursor()
+            except Exception as _cur_exc:
+                logger.error("[/verify] Cannot create cursor for COLD lookup: %s", _cur_exc)
+                return None, None
 
         # ── COLD (via archival index) ──────────────────────────────────────────
+        # FIX-2: track whether COLD had a retrieval error (distinct from "not found")
+        _cold_retrieval_error = False
         try:
             cur.execute(
                 """
@@ -188,14 +203,34 @@ def _fetch_receipt_all_tiers(receipt_id_clean: str) -> "tuple[tuple | None, str 
                 )
                 db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
                 svc    = ReceiptArchivalService(db_url=db_url)
-                receipt_dict, _ = svc.fetch_receipt_any_tier(conn, receipt_id_clean)
+                try:
+                    receipt_dict, _ = svc.fetch_receipt_any_tier(conn, receipt_id_clean)
+                except Exception as _cold_fetch_exc:
+                    # FIX-2: cold payload corrupted/unreadable — escalate to ERROR,
+                    # caller gets (None, None) but we log the true cause.
+                    _cold_retrieval_error = True
+                    logger.error(
+                        "[/verify] COLD retrieval error receipt_id=%s location=%s — "
+                        "payload may be corrupted: %s",
+                        receipt_id_clean, location, _cold_fetch_exc,
+                    )
+                    receipt_dict = None
+
                 if receipt_dict:
                     # Reconstruct tuple in the same column order
                     row_dict = {k: receipt_dict.get(k) for k in _VERIFY_COLS}
                     cur.close()
                     return tuple(row_dict[c] for c in _VERIFY_COLS), "COLD"
+                elif not _cold_retrieval_error:
+                    # Index says ARCHIVED but fetch returned nothing — gap in index
+                    logger.error(
+                        "[/verify] COLD index entry exists but fetch returned None "
+                        "receipt_id=%s location=%s — index/storage out of sync",
+                        receipt_id_clean, location,
+                    )
         except Exception as _cold_exc:
-            logger.debug("[/verify] COLD lookup error: %s", _cold_exc)
+            logger.error("[/verify] COLD index lookup error receipt_id=%s: %s",
+                         receipt_id_clean, _cold_exc)
 
         cur.close()
         return None, None
