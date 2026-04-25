@@ -57,6 +57,7 @@
 
 | Fecha | Fix | Commit |
 |---|---|---|
+| 25 Abr 2026 | **OMNIX Hardcore Audit Suite v2.0 — TODAS LAS TAREAS COMPLETADAS (T001-T013)**: AML/Fraud/CAG fail-safe defaults (`admissible=False`), 12 except:pass→logger, TESTING guard de producción, ADR-120 creado, DB migrations ejecutadas, replit.md actualizado. 39 tests pasan. | — |
 | 25 Abr 2026 | **ADR-120 — AVM Auto-Recalibración**: `evaluate()` cachea señales live en `_last_seen_signals[domain]`. Nuevo método `auto_recalibrate_stale_domains(interval_h=72, max_drift=80%)`. Hilo daemon `AVM-AutoRecalib` en `server.py`: warmup=30min, ciclo=24h. Políticas: (1) Skip si no hay señales cacheadas (no recalibra a ciegas). (2) Recalibra si `age>=72h` OR `drift>=threshold`. (3) Safety guard: drift>80% → skip + WARNING (posible crisis, requiere revisión humana). (4) Persiste en JSON + DB. Lógica completamente automática. | — |
 | 25 Abr 2026 | **ADR-119 — Governance Hardening**: (1) Threshold dinámico de coherencia: cuando BS=HIGH, `veto_critical` escala de 30%→50% y `veto_normal` de 45%→65%. (2) AML `proxy_mode` explícito: `AMLVetoResult.proxy_mode=True` + WARNING en log cuando DB de frecuencia no disponible. (3) `run_full_analysis(persist=False)` para análisis de solo lectura. (4) `processing_time_ms` en `decision_receipts` — captura latencia real por decisión. | — |
 | 24 Abr 2026 | **MCM v1.1 (ADR-117)** — DEFERRAL_TRAJECTORY: 4º signal MCM. Time-series de HOLD rate — velocity, accel, std. Detecta degradación antes de que el cross-window drift lo confirme. 45 tests pasan. 4 señales en governance_drift_log. Endpoint REST activo. | — |
@@ -104,9 +105,12 @@ Fixes adicionales 25 Abr 2026 (ADR-119):
 
 ### T001 — AML, Fraud, CAG Fail-Closed (Critical A-01 / ADR-116) ✅
 - **Archivos**: `omnix_core/governance/aml_gate.py`, `fraud_gate.py`, `context_admission_gate.py`
-- **Código**: ya era fail-closed (`except Exception → admissible=False, pass_through=False, evaluation_state="FAIL_CLOSED"`)
-- **Fix real**: docstrings decían "Fail-safe: pass-through" — corregidos a "Fail-closed: BLOCK (ADR-116)"
-- **Verificado con tests**: `TestGatesFailClosed` en `tests/test_ai_diagnostic_mode.py` (3 tests: AML, CAG, Fraud) — todos PASS
+- **Exception handlers**: ya eran fail-closed (`except Exception → admissible=False, pass_through=False, evaluation_state="FAIL_CLOSED"`)
+- **Fix real (25 Abr 2026 — Audit v2.0)**: dataclass defaults ahora fail-safe:
+  - `AMLVetoResult.admissible: bool = False` — instancia sin args no admite por defecto
+  - `FraudVetoResult.admissible: bool = False` — idem (ADR-116)
+  - `CAGResult.admitted: bool = False` — idem (ADR-116)
+- **Verificado con tests**: `TestGatesFailClosed` en `tests/test_ai_diagnostic_mode.py` — todos PASS
 
 ### T002 — webhook_url columns al startup (Critical C-02) ✅
 - **Archivo**: `omnix_web/api/server.py` líneas 519-526
@@ -135,16 +139,16 @@ Fixes adicionales 25 Abr 2026 (ADR-119):
 - **FALLBACK_DATA**: todos ceros — no hay datos inventados, solo placeholders con valor 0
 
 ### T008 — except:pass → logger.warning (Medium A-05) ✅
-- **34 bloques** identificados con AST scan. Reparados los 8 críticos:
-  - `avm_db_bridge.py:242` → `logger.warning("Could not read version/genesis...")`
-  - `avm_db_bridge.py:366` → `logger.warning("fire_avm_alert(SCHEMA_MISMATCH_LOAD) failed...")`
-  - `jurisdiction_gate.py:311` → `logger.warning("Could not validate OFAC list age...")`
-  - `structural_admissibility_engine.py:256` → `logger.warning("Layer0 snapshot record failed...")`
-  - `assumption_validity_monitor.py:630` → `logger.warning("fire_avm_alert(SCHEMA_MISMATCH) failed...")`
-  - `assumption_validity_monitor.py:655` → `logger.warning("fire_avm_alert(SCHEMA_ANOMALY_PARTIAL) failed...")`
-  - `assumption_validity_monitor.py:693` → `logger.warning("fire_avm_alert(DRIFT_ANOMALY) failed...")`
-  - `auto_trading_bot.py:1169` → `logger.debug("shadow_trade_events query failed, falling back...")`
-- **Aceptables como pass**: `conn.close()` cleanup, `ImportError` fallbacks, rollback() cleanup
+- **Ronda 1 (24 Abr 2026)**: 8 bloques críticos reparados (avm_db_bridge, jurisdiction_gate, SAE, AVM alerts, auto_trading_bot)
+- **Ronda 2 (25 Abr 2026 — Audit v2.0)**: 12 bloques adicionales reparados:
+  - `avm_engine.py:95,192` → `logger.debug("disk glob failed...")` (glob cuando snapshots dir no existe)
+  - `assumption_validity_monitor.py:788` → `logger.debug("Disk glob failed...")` (mismo patrón)
+  - `meta_coherence_monitor.py:1088,1099` → `logger.debug(...)` (datetime/json parse en análisis MCM)
+  - `trajectory_invariant_engine.py:573` → `logger.debug("Rollback also failed...")` (rollback anidado)
+  - `execution_integrity.py:189,686,691,734` → `logger.warning(...)` (contradiction detection, violation logging, record_decision, DB query)
+  - `position_monitor.py:157,210` → `logger.warning(...)` (balance query, daily stats)
+  - `risk_guardian.py:550` → `logger.debug(...)` (timestamp parse con fallback a utcnow())
+- **Política de niveles**: `logger.debug` en fallbacks benignos con default seguro; `logger.warning` en paths de governance críticos
 
 ### T009 — print() → logger en archivos críticos ✅
 - **SAE** `structural_admissibility_engine.py` línea 1019: `print(result)` → `logger.debug("[SAE] StructuredRejectionRecord: %s", result)` — **fix real aplicado 25 Abr 2026**
@@ -153,8 +157,14 @@ Fixes adicionales 25 Abr 2026 (ADR-119):
 
 ### T010 — SECRET_KEY y TELEGRAM_ADMIN_ID validación (Critical C-03/C-05) ✅
 - **Archivo**: `omnix_config/settings.py` líneas 150-160
-- **Estado**: ya tenía `_cfg_logger.warning()` si `SECRET_KEY == 'omnix-enterprise-secret-key-change-in-prod'` y si `TELEGRAM_ADMIN_ID == '7014748854'` (valores hardcoded)
-- **Railway**: configurar `SECRET_KEY` y `TELEGRAM_ADMIN_USER_ID` como env vars obligatorias
+- **Estado**: `_cfg_logger.warning()` cuando SECRET_KEY o TELEGRAM_ADMIN_ID usan valores hardcoded — warnings activos en startup
+- **Fix adicional (25 Abr 2026)**: `env_manager.py` — TESTING bypass protegido con guard de producción:
+  ```python
+  is_production = (ENVIRONMENT == 'production' OR RAILWAY_ENVIRONMENT_NAME == 'production')
+  is_test_env = not is_production and (PYTEST_CURRENT_TEST OR TESTING=true)
+  ```
+  → `TESTING=true` NO tiene efecto en Railway production aunque esté seteado accidentalmente
+- **Railway**: ver tabla "Variables Railway REQUERIDAS" abajo
 
 ### T011 — Tests diagnostic_mode + fail-closed gates ✅
 - **Archivo**: `tests/test_ai_diagnostic_mode.py` — **22 tests, todos PASS**
@@ -167,7 +177,8 @@ Fixes adicionales 25 Abr 2026 (ADR-119):
 - Responden "en desarrollo — usa /buscar o /market" en lugar de silencio
 
 ### T013 — replit.md actualizado ✅
-- Esta sección documenta todos los T001-T012 con archivo, línea, estado real (pre-existente vs arreglado en sesión)
+- **Ronda 1 (24 Abr 2026)**: T001-T012 documentados con archivo, línea, estado real
+- **Ronda 2 (25 Abr 2026 — Audit v2.0)**: Actualizado con fixes adicionales — fail-safe defaults, 12 except:pass, TESTING guard, ADR-120, DB migrations ejecutadas, Railway env vars documentadas
 
 ---
 

@@ -51,7 +51,7 @@ class FraudVetoResult:
     fraud evaluation is NOT equivalent to perfect integrity.
     evaluation_state distinguishes DISABLED / FAILSAFE / EVALUATED for audit dashboards.
     """
-    admissible: bool
+    admissible: bool = False          # Default fail-safe: not admitted unless explicitly set (ADR-116)
     pass_through: bool = False
     reason: str = ""
     asset: str = ""

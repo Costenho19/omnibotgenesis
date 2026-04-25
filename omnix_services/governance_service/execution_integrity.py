@@ -186,8 +186,8 @@ class AdmissibilityConsistencyValidator:
                         "description": rule["description"],
                         "severity": rule["severity"],
                     })
-            except Exception:
-                pass
+            except Exception as _e:
+                logger.warning(f"[EI] Contradiction rule check failed: {_e}")
 
         total_signals = len([k for k in signals if k in [
             "probability_score", "risk_exposure", "signal_coherence",
@@ -683,13 +683,13 @@ class ExecutionBoundaryIntegrityProtocol:
         if has_violation and receipt_id:
             try:
                 self.acv.log_violation(receipt_id, asset, consistency, signals)
-            except Exception:
-                pass
+            except Exception as _e:
+                logger.warning(f"[EI] acv.log_violation failed for {asset} receipt={receipt_id}: {_e}")
 
         try:
             self.npm.record_decision(decision, dominant_checkpoint, asset, has_violation)
-        except Exception:
-            pass
+        except Exception as _e:
+            logger.warning(f"[EI] npm.record_decision failed for {asset}: {_e}")
 
         integrity_score = 100.0
         if not verification.get("is_valid", True):
@@ -731,8 +731,8 @@ class ExecutionBoundaryIntegrityProtocol:
                     )
                     row = cur.fetchone()
                     recent_violations = int(row[0]) if row else 0
-            except Exception:
-                pass
+            except Exception as _e:
+                logger.warning(f"[EI] admissibility_violations DB query failed: {_e}")
             finally:
                 conn.close()
 

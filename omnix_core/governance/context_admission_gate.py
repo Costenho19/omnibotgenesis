@@ -66,7 +66,7 @@ class CAGResult:
       "FAILSAFE"  — module error; score=0 means not evaluated
       "EVALUATED" — gate ran; score reflects actual market conditions checked
     """
-    admitted: bool
+    admitted: bool = False            # Default fail-safe: not admitted unless explicitly set (ADR-116)
     pass_through: bool = False
     reason: str = ""
     admission_score: float = 0.0

@@ -570,8 +570,8 @@ class TrajectoryInvariantEngine:
             logger.debug(f"[TIE] Persist failed for {asset}: {e}")
             try:
                 self.conn.rollback()
-            except Exception:
-                pass
+            except Exception as _e:
+                logger.debug(f"[TIE] Rollback also failed for {asset}: {_e}")
 
     # ── Helpers ─────────────────────────────────────────────────────────────────
 

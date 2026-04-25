@@ -547,8 +547,8 @@ class AIRiskGuardian:
         if isinstance(timestamp, str):
             try:
                 return datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-            except Exception:
-                pass
+            except Exception as _e:
+                logger.debug(f"[RiskGuardian] Timestamp parse failed for '{timestamp}': {_e} — using utcnow() fallback")
         return datetime.utcnow()
     
     def get_adjusted_position_size(self, original_size: float) -> float:

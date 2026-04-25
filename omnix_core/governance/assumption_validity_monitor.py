@@ -785,8 +785,8 @@ class AssumptionValidityMonitor:
             for p in self._snapshots_dir.glob("*_calibration.json"):
                 d = p.stem.replace("_calibration", "")
                 domains.add(d)
-        except Exception:
-            pass
+        except Exception as _e:
+            logger.debug(f"[AVM.AUTO] Disk glob failed (snapshots dir may not exist yet): {_e}")
 
         if not domains:
             logger.info("[AVM.AUTO] No snapshots found — nothing to recalibrate")

@@ -306,12 +306,13 @@ except Exception:
 
 # Import AML Gate — ADR-047 / CP-9
 try:
-    from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig, load_aml_config_from_env
+    from omnix_core.governance.aml_gate import AMLGate, AMLGateConfig, AMLVetoResult, load_aml_config_from_env
     AML_GATE_AVAILABLE = True
     logger.info("🏦 AML Governance Gate (ADR-047 / CP-9) disponible")
 except Exception:
     AMLGate = None
     AMLGateConfig = None
+    AMLVetoResult = None
     load_aml_config_from_env = None
     AML_GATE_AVAILABLE = False
     logger.warning("⚠️ AML Gate no disponible - CP-9 pass-through")

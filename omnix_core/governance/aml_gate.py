@@ -49,7 +49,7 @@ AML_FREQUENCY_THRESHOLD_DEFAULT: int = 10
 
 @dataclass
 class AMLVetoResult:
-    admissible: bool
+    admissible: bool = False          # Default fail-safe: not admitted unless explicitly set
     pass_through: bool = False
     reason: str = ""
     asset: str = ""

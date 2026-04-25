@@ -1085,8 +1085,8 @@ class MetaCoherenceMonitor:
                     result.calibration_age_hours = round(
                         (now_dt - cal_dt).total_seconds() / 3600.0, 1
                     )
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logger.debug(f"[MCM] calibration_age parse failed for domain snapshot: {_e}")
 
             result.age_fraction = round(
                 result.calibration_age_hours / max(result.max_age_hours, 1.0), 3
@@ -1096,8 +1096,8 @@ class MetaCoherenceMonitor:
             try:
                 bs = baseline_raw if isinstance(baseline_raw, dict) else json.loads(baseline_raw or "{}")
                 result.baseline_signal_coherence = float(bs.get("signal_coherence", 0.0))
-            except Exception:
-                pass
+            except Exception as _e:
+                logger.debug(f"[MCM] baseline_signal_coherence parse failed: {_e}")
 
             # Compute BLOCK rate at the time of calibration (±7 days around cal_at)
             if cal_at:
