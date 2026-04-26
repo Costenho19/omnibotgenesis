@@ -1,26 +1,24 @@
 {
-  "snapshot_id": "AVM-EFCB730444",
-  "parameter_version": "1.efcb730444",
+  "snapshot_id": "AVM-7FEED9F11C",
+  "parameter_version": "1.7feed9f11c",
   "domain": "real_estate",
   "baseline_signals": {
-    "risk_exposure": 19.9,
-    "signal_coherence": 62.8,
-    "logic_consistency": 86.6,
-    "probability_score": 69.8,
-    "stress_resilience": 60.4,
-    "trend_persistence": 63.8
+    "risk_exposure": 15.41,
+    "signal_coherence": 50.77,
+    "logic_consistency": 99.58,
+    "probability_score": 60.84,
+    "stress_resilience": 59.28,
+    "trend_persistence": 58.54
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "Recalibraci\u00f3n definitiva Q2 2026 \u2014 se\u00f1ales corregidas a SIGNAL_WEIGHTS, promedio 13,245 decisiones reales 2026-04-20",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=120h>=72h",
   "tags": [
-    "recalibrated",
-    "q2-2026",
-    "real-estate",
-    "2026-04-20",
-    "signal-keys-fixed"
+    "AUTO_RECALIBRATION",
+    "interval_72h",
+    "prev_drift_7.5"
   ],
-  "calibrated_at": "2026-04-20T07:28:06.772372+00:00",
-  "calibrated_at_epoch": 1776670086.772372
+  "calibrated_at": "2026-04-25T07:35:02.940459+00:00",
+  "calibrated_at_epoch": 1777102502.940459
 }
