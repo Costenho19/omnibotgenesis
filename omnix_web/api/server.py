@@ -84,9 +84,13 @@ def add_security_headers(response):
         "frame-ancestors 'none';"
     )
     if request.path.startswith('/api/'):
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
+        # ADR-130 v2: /api/trust/status-list uses public ETag caching (max-age=300)
+        # All other API endpoints remain no-cache for security.
+        _CACHEABLE_PATHS = ('/api/trust/status-list',)
+        if not any(request.path.startswith(p) for p in _CACHEABLE_PATHS):
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
     return response
 
 @app.errorhandler(500)

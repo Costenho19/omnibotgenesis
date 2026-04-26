@@ -95,7 +95,7 @@ def _require_admin_auth(request) -> Tuple[Optional[str], Optional[Any]]:
         conn = _get_db_conn()
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT client_id, role FROM b2b_clients WHERE key_hash = %s AND active = true",
+                "SELECT client_id, role FROM b2b_clients WHERE api_key_hash = %s AND is_active = TRUE",
                 (key_hash,),
             )
             row = cur.fetchone()
@@ -165,7 +165,7 @@ def _get_client_webhook_config(client_id: str) -> Optional[Dict[str, str]]:
                 """
                 SELECT webhook_url, webhook_secret
                 FROM b2b_clients
-                WHERE client_id = %s AND active = true
+                WHERE client_id = %s AND is_active = TRUE
                   AND webhook_url IS NOT NULL
                 """,
                 (client_id,),
@@ -178,10 +178,10 @@ def _get_client_webhook_config(client_id: str) -> Optional[Dict[str, str]]:
         if not encrypted_secret:
             return None
         try:
-            from api.gov_auth_rbac import _decrypt_secret
+            from api.gov_auth_rbac import _decrypt_webhook_secret as _decrypt_secret
         except ImportError:
             try:
-                from gov_auth_rbac import _decrypt_secret
+                from gov_auth_rbac import _decrypt_webhook_secret as _decrypt_secret
             except ImportError:
                 return None
         secret = _decrypt_secret(encrypted_secret)

@@ -212,7 +212,7 @@ class ReceiptToVC:
         if session_id:
             block["oversightSessionId"] = session_id
         if eqs_score is not None:
-            block["epistemicQualityScore"] = round(float(eqs_score), 4)
+            block["eqsScore"] = round(float(eqs_score), 4)
         return block
 
     def _parse_timestamp(self, ts: Any) -> datetime:
