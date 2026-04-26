@@ -31,6 +31,7 @@ import IntegrationGuide from './pages/IntegrationGuide'
 import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import ProofLayer from './pages/ProofLayer'
+import IndependentVerification from './pages/IndependentVerification'
 import './index.css'
 
 function App() {
@@ -68,6 +69,7 @@ function App() {
           <Route path="/integration" element={<IntegrationGuide />} />
           <Route path="/my-report" element={<ClientReportDownload />} />
           <Route path="/proof" element={<ProofLayer />} />
+          <Route path="/verify-independently" element={<IndependentVerification />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />

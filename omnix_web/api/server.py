@@ -1575,6 +1575,91 @@ def serve_did_document():
         return jsonify({'error': 'DID document not found'}), 404
 
 
+@app.route('/.well-known/omnix-public-key.json', methods=['GET'])
+def well_known_public_key():
+    """
+    RFC 8615 well-known URI for the OMNIX active signing public key.
+    Any third party can fetch this to obtain the current PQC public key
+    and verify any OMNIX receipt independently — without DB access.
+
+    External trust anchor for eIDAS / ARF interoperability (ADR-085).
+    """
+    import time as _time
+    now = datetime.utcnow().isoformat() + "Z"
+    try:
+        from api.omnix_engine.federated_trust import _get_runtime_public_key, _get_signing_algorithm
+        pub_key = _get_runtime_public_key()
+        algo    = _get_signing_algorithm()
+    except Exception:
+        try:
+            from omnix_engine.federated_trust import _get_runtime_public_key, _get_signing_algorithm
+            pub_key = _get_runtime_public_key()
+            algo    = _get_signing_algorithm()
+        except Exception:
+            pub_key = None
+            algo    = "dilithium3"
+
+    import hashlib as _hl, base64 as _b64
+    fingerprint = None
+    if pub_key:
+        try:
+            raw = _b64.b64decode(pub_key)
+            fingerprint = _hl.sha256(raw).hexdigest()[:32]
+        except Exception:
+            pass
+
+    payload = {
+        "spec":          "OMNIX Public Key Manifest v1.0",
+        "issuer":        "OMNIX Quantum Ltd",
+        "issuer_did":    "did:web:omnixquantum.net",
+        "issuer_url":    "https://omnixquantum.net",
+        "published_at":  now,
+        "key": {
+            "id":              "did:web:omnixquantum.net#pqc-key-1",
+            "algorithm":       algo or "dilithium3",
+            "standard":        "NIST FIPS 204 — ML-DSA-65 (Dilithium-3)",
+            "public_key_b64":  pub_key,
+            "fingerprint_sha256": fingerprint,
+            "use":             "sig",
+            "key_ops":         ["verify"],
+            "note": (
+                "This key signs all OMNIX governance decision receipts. "
+                "Use it to verify signatures offline — no OMNIX server needed."
+            ),
+        },
+        "how_to_verify": {
+            "local_script":  "https://omnixquantum.net/omnix_verify.py",
+            "api_endpoint":  "https://omnixquantum.net/api/trust/verify",
+            "did_document":  "https://omnixquantum.net/.well-known/did.json",
+            "trust_registry":"https://omnixquantum.net/api/trust/registry",
+            "guide":         "https://omnixquantum.net/verify-independently",
+        },
+        "rotation_policy": {
+            "policy":   "ADR-043 — Crypto-agility with provider abstraction",
+            "current":  "Stable per deployment (set via OMNIX_SIGNING_PUBLIC_KEY_B64 env var)",
+            "rotation": "Manual, announced 30 days in advance via trust registry changelog",
+        },
+        "regulatory_alignment": [
+            "eIDAS 2.0 — Electronic signatures and trust services",
+            "EU AI Act — Article 14 human oversight traceability",
+            "ARF (EU Digital Identity Architecture Reference Framework)",
+            "NIST FIPS 204 (ML-DSA / Dilithium-3)",
+            "MiFID II — 5-year decision record retention",
+        ],
+    }
+    return app.response_class(
+        response=json.dumps(payload, indent=2),
+        status=200,
+        mimetype='application/json',
+        headers={
+            'Cache-Control':               'no-cache, must-revalidate',
+            'Access-Control-Allow-Origin': '*',
+            'X-OMNIX-Key-Algorithm':       algo or 'dilithium3',
+            'X-OMNIX-DID':                 'did:web:omnixquantum.net',
+        }
+    )
+
+
 @app.route('/api/trust/registry', methods=['GET'])
 def trust_registry():
     """
