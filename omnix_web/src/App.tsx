@@ -33,6 +33,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import ProofLayer from './pages/ProofLayer'
 import IndependentVerification from './pages/IndependentVerification'
 import GettingStarted from './pages/GettingStarted'
+import ARFCompliance from './pages/ARFCompliance'
 import './index.css'
 
 function App() {
@@ -72,6 +73,7 @@ function App() {
           <Route path="/proof" element={<ProofLayer />} />
           <Route path="/verify-independently" element={<IndependentVerification />} />
           <Route path="/docs" element={<GettingStarted />} />
+          <Route path="/eidas" element={<ARFCompliance />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />

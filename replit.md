@@ -1128,3 +1128,36 @@ cd sdk/node
 npm install && npm run build
 npm publish --access public
 ```
+
+---
+
+## Fase C — eIDAS 2.0 / ARF Interoperability
+
+**Estado:** ✅ COMPLETO — eIDAS 2.0 ARF 1.4 / OpenID4VCI draft-13 / W3C VC 1.1
+
+### Nuevos endpoints (públicos, no requieren autenticación)
+| Endpoint | Descripción |
+|---|---|
+| `GET /.well-known/openid-credential-issuer` | OpenID4VCI credential issuer metadata (EUDI Wallet discovery) |
+| `GET /.well-known/omnix-arf-profile.json` | ARF credential profile completo |
+| `POST /api/governance/receipt/vc` | Convierte un receipt OMNIX → W3C VC (requiere API key) |
+| `include_vc: true` en `/evaluate` | Respuesta incluye el VC completo + ARF links |
+
+### Archivos creados/modificados
+- `omnix_web/public/.well-known/openid-credential-issuer` — OpenID4VCI metadata JSON
+- `omnix_web/public/.well-known/omnix-arf-profile.json` — ARF profile con 10 frameworks
+- `omnix_web/api/server.py` — 2 nuevas rutas `/.well-known/`
+- `omnix_web/api/gov_blueprint.py` — `include_vc` en evaluate + endpoint `/receipt/vc`
+- `omnix_web/src/pages/ARFCompliance.tsx` — página `/eidas` con docs completas
+- `omnix_web/src/App.tsx` — ruta `/eidas`
+- `omnix_web/src/pages/CommercialLanding.tsx` — link "eIDAS" en navbar
+
+### VC Structure
+```json
+{
+  "@context": ["https://www.w3.org/2018/credentials/v1", "omnix-receipt-v1.jsonld"],
+  "type": ["VerifiableCredential", "OmnixGovernanceCredential"],
+  "issuer": { "id": "did:web:omnixquantum.net" },
+  "proof": { "type": "Dilithium2021", "verificationMethod": "did:web:omnixquantum.net#pqc-key-1" }
+}
+```

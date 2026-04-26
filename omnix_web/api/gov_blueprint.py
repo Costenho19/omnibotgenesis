@@ -1424,7 +1424,7 @@ def api_governance_evaluate():
         }), 400
 
     # ── Body-level schema validation — ADR-080 ──────────────────────────────
-    _ALLOWED_EVALUATE_KEYS = {'signals', 'asset', 'domain', 'metadata', 'compliance_config'}
+    _ALLOWED_EVALUATE_KEYS = {'signals', 'asset', 'domain', 'metadata', 'compliance_config', 'include_vc'}
     unknown_keys = set(body.keys()) - _ALLOWED_EVALUATE_KEYS
     if unknown_keys:
         return jsonify({
@@ -1656,6 +1656,28 @@ def api_governance_evaluate():
     # Monthly usage alert (non-blocking)
     _check_monthly_alert(client_id)
 
+    # ── W3C Verifiable Credential — ARF/eIDAS 2.0 (ADR-084) ──────────────────
+    if body.get('include_vc'):
+        try:
+            try:
+                from api.omnix_engine.receipt_to_vc import ReceiptToVC, build_jurisdiction_semantics
+            except ImportError:
+                from omnix_engine.receipt_to_vc import ReceiptToVC, build_jurisdiction_semantics
+            vc_receipt = dict(receipt)
+            vc_receipt['domain']  = domain
+            vc_receipt['asset']   = asset
+            vc_receipt['decision'] = evaluation['decision']
+            vc_receipt['veto_chain'] = evaluation.get('veto_chain', [])
+            vc = ReceiptToVC().convert(vc_receipt)
+            vc['credentialSubject']['jurisdiction_semantics'] = build_jurisdiction_semantics(
+                evaluation.get('veto_chain', []), evaluation['decision'], domain
+            )
+            response['verifiable_credential'] = vc
+            response['arf_profile'] = 'https://omnixquantum.net/.well-known/omnix-arf-profile.json'
+            response['openid4vci']  = 'https://omnixquantum.net/.well-known/openid-credential-issuer'
+        except Exception as _ve:
+            logger.debug(f"VC generation skipped (non-critical): {_ve}")
+
     # ── Generic Webhook Push (ADR-053) ────────────────────────────────────────
     try:
         webhook_cfg = get_client_webhook(client_id)
@@ -1694,6 +1716,101 @@ def api_governance_evaluate():
         logger.debug(f"Webhook push thread skipped: {_we}")
 
     return jsonify(response), 200
+
+
+# ── W3C VERIFIABLE CREDENTIAL ISSUER — ARF/eIDAS 2.0 (ADR-084) ───────────────
+
+@governance_bp.route('/api/governance/receipt/vc', methods=['POST'])
+def api_governance_receipt_vc():
+    """
+    ADR-084: W3C Verifiable Credential endpoint — OpenID4VCI compatible.
+    Converts an OMNIX governance receipt into a W3C VC (JSON-LD).
+    Conforms to: eIDAS 2.0 ARF 1.4 / OpenID4VCI draft-13 / W3C VC 1.1.
+
+    Body: { "receipt": <OMNIX receipt dict> }
+    OR:   { "receipt_id": "OMNIX-TRD-..." }  (fetches from DB)
+
+    Optional: { "include_jurisdiction_semantics": true }
+
+    Returns: { "verifiable_credential": <W3C VC>, "arf_profile": "...", ... }
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    data = request.get_json(silent=True) or {}
+
+    receipt = data.get('receipt')
+    receipt_id = data.get('receipt_id')
+
+    if not receipt and not receipt_id:
+        return jsonify({
+            'error': 'Provide either { "receipt": <receipt dict> } or { "receipt_id": "OMNIX-..." }',
+            'status': 400,
+            'arf_profile': 'https://omnixquantum.net/.well-known/omnix-arf-profile.json',
+        }), 400
+
+    if not receipt and receipt_id:
+        try:
+            from api.omnix_engine.receipt_engine import DecisionReceiptEngine as _RE
+        except ImportError:
+            try:
+                from omnix_engine.receipt_engine import DecisionReceiptEngine as _RE
+            except Exception:
+                _RE = None
+        if _RE:
+            try:
+                engine = _RE()
+                db_rec = engine.get_receipt_by_id(str(receipt_id))
+                if db_rec:
+                    receipt = db_rec
+            except Exception as _e:
+                logger.debug(f"receipt fetch by ID failed: {_e}")
+        if not receipt:
+            return jsonify({'error': f'Receipt {receipt_id} not found.', 'status': 404}), 404
+
+    if not isinstance(receipt, dict):
+        return jsonify({'error': '"receipt" must be a JSON object.', 'status': 400}), 400
+
+    include_semantics = bool(data.get('include_jurisdiction_semantics', True))
+
+    try:
+        try:
+            from api.omnix_engine.receipt_to_vc import ReceiptToVC, build_jurisdiction_semantics
+        except ImportError:
+            from omnix_engine.receipt_to_vc import ReceiptToVC, build_jurisdiction_semantics
+
+        vc = ReceiptToVC().convert(receipt)
+
+        if include_semantics:
+            veto_chain = receipt.get('veto_chain', [])
+            decision   = receipt.get('decision', 'UNKNOWN')
+            domain     = receipt.get('domain', 'generic')
+            vc['credentialSubject']['jurisdiction_semantics'] = build_jurisdiction_semantics(
+                veto_chain, decision, domain
+            )
+
+        return jsonify({
+            'verifiable_credential': vc,
+            'arf_profile':    'https://omnixquantum.net/.well-known/omnix-arf-profile.json',
+            'openid4vci':     'https://omnixquantum.net/.well-known/openid-credential-issuer',
+            'did_document':   'https://omnixquantum.net/.well-known/did.json',
+            'trust_registry': 'https://omnixquantum.net/api/trust/registry',
+            'verify_url':     'https://omnixquantum.net/api/trust/verify',
+            'issuer_did':     'did:web:omnixquantum.net',
+            'schema':         'https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld',
+            'conformance':    'eIDAS-2.0-ARF-1.4 / OpenID4VCI-draft-13 / W3C-VC-1.1',
+        }), 200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'X-OMNIX-ARF-Conformance': 'eIDAS-2.0-ARF-1.4',
+            'X-OMNIX-VC-Issuer': 'did:web:omnixquantum.net',
+        }
+
+    except Exception as e:
+        ref_id = str(uuid.uuid4())[:8]
+        logger.error(f"VC generation error ref={ref_id}: {e}")
+        return jsonify({'error': 'VC generation failed', 'status': 500, 'reference': ref_id}), 500
 
 
 # ── CLIENT RECEIPTS ENDPOINT ──────────────────────────────────────────────────

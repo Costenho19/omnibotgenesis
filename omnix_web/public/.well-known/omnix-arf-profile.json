@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnixquantum.net/.well-known/omnix-arf-profile.json",
+  "title": "OMNIX Governance Credential — ARF Profile",
+  "description": "eIDAS 2.0 Architecture Reference Framework (ARF) compatible profile for OMNIX governance credentials. Conformance: EUDI ARF 1.4 / OpenID4VCI / W3C VC 1.1.",
+  "version": "1.0.0",
+  "issued": "2026-04-26",
+  "issuer": {
+    "did": "did:web:omnixquantum.net",
+    "name": "OMNIX Quantum Ltd",
+    "url": "https://omnixquantum.net",
+    "jurisdiction": "United Kingdom",
+    "company_number": "UK — 71-75 Shelton Street, London WC2H 9JQ"
+  },
+  "credential_type": {
+    "id": "OmnixGovernanceCredential",
+    "vc_types": ["VerifiableCredential", "OmnixGovernanceCredential"],
+    "jsonld_context": "https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld",
+    "json_schema": "https://omnixquantum.net/schemas/omnix-receipt-schema-v6.5.4e.json",
+    "arf_conformance": "eIDAS-2.0-ARF-1.4",
+    "openid4vci_endpoint": "https://omnixquantum.net/api/governance/receipt/vc",
+    "credential_issuer_metadata": "https://omnixquantum.net/.well-known/openid-credential-issuer"
+  },
+  "cryptography": {
+    "primary_algorithm": "Dilithium-3",
+    "nist_standard": "NIST FIPS 204",
+    "iana_algorithm_id": "CRYDI3",
+    "hash_algorithm": "SHA-256",
+    "quantum_resistant": true,
+    "key_discovery": "https://omnixquantum.net/api/trust/registry",
+    "did_verification_method": "did:web:omnixquantum.net#pqc-key-1",
+    "key_format": "JsonWebKey2020"
+  },
+  "proof_block": {
+    "type": "Dilithium2021",
+    "proof_purpose": "assertionMethod",
+    "verification_method": "did:web:omnixquantum.net#pqc-key-1",
+    "offline_verification": true,
+    "verifier_script": "https://omnixquantum.net/omnix_verify.py",
+    "verifier_page": "https://omnixquantum.net/verify-independently"
+  },
+  "credential_subject_schema": {
+    "required": ["receipt_id", "decision", "domain", "asset", "content_hash", "policy_version"],
+    "properties": {
+      "receipt_id":       { "type": "string", "pattern": "^OMNIX-[A-Z]{3}-[a-f0-9]{16}$" },
+      "decision":         { "type": "string", "enum": ["APPROVED", "BLOCKED", "HOLD"] },
+      "domain":           { "type": "string", "enum": ["trading", "islamic_credit", "insurance", "robotics", "medical", "energy", "real_estate", "agents", "stablecoin"] },
+      "asset":            { "type": "string" },
+      "content_hash":     { "type": "string", "pattern": "^sha256:" },
+      "policy_version":   { "type": "string" },
+      "veto_chain":       { "type": "array", "items": { "type": "string" } },
+      "prev_hash":        { "type": "string" },
+      "signing_provider": { "type": "string" }
+    }
+  },
+  "lifecycle": {
+    "issuance_trigger": "POST /api/governance/evaluate",
+    "validity_period_days": 365,
+    "retention_years": 5,
+    "archival_policy": "HOT (0-30d) → WARM (30-365d) → COLD (1-5yr)",
+    "regulatory_basis": "MiFID II Article 25 · DORA Article 28 · UAE CBUAE 2024"
+  },
+  "jurisdiction_mappings": {
+    "EU_AI_ACT":      { "label": "EU Artificial Intelligence Act",  "reference": "Regulation (EU) 2024/1689" },
+    "GDPR":           { "label": "EU GDPR",                         "reference": "Regulation (EU) 2016/679 — Article 22" },
+    "DORA":           { "label": "Digital Operational Resilience Act", "reference": "Regulation (EU) 2022/2554" },
+    "FATF":           { "label": "FATF Recommendations",            "reference": "FATF R.10, R.16, R.20, R.29 (2023)" },
+    "UK_FCA":         { "label": "UK FCA COBS + SM&CR",             "reference": "FCA COBS 11.2 · SYSC 9.1" },
+    "US_SEC":         { "label": "US SEC Rule 15c3-5 + Reg SCI",    "reference": "17 CFR §240.15c3-5" },
+    "MAS_SINGAPORE":  { "label": "MAS FEAT Principles",             "reference": "MAS AI Governance Framework v2 (2020)" },
+    "UAE_CBUAE":      { "label": "UAE CBUAE AI Governance",         "reference": "CBUAE AI Governance Framework 2024" },
+    "SAMA_SAUDI":     { "label": "SAMA Responsible AI",             "reference": "SAMA Principles for Responsible AI (2023)" },
+    "FSB_G20":        { "label": "FSB AI/ML in Financial Services", "reference": "FSB Report (Nov 2017, updated 2023)" }
+  },
+  "trust_chain": {
+    "root_of_trust": "did:web:omnixquantum.net",
+    "trust_registry": "https://omnixquantum.net/api/trust/registry",
+    "did_document": "https://omnixquantum.net/.well-known/did.json",
+    "public_key": "https://omnixquantum.net/.well-known/omnix-public-key.json",
+    "credential_issuer_metadata": "https://omnixquantum.net/.well-known/openid-credential-issuer",
+    "independent_verifier": "https://omnixquantum.net/api/trust/verify",
+    "hash_chain": "SHA-256 linked — each receipt references prev_hash of preceding receipt"
+  },
+  "interoperability": {
+    "w3c_vc_data_model": "1.1",
+    "openid4vci": "draft-13",
+    "arf_version": "1.4",
+    "eidas_version": "2.0",
+    "did_method": "did:web",
+    "jsonld_processing": "JSON-LD 1.1 (@protected context)"
+  },
+  "proof_scope": {
+    "what_this_credential_proves": [
+      "The decision was evaluated by OMNIX at the stated timestamp",
+      "The veto chain result is cryptographically bound to the credential",
+      "The credential has not been altered since issuance",
+      "The issuer (did:web:omnixquantum.net) controlled the signing key at issuance"
+    ],
+    "what_this_credential_does_not_claim": [
+      "Authoritative regulatory approval from any named supervisory body",
+      "Guaranteed cross-border enforceability without local legal assessment"
+    ]
+  }
+}

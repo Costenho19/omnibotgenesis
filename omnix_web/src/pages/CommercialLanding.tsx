@@ -292,6 +292,7 @@ export default function CommercialLanding() {
           <div className="flex items-center gap-8">
             <Link to="/try" className="nav-link font-semibold text-[#C9A227]">Try OMNIX</Link>
             <Link to="/docs" className="nav-link" style={{color:'#94a3b8', fontSize:'0.82rem'}}>Docs</Link>
+            <Link to="/eidas" className="nav-link" style={{color:'#60a5fa', fontSize:'0.82rem'}}>eIDAS</Link>
             <Link to="/credit" className="nav-link font-semibold" style={{color:'#a78bfa', fontSize:'0.82rem'}}>Islamic Credit</Link>
             <Link to="/insurance" className="nav-link font-semibold" style={{color:'#60a5fa', fontSize:'0.82rem'}}>Insurance</Link>
             <Link to="/robotics" className="nav-link font-semibold" style={{color:'#34d399', fontSize:'0.82rem'}}>Robotics</Link>

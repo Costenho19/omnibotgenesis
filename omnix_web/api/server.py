@@ -1575,6 +1575,59 @@ def serve_did_document():
         return jsonify({'error': 'DID document not found'}), 404
 
 
+@app.route('/.well-known/openid-credential-issuer', methods=['GET'])
+def well_known_openid_credential_issuer():
+    """
+    ADR-084: OpenID4VCI Credential Issuer Metadata (RFC 8615).
+    Required by eIDAS 2.0 ARF for EUDI Wallet compatibility.
+    Consumed by wallets, verifiers, and OpenID4VCI clients to discover
+    OMNIX credential types and endpoint configuration.
+    """
+    import pathlib as _pl
+    _path = _pl.Path(__file__).parent.parent / 'public' / '.well-known' / 'openid-credential-issuer'
+    try:
+        content = _path.read_text(encoding='utf-8')
+        return app.response_class(
+            response=content,
+            status=200,
+            mimetype='application/json',
+            headers={
+                'Cache-Control': 'public, max-age=3600',
+                'Access-Control-Allow-Origin': '*',
+                'X-OMNIX-ARF-Conformance': 'eIDAS-2.0-ARF-1.4',
+                'X-OMNIX-OpenID4VCI': 'draft-13',
+            }
+        )
+    except FileNotFoundError:
+        return jsonify({'error': 'OpenID4VCI metadata not found'}), 404
+
+
+@app.route('/.well-known/omnix-arf-profile.json', methods=['GET'])
+def well_known_arf_profile():
+    """
+    ADR-084: OMNIX ARF Credential Profile.
+    Machine-readable description of the OmnixGovernanceCredential type —
+    schema, cryptography, jurisdiction mappings, lifecycle, trust chain.
+    """
+    import pathlib as _pl
+    _path = _pl.Path(__file__).parent.parent / 'public' / '.well-known' / 'omnix-arf-profile.json'
+    try:
+        content = _path.read_text(encoding='utf-8')
+        return app.response_class(
+            response=content,
+            status=200,
+            mimetype='application/json',
+            headers={
+                'Cache-Control': 'public, max-age=3600',
+                'Access-Control-Allow-Origin': '*',
+                'X-OMNIX-ARF-Version': '1.4',
+                'X-OMNIX-eIDAS': '2.0',
+            }
+        )
+    except FileNotFoundError:
+        return jsonify({'error': 'ARF profile not found'}), 404
+
+
 @app.route('/.well-known/omnix-public-key.json', methods=['GET'])
 def well_known_public_key():
     """
