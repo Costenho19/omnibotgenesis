@@ -46,7 +46,7 @@
       "decision":         { "type": "string", "enum": ["APPROVED", "BLOCKED", "HOLD"] },
       "domain":           { "type": "string", "enum": ["trading", "islamic_credit", "insurance", "robotics", "medical", "energy", "real_estate", "agents", "stablecoin"] },
       "asset":            { "type": "string" },
-      "content_hash":     { "type": "string", "pattern": "^sha256:" },
+      "content_hash":     { "type": "string", "pattern": "^[a-f0-9]{64}$" },
       "policy_version":   { "type": "string" },
       "veto_chain":       { "type": "array", "items": { "type": "string" } },
       "prev_hash":        { "type": "string" },
