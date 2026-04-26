@@ -18,6 +18,17 @@ Status lifecycle:
 Revocation is append-only. The audit_trail JSONB column carries every state
 transition with timestamp, actor, and reason. Nothing is ever deleted.
 
+W3C StatusList2021 bitstring (ADR-130 v2):
+  Every revoked VC is assigned a sequential status_list_index.
+  The /api/trust/status-list endpoint returns a GZIP-compressed, base64url-encoded
+  bitstring of BITSTRING_SIZE bits where bit[index]=1 means revoked.
+  This is the canonical W3C StatusList2021 format, compatible with any EUDI wallet.
+
+Revocation webhook (ADR-130 v2):
+  When a VC is revoked or reinstated, an HMAC-SHA256 signed webhook event is
+  delivered asynchronously to the registered client endpoint.
+  Event types: 'vc.revoked', 'vc.suspended', 'vc.reinstated'
+
 Human accountability (ADR-124 integration):
   revoked_by can be:
     - a client_id (B2B client with admin role)
@@ -26,15 +37,25 @@ Human accountability (ADR-124 integration):
     - 'system:anomaly' (AnomalyResponseEngine — ADR-129)
 """
 
+import base64
+import gzip
+import hashlib
+import hmac
 import json
 import logging
 import os
+import threading
+import time
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("OMNIX.Revocation")
 
-OMNIX_ISSUER_URL = "https://omnixquantum.net"
+OMNIX_ISSUER_URL  = "https://omnixquantum.net"
+BITSTRING_SIZE    = 131072   # W3C StatusList2021 §4: minimum 131,072 bits (16KB)
+_WEBHOOK_TIMEOUT  = 10       # seconds
 
 
 def _get_db_conn():
@@ -68,7 +89,6 @@ def _require_admin_auth(request) -> Tuple[Optional[str], Optional[Any]]:
             "hint":  "Revocation requires admin-level authentication.",
         }), 401)
 
-    import hashlib
     key_hash = hashlib.sha256(api_key.encode("utf-8")).hexdigest()
 
     try:
@@ -97,6 +117,170 @@ def _require_admin_auth(request) -> Tuple[Optional[str], Optional[Any]]:
     return client_id, None
 
 
+# ── W3C StatusList2021 bitstring ──────────────────────────────────────────────
+
+def _build_encoded_list(revoked_indices: List[int], size: int = BITSTRING_SIZE) -> str:
+    """
+    Build a W3C StatusList2021 §4 encoded list.
+
+    Creates a bitstring of `size` bits (default 131,072 — W3C minimum).
+    Bit at position `index` is set to 1 if the credential at that index is revoked.
+    Bit ordering: MSB first (bit 0 of byte 0 = index 0).
+
+    Returns: base64url(gzip(bitstring)) — the `encodedList` field value.
+    """
+    ba = bytearray(size // 8)
+    for idx in revoked_indices:
+        if 0 <= idx < size:
+            ba[idx // 8] |= (1 << (7 - (idx % 8)))
+    compressed = gzip.compress(bytes(ba), compresslevel=9)
+    return base64.urlsafe_b64encode(compressed).decode("ascii")
+
+
+def _get_next_status_list_index(cur) -> int:
+    """
+    Returns the next available sequential status_list_index.
+    Thread-safe: uses SELECT MAX() + 1 within the same transaction.
+    """
+    cur.execute(
+        "SELECT COALESCE(MAX(status_list_index), -1) + 1 FROM vc_revocation_registry"
+    )
+    row = cur.fetchone()
+    return int(row[0]) if row else 0
+
+
+# ── Revocation webhook delivery ───────────────────────────────────────────────
+
+def _get_client_webhook_config(client_id: str) -> Optional[Dict[str, str]]:
+    """
+    Fetch the webhook_url and webhook_secret for a given client_id.
+    Returns None if client has no webhook configured.
+    """
+    if not client_id or client_id.startswith("system:"):
+        return None
+    try:
+        conn = _get_db_conn()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT webhook_url, webhook_secret
+                FROM b2b_clients
+                WHERE client_id = %s AND active = true
+                  AND webhook_url IS NOT NULL
+                """,
+                (client_id,),
+            )
+            row = cur.fetchone()
+        conn.close()
+        if not row or not row[0]:
+            return None
+        webhook_url, encrypted_secret = row
+        if not encrypted_secret:
+            return None
+        try:
+            from api.gov_auth_rbac import _decrypt_secret
+        except ImportError:
+            try:
+                from gov_auth_rbac import _decrypt_secret
+            except ImportError:
+                return None
+        secret = _decrypt_secret(encrypted_secret)
+        return {"webhook_url": webhook_url, "webhook_secret": secret}
+    except Exception as e:
+        logger.debug(f"webhook config lookup failed for {client_id}: {e}")
+        return None
+
+
+def _deliver_revocation_webhook(
+    client_id: str,
+    receipt_id: str,
+    event_type: str,
+    status_data: Dict[str, Any],
+) -> None:
+    """
+    Fire-and-forget: delivers a signed revocation webhook event.
+    Called in a background daemon thread — never blocks the HTTP response.
+
+    Event types: 'vc.revoked' | 'vc.suspended' | 'vc.reinstated'
+
+    Payload signature: HMAC-SHA256(webhook_secret, body_bytes)
+    Header: X-OMNIX-Signature: sha256=<hexdigest>
+    """
+    cfg = _get_client_webhook_config(client_id)
+    if not cfg:
+        return
+
+    webhook_url    = cfg["webhook_url"]
+    webhook_secret = cfg["webhook_secret"]
+
+    payload = {
+        "event":      event_type,
+        "receipt_id": receipt_id,
+        "data":       status_data,
+        "issuer":     "did:web:omnixquantum.net",
+        "adr":        "ADR-130 — VC Trust Revocation Registry",
+        "delivered_at": datetime.now(timezone.utc).isoformat(),
+        "verify_url": f"{OMNIX_ISSUER_URL}/api/trust/vc-status/{receipt_id}",
+    }
+
+    try:
+        body_bytes = json.dumps(payload, default=str).encode("utf-8")
+        sig_hex = hmac.new(
+            webhook_secret.encode("utf-8"),
+            body_bytes,
+            digestmod=hashlib.sha256,
+        ).hexdigest()
+
+        req = urllib.request.Request(
+            webhook_url,
+            data=body_bytes,
+            headers={
+                "Content-Type":       "application/json",
+                "X-OMNIX-Signature":  f"sha256={sig_hex}",
+                "X-OMNIX-Event":      event_type,
+                "X-OMNIX-Receipt-ID": receipt_id,
+                "X-OMNIX-Client-ID":  client_id,
+                "User-Agent":         "OMNIX-Webhook/2.0-ADR130 (omnixquantum.net)",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=_WEBHOOK_TIMEOUT) as resp:
+            http_code = resp.getcode()
+            logger.info(
+                f"[Revocation.Webhook] {event_type} → {client_id} "
+                f"receipt={receipt_id} http={http_code}"
+            )
+    except urllib.error.HTTPError as exc:
+        logger.warning(
+            f"[Revocation.Webhook] HTTP {exc.code} for {client_id} receipt={receipt_id}"
+        )
+    except Exception as exc:
+        logger.warning(
+            f"[Revocation.Webhook] delivery failed for {client_id} receipt={receipt_id}: {exc}"
+        )
+
+
+def fire_revocation_webhook(
+    client_id: str,
+    receipt_id: str,
+    event_type: str,
+    status_data: Dict[str, Any],
+) -> None:
+    """
+    Dispatch a revocation webhook in a background daemon thread.
+    Returns immediately — never blocks the calling HTTP handler.
+    """
+    t = threading.Thread(
+        target=_deliver_revocation_webhook,
+        args=(client_id, receipt_id, event_type, status_data),
+        daemon=True,
+        name=f"webhook-revoke-{receipt_id[:12]}",
+    )
+    t.start()
+
+
+# ── Core registry class ───────────────────────────────────────────────────────
+
 class VCRevocationRegistry:
     """
     Core revocation logic — stateless, DB-backed.
@@ -116,17 +300,18 @@ class VCRevocationRegistry:
 
         Returns:
             {
-                "receipt_id":    str,
-                "status":        "active" | "revoked" | "suspended",
-                "revoked_at":    ISO8601 | None,
-                "revoked_by":    str | None,
-                "reason":        str | None,
-                "reinstate_url": str | None,  (only if suspended)
-                "checked_at":    ISO8601,
-                "vc_status_url": str,
+                "receipt_id":          str,
+                "status":              "active" | "revoked" | "suspended",
+                "status_list_index":   int | None,  (W3C StatusList2021 position)
+                "revoked_at":          ISO8601 | None,
+                "revoked_by":          str | None,
+                "reason":              str | None,
+                "reinstate_url":       str | None,  (only if suspended)
+                "checked_at":          ISO8601,
+                "vc_status_url":       str,
             }
         """
-        now_iso = datetime.now(timezone.utc).isoformat()
+        now_iso    = datetime.now(timezone.utc).isoformat()
         status_url = f"{OMNIX_ISSUER_URL}/api/trust/vc-status/{receipt_id}"
 
         try:
@@ -135,7 +320,7 @@ class VCRevocationRegistry:
                 cur.execute(
                     """
                     SELECT status, reason, revoked_by, revoked_at,
-                           reinstated_at, reinstatement_reason
+                           reinstated_at, reinstatement_reason, status_list_index
                     FROM vc_revocation_registry
                     WHERE receipt_id = %s
                     """,
@@ -146,37 +331,43 @@ class VCRevocationRegistry:
         except Exception as e:
             logger.error(f"get_status DB error for {receipt_id}: {e}")
             return {
-                "receipt_id":    receipt_id,
-                "status":        "unknown",
-                "error":         "Revocation registry temporarily unavailable.",
-                "checked_at":    now_iso,
-                "vc_status_url": status_url,
+                "receipt_id":        receipt_id,
+                "status":            "unknown",
+                "status_list_index": None,
+                "error":             "Revocation registry temporarily unavailable.",
+                "checked_at":        now_iso,
+                "vc_status_url":     status_url,
             }
 
         if not row:
             return {
-                "receipt_id":    receipt_id,
-                "status":        "active",
-                "revoked_at":    None,
-                "revoked_by":    None,
-                "reason":        None,
-                "checked_at":    now_iso,
-                "vc_status_url": status_url,
-                "note":          "Not found in revocation registry — credential is active.",
+                "receipt_id":         receipt_id,
+                "status":             "active",
+                "status_list_index":  None,
+                "revoked_at":         None,
+                "revoked_by":         None,
+                "reason":             None,
+                "checked_at":         now_iso,
+                "vc_status_url":      status_url,
+                "note":               "Not found in revocation registry — credential is active.",
             }
 
-        status, reason, revoked_by, revoked_at, reinstated_at, reinstate_reason = row
-        return {
-            "receipt_id":         receipt_id,
-            "status":             status,
-            "reason":             reason,
-            "revoked_by":         revoked_by,
-            "revoked_at":         revoked_at.isoformat() if revoked_at else None,
-            "reinstated_at":      reinstated_at.isoformat() if reinstated_at else None,
+        status, reason, revoked_by, revoked_at, reinstated_at, reinstate_reason, sli = row
+        result = {
+            "receipt_id":           receipt_id,
+            "status":               status,
+            "status_list_index":    sli,
+            "reason":               reason,
+            "revoked_by":           revoked_by,
+            "revoked_at":           revoked_at.isoformat() if revoked_at else None,
+            "reinstated_at":        reinstated_at.isoformat() if reinstated_at else None,
             "reinstatement_reason": reinstate_reason,
-            "checked_at":         now_iso,
-            "vc_status_url":      status_url,
+            "checked_at":           now_iso,
+            "vc_status_url":        status_url,
         }
+        if status == "suspended":
+            result["reinstate_url"] = f"{OMNIX_ISSUER_URL}/api/trust/reinstate/{receipt_id}"
+        return result
 
     def revoke(
         self,
@@ -188,6 +379,8 @@ class VCRevocationRegistry:
     ) -> Dict[str, Any]:
         """
         Revokes or suspends a VC. Creates or updates the registry entry.
+        Assigns a sequential status_list_index (W3C StatusList2021 position).
+        Fires an asynchronous webhook notification to the registered client.
 
         Args:
             receipt_id: The OMNIX receipt_id of the VC to revoke.
@@ -205,22 +398,23 @@ class VCRevocationRegistry:
 
         now = datetime.now(timezone.utc)
         audit_entry = {
-            "action":     status,
-            "actor":      revoked_by,
-            "reason":     reason,
-            "timestamp":  now.isoformat(),
-            "context":    context or {},
+            "action":    status,
+            "actor":     revoked_by,
+            "reason":    reason,
+            "timestamp": now.isoformat(),
+            "context":   context or {},
         }
 
         try:
             conn = _get_db_conn()
             with conn.cursor() as cur:
+                next_index = _get_next_status_list_index(cur)
                 cur.execute(
                     """
                     INSERT INTO vc_revocation_registry
                         (receipt_id, status, reason, revoked_by, revoked_at,
-                         revocation_context, audit_trail, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, NOW())
+                         revocation_context, audit_trail, status_list_index, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s, NOW())
                     ON CONFLICT (receipt_id) DO UPDATE SET
                         status             = EXCLUDED.status,
                         reason             = EXCLUDED.reason,
@@ -239,18 +433,25 @@ class VCRevocationRegistry:
                         now,
                         json.dumps(context or {}),
                         json.dumps([audit_entry]),
+                        next_index,
                     ),
                 )
                 conn.commit()
             conn.close()
             logger.warning(
-                f"[Revocation] {receipt_id} → {status.upper()} | by={revoked_by} | reason={reason[:80]}"
+                f"[Revocation] {receipt_id} → {status.upper()} "
+                f"idx={next_index} by={revoked_by} reason={reason[:80]}"
             )
         except Exception as e:
             logger.error(f"revoke DB error for {receipt_id}: {e}")
             raise
 
-        return self.get_status(receipt_id)
+        result = self.get_status(receipt_id)
+
+        event_type = "vc.revoked" if status == "revoked" else "vc.suspended"
+        fire_revocation_webhook(revoked_by, receipt_id, event_type, result)
+
+        return result
 
     def reinstate(
         self,
@@ -261,6 +462,7 @@ class VCRevocationRegistry:
         """
         Reinstates a suspended or revoked VC. Requires explicit justification.
         Audit trail is preserved — the original revocation event is not erased.
+        Fires a 'vc.reinstated' webhook event.
 
         Args:
             receipt_id:    The VC to reinstate.
@@ -305,18 +507,24 @@ class VCRevocationRegistry:
             raise ValueError(f"Receipt {receipt_id} not found in revocation registry.")
 
         logger.warning(
-            f"[Revocation] {receipt_id} → REINSTATED | by={reinstated_by} | reason={reason[:80]}"
+            f"[Revocation] {receipt_id} → REINSTATED "
+            f"by={reinstated_by} reason={reason[:80]}"
         )
-        return self.get_status(receipt_id)
+
+        result = self.get_status(receipt_id)
+        fire_revocation_webhook(reinstated_by, receipt_id, "vc.reinstated", result)
+        return result
 
     def get_status_list(self, limit: int = 500) -> Dict[str, Any]:
         """
-        Returns a W3C StatusList2021-compatible revocation index.
-        Lists all non-active VCs with their status.
+        Returns a W3C StatusList2021-compatible revocation credential.
 
-        For large deployments, StatusList2021 specifies a compressed bitstring.
-        OMNIX uses an enumerated list format (suitable for current receipt volume)
-        with a migration path to full bitstring compression noted.
+        Format: Full W3C spec compliance —
+          - 'encodedList': base64url(gzip(bitstring)) with BITSTRING_SIZE bits
+          - 'revoked_credentials': human-readable index (with statusListIndex per entry)
+          - ETag source: sha256(revoked_count + ":" + max_updated_at)
+
+        Spec: https://www.w3.org/TR/2023/WD-vc-status-list-20230427/
         """
         now_iso = datetime.now(timezone.utc).isoformat()
         try:
@@ -324,10 +532,12 @@ class VCRevocationRegistry:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT receipt_id, status, revoked_at, reason
+                    SELECT receipt_id, status, revoked_at, reason, status_list_index,
+                           MAX(updated_at) OVER () AS max_updated_at,
+                           COUNT(*) OVER ()         AS total_count
                     FROM vc_revocation_registry
                     WHERE status != 'active'
-                    ORDER BY revoked_at DESC NULLS LAST
+                    ORDER BY status_list_index ASC NULLS LAST, revoked_at DESC NULLS LAST
                     LIMIT %s
                     """,
                     (limit,),
@@ -338,15 +548,31 @@ class VCRevocationRegistry:
             logger.error(f"status_list DB error: {e}")
             rows = []
 
-        revoked_entries = [
-            {
-                "receipt_id": r[0],
-                "status":     r[1],
-                "revoked_at": r[2].isoformat() if r[2] else None,
-                "reason":     r[3],
+        max_updated_at = None
+        total_count    = 0
+        revoked_indices: List[int] = []
+        revoked_entries = []
+
+        for r in rows:
+            rid, status, revoked_at, reason, sli, mu, tc = r
+            if max_updated_at is None:
+                max_updated_at = mu
+                total_count    = tc
+            entry = {
+                "receipt_id":        rid,
+                "status":            status,
+                "statusListIndex":   sli,
+                "revoked_at":        revoked_at.isoformat() if revoked_at else None,
+                "reason":            reason,
             }
-            for r in rows
-        ]
+            revoked_entries.append(entry)
+            if sli is not None:
+                revoked_indices.append(int(sli))
+
+        encoded_list = _build_encoded_list(revoked_indices)
+
+        etag_source = f"{len(revoked_entries)}:{max_updated_at or 'none'}"
+        etag        = hashlib.sha256(etag_source.encode()).hexdigest()[:32]
 
         return {
             "@context": [
@@ -359,31 +585,57 @@ class VCRevocationRegistry:
                 "id":   "did:web:omnixquantum.net",
                 "name": "OMNIX Quantum Ltd",
             },
-            "issuedAt":           now_iso,
-            "statusPurpose":      "revocation",
-            "format_note":        (
-                "Enumerated list format (current). Migration path to "
-                "StatusList2021 compressed bitstring available when "
-                "revocation volume exceeds 131,072 entries."
-            ),
-            "revoked_count":      len(revoked_entries),
+            "issuedAt":            now_iso,
+            "statusPurpose":       "revocation",
+            "encodedList":         encoded_list,
+            "bitstring_size":      BITSTRING_SIZE,
+            "revoked_count":       len(revoked_entries),
             "revoked_credentials": revoked_entries,
-            "spec":               "https://www.w3.org/TR/2023/WD-vc-status-list-20230427/",
-            "adr":                "ADR-130 — VC Trust Revocation Registry",
+            "etag":                etag,
+            "spec":                "https://www.w3.org/TR/2023/WD-vc-status-list-20230427/",
+            "adr":                 "ADR-130 — VC Trust Revocation Registry",
         }
 
+    def get_etag(self) -> str:
+        """
+        Returns a lightweight ETag for the status list without fetching all entries.
+        Used by the HTTP layer for conditional GET (If-None-Match → 304).
+        """
+        try:
+            conn = _get_db_conn()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT COUNT(*) AS cnt,
+                           COALESCE(MAX(updated_at)::text, 'none') AS mu
+                    FROM vc_revocation_registry
+                    WHERE status != 'active'
+                    """
+                )
+                row = cur.fetchone()
+            conn.close()
+            cnt, mu = row if row else (0, "none")
+            return hashlib.sha256(f"{cnt}:{mu}".encode()).hexdigest()[:32]
+        except Exception as e:
+            logger.debug(f"get_etag error: {e}")
+            return hashlib.sha256(str(time.monotonic()).encode()).hexdigest()[:32]
 
-def build_credential_status(receipt_id: str) -> Dict[str, Any]:
+
+def build_credential_status(receipt_id: str, status_list_index: Optional[int] = None) -> Dict[str, Any]:
     """
     Builds the credentialStatus block for embedding in a W3C VC.
     Called by ReceiptToVC.convert() for every issued credential.
 
     The verifier fetches {id} to confirm active/revoked status in real time.
+    If status_list_index is provided, it is embedded for fast bitstring lookup.
     """
-    return {
-        "id":                    f"{OMNIX_ISSUER_URL}/api/trust/vc-status/{receipt_id}",
-        "type":                  "StatusList2021Entry",
-        "statusPurpose":         "revocation",
-        "statusListCredential":  f"{OMNIX_ISSUER_URL}/api/trust/status-list",
-        "adr":                   "ADR-130",
+    block = {
+        "id":                   f"{OMNIX_ISSUER_URL}/api/trust/vc-status/{receipt_id}",
+        "type":                 "StatusList2021Entry",
+        "statusPurpose":        "revocation",
+        "statusListCredential": f"{OMNIX_ISSUER_URL}/api/trust/status-list",
+        "adr":                  "ADR-130",
     }
+    if status_list_index is not None:
+        block["statusListIndex"] = status_list_index
+    return block

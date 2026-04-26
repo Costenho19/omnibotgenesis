@@ -385,12 +385,23 @@ def _ensure_vertical_tables():
         """,
     ]
 
+    # ADR-130 v2: ALTER TABLE migrations for existing prod tables
+    # CREATE TABLE IF NOT EXISTS does not add columns to already-existing tables.
+    ALTER_TABLE_SQL = [
+        "ALTER TABLE vc_revocation_registry ADD COLUMN IF NOT EXISTS status_list_index INTEGER",
+    ]
+
     try:
         conn = psycopg2.connect(db_url)
         conn.autocommit = False
         cur = conn.cursor()
         for sql in VERTICAL_TABLES_SQL:
             cur.execute(sql)
+        for sql in ALTER_TABLE_SQL:
+            try:
+                cur.execute(sql)
+            except Exception as _ae:
+                print(f"[startup] ALTER TABLE (non-fatal): {_ae}")
         conn.commit()
         cur.close()
         conn.close()
@@ -2056,11 +2067,12 @@ def trust_reinstate_vc(receipt_id: str):
 def trust_status_list():
     """
     GET /api/trust/status-list
-    ADR-130: W3C StatusList2021-compatible revocation index.
+    ADR-130 v2: W3C StatusList2021-compatible revocation index.
 
     Public endpoint — no authentication required.
-    Lists all non-active VCs (revoked + suspended).
-    Verifiers can cache this list and check receipt_ids locally.
+    Returns compressed bitstring (gzip+base64url, 131072-bit minimum, MSB-first).
+    Supports ETag / If-None-Match for conditional GET (304 Not Modified).
+    Cache-Control: public, max-age=300 (5-minute TTL per ADR-130 v2).
 
     Spec: https://www.w3.org/TR/2023/WD-vc-status-list-20230427/
     """
@@ -2069,13 +2081,27 @@ def trust_status_list():
     except ImportError:
         from omnix_engine.vc_revocation import VCRevocationRegistry
 
-    registry    = VCRevocationRegistry()
+    registry = VCRevocationRegistry()
+
+    # ETag / conditional GET (ADR-130 v2 — T002)
+    current_etag = registry.get_etag()
+    client_etag  = request.headers.get('If-None-Match', '').strip().strip('"')
+    if client_etag and client_etag == current_etag:
+        return '', 304, {
+            'ETag':                      f'"{current_etag}"',
+            'Cache-Control':             'public, max-age=300',
+            'Access-Control-Allow-Origin': '*',
+            'X-OMNIX-ADR':               'ADR-130',
+        }
+
     status_list = registry.get_status_list()
     return jsonify(status_list), 200, {
         'Content-Type':              'application/json',
         'Access-Control-Allow-Origin': '*',
         'Cache-Control':             'public, max-age=300',
+        'ETag':                      f'"{current_etag}"',
         'X-OMNIX-ADR':               'ADR-130',
+        'X-StatusList-Encoding':     'StatusList2021/gzip+base64url',
     }
 
 

@@ -1815,13 +1815,20 @@ def api_governance_receipt_vc():
 
     include_semantics = bool(data.get('include_jurisdiction_semantics', True))
 
+    # ADR-130 v2 (T004): optional human accountability binding in VC proof
+    # Callers supply { "human_signer": { "reviewer_id": "...", "eqs_score": 0.93,
+    #                                     "oversight_session_id": "OSS-..." } }
+    human_signer = data.get('human_signer') or None
+    if human_signer and not isinstance(human_signer, dict):
+        human_signer = None
+
     try:
         try:
             from api.omnix_engine.receipt_to_vc import ReceiptToVC, build_jurisdiction_semantics
         except ImportError:
             from omnix_engine.receipt_to_vc import ReceiptToVC, build_jurisdiction_semantics
 
-        vc = ReceiptToVC().convert(receipt)
+        vc = ReceiptToVC().convert(receipt, human_signer=human_signer)
 
         if include_semantics:
             veto_chain = receipt.get('veto_chain', [])
@@ -1831,22 +1838,27 @@ def api_governance_receipt_vc():
                 veto_chain, decision, domain
             )
 
-        return jsonify({
-            'verifiable_credential': vc,
-            'hash_verified':  hash_verified,
-            'arf_profile':    'https://omnixquantum.net/.well-known/omnix-arf-profile.json',
-            'openid4vci':     'https://omnixquantum.net/.well-known/openid-credential-issuer',
-            'did_document':   'https://omnixquantum.net/.well-known/did.json',
-            'trust_registry': 'https://omnixquantum.net/api/trust/registry',
-            'verify_url':     'https://omnixquantum.net/api/trust/verify',
-            'issuer_did':     'did:web:omnixquantum.net',
-            'schema':         'https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld',
-            'conformance':    'eIDAS-2.0-ARF-1.4 / OpenID4VCI-draft-13 / W3C-VC-1.1',
-        }), 200, {
-            'Content-Type': 'application/json',
+        resp_body = {
+            'verifiable_credential':   vc,
+            'hash_verified':           hash_verified,
+            'human_accountability':    bool(human_signer),
+            'arf_profile':             'https://omnixquantum.net/.well-known/omnix-arf-profile.json',
+            'openid4vci':              'https://omnixquantum.net/.well-known/openid-credential-issuer',
+            'did_document':            'https://omnixquantum.net/.well-known/did.json',
+            'trust_registry':          'https://omnixquantum.net/api/trust/registry',
+            'verify_url':              'https://omnixquantum.net/api/trust/verify',
+            'issuer_did':              'did:web:omnixquantum.net',
+            'schema':                  'https://omnixquantum.net/schemas/omnix-receipt-v1.jsonld',
+            'conformance':             'eIDAS-2.0-ARF-1.4 / OpenID4VCI-draft-13 / W3C-VC-1.1',
+            'adr':                     'ADR-130 v2',
+        }
+        return jsonify(resp_body), 200, {
+            'Content-Type':              'application/json',
             'Access-Control-Allow-Origin': '*',
-            'X-OMNIX-ARF-Conformance': 'eIDAS-2.0-ARF-1.4',
-            'X-OMNIX-VC-Issuer': 'did:web:omnixquantum.net',
+            'X-OMNIX-ARF-Conformance':   'eIDAS-2.0-ARF-1.4',
+            'X-OMNIX-VC-Issuer':         'did:web:omnixquantum.net',
+            'X-OMNIX-Human-Accountability': 'true' if human_signer else 'false',
+            'X-OMNIX-ADR':               'ADR-130',
         }
 
     except Exception as e:

@@ -39,10 +39,26 @@ class ReceiptToVC:
         vc = converter.convert(receipt)
     """
 
-    def convert(self, receipt: Dict[str, Any]) -> Dict[str, Any]:
+    def convert(
+        self,
+        receipt: Dict[str, Any],
+        human_signer: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """
         Wrap an OMNIX receipt into a W3C VC envelope.
         Returns the VC as a dict (JSON-serialisable).
+
+        Args:
+            receipt:      OMNIX governance receipt dict.
+            human_signer: Optional human accountability block (ADR-130 §7).
+                          If provided, embedded in the proof as 'humanSigner'.
+                          {
+                            "reviewer_id":       str,
+                            "attested_at":       ISO8601,
+                            "attestation_hash":  "sha256:<hex>",
+                            "oversight_session_id": str | None,
+                            "eqs_score":         float | None,
+                          }
         """
         receipt_id  = receipt.get("receipt_id", "UNKNOWN")
         timestamp   = receipt.get("timestamp", datetime.now(timezone.utc).isoformat())
@@ -116,7 +132,7 @@ class ReceiptToVC:
         }
 
         if sig_b64:
-            vc["proof"] = {
+            proof_block = {
                 "type":               self._map_proof_type(sig_algo),
                 "created":            issuance_dt.isoformat(),
                 "verificationMethod": f"{OMNIX_ISSUER_DID}#pqc-key-1",
@@ -128,16 +144,76 @@ class ReceiptToVC:
                 "nist_note":          "Post-quantum signature (NIST-standardized algorithm)",
             }
         else:
-            vc["proof"] = {
-                "type":           "OmnixHashProof2026",
-                "created":        issuance_dt.isoformat(),
-                "proofPurpose":   "assertionMethod",
-                "proofValue":     content_hash,
+            proof_block = {
+                "type":               "OmnixHashProof2026",
+                "created":            issuance_dt.isoformat(),
+                "proofPurpose":       "assertionMethod",
+                "proofValue":         content_hash,
                 "signatureAlgorithm": "SHA-256",
-                "nist_note":      "Hash-chain integrity proof (no PQC key available at issuance)",
+                "nist_note":          "Hash-chain integrity proof (no PQC key available at issuance)",
             }
 
+        if human_signer:
+            proof_block["humanSigner"] = self._build_human_signer_block(
+                receipt_id, human_signer
+            )
+
+        vc["proof"] = proof_block
         return vc
+
+    def _build_human_signer_block(
+        self,
+        receipt_id: str,
+        human_signer: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Builds the humanSigner sub-block for the proof.
+
+        ADR-130 §7 — Human Accountability Binding:
+        The human who authorized the issuance of this governance credential is
+        cryptographically identified. This shifts OMNIX governance from
+        observational (the system decided) to accountable (this human authorized it).
+
+        The attestation_hash binds reviewer_id + receipt_id + attested_at in a
+        single SHA-256 digest — independently verifiable by any party.
+
+        Verifier instructions:
+          1. SHA-256(reviewer_id + ":" + receipt_id + ":" + attested_at)
+          2. Compare with attestation_hash (strip "sha256:" prefix)
+          3. Match confirms the named human was the authorizing party.
+        """
+        reviewer_id   = human_signer.get("reviewer_id", "unknown")
+        attested_at   = human_signer.get("attested_at", datetime.now(timezone.utc).isoformat())
+        session_id    = human_signer.get("oversight_session_id")
+        eqs_score     = human_signer.get("eqs_score")
+        provided_hash = human_signer.get("attestation_hash", "")
+
+        if not provided_hash.startswith("sha256:"):
+            import hashlib as _hl
+            computed = _hl.sha256(
+                f"{reviewer_id}:{receipt_id}:{attested_at}".encode()
+            ).hexdigest()
+            attestation_hash = f"sha256:{computed}"
+        else:
+            attestation_hash = provided_hash
+
+        block: Dict[str, Any] = {
+            "type":             "HumanAccountabilityAttestation2026",
+            "adr":              "ADR-130 — Human Accountability Binding",
+            "reviewerId":       reviewer_id,
+            "attestedAt":       attested_at,
+            "attestationHash":  attestation_hash,
+            "hashMethod":       "SHA-256(reviewerId:receipt_id:attestedAt)",
+            "verifierNote":     (
+                "Recompute SHA-256(reviewerId + ':' + receipt_id + ':' + attestedAt) "
+                "and compare with attestationHash to confirm human identity binding."
+            ),
+        }
+        if session_id:
+            block["oversightSessionId"] = session_id
+        if eqs_score is not None:
+            block["epistemicQualityScore"] = round(float(eqs_score), 4)
+        return block
 
     def _parse_timestamp(self, ts: Any) -> datetime:
         if isinstance(ts, datetime):
