@@ -418,6 +418,28 @@ class ReceiptArchivalService:
         self._cold_required: bool = (
             os.environ.get("OMNIX_COLD_STORAGE_REQUIRED", "false").lower() == "true"
         )
+        self._warn_production_cold_flag()
+
+    def _warn_production_cold_flag(self) -> None:
+        """
+        I-2 guard: emit CRITICAL log if running in production with cold storage
+        flag disabled. This prevents silent non-compliance with MiFID II retention.
+        Production is detected via RAILWAY_ENVIRONMENT, OMNIX_APP_ENV, or APP_ENV.
+        """
+        env = (
+            os.environ.get("RAILWAY_ENVIRONMENT", "")
+            or os.environ.get("OMNIX_APP_ENV", "")
+            or os.environ.get("APP_ENV", "")
+        ).lower()
+        if env == "production" and not self._cold_required:
+            logger.critical(
+                "[Archival] PRODUCTION ENVIRONMENT DETECTED but "
+                "OMNIX_COLD_STORAGE_REQUIRED=false. Receipts older than 12 months "
+                "will be archived to PostgreSQL fallback instead of S3/R2. "
+                "This may violate MiFID II Article 25 (5-year external retention). "
+                "Set OMNIX_COLD_STORAGE_REQUIRED=true and configure S3/R2 credentials "
+                "before the next archival cycle."
+            )
 
     # ── Cold backend factory ───────────────────────────────────────────────────
 

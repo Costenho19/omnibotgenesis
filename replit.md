@@ -40,7 +40,7 @@
 | **PostgreSQL** | 🟢 OPERATIVO | 44+ tablas, 327K+ decision_receipts, 0 NULLs |
 | **Redis** | 🟢 OPERATIVO | Anti-replay (best_effort mode) |
 
-### Métricas Clave (24 Abr 2026 — post-audit-repair)
+### Métricas Clave (26 Abr 2026 — post-institutional-audit)
 
 | Métrica | Valor |
 |---|---|

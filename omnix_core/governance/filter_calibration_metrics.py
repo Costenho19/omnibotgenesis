@@ -166,6 +166,15 @@ def _scan_trace(decision_trace: List[str], pass_keywords: Tuple[str, ...],
     return OUTCOME_SKIP
 
 
+DECISION_TRACE_FORMAT_VERSION = "v1"
+"""
+Expected version tag in result dicts produced by GovernanceEvaluationEngine.
+Set result['_trace_version'] = DECISION_TRACE_FORMAT_VERSION in the engine.
+If absent or mismatched, extract_event_from_result logs a warning so format
+drift is detectable immediately rather than silently falling to OUTCOME_SKIP.
+"""
+
+
 def extract_event_from_result(
     result:             Dict[str, Any],
     domain:             str            = "trading",
@@ -180,8 +189,29 @@ def extract_event_from_result(
     This function is best-effort — it never raises. If a gate's outcome cannot
     be determined, OUTCOME_SKIP is used. The call is O(N) over gate_results and
     decision_trace, which are small lists (< 20 entries each).
+
+    I-4 guard: validates '_trace_version' field to detect format drift early.
+    If the field is absent or mismatched, a WARNING is logged. Behavior is
+    unchanged — extraction continues best-effort with OUTCOME_SKIP fallback.
     """
     try:
+        trace_version = result.get("_trace_version")
+        if trace_version is None:
+            logger.debug(
+                "[FCM] result dict has no '_trace_version' field. "
+                "Add result['_trace_version'] = '%s' in GovernanceEvaluationEngine "
+                "to enable format-drift detection (I-4).",
+                DECISION_TRACE_FORMAT_VERSION,
+            )
+        elif trace_version != DECISION_TRACE_FORMAT_VERSION:
+            logger.warning(
+                "[FCM] decision_trace format version mismatch: expected '%s', "
+                "got '%s'. Gate extraction may produce unexpected OUTCOME_SKIP values. "
+                "Update DECISION_TRACE_FORMAT_VERSION or the engine output format.",
+                DECISION_TRACE_FORMAT_VERSION,
+                trace_version,
+            )
+
         gate_results   = result.get("gate_results",   []) or []
         decision_trace = result.get("decision_trace", []) or []
         veto_chain     = result.get("veto_chain",     []) or []

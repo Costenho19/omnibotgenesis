@@ -37,9 +37,6 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
-import psycopg2
-import psycopg2.extras
-
 logger = logging.getLogger("OMNIX.Governance.OversightSurface")
 
 DELIBERATION_WINDOW_SECONDS: int = 30
@@ -58,6 +55,7 @@ VALID_STATUSES: set[str] = {"PENDING", "OPEN", "SUBMITTED", "EXPIRED"}
 
 
 def _get_conn():
+    import psycopg2  # lazy import — avoids collection-time import errors in test environments
     db_url = os.environ.get("DATABASE_URL") or os.environ.get("OMNIX_DB_URL")
     if not db_url:
         raise RuntimeError(
@@ -419,6 +417,7 @@ class OversightSurfaceEngine:
 
         conn = _get_conn()
         try:
+            import psycopg2.extras  # lazy import — only needed at runtime, not at collection
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(
                     f"""
@@ -464,6 +463,7 @@ class OversightSurfaceEngine:
             conn.close()
 
     def _load_session(self, session_id: str) -> dict:
+        import psycopg2.extras  # lazy import — only needed at runtime, not at collection
         conn = _get_conn()
         try:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:

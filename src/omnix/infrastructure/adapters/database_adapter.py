@@ -177,6 +177,11 @@ class DatabaseAdapter:
         gateway = self._get_database_gateway()
         if gateway is None:
             from contextlib import contextmanager
+            logger.warning(
+                "DatabaseAdapter: get_connection called but gateway is unavailable. "
+                "Yielding None — callers MUST check 'if conn is not None' before use. "
+                "I-3: null connection adapter active."
+            )
             @contextmanager
             def null_connection():
                 yield None
@@ -188,6 +193,10 @@ class DatabaseAdapter:
             logger.error(f"DatabaseAdapter: get_connection error: {e}")
             self._error_count += 1
             from contextlib import contextmanager
+            logger.warning(
+                "DatabaseAdapter: get_connection fallback to null after error. "
+                "Yielding None — callers MUST check 'if conn is not None' before use."
+            )
             @contextmanager
             def null_connection():
                 yield None
