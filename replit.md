@@ -1053,3 +1053,42 @@ Esto permite auditoría externa del estado Layer 0 sin acceso directo a la DB.
 | P2 AVM genesis anchor | `avm_db_bridge.py` | 27 passed | ✅ COMPLETO |
 | P3 Layer 0 en /verify | `proof_layer.py` | 27 passed | ✅ COMPLETO |
 | P4 layer0-stats endpoint | `governance.py` | 27 passed | ✅ COMPLETO |
+
+---
+
+## Python SDK — `omnix-quantum` (Fase B)
+
+**Ruta:** `sdk/python/`  
+**Instalación:** `pip install omnix-quantum`  
+**Estado:** ✅ Listo para publicar en PyPI — pendiente de cuenta PyPI  
+
+### Estructura
+```
+sdk/python/
+├── omnix/
+│   ├── __init__.py     # exports + convenience evaluate()
+│   ├── client.py       # OmnixClient — HTTP client principal
+│   ├── models.py       # GovernanceReceipt, CheckpointResult
+│   └── exceptions.py   # 6 exception types
+├── pyproject.toml      # packaging para PyPI
+├── README.md           # docs para PyPI/GitHub
+└── examples/
+    └── basic_usage.py  # 6 ejemplos comentados
+```
+
+### Uso mínimo
+```python
+from omnix import OmnixClient
+client = OmnixClient(api_key="OMNIX-...")
+receipt = client.evaluate(domain="trading", asset="BTC/USD",
+                          signals={"price": 94200, "volume": 1.5, "volatility": 0.18})
+print(receipt)  # ✅ APPROVED | OMNIX-TRD-... | 11/11 gates
+```
+
+### Para publicar en PyPI
+```bash
+cd sdk/python
+pip install build twine
+python -m build
+twine upload dist/*
+```

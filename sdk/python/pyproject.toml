@@ -1,0 +1,50 @@
+[build-system]
+requires      = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name        = "omnix-quantum"
+version     = "1.0.0"
+description = "OMNIX Governance SDK — Decision governance infrastructure with post-quantum cryptographic proof"
+readme      = "README.md"
+license     = { text = "MIT" }
+requires-python = ">=3.8"
+dependencies    = []
+
+keywords = [
+    "governance", "ai-governance", "decision-infrastructure",
+    "post-quantum-cryptography", "pqc", "dilithium", "audit",
+    "compliance", "eidas", "mifid", "fintech"
+]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Security :: Cryptography",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[[project.authors]]
+name  = "OMNIX Quantum Ltd"
+email = "hello@omnixquantum.net"
+
+[project.urls]
+Homepage      = "https://omnixquantum.net"
+Documentation = "https://omnixquantum.net/docs"
+"API Reference" = "https://omnixquantum.net/integration"
+"Independent Verification" = "https://omnixquantum.net/verify-independently"
+"Trust Registry" = "https://omnixquantum.net/api/trust/registry"
+"Source Code"  = "https://github.com/omnixquantum/omnix-python-sdk"
+"Bug Tracker"  = "https://github.com/omnixquantum/omnix-python-sdk/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["omnix*"]
