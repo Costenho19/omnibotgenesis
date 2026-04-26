@@ -298,6 +298,7 @@ export default function CommercialLanding() {
             <Link to="/agents" className="nav-link font-semibold" style={{color:'#fb923c', fontSize:'0.82rem'}}>Agents</Link>
             <Link to="/command" className="nav-link font-semibold" style={{color:'#10B981', background:'rgba(16,185,129,0.08)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(16,185,129,0.25)', fontSize:'0.82rem'}}>⚡ Live Data</Link>
             <Link to="/institutional" className="nav-link">Technical Details</Link>
+            <Link to="/verify-independently" className="nav-link font-semibold" style={{color:'#34d399', fontSize:'0.82rem', background:'rgba(52,211,153,0.07)', padding:'6px 14px', borderRadius:8, border:'1px solid rgba(52,211,153,0.2)'}}>Verify</Link>
             <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX" target="_blank" rel="noopener noreferrer" className="btn-primary">Talk to Us</a>
           </div>
         </div>
@@ -377,6 +378,72 @@ export default function CommercialLanding() {
             </p>
           </div>
           <GovernanceLiveDemo />
+        </section>
+
+        {/* ── 60-SECOND PROOF ── */}
+        <section className="mb-24">
+          <div className="text-center mb-10">
+            <span style={{
+              display:'inline-block',
+              background:'rgba(52,211,153,0.08)',
+              border:'1px solid rgba(52,211,153,0.3)',
+              borderRadius:99, padding:'6px 18px',
+              fontSize:'0.8rem', fontWeight:700,
+              color:'#34d399', letterSpacing:'0.12em',
+              textTransform:'uppercase', marginBottom:16,
+            }}>60-Second Proof</span>
+            <h2 className="heading-lg text-white mb-3">From Decision to Verified Receipt</h2>
+            <p className="text-muted text-lg max-w-2xl mx-auto">
+              No explanations. Just the four things that happen every time OMNIX governs a decision.
+            </p>
+          </div>
+          <div style={{
+            display:'grid',
+            gridTemplateColumns:'1fr auto 1fr auto 1fr auto 1fr',
+            alignItems:'center',
+            gap:'0',
+            maxWidth:960,
+            margin:'0 auto 2rem',
+          }}>
+            {[
+              { num:'01', label:'Scenario', desc:'A decision arrives — trade, loan, claim, dispatch.', color:'#a78bfa', bg:'rgba(167,139,250,0.08)', border:'rgba(167,139,250,0.2)' },
+              { num:'02', label:'Decision', desc:'11 checkpoints. Every rule fires. Every gate scored.', color:'#C9A227', bg:'rgba(201,162,39,0.08)', border:'rgba(201,162,39,0.2)' },
+              { num:'03', label:'Receipt', desc:'SHA-256 hash + Dilithium-3 signature. Immutable.', color:'#60a5fa', bg:'rgba(96,165,250,0.08)', border:'rgba(96,165,250,0.2)' },
+              { num:'04', label:'Verify', desc:'Anyone verifies it. No OMNIX server needed.', color:'#34d399', bg:'rgba(52,211,153,0.08)', border:'rgba(52,211,153,0.2)' },
+            ].map((step, i) => (
+              <>
+                <div key={step.num} style={{
+                  background: step.bg,
+                  border: `1px solid ${step.border}`,
+                  borderRadius: 16,
+                  padding: '28px 20px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize:'2rem', fontWeight:900, color: step.color, opacity:0.5, marginBottom:8, fontFamily:'monospace' }}>{step.num}</div>
+                  <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#fff', marginBottom:8 }}>{step.label}</div>
+                  <div style={{ fontSize:'0.82rem', color:'#94A3B8', lineHeight:1.5 }}>{step.desc}</div>
+                </div>
+                {i < 3 && (
+                  <div key={`arrow-${i}`} style={{ textAlign:'center', color:'#334155', fontSize:'1.5rem', padding:'0 8px' }}>→</div>
+                )}
+              </>
+            ))}
+          </div>
+          <div style={{ textAlign:'center' }}>
+            <Link to="/verify-independently" style={{
+              display:'inline-flex', alignItems:'center', gap:10,
+              background:'rgba(52,211,153,0.08)',
+              border:'1px solid rgba(52,211,153,0.3)',
+              borderRadius:10, padding:'14px 28px',
+              color:'#34d399', fontWeight:700, fontSize:'0.95rem',
+              textDecoration:'none', transition:'all 0.2s',
+            }}>
+              Verify a Receipt Independently →
+            </Link>
+            <p style={{ color:'#475569', fontSize:'0.8rem', marginTop:10 }}>
+              Download the script · Fetch the public key · No account required
+            </p>
+          </div>
         </section>
 
         {/* ── PRODUCT DEMO VIDEO ── */}
@@ -1510,6 +1577,9 @@ export default function CommercialLanding() {
             </Link>
             <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">
               Technical Details
+            </Link>
+            <Link to="/verify-independently" className="text-emerald-400 hover:text-white text-sm transition-colors font-medium">
+              Independent Verification
             </Link>
             <Link to="/my-report" className="text-muted hover:text-white text-sm transition-colors">
               Client Portal
