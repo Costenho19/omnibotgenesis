@@ -1,0 +1,64 @@
+{
+  "name": "omnix-quantum",
+  "version": "1.0.0",
+  "description": "OMNIX Governance SDK — Decision governance infrastructure with post-quantum cryptographic proof",
+  "author": "OMNIX Quantum Ltd <hello@omnixquantum.net>",
+  "license": "MIT",
+  "homepage": "https://omnixquantum.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/omnixquantum/omnix-node-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/omnixquantum/omnix-node-sdk/issues"
+  },
+  "keywords": [
+    "governance",
+    "ai-governance",
+    "decision-infrastructure",
+    "post-quantum-cryptography",
+    "pqc",
+    "dilithium",
+    "audit",
+    "compliance",
+    "eidas",
+    "mifid",
+    "fintech"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "example": "tsx examples/basic_usage.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

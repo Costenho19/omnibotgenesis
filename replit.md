@@ -1092,3 +1092,39 @@ pip install build twine
 python -m build
 twine upload dist/*
 ```
+
+---
+
+## Node.js / TypeScript SDK — `omnix-quantum` (Fase B)
+
+**Ruta:** `sdk/node/`
+**Instalación:** `npm install omnix-quantum`
+**Estado:** ✅ Build limpio (ESM + CJS + tipos) — pendiente de cuenta npm
+
+### Estructura
+```
+sdk/node/
+├── src/
+│   ├── index.ts         # exports + evaluate() convenience
+│   ├── client.ts        # OmnixClient — HTTP client (cero deps)
+│   ├── models.ts        # GovernanceReceipt, CheckpointResult (tipos TS)
+│   └── exceptions.ts    # 6 typed error classes
+├── dist/                # compilado — ESM + CJS + .d.ts
+├── package.json         # omnix-quantum, Node ≥ 16
+├── tsconfig.json
+├── README.md
+└── examples/
+    └── basic_usage.ts   # 7 ejemplos comentados
+```
+
+### Build
+```bash
+cd sdk/node && npm run build   # → dist/ ESM + CJS + tipos
+```
+
+### Para publicar en npm
+```bash
+cd sdk/node
+npm install && npm run build
+npm publish --access public
+```
