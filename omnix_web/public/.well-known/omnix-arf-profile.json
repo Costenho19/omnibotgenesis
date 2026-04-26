@@ -72,6 +72,26 @@
     "SAMA_SAUDI":     { "label": "SAMA Responsible AI",             "reference": "SAMA Principles for Responsible AI (2023)" },
     "FSB_G20":        { "label": "FSB AI/ML in Financial Services", "reference": "FSB Report (Nov 2017, updated 2023)" }
   },
+  "revocation": {
+    "adr": "ADR-130 — VC Trust Revocation Registry",
+    "spec": "W3C Status List 2021 (https://www.w3.org/TR/2023/WD-vc-status-list-20230427/)",
+    "status_check": "https://omnixquantum.net/api/trust/vc-status/{receipt_id}",
+    "status_list":  "https://omnixquantum.net/api/trust/status-list",
+    "revoke_endpoint": "https://omnixquantum.net/api/trust/revoke/{receipt_id}",
+    "credential_status_type": "StatusList2021Entry",
+    "status_purpose": "revocation",
+    "revocation_triggers": [
+      "fraud_detected",
+      "assumption_invalidation_avm",
+      "execution_boundary_violation_ebip",
+      "anomaly_response_adr129",
+      "regulatory_order",
+      "admin_override"
+    ],
+    "lifecycle": "active → revoked | suspended → active (reinstatement with audit trail)",
+    "verifier_instruction": "Fetch /api/trust/vc-status/{receipt_id} before accepting any OMNIX VC as governance evidence. Status='active' means the credential has not been revoked. Cache TTL: 0 seconds (always check live).",
+    "innocent_until_revoked": true
+  },
   "trust_chain": {
     "root_of_trust": "did:web:omnixquantum.net",
     "trust_registry": "https://omnixquantum.net/api/trust/registry",

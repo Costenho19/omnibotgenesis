@@ -24,6 +24,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import psycopg2
+import uuid
 from datetime import datetime, timezone
 import re
 
@@ -364,6 +365,22 @@ def _ensure_vertical_tables():
             blocked_volume_usd  FLOAT       DEFAULT 0,
             duration_ms         INTEGER     DEFAULT 0,
             created_at          TIMESTAMPTZ DEFAULT NOW()
+        )
+        """,
+        # ── VC Trust Revocation Registry (ADR-130) ────────────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS vc_revocation_registry (
+            receipt_id           VARCHAR(128) PRIMARY KEY,
+            status               VARCHAR(20)  NOT NULL DEFAULT 'active',
+            reason               TEXT,
+            revoked_by           VARCHAR(128),
+            revoked_at           TIMESTAMPTZ,
+            reinstated_at        TIMESTAMPTZ,
+            reinstatement_reason TEXT,
+            revocation_context   JSONB        NOT NULL DEFAULT '{}',
+            audit_trail          JSONB        NOT NULL DEFAULT '[]',
+            created_at           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            updated_at           TIMESTAMPTZ  NOT NULL DEFAULT NOW()
         )
         """,
     ]
@@ -1870,11 +1887,196 @@ def trust_health():
             'trust_registry':       '/api/trust/registry',
             'independent_verifier': '/api/trust/verify',
             'vc_issuer':            '/api/governance/receipt/vc',
+            'vc_status':            '/api/trust/vc-status/{receipt_id}',
+            'vc_revoke':            '/api/trust/revoke/{receipt_id}',
+            'vc_reinstate':         '/api/trust/reinstate/{receipt_id}',
+            'status_list':          '/api/trust/status-list',
             'framework_catalog':    '/api/trust/frameworks',
             'jsonld_context':       '/schemas/omnix-receipt-v1.jsonld',
             'json_schema':          '/schemas/omnix-receipt-schema-v6.5.4e.json',
         },
+        'adr': 'ADR-130 — VC Trust Revocation Registry (active)',
     }), 200, {'Access-Control-Allow-Origin': '*'}
+
+
+# ── VC Trust Revocation Registry — ADR-130 ────────────────────────────────────
+
+@app.route('/api/trust/vc-status/<receipt_id>', methods=['GET'])
+def trust_vc_status(receipt_id: str):
+    """
+    GET /api/trust/vc-status/{receipt_id}
+    ADR-130: Real-time revocation status for a specific OMNIX Verifiable Credential.
+
+    Public endpoint — no authentication required.
+    Innocent-until-revoked: returns status='active' if the receipt is not in the
+    revocation registry (matching W3C StatusList2021 semantics).
+
+    Verifiers MUST call this endpoint before accepting any OMNIX VC as evidence.
+    """
+    if not receipt_id or len(receipt_id) > 128:
+        return jsonify({'error': 'Invalid receipt_id'}), 400
+
+    try:
+        from api.omnix_engine.vc_revocation import VCRevocationRegistry
+    except ImportError:
+        from omnix_engine.vc_revocation import VCRevocationRegistry
+
+    registry = VCRevocationRegistry()
+    status   = registry.get_status(receipt_id)
+    http_code = 200 if status.get('status') in ('active', 'unknown') else 200
+    return jsonify(status), http_code, {
+        'Content-Type':              'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control':             'no-cache, no-store, must-revalidate',
+        'X-OMNIX-ADR':               'ADR-130',
+        'X-OMNIX-VC-Status':         status.get('status', 'unknown'),
+    }
+
+
+@app.route('/api/trust/revoke/<receipt_id>', methods=['POST'])
+def trust_revoke_vc(receipt_id: str):
+    """
+    POST /api/trust/revoke/{receipt_id}
+    ADR-130: Revoke or suspend an OMNIX Verifiable Credential.
+
+    Authentication: X-API-Key with admin role (b2b_clients.role = 'admin').
+    System actors: 'system:avm', 'system:ebip', 'system:anomaly' bypass
+    client auth when called internally.
+
+    Body: {
+        "reason":  str  (required, min 10 chars),
+        "status":  "revoked" | "suspended"  (default: "revoked"),
+        "context": dict  (optional — regulatory basis, evidence refs, etc.)
+    }
+    """
+    if not receipt_id or len(receipt_id) > 128:
+        return jsonify({'error': 'Invalid receipt_id'}), 400
+
+    try:
+        from api.omnix_engine.vc_revocation import VCRevocationRegistry, _require_admin_auth
+    except ImportError:
+        from omnix_engine.vc_revocation import VCRevocationRegistry, _require_admin_auth
+
+    client_id, err = _require_admin_auth(request)
+    if err:
+        return err
+
+    data    = request.get_json(silent=True) or {}
+    reason  = (data.get('reason') or '').strip()
+    status  = data.get('status', 'revoked')
+    context = data.get('context') or {}
+
+    if not reason or len(reason) < 10:
+        return jsonify({
+            'error': 'reason is required and must be at least 10 characters.',
+        }), 422
+
+    if status not in ('revoked', 'suspended'):
+        return jsonify({
+            'error': 'status must be "revoked" or "suspended".',
+        }), 422
+
+    try:
+        registry = VCRevocationRegistry()
+        result   = registry.revoke(
+            receipt_id=receipt_id,
+            reason=reason,
+            revoked_by=client_id,
+            status=status,
+            context=context,
+        )
+        return jsonify({
+            'success':    True,
+            'event':      result,
+            'message':    f'VC {receipt_id} has been {status}.',
+            'adr':        'ADR-130 — VC Trust Revocation Registry',
+            'status_url': f'https://omnixquantum.net/api/trust/vc-status/{receipt_id}',
+        }), 200, {'Content-Type': 'application/json', 'X-OMNIX-ADR': 'ADR-130'}
+    except ValueError as ve:
+        return jsonify({'error': str(ve)}), 422
+    except Exception as e:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"revoke_vc error ref={ref}: {e}")
+        return jsonify({'error': 'Revocation failed', 'reference': ref}), 500
+
+
+@app.route('/api/trust/reinstate/<receipt_id>', methods=['POST'])
+def trust_reinstate_vc(receipt_id: str):
+    """
+    POST /api/trust/reinstate/{receipt_id}
+    ADR-130: Reinstate a suspended or revoked VC.
+
+    Authentication: X-API-Key with admin role.
+    Audit trail is preserved — the original revocation event is not erased.
+
+    Body: { "reason": str (required, min 20 chars) }
+    """
+    if not receipt_id or len(receipt_id) > 128:
+        return jsonify({'error': 'Invalid receipt_id'}), 400
+
+    try:
+        from api.omnix_engine.vc_revocation import VCRevocationRegistry, _require_admin_auth
+    except ImportError:
+        from omnix_engine.vc_revocation import VCRevocationRegistry, _require_admin_auth
+
+    client_id, err = _require_admin_auth(request)
+    if err:
+        return err
+
+    data   = request.get_json(silent=True) or {}
+    reason = (data.get('reason') or '').strip()
+
+    if not reason or len(reason) < 20:
+        return jsonify({
+            'error': 'reason is required and must be at least 20 characters.',
+        }), 422
+
+    try:
+        registry = VCRevocationRegistry()
+        result   = registry.reinstate(
+            receipt_id=receipt_id,
+            reason=reason,
+            reinstated_by=client_id,
+        )
+        return jsonify({
+            'success': True,
+            'event':   result,
+            'message': f'VC {receipt_id} has been reinstated.',
+            'adr':     'ADR-130 — VC Trust Revocation Registry',
+        }), 200, {'Content-Type': 'application/json', 'X-OMNIX-ADR': 'ADR-130'}
+    except ValueError as ve:
+        return jsonify({'error': str(ve)}), 422
+    except Exception as e:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"reinstate_vc error ref={ref}: {e}")
+        return jsonify({'error': 'Reinstatement failed', 'reference': ref}), 500
+
+
+@app.route('/api/trust/status-list', methods=['GET'])
+def trust_status_list():
+    """
+    GET /api/trust/status-list
+    ADR-130: W3C StatusList2021-compatible revocation index.
+
+    Public endpoint — no authentication required.
+    Lists all non-active VCs (revoked + suspended).
+    Verifiers can cache this list and check receipt_ids locally.
+
+    Spec: https://www.w3.org/TR/2023/WD-vc-status-list-20230427/
+    """
+    try:
+        from api.omnix_engine.vc_revocation import VCRevocationRegistry
+    except ImportError:
+        from omnix_engine.vc_revocation import VCRevocationRegistry
+
+    registry    = VCRevocationRegistry()
+    status_list = registry.get_status_list()
+    return jsonify(status_list), 200, {
+        'Content-Type':              'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control':             'public, max-age=300',
+        'X-OMNIX-ADR':               'ADR-130',
+    }
 
 
 @app.route('/api/explorer/receipt/<receipt_id>', methods=['GET'])

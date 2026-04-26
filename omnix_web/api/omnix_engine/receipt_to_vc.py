@@ -84,6 +84,14 @@ class ReceiptToVC:
             if optional_block in receipt:
                 credential_subject[optional_block] = receipt[optional_block]
 
+        try:
+            from api.omnix_engine.vc_revocation import build_credential_status
+        except ImportError:
+            try:
+                from omnix_engine.vc_revocation import build_credential_status
+            except ImportError:
+                build_credential_status = None
+
         vc = {
             "@context": VC_CONTEXT,
             "id": vc_id,
@@ -95,6 +103,15 @@ class ReceiptToVC:
             },
             "issuanceDate":   issuance_dt.isoformat(),
             "expirationDate": expiry_dt.isoformat(),
+            "credentialStatus": (
+                build_credential_status(receipt_id)
+                if build_credential_status else {
+                    "id":   f"{OMNIX_ISSUER_URL}/api/trust/vc-status/{receipt_id}",
+                    "type": "StatusList2021Entry",
+                    "statusPurpose": "revocation",
+                    "statusListCredential": f"{OMNIX_ISSUER_URL}/api/trust/status-list",
+                }
+            ),
             "credentialSubject": credential_subject,
         }
 
