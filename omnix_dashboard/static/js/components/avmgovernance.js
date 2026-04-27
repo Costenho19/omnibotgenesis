@@ -147,7 +147,7 @@
 
                 <!-- Domain baseline grid -->
                 <div class="avm-domains-section">
-                    <div class="avm-domains-title">BASELINE INTEGRITY · 4 DOMAINS</div>
+                    <div class="avm-domains-title">BASELINE INTEGRITY · 9 DOMAINS</div>
                     <div class="avm-domains-grid">
                         <div class="avm-grid-header">
                             <span>Domain</span>

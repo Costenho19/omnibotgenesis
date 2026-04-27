@@ -32,10 +32,6 @@ args = "OMNIX Web"
 task = "workflow.run"
 args = "Flask Dashboard"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "OMNIX Web API"
-
 [[workflows.workflow]]
 name = "Code Verification"
 author = "agent"
@@ -78,7 +74,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd omnix_web && npm run dev"
+args = "bash /home/runner/workspace/omnix_web/start.sh"
 waitForPort = 3000
 
 [[workflows.workflow]]
@@ -93,29 +89,9 @@ task = "shell.exec"
 args = "cd omnix_dashboard && python -m flask run --host=0.0.0.0 --port=5000"
 waitForPort = 5000
 
-[[workflows.workflow]]
-name = "OMNIX Web API"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd /home/runner/workspace/omnix_web && PYTHONPATH=/home/runner/workspace/omnix_web PORT=8080 python api/server.py"
-waitForPort = 8080
-
 [[ports]]
 localPort = 3000
-externalPort = 80
-
-[[ports]]
-localPort = 3001
-externalPort = 3001
-
-[[ports]]
-localPort = 5000
-externalPort = 5000
+externalPort = 3000
 
 [[ports]]
 localPort = 5904

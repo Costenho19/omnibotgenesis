@@ -1111,12 +1111,21 @@ def api_avm_status():
 
         snapshots = bridge.load_all_snapshots() if bridge.is_available() else {}
 
-        DOMAIN_ORDER = ["trading", "islamic_credit", "insurance", "robotics"]
+        DOMAIN_ORDER = [
+            "trading", "islamic_credit", "insurance", "robotics",
+            "energy_governance", "stablecoin", "autonomous_agent",
+            "medical_ai", "real_estate",
+        ]
         DOMAIN_LABELS = {
-            "trading":        "Trading",
-            "islamic_credit": "Islamic Credit",
-            "insurance":      "Insurance",
-            "robotics":       "Robotics",
+            "trading":           "Trading",
+            "islamic_credit":    "Islamic Credit",
+            "insurance":         "Insurance",
+            "robotics":          "Robotics",
+            "energy_governance": "Energy Governance",
+            "stablecoin":        "Stablecoin",
+            "autonomous_agent":  "Autonomous Agent",
+            "medical_ai":        "Medical AI",
+            "real_estate":       "Real Estate",
         }
 
         domains = []

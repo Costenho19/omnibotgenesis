@@ -254,12 +254,11 @@ def create_app():
 app = create_app()
 
 
-@app.route('/api/public/<path:subpath>', methods=['GET', 'POST', 'OPTIONS'])
-def proxy_public_api(subpath):
-    """Forward /api/public/* to OMNIX Web API on port 8080 (dev only)."""
+def _proxy_to_omnix_web(path: str):
+    """Helper: forward a request to OMNIX Web API (port 8080)."""
     import requests as _req
-    from flask import request, Response
-    target = f"http://127.0.0.1:8080/api/public/{subpath}"
+    from flask import request, Response, jsonify
+    target = f"http://127.0.0.1:8080/{path}"
     try:
         resp = _req.request(
             method=request.method,
@@ -274,8 +273,25 @@ def proxy_public_api(subpath):
         headers = [(k, v) for k, v in resp.headers.items() if k.lower() not in excluded]
         return Response(resp.content, status=resp.status_code, headers=headers)
     except Exception as _e:
-        from flask import jsonify
         return jsonify({'success': False, 'error': str(_e)}), 503
+
+
+@app.route('/api/public/<path:subpath>', methods=['GET', 'POST', 'OPTIONS'])
+def proxy_public_api(subpath):
+    """Forward /api/public/* to OMNIX Web API on port 8080."""
+    return _proxy_to_omnix_web(f'api/public/{subpath}')
+
+
+@app.route('/api/trust/<path:subpath>', methods=['GET', 'POST', 'OPTIONS'])
+def proxy_trust_api(subpath):
+    """Forward /api/trust/* to OMNIX Web API on port 8080."""
+    return _proxy_to_omnix_web(f'api/trust/{subpath}')
+
+
+@app.route('/api/execution/<path:subpath>', methods=['GET', 'POST', 'OPTIONS'])
+def proxy_execution_api(subpath):
+    """Forward /api/execution/* to OMNIX Web API on port 8080."""
+    return _proxy_to_omnix_web(f'api/execution/{subpath}')
 
 
 @app.after_request

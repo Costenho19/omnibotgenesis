@@ -1,7 +1,7 @@
 # ADR-130 — VC Trust Revocation Registry
 
-**Status:** ACCEPTED (v2 — "full Europa" premium upgrade)  
-**Date:** 2026-04-26  
+**Status:** ACCEPTED (v2.2 — "full Europa" complete)  
+**Date:** 2026-04-27  
 **Author:** OMNIX Quantum Ltd — Harold Alberto Nunes Rodelo  
 **Context:** Fase C — eIDAS 2.0 / W3C VC / ARF Institutional Readiness  
 
@@ -14,6 +14,7 @@
 | v1 | 2026-04-26 | Initial revocation registry — 4 endpoints, credentialStatus block, ADR doc |
 | v2 | 2026-04-26 | Full Europa upgrade: W3C compressed bitstring, ETag cache strategy, revocation webhooks, human accountability binding in VC proof |
 | v2.1 | 2026-04-27 | Premium headers on trust_vc_status (`Vary: Accept`, `X-Content-Type-Options: nosniff`). Auto-lookup oversight_sessions for human_signer in `receipt/vc` endpoint — VC proof now auto-includes human reviewer binding when oversight session exists for the receipt. |
+| v2.2 | 2026-04-27 | **"Full Europa" verified production-ready.** All 5 items confirmed implemented and tested: (1) W3C StatusList2021 bitstring comprimido con `status_list_index` secuencial; (2) ETag / `If-None-Match` → 304 con `Cache-Control: public, max-age=300`; (3) Revocation webhooks HMAC-SHA256 async en daemon thread; (4) Human accountability binding auto-lookup desde `oversight_sessions`; (5) AVM event-driven domain suspension (`fire_avm_domain_suspension` — event-triggered, not cycle-based). ADR-130 es el primer ADR de OMNIX en cubrir enforcement cryptographic completo de principio a fin. |
 
 ---
 
@@ -126,10 +127,11 @@ _require_admin_auth(request)            → (client_id, error_response)
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `GET` | `/api/trust/vc-status/{receipt_id}` | Public | Real-time status check (no-cache) |
-| `POST` | `/api/trust/revoke/{receipt_id}` | Admin | Revoke or suspend |
-| `POST` | `/api/trust/reinstate/{receipt_id}` | Admin | Reinstate with audit trail |
-| `GET` | `/api/trust/status-list` | Public | W3C StatusList2021 bitstring (ETag/304) |
+| `GET` | `/api/trust/vc-status/{receipt_id}` | Public | Real-time status check (`no-cache`, `Vary: Accept`) |
+| `POST` | `/api/trust/revoke/{receipt_id}` | Admin | Revoke or suspend — fires webhook async |
+| `POST` | `/api/trust/reinstate/{receipt_id}` | Admin | Reinstate with full audit trail — fires webhook async |
+| `GET` | `/api/trust/status-list` | Public | W3C StatusList2021 bitstring (`ETag`/`304`, `max-age=300`) |
+| `POST` | `/api/governance/receipt/vc` | Public | Issue W3C VC from receipt — includes `humanSigner` auto-lookup |
 
 ### 3.4 VC Structure (ADR-084 Extension)
 
@@ -212,7 +214,42 @@ registry.revoke(
 )
 ```
 
-### 4.3 EBIP Integration (Future)
+### 4.3 AVM Event-Driven Domain Suspension (v2.2)
+
+The `fire_avm_domain_suspension()` function is triggered **immediately** when
+`GovernanceEvaluationEngine` detects a STALE_BLOCK (AVM drift > threshold).
+It is **event-driven**, not cycle-based — closing the gap Dr. Todd M. Price identified:
+
+> *"Assumption tracking must be active and time-sensitive, capable of invalidating
+> decisions when conditions change."*
+
+```python
+# Called from GovernanceEvaluationEngine when AVM returns STALE_BLOCK:
+fire_avm_domain_suspension(
+    domain="trading",
+    drift_score=87.3,
+    snapshot_id="AVM-SNAPSHOT-001",
+    asset="BTC/USD",
+)
+```
+
+Behavior:
+- Fetches all active VCs for the domain issued in the last 24 hours.
+- Calls `registry.revoke(..., status="suspended", revoked_by="system:avm")`.
+- Fires `vc.suspended` webhook for each affected VC.
+- Suspension is reversible — VCs are reinstated when AVM recalibrates.
+- Runs in a daemon thread — never blocks the evaluation pipeline.
+
+```
+fire_avm_domain_suspension(domain, drift, snapshot_id)
+  └── _suspend_domain_vcs()  [daemon thread]
+        ├── SELECT active VCs for domain issued in last 24h
+        ├── registry.revoke(..., status="suspended", revoked_by="system:avm")
+        │     └── fire_revocation_webhook("vc.suspended", ...)  [daemon thread]
+        └── LOG: N VCs suspended | domain | drift | snapshot_id
+```
+
+### 4.4 EBIP Integration (Future)
 ExecutionBoundaryIntegrityProtocol (EBIP) violations with severity ≥ CRITICAL
 can trigger automatic suspension of the associated VC, pending investigation.
 
@@ -499,7 +536,7 @@ MODIFIED (v2):
       + get_status_list()                  returns encodedList + per-entry statusListIndex
       + get_etag()                         SHA-256 of registry state for ETag
       + fire_revocation_webhook()          HMAC-SHA256 signed, daemon thread
-      + _deliver_revocation_webhook()      HTTP delivery with 2 retries
+      + _deliver_revocation_webhook()      HTTP delivery, 10s timeout
       + _get_client_webhook_config()       fetches webhook_url/secret from b2b_clients
       revoke()                             triggers webhook + assigns status_list_index
       reinstate()                          triggers vc.reinstated webhook
@@ -518,7 +555,19 @@ MODIFIED (v2):
       api_governance_receipt_vc() [v2.1]   + auto-lookup oversight_sessions for receipt_id
                                              Auto-populates human_signer from completed oversight session
 
-NEW (v1, unchanged in v2):
+MODIFIED (v2.2 — "full Europa" completion pass):
+  omnix_web/api/omnix_engine/vc_revocation.py
+      + fire_avm_domain_suspension()       Event-driven hook: suspends all active domain VCs
+      + _suspend_domain_vcs()             Daemon thread: bulk domain suspension (last 24h VCs)
+                                          Closes Dr. Todd M. Price's "time-sensitive invalidation" gap
+
+  docs/adr/ADR-130-vc-trust-revocation-registry.md
+      § Changelog v2.2 — verified production-ready, all 5 items confirmed
+      § 4.3 AVM Event-Driven Domain Suspension — new section
+      § 3.3 API Endpoints — added POST /api/governance/receipt/vc row
+      § 13. Implementation Files — this section, v2.2 addendum
+
+NEW (v1, unchanged in v2/v2.1/v2.2):
   omnix_web/api/omnix_engine/vc_revocation.py
       VCRevocationRegistry, build_credential_status, _require_admin_auth
 
@@ -527,7 +576,6 @@ NEW (v1, unchanged in v2):
       POST /api/trust/revoke/<receipt_id>
       POST /api/trust/reinstate/<receipt_id>
       GET  /api/trust/status-list
-      Updated /api/trust/health endpoints dict
 
   omnix_web/api/omnix_engine/receipt_to_vc.py
       credentialStatus block in VC output (ReceiptToVC.convert)
@@ -535,3 +583,20 @@ NEW (v1, unchanged in v2):
   omnix_web/public/.well-known/omnix-arf-profile.json
       revocation section with W3C StatusList2021 references
 ```
+
+---
+
+## 14. "Full Europa" Compliance Checklist (v2.2)
+
+| Item | Requirement | Status | Implementation |
+|---|---|---|---|
+| 1 | W3C StatusList2021 compressed bitstring (`encodedList`) | ✅ DONE | `_build_encoded_list()`, BITSTRING_SIZE=131072, gzip+base64url |
+| 2 | Sequential `status_list_index` per revocation | ✅ DONE | `_get_next_status_list_index()`, `ALTER TABLE … ADD COLUMN` |
+| 3 | ETag conditional GET (If-None-Match → 304) | ✅ DONE | `get_etag()`, `trust_status_list()` |
+| 4 | `Cache-Control: public, max-age=300` on status-list | ✅ DONE | `trust_status_list()` HTTP headers |
+| 5 | Revocation webhooks HMAC-SHA256 async | ✅ DONE | `fire_revocation_webhook()`, daemon thread |
+| 6 | `vc.revoked` / `vc.suspended` / `vc.reinstated` events | ✅ DONE | `revoke()` and `reinstate()` fire automatically |
+| 7 | `humanSigner` block in VC proof | ✅ DONE | `_build_human_signer_block()`, `ReceiptToVC.convert()` |
+| 8 | Auto-lookup `oversight_sessions` for `humanSigner` | ✅ DONE | `api_governance_receipt_vc()` auto-fetch |
+| 9 | `Vary: Accept` + `X-Content-Type-Options` on vc-status | ✅ DONE | `trust_vc_status()` headers |
+| 10 | AVM event-driven domain suspension (not cycle-based) | ✅ DONE | `fire_avm_domain_suspension()` |
