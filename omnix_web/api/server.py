@@ -1938,13 +1938,14 @@ def trust_vc_status(receipt_id: str):
 
     registry = VCRevocationRegistry()
     status   = registry.get_status(receipt_id)
-    http_code = 200 if status.get('status') in ('active', 'unknown') else 200
-    return jsonify(status), http_code, {
-        'Content-Type':              'application/json',
+    return jsonify(status), 200, {
+        'Content-Type'               : 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control':             'no-cache, no-store, must-revalidate',
-        'X-OMNIX-ADR':               'ADR-130',
-        'X-OMNIX-VC-Status':         status.get('status', 'unknown'),
+        'Cache-Control'              : 'no-cache, no-store, must-revalidate',
+        'Vary'                       : 'Accept',
+        'X-Content-Type-Options'     : 'nosniff',
+        'X-OMNIX-ADR'                : 'ADR-130',
+        'X-OMNIX-VC-Status'          : status.get('status', 'unknown'),
     }
 
 
@@ -3957,6 +3958,186 @@ def stablecoin_timeline():
         return jsonify({"success": True, "timeline": rows})
     except Exception as e:
         return _api_error(e)
+
+
+# ── ADR-131: Execution Integrity Layer — Public API endpoints ─────────────────
+# These endpoints seal the decision→execution audit chain for B2B SDK clients.
+# Spec: docs/adr/ADR-131-execution-integrity-layer.md
+# SDK:  omnix_sdk/python/omnix_sdk.py — execute() / get_execution_receipt()
+
+@app.route('/api/execution/receipts', methods=['POST'])
+def api_execution_create():
+    """
+    POST /api/execution/receipts
+    ADR-131 — Log an execution receipt and seal the decision→execution audit chain.
+
+    Authentication: X-API-Key (standard B2B client auth, same as governance endpoints).
+
+    Body:
+        decision_receipt_id  str    required — receipt_id from /api/governance/evaluate
+        order_id             str    required — exchange order reference
+        symbol               str    required — instrument (e.g. "BTC/USD")
+        side                 str    required — "BUY" | "SELL"
+        size_usd             float  required — notional value in USD
+        final_status         str    required — "FILLED" | "PARTIAL" | "FAILED"
+        executed_price       float  optional — actual fill price
+        filled_quantity      float  optional — units filled
+        requested_price      float  optional — limit price (omit for MARKET)
+        requested_quantity   float  optional — units requested
+        execution_style      str    optional — "MARKET" | "LIMIT" | "TWAP" | "VWAP"
+        exchange_response    dict   optional — raw exchange response (verbatim)
+        failure_reason       str    optional — required when final_status = "FAILED"
+
+    Returns:
+        201  Sealed execution receipt with latency_ms, slippage_bps, fill_ratio,
+             receipt_hash, and audit_trail.
+        400  Missing or invalid required fields.
+        401  Missing or invalid API key.
+        422  Validation error (invalid status, missing required conditionals).
+        500  Internal engine error.
+    """
+    try:
+        from api.gov_auth_rbac import require_auth as _require_auth_rbac
+    except ImportError:
+        try:
+            from gov_auth_rbac import require_auth as _require_auth_rbac
+        except ImportError:
+            _require_auth_rbac = None
+
+    if _require_auth_rbac:
+        client, err = _require_auth_rbac()
+        if err:
+            return err
+        client_id = client.get("client_id", "unknown")
+    else:
+        api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
+        if not api_key:
+            return jsonify({"error": "Missing X-API-Key header"}), 401
+        client_id = "direct"
+
+    data = request.get_json(silent=True) or {}
+
+    required_fields = ["decision_receipt_id", "order_id", "symbol", "side", "size_usd", "final_status"]
+    missing = [f for f in required_fields if not data.get(f)]
+    if missing:
+        return jsonify({"error": f"Missing required fields: {missing}"}), 400
+
+    final_status_raw = str(data.get("final_status", "")).upper()
+    if final_status_raw not in ("FILLED", "PARTIAL", "FAILED"):
+        return jsonify({"error": "final_status must be FILLED, PARTIAL, or FAILED"}), 422
+
+    if final_status_raw == "FAILED" and not (data.get("failure_reason") or "").strip():
+        return jsonify({"error": "failure_reason is required when final_status is FAILED"}), 422
+
+    if final_status_raw in ("FILLED", "PARTIAL") and data.get("executed_price") is None:
+        return jsonify({"error": "executed_price is required when final_status is FILLED or PARTIAL"}), 422
+
+    try:
+        size_usd = float(data["size_usd"])
+    except (ValueError, TypeError):
+        return jsonify({"error": "size_usd must be a number"}), 422
+
+    try:
+        try:
+            from api.omnix_engine.execution_receipt import (
+                ExecutionIntent, ExecutionStatus, ExecutionReceiptRegistry,
+            )
+        except ImportError:
+            from omnix_engine.execution_receipt import (
+                ExecutionIntent, ExecutionStatus, ExecutionReceiptRegistry,
+            )
+
+        intent = ExecutionIntent(
+            decision_receipt_id = str(data["decision_receipt_id"]),
+            order_id            = str(data["order_id"]),
+            symbol              = str(data["symbol"]),
+            side                = str(data["side"]).upper(),
+            size_usd            = size_usd,
+            execution_style     = str(data.get("execution_style") or "MARKET").upper(),
+            requested_price     = float(data["requested_price"]) if data.get("requested_price") is not None else None,
+            requested_quantity  = float(data["requested_quantity"]) if data.get("requested_quantity") is not None else None,
+        )
+
+        registry   = ExecutionReceiptRegistry()
+        receipt_id = registry.log_intent(intent)
+
+        enum_status  = ExecutionStatus(final_status_raw)
+        exec_receipt = registry.log_result(
+            receipt_id        = receipt_id,
+            final_status      = enum_status,
+            executed_price    = float(data["executed_price"]) if data.get("executed_price") is not None else None,
+            filled_quantity   = float(data["filled_quantity"]) if data.get("filled_quantity") is not None else None,
+            exchange_response = data.get("exchange_response") or {},
+            failure_reason    = str(data.get("failure_reason") or ""),
+            requested_price   = float(data["requested_price"]) if data.get("requested_price") is not None else None,
+            requested_quantity= float(data["requested_quantity"]) if data.get("requested_quantity") is not None else None,
+        )
+
+        body = exec_receipt.to_dict()
+        body["_links"] = {
+            "self":    f"https://omnixquantum.net/api/execution/receipts/{receipt_id}",
+            "decision": f"https://omnixquantum.net/api/governance/receipts/{intent.decision_receipt_id}",
+        }
+        body["adr"] = "ADR-131 — Execution Integrity Layer"
+
+        return jsonify(body), 201, {
+            "Content-Type"  : "application/json",
+            "X-OMNIX-ADR"   : "ADR-131",
+            "Location"      : f"/api/execution/receipts/{receipt_id}",
+        }
+
+    except Exception as exc:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"[ExecutionAPI] create failed ref={ref}: {exc}")
+        return jsonify({"error": "Execution receipt creation failed", "reference": ref}), 500
+
+
+@app.route('/api/execution/receipts/<string:receipt_id>', methods=['GET'])
+def api_execution_get(receipt_id: str):
+    """
+    GET /api/execution/receipts/<receipt_id>
+    ADR-131 — Retrieve a specific execution receipt by its ID.
+
+    Authentication: X-API-Key (same B2B client that created the receipt).
+    Public verifiers may use the receipt_hash for tamper detection.
+
+    Returns full execution receipt including latency_ms, slippage_bps,
+    fill_ratio, receipt_hash, and the complete audit_trail.
+    """
+    if not receipt_id or len(receipt_id) > 64:
+        return jsonify({"error": "Invalid receipt_id"}), 400
+
+    try:
+        try:
+            from api.omnix_engine.execution_receipt import ExecutionReceiptRegistry
+        except ImportError:
+            from omnix_engine.execution_receipt import ExecutionReceiptRegistry
+
+        registry = ExecutionReceiptRegistry()
+        receipt  = registry.get_by_receipt_id(receipt_id)
+
+        if not receipt:
+            return jsonify({"error": f"Execution receipt {receipt_id} not found"}), 404
+
+        receipt["_links"] = {
+            "self": f"https://omnixquantum.net/api/execution/receipts/{receipt_id}",
+        }
+        if receipt.get("decision_receipt_id"):
+            receipt["_links"]["decision"] = (
+                f"https://omnixquantum.net/api/governance/receipts/"
+                f"{receipt['decision_receipt_id']}"
+            )
+
+        return jsonify(receipt), 200, {
+            "Content-Type" : "application/json",
+            "X-OMNIX-ADR"  : "ADR-131",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        }
+
+    except Exception as exc:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"[ExecutionAPI] get failed ref={ref}: {exc}")
+        return jsonify({"error": "Failed to retrieve execution receipt", "reference": ref}), 500
 
 
 @app.route('/', defaults={'path': ''})

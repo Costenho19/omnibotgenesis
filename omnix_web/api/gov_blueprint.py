@@ -1815,12 +1815,44 @@ def api_governance_receipt_vc():
 
     include_semantics = bool(data.get('include_jurisdiction_semantics', True))
 
-    # ADR-130 v2 (T004): optional human accountability binding in VC proof
-    # Callers supply { "human_signer": { "reviewer_id": "...", "eqs_score": 0.93,
-    #                                     "oversight_session_id": "OSS-..." } }
+    # ADR-130 v2 (T004): optional human accountability binding in VC proof.
+    # Callers may supply:
+    #   { "human_signer": { "reviewer_id": "...", "eqs_score": 0.93,
+    #                        "oversight_session_id": "OSS-..." } }
+    # If human_signer is omitted and receipt_id is known, OMNIX auto-fetches
+    # the most recent completed oversight session for that receipt (if any).
     human_signer = data.get('human_signer') or None
     if human_signer and not isinstance(human_signer, dict):
         human_signer = None
+
+    if not human_signer and receipt_id:
+        try:
+            _hs_conn = get_db_connection()
+            if _hs_conn:
+                with _hs_conn.cursor() as _hs_cur:
+                    _hs_cur.execute(
+                        """
+                        SELECT reviewer_id, completed_at, session_id, eqs_score
+                        FROM oversight_sessions
+                        WHERE decision_id = %s
+                          AND status      = 'completed'
+                        ORDER BY completed_at DESC
+                        LIMIT 1
+                        """,
+                        (str(receipt_id),),
+                    )
+                    _hs_row = _hs_cur.fetchone()
+                _hs_conn.close()
+                if _hs_row:
+                    _reviewer_id, _attested_at, _session_id, _eqs = _hs_row
+                    human_signer = {
+                        "reviewer_id"         : _reviewer_id,
+                        "attested_at"         : _attested_at.isoformat() if _attested_at else None,
+                        "oversight_session_id": _session_id,
+                        "eqs_score"           : round(float(_eqs), 4) if _eqs is not None else None,
+                    }
+        except Exception as _hs_exc:
+            logger.debug(f"[VC] oversight_sessions auto-lookup skipped: {_hs_exc}")
 
     try:
         try:

@@ -13,6 +13,7 @@
 |---|---|---|
 | v1 | 2026-04-26 | Initial revocation registry — 4 endpoints, credentialStatus block, ADR doc |
 | v2 | 2026-04-26 | Full Europa upgrade: W3C compressed bitstring, ETag cache strategy, revocation webhooks, human accountability binding in VC proof |
+| v2.1 | 2026-04-27 | Premium headers on trust_vc_status (`Vary: Accept`, `X-Content-Type-Options: nosniff`). Auto-lookup oversight_sessions for human_signer in `receipt/vc` endpoint — VC proof now auto-includes human reviewer binding when oversight session exists for the receipt. |
 
 ---
 
@@ -510,9 +511,12 @@ MODIFIED (v2):
   omnix_web/api/server.py
       _ensure_vertical_tables()            + ALTER TABLE … ADD COLUMN IF NOT EXISTS status_list_index
       trust_status_list()                  + ETag, If-None-Match→304, X-StatusList-Encoding header
+      trust_vc_status()           [v2.1]   + Vary: Accept, X-Content-Type-Options: nosniff
 
   omnix_web/api/gov_blueprint.py
       api_governance_receipt_vc()          + human_signer extraction + pass-through to ReceiptToVC
+      api_governance_receipt_vc() [v2.1]   + auto-lookup oversight_sessions for receipt_id
+                                             Auto-populates human_signer from completed oversight session
 
 NEW (v1, unchanged in v2):
   omnix_web/api/omnix_engine/vc_revocation.py
