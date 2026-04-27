@@ -621,6 +621,127 @@ class VCRevocationRegistry:
             return hashlib.sha256(str(time.monotonic()).encode()).hexdigest()[:32]
 
 
+def _suspend_domain_vcs(
+    domain: str,
+    drift_score: float,
+    snapshot_id: str,
+    asset: Optional[str] = None,
+) -> None:
+    """
+    ADR-130 v2 — AVM event-driven domain suspension.
+
+    Suspends all active VCs issued for `domain` in the last 24 hours
+    when the AVM detects drift > threshold at evaluation time (STALE_BLOCK).
+
+    Called in a daemon thread by `fire_avm_domain_suspension()`.
+    Never blocks the evaluation pipeline.
+
+    Status used: 'suspended' (reversible) — not 'revoked'.
+    Actor: 'system:avm' (ADR-130 §3.5).
+    """
+    try:
+        conn = _get_db_conn()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT r.receipt_id
+                FROM decision_receipts r
+                LEFT JOIN vc_revocation_registry v ON v.receipt_id = r.receipt_id
+                WHERE r.domain = %s
+                  AND r.created_at >= NOW() - INTERVAL '24 hours'
+                  AND (v.receipt_id IS NULL OR v.status = 'active')
+                LIMIT 100
+                """,
+                (domain,),
+            )
+            rows = cur.fetchall()
+        conn.close()
+    except Exception as e:
+        logger.error(f"[AVM.Suspension] DB query failed for domain={domain}: {e}")
+        return
+
+    if not rows:
+        logger.info(
+            f"[AVM.Suspension] No active VCs in last 24h for domain={domain} — nothing to suspend"
+        )
+        return
+
+    reason = (
+        f"AVM drift exceeded safety threshold: {drift_score:.1f}% "
+        f"(snapshot={snapshot_id}). Automatic suspension — pending recalibration. "
+        f"Credential will be reinstated when calibration is restored."
+    )
+    context = {
+        "drift_score":  drift_score,
+        "snapshot_id":  snapshot_id,
+        "domain":       domain,
+        "asset":        asset,
+        "trigger":      "event-driven STALE_BLOCK (ADR-130 v2)",
+        "adr":          "ADR-130",
+        "auto_reinstate": "when AVM recalibrates successfully",
+    }
+
+    registry = VCRevocationRegistry()
+    suspended, skipped = [], []
+
+    for (receipt_id,) in rows:
+        try:
+            registry.revoke(
+                receipt_id=receipt_id,
+                reason=reason,
+                revoked_by="system:avm",
+                status="suspended",
+                context=context,
+            )
+            suspended.append(receipt_id)
+        except ValueError:
+            skipped.append(receipt_id)   # already revoked/suspended — safe to skip
+        except Exception as e:
+            logger.warning(f"[AVM.Suspension] Could not suspend {receipt_id}: {e}")
+
+    if suspended:
+        logger.warning(
+            f"[AVM.Suspension] ✅ {len(suspended)} VC(s) suspended for domain={domain} | "
+            f"drift={drift_score:.1f} | snapshot={snapshot_id} | "
+            f"skipped={len(skipped)} (already non-active)"
+        )
+    else:
+        logger.info(
+            f"[AVM.Suspension] domain={domain} — all VCs already non-active (skipped={len(skipped)})"
+        )
+
+
+def fire_avm_domain_suspension(
+    domain: str,
+    drift_score: float,
+    snapshot_id: str,
+    asset: Optional[str] = None,
+) -> None:
+    """
+    ADR-130 v2 — Event-driven AVM hook: called immediately when GovernanceEvaluationEngine
+    detects a STALE_BLOCK (drift > threshold). Dispatches suspension in a daemon thread.
+
+    This closes the gap Dr. Todd M. Price identified:
+    'Assumption tracking must be active and time-sensitive, capable of invalidating
+    decisions when conditions change.' — not cycle-based, but event-driven.
+
+    Domain VCs issued in the last 24h are suspended immediately.
+    Suspension is reversible — when AVM recalibrates (auto_recalibrate_stale_domains),
+    affected VCs can be reinstated.
+    """
+    t = threading.Thread(
+        target=_suspend_domain_vcs,
+        args=(domain, drift_score, snapshot_id, asset),
+        daemon=True,
+        name=f"AVM-EventSuspension-{domain}",
+    )
+    t.start()
+    logger.info(
+        f"[AVM.Suspension] Event-driven suspension dispatched | "
+        f"domain={domain} drift={drift_score:.1f} snapshot={snapshot_id}"
+    )
+
+
 def build_credential_status(receipt_id: str, status_list_index: Optional[int] = None) -> Dict[str, Any]:
     """
     Builds the credentialStatus block for embedding in a W3C VC.

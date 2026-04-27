@@ -440,6 +440,33 @@ class GovernanceEvaluationEngine:
                             f"domain={domain} | asset={asset} | "
                             f"snapshot={avm_result.snapshot_id} | age={avm_result.age_hours:.1f}h"
                         )
+                        # ── ADR-130 v2: Event-driven VC suspension ────────────────────────
+                        # Dr. Todd M. Price requirement: "assumption tracking must be active
+                        # and time-sensitive, capable of invalidating decisions when
+                        # conditions change" — not cycle-based, but event-driven.
+                        # Fire immediately on every STALE_BLOCK — no 24h wait.
+                        # Runs in daemon thread — NEVER blocks evaluation pipeline.
+                        try:
+                            try:
+                                from api.omnix_engine.vc_revocation import (
+                                    fire_avm_domain_suspension as _fire_avm_susp,
+                                )
+                            except ImportError:
+                                from omnix_engine.vc_revocation import (
+                                    fire_avm_domain_suspension as _fire_avm_susp,
+                                )
+                            _fire_avm_susp(
+                                domain=domain,
+                                drift_score=avm_result.drift_score,
+                                snapshot_id=str(avm_result.snapshot_id),
+                                asset=asset,
+                            )
+                        except Exception as _avm_susp_err:
+                            # Suspension failure must NEVER propagate — evaluation
+                            # pipeline integrity takes precedence.
+                            logger.debug(
+                                f"[AVM] event-driven suspension skipped: {_avm_susp_err}"
+                            )
                         all_signals = list(REQUIRED_SIGNALS) + list(OPTIONAL_SIGNAL_DEFAULTS.keys())
                         return {
                             "decision": "BLOCKED",
