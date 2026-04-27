@@ -2810,6 +2810,7 @@ _DOMAIN_LABELS = {
     'energy_governance': 'Energy Grid Governance',
     'real_estate':       'Real Estate & PropTech',
     'autonomous_agent':  'Autonomous Agent Governance',
+    'stablecoin':        'Stablecoin Reserve Governance',
 }
 
 
@@ -3127,10 +3128,15 @@ def api_public_audit_demo():
     import datetime, random, uuid
 
     domains = [
-        ('trading',   'Digital Asset Trading',           'BTC/USD'),
-        ('credit',    'Islamic Credit',                  'CREDIT-APP'),
-        ('insurance', 'Insurance Underwriting',          'POLICY-INS'),
-        ('robotics',  'Robotics & Autonomous Systems',   'ROBOT-001'),
+        ('trading',           'Digital Asset Trading',           'BTC/USD'),
+        ('credit',            'Islamic Credit',                  'CREDIT-APP-7821'),
+        ('insurance',         'Insurance Underwriting',          'POLICY-INS-4432'),
+        ('robotics',          'Robotics & Autonomous Systems',   'ROBOT-ARM-001'),
+        ('medical_ai',        'Medical AI Governance',           'PATIENT-DIAG-8819'),
+        ('autonomous_agent',  'Autonomous Agent Governance',     'AGENT-TASK-3307'),
+        ('real_estate',       'Real Estate & PropTech',          'PROP-LON-0041'),
+        ('energy_governance', 'Energy Grid Governance',          'WIND-DISPATCH-009'),
+        ('stablecoin',        'Stablecoin Reserve Governance',   'USDC-RESERVE-7B'),
     ]
 
     demo_outcomes_approved = [
@@ -3179,6 +3185,17 @@ def api_public_audit_demo():
     approved_count = sum(1 for x in items if x['decision'] == 'APPROVED')
     blocked_count  = len(items) - approved_count
 
+    domain_kpis_demo = {}
+    for x in items:
+        d = x['domain']
+        if d not in domain_kpis_demo:
+            domain_kpis_demo[d] = {'domain': d, 'label': x['domain_label'], 'approved': 0, 'blocked': 0, 'total': 0}
+        if x['decision'] == 'APPROVED':
+            domain_kpis_demo[d]['approved'] += 1
+        else:
+            domain_kpis_demo[d]['blocked'] += 1
+        domain_kpis_demo[d]['total'] += 1
+
     return jsonify({
         'success':      True,
         'demo':         True,
@@ -3191,12 +3208,7 @@ def api_public_audit_demo():
             'blocked':         blocked_count,
             'approved_pct':    round(approved_count / len(items) * 100, 1),
             'blocked_pct':     round(blocked_count  / len(items) * 100, 1),
-            'by_domain': [
-                {'domain': 'trading',   'label': 'Digital Asset Trading',        'approved': 3, 'blocked': 1, 'total': 4},
-                {'domain': 'credit',    'label': 'Islamic Credit',               'approved': 2, 'blocked': 1, 'total': 3},
-                {'domain': 'insurance', 'label': 'Insurance Underwriting',       'approved': 2, 'blocked': 1, 'total': 3},
-                {'domain': 'robotics',  'label': 'Robotics & Autonomous Systems','approved': 2, 'blocked': 0, 'total': 2},
-            ],
+            'by_domain':       list(domain_kpis_demo.values()),
         },
         'items': items,
     }), 200
@@ -3206,7 +3218,7 @@ def api_public_audit_demo():
 def api_public_audit_live():
     """
     GET /api/public/audit-live
-    Public endpoint — real governance decisions from all 8 verticals.
+    Public endpoint — real governance decisions from all 9 verticals.
     No authentication required. No raw scores or thresholds exposed.
     """
     import json as _json, datetime as _dt
@@ -3273,6 +3285,7 @@ def api_public_audit_live():
             ("SELECT receipt_id, created_at AS timestamp_utc, decision_id AS asset, 'energy_governance' AS domain, decision, block_reason, NULL AS cp_results FROM energy_decisions", 'energy_governance'),
             ("SELECT receipt_id, created_at AS timestamp_utc, decision_id AS asset, 'real_estate' AS domain, decision, block_reason, checkpoint_results::text AS cp_results FROM property_decisions", 'real_estate'),
             ("SELECT receipt_id, created_at AS timestamp_utc, decision_id AS asset, 'autonomous_agent' AS domain, decision, block_reason, checkpoint_results::text AS cp_results FROM agent_decisions", 'autonomous_agent'),
+            ("SELECT receipt_id, created_at AS timestamp_utc, reserve_asset AS asset, 'stablecoin' AS domain, decision, block_reason, NULL AS cp_results FROM stablecoin_decisions", 'stablecoin'),
         ]
 
         rows = []

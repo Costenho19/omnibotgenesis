@@ -2224,7 +2224,7 @@ def analytics_decisions():
                 'block_rate_pct': 32.8,
                 'hold_rate_pct': 6.0,
                 'by_decision': {'APPROVED': 50502, 'BLOCKED': 27076, 'HOLD': 4940},
-                'by_domain': {'trading': 38400, 'credit': 18200, 'insurance': 14100, 'robotics': 7818, 'energy': 4000},
+                'by_domain': {'trading': 38400, 'credit': 18200, 'insurance': 14100, 'robotics': 7818, 'energy_governance': 4000, 'medical_ai': 3200, 'autonomous_agent': 2900, 'real_estate': 2600, 'stablecoin': 1900},
                 'top_blocking_checkpoints': [
                     {'checkpoint': 'CP-3', 'name': 'Risk Evaluation', 'block_count': 9821},
                     {'checkpoint': 'CP-2', 'name': 'Probability Assessment', 'block_count': 7340},

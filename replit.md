@@ -727,7 +727,7 @@ Vertical construido internamente para testing y validación. **No anunciado púb
 | # | Categoría | Fix |
 |---|---|---|
 | 24-26 | CORE P0 | `generate_receipt` + `auto_trading_bot.py` sin `domain` en receipt dict → NULL en DB |
-| 27-28 | FRONTEND P1 | ClientDashboard + AuditDashboard: solo 4 dominios (sin medical_ai, autonomous_agent) |
+| 27-28 | FRONTEND P1 ✅ | AuditDashboard: audit-demo tenía 4 dominios (trading/credit/insurance/robotics) → expandido a los 9 verticales. audit-live tenía 8 (faltaba stablecoin) → 9. by_domain KPIs en demo ahora calculados dinámicamente desde items generados (no hardcoded). _DOMAIN_LABELS añade stablecoin. analytics/decisions fallback: 5 dominios → 9. audit-live docstring actualizado a "9 verticals". |
 | 29-30 | PITCH + API | Market slide, TAM actualizado: $137B+ → $212B+, "7 live domains" |
 | 31 | SECURITY | `public_verify.py` regex rechazaba formato `OMNIX-TRD-{hex}` → regex actualizado |
 | 32 | DB P0 | 30 receipts adicionales con domain=NULL → backfill final |
