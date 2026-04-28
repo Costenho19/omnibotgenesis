@@ -1486,6 +1486,27 @@ def api_governance_evaluate():
     compliance_config = {**_compliance_raw, 'client_id': client_id}
     compliance_config['layer0_enabled'] = True  # Layer 0 is always active — clients cannot disable
 
+    # ── ADR-133: State Provenance Guard (pre-bind lineage check) ──────────────
+    _spg_result_gov = None
+    try:
+        from omnix_core.governance.state_provenance_guard import evaluate_provenance
+        _spg_result_gov = evaluate_provenance(
+            signals   = signals,
+            domain    = domain,
+            asset     = asset,
+            client_id = client_id,
+        )
+        logger.info(
+            "[SPG][/evaluate] %s | score=%.1f | client=%s | asset=%s | spg_id=%s",
+            _spg_result_gov.verdict.value,
+            _spg_result_gov.lineage_singularity,
+            client_id, asset,
+            _spg_result_gov.spg_id,
+        )
+    except Exception as _spg_exc:
+        logger.debug("[SPG] pre-evaluate SPG skipped (advisory): %s", _spg_exc)
+    # ─────────────────────────────────────────────────────────────────────────
+
     try:
         checkpoint_overrides = _load_client_checkpoint_overrides(client_id)
         thresholds_source = "client_custom" if any(
@@ -1609,6 +1630,7 @@ def api_governance_evaluate():
         'thresholds_source': thresholds_source,
         'verifiable_at': 'https://omnibotgenesis-production.up.railway.app/verify',
         'policy_version': receipt.get('policy_version', os.environ.get('OMNIX_VERSION', '6.5.4e')),
+        'state_provenance': _spg_result_gov.to_dict() if _spg_result_gov else None,
     }
 
     # ── Regulatory alignment (ADR-062) ────────────────────────────────────────

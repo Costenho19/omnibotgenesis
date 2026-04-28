@@ -1329,6 +1329,30 @@ def simple_evaluate():
                 except (TypeError, ValueError):
                     pass
 
+        # ── ADR-133: State Provenance Guard (pre-bind lineage check) ─────────
+        # Answers: "Can this state be explained by more than one plausible
+        # lineage before consequence is bound to it?" — Eduardo Monteiro.
+        # Advisory mode: result embeds in receipt; pipeline continues.
+        _spg_result = None
+        try:
+            from omnix_core.governance.state_provenance_guard import evaluate_provenance
+            _spg_result = evaluate_provenance(
+                signals   = signals,
+                domain    = "trading",
+                asset     = asset,
+                client_id = "PUBLIC_EVALUATE",
+            )
+            logger.info(
+                "[SPG][/evaluate] %s | score=%.1f | asset=%s | spg_id=%s",
+                _spg_result.verdict.value,
+                _spg_result.lineage_singularity,
+                asset,
+                _spg_result.spg_id,
+            )
+        except Exception as _spg_exc:
+            logger.debug("[SPG][/evaluate] SPG skipped (advisory): %s", _spg_exc)
+        # ─────────────────────────────────────────────────────────────────────
+
         engine = GovernanceEvaluationEngine()
         result = engine.evaluate(
             signals=signals,
@@ -1448,6 +1472,7 @@ def simple_evaluate():
         "checkpoint_proof":   checkpoint_proof,
         "execution_proof":    execution_proof,
         "verifiable_credential": w3c_vc,
+        "state_provenance": _spg_result.to_dict() if _spg_result else None,
     }
 
     # Paridad DB vs cache:
