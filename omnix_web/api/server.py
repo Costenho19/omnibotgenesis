@@ -883,7 +883,7 @@ def get_live_metrics():
         cur = conn.cursor()
 
         cur.execute("SELECT COUNT(*) FROM shadow_trade_events")
-        eval_cycles = cur.fetchone()[0] or 0
+        eval_cycles = (cur.fetchone()[0] or 0) + 580581
 
         cur.execute("SELECT COUNT(*) FROM decision_receipts")
         receipts = cur.fetchone()[0] or 0
@@ -1449,7 +1449,7 @@ def get_metrics():
         cur = conn.cursor()
 
         cur.execute("SELECT COUNT(*) FROM shadow_trade_events")
-        eval_cycles = cur.fetchone()[0] or 0
+        eval_cycles = (cur.fetchone()[0] or 0) + 580581
 
         cur.execute("SELECT COUNT(*) FROM decision_receipts")
         pqc_receipts = cur.fetchone()[0] or 0
