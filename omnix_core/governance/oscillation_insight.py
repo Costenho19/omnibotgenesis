@@ -188,15 +188,22 @@ class OscillationInsightEngine:
 
         Pattern Classification
         ──────────────────────
-        CYCLING            — std-dev ≥ OSCILLATION_STD_THRESHOLD.
-                             The evaluative frame has not settled.
+        CYCLING            — Non-monotonic series with std-dev ≥ OSCILLATION_STD_THRESHOLD.
+                             The evaluative frame is alternating without settling.
                              Residual recognition capacity still present.
-        SETTLING           — std-dev < threshold AND last window lower than first.
-                             HOLD rate falling — resolving toward enforcement or capture.
-        DRIFTING           — std-dev < threshold AND monotonic hold_rate increase.
+        DRIFTING           — Every week strictly higher than the previous (d > 0 for all diffs).
                              Slow accumulation toward deferral equilibrium.
-        STABLE             — std-dev < threshold, no directional trend.
+                             Note: detected BEFORE std-dev check — a clean monotonic rise
+                             with wide range is DRIFTING, not CYCLING.
+        SETTLING           — Every week strictly lower than the previous (d < 0 for all diffs).
+                             HOLD rate falling — resolving toward enforcement or capture.
+                             Cross-reference dampening_curve() to distinguish healthy vs captured.
+        STABLE             — Neither monotonic nor high-variance. No directional signal.
         INSUFFICIENT_DATA  — fewer than MIN_WINDOWS_FOR_OSCILLATION valid windows.
+
+        Classification priority: DRIFTING/SETTLING (strict monotonic) > CYCLING (std-dev) > STABLE.
+        A non-monotonic series where last < first but with direction changes is NOT SETTLING —
+        it is CYCLING (if high variance) or STABLE (if low variance).
 
         Returns
         ───────

@@ -2374,9 +2374,19 @@ def analytics_oscillation():
 
     Authentication: public endpoint — aggregated data only, no PII.
     """
-    domain    = request.args.get('domain') or None
-    num_weeks = min(int(request.args.get('num_weeks', 8)), 26)
-    view      = request.args.get('view', 'full').lower()
+    domain = request.args.get('domain') or None
+    view   = request.args.get('view', 'full').lower()
+    try:
+        num_weeks = min(int(request.args.get('num_weeks', 8)), 26)
+        if num_weeks < 1:
+            raise ValueError("num_weeks must be ≥ 1")
+    except (ValueError, TypeError) as _nw_err:
+        return jsonify({
+            'error':     'Invalid num_weeks parameter — must be an integer between 1 and 26.',
+            'parameter': 'num_weeks',
+            'received':  request.args.get('num_weeks'),
+            'adr':       'ADR-134',
+        }), 400
 
     try:
         try:
