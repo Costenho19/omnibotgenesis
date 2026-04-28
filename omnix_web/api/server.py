@@ -872,6 +872,7 @@ def get_live_metrics():
     try:
         conn = get_db_connection()
         if not conn:
+            _fb_uptime = max(0, (datetime.now(timezone.utc) - datetime(2025, 11, 28, tzinfo=timezone.utc)).days)
             return jsonify({
                 'success': True,
                 'live': False,
@@ -882,7 +883,7 @@ def get_live_metrics():
                     'exit_receipts': 78,
                     'capital_preserved_pct': 98.42,
                     'verticals_demo': 9,
-                    'system_uptime_days': 112,
+                    'system_uptime_days': _fb_uptime,
                 },
                 'last_updated': datetime.now(timezone.utc).isoformat()
             })
@@ -1206,19 +1207,8 @@ def get_metrics_live():
         except Exception as e:
             logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
 
-        # ── Uptime ────────────────────────────────────────────────────────────
-        try:
-            cur.execute("SELECT MIN(created_at) FROM decision_receipts")
-            first_row = cur.fetchone()
-            if first_row and first_row[0]:
-                first_dt = first_row[0]
-                if hasattr(first_dt, 'tzinfo') and first_dt.tzinfo is None:
-                    first_dt = first_dt.replace(tzinfo=timezone.utc)
-                uptime_days = max(0, (datetime.now(timezone.utc) - first_dt).days)
-            else:
-                uptime_days = max(0, (datetime.now(timezone.utc) - LAUNCH_DATE).days)
-        except Exception:
-            uptime_days = max(0, (datetime.now(timezone.utc) - LAUNCH_DATE).days)
+        # ── Uptime — from official LAUNCH_DATE (Nov 28 2025) ─────────────────
+        uptime_days = max(0, (datetime.now(timezone.utc) - LAUNCH_DATE).days)
 
         # ── ADR count — live from DB, fallback to filesystem max ──────────────
         adr_count = 0
@@ -1228,13 +1218,7 @@ def get_metrics_live():
         except Exception as e:
             logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
         if adr_count == 0:
-            try:
-                import re as _re, os as _os
-                _adr_dir = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'docs', 'adr')
-                _nums = [int(_re.search(r'ADR-(\d+)', f).group(1)) for f in _os.listdir(_adr_dir) if _re.search(r'ADR-(\d+)', f)]
-                adr_count = max(_nums) if _nums else 116
-            except Exception:
-                adr_count = 116
+            adr_count = _ADR_FILE_COUNT
 
         cur.close()
         conn.close()

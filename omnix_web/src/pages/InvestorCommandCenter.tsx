@@ -64,7 +64,7 @@ const LAYER_COLORS: Record<string, string> = {
   output:     '#C9A227',
 }
 
-const _uptimeDays = Math.max(0, Math.floor((Date.now() - new Date('2026-01-15').getTime()) / 86400000))
+const _uptimeDays = Math.max(0, Math.floor((Date.now() - new Date('2025-11-28').getTime()) / 86400000))
 
 const FALLBACK_DATA: LiveMetricsResponse = {
   success: true,
@@ -77,7 +77,7 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     decisions_today:  0,
     receipts_total:   0,
     uptime_days:      _uptimeDays,
-    adr_count:        116,
+    adr_count:        135,
     checkpoint_count: 11,
     verticals_live:   9,
     tam_usd:          '212B+',
