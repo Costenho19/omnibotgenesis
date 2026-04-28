@@ -1210,15 +1210,8 @@ def get_metrics_live():
         # ── Uptime — from official LAUNCH_DATE (Nov 28 2025) ─────────────────
         uptime_days = max(0, (datetime.now(timezone.utc) - LAUNCH_DATE).days)
 
-        # ── ADR count — live from DB, fallback to filesystem max ──────────────
-        adr_count = 0
-        try:
-            cur.execute("SELECT COUNT(*) FROM architecture_decisions")
-            adr_count = int(cur.fetchone()[0] or 0)
-        except Exception as e:
-            logger.debug("[OMNIX.API] best-effort skipped: %s: %s", type(e).__name__, e)
-        if adr_count == 0:
-            adr_count = _ADR_FILE_COUNT
+        # ── ADR count — highest ADR number from docs/adr filesystem ──────────
+        adr_count = _ADR_FILE_COUNT
 
         cur.close()
         conn.close()
