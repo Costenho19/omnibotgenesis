@@ -4,59 +4,59 @@ const BASE = 'https://omnixquantum.net'
 
 const endpoints = [
   {
-    label: 'Clave Pública (RFC 8615)',
+    label: 'Public Key (RFC 8615)',
     url: `${BASE}/.well-known/omnix-public-key.json`,
     badge: 'LIVE',
-    desc: 'Clave Dilithium-3 activa. Cualquier sistema puede fetchearla sin autenticación.',
+    desc: 'Active Dilithium-3 key. Any system can fetch it without authentication.',
   },
   {
     label: 'DID Document (W3C)',
     url: `${BASE}/.well-known/did.json`,
     badge: 'LIVE',
-    desc: 'did:web:omnixquantum.net — resolvible por cualquier DID resolver del mundo.',
+    desc: 'did:web:omnixquantum.net — resolvable by any DID resolver worldwide.',
   },
   {
     label: 'Trust Registry',
     url: `${BASE}/api/trust/registry`,
     badge: 'LIVE',
-    desc: 'Registro público de emisores confiables, algoritmos y métodos de verificación.',
+    desc: 'Public registry of trusted issuers, algorithms, and verification methods.',
   },
   {
-    label: 'Verificador API (stateless)',
+    label: 'Verification API (stateless)',
     url: `${BASE}/api/trust/verify`,
     badge: 'POST',
-    desc: 'Verificación sin acceso a DB. Envía un recibo, recibe hash_valid + signature_valid.',
+    desc: 'Verification without DB access. Send a receipt, receive hash_valid + signature_valid.',
   },
 ]
 
 const steps = [
   {
     num: '01',
-    title: 'Obtener la clave pública',
-    desc: 'Descarga la clave pública Dilithium-3 desde el endpoint well-known. Esta clave firma TODOS los recibos de gobernanza.',
+    title: 'Fetch the public key',
+    desc: 'Download the Dilithium-3 public key from the well-known endpoint. This key signs ALL governance receipts.',
     code: `curl https://omnixquantum.net/.well-known/omnix-public-key.json`,
-    note: 'Una sola red call. Después, todo es local.',
+    note: 'One network call. After that, everything runs locally.',
   },
   {
     num: '02',
-    title: 'Recomputar el hash SHA-256',
-    desc: 'El campo content_hash del recibo es un SHA-256 del payload canónico. Puedes recomputarlo tú mismo y comparar.',
+    title: 'Recompute the SHA-256 hash',
+    desc: 'The content_hash field in the receipt is a SHA-256 of the canonical payload. You can recompute it yourself and compare.',
     code: `python omnix_verify.py receipt.json`,
-    note: 'La matemática no depende de ningún servidor OMNIX.',
+    note: 'The math does not depend on any OMNIX server.',
   },
   {
     num: '03',
-    title: 'Verificar la firma Dilithium-3',
-    desc: 'La firma PQC usa ML-DSA-65 (NIST FIPS 204). Cualquier implementación estándar de Dilithium-3 puede verificarla.',
+    title: 'Verify the Dilithium-3 signature',
+    desc: 'The PQC signature uses ML-DSA-65 (NIST FIPS 204). Any standard Dilithium-3 implementation can verify it.',
     code: `pip install pqcrypto\npython omnix_verify.py receipt.json`,
-    note: 'Verificación 100% offline. Sin conexión a OMNIX.',
+    note: '100% offline verification. No connection to OMNIX required.',
   },
 ]
 
 const critique = {
-  original: `"Todo lo que describes ocurre dentro de tu propio sistema: validación, monitorización y trazabilidad. Eso es gobernanza interna. No interoperabilidad. La confianza no puede depender de un sistema, sino de pruebas que puedan ser verificadas y comprendidas por terceros."`,
+  original: `"Everything you describe happens inside your own system: validation, monitoring, and traceability. That is internal governance. Not interoperability. Trust cannot depend on a system — it must depend on proofs that can be verified and understood by third parties."`,
   author: '— Antonio Socorro, LinkedIn',
-  response: `La crítica es correcta y la tomamos en serio. Por eso construimos tres capas de verificabilidad externa: la matemática es pública (NIST FIPS 204), la clave está publicada en un endpoint estándar (RFC 8615 + W3C DID), y el script de verificación es descargable y corre sin ningún servidor de OMNIX. Si la gobernanza existe, la prueba debe sobrevivir fuera del sistema que la produce.`,
+  response: `The critique is correct and we took it seriously. That is why we built three layers of external verifiability: the math is public (NIST FIPS 204), the key is published at a standard endpoint (RFC 8615 + W3C DID), and the verification script is downloadable and runs without any OMNIX server. If governance exists, the proof must survive outside the system that produced it.`,
 }
 
 export default function IndependentVerification() {
@@ -71,7 +71,6 @@ export default function IndependentVerification() {
   return (
     <div className="min-h-screen bg-black text-white font-mono">
 
-      {/* Header */}
       <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
         <a href="/" className="text-gray-400 hover:text-white text-sm transition-colors">← omnixquantum.net</a>
         <span className="text-xs text-gray-600">ADR-085 · eIDAS · ARF · NIST FIPS 204</span>
@@ -79,39 +78,36 @@ export default function IndependentVerification() {
 
       <div className="max-w-4xl mx-auto px-6 py-16">
 
-        {/* Title */}
         <div className="mb-16">
-          <div className="text-xs text-emerald-400 tracking-widest mb-4">VERIFICACIÓN INDEPENDIENTE</div>
+          <div className="text-xs text-emerald-400 tracking-widest mb-4">INDEPENDENT VERIFICATION</div>
           <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
-            Verifica cualquier decisión<br />
-            <span className="text-emerald-400">sin depender de OMNIX</span>
+            Verify any decision<br />
+            <span className="text-emerald-400">without depending on OMNIX</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl leading-relaxed">
-            Las firmas criptográficas son matemáticas. La matemática no tiene servidor.
-            Descarga el script, obtén la clave pública una vez, y verifica offline para siempre.
+            Cryptographic signatures are mathematics. Mathematics has no server.
+            Download the script, fetch the public key once, and verify offline forever.
           </p>
         </div>
 
-        {/* The critique card */}
         <div className="mb-16 border border-amber-800/40 bg-amber-950/20 rounded-lg p-6">
-          <div className="text-xs text-amber-400 tracking-widest mb-3">CONTEXTO — CRÍTICA QUE ORIGINÓ ESTO</div>
+          <div className="text-xs text-amber-400 tracking-widest mb-3">CONTEXT — THE CRITIQUE THAT ORIGINATED THIS</div>
           <blockquote className="text-gray-300 text-sm leading-relaxed italic mb-3 border-l-2 border-amber-600 pl-4">
             {critique.original}
           </blockquote>
           <div className="text-xs text-amber-600 mb-4">{critique.author}</div>
           <div className="text-gray-400 text-sm leading-relaxed border-t border-amber-800/30 pt-4">
-            <span className="text-emerald-400 font-bold">Respuesta: </span>
+            <span className="text-emerald-400 font-bold">Response: </span>
             {critique.response}
           </div>
         </div>
 
-        {/* Download CTA */}
         <div className="mb-16 border border-emerald-800/50 bg-emerald-950/20 rounded-lg p-8 text-center">
-          <div className="text-xs text-emerald-400 tracking-widest mb-4">PASO 0 — DESCARGA EL VERIFICADOR</div>
+          <div className="text-xs text-emerald-400 tracking-widest mb-4">STEP 0 — DOWNLOAD THE VERIFIER</div>
           <h2 className="text-2xl font-bold text-white mb-3">omnix_verify.py</h2>
           <p className="text-gray-400 text-sm mb-6 max-w-lg mx-auto">
-            Script Python standalone. Cero dependencias de OMNIX. Requiere solo Python 3.8+.
-            Para verificación PQC completa: <code className="text-emerald-400">pip install pqcrypto</code>
+            Standalone Python script. Zero OMNIX dependencies. Requires Python 3.8+ only.
+            For full PQC verification: <code className="text-emerald-400">pip install pqcrypto</code>
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <a
@@ -119,26 +115,25 @@ export default function IndependentVerification() {
               download="omnix_verify.py"
               className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-bold rounded transition-colors text-sm"
             >
-              Descargar omnix_verify.py
+              Download omnix_verify.py
             </a>
             <button
               onClick={() => copy('pip install pqcrypto', 'pip')}
               className="px-6 py-3 border border-emerald-800 hover:border-emerald-600 text-emerald-400 text-sm rounded transition-colors"
             >
-              {copied === 'pip' ? '¡Copiado!' : 'pip install pqcrypto'}
+              {copied === 'pip' ? 'Copied!' : 'pip install pqcrypto'}
             </button>
           </div>
           <div className="mt-4 text-xs text-gray-600">
-            SHA-256 hash del script disponible en{' '}
+            SHA-256 hash of the script available at{' '}
             <a href="/.well-known/omnix-public-key.json" className="text-gray-500 hover:text-gray-400 underline" target="_blank" rel="noreferrer">
               .well-known/omnix-public-key.json
             </a>
           </div>
         </div>
 
-        {/* Steps */}
         <div className="mb-16">
-          <div className="text-xs text-gray-500 tracking-widest mb-8">CÓMO FUNCIONA</div>
+          <div className="text-xs text-gray-500 tracking-widest mb-8">HOW IT WORKS</div>
           <div className="space-y-8">
             {steps.map((step) => (
               <div key={step.num} className="flex gap-6 group">
@@ -154,7 +149,7 @@ export default function IndependentVerification() {
                       onClick={() => copy(step.code, step.num)}
                       className="text-gray-600 hover:text-gray-400 text-xs ml-4 flex-shrink-0 transition-colors"
                     >
-                      {copied === step.num ? 'copiado' : 'copiar'}
+                      {copied === step.num ? 'copied' : 'copy'}
                     </button>
                   </div>
                   <div className="text-xs text-gray-600">{step.note}</div>
@@ -164,9 +159,8 @@ export default function IndependentVerification() {
           </div>
         </div>
 
-        {/* Live endpoints */}
         <div className="mb-16">
-          <div className="text-xs text-gray-500 tracking-widest mb-8">ENDPOINTS PÚBLICOS — SIN AUTENTICACIÓN</div>
+          <div className="text-xs text-gray-500 tracking-widest mb-8">PUBLIC ENDPOINTS — NO AUTHENTICATION REQUIRED</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {endpoints.map((ep) => (
               <div key={ep.url} className="border border-gray-800 rounded-lg p-5 hover:border-gray-700 transition-colors">
@@ -188,32 +182,31 @@ export default function IndependentVerification() {
                   rel="noreferrer"
                   className="mt-3 inline-block text-xs text-emerald-600 hover:text-emerald-400 transition-colors"
                 >
-                  Abrir →
+                  Open →
                 </a>
               </div>
             ))}
           </div>
         </div>
 
-        {/* What the math guarantees */}
         <div className="mb-16 border border-gray-800 rounded-lg p-8">
-          <div className="text-xs text-gray-500 tracking-widest mb-6">LO QUE LA MATEMÁTICA GARANTIZA</div>
+          <div className="text-xs text-gray-500 tracking-widest mb-6">WHAT THE MATH GUARANTEES</div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 icon: '🔒',
-                title: 'Integridad',
-                body: 'SHA-256 del payload canónico. Si un campo fue modificado después de emitir el recibo, el hash no coincide. Detectable por cualquiera.',
+                title: 'Integrity',
+                body: 'SHA-256 of the canonical payload. If any field was modified after the receipt was issued, the hash will not match. Detectable by anyone.',
               },
               {
                 icon: '✍️',
-                title: 'Autenticidad',
-                body: 'Firma Dilithium-3 (NIST FIPS 204). Solo quien tiene la clave privada puede firmar. La clave privada nunca sale del servidor.',
+                title: 'Authenticity',
+                body: 'Dilithium-3 signature (NIST FIPS 204). Only the holder of the private key can sign. The private key never leaves the server.',
               },
               {
                 icon: '🌐',
-                title: 'Independencia',
-                body: 'La verificación criptográfica no requiere que OMNIX exista. El recibo se puede verificar en 2030 con el script y la clave pública.',
+                title: 'Independence',
+                body: 'Cryptographic verification does not require OMNIX to exist. A receipt can be verified in 2030 using only the script and the public key.',
               },
             ].map((item) => (
               <div key={item.title}>
@@ -225,34 +218,32 @@ export default function IndependentVerification() {
           </div>
         </div>
 
-        {/* What this does NOT solve (honest) */}
         <div className="mb-16 border border-gray-800 rounded-lg p-8">
-          <div className="text-xs text-gray-500 tracking-widest mb-4">HONESTIDAD TÉCNICA — QUÉ NO RESUELVE ESTO SOLO</div>
+          <div className="text-xs text-gray-500 tracking-widest mb-4">TECHNICAL HONESTY — WHAT THIS ALONE DOES NOT SOLVE</div>
           <div className="space-y-3 text-sm text-gray-400">
             <div className="flex gap-3">
               <span className="text-amber-500 flex-shrink-0">△</span>
               <span>
-                <strong className="text-white">Ancla de confianza externa:</strong> La clave pública la publica OMNIX. Para cumplimiento eIDAS completo, la siguiente capa es anclarla en un QTSP (Qualified Trust Service Provider) europeo. Está en roadmap.
+                <strong className="text-white">External trust anchor:</strong> The public key is published by OMNIX. For full eIDAS compliance, the next layer is anchoring it in a European QTSP (Qualified Trust Service Provider). On the roadmap.
               </span>
             </div>
             <div className="flex gap-3">
               <span className="text-amber-500 flex-shrink-0">△</span>
               <span>
-                <strong className="text-white">Rotación de claves:</strong> Si OMNIX cambia la clave, los recibos antiguos siguen siendo verificables con la clave con que fueron firmados (embebida en el recibo). La política de rotación está en ADR-043.
+                <strong className="text-white">Key rotation:</strong> If OMNIX rotates the key, older receipts remain verifiable with the key they were signed with (embedded in the receipt). Rotation policy is in ADR-043.
               </span>
             </div>
             <div className="flex gap-3">
               <span className="text-emerald-500 flex-shrink-0">✓</span>
               <span>
-                <strong className="text-white">Lo que SÍ resuelve hoy:</strong> cualquier tercero puede verificar que un recibo no fue modificado y que fue emitido por OMNIX, sin confiar en ningún endpoint de OMNIX durante la verificación.
+                <strong className="text-white">What this solves today:</strong> any third party can verify that a receipt was not tampered with and was issued by OMNIX — without trusting any OMNIX endpoint during verification.
               </span>
             </div>
           </div>
         </div>
 
-        {/* API example */}
         <div className="mb-16">
-          <div className="text-xs text-gray-500 tracking-widest mb-6">VERIFICACIÓN VÍA API (sin DB, stateless)</div>
+          <div className="text-xs text-gray-500 tracking-widest mb-6">VERIFICATION VIA API (no DB, stateless)</div>
           <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
             <div className="text-xs text-gray-600 mb-3">POST /api/trust/verify</div>
             <pre className="text-emerald-400 text-xs overflow-x-auto whitespace-pre-wrap">{`curl -X POST https://omnixquantum.net/api/trust/verify \\
@@ -280,7 +271,6 @@ export default function IndependentVerification() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="border-t border-gray-800 pt-8 text-center">
           <div className="text-xs text-gray-600 mb-2">
             OMNIX Quantum Ltd · did:web:omnixquantum.net · ADR-085
@@ -289,10 +279,10 @@ export default function IndependentVerification() {
             eIDAS 2.0 · EU AI Act Art. 14 · ARF · NIST FIPS 204 · MiFID II
           </div>
           <div className="mt-4 flex justify-center gap-6 text-xs">
-            <a href="/verify" className="text-gray-600 hover:text-gray-400 transition-colors">Verificar recibo</a>
+            <a href="/verify" className="text-gray-600 hover:text-gray-400 transition-colors">Verify receipt</a>
             <a href="/proof" className="text-gray-600 hover:text-gray-400 transition-colors">Proof Layer</a>
             <a href="/integration" className="text-gray-600 hover:text-gray-400 transition-colors">Integration Guide</a>
-            <a href="/" className="text-gray-600 hover:text-gray-400 transition-colors">Inicio</a>
+            <a href="/" className="text-gray-600 hover:text-gray-400 transition-colors">Home</a>
           </div>
         </div>
 
