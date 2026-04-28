@@ -3,6 +3,30 @@ import { Shield, ArrowRight, CheckCircle, Lock, Zap, Phone, Mail, Send, Loader2,
 import { Link } from 'react-router-dom'
 import { useLiveMetrics } from '../hooks/useLiveMetrics'
 
+function useTradingCount() {
+  const [count, setCount] = useState<number>(0)
+  const [loaded, setLoaded] = useState(false)
+  const ref = useRef(true)
+  useEffect(() => {
+    const fetch_ = async () => {
+      try {
+        const res = await fetch(`/api/trades/history?telemetry_source=REAL&_t=${Date.now()}`, { cache: 'no-store' })
+        if (!res.ok) return
+        const d = await res.json()
+        const trades = Array.isArray(d) ? d : (d.trades || d.data || [])
+        if (ref.current && trades.length > 0) {
+          setCount(trades.length)
+          setLoaded(true)
+        }
+      } catch {}
+    }
+    fetch_()
+    const t = setInterval(fetch_, 30_000)
+    return () => { ref.current = false; clearInterval(t) }
+  }, [])
+  return { count, loaded }
+}
+
 function useTotalDecisions() {
   const [total, setTotal] = useState<number>(0)
   const [loaded, setLoaded] = useState(false)
@@ -239,6 +263,7 @@ const REFERRAL_OPTIONS = [
 export default function CommercialLanding() {
   const { metrics, isLive, formatNumber, formatNumberFull, animKey } = useLiveMetrics()
   const { total: liveTotal, loaded } = useTotalDecisions()
+  const { count: tradingCount, loaded: tradingLoaded } = useTradingCount()
   const [formData, setFormData] = useState({
     name: '', company: '', email: '', referral_source: '', message: ''
   })
@@ -413,8 +438,8 @@ export default function CommercialLanding() {
               { num:'03', label:'Receipt', desc:'SHA-256 hash + Dilithium-3 signature. Immutable.', color:'#60a5fa', bg:'rgba(96,165,250,0.08)', border:'rgba(96,165,250,0.2)' },
               { num:'04', label:'Verify', desc:'Anyone verifies it. No OMNIX server needed.', color:'#34d399', bg:'rgba(52,211,153,0.08)', border:'rgba(52,211,153,0.2)' },
             ].map((step, i) => (
-              <>
-                <div key={step.num} style={{
+              <React.Fragment key={step.num}>
+                <div style={{
                   background: step.bg,
                   border: `1px solid ${step.border}`,
                   borderRadius: 16,
@@ -426,9 +451,9 @@ export default function CommercialLanding() {
                   <div style={{ fontSize:'0.82rem', color:'#94A3B8', lineHeight:1.5 }}>{step.desc}</div>
                 </div>
                 {i < 3 && (
-                  <div key={`arrow-${i}`} style={{ textAlign:'center', color:'#334155', fontSize:'1.5rem', padding:'0 8px' }}>→</div>
+                  <div style={{ textAlign:'center', color:'#334155', fontSize:'1.5rem', padding:'0 8px' }}>→</div>
                 )}
-              </>
+              </React.Fragment>
             ))}
           </div>
           <div style={{ textAlign:'center' }}>
@@ -584,7 +609,8 @@ export default function CommercialLanding() {
               </div>
               <div style={{ ...liveStatStyle(animKey), animationDelay: '0.16s' }}>
                 <div className="text-3xl font-bold text-white">{isLive && metrics.capital_preserved_pct > 0 ? `${metrics.capital_preserved_pct}%` : '—'}</div>
-                <div className="text-sm text-muted mt-1">Capital Preserved</div>
+                <div className="text-sm text-muted mt-1">Virtual Capital Preserved</div>
+                <div className="text-xs text-muted/40 mt-0.5">Simulated — governance demo</div>
               </div>
               <div style={{ ...liveStatStyle(animKey), animationDelay: '0.24s' }}>
                 <div className="text-3xl font-bold gold-text">{metrics.verticals_demo}</div>
@@ -665,7 +691,7 @@ export default function CommercialLanding() {
               </div>
               <p className="text-muted text-sm mb-5">Governance layer for automated crypto trading. Every entry decision passes through 11 checkpoints + Trajectory Invariant Enforcement before execution.</p>
               <div className="grid grid-cols-2 gap-4 mb-5">
-                <div><div className="text-xl font-bold text-[#C9A227]">119+</div><div className="text-xs text-muted">Decisions governed</div></div>
+                <div><div className="text-xl font-bold text-[#C9A227]">{tradingLoaded && tradingCount > 0 ? `${tradingCount.toLocaleString()}+` : '—'}</div><div className="text-xs text-muted">Decisions governed</div></div>
                 <div><div className="text-xl font-bold text-emerald-400">100%</div><div className="text-xs text-muted">PQC-signed receipts</div></div>
               </div>
               <Link to="/try" className="text-[#C9A227] text-sm hover:text-white transition-colors flex items-center gap-1">
