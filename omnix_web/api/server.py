@@ -664,9 +664,9 @@ def _data_retention_loop(
     Background thread that enforces data retention policies on high-volume tables.
 
     Policies:
-      - shadow_trade_events   → DELETE rows older than 90 days (simulated trades,
+      - shadow_trade_events   → DELETE rows older than 30 days (simulated trades,
                                 no legal retention obligation)
-      - governance_transparency_log → DELETE rows older than 180 days (regulatory
+      - governance_transparency_log → DELETE rows older than 90 days (regulatory
                                 records, longer retention window)
       - decision_receipts     → NOT touched automatically (legal/compliance records;
                                 manual archiving only)
@@ -702,30 +702,30 @@ def _data_retention_loop(
                             "DELETE FROM shadow_trade_outcomes "
                             "WHERE shadow_event_id IN ("
                             "  SELECT id FROM shadow_trade_events "
-                            "  WHERE created_at < NOW() - INTERVAL '90 days'"
+                            "  WHERE created_at < NOW() - INTERVAL '30 days'"
                             ")"
                         )
                         _deleted_sto = _cur.rowcount
 
-                        # shadow_trade_events — 90 días
+                        # shadow_trade_events — 30 días
                         _cur.execute(
                             "DELETE FROM shadow_trade_events "
-                            "WHERE created_at < NOW() - INTERVAL '90 days'"
+                            "WHERE created_at < NOW() - INTERVAL '30 days'"
                         )
                         _deleted_ste = _cur.rowcount
 
-                        # governance_transparency_log — 180 días
+                        # governance_transparency_log — 90 días
                         _cur.execute(
                             "DELETE FROM governance_transparency_log "
-                            "WHERE ts_utc < NOW() - INTERVAL '180 days'"
+                            "WHERE ts_utc < NOW() - INTERVAL '90 days'"
                         )
                         _deleted_gtl = _cur.rowcount
 
                 _logger.info(
                     "[RETENTION] ✅ Ciclo completo — "
                     "shadow_trade_outcomes: %d eliminados, "
-                    "shadow_trade_events: %d eliminados (>90d), "
-                    "governance_transparency_log: %d eliminados (>180d)",
+                    "shadow_trade_events: %d eliminados (>30d), "
+                    "governance_transparency_log: %d eliminados (>90d)",
                     _deleted_sto, _deleted_ste, _deleted_gtl,
                 )
             finally:
@@ -749,7 +749,7 @@ try:
     _retention_thread.start()
     logger.info(
         "[startup] Data retention loop iniciado — "
-        "shadow_trade_events >90d, governance_transparency_log >180d, "
+        "shadow_trade_events >30d, governance_transparency_log >90d, "
         "primer ciclo en 5min, luego cada 24h"
     )
 except Exception as _ret_err:
