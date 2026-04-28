@@ -590,6 +590,13 @@ try:
 except Exception as _ose_startup_err:
     logger.warning("[startup] OSE schema init skipped: %s", _ose_startup_err)
 
+try:
+    from omnix_core.governance.conditional_bind_gate import ConditionalBindGate as _CBG
+    _CBG().ensure_schema()
+    logger.info("[startup] ConditionalBindGate schema verified OK (ADR-135)")
+except Exception as _cbg_startup_err:
+    logger.warning("[startup] CBG schema init skipped: %s", _cbg_startup_err)
+
 
 # ── Startup: AVM auto-recalibration background loop (ADR-120) ─────────────────
 def _avm_auto_recalib_loop(
@@ -4215,6 +4222,235 @@ def api_execution_get(receipt_id: str):
         ref = str(uuid.uuid4())[:8]
         logger.error(f"[ExecutionAPI] get failed ref={ref}: {exc}")
         return jsonify({"error": "Failed to retrieve execution receipt", "reference": ref}), 500
+
+
+# ── Conditional Bind Gate — ADR-135 ──────────────────────────────────────────
+
+@app.route('/api/governance/bind-gate/evaluate', methods=['POST'])
+def cbg_evaluate():
+    """
+    POST /api/governance/bind-gate/evaluate
+    ADR-135: Evaluate whether a conditional bind gate is required for an SPG result.
+
+    Body:
+        spg_id:              str  (SPG evaluation identifier from ADR-133 result)
+        spg_verdict:         "SINGULAR" | "AMBIGUOUS" | "INDETERMINATE"
+        lineage_singularity: float  (0–100 score from SPG)
+        contradiction_count: int
+        decision_id:         str  (receipt_id or decision identifier)
+        domain:              str  (optional)
+
+    Returns:
+        bind_allowed: bool — True if consequence may proceed immediately
+        gate_id:      str | null — present when a gate is created or exists
+        verdict:      PASS | GATE_CREATED | GATE_EXISTS | ATTESTED | BLOCKED | EXPIRED
+    """
+    data = request.get_json(silent=True) or {}
+    spg_id = (data.get('spg_id') or '').strip()
+    if not spg_id or len(spg_id) > 128:
+        return jsonify({'error': 'spg_id is required (max 128 chars).'}), 400
+
+    spg_verdict = (data.get('spg_verdict') or '').strip().upper()
+    if spg_verdict not in ('SINGULAR', 'AMBIGUOUS', 'INDETERMINATE'):
+        return jsonify({'error': 'spg_verdict must be SINGULAR, AMBIGUOUS, or INDETERMINATE.'}), 400
+
+    decision_id = (data.get('decision_id') or '').strip()
+    if not decision_id or len(decision_id) > 128:
+        return jsonify({'error': 'decision_id is required (max 128 chars).'}), 400
+
+    try:
+        lineage_singularity = float(data.get('lineage_singularity', 100.0))
+        contradiction_count = int(data.get('contradiction_count', 0))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'lineage_singularity must be a float; contradiction_count an int.'}), 400
+
+    try:
+        from omnix_core.governance.conditional_bind_gate import get_conditional_bind_gate
+    except ImportError:
+        return jsonify({'error': 'ConditionalBindGate module unavailable.'}), 503
+
+    try:
+        cbg    = get_conditional_bind_gate()
+        result = cbg.evaluate(
+            spg_id=spg_id,
+            spg_verdict=spg_verdict,
+            lineage_singularity=lineage_singularity,
+            contradiction_count=contradiction_count,
+            decision_id=decision_id,
+            domain=data.get('domain'),
+            metadata=data.get('metadata'),
+        )
+        return jsonify({
+            'success':      True,
+            'bind_allowed': result.bind_allowed,
+            'gate_id':      result.gate_id,
+            'verdict':      result.verdict.value,
+            'reason':       result.reason,
+            'result':       result.to_dict(),
+            'adr':          'ADR-135 — Conditional Bind Gate',
+        }), 200, {'Content-Type': 'application/json', 'X-OMNIX-ADR': 'ADR-135'}
+    except Exception as exc:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"[CBG.evaluate] error ref={ref}: {exc}")
+        return jsonify({'error': 'Bind gate evaluation failed', 'reference': ref}), 500
+
+
+@app.route('/api/governance/bind-gate/<gate_id>', methods=['GET'])
+def cbg_query(gate_id: str):
+    """
+    GET /api/governance/bind-gate/<gate_id>
+    ADR-135: Query current status of a conditional bind gate.
+
+    Auto-expires the gate if the timeout has elapsed and status is still PENDING.
+    Authentication: X-API-Key (standard B2B auth).
+    """
+    if not gate_id or len(gate_id) > 64:
+        return jsonify({'error': 'Invalid gate_id.'}), 400
+
+    try:
+        from omnix_core.governance.conditional_bind_gate import get_conditional_bind_gate
+        cbg    = get_conditional_bind_gate()
+        record = cbg.query(gate_id)
+        return jsonify({
+            'success':      True,
+            'bind_allowed': record.bind_allowed,
+            'gate':         record.to_dict(),
+            'adr':          'ADR-135 — Conditional Bind Gate',
+        }), 200, {'Content-Type': 'application/json', 'X-OMNIX-ADR': 'ADR-135'}
+    except ValueError as ve:
+        return jsonify({'error': str(ve)}), 404
+    except Exception as exc:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"[CBG.query] error ref={ref}: {exc}")
+        return jsonify({'error': 'Gate query failed', 'reference': ref}), 500
+
+
+@app.route('/api/governance/bind-gate/<gate_id>/attest', methods=['POST'])
+def cbg_attest(gate_id: str):
+    """
+    POST /api/governance/bind-gate/<gate_id>/attest
+    ADR-135: Explicitly attest that consequence may proceed despite lineage ambiguity.
+
+    The attester takes cryptographic ownership of the consequence.
+    Justification minimum: 80 chars (stricter than OSE's 50 — binding consequence).
+
+    Body:
+        attester_id:  str  (human reviewer — email, employee ID, or OAuth subject)
+        justification: str (≥ 80 chars — mandatory explicit reasoning)
+    """
+    if not gate_id or len(gate_id) > 64:
+        return jsonify({'error': 'Invalid gate_id.'}), 400
+
+    data          = request.get_json(silent=True) or {}
+    attester_id   = (data.get('attester_id') or '').strip()
+    justification = (data.get('justification') or '').strip()
+
+    if not attester_id:
+        return jsonify({'error': 'attester_id is required.'}), 400
+    if not justification:
+        return jsonify({'error': 'justification is required.'}), 400
+
+    try:
+        from omnix_core.governance.conditional_bind_gate import get_conditional_bind_gate
+        cbg    = get_conditional_bind_gate()
+        record = cbg.attest(
+            gate_id=gate_id,
+            attester_id=attester_id,
+            justification=justification,
+        )
+        return jsonify({
+            'success':      True,
+            'bind_allowed': record.bind_allowed,
+            'gate_status':  record.gate_status.value,
+            'gate':         record.to_dict(),
+            'adr':          'ADR-135 — Conditional Bind Gate',
+        }), 200, {'Content-Type': 'application/json', 'X-OMNIX-ADR': 'ADR-135'}
+    except ValueError as ve:
+        return jsonify({'error': str(ve)}), 422
+    except Exception as exc:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"[CBG.attest] error ref={ref}: {exc}")
+        return jsonify({'error': 'Gate attestation failed', 'reference': ref}), 500
+
+
+@app.route('/api/governance/bind-gate/<gate_id>/block', methods=['POST'])
+def cbg_block(gate_id: str):
+    """
+    POST /api/governance/bind-gate/<gate_id>/block
+    ADR-135: Permanently block a bind gate — consequence will not proceed.
+
+    BLOCKED is a terminal state — cannot be reversed.
+    Authentication: X-API-Key (standard B2B auth).
+
+    Body:
+        reason:     str (block rationale — stored in audit trail)
+        blocked_by: str (optional human/system identifier)
+    """
+    if not gate_id or len(gate_id) > 64:
+        return jsonify({'error': 'Invalid gate_id.'}), 400
+
+    data       = request.get_json(silent=True) or {}
+    reason     = (data.get('reason') or '').strip()
+    blocked_by = (data.get('blocked_by') or '').strip() or None
+
+    if not reason or len(reason) < 10:
+        return jsonify({'error': 'reason is required and must be at least 10 characters.'}), 400
+
+    try:
+        from omnix_core.governance.conditional_bind_gate import get_conditional_bind_gate
+        cbg    = get_conditional_bind_gate()
+        record = cbg.block(gate_id=gate_id, reason=reason, blocked_by=blocked_by)
+        return jsonify({
+            'success':      True,
+            'bind_allowed': record.bind_allowed,
+            'gate_status':  record.gate_status.value,
+            'gate':         record.to_dict(),
+            'adr':          'ADR-135 — Conditional Bind Gate',
+        }), 200, {'Content-Type': 'application/json', 'X-OMNIX-ADR': 'ADR-135'}
+    except ValueError as ve:
+        return jsonify({'error': str(ve)}), 422
+    except Exception as exc:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"[CBG.block] error ref={ref}: {exc}")
+        return jsonify({'error': 'Gate block failed', 'reference': ref}), 500
+
+
+@app.route('/api/governance/bind-gate/expire', methods=['POST'])
+def cbg_expire():
+    """
+    POST /api/governance/bind-gate/expire
+    ADR-135: Admin endpoint — expire all PENDING gates whose timeout has elapsed.
+
+    Authentication: X-API-Key with admin role (b2b_clients.role = 'admin').
+    Returns the number of gates expired.
+    """
+    try:
+        from api.omnix_engine.vc_revocation import _require_admin_auth
+    except ImportError:
+        try:
+            from omnix_engine.vc_revocation import _require_admin_auth
+        except ImportError:
+            _require_admin_auth = None
+
+    if _require_admin_auth:
+        _client_id, _err = _require_admin_auth(request)
+        if _err:
+            return _err
+
+    try:
+        from omnix_core.governance.conditional_bind_gate import get_conditional_bind_gate
+        cbg     = get_conditional_bind_gate()
+        expired = cbg.expire_stale()
+        return jsonify({
+            'success':       True,
+            'gates_expired': expired,
+            'message':       f'Expired {expired} stale bind gate(s).',
+            'adr':           'ADR-135 — Conditional Bind Gate',
+        }), 200, {'Content-Type': 'application/json', 'X-OMNIX-ADR': 'ADR-135'}
+    except Exception as exc:
+        ref = str(uuid.uuid4())[:8]
+        logger.error(f"[CBG.expire] error ref={ref}: {exc}")
+        return jsonify({'error': 'Gate expiry failed', 'reference': ref}), 500
 
 
 @app.route('/', defaults={'path': ''})

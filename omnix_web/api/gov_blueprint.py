@@ -1852,13 +1852,15 @@ def api_governance_receipt_vc():
             _hs_conn = get_db_connection()
             if _hs_conn:
                 with _hs_conn.cursor() as _hs_cur:
+                    # ADR-130 v2.3 fix: correct column (submitted_at) and status ('SUBMITTED')
+                    # matching the oversight_sessions schema defined in ADR-124/oversight_surface.py
                     _hs_cur.execute(
                         """
-                        SELECT reviewer_id, completed_at, session_id, eqs_score
+                        SELECT reviewer_id, submitted_at, session_id, eqs_score
                         FROM oversight_sessions
                         WHERE decision_id = %s
-                          AND status      = 'completed'
-                        ORDER BY completed_at DESC
+                          AND status      = 'SUBMITTED'
+                        ORDER BY submitted_at DESC
                         LIMIT 1
                         """,
                         (str(receipt_id),),
