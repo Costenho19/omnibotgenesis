@@ -69,6 +69,7 @@ ADR references
 import logging
 import math
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
@@ -554,10 +555,24 @@ class OscillationInsightEngine:
           - dampening_curve
           - executive_summary (plain-language synthesis)
         """
-        profile   = self.oscillation_profile(domain=domain, num_weeks=num_weeks)
-        phases    = self.phase_segmented_analysis(domain=domain, num_weeks=num_weeks + 4)
-        asymmetry = self.hesitation_asymmetry(domain=domain)
-        dampening = self.dampening_curve(domain=domain, num_weeks=num_weeks)
+        # Run all four analyses concurrently — each method manages its own DB
+        # connection, so thread-safe parallel execution is safe here.
+        tasks = {
+            "profile":   lambda: self.oscillation_profile(domain=domain, num_weeks=num_weeks),
+            "phases":    lambda: self.phase_segmented_analysis(domain=domain, num_weeks=num_weeks + 4),
+            "asymmetry": lambda: self.hesitation_asymmetry(domain=domain),
+            "dampening": lambda: self.dampening_curve(domain=domain, num_weeks=num_weeks),
+        }
+        results: Dict[str, Any] = {}
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            futures = {pool.submit(fn): key for key, fn in tasks.items()}
+            for future in as_completed(futures):
+                results[futures[future]] = future.result()
+
+        profile   = results["profile"]
+        phases    = results["phases"]
+        asymmetry = results["asymmetry"]
+        dampening = results["dampening"]
 
         summary = self._build_executive_summary(profile, phases, asymmetry, dampening)
 
