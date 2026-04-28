@@ -380,7 +380,7 @@ def api_system_adaptive():
     adaptive_data = {
         'engine': 'adaptive',
         'status': 'ACTIVE',
-        'version': 'V6.5',
+        'version': 'V6.5.4e',
         'main_driver': {
             'name':        main_driver,
             'weight':      max_weight,

@@ -80,7 +80,7 @@
                 <div class="tracker-header">
                     <span class="tracker-icon">🎯</span>
                     <span class="tracker-title">Opportunity Tracker</span>
-                    <span class="tracker-day">Day ${dayProgress.current_day || 1}/30</span>
+                    <span class="tracker-day">Day ${dayProgress.current_day || 1}</span>
                 </div>
                 
                 <div class="tracker-balance">
@@ -111,7 +111,7 @@
                 </div>
                 
                 <div class="tracker-footer">
-                    <span class="review-date">📅 Day 30 Review: Complete</span>
+                    <span class="review-date">📅 Day 90 Review: Complete</span>
                     <span class="rec-badge ${recBadge.class}">${recBadge.text}</span>
                 </div>
                 

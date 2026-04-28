@@ -40,8 +40,8 @@ var CalibrationProgressWidget = (function() {
         
         var statusClass = status === 'READY' ? 'ready' : 'calibrating';
         var currentDay = timeline.current_day || 0;
-        var nextMilestone = timeline.next_milestone || 'Day 30 Review';
-        var day30Review = timeline.day30_review || '2026-02-14';
+        var nextMilestone = timeline.next_milestone || 'Day 120 Institutional';
+        var nextMilestoneDate = timeline.day120_target || timeline.day90_milestone || timeline.day60_target || '2026-05-15';
         
         var phasesHtml = phases.map(function(phase) {
             var phaseClass = phase.complete ? 'complete' : (phase.id === currentPhase ? 'active' : 'pending');
@@ -67,7 +67,7 @@ var CalibrationProgressWidget = (function() {
         
         var timelineHtml = '<div class="calibration-timeline">' +
             '<span class="timeline-day">📅 Day ' + currentDay + '</span>' +
-            '<span class="timeline-next" title="Next review: ' + day30Review + '">→ ' + nextMilestone + '</span>' +
+            '<span class="timeline-next" title="Next milestone: ' + nextMilestoneDate + '">→ ' + nextMilestone + '</span>' +
         '</div>';
         
         container.innerHTML = 

@@ -1283,8 +1283,8 @@ def calibration_progress():
                 'progress': round(phase2_progress, 1),
                 'complete': phase2_complete,
                 'icon': 'cpu',
-                'eta': '~Day 45' if not phase2_complete else 'Complete',
-                'target_date': '2026-03-01' if not phase2_complete else None
+                'eta': 'In Progress' if not phase2_complete else 'Complete',
+                'target_date': None
             },
             {
                 'id': 3,
@@ -1293,8 +1293,8 @@ def calibration_progress():
                 'progress': round(phase3_progress, 1),
                 'complete': phase3_complete,
                 'icon': 'sliders',
-                'eta': '~Day 60' if not phase3_complete else 'Complete',
-                'target_date': '2026-03-16' if not phase3_complete else None
+                'eta': 'In Progress' if not phase3_complete else 'Complete',
+                'target_date': None
             },
             {
                 'id': 4,
@@ -1303,8 +1303,8 @@ def calibration_progress():
                 'progress': round(phase4_progress, 1),
                 'complete': deployment_ready,
                 'icon': 'rocket',
-                'eta': '~Day 90' if not deployment_ready else 'Complete',
-                'target_date': '2026-04-15' if not deployment_ready else None
+                'eta': 'In Progress' if not deployment_ready else 'Complete',
+                'target_date': None
             }
         ]
         
@@ -1328,11 +1328,18 @@ def calibration_progress():
                 'target_win_rate': 40
             },
             'timeline': {
-                'start_date': '2026-01-15',
-                'current_day': days_since_start,
-                'day30_review': '2026-02-14',
-                'day60_target': '2026-03-16',
-                'next_milestone': 'Day 60 Optimization' if days_since_start >= 30 else 'Day 30 Review'
+                'start_date':      '2026-01-15',
+                'current_day':     days_since_start,
+                'day30_review':    '2026-02-14',
+                'day60_target':    '2026-03-16',
+                'day90_milestone': '2026-04-15',
+                'day120_target':   '2026-05-15',
+                'next_milestone': (
+                    'Day 120 Institutional' if days_since_start >= 90 else
+                    'Day 90 Institutional'  if days_since_start >= 60 else
+                    'Day 60 Optimization'   if days_since_start >= 30 else
+                    'Day 30 Review'
+                )
             },
             'last_updated': datetime.now().isoformat()
         })
