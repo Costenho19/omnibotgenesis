@@ -134,8 +134,41 @@ from resistance to absorption.
 `oscillation_report()` combines all four methods and produces an `executive_summary`
 with a risk level (`LOW / MEDIUM / HIGH / CRITICAL`) and a prioritised signal list.
 
-**CRITICAL** is triggered when dampening + hesitation asymmetry are simultaneously
-present — the combination indicates pre-capture across multiple dimensions.
+### 4.1 Risk Level Matrix
+
+| Pattern | Asymmetry | Curve | Risk Level |
+|---|---|---|---|
+| Any | No | Stable/None | LOW → MEDIUM |
+| CYCLING / DRIFTING | No | Stable | MEDIUM |
+| Any | Yes | Stable | HIGH |
+| Any | No | DAMPENING | HIGH |
+| Any | Yes | DAMPENING | **CRITICAL** |
+| Any | No | AMPLIFYING | HIGH |
+| Any | Yes | AMPLIFYING | **CRITICAL** |
+
+### 4.2 CRITICAL Trigger Conditions
+
+**CRITICAL** is triggered by either of two two-signal combinations:
+
+**Condition A — Pre-capture pathway:**
+`DAMPENING curve` + `hesitation asymmetry detected`
+
+Oscillation amplitude is falling (resistance attenuating) AND the evaluative frame
+is already routing tension into deferral shortcuts. Two independent pre-capture
+signals present simultaneously.
+
+**Condition B — Escalating destabilisation pathway (ADR-134 architectural decision, 2026-04-28):**
+`AMPLIFYING curve` + `hesitation asymmetry detected`
+
+Evaluative conflict is intensifying AND the frame is already defaulting to deferral
+under load. Two compounding destabilisation signals — conflict escalation without
+the evaluative capacity to resolve it. Categorically equivalent to Condition A for
+governance risk escalation.
+
+Rationale: A system under escalating evaluative pressure that simultaneously
+demonstrates deferral shortcuts is already operating in a degraded governance mode.
+The combination cannot be treated as merely HIGH — it requires immediate intervention
+regardless of whether the amplitude trend is falling (Condition A) or rising (Condition B).
 
 Recommendation at `CRITICAL`:
 > "Immediate governance review required. Pre-capture signals present across multiple
@@ -233,9 +266,43 @@ this is implemented by:
 
 ---
 
-## 11. Test Coverage
+## 11. Database Prerequisites
 
-`tests/test_oscillation_insight.py` — target: 35 tests
+### 11.1 Required Index — `filter_calibration_events.event_ts`
+
+`_fetch_weekly_windows()` uses a cross-join with `generate_series()` to build
+rolling weekly windows. Each iteration filters `event_ts` by a `[start, end)`
+range. Without an index, this is O(rows × N_weeks).
+
+**Required index (must be created before production deployment):**
+
+```sql
+-- Minimum required: single-column index on event_ts
+CREATE INDEX IF NOT EXISTS idx_fce_event_ts
+    ON filter_calibration_events (event_ts);
+
+-- Preferred: composite index when domain-scoped queries are the primary usage
+CREATE INDEX IF NOT EXISTS idx_fce_domain_event_ts
+    ON filter_calibration_events (domain, event_ts);
+```
+
+**Performance envelope:**
+
+| Row count | N_weeks | Without index | With index |
+|---|---|---|---|
+| < 10K | 26 | < 50ms | < 10ms |
+| 100K | 26 | 400–800ms | 20–40ms |
+| 1M+ | 26 | > 5s | 50–100ms |
+
+**Deployment gate:** The endpoint MUST NOT be exposed publicly without this index
+on datasets > 50K rows. The `oscillation_report()` call chain executes the
+weekly window query twice (once for oscillation profile, once for dampening curve).
+
+---
+
+## 12. Test Coverage
+
+`tests/test_oscillation_insight.py` — 37 tests
 
 | Group | Tests | Coverage |
 |---|---|---|
@@ -244,13 +311,19 @@ this is implemented by:
 | T11–T15 | `phase_segmented_analysis` | Boundary detection, segment building, continuity warning |
 | T16–T20 | `hesitation_asymmetry` | Coefficient calculation, threshold detection, interpretation |
 | T21–T25 | `dampening_curve` | DAMPENING/AMPLIFYING/STABLE/INSUFFICIENT_DATA |
-| T26–T30 | `oscillation_report` full | Executive summary, risk levels |
+| T26–T28 | `oscillation_report` full | Executive summary, DAMPENING+ASYMMETRY=CRITICAL |
+| T28b–T28c | `_build_executive_summary` direct | AMPLIFYING+ASYMMETRY=CRITICAL; AMPLIFYING alone=HIGH |
+| T29–T30 | Report structure | Signals list, ADR field |
 | T31–T35 | Edge cases | Empty data, DB error fail-safe, sparse windows |
 
 ---
 
-## 12. Changelog
+## 13. Changelog
 
 | Version | Date | Change |
 |---|---|---|
 | v1.0 | 2026-04-28 | Initial implementation — 4 methods, API endpoint, ADR-134 |
+| v1.1 | 2026-04-28 | Audit fix: API 400 on invalid num_weeks (was 500) |
+| v1.2 | 2026-04-28 | Audit fix: docstring SETTLING corrected to strict monotonic |
+| v1.3 | 2026-04-28 | **Arch decision F3**: AMPLIFYING + ASYMMETRY → CRITICAL (was HIGH). Two compounding destabilisation signals. Tests T28b + T28c added. |
+| v1.3 | 2026-04-28 | **Arch decision F4**: DB index prerequisite documented in §11. |

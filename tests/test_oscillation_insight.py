@@ -360,7 +360,36 @@ def test_T28_critical_risk_on_dampening_plus_asymmetry():
     engine._fetch_weekly_windows = MagicMock(return_value=windows)
     engine._fetch_latency_by_decision_type = MagicMock(return_value=latency)
     result = engine.oscillation_report()
-    assert result["executive_summary"]["risk_level"] in ("HIGH", "CRITICAL")
+    assert result["executive_summary"]["risk_level"] == "CRITICAL"
+
+
+def test_T28b_amplifying_plus_asymmetry_is_critical():
+    """AMPLIFYING + ASYMMETRY = CRITICAL — compounding destabilisation signals.
+    ADR-134 architectural decision 2026-04-28."""
+    from omnix_core.governance.oscillation_insight import OscillationInsightEngine as OIE
+    summary = OIE._build_executive_summary(
+        {"pattern": "CYCLING", "available": True},
+        {"boundaries_detected": 0, "available": True},
+        {"asymmetry_detected": True, "asymmetry_coefficient": 0.75, "available": True},
+        {"curve_direction": "AMPLIFYING", "available": True},
+    )
+    assert summary["risk_level"] == "CRITICAL", (
+        f"Expected CRITICAL for AMPLIFYING+ASYMMETRY, got {summary['risk_level']}"
+    )
+
+
+def test_T28c_amplifying_without_asymmetry_is_high():
+    """AMPLIFYING alone (no asymmetry) stays at HIGH."""
+    from omnix_core.governance.oscillation_insight import OscillationInsightEngine as OIE
+    summary = OIE._build_executive_summary(
+        {"pattern": "STABLE", "available": True},
+        {"boundaries_detected": 0, "available": True},
+        {"asymmetry_detected": False, "asymmetry_coefficient": None, "available": True},
+        {"curve_direction": "AMPLIFYING", "available": True},
+    )
+    assert summary["risk_level"] == "HIGH", (
+        f"Expected HIGH for AMPLIFYING alone, got {summary['risk_level']}"
+    )
 
 
 def test_T29_signals_list_not_empty():

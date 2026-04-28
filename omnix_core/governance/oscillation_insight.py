@@ -868,17 +868,27 @@ class OscillationInsightEngine:
             risk_level = "HIGH" if risk_level != "CRITICAL" else "CRITICAL"
 
         curve = dampening.get("curve_direction", "UNKNOWN")
+        asymmetry_active = asymmetry.get("asymmetry_detected", False)
         if curve == "DAMPENING":
             signals.append(
                 "Oscillation amplitude dampening — residual recognition capacity attenuating. "
                 "Pre-capture signal: transition from resistance to absorption may be underway."
             )
-            risk_level = "CRITICAL" if asymmetry.get("asymmetry_detected") else "HIGH"
+            # DAMPENING alone → HIGH; DAMPENING + hesitation asymmetry → CRITICAL.
+            # Two simultaneous pre-capture signals across independent dimensions.
+            risk_level = "CRITICAL" if asymmetry_active else "HIGH"
         elif curve == "AMPLIFYING":
             signals.append(
                 "Oscillation amplitude amplifying — evaluative conflict intensifying."
             )
-            if risk_level in ("LOW", "MEDIUM"):
+            # AMPLIFYING + hesitation asymmetry → CRITICAL.
+            # Conflict is escalating AND the frame is already routing tension into
+            # deferral shortcuts — two compounding destabilisation signals.
+            # ADR-134 architectural decision 2026-04-28: this combination is
+            # categorically equivalent to DAMPENING + ASYMMETRY for risk escalation.
+            if asymmetry_active:
+                risk_level = "CRITICAL"
+            elif risk_level in ("LOW", "MEDIUM"):
                 risk_level = "HIGH"
 
         if not signals:
