@@ -356,7 +356,7 @@ export default function CommercialLanding() {
               <Activity className="w-5 h-5" />
               View Live System
             </Link>
-            <Link to="/try" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
+            <Link to="/full-demo" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
               Run your first decision through OMNIX
             </Link>
           </div>

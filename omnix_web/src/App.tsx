@@ -34,6 +34,7 @@ import ProofLayer from './pages/ProofLayer'
 import IndependentVerification from './pages/IndependentVerification'
 import GettingStarted from './pages/GettingStarted'
 import ARFCompliance from './pages/ARFCompliance'
+import FullDemo from './pages/FullDemo'
 import './index.css'
 
 function App() {
@@ -74,6 +75,7 @@ function App() {
           <Route path="/verify-independently" element={<IndependentVerification />} />
           <Route path="/docs" element={<GettingStarted />} />
           <Route path="/eidas" element={<ARFCompliance />} />
+          <Route path="/full-demo" element={<FullDemo />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />
