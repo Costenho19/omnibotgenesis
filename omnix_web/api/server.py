@@ -2354,6 +2354,73 @@ def analytics_decisions():
         return jsonify({'error': 'Analytics unavailable', 'live': False}), 500
 
 
+@app.route('/api/analytics/oscillation', methods=['GET'])
+def analytics_oscillation():
+    """
+    GET /api/analytics/oscillation
+    ADR-134 — Governance Oscillation & Hesitation Asymmetry Engine.
+
+    Returns a full oscillation report for the given domain, including:
+    - HOLD rate oscillation profile across rolling weekly windows
+    - Phase-segmented analysis (regime-change boundary detection)
+    - Hesitation asymmetry (processing_time_ms by decision type)
+    - Dampening curve (oscillation amplitude trend)
+    - Executive summary with risk level and signals
+
+    Query parameters:
+      domain    (optional) — filter by governance domain
+      num_weeks (optional) — number of weekly windows to analyze (default: 8)
+      view      (optional) — "full" (default) | "profile" | "phases" | "asymmetry" | "dampening"
+
+    Authentication: public endpoint — aggregated data only, no PII.
+    """
+    domain    = request.args.get('domain') or None
+    num_weeks = min(int(request.args.get('num_weeks', 8)), 26)
+    view      = request.args.get('view', 'full').lower()
+
+    try:
+        try:
+            from api.omnix_core.governance.oscillation_insight import OscillationInsightEngine
+        except ImportError:
+            try:
+                from omnix_core.governance.oscillation_insight import OscillationInsightEngine
+            except ImportError:
+                logger.error("[OMNIX.API] [oscillation] OscillationInsightEngine not importable")
+                return jsonify({'error': 'Oscillation module unavailable', 'adr': 'ADR-134'}), 503
+
+        engine = OscillationInsightEngine()
+
+        if view == 'profile':
+            result = engine.oscillation_profile(domain=domain, num_weeks=num_weeks)
+        elif view == 'phases':
+            result = engine.phase_segmented_analysis(domain=domain, num_weeks=num_weeks + 4)
+        elif view == 'asymmetry':
+            result = engine.hesitation_asymmetry(domain=domain)
+        elif view == 'dampening':
+            result = engine.dampening_curve(domain=domain, num_weeks=num_weeks)
+        else:
+            result = engine.oscillation_report(domain=domain, num_weeks=num_weeks)
+
+        return jsonify({
+            'success':      True,
+            'adr':          'ADR-134 — Governance Oscillation & Hesitation Asymmetry Engine',
+            'view':         view,
+            'domain':       domain,
+            'result':       result,
+            'generated_at': datetime.now(timezone.utc).isoformat(),
+        }), 200, {
+            'Content-Type':               'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control':              'no-cache, no-store, must-revalidate',
+            'X-OMNIX-ADR':                'ADR-134',
+        }
+
+    except Exception as e:
+        ref = str(uuid.uuid4())[:8]
+        logger.error("[OMNIX.API] [oscillation] ref=%s %s: %s", ref, type(e).__name__, e)
+        return jsonify({'error': 'Oscillation analysis unavailable', 'reference': ref}), 500
+
+
 def init_contact_leads_table():
     try:
         conn = get_db_connection()
