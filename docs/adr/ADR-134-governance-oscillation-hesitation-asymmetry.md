@@ -327,3 +327,4 @@ weekly window query twice (once for oscillation profile, once for dampening curv
 | v1.2 | 2026-04-28 | Audit fix: docstring SETTLING corrected to strict monotonic |
 | v1.3 | 2026-04-28 | **Arch decision F3**: AMPLIFYING + ASYMMETRY → CRITICAL (was HIGH). Two compounding destabilisation signals. Tests T28b + T28c added. |
 | v1.3 | 2026-04-28 | **Arch decision F4**: DB index prerequisite documented in §11. |
+| v1.4 | 2026-04-28 | **Performance**: `ThreadedConnectionPool(minconn=1, maxconn=5)` at module level replaces per-call `psycopg2.connect()`. Pool shared across all engine instances and ThreadPoolExecutor threads. `_db_conn()` context manager handles get/putconn safely. `_fetch_weekly_windows` and `_fetch_latency_by_decision_type` updated to `with _db_conn(...) as conn, conn.cursor() as cur:` pattern. Result: connection overhead eliminated from warm requests. |

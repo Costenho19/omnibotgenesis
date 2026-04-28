@@ -69,10 +69,12 @@ ADR references
 import logging
 import math
 import os
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 logger = logging.getLogger("OMNIX.OscillationInsight")
 
@@ -89,18 +91,47 @@ LATENCY_ASYMMETRY_THRESHOLD: float = 0.85   # HOLD/BLOCK ratio < 0.85 → asymme
 _TABLE = "filter_calibration_events"
 
 
-# ── DB helper ─────────────────────────────────────────────────────────────────
+# ── Connection pool ───────────────────────────────────────────────────────────
+#
+# One ThreadedConnectionPool shared across all OscillationInsightEngine instances
+# and all threads spawned by ThreadPoolExecutor.
+#
+# Pool sizing:
+#   minconn = 1  — keep one warm connection at idle
+#   maxconn = 5  — 4 parallel workers + 1 buffer for sequential callers
+#
+# This prevents opening a new TCP connection for every DB call, which was the
+# primary source of the ~800ms latency on each method invocation.
 
-def _get_db_conn(db_url: Optional[str] = None):
-    import psycopg2
-    url = (
-        db_url
-        or os.environ.get("OMNIX_DB_URL")
-        or os.environ.get("DATABASE_URL")
-    )
+_pool      = None           # psycopg2.pool.ThreadedConnectionPool | None
+_pool_lock = threading.Lock()
+_pool_url  = None           # DB URL the pool was created with
+
+
+def _get_pool(db_url: Optional[str] = None):
+    """Return the module-level ThreadedConnectionPool, creating it if needed."""
+    global _pool, _pool_url
+    url = db_url or os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
     if not url:
-        raise RuntimeError("No database URL configured (OMNIX_DB_URL)")
-    return psycopg2.connect(url)
+        raise RuntimeError("No database URL configured (OMNIX_DB_URL / DATABASE_URL)")
+    with _pool_lock:
+        if _pool is None or _pool_url != url:
+            import psycopg2.pool as pgpool
+            logger.info("[OIE] Initialising ThreadedConnectionPool (minconn=1 maxconn=5)")
+            _pool     = pgpool.ThreadedConnectionPool(1, 5, url)
+            _pool_url = url
+    return _pool
+
+
+@contextmanager
+def _db_conn(db_url: Optional[str] = None) -> Iterator:
+    """Context manager — borrow a connection from the pool and return it on exit."""
+    pool = _get_pool(db_url)
+    conn = pool.getconn()
+    try:
+        yield conn
+    finally:
+        pool.putconn(conn)
 
 
 # ── Data structures ───────────────────────────────────────────────────────────
@@ -598,43 +629,39 @@ class OscillationInsightEngine:
         Fetch HOLD/BLOCK/APPROVED counts for N rolling 7-day windows.
         Returns list ordered most-recent-first (week_offset=0 is current week).
         """
-        conn = _get_db_conn(self._db_url)
-        try:
-            with conn.cursor() as cur:
-                domain_filter = "AND domain = %s" if domain else ""
-                params: list = []
-                if domain:
-                    params.append(domain)
-                params.append(num_weeks)
+        domain_filter = "AND domain = %s" if domain else ""
+        params: list = []
+        if domain:
+            params.append(domain)
+        params.append(num_weeks)
 
-                cur.execute(
-                    f"""
-                    SELECT
-                        week_offset,
-                        date_trunc('week', NOW() - (week_offset * INTERVAL '7 days'))
-                            AS week_start,
-                        date_trunc('week', NOW() - (week_offset * INTERVAL '7 days'))
-                            + INTERVAL '7 days'
-                            AS week_end,
-                        COUNT(*)                                                AS total,
-                        SUM(CASE WHEN final_decision = 'HOLD'     THEN 1 ELSE 0 END) AS hold_count,
-                        SUM(CASE WHEN final_decision = 'BLOCKED'  THEN 1 ELSE 0 END) AS block_count,
-                        SUM(CASE WHEN final_decision IN ('APPROVED','APPROVED_CONDITIONAL')
-                                 THEN 1 ELSE 0 END)                             AS approved_count
-                    FROM {_TABLE},
-                         generate_series(0, %s - 1) AS week_offset
-                    WHERE event_ts >= date_trunc('week', NOW() - (week_offset * INTERVAL '7 days'))
-                      AND event_ts <  date_trunc('week', NOW() - (week_offset * INTERVAL '7 days'))
-                                      + INTERVAL '7 days'
-                      {domain_filter}
-                    GROUP BY week_offset, week_start, week_end
-                    ORDER BY week_offset ASC
-                    """,
-                    params,
-                )
-                rows = cur.fetchall()
-        finally:
-            conn.close()
+        with _db_conn(self._db_url) as conn, conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT
+                    week_offset,
+                    date_trunc('week', NOW() - (week_offset * INTERVAL '7 days'))
+                        AS week_start,
+                    date_trunc('week', NOW() - (week_offset * INTERVAL '7 days'))
+                        + INTERVAL '7 days'
+                        AS week_end,
+                    COUNT(*)                                                AS total,
+                    SUM(CASE WHEN final_decision = 'HOLD'     THEN 1 ELSE 0 END) AS hold_count,
+                    SUM(CASE WHEN final_decision = 'BLOCKED'  THEN 1 ELSE 0 END) AS block_count,
+                    SUM(CASE WHEN final_decision IN ('APPROVED','APPROVED_CONDITIONAL')
+                             THEN 1 ELSE 0 END)                             AS approved_count
+                FROM {_TABLE},
+                     generate_series(0, %s - 1) AS week_offset
+                WHERE event_ts >= date_trunc('week', NOW() - (week_offset * INTERVAL '7 days'))
+                  AND event_ts <  date_trunc('week', NOW() - (week_offset * INTERVAL '7 days'))
+                                  + INTERVAL '7 days'
+                  {domain_filter}
+                GROUP BY week_offset, week_start, week_end
+                ORDER BY week_offset ASC
+                """,
+                params,
+            )
+            rows = cur.fetchall()
 
         windows = []
         for row in rows:
@@ -676,30 +703,26 @@ class OscillationInsightEngine:
         if domain:
             params.append(domain)
 
-        conn = _get_db_conn(self._db_url)
-        try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    f"""
-                    SELECT
-                        final_decision,
-                        COUNT(*)                                   AS cnt,
-                        AVG(processing_time_ms)                    AS avg_ms,
-                        PERCENTILE_CONT(0.5) WITHIN GROUP
-                            (ORDER BY processing_time_ms)          AS p50_ms,
-                        PERCENTILE_CONT(0.9) WITHIN GROUP
-                            (ORDER BY processing_time_ms)          AS p90_ms
-                    FROM {_TABLE}
-                    WHERE processing_time_ms IS NOT NULL
-                      AND event_ts >= NOW() - INTERVAL '{interval}'
-                      {domain_filter}
-                    GROUP BY final_decision
-                    """,
-                    params,
-                )
-                rows = cur.fetchall()
-        finally:
-            conn.close()
+        with _db_conn(self._db_url) as conn, conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT
+                    final_decision,
+                    COUNT(*)                                   AS cnt,
+                    AVG(processing_time_ms)                    AS avg_ms,
+                    PERCENTILE_CONT(0.5) WITHIN GROUP
+                        (ORDER BY processing_time_ms)          AS p50_ms,
+                    PERCENTILE_CONT(0.9) WITHIN GROUP
+                        (ORDER BY processing_time_ms)          AS p90_ms
+                FROM {_TABLE}
+                WHERE processing_time_ms IS NOT NULL
+                  AND event_ts >= NOW() - INTERVAL '{interval}'
+                  {domain_filter}
+                GROUP BY final_decision
+                """,
+                params,
+            )
+            rows = cur.fetchall()
 
         result: Dict[str, Dict[str, Any]] = {}
         for row in rows:
