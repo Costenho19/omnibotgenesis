@@ -7,7 +7,6 @@
 
         init: function(containerId) {
             this.containerId = containerId;
-            console.log('RiskGuardian widget initialized');
         },
 
         refresh: async function() {

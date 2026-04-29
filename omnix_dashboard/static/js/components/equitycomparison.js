@@ -85,7 +85,6 @@ const EquityComparison = (function() {
     }
 
     function init() {
-        console.log('EquityComparison widget initialized');
         refresh();
     }
 

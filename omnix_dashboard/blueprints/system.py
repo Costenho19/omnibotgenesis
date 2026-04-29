@@ -377,7 +377,10 @@ def api_system_adaptive():
         perf_status           = 'warming_up'
         perf_source           = None
 
-    from omnix_config import VERSION_BANNER
+    try:
+        from omnix_config import VERSION_BANNER
+    except Exception:
+        VERSION_BANNER = 'V6.5.4e INSTITUTIONAL+'
     adaptive_data = {
         'engine': 'adaptive',
         'status': 'ACTIVE',

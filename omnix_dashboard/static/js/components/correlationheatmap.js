@@ -90,7 +90,6 @@
     function init() {
         fetchCorrelation();
         setInterval(fetchCorrelation, REFRESH_INTERVAL);
-        console.log('CorrelationHeatmapWidget initialized');
     }
 
     if (document.readyState === 'loading') {

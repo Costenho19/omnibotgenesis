@@ -6,7 +6,6 @@ const RecommendedActionsWidget = (function() {
     function init(id) {
         containerId = id;
         refresh();
-        console.log('RecommendedActionsWidget initialized');
     }
     
     async function refresh() {

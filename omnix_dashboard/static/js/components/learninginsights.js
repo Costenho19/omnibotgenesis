@@ -212,7 +212,6 @@
     function init() {
         fetchLearningInsights();
         setInterval(fetchLearningInsights, REFRESH_INTERVAL);
-        console.log('OpportunityTrackerWidget initialized');
     }
 
     if (document.readyState === 'loading') {

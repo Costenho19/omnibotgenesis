@@ -6,7 +6,6 @@ const LatencyWidget = {
         if (!this.headerEl) return false;
         this.load();
         setInterval(() => this.load(), 30000);
-        console.log('LatencyWidget initialized');
         return true;
     },
     

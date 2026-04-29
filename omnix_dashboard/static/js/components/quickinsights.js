@@ -7,7 +7,6 @@ var QuickInsightsWidget = (function() {
     function init(id) {
         containerId = id || 'quick-insights-widget';
         isInitialized = true;
-        console.log('QuickInsightsWidget initialized');
         refresh();
     }
     

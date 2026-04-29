@@ -104,7 +104,6 @@
     function init() {
         fetchTimeHeatmap();
         setInterval(fetchTimeHeatmap, REFRESH_INTERVAL);
-        console.log('TimeHeatmapWidget initialized');
     }
 
     if (document.readyState === 'loading') {

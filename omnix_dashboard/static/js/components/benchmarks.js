@@ -194,7 +194,6 @@ const BenchmarkOverlay = (function() {
             }
         }
 
-        console.log('[BenchmarkOverlay] Initialized for chart:', chartId);
     }
 
     async function refresh() {

@@ -30,7 +30,6 @@ const SessionsWidget = (function() {
     }
 
     function init() {
-        console.log('SessionsWidget initialized');
         refresh();
     }
 

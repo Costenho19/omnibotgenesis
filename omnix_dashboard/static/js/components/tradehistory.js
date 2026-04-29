@@ -233,7 +233,6 @@ const TradeHistoryWidget = {
     },
     
     init() {
-        console.log('TradeHistory widget initialized');
         this.refresh();
     }
 };

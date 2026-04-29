@@ -128,7 +128,6 @@
     function init() {
         fetchPnlBreakdown();
         setInterval(fetchPnlBreakdown, REFRESH_INTERVAL);
-        console.log('PnlBreakdownWidget initialized');
     }
     
     if (document.readyState === 'loading') {

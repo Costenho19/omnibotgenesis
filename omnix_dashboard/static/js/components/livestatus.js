@@ -7,7 +7,6 @@ var LiveStatusWidget = (function() {
     function init(id) {
         containerId = id || 'live-status-widget';
         isInitialized = true;
-        console.log('LiveStatusWidget initialized');
         refresh();
     }
     

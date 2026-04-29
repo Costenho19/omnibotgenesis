@@ -18,7 +18,6 @@ const AuditedSnapshots = (function() {
 
     function init(containerId) {
         _containerId = containerId;
-        console.log('AuditedSnapshots widget initialized');
     }
 
     async function refresh() {

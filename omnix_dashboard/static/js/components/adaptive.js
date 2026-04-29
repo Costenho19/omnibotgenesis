@@ -278,7 +278,6 @@ const AdaptiveEngine = (function() {
     }
 
     function init(containerId) {
-        console.log('AdaptiveEngine widget initialized');
         refresh(containerId);
     }
 

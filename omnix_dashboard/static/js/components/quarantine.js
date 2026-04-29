@@ -7,7 +7,6 @@ const QuarantineWidget = {
         this.container = document.getElementById('quarantine-widget');
         this.headerEl = document.getElementById('quarantine-avoided');
         this.load();
-        console.log('QuarantineWidget initialized');
         return true;
     },
     

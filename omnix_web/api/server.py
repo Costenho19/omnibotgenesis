@@ -2415,6 +2415,102 @@ def analytics_oscillation():
         return jsonify({'error': 'Oscillation analysis unavailable', 'reference': ref}), 500
 
 
+def _send_lead_emails(name: str, company: str, email: str, referral_source: str, message: str) -> None:
+    """
+    Background task: sends two emails after a contact lead is saved.
+    1. Notification to the owner (OWNER_EMAIL) with full lead details.
+    2. Auto-reply to the prospect confirming receipt.
+    Non-blocking — called in a daemon thread from contact_lead().
+    """
+    import threading
+
+    def _deliver() -> None:
+        gmail_sender   = os.environ.get('GMAIL_SENDER', '')
+        gmail_password = os.environ.get('GMAIL_APP_PASSWORD', '')
+        owner_email    = os.environ.get('OWNER_EMAIL', '')
+
+        if not gmail_sender or not gmail_password or not owner_email:
+            logger.warning("[OMNIX.Contact] Email credentials or OWNER_EMAIL not set — skipping notification")
+            return
+
+        from datetime import datetime, timezone as _tz
+        now_str = datetime.now(_tz.utc).strftime('%Y-%m-%d %H:%M UTC')
+
+        # ── 1. Owner notification ──────────────────────────────────────────────
+        owner_html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0A1628;color:#ffffff;border-radius:12px;overflow:hidden;">
+          <div style="background:#C9A227;padding:20px 24px;">
+            <h2 style="margin:0;color:#0A1628;font-size:18px;">⚡ New Lead — OMNIX Quantum</h2>
+            <p style="margin:4px 0 0;color:#0A1628;font-size:13px;">{now_str}</p>
+          </div>
+          <div style="padding:24px;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:8px 0;color:#C9A227;font-size:13px;width:130px;">Name</td><td style="padding:8px 0;font-size:14px;">{html.escape(name)}</td></tr>
+              <tr><td style="padding:8px 0;color:#C9A227;font-size:13px;">Company</td><td style="padding:8px 0;font-size:14px;">{html.escape(company) if company else '—'}</td></tr>
+              <tr><td style="padding:8px 0;color:#C9A227;font-size:13px;">Email</td><td style="padding:8px 0;font-size:14px;"><a href="mailto:{html.escape(email)}" style="color:#C9A227;">{html.escape(email)}</a></td></tr>
+              <tr><td style="padding:8px 0;color:#C9A227;font-size:13px;">Source</td><td style="padding:8px 0;font-size:14px;">{html.escape(referral_source)}</td></tr>
+            </table>
+            {f'<div style="margin-top:16px;padding:16px;background:#0D1E35;border-radius:8px;border-left:3px solid #C9A227;"><p style="margin:0;font-size:13px;color:#d1d5db;">{html.escape(message)}</p></div>' if message else ''}
+            <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1e3a5f;">
+              <a href="mailto:{html.escape(email)}" style="display:inline-block;background:#C9A227;color:#0A1628;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:13px;">Reply to {html.escape(name)}</a>
+            </div>
+          </div>
+        </div>"""
+
+        msg_owner = MIMEMultipart('alternative')
+        msg_owner['Subject'] = f'[OMNIX Lead] {name}{" — " + company if company else ""}'
+        msg_owner['From']    = f'OMNIX Quantum <{gmail_sender}>'
+        msg_owner['To']      = owner_email
+        msg_owner.attach(MIMEText(owner_html, 'html'))
+
+        # ── 2. Auto-reply to prospect ──────────────────────────────────────────
+        prospect_html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+          <div style="background:#0A1628;padding:24px;">
+            <h2 style="margin:0;color:#C9A227;font-size:20px;">OMNIX Quantum</h2>
+            <p style="margin:4px 0 0;color:#9ca3af;font-size:12px;">Decision Governance Infrastructure</p>
+          </div>
+          <div style="padding:28px;color:#111827;">
+            <p style="font-size:15px;">Hi {html.escape(name)},</p>
+            <p style="font-size:14px;line-height:1.6;color:#374151;">
+              Thank you for reaching out. We've received your message and will get back to you within <strong>24–48 hours</strong>.
+            </p>
+            <p style="font-size:14px;line-height:1.6;color:#374151;">
+              OMNIX Quantum is a Decision Governance Infrastructure — we help financial institutions, insurance companies, and regulated industries make <strong>auditable, compliant, cryptographically-signed decisions</strong> at scale.
+            </p>
+            <p style="font-size:14px;line-height:1.6;color:#374151;">
+              In the meantime, feel free to explore our platform at
+              <a href="https://omnixquantum.net" style="color:#C9A227;">omnixquantum.net</a>.
+            </p>
+            <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">
+              <p style="margin:0;">OMNIX Quantum Ltd · London, United Kingdom</p>
+              <p style="margin:4px 0 0;"><a href="https://omnixquantum.net" style="color:#C9A227;">omnixquantum.net</a></p>
+            </div>
+          </div>
+        </div>"""
+
+        msg_prospect = MIMEMultipart('alternative')
+        msg_prospect['Subject'] = 'Thank you for reaching out — OMNIX Quantum'
+        msg_prospect['From']    = f'OMNIX Quantum <{gmail_sender}>'
+        msg_prospect['To']      = email
+        msg_prospect.attach(MIMEText(prospect_html, 'html'))
+
+        # ── Send both ──────────────────────────────────────────────────────────
+        try:
+            with smtplib.SMTP('smtp.gmail.com', 587) as srv:
+                srv.ehlo()
+                srv.starttls()
+                srv.login(gmail_sender, gmail_password)
+                srv.sendmail(gmail_sender, owner_email, msg_owner.as_string())
+                srv.sendmail(gmail_sender, email, msg_prospect.as_string())
+            logger.info("[OMNIX.Contact] Lead emails sent — owner=%s prospect=%s", owner_email, email)
+        except Exception as _mail_err:
+            logger.error("[OMNIX.Contact] Failed to send lead emails: %s", _mail_err)
+
+    t = threading.Thread(target=_deliver, daemon=True)
+    t.start()
+
+
 def init_contact_leads_table():
     try:
         conn = get_db_connection()
@@ -2488,6 +2584,8 @@ def contact_lead():
         conn.commit()
         cur.close()
         conn.close()
+
+        _send_lead_emails(name, company, email, referral_source, message)
 
         return jsonify({'success': True, 'message': 'Contact information saved successfully'})
 

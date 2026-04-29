@@ -6,7 +6,6 @@ const HealthScoreWidget = (function() {
 
     function init(id) {
         containerId = id || containerId;
-        console.log('HealthScoreWidget initialized');
     }
 
     async function refresh() {

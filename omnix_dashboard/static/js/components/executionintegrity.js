@@ -34,7 +34,6 @@ const ExecutionIntegrityWidget = (function () {
 
     function init(id) {
         containerId = id || containerId;
-        console.log('ExecutionIntegrityWidget initialized');
     }
 
     async function refresh() {

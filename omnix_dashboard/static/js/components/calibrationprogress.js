@@ -7,7 +7,6 @@ var CalibrationProgressWidget = (function() {
     function init(id) {
         containerId = id || 'calibration-progress-widget';
         isInitialized = true;
-        console.log('CalibrationProgressWidget initialized');
         refresh();
     }
     

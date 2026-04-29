@@ -293,7 +293,7 @@ export default function InvestorDemo() {
     setResult(null)
 
     try {
-      const res = await fetch(`${API_BASE}/api/public/sandbox`, {
+      const res = await fetch(`${API_BASE}/api/public/sandbox/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scenario: scenario.text, domain: scenario.domain }),
