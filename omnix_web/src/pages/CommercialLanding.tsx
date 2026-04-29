@@ -269,9 +269,25 @@ export default function CommercialLanding() {
   })
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
   const [formError, setFormError] = useState('')
+  const partialSentRef = useRef(false)
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleEmailBlur = () => {
+    const email = formData.email.trim()
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || partialSentRef.current) return
+    partialSentRef.current = true
+    fetch('/api/contact/partial', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        name: formData.name.trim() || undefined,
+        company: formData.company.trim() || undefined
+      })
+    }).catch(() => {})
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -1421,6 +1437,7 @@ export default function CommercialLanding() {
                   required
                   value={formData.email}
                   onChange={handleFormChange}
+                  onBlur={handleEmailBlur}
                   className="w-full px-4 py-3 rounded-xl bg-[#0A1628]/80 border border-[#C9A227]/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A227]/60 transition-colors"
                   placeholder="you@company.com"
                 />

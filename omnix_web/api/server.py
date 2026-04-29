@@ -2538,6 +2538,36 @@ def init_contact_leads_table():
 init_contact_leads_table()
 
 
+def init_contact_partial_leads_table():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS contact_partial_leads (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                name VARCHAR(255),
+                company VARCHAR(255),
+                attempts INTEGER DEFAULT 1,
+                converted BOOLEAN DEFAULT FALSE,
+                captured_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                converted_at TIMESTAMP WITH TIME ZONE
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_partial_leads_email ON contact_partial_leads(email)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_partial_leads_captured ON contact_partial_leads(captured_at DESC)")
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.warning("[OMNIX.API] [partial_leads_init] %s: %s", type(e).__name__, e)
+
+
+init_contact_partial_leads_table()
+
+
 VALID_REFERRAL_SOURCES = {
     'Facebook', 'WhatsApp', 'Instagram', 'Telegram',
     'LinkedIn', 'Google', 'Recomendación', 'Otro'
@@ -2581,6 +2611,14 @@ def contact_lead():
                VALUES (%s, %s, %s, %s, %s)""",
             (name, company or None, email, referral_source, message or None)
         )
+        try:
+            cur.execute("""
+                UPDATE contact_partial_leads
+                SET converted = TRUE, converted_at = NOW()
+                WHERE email = %s
+            """, (email,))
+        except Exception:
+            pass
         conn.commit()
         cur.close()
         conn.close()
@@ -2596,6 +2634,42 @@ def contact_lead():
             'error': 'Failed to save contact information',
             'fallback_email': 'contacto@omnixquantum.net'
         }), 500
+
+
+@app.route('/api/contact/partial', methods=['POST'])
+@limiter.limit("10 per minute; 60 per hour")
+def contact_partial():
+    data = request.get_json(silent=True) or {}
+    email = (data.get('email') or '').strip()
+    if not email or not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        return jsonify({'success': False}), 400
+
+    name    = (data.get('name') or '').strip() or None
+    company = (data.get('company') or '').strip() or None
+
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False}), 503
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO contact_partial_leads (email, name, company)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (email) DO UPDATE SET
+                name        = COALESCE(EXCLUDED.name, contact_partial_leads.name),
+                company     = COALESCE(EXCLUDED.company, contact_partial_leads.company),
+                attempts    = contact_partial_leads.attempts + 1,
+                captured_at = NOW()
+            WHERE contact_partial_leads.converted = FALSE
+        """, (email, name, company))
+        conn.commit()
+        cur.close()
+        conn.close()
+        logger.info("[OMNIX.Partial] Captured partial lead: %s", email)
+    except Exception as e:
+        logger.error("[OMNIX.Partial] DB error: %s", e)
+
+    return jsonify({'success': True})
 
 
 @app.route('/api/sandbox/stats', methods=['GET'])
