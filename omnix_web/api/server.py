@@ -2457,15 +2457,28 @@ def _send_lead_emails(name: str, company: str, email: str, referral_source: str,
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:580px;margin:0 auto;">
 
   <!-- Header -->
-  <div style="background:linear-gradient(135deg,#0A1628 0%,#0D1E35 100%);border-radius:14px 14px 0 0;padding:28px 32px;border-bottom:2px solid #C9A227;">
-    <div style="display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <p style="margin:0;font-size:11px;color:#C9A227;text-transform:uppercase;letter-spacing:2px;font-weight:700;">OMNIX Quantum</p>
-        <h1 style="margin:6px 0 0;font-size:22px;color:#ffffff;font-weight:700;">New Inbound Lead</h1>
-      </div>
-      <div style="background:{priority_color};color:#fff;font-size:10px;font-weight:800;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;">{priority}</div>
-    </div>
-    <p style="margin:10px 0 0;font-size:12px;color:#64748b;">{now_str}</p>
+  <div style="background:linear-gradient(135deg,#0A1628 0%,#0D1E35 100%);border-radius:14px 14px 0 0;padding:24px 32px 20px;border-bottom:3px solid #C9A227;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="vertical-align:middle;">
+          <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="vertical-align:middle;padding-right:14px;">
+                <img src="https://omnixquantum.net/logo.png" alt="OMNIX Quantum" width="54" height="54" style="display:block;border-radius:8px;object-fit:contain;" />
+              </td>
+              <td style="vertical-align:middle;">
+                <p style="margin:0;font-size:13px;color:#C9A227;text-transform:uppercase;letter-spacing:2px;font-weight:800;">OMNIX Quantum</p>
+                <h1 style="margin:4px 0 0;font-size:20px;color:#ffffff;font-weight:700;letter-spacing:-0.3px;">New Inbound Lead</h1>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td style="vertical-align:middle;text-align:right;">
+          <div style="display:inline-block;background:{priority_color};color:#ffffff;font-size:10px;font-weight:800;padding:6px 14px;border-radius:20px;text-transform:uppercase;letter-spacing:1.5px;">{priority}</div>
+          <p style="margin:8px 0 0;font-size:11px;color:#475569;text-align:right;">{now_str}</p>
+        </td>
+      </tr>
+    </table>
   </div>
 
   <!-- Lead Details -->
@@ -2541,9 +2554,10 @@ def _send_lead_emails(name: str, company: str, email: str, referral_source: str,
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:580px;margin:0 auto;">
 
   <!-- Header -->
-  <div style="background:linear-gradient(135deg,#0A1628 0%,#0D1E35 100%);border-radius:14px 14px 0 0;padding:32px;text-align:center;">
-    <p style="margin:0;font-size:24px;font-weight:900;color:#C9A227;letter-spacing:-0.5px;">OMNIX QUANTUM</p>
-    <p style="margin:6px 0 0;font-size:12px;color:#64748b;letter-spacing:2px;text-transform:uppercase;">Decision Governance Infrastructure</p>
+  <div style="background:linear-gradient(135deg,#0A1628 0%,#0D1E35 100%);border-radius:14px 14px 0 0;padding:32px 32px 28px;text-align:center;border-bottom:3px solid #C9A227;">
+    <img src="https://omnixquantum.net/logo.png" alt="OMNIX Quantum" width="72" height="72" style="display:block;margin:0 auto 14px;border-radius:10px;object-fit:contain;" />
+    <p style="margin:0;font-size:22px;font-weight:900;color:#C9A227;letter-spacing:1px;text-transform:uppercase;">OMNIX Quantum</p>
+    <p style="margin:6px 0 0;font-size:11px;color:#475569;letter-spacing:2.5px;text-transform:uppercase;">Decision Governance Infrastructure</p>
   </div>
 
   <!-- Body -->
@@ -2559,29 +2573,53 @@ def _send_lead_emails(name: str, company: str, email: str, referral_source: str,
     </p>
 
     <!-- 3 value props -->
-    <div style="background:#f8fafc;border-radius:12px;padding:24px;margin-bottom:28px;">
-      <div style="margin-bottom:18px;display:flex;gap:14px;align-items:flex-start;">
-        <span style="font-size:20px;flex-shrink:0;">🔐</span>
-        <div>
-          <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0A1628;">Cryptographically-signed decisions</p>
-          <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">Every governance decision produces a tamper-evident receipt with post-quantum cryptographic signature — auditable forever.</p>
-        </div>
-      </div>
-      <div style="margin-bottom:18px;display:flex;gap:14px;align-items:flex-start;">
-        <span style="font-size:20px;flex-shrink:0;">⚖️</span>
-        <div>
-          <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0A1628;">Built for regulated industries</p>
-          <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">Trading, credit, insurance, medical AI, real estate, energy — 9 verticals with full MiCA, Basel III, and EU AI Act alignment.</p>
-        </div>
-      </div>
-      <div style="display:flex;gap:14px;align-items:flex-start;">
-        <span style="font-size:20px;flex-shrink:0;">🚀</span>
-        <div>
-          <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0A1628;">Production-ready infrastructure</p>
-          <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">327,000+ governance decisions processed. Real-time 11-checkpoint pipeline with sub-second latency and full audit trail.</p>
-        </div>
-      </div>
-    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="padding-bottom:10px;">
+          <div style="background:#0A1628;border-radius:10px;padding:16px 18px;border-left:4px solid #C9A227;">
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:12px;font-size:22px;vertical-align:middle;">🔐</td>
+                <td style="vertical-align:middle;">
+                  <p style="margin:0 0 3px;font-size:13px;font-weight:800;color:#C9A227;">Cryptographically-signed decisions</p>
+                  <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">Every governance decision produces a tamper-evident receipt with post-quantum cryptographic signature — auditable forever.</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-bottom:10px;">
+          <div style="background:#0A1628;border-radius:10px;padding:16px 18px;border-left:4px solid #C9A227;">
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:12px;font-size:22px;vertical-align:middle;">⚖️</td>
+                <td style="vertical-align:middle;">
+                  <p style="margin:0 0 3px;font-size:13px;font-weight:800;color:#C9A227;">Built for regulated industries</p>
+                  <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">Trading, credit, insurance, medical AI, real estate, energy — 9 verticals with full MiCA, Basel III, and EU AI Act alignment.</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div style="background:#0A1628;border-radius:10px;padding:16px 18px;border-left:4px solid #C9A227;">
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:12px;font-size:22px;vertical-align:middle;">🚀</td>
+                <td style="vertical-align:middle;">
+                  <p style="margin:0 0 3px;font-size:13px;font-weight:800;color:#C9A227;">Production-ready infrastructure</p>
+                  <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">327,000+ governance decisions processed. Real-time 11-checkpoint pipeline with sub-second latency and full audit trail.</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+    </table>
 
     <!-- CTA -->
     <div style="text-align:center;margin-bottom:28px;">
