@@ -2434,63 +2434,189 @@ def _send_lead_emails(name: str, company: str, email: str, referral_source: str,
             return
 
         from datetime import datetime, timezone as _tz
-        now_str = datetime.now(_tz.utc).strftime('%Y-%m-%d %H:%M UTC')
+        now_str  = datetime.now(_tz.utc).strftime('%d %b %Y · %H:%M UTC')
+        has_co   = bool(company)
+        priority = 'HIGH' if has_co else 'NORMAL'
+        priority_color = '#16a34a' if has_co else '#C9A227'
 
         # ── 1. Owner notification ──────────────────────────────────────────────
-        owner_html = f"""
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0A1628;color:#ffffff;border-radius:12px;overflow:hidden;">
-          <div style="background:#C9A227;padding:20px 24px;">
-            <h2 style="margin:0;color:#0A1628;font-size:18px;">⚡ New Lead — OMNIX Quantum</h2>
-            <p style="margin:4px 0 0;color:#0A1628;font-size:13px;">{now_str}</p>
-          </div>
-          <div style="padding:24px;">
-            <table style="width:100%;border-collapse:collapse;">
-              <tr><td style="padding:8px 0;color:#C9A227;font-size:13px;width:130px;">Name</td><td style="padding:8px 0;font-size:14px;">{html.escape(name)}</td></tr>
-              <tr><td style="padding:8px 0;color:#C9A227;font-size:13px;">Company</td><td style="padding:8px 0;font-size:14px;">{html.escape(company) if company else '—'}</td></tr>
-              <tr><td style="padding:8px 0;color:#C9A227;font-size:13px;">Email</td><td style="padding:8px 0;font-size:14px;"><a href="mailto:{html.escape(email)}" style="color:#C9A227;">{html.escape(email)}</a></td></tr>
-              <tr><td style="padding:8px 0;color:#C9A227;font-size:13px;">Source</td><td style="padding:8px 0;font-size:14px;">{html.escape(referral_source)}</td></tr>
-            </table>
-            {f'<div style="margin-top:16px;padding:16px;background:#0D1E35;border-radius:8px;border-left:3px solid #C9A227;"><p style="margin:0;font-size:13px;color:#d1d5db;">{html.escape(message)}</p></div>' if message else ''}
-            <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1e3a5f;">
-              <a href="mailto:{html.escape(email)}" style="display:inline-block;background:#C9A227;color:#0A1628;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:13px;">Reply to {html.escape(name)}</a>
-            </div>
-          </div>
-        </div>"""
+        message_block = (
+            f'<div style="margin:20px 0;padding:18px 20px;background:#0D1E35;border-radius:10px;border-left:4px solid #C9A227;">'
+            f'<p style="margin:0 0 6px;color:#C9A227;font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Message</p>'
+            f'<p style="margin:0;font-size:14px;color:#e2e8f0;line-height:1.7;">{html.escape(message)}</p>'
+            f'</div>'
+        ) if message else (
+            '<div style="margin:20px 0;padding:14px 18px;background:#0D1E35;border-radius:10px;">'
+            '<p style="margin:0;font-size:13px;color:#64748b;font-style:italic;">No message provided.</p>'
+            '</div>'
+        )
+
+        owner_html = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:20px;background:#050D18;">
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:580px;margin:0 auto;">
+
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#0A1628 0%,#0D1E35 100%);border-radius:14px 14px 0 0;padding:28px 32px;border-bottom:2px solid #C9A227;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <p style="margin:0;font-size:11px;color:#C9A227;text-transform:uppercase;letter-spacing:2px;font-weight:700;">OMNIX Quantum</p>
+        <h1 style="margin:6px 0 0;font-size:22px;color:#ffffff;font-weight:700;">New Inbound Lead</h1>
+      </div>
+      <div style="background:{priority_color};color:#fff;font-size:10px;font-weight:800;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;">{priority}</div>
+    </div>
+    <p style="margin:10px 0 0;font-size:12px;color:#64748b;">{now_str}</p>
+  </div>
+
+  <!-- Lead Details -->
+  <div style="background:#0A1628;padding:28px 32px;">
+    <p style="margin:0 0 16px;font-size:11px;color:#C9A227;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Contact Details</p>
+
+    <div style="display:grid;gap:12px;">
+      <div style="background:#0D1E35;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;">
+        <span style="font-size:18px;">👤</span>
+        <div>
+          <p style="margin:0;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Name</p>
+          <p style="margin:3px 0 0;font-size:15px;color:#ffffff;font-weight:600;">{html.escape(name)}</p>
+        </div>
+      </div>
+
+      <div style="background:#0D1E35;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;">
+        <span style="font-size:18px;">🏢</span>
+        <div>
+          <p style="margin:0;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Company</p>
+          <p style="margin:3px 0 0;font-size:15px;color:#ffffff;font-weight:600;">{html.escape(company) if has_co else '<span style="color:#475569;font-style:italic;">Not provided</span>'}</p>
+        </div>
+      </div>
+
+      <div style="background:#0D1E35;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;">
+        <span style="font-size:18px;">✉️</span>
+        <div>
+          <p style="margin:0;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Email</p>
+          <p style="margin:3px 0 0;font-size:15px;font-weight:600;"><a href="mailto:{html.escape(email)}" style="color:#C9A227;text-decoration:none;">{html.escape(email)}</a></p>
+        </div>
+      </div>
+
+      <div style="background:#0D1E35;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;">
+        <span style="font-size:18px;">📍</span>
+        <div>
+          <p style="margin:0;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Found via</p>
+          <p style="margin:3px 0 0;font-size:15px;color:#ffffff;font-weight:600;">{html.escape(referral_source)}</p>
+        </div>
+      </div>
+    </div>
+
+    {message_block}
+
+    <!-- CTA -->
+    <div style="margin-top:28px;text-align:center;">
+      <a href="mailto:{html.escape(email)}?subject=Re: Your inquiry about OMNIX Quantum"
+         style="display:inline-block;background:#C9A227;color:#0A1628;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:800;font-size:14px;letter-spacing:0.5px;">
+        Reply to {html.escape(name)} →
+      </a>
+      <p style="margin:12px 0 0;font-size:12px;color:#475569;">Respond within 24h to maximize conversion</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="background:#050D18;border-radius:0 0 14px 14px;padding:16px 32px;text-align:center;border-top:1px solid #0D1E35;">
+    <p style="margin:0;font-size:11px;color:#334155;">OMNIX Quantum Ltd · Decision Governance Infrastructure · omnixquantum.net</p>
+  </div>
+
+</div>
+</body></html>"""
 
         msg_owner = MIMEMultipart('alternative')
-        msg_owner['Subject'] = f'[OMNIX Lead] {name}{" — " + company if company else ""}'
+        msg_owner['Subject'] = f'🔔 New Lead: {name}{" — " + company if has_co else ""}'
         msg_owner['From']    = f'OMNIX Quantum <{gmail_sender}>'
         msg_owner['To']      = owner_email
         msg_owner.attach(MIMEText(owner_html, 'html'))
 
         # ── 2. Auto-reply to prospect ──────────────────────────────────────────
-        prospect_html = f"""
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
-          <div style="background:#0A1628;padding:24px;">
-            <h2 style="margin:0;color:#C9A227;font-size:20px;">OMNIX Quantum</h2>
-            <p style="margin:4px 0 0;color:#9ca3af;font-size:12px;">Decision Governance Infrastructure</p>
-          </div>
-          <div style="padding:28px;color:#111827;">
-            <p style="font-size:15px;">Hi {html.escape(name)},</p>
-            <p style="font-size:14px;line-height:1.6;color:#374151;">
-              Thank you for reaching out. We've received your message and will get back to you within <strong>24–48 hours</strong>.
-            </p>
-            <p style="font-size:14px;line-height:1.6;color:#374151;">
-              OMNIX Quantum is a Decision Governance Infrastructure — we help financial institutions, insurance companies, and regulated industries make <strong>auditable, compliant, cryptographically-signed decisions</strong> at scale.
-            </p>
-            <p style="font-size:14px;line-height:1.6;color:#374151;">
-              In the meantime, feel free to explore our platform at
-              <a href="https://omnixquantum.net" style="color:#C9A227;">omnixquantum.net</a>.
-            </p>
-            <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">
-              <p style="margin:0;">OMNIX Quantum Ltd · London, United Kingdom</p>
-              <p style="margin:4px 0 0;"><a href="https://omnixquantum.net" style="color:#C9A227;">omnixquantum.net</a></p>
-            </div>
-          </div>
-        </div>"""
+        first_name = html.escape(name.split()[0]) if name else 'there'
+
+        prospect_html = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:20px;background:#f8fafc;">
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:580px;margin:0 auto;">
+
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#0A1628 0%,#0D1E35 100%);border-radius:14px 14px 0 0;padding:32px;text-align:center;">
+    <p style="margin:0;font-size:24px;font-weight:900;color:#C9A227;letter-spacing:-0.5px;">OMNIX QUANTUM</p>
+    <p style="margin:6px 0 0;font-size:12px;color:#64748b;letter-spacing:2px;text-transform:uppercase;">Decision Governance Infrastructure</p>
+  </div>
+
+  <!-- Body -->
+  <div style="background:#ffffff;padding:36px 40px;">
+    <p style="margin:0 0 20px;font-size:16px;color:#111827;font-weight:600;">Hi {first_name},</p>
+
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#374151;">
+      Thank you for reaching out. We've received your message and one of our team members will be in touch with you within <strong style="color:#0A1628;">24–48 hours</strong>.
+    </p>
+
+    <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#374151;">
+      While you wait, here's a quick look at what OMNIX Quantum does:
+    </p>
+
+    <!-- 3 value props -->
+    <div style="background:#f8fafc;border-radius:12px;padding:24px;margin-bottom:28px;">
+      <div style="margin-bottom:18px;display:flex;gap:14px;align-items:flex-start;">
+        <span style="font-size:20px;flex-shrink:0;">🔐</span>
+        <div>
+          <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0A1628;">Cryptographically-signed decisions</p>
+          <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">Every governance decision produces a tamper-evident receipt with post-quantum cryptographic signature — auditable forever.</p>
+        </div>
+      </div>
+      <div style="margin-bottom:18px;display:flex;gap:14px;align-items:flex-start;">
+        <span style="font-size:20px;flex-shrink:0;">⚖️</span>
+        <div>
+          <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0A1628;">Built for regulated industries</p>
+          <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">Trading, credit, insurance, medical AI, real estate, energy — 9 verticals with full MiCA, Basel III, and EU AI Act alignment.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <span style="font-size:20px;flex-shrink:0;">🚀</span>
+        <div>
+          <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0A1628;">Production-ready infrastructure</p>
+          <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">327,000+ governance decisions processed. Real-time 11-checkpoint pipeline with sub-second latency and full audit trail.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin-bottom:28px;">
+      <a href="https://omnixquantum.net/full-demo"
+         style="display:inline-block;background:#0A1628;color:#C9A227;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:800;font-size:14px;letter-spacing:0.5px;border:2px solid #C9A227;">
+        Explore the Live Demo →
+      </a>
+    </div>
+
+    <p style="margin:0;font-size:14px;line-height:1.7;color:#374151;">
+      If you have any urgent questions, feel free to reply directly to this email.
+    </p>
+
+    <p style="margin:24px 0 0;font-size:14px;color:#374151;">
+      Best regards,<br>
+      <strong style="color:#0A1628;">Harold Nunes</strong><br>
+      <span style="color:#6b7280;font-size:13px;">Founder, OMNIX Quantum Ltd</span>
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <div style="background:#f1f5f9;border-radius:0 0 14px 14px;padding:20px 40px;text-align:center;">
+    <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;">OMNIX Quantum Ltd · London, United Kingdom</p>
+    <p style="margin:0;font-size:12px;">
+      <a href="https://omnixquantum.net" style="color:#C9A227;text-decoration:none;">omnixquantum.net</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:contacto@omnixquantum.net" style="color:#94a3b8;text-decoration:none;">contacto@omnixquantum.net</a>
+    </p>
+  </div>
+
+</div>
+</body></html>"""
 
         msg_prospect = MIMEMultipart('alternative')
-        msg_prospect['Subject'] = 'Thank you for reaching out — OMNIX Quantum'
+        msg_prospect['Subject'] = f'We received your message, {first_name} — OMNIX Quantum'
         msg_prospect['From']    = f'OMNIX Quantum <{gmail_sender}>'
         msg_prospect['To']      = email
         msg_prospect.attach(MIMEText(prospect_html, 'html'))
