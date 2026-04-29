@@ -377,10 +377,11 @@ def api_system_adaptive():
         perf_status           = 'warming_up'
         perf_source           = None
 
+    from omnix_config import VERSION_BANNER
     adaptive_data = {
         'engine': 'adaptive',
         'status': 'ACTIVE',
-        'version': 'V6.5.4e',
+        'version': VERSION_BANNER,
         'main_driver': {
             'name':        main_driver,
             'weight':      max_weight,

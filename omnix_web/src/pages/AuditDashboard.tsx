@@ -255,21 +255,16 @@ export default function AuditDashboard() {
       if (domainFilter) params.set('domain', domainFilter)
       if (decisionFilter) params.set('decision', decisionFilter)
       const url = `${API_BASE}/api/public/audit-live?${params}`
-      console.log('[AuditDashboard] fetching:', url)
       const res = await fetch(url, { cache: 'no-store' })
-      console.log('[AuditDashboard] response:', res.status, res.ok)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json: AuditResponse = await res.json()
-      console.log('[AuditDashboard] data:', json?.kpis?.total_decisions, 'decisions | items:', json?.items?.length)
       if (!json.success) throw new Error(`API returned success=false`)
       setData(json)
       setLastRefresh(new Date())
     } catch (e: unknown) {
-      console.error('[AuditDashboard] fetchData error:', e)
       if (!silent) setError('Unable to load audit data.')
     } finally {
       if (!silent) setLoading(false)
-      console.log('[AuditDashboard] loading=false (finally)')
     }
   }, [domainFilter, decisionFilter])
 

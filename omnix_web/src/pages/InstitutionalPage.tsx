@@ -155,16 +155,8 @@ export default function InstitutionalPage() {
         }
       }
     } catch {
-      
+      // fail silently — no mock data
     }
-    
-    const mockNews: NewsItem[] = [
-      { id: '1', headline: 'Bitcoin Surges Past Key Resistance Level', source: 'CryptoNews', datetime: Date.now(), url: '#', sentiment: 'positive' },
-      { id: '2', headline: 'SEC Delays Decision on Spot ETF Applications', source: 'Reuters', datetime: Date.now() - 3600000, url: '#', sentiment: 'neutral' },
-      { id: '3', headline: 'Major Exchange Reports Record Trading Volume', source: 'Bloomberg', datetime: Date.now() - 7200000, url: '#', sentiment: 'positive' },
-      { id: '4', headline: 'Volatility Expected Ahead of FOMC Meeting', source: 'MarketWatch', datetime: Date.now() - 10800000, url: '#', sentiment: 'negative' },
-    ]
-    setNews(mockNews)
   }
 
   const formatNumber = (num: number) => {
