@@ -10,18 +10,17 @@ function useTradingCount() {
   useEffect(() => {
     const fetch_ = async () => {
       try {
-        const res = await fetch(`/api/trades/history?telemetry_source=REAL&_t=${Date.now()}`, { cache: 'no-store' })
+        const res = await fetch(`/api/trades/count?_t=${Date.now()}`, { cache: 'no-store' })
         if (!res.ok) return
         const d = await res.json()
-        const trades = Array.isArray(d) ? d : (d.trades || d.data || [])
-        if (ref.current && trades.length > 0) {
-          setCount(trades.length)
+        if (ref.current && d.count > 0) {
+          setCount(d.count)
           setLoaded(true)
         }
       } catch {}
     }
     fetch_()
-    const t = setInterval(fetch_, 30_000)
+    const t = setInterval(fetch_, 60_000)
     return () => { ref.current = false; clearInterval(t) }
   }, [])
   return { count, loaded }

@@ -965,6 +965,20 @@ def get_live_metrics():
         }), 503
 
 
+@app.route('/api/trades/count', methods=['GET'])
+def api_trades_count():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM decision_receipts WHERE domain='trading'")
+        row = cur.fetchone()
+        cur.close(); conn.close()
+        count = int(row[0]) if row else 0
+        return jsonify({'count': count, 'domain': 'trading'})
+    except Exception as e:
+        return jsonify({'count': 0, 'error': str(e)}), 500
+
+
 @app.route('/api/metrics/live', methods=['GET'])
 def get_metrics_live():
     """
