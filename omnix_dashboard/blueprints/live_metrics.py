@@ -26,6 +26,16 @@ CHECKPOINT_COUNT = 11
 
 def _get_adr_count() -> int:
     try:
+        import re as _re
+        _adr_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                '..', 'docs', 'adr')
+        nums = [int(_re.search(r'ADR-(\d+)', f).group(1))
+                for f in os.listdir(_adr_dir) if _re.search(r'ADR-(\d+)', f)]
+        if nums:
+            return max(nums)
+    except Exception:
+        pass
+    try:
         conn = _new_conn()
         cur  = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM architecture_decisions")
@@ -35,15 +45,7 @@ def _get_adr_count() -> int:
             return count
     except Exception:
         pass
-    try:
-        import re as _re
-        _adr_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                '..', 'docs', 'adr')
-        nums = [int(_re.search(r'ADR-(\d+)', f).group(1))
-                for f in os.listdir(_adr_dir) if _re.search(r'ADR-(\d+)', f)]
-        return max(nums) if nums else 115
-    except Exception:
-        return 115
+    return 135
 
 TRACK_RECORD_START = datetime(2026, 1, 15, tzinfo=timezone.utc)
 

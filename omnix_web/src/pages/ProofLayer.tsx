@@ -92,9 +92,9 @@ function CopyButton({ text }: { text: string }) {
 
 function StepIndicator({ current }: { current: Step }) {
   const steps: { key: Step; label: string }[] = [
-    { key: 'form',    label: '1 — Enviar decisión' },
-    { key: 'receipt', label: '2 — Recibo emitido' },
-    { key: 'verify',  label: '3 — Verificar' },
+    { key: 'form',    label: '1 — Submit Decision' },
+    { key: 'receipt', label: '2 — Receipt Issued' },
+    { key: 'verify',  label: '3 — Verify' },
   ]
   const idx = steps.findIndex(s => s.key === current)
   return (
@@ -144,7 +144,7 @@ export default function ProofLayer() {
       setEvaluate(d)
       setStep('receipt')
     } catch (e) {
-      setError('No se pudo conectar al motor de gobernanza. Intenta de nuevo.')
+      setError('Could not connect to the governance engine. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -160,7 +160,7 @@ export default function ProofLayer() {
       setVerify(d)
       setStep('verify')
     } catch (e) {
-      setError('Error al verificar el recibo. Intenta de nuevo.')
+      setError('Error verifying the receipt. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -187,11 +187,11 @@ export default function ProofLayer() {
             </span>
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 12px', color: '#F1F5F9', lineHeight: 1.2 }}>
-            Proof Layer — Verificación en Vivo
+            Proof Layer — Live Verification
           </h1>
           <p style={{ fontSize: 15, color: '#94A3B8', maxWidth: 520, margin: '0 auto', lineHeight: 1.6 }}>
-            Envía una propuesta de decisión, recibe un recibo firmado, y verifica su integridad de forma independiente.
-            Cada recibo queda registrado permanentemente y es auditable en cualquier momento.
+            Submit a governance decision, receive a signed receipt, and verify its integrity independently.
+            Every receipt is permanently recorded and auditable at any time.
           </p>
         </div>
 
@@ -211,30 +211,30 @@ export default function ProofLayer() {
         {step === 'form' && (
           <div style={{ background: '#0F2140', border: '1px solid #1E3A5F', borderRadius: 12, padding: 32 }}>
             <h2 style={{ fontSize: 17, fontWeight: 700, marginTop: 0, marginBottom: 24, color: '#F1F5F9' }}>
-              ¿Qué decisión quieres evaluar?
+              What decision do you want to evaluate?
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Activo</label>
+                <label style={{ display: 'block', fontSize: 12, color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Asset</label>
                 <select value={asset} onChange={e => setAsset(e.target.value)} style={selectStyle}>
                   {ASSETS.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Jurisdicción</label>
+                <label style={{ display: 'block', fontSize: 12, color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Jurisdiction</label>
                 <select value={jurisdiction} onChange={e => setJur(e.target.value)} style={selectStyle}>
                   {JURISDICTIONS.map(j => <option key={j} value={j}>{j}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Operación</label>
+                <label style={{ display: 'block', fontSize: 12, color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Operation</label>
                 <select value={action} onChange={e => setAction(e.target.value)} style={selectStyle}>
                   {ACTIONS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Monto (USD)</label>
+                <label style={{ display: 'block', fontSize: 12, color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>Amount (USD)</label>
                 <input
                   type="number" value={amount} onChange={e => setAmount(e.target.value)}
                   min={100} max={10000000}
@@ -244,8 +244,8 @@ export default function ProofLayer() {
             </div>
 
             <div style={{ background: '#1E293B', borderRadius: 8, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#64748B', lineHeight: 1.6 }}>
-              <strong style={{ color: '#94A3B8' }}>Sugerencia:</strong> Prueba XMR + UAE para ver un bloqueo de Layer 0 (restricción regulatoria VARA), 
-              o SHIB + UAE con monto alto para ver un bloqueo de checkpoint de gobernanza.
+              <strong style={{ color: '#94A3B8' }}>Tip:</strong> Try XMR + UAE to see a Layer 0 block (VARA regulatory restriction),
+              or SHIB + UAE with a high amount to trigger a governance checkpoint block.
             </div>
 
             <button
@@ -258,7 +258,7 @@ export default function ProofLayer() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              {loading ? 'Evaluando...' : <><Shield size={16} /> Evaluar y generar recibo</>}
+              {loading ? 'Evaluating...' : <><Shield size={16} /> Evaluate and generate receipt</>}
             </button>
           </div>
         )}
@@ -274,9 +274,9 @@ export default function ProofLayer() {
                     : <XCircle size={32} color="#EF4444" />
                   }
                   <div>
-                    <div style={{ fontSize: 11, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Decisión de gobernanza</div>
+                    <div style={{ fontSize: 11, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Governance Decision</div>
                     <div style={{ fontSize: 22, fontWeight: 800, color: isApproved ? '#10B981' : '#EF4444' }}>
-                      {isApproved ? 'APROBADO' : 'BLOQUEADO'}
+                      {isApproved ? 'APPROVED' : 'BLOCKED'}
                     </div>
                   </div>
                 </div>
@@ -300,15 +300,15 @@ export default function ProofLayer() {
 
               {/* Reason */}
               <div style={{ background: '#050D18', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>Razón</div>
+                <div style={{ fontSize: 11, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>Reason</div>
                 <div style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.6 }}>{evaluate.reason}</div>
               </div>
 
               {/* Summary */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
                 {[
-                  { label: 'Activo', value: evaluate.governance_summary?.asset },
-                  { label: 'Jurisdicción', value: evaluate.governance_summary?.jurisdiction },
+                  { label: 'Asset', value: evaluate.governance_summary?.asset },
+                  { label: 'Jurisdiction', value: evaluate.governance_summary?.jurisdiction },
                   { label: 'Checkpoints', value: `${evaluate.governance_summary?.checkpoints_passed ?? 0}/${evaluate.governance_summary?.checkpoints_total ?? 0}` },
                 ].map(({ label, value }) => (
                   <div key={label} style={{ background: '#1E293B', borderRadius: 8, padding: '10px 14px' }}>
@@ -319,7 +319,7 @@ export default function ProofLayer() {
               </div>
 
               <div style={{ fontSize: 12, color: '#475569', marginBottom: 20 }}>
-                Emitido: {new Date(evaluate.evaluated_at).toLocaleString()} UTC
+                Issued: {new Date(evaluate.evaluated_at).toLocaleString()} UTC
               </div>
 
               <button
@@ -333,12 +333,12 @@ export default function ProofLayer() {
                   border: loading ? '1px solid #1E293B' : '1px solid #C9A22733',
                 }}
               >
-                {loading ? 'Verificando...' : <><Hash size={16} /> Verificar integridad del recibo</>}
+                {loading ? 'Verifying...' : <><Hash size={16} /> Verify receipt integrity</>}
               </button>
             </div>
 
             <button onClick={reset} style={ghostBtn}>
-              <RotateCcw size={14} /> Nueva evaluación
+              <RotateCcw size={14} /> New evaluation
             </button>
           </div>
         )}
@@ -350,38 +350,38 @@ export default function ProofLayer() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
                 <Lock size={28} color={verify.status === 'VALID' ? '#10B981' : '#EF4444'} />
                 <div>
-                  <div style={{ fontSize: 11, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Resultado de verificación independiente</div>
+                  <div style={{ fontSize: 11, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Independent Verification Result</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: verify.status === 'VALID' ? '#10B981' : '#EF4444' }}>
-                    {verify.status === 'VALID' ? 'RECIBO VÁLIDO' : 'RECIBO INVÁLIDO'}
+                    {verify.status === 'VALID' ? 'VALID RECEIPT' : 'INVALID RECEIPT'}
                   </div>
                 </div>
               </div>
 
               {/* Integrity fields */}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 12, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Integridad criptográfica</div>
+                <div style={{ fontSize: 12, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Cryptographic Integrity</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
                     {
                       icon: <Hash size={14} />,
-                      label: 'Hash de contenido',
+                      label: 'Content Hash',
                       value: verify.hash_valid,
                       policy: 'strict',
-                      desc: verify.hash_valid === true ? 'El recibo no fue modificado desde su emisión.' : verify.hash_valid === false ? 'ALERTA: contenido alterado después de emisión.' : 'Hash no disponible (no afecta validez).'
+                      desc: verify.hash_valid === true ? 'The receipt has not been modified since issuance.' : verify.hash_valid === false ? 'ALERT: content altered after issuance.' : 'Hash not available (does not affect validity).'
                     },
                     {
                       icon: <Lock size={14} />,
-                      label: 'Firma criptográfica',
+                      label: 'Cryptographic Signature',
                       value: verify.signature_valid,
                       policy: 'optional',
-                      desc: verify.signature_valid === true ? 'Firma verificada.' : 'No disponible — recibos EVL no llevan firma individual (opcional por diseño).'
+                      desc: verify.signature_valid === true ? 'Signature verified.' : 'Not available — EVL receipts do not carry an individual signature (optional by design).'
                     },
                     {
                       icon: <Link2 size={14} />,
-                      label: 'Cadena de continuidad',
+                      label: 'Continuity Chain',
                       value: verify.chain_valid,
                       policy: 'contextual',
-                      desc: 'Recibo autónomo — los recibos EVL no tienen cadena. ADR-096 implementará verificación de cadena.'
+                      desc: 'Autonomous receipt — EVL receipts have no chain. ADR-096 will implement chain verification.'
                     },
                   ].map(({ icon, label, value, policy, desc }) => (
                     <div key={label} style={{ background: '#050D18', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -401,13 +401,13 @@ export default function ProofLayer() {
 
               {/* Decision fields */}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 12, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Trazabilidad de la decisión</div>
+                <div style={{ fontSize: 12, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Decision Traceability</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {[
-                    { label: 'Decisión registrada', value: verify.decision },
+                    { label: 'Recorded Decision', value: verify.decision },
                     { label: 'Reason code', value: verify.reason_code },
-                    { label: 'Fuente de verificación', value: verify.source, neutral: true },
-                    { label: 'Emisor (DID)', value: verify.issuer, neutral: true },
+                    { label: 'Verification Source', value: verify.source, neutral: true },
+                    { label: 'Issuer (DID)', value: verify.issuer, neutral: true },
                   ].map(({ label, value, neutral }) => (
                     <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #1E293B' }}>
                       <span style={{ fontSize: 13, color: '#94A3B8' }}>{label}</span>
@@ -420,14 +420,14 @@ export default function ProofLayer() {
               {/* Verify URL */}
               <div style={{ background: '#050D18', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 11, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>URL de verificación pública</div>
+                  <div style={{ fontSize: 11, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Public Verification URL</div>
                   <code style={{ fontSize: 12, color: '#7DD3FC', wordBreak: 'break-all' }}>{evaluate.verify_url}</code>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 12 }}>
                   <CopyButton text={evaluate.verify_url} />
                   <a href={evaluate.verify_url} target="_blank" rel="noopener noreferrer"
                     style={{ color: '#64748B', display: 'flex', alignItems: 'center' }}
-                    title="Abrir en omnixquantum.net">
+                    title="Open at omnixquantum.net">
                     <ExternalLink size={14} />
                   </a>
                 </div>
@@ -437,7 +437,7 @@ export default function ProofLayer() {
             {/* Policy explanation */}
             <div style={{ background: '#0A1628', border: '1px solid #1E293B', borderRadius: 8, padding: '16px 20px', marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: '#64748B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
-                Política de validación
+                Validation Policy
               </div>
               <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
                 {Object.entries(verify.validation_policy || {}).map(([k, v]) => (
@@ -448,14 +448,14 @@ export default function ProofLayer() {
                 ))}
               </div>
               <div style={{ fontSize: 12, color: '#475569', marginTop: 8 }}>
-                <strong style={{ color: '#64748B' }}>strict</strong> = null invalida · 
-                <strong style={{ color: '#64748B' }}> optional</strong> = null no invalida · 
-                <strong style={{ color: '#64748B' }}> contextual</strong> = null = recibo autónomo
+                <strong style={{ color: '#64748B' }}>strict</strong> = null invalidates · 
+                <strong style={{ color: '#64748B' }}> optional</strong> = null does not invalidate · 
+                <strong style={{ color: '#64748B' }}> contextual</strong> = null = autonomous receipt
               </div>
             </div>
 
             <button onClick={reset} style={ghostBtn}>
-              <RotateCcw size={14} /> Nueva evaluación
+              <RotateCcw size={14} /> New evaluation
             </button>
           </div>
         )}

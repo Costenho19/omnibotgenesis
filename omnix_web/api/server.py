@@ -38,9 +38,9 @@ def _count_adrs_from_files() -> int:
         adr_dir = os.path.join(BASE_DIR, '..', 'docs', 'adr')
         nums = [int(re.search(r'ADR-(\d+)', f).group(1))
                 for f in os.listdir(adr_dir) if re.search(r'ADR-(\d+)', f)]
-        return max(nums) if nums else 116
+        return max(nums) if nums else 135
     except Exception:
-        return 116
+        return 135
 
 _ADR_FILE_COUNT = _count_adrs_from_files()
 
