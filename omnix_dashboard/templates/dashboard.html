@@ -313,6 +313,16 @@
             </div>
         </div>
 
+        <div class="glass-card p-4 mb-6" id="domain-status-panel">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Domain Governance Status</h2>
+                <span id="domain-status-summary" class="text-[10px] px-2 py-1 rounded bg-slate-800 text-slate-500 uppercase tracking-wider">Loading...</span>
+            </div>
+            <div id="domain-status-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div class="text-slate-600 text-xs text-center py-6 col-span-5 uppercase tracking-wider">Loading domain status...</div>
+            </div>
+        </div>
+
         <div class="glass-card overflow-hidden">
             <div class="flex items-center justify-between p-4 border-b border-slate-800">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Trading Activity</h2>
@@ -364,4 +374,57 @@
 <script src="{{ url_for('static', filename='js/components/snapshots.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/executionintegrity.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
+<script>
+(function loadDomainStatus() {
+    const STATUS_COLORS = {
+        CERTIFIED:   { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', dot: 'bg-emerald-400', text: 'text-emerald-400', label: 'CERTIFIED' },
+        STALE_BLOCK: { bg: 'bg-red-500/10',     border: 'border-red-500/30',     dot: 'bg-red-400',     text: 'text-red-400',     label: 'BLOCKED'   },
+        UNKNOWN:     { bg: 'bg-slate-500/10',   border: 'border-slate-500/30',   dot: 'bg-slate-400',   text: 'text-slate-400',   label: 'UNKNOWN'   },
+    };
+
+    function render(data) {
+        const grid = document.getElementById('domain-status-grid');
+        const summary = document.getElementById('domain-status-summary');
+        if (!grid) return;
+
+        const s = data.summary || {};
+        summary.textContent = `${s.certified || 0} Certified · ${s.stale || 0} Blocked`;
+        summary.className = s.stale > 0
+            ? 'text-[10px] px-2 py-1 rounded bg-red-500/10 text-red-400 uppercase tracking-wider'
+            : 'text-[10px] px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 uppercase tracking-wider';
+
+        grid.innerHTML = (data.domains || []).map(d => {
+            const c = STATUS_COLORS[d.status] || STATUS_COLORS.UNKNOWN;
+            const ageStr = d.age_hours != null ? `${d.age_hours}h` : '—';
+            const recalibMsg = d.status === 'STALE_BLOCK'
+                ? '<div class="text-[9px] text-slate-500 mt-1">Waiting for fresh signals to re-anchor baseline</div>'
+                : '';
+            return `
+            <div class="rounded-lg border ${c.border} ${c.bg} p-3">
+                <div class="flex items-center gap-1.5 mb-2">
+                    <span class="w-1.5 h-1.5 rounded-full ${c.dot} flex-shrink-0"></span>
+                    <span class="text-[10px] font-semibold ${c.text} uppercase tracking-wider">${c.label}</span>
+                </div>
+                <div class="text-xs font-medium text-slate-300 leading-tight mb-1">${d.label}</div>
+                <div class="text-[10px] text-slate-500">Snapshot age: ${ageStr}</div>
+                <div class="text-[10px] text-slate-600">Drift threshold: ${d.drift_threshold_pct}%</div>
+                ${recalibMsg}
+            </div>`;
+        }).join('');
+    }
+
+    function load() {
+        fetch('/api/governance/domain-status')
+            .then(r => r.json())
+            .then(render)
+            .catch(() => {
+                const grid = document.getElementById('domain-status-grid');
+                if (grid) grid.innerHTML = '<div class="text-slate-600 text-xs col-span-5 text-center py-4">Domain status unavailable</div>';
+            });
+    }
+
+    load();
+    setInterval(load, 60000);
+})();
+</script>
 {% endblock %}

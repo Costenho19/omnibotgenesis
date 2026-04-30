@@ -384,3 +384,9 @@ id = "YuQyQYN75CKfjueGKGfEw"
 uri = "file://whitepaper/governance-flow-transition-map.md"
 type = "text"
 title = "Governance Flow — Transition Map para Eduardo"
+
+[[outputs]]
+id = "Hos8v3CWxxg3_f5NC2qc1"
+uri = "file://whitepaper/linkedin-post-autonomous-agent-block.md"
+type = "text"
+title = "Post LinkedIn — Autonomous Agent STALE_BLOCK"

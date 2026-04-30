@@ -533,3 +533,78 @@ def get_live_metrics():
             'error': 'Metrics aggregation unavailable',
             'generated_at': datetime.now(timezone.utc).isoformat(),
         }), 500
+
+
+DOMAIN_LABELS = {
+    'trading':           'Digital Asset Trading',
+    'islamic_credit':    'Islamic Credit',
+    'insurance':         'Insurance',
+    'robotics':          'Robotics',
+    'medical_ai':        'Medical AI',
+    'autonomous_agent':  'Autonomous Agents',
+    'real_estate':       'Real Estate',
+    'energy_governance': 'Energy Governance',
+    'stablecoin':        'Stablecoin Reserve',
+    'crisis':            'Crisis Governance',
+}
+
+
+@live_metrics_bp.route('/api/governance/domain-status', methods=['GET'])
+def api_domain_status():
+    now = datetime.now(timezone.utc)
+    domains = []
+    try:
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        cur  = conn.cursor()
+        cur.execute("""
+            SELECT domain, snapshot_id, updated_at, max_age_hours, drift_threshold
+            FROM avm_calibration_snapshots
+            ORDER BY domain
+        """)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        for domain, snapshot_id, updated_at, max_age_hours, drift_threshold in rows:
+            if updated_at and updated_at.tzinfo is None:
+                updated_at = updated_at.replace(tzinfo=timezone.utc)
+            age_hours = (now - updated_at).total_seconds() / 3600 if updated_at else None
+            max_age   = max_age_hours or 72.0
+            raw_thresh = drift_threshold or 35.0
+            threshold = raw_thresh if raw_thresh > 1.0 else raw_thresh * 100
+
+            if age_hours is None:
+                status = 'UNKNOWN'
+                reason = 'No snapshot timestamp available'
+            elif age_hours > max_age:
+                status = 'STALE_BLOCK'
+                reason = f'Snapshot {age_hours:.1f}h old — exceeds {max_age:.0f}h limit'
+            else:
+                status = 'CERTIFIED'
+                reason = f'Snapshot {age_hours:.1f}h old — within {max_age:.0f}h limit'
+
+            domains.append({
+                'domain':      domain,
+                'label':       DOMAIN_LABELS.get(domain, domain.replace('_', ' ').title()),
+                'snapshot_id': snapshot_id,
+                'age_hours':   round(age_hours, 1) if age_hours is not None else None,
+                'max_age_hours': max_age,
+                'drift_threshold_pct': round(threshold, 1),
+                'status':      status,
+                'reason':      reason,
+            })
+
+    except Exception as e:
+        logger.error(f"[DomainStatus] DB error: {e}", exc_info=True)
+
+    return jsonify({
+        'success':      True,
+        'generated_at': now.isoformat(),
+        'domains':      domains,
+        'summary': {
+            'total':      len(domains),
+            'certified':  sum(1 for d in domains if d['status'] == 'CERTIFIED'),
+            'stale':      sum(1 for d in domains if d['status'] == 'STALE_BLOCK'),
+            'unknown':    sum(1 for d in domains if d['status'] == 'UNKNOWN'),
+        },
+    })
