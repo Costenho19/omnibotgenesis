@@ -1242,6 +1242,39 @@ export default function CommercialLanding() {
             </div>
           </div>
 
+          {/* Billing models — no prices shown */}
+          <div className="grid md:grid-cols-3 gap-4 mb-10">
+            <div className="bg-[#0A1628]/60 border border-[#1E293B] rounded-2xl p-6 flex items-start gap-5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Pay-per-Decision</div>
+                <p className="text-xs text-muted leading-relaxed">Pagas solo por las decisiones que OMNIX gobierna. Cada decisión incluye un recibo PQC firmado. Sin compromiso mensual.</p>
+              </div>
+            </div>
+
+            <div className="bg-[#0A1628]/60 border border-[#C9A227]/20 rounded-2xl p-6 flex items-start gap-5" style={{boxShadow:'0 0 20px rgba(201,162,39,0.06)'}}>
+              <div className="w-10 h-10 rounded-xl bg-[#C9A227]/10 border border-[#C9A227]/25 flex items-center justify-center flex-shrink-0">
+                <Shield className="w-5 h-5 text-[#C9A227]" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-1">Capital-Based Fee</div>
+                <p className="text-xs text-muted leading-relaxed">Cargo proporcional al capital bajo gobernanza. Escala con el valor que proteges — a mayor capital gobernado, mayor respaldo institucional.</p>
+              </div>
+            </div>
+
+            <div className="bg-[#0A1628]/60 border border-[#1E293B] rounded-2xl p-6 flex items-start gap-5">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                <Phone className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-1">API Integration</div>
+                <p className="text-xs text-muted leading-relaxed">Precios por volumen para integraciones de alto rendimiento. SLA tiers, rate limits e infraestructura dedicada disponibles. Contáctanos.</p>
+              </div>
+            </div>
+          </div>
+
           <p className="text-center text-xs text-muted">
             omnixquantum.net · contacto@omnixquantum.net · Every conversation starts with listening, not selling.
           </p>
