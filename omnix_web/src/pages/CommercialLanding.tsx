@@ -1210,7 +1210,7 @@ export default function CommercialLanding() {
               </ul>
               <a href="https://wa.me/16505078293?text=I%27d%20like%20to%20discuss%20OMNIX%20Quantum%20for%20my%20institution" target="_blank" rel="noopener noreferrer"
                 className="block text-center py-3 rounded-xl bg-[#C9A227] text-[#0a0f1a] text-sm font-bold hover:bg-[#F5D97A] transition-colors">
-                Contact via WhatsApp
+                Contact Us
               </a>
             </div>
 
@@ -1250,7 +1250,7 @@ export default function CommercialLanding() {
               </div>
               <div>
                 <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Pay-per-Decision</div>
-                <p className="text-xs text-muted leading-relaxed">Pagas solo por las decisiones que OMNIX gobierna. Cada decisión incluye un recibo PQC firmado. Sin compromiso mensual.</p>
+                <p className="text-xs text-muted leading-relaxed">Pay only for the decisions OMNIX governs. Every governed decision includes a PQC-signed receipt. No monthly commitment required.</p>
               </div>
             </div>
 
@@ -1260,7 +1260,7 @@ export default function CommercialLanding() {
               </div>
               <div>
                 <div className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-1">Capital-Based Fee</div>
-                <p className="text-xs text-muted leading-relaxed">Cargo proporcional al capital bajo gobernanza. Escala con el valor que proteges — a mayor capital gobernado, mayor respaldo institucional.</p>
+                <p className="text-xs text-muted leading-relaxed">A fee proportional to the capital under governance. Scales with the value you protect — the more capital governed, the greater the institutional backing.</p>
               </div>
             </div>
 
@@ -1270,7 +1270,7 @@ export default function CommercialLanding() {
               </div>
               <div>
                 <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-1">API Integration</div>
-                <p className="text-xs text-muted leading-relaxed">Precios por volumen para integraciones de alto rendimiento. SLA tiers, rate limits e infraestructura dedicada disponibles. Contáctanos.</p>
+                <p className="text-xs text-muted leading-relaxed">Volume-based pricing for high-throughput integrations. Rate limits, SLA tiers, and dedicated infrastructure available. Contact us for details.</p>
               </div>
             </div>
           </div>
