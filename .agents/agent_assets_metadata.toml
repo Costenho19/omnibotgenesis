@@ -390,3 +390,9 @@ id = "Hos8v3CWxxg3_f5NC2qc1"
 uri = "file://whitepaper/linkedin-post-autonomous-agent-block.md"
 type = "text"
 title = "Post LinkedIn — Autonomous Agent STALE_BLOCK"
+
+[[outputs]]
+id = "zTD019ClIihH9Yn5Hnhg5"
+uri = "file://omnix_web/public/whitepaper.pdf"
+type = "pdf"
+title = "Detection Is Not Governance — OMNIX Whitepaper"
