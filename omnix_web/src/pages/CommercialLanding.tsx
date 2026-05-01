@@ -1147,30 +1147,30 @@ export default function CommercialLanding() {
           </div>
         </section>
 
-        {/* ── PRICING ── */}
-        <section className="mb-24" id="pricing">
+        {/* ── CONTACT ── */}
+        <section className="mb-24" id="contact">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Governance Access Plans</h2>
-            <p className="text-muted max-w-xl mx-auto">Start with the free pilot. The difference between plans is not volume — it's authority. Advisory plans observe. Only Enterprise can stop a decision.</p>
+            <h2 className="text-3xl font-bold text-white mb-4">Get in Touch</h2>
+            <p className="text-muted max-w-xl mx-auto">Every deployment is different. Tell us about your environment and we'll design the right governance structure for your institution.</p>
           </div>
 
-          {/* Subscription tiers */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
+          {/* Contact cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 
-            {/* Tier 1 — Shadow */}
-            <div className="flex flex-col bg-[#0A1628]/80 border border-[#334155] rounded-2xl p-5">
-              <div className="mb-4">
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Shadow Mode</span>
-                <div className="mt-3">
-                  <span className="text-3xl font-black text-white">Free</span>
-                </div>
-                <p className="text-xs text-muted mt-1">4-week pilot · No commitment</p>
+            {/* Free Pilot */}
+            <div className="flex flex-col bg-[#0A1628]/80 border border-emerald-500/30 rounded-2xl p-7" style={{boxShadow:'0 0 24px rgba(16,185,129,0.06)'}}>
+              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-5">
+                <Zap className="w-5 h-5 text-emerald-400" />
               </div>
-              <ul className="space-y-2 flex-1 mb-5">
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">Start Free</span>
+              <h3 className="text-lg font-bold text-white mb-2">Shadow Mode Pilot</h3>
+              <p className="text-xs text-muted leading-relaxed flex-1 mb-6">
+                Run OMNIX alongside your system for 4 weeks — zero interventions, no operational risk. See exactly what would have been blocked before you commit to anything.
+              </p>
+              <ul className="space-y-2 mb-6">
                 {[
-                  'Runs alongside your system',
-                  'Zero interventions — no operational risk',
-                  'Full report: what would have been blocked',
+                  'No commitment required',
+                  'Full governance report at end of pilot',
                   'PQC-signed receipts included',
                 ].map(f => (
                   <li key={f} className="flex items-start gap-2 text-xs text-muted">
@@ -1179,182 +1179,71 @@ export default function CommercialLanding() {
                 ))}
               </ul>
               <a href="https://wa.me/16505078293?text=I%27d%20like%20to%20start%20the%20Shadow%20Mode%20pilot" target="_blank" rel="noopener noreferrer"
-                className="block text-center py-2 rounded-xl border border-emerald-500/50 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/10 transition-colors">
+                className="block text-center py-3 rounded-xl border border-emerald-500/50 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/10 transition-colors">
                 Start Free Pilot
               </a>
             </div>
 
-            {/* Tier 2 — Advisory */}
-            <div className="flex flex-col bg-[#0A1628]/80 border border-[#334155] rounded-2xl p-5">
-              <div className="mb-4">
-                <span className="text-xs font-bold text-[#06b6d4] uppercase tracking-widest">Advisory</span>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">$8K</span>
-                  <span className="text-xs text-muted font-medium">/ month</span>
-                </div>
-                <p className="text-xs text-muted mt-1">Observation tier · 1 vertical</p>
-              </div>
-              <ul className="space-y-2 flex-1 mb-5">
-                {[
-                  'OMNIX observes every decision in real time',
-                  'Your team retains full authority — OMNIX advises',
-                  'PQC-signed receipt per recommendation',
-                  '1 vertical of choice',
-                  'Monthly governance report',
-                ].map(f => (
-                  <li key={f} className="flex items-start gap-2 text-xs text-muted">
-                    <CheckCircle className="w-3.5 h-3.5 text-[#06b6d4] flex-shrink-0 mt-0.5" />{f}
-                  </li>
-                ))}
-              </ul>
-              <a href="https://wa.me/16505078293?text=I%27m%20interested%20in%20the%20Advisory%20plan" target="_blank" rel="noopener noreferrer"
-                className="block text-center py-2 rounded-xl border border-[#06b6d4]/50 text-[#06b6d4] text-xs font-semibold hover:bg-[#06b6d4]/10 transition-colors">
-                Talk to Us
-              </a>
-            </div>
-
-            {/* Tier 3 — Professional */}
-            <div className="flex flex-col bg-[#0A1628]/80 border border-[#a78bfa]/40 rounded-2xl p-5">
-              <div className="mb-4">
-                <span className="text-xs font-bold text-[#a78bfa] uppercase tracking-widest">Professional</span>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">$25K</span>
-                  <span className="text-xs text-muted font-medium">/ month</span>
-                </div>
-                <p className="text-xs text-muted mt-1">Governance authority · Up to 4 verticals</p>
-              </div>
-              <ul className="space-y-2 flex-1 mb-5">
-                {[
-                  'HOLD state resolution included',
-                  'Governance authority on selected verticals',
-                  'Up to 4 verticals active simultaneously',
-                  'Full audit trail + regulator export',
-                  'API integration included',
-                  'PQC-signed receipts on every decision',
-                ].map(f => (
-                  <li key={f} className="flex items-start gap-2 text-xs text-muted">
-                    <CheckCircle className="w-3.5 h-3.5 text-[#a78bfa] flex-shrink-0 mt-0.5" />{f}
-                  </li>
-                ))}
-              </ul>
-              <a href="https://wa.me/16505078293?text=I%27m%20interested%20in%20the%20Professional%20plan" target="_blank" rel="noopener noreferrer"
-                className="block text-center py-2 rounded-xl border border-[#a78bfa]/50 text-[#a78bfa] text-xs font-semibold hover:bg-[#a78bfa]/10 transition-colors">
-                Talk to Us
-              </a>
-            </div>
-
-            {/* Tier 4 — Enterprise */}
-            <div className="flex flex-col bg-[#0A1628]/80 border-2 border-[#C9A227] rounded-2xl p-5 relative">
+            {/* Contact — WhatsApp */}
+            <div className="flex flex-col bg-[#0A1628]/80 border-2 border-[#C9A227] rounded-2xl p-7 relative" style={{boxShadow:'0 0 32px rgba(201,162,39,0.10)'}}>
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="bg-[#C9A227] text-[#0a0f1a] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Most Popular</span>
+                <span className="bg-[#C9A227] text-[#0a0f1a] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Fastest Response</span>
               </div>
-              <div className="mb-4">
-                <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest">Enterprise</span>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">$35K</span>
-                  <span className="text-xs text-muted font-medium">/ month</span>
-                </div>
-                <p className="text-xs text-[#C9A227]/70 mt-0.5 font-medium">$420,000 / year · All 9 verticals</p>
+              <div className="w-11 h-11 rounded-xl bg-[#C9A227]/10 border border-[#C9A227]/25 flex items-center justify-center mb-5">
+                <Phone className="w-5 h-5 text-[#C9A227]" />
               </div>
-              <ul className="space-y-2 flex-1 mb-5">
+              <span className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-2">Direct</span>
+              <h3 className="text-lg font-bold text-white mb-2">Talk to Harold</h3>
+              <p className="text-xs text-muted leading-relaxed flex-1 mb-6">
+                Speak directly with the founder. Bring your architecture, your constraints, your use case. We'll tell you exactly how OMNIX fits — or if it doesn't.
+              </p>
+              <ul className="space-y-2 mb-6">
                 {[
-                  'Full veto authority — fail-closed by default',
-                  'All 9 verticals active',
-                  'Unlimited governed decisions',
-                  'Complete audit trail for regulators',
-                  'Dedicated onboarding + SLA 99.9%',
-                  'Sharia-aligned governance gate included',
+                  'Direct line to the founder',
+                  'No sales process — just the conversation',
+                  'Response within 24 hours',
                 ].map(f => (
                   <li key={f} className="flex items-start gap-2 text-xs text-muted">
                     <CheckCircle className="w-3.5 h-3.5 text-[#C9A227] flex-shrink-0 mt-0.5" />{f}
                   </li>
                 ))}
               </ul>
-              <a href="https://wa.me/16505078293?text=I%27m%20interested%20in%20the%20Enterprise%20plan" target="_blank" rel="noopener noreferrer"
-                className="block text-center py-2 rounded-xl bg-[#C9A227] text-[#0a0f1a] text-xs font-bold hover:bg-[#F5D97A] transition-colors">
-                Talk to Us
+              <a href="https://wa.me/16505078293?text=I%27d%20like%20to%20discuss%20OMNIX%20Quantum%20for%20my%20institution" target="_blank" rel="noopener noreferrer"
+                className="block text-center py-3 rounded-xl bg-[#C9A227] text-[#0a0f1a] text-sm font-bold hover:bg-[#F5D97A] transition-colors">
+                Contact via WhatsApp
               </a>
             </div>
 
-            {/* Tier 5 — Custom */}
-            <div className="flex flex-col bg-[#0A1628]/80 border border-[#3b82f6]/50 rounded-2xl p-5">
-              <div className="mb-4">
-                <span className="text-xs font-bold text-[#3b82f6] uppercase tracking-widest">Custom</span>
-                <div className="mt-3">
-                  <span className="text-3xl font-black text-white">Custom</span>
-                </div>
-                <p className="text-xs text-muted mt-1">Large-scale · White-label · On-premise</p>
+            {/* Email */}
+            <div className="flex flex-col bg-[#0A1628]/80 border border-[#334155] rounded-2xl p-7">
+              <div className="w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-5">
+                <Shield className="w-5 h-5 text-violet-400" />
               </div>
-              <ul className="space-y-2 flex-1 mb-5">
+              <span className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-2">Formal</span>
+              <h3 className="text-lg font-bold text-white mb-2">Institutional Inquiry</h3>
+              <p className="text-xs text-muted leading-relaxed flex-1 mb-6">
+                For regulated institutions, enterprise deployments, partnerships, or NDA-first conversations. We'll respond with the appropriate documentation and next steps.
+              </p>
+              <ul className="space-y-2 mb-6">
                 {[
-                  'Multi-tenant infrastructure',
-                  'White-label options available',
-                  'Revenue share model available',
+                  'NDA available on request',
+                  'Enterprise & white-label options',
                   'Custom vertical development',
-                  'On-premise deployment',
-                  'Dedicated governance architect',
                 ].map(f => (
                   <li key={f} className="flex items-start gap-2 text-xs text-muted">
-                    <CheckCircle className="w-3.5 h-3.5 text-[#3b82f6] flex-shrink-0 mt-0.5" />{f}
+                    <CheckCircle className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 mt-0.5" />{f}
                   </li>
                 ))}
               </ul>
-              <a href="mailto:contacto@omnixquantum.net?subject=Custom%20Deployment%20Inquiry"
-                className="block text-center py-2 rounded-xl border border-[#3b82f6]/60 text-[#3b82f6] text-xs font-semibold hover:bg-[#3b82f6]/10 hover:text-white transition-colors">
-                Contact Us
+              <a href="mailto:contacto@omnixquantum.net?subject=Institutional%20Inquiry%20%E2%80%94%20OMNIX%20Quantum"
+                className="block text-center py-3 rounded-xl border border-violet-500/50 text-violet-400 text-sm font-semibold hover:bg-violet-500/10 transition-colors">
+                Email Us
               </a>
             </div>
           </div>
 
-          {/* Usage-based pricing */}
-          <div className="grid md:grid-cols-3 gap-4 mb-10">
-            <div className="bg-[#0A1628]/60 border border-[#1E293B] rounded-2xl p-6 flex items-start gap-5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                <Zap className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Pay-per-Decision</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-2xl font-black text-white">$0.05</span>
-                  <span className="text-sm text-muted">/ governed decision</span>
-                </div>
-                <p className="text-xs text-muted leading-relaxed">For organisations with variable decision volume. Every governed decision includes a PQC-signed receipt. No monthly commitment required.</p>
-              </div>
-            </div>
-
-            <div className="bg-[#0A1628]/60 border border-[#C9A227]/20 rounded-2xl p-6 flex items-start gap-5" style={{boxShadow:'0 0 20px rgba(201,162,39,0.06)'}}>
-              <div className="w-10 h-10 rounded-xl bg-[#C9A227]/10 border border-[#C9A227]/25 flex items-center justify-center flex-shrink-0">
-                <Shield className="w-5 h-5 text-[#C9A227]" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-[#C9A227] uppercase tracking-widest mb-1">AUG Fee — Capital Protected</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-2xl font-black text-white">0.5% – 1%</span>
-                  <span className="text-sm text-muted">/ year on capital governed</span>
-                </div>
-                <p className="text-xs text-muted leading-relaxed">OMNIX charges a percentage of the capital under governance. If OMNIX governs decisions over $50M in capital exposure, the fee is $250K–$500K/year. Scales with the value you protect.</p>
-              </div>
-            </div>
-
-            <div className="bg-[#0A1628]/60 border border-[#1E293B] rounded-2xl p-6 flex items-start gap-5">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
-                <Phone className="w-5 h-5 text-violet-400" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-1">API Call Pricing</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-2xl font-black text-white">Contact Us</span>
-                </div>
-                <p className="text-xs text-muted leading-relaxed">Volume-based API pricing for high-throughput integrations. Rate limits, SLA tiers, and dedicated infrastructure available for enterprise API deployments.</p>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-center text-sm text-white/70 font-medium mb-2">
-            Advisory and Professional plans advise. Only Enterprise has full authority to stop a decision.
-          </p>
           <p className="text-center text-xs text-muted">
-            All plans include post-quantum cryptographic receipts (NIST-standardized) · No hidden fees · Start with the free pilot, no card required
+            omnixquantum.net · contacto@omnixquantum.net · Every conversation starts with listening, not selling.
           </p>
         </section>
 
