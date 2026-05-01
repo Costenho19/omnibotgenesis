@@ -1,24 +1,24 @@
 {
-  "snapshot_id": "AVM-1293EF9E44",
-  "parameter_version": "1.1293ef9e44",
+  "snapshot_id": "AVM-9A7DC2689D",
+  "parameter_version": "1.9a7dc2689d",
   "domain": "real_estate",
   "baseline_signals": {
-    "risk_exposure": 6.24,
-    "signal_coherence": 64.99,
-    "logic_consistency": 94.78,
-    "probability_score": 78.07,
-    "stress_resilience": 65.18,
-    "trend_persistence": 72.68
+    "risk_exposure": 12.46,
+    "signal_coherence": 51.39,
+    "logic_consistency": 82.39,
+    "probability_score": 65.56,
+    "stress_resilience": 57.13,
+    "trend_persistence": 57.83
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=72h>=72h",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=73h>=72h",
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_12.2"
+    "prev_drift_11.6"
   ],
-  "calibrated_at": "2026-04-28T07:47:05.465709+00:00",
-  "calibrated_at_epoch": 1777362425.465709
+  "calibrated_at": "2026-05-01T08:28:32.788606+00:00",
+  "calibrated_at_epoch": 1777624112.788606
 }
