@@ -157,6 +157,9 @@ def verify_receipt(receipt_id):
             'prev_hash': receipt['prev_hash'][:16] + '...' if receipt['prev_hash'] else '',
             'signature_algorithm': receipt['signature_algorithm'],
             'has_signature': bool(receipt.get('signature')),
+            'policy_version': receipt.get('policy_version') or '—',
+            'engine_version': receipt.get('engine_version') or '—',
+            'veto_chain': receipt.get('veto_chain') or [],
         },
         'verification': verification
     })

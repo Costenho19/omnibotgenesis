@@ -988,9 +988,9 @@ export default function PublicGovernanceSandbox() {
         )}
 
         {!result && !isEvaluating && (
-          <section className="mt-16">
-            <div className="glass-card p-8 text-center">
-              <h3 className="text-lg font-semibold text-white mb-6">What Makes This Different from Our Other Demos</h3>
+          <section className="mt-8">
+            <div className="glass-card p-6 text-center">
+              <h3 className="text-lg font-semibold text-white mb-4">What Makes This Different from Our Other Demos</h3>
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="p-4 rounded-lg bg-[#0A1628]/40">
                   <Zap className="w-6 h-6 text-[#C9A227] mx-auto mb-3" />
@@ -1010,7 +1010,7 @@ export default function PublicGovernanceSandbox() {
               </div>
             </div>
 
-            <div className="mt-12 text-center space-y-3">
+            <div className="mt-6 text-center space-y-3">
               <Link to="/governance-demo" className="text-emerald-400 hover:text-white transition-colors flex items-center justify-center gap-2">
                 See structured demos (Credit, Insurance, Energy, Biotech)
                 <ArrowRight className="w-4 h-4" />
