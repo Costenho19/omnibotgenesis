@@ -977,12 +977,15 @@ class TestEvaluateSessionAPI:
         assert result is not None
 
     def test_evaluate_session_fail_safe_on_bad_config(self):
-        """evaluate_session returns pass-through result on config/exception path."""
+        """evaluate_session returns FAIL_CLOSED (admitted=False) on constructor exception.
+        ADR-116: any module error → BLOCK. DISABLED ≠ ADMITTED.
+        Updated from outdated pass-through expectation that pre-dated ADR-116."""
         from omnix_core.governance.context_admission_gate import evaluate_session, SessionAdmissionResult
         from unittest.mock import patch
         with patch("omnix_core.governance.context_admission_gate.ContextAdmissionGate",
                    side_effect=RuntimeError("boom")):
             result = evaluate_session(session_id="SES-UNIT-ERR-001")
         assert isinstance(result, SessionAdmissionResult)
-        assert result.admitted is True
-        assert result.pass_through is True
+        assert result.admitted is False
+        assert result.pass_through is False
+        assert result.evaluation_state == "FAIL_CLOSED"

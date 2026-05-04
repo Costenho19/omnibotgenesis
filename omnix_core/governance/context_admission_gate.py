@@ -41,12 +41,71 @@ ADR-070 (2026-04-09):
 
 from __future__ import annotations
 
+import json
 import logging
 import os
+import time
 from dataclasses import dataclass, field
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+_SUPPRESSION_LOG_PATH = os.environ.get(
+    "CAG_SUPPRESSION_LOG",
+    os.path.join(os.path.dirname(__file__), "..", "..", "logs", "cag_suppressed_sessions.jsonl"),
+)
+
+
+def _write_suppression_audit(
+    global_volatility: float,
+    cross_pair_correlation: float,
+    liquidity_score: float,
+    macro_risk: float,
+    violations: list,
+    admission_score: float,
+    gate_checks: list,
+    session_id: str = "",
+) -> None:
+    """
+    ADR-050-A: Information-Preserving Suppression Audit.
+
+    When the CAG blocks a session, it must NOT silently discard the signal context.
+    Every suppressed session is written to an append-only audit log so that:
+      - Downstream invariants can later verify whether the regime assessment was correct.
+      - Structural blind spots (wrong regime reading → downstream never sees the signal)
+        become detectable and measurable.
+
+    This implements Kemar Morrison's 'information-preserving for admissibility' principle:
+    upstream gating SHRINKS the proposal domain without DESTROYING what the downstream
+    invariants need to evaluate correctness.
+    """
+    try:
+        log_dir = os.path.dirname(_SUPPRESSION_LOG_PATH)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+        entry = {
+            "ts": time.time(),
+            "session_id": session_id,
+            "outcome": "SESSION_BLOCKED",
+            "admission_score": round(admission_score, 2),
+            "violations": violations,
+            "admission_parameters": {
+                "global_volatility": global_volatility,
+                "cross_pair_correlation": cross_pair_correlation,
+                "liquidity_score": liquidity_score,
+                "macro_risk": macro_risk,
+            },
+            "gate_checks": gate_checks,
+            "audit_note": (
+                "Full signal context preserved per ADR-050-A. "
+                "Downstream invariants can audit whether this suppression was information-preserving."
+            ),
+        }
+        with open(_SUPPRESSION_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+        logger.debug(f"[CAG] Suppression audit written | session={session_id or 'n/a'}")
+    except Exception as exc:
+        logger.warning(f"[CAG] Could not write suppression audit: {exc}")
 
 CAG_DEFAULT_VOLATILITY_THRESHOLD: float = 80.0
 CAG_DEFAULT_CORRELATION_THRESHOLD: float = 90.0
@@ -173,6 +232,7 @@ class ContextAdmissionGate:
                 cross_pair_correlation,
                 liquidity_score,
                 macro_risk,
+                session_id=getattr(self, '_session_id', ''),
             )
         except Exception as exc:
             logger.error(f"❌ [CAG] Exception during admission check: {exc} → FAIL-CLOSED (ADR-116)")
@@ -192,6 +252,7 @@ class ContextAdmissionGate:
         cross_pair_correlation: float,
         liquidity_score: float,
         macro_risk: float,
+        session_id: str = "",
     ) -> CAGResult:
         """
         Execute the 4 admission checks in sequence.
@@ -292,6 +353,16 @@ class ContextAdmissionGate:
                     f"🚫 [CAG] SESSION_BLOCKED: {'; '.join(violations)} | "
                     f"admission_score={admission_score:.0f}/100"
                 )
+                _write_suppression_audit(
+                    global_volatility=global_volatility,
+                    cross_pair_correlation=cross_pair_correlation,
+                    liquidity_score=liquidity_score,
+                    macro_risk=macro_risk,
+                    violations=violations,
+                    admission_score=admission_score,
+                    gate_checks=gate_checks,
+                    session_id=session_id,
+                )
                 return CAGResult(
                     admitted=False,
                     pass_through=False,
@@ -368,6 +439,7 @@ def evaluate_session(
     """
     try:
         gate = ContextAdmissionGate(config or load_cag_config_from_env())
+        gate._session_id = session_id
         result = gate.evaluate(
             global_volatility=global_volatility,
             cross_pair_correlation=cross_pair_correlation,
