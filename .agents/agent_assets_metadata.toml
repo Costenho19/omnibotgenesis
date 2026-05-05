@@ -450,3 +450,9 @@ id = "um03fSaUuGks8nNBRQMTz"
 uri = "file://ghost_compliance_ES.md"
 type = "text"
 title = "Libro Completo — ESPAÑOL"
+
+[[outputs]]
+id = "DVMz3LCR4DMJHW_wvqIun"
+uri = "file://Ghost_Compliance_ES.pdf"
+type = "pdf"
+title = "Ghost Compliance — Versión Española (PDF)"
