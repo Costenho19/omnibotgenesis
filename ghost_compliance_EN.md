@@ -185,7 +185,7 @@ This is not a book about bad actors. The institutions we examine in Part I were 
 
 This is a book about a structural problem in how governance is designed. And about the architecture that solves it.
 
-*— Harold Nunes, Dubai, 2026*
+*— Harold Nunes, 2026*
 
 ---
 
@@ -3539,13 +3539,13 @@ What distinguishes VARA from most financial regulatory frameworks is its explici
 
 ### Why OMNIX and VARA Are Natural Complements
 
-OMNIX was built in a Dubai context, by a founder who understood VARA's requirements from inside — not as an external observer retrofitting compliance, but as a builder who understood what genuine compliance with VARA's spirit required.
+OMNIX was designed with VARA's requirements as a reference standard — not by an external observer retrofitting compliance onto a finished product, but by a builder who studied what genuine compliance with VARA's spirit actually requires, from the architecture up.
 
 VARA requires continuous governance. OMNIX provides continuous governance.
 VARA requires documented decisions. OMNIX provides PQC-signed irrefutable receipts.
 VARA requires technology-native compliance. OMNIX is technology-native governance.
 
-The alignment is not coincidental. It reflects the fact that VARA and OMNIX were both shaped by the same understanding: the photograph problem is not solved by better photographs. It is solved by continuous monitoring that makes photographs unnecessary.
+The alignment is not coincidental. VARA and OMNIX were shaped by the same understanding: the photograph problem is not solved by better photographs. It is solved by continuous monitoring that makes photographs unnecessary. That is the standard Dubai has set. OMNIX is built to meet it.
 
 ---
 
@@ -3678,7 +3678,7 @@ A provider using OMNIX for their high-risk AI system's post-market monitoring ha
 │                                                         │
 │  ✓ Why the governance problem is visible from inside    │
 │  ✓ The architectural decisions and their rationale      │
-│  ✓ Building in Dubai: VARA context and advantage        │
+│  ✓ Dubai as the leading market: VARA alignment        │
 │  ✓ What makes OMNIX different from governance           │
 │    frameworks that came before                          │
 │  ✓ What is still unfinished                             │
@@ -3733,15 +3733,17 @@ Every architectural decision in OMNIX was made to solve a specific problem that 
 
 ---
 
-### Building in Dubai
+### Why Dubai Is the Right Market
 
-OMNIX was built in Dubai. This is not incidental.
+Dubai is the most advanced regulatory environment for what OMNIX does. This is not marketing — it is structural.
 
-Dubai's governance ambition — expressed through VARA and the broader UAE AI strategy — is aligned with what OMNIX was built to provide. VARA does not want governance in name. It wants governance that works — governance that can be demonstrated, verified, and defended before regulators and courts.
+VARA does not want governance in name. It wants governance that works — governance that can be demonstrated, verified, and defended before regulators and courts. The eight VARA rulebooks are not a compliance checklist. They are the most detailed specification, by any regulatory authority anywhere in the world, of what genuine virtual asset governance infrastructure must deliver.
 
-Building in Dubai also meant building within the VARA framework's requirements from inception. The eight rulebooks are not a compliance burden for OMNIX. They are a specification of what genuine governance infrastructure must deliver. Building to that specification, rather than to a lower common denominator, produced a stronger architecture.
+An institution operating under VARA that deploys OMNIX is not adapting a generic governance product to a local framework. The architecture was built to satisfy frameworks at VARA's level of specificity from the start. The result is native alignment — not retrofitting.
 
-The VARA context is also commercial: Dubai's ambition to be the global hub for virtual asset governance means that the institutions operating here will, increasingly, need the most rigorous governance infrastructure available. OMNIX is building for that demand — not waiting for it, but building ahead of it.
+The commercial logic follows the regulatory logic: Dubai's ambition to establish itself as the global reference standard for virtual asset governance means that institutions operating here will face, increasingly, the most demanding governance expectations in the world. The institutions that build the governance infrastructure now — before those expectations fully materialize — will hold a positioning advantage that compounds over time.
+
+OMNIX is designed for that market — not waiting for the demand to arrive, but building the infrastructure ahead of it.
 
 ---
 
@@ -3901,7 +3903,7 @@ OMNIX Quantum exists to make the second answer achievable — technically, legal
 
 The ghost is visible now. What you do next is your decision.
 
-*— Harold Nunes, Dubai, 2026*
+*— Harold Nunes, 2026*
 
 ---
 
