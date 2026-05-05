@@ -583,7 +583,7 @@ except Exception as _wh_err:
 
 try:
     import os as _os, sys as _sys
-    _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))))
+    _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))))
     from omnix_core.governance.oversight_surface import OversightSurfaceEngine as _OSE
     _OSE().ensure_schema()
     logger.info("[startup] OversightSurfaceEngine schema verified OK (ADR-124)")
