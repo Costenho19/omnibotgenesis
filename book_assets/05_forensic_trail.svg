@@ -1,0 +1,94 @@
+<svg viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, serif">
+  <rect width="900" height="480" fill="#0a0a0f"/>
+
+  <!-- Title -->
+  <text x="450" y="42" text-anchor="middle" fill="#e8d5a3" font-size="22" font-weight="bold" letter-spacing="2">FORENSIC AUDIT TRAIL — FOUR ROUNDS</text>
+  <text x="450" y="63" text-anchor="middle" fill="#888" font-size="12" letter-spacing="1">From decision to irrefutable evidence. No gaps. No exceptions.</text>
+  <line x1="100" y1="76" x2="800" y2="76" stroke="#c9a84c" stroke-width="1" opacity="0.6"/>
+
+  <!-- Round 1 -->
+  <rect x="60" y="100" width="180" height="140" rx="10" fill="#0a1020" stroke="#c9a84c" stroke-width="2"/>
+  <circle cx="150" cy="130" r="20" fill="#c9a84c"/>
+  <text x="150" y="136" text-anchor="middle" fill="#0a0a0f" font-size="16" font-weight="bold">1</text>
+  <text x="150" y="168" text-anchor="middle" fill="#c9a84c" font-size="12" font-weight="bold">REAL-TIME</text>
+  <text x="150" y="184" text-anchor="middle" fill="#c9a84c" font-size="12" font-weight="bold">CAPTURE</text>
+  <text x="150" y="206" text-anchor="middle" fill="#888" font-size="9">Complete state snapshot</text>
+  <text x="150" y="220" text-anchor="middle" fill="#888" font-size="9">at decision moment</text>
+  <text x="150" y="234" text-anchor="middle" fill="#888" font-size="9">Millisecond precision</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="240" y1="170" x2="290" y2="170" stroke="#c9a84c" stroke-width="2"/>
+  <polygon points="287,164 300,170 287,176" fill="#c9a84c"/>
+
+  <!-- Round 2 -->
+  <rect x="300" y="100" width="180" height="140" rx="10" fill="#0a1020" stroke="#4a9eff" stroke-width="2"/>
+  <circle cx="390" cy="130" r="20" fill="#4a9eff"/>
+  <text x="390" y="136" text-anchor="middle" fill="#0a0a0f" font-size="16" font-weight="bold">2</text>
+  <text x="390" y="168" text-anchor="middle" fill="#4a9eff" font-size="12" font-weight="bold">PQC</text>
+  <text x="390" y="184" text-anchor="middle" fill="#4a9eff" font-size="12" font-weight="bold">SIGNATURE</text>
+  <text x="390" y="206" text-anchor="middle" fill="#888" font-size="9">ML-DSA-65 signing</text>
+  <text x="390" y="220" text-anchor="middle" fill="#888" font-size="9">Quantum-resistant</text>
+  <text x="390" y="234" text-anchor="middle" fill="#888" font-size="9">Mathematically irrefutable</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="480" y1="170" x2="530" y2="170" stroke="#4a9eff" stroke-width="2"/>
+  <polygon points="527,164 540,170 527,176" fill="#4a9eff"/>
+
+  <!-- Round 3 -->
+  <rect x="540" y="100" width="180" height="140" rx="10" fill="#0a1020" stroke="#44ff88" stroke-width="2"/>
+  <circle cx="630" cy="130" r="20" fill="#44ff88"/>
+  <text x="630" y="136" text-anchor="middle" fill="#0a0a0f" font-size="16" font-weight="bold">3</text>
+  <text x="630" y="168" text-anchor="middle" fill="#44ff88" font-size="12" font-weight="bold">CHAIN</text>
+  <text x="630" y="184" text-anchor="middle" fill="#44ff88" font-size="12" font-weight="bold">VERIFICATION</text>
+  <text x="630" y="206" text-anchor="middle" fill="#888" font-size="9">Cross-reference with</text>
+  <text x="630" y="220" text-anchor="middle" fill="#888" font-size="9">previous receipts</text>
+  <text x="630" y="234" text-anchor="middle" fill="#888" font-size="9">Tamper-evident chain</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="720" y1="170" x2="745" y2="170" stroke="#44ff88" stroke-width="2"/>
+  <polygon points="742,164 755,170 742,176" fill="#44ff88"/>
+
+  <!-- Round 4 -->
+  <rect x="755" y="100" width="120" height="140" rx="10" fill="#0a1020" stroke="#ffaa44" stroke-width="2"/>
+  <circle cx="815" cy="130" r="20" fill="#ffaa44"/>
+  <text x="815" y="136" text-anchor="middle" fill="#0a0a0f" font-size="16" font-weight="bold">4</text>
+  <text x="815" y="163" text-anchor="middle" fill="#ffaa44" font-size="11" font-weight="bold">FORENSIC</text>
+  <text x="815" y="179" text-anchor="middle" fill="#ffaa44" font-size="11" font-weight="bold">ARCHIVAL</text>
+  <text x="815" y="200" text-anchor="middle" fill="#888" font-size="9">Long-term</text>
+  <text x="815" y="214" text-anchor="middle" fill="#888" font-size="9">preservation</text>
+  <text x="815" y="228" text-anchor="middle" fill="#888" font-size="9">Future-proof</text>
+  <text x="815" y="234" text-anchor="middle" fill="#888" font-size="9">standards</text>
+
+  <!-- Decision Receipt visual -->
+  <rect x="100" y="285" width="700" height="120" rx="10" fill="#0a1020" stroke="#c9a84c" stroke-width="1.5"/>
+  <text x="450" y="308" text-anchor="middle" fill="#c9a84c" font-size="13" font-weight="bold">DECISION RECEIPT — STRUCTURE</text>
+  <line x1="120" y1="315" x2="780" y2="315" stroke="#333" stroke-width="1"/>
+
+  <text x="200" y="338" text-anchor="middle" fill="#e8d5a3" font-size="10" font-weight="bold">DECISION CONTENT</text>
+  <text x="200" y="352" text-anchor="middle" fill="#888" font-size="9">What · Why · Output</text>
+
+  <line x1="290" y1="320" x2="290" y2="395" stroke="#333" stroke-width="1"/>
+
+  <text x="390" y="338" text-anchor="middle" fill="#e8d5a3" font-size="10" font-weight="bold">SIGNAL STATE</text>
+  <text x="390" y="352" text-anchor="middle" fill="#888" font-size="9">6 AVM values at t=0</text>
+  <text x="390" y="366" text-anchor="middle" fill="#888" font-size="9">CAG admission score</text>
+
+  <line x1="480" y1="320" x2="480" y2="395" stroke="#333" stroke-width="1"/>
+
+  <text x="570" y="338" text-anchor="middle" fill="#e8d5a3" font-size="10" font-weight="bold">TIMESTAMP</text>
+  <text x="570" y="352" text-anchor="middle" fill="#888" font-size="9">±1ms precision</text>
+  <text x="570" y="366" text-anchor="middle" fill="#888" font-size="9">Verified time source</text>
+
+  <line x1="650" y1="320" x2="650" y2="395" stroke="#333" stroke-width="1"/>
+
+  <text x="720" y="338" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="bold">ML-DSA-65</text>
+  <text x="720" y="352" text-anchor="middle" fill="#888" font-size="9">PQC Signature</text>
+  <text x="720" y="366" text-anchor="middle" fill="#888" font-size="9">+ Chain ref</text>
+
+  <!-- Bottom guarantee bar -->
+  <rect x="100" y="415" width="700" height="35" rx="6" fill="#0d2a0d" stroke="#44ff88" stroke-width="1"/>
+  <text x="450" y="437" text-anchor="middle" fill="#44ff88" font-size="11" font-weight="bold">✓ Irrefutable before any court · Any jurisdiction · Any future technology</text>
+
+  <!-- Caption -->
+  <text x="450" y="472" text-anchor="middle" fill="#555" font-size="9" letter-spacing="1">OMNIX QUANTUM · omnixquantum.net · Post-Quantum Forensic Evidence Standard</text>
+</svg>
