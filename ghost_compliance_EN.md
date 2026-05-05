@@ -611,7 +611,7 @@ A stablecoin showing:
 
 Each metric individually within bounds. In combination, a coherence failure — the system is stable by conventional metrics while becoming increasingly sensitive to the exact condition (market stress) that would expose its instability.
 
-Signal Coherence below 0.4 is a governance concern regardless of individual signal levels. It is the signal that says: *the parts are fine but the whole is not.*
+Signal Coherence below the calibrated critical threshold is a governance concern regardless of individual signal levels. It is the signal that says: *the parts are fine but the whole is not.*
 
 #### Signal Three: Risk Exposure (0–100)
 
@@ -1233,7 +1233,7 @@ Signal Coherence is computed after all other signals are evaluated. It measures 
 
 **Why it matters**: The LTCM failure was fundamentally a coherence failure. The fund's positions showed individually acceptable metrics — volatility, exposure, correlation — that were, in combination, structurally inconsistent. No individual signal was alarming. The combination was catastrophic.
 
-**What triggers review**: Signal Coherence below 0.4, regardless of individual signal levels. A coherence reading this low means the governance system's signal readings are internally contradictory — which is almost always a precursor to instability.
+**What triggers review**: Signal Coherence below the calibrated critical threshold, regardless of individual signal levels. A coherence reading this low means the governance system's signal readings are internally contradictory — which is almost always a precursor to instability.
 
 **What it detects that individual signals cannot**: The class of failure where individually-acceptable metrics combine to create structural fragility. Terra/Luna's coherence failure was detectable four months before collapse.
 
@@ -1272,7 +1272,7 @@ Stress Resilience is the most forward-looking signal in the AVM architecture. It
 
 **What changes over time**: Stress Resilience is recalculated at every evaluation cycle as the entity's composition changes. An entity admitted at Stress Resilience 82 that drifts to 45 over six months has become dramatically more fragile — even if all current operating metrics remain within normal-condition thresholds.
 
-**What triggers review**: Stress Resilience below 55 (warning), below 35 (critical). Declining trend with Trend Persistence above 0.7.
+**What triggers review**: Stress Resilience below calibrated warning and critical thresholds. Declining trend with Trend Persistence above the calibrated persistence floor.
 
 #### Signal Five: Trend Persistence
 
@@ -1282,9 +1282,9 @@ Trend Persistence is the signal that answers the question governance systems mos
 
 **What it measures**: The statistical persistence of directional signals across evaluation cycles. A reading of 0.9 means signals are moving consistently in one direction over time — structurally. A reading of 0.2 means signals are noisy — fluctuating without consistent direction.
 
-**Why this matters for governance**: Treating a persistent trend as noise is one of the most common and most costly errors in institutional risk management. SVB's bond portfolio showed persistent, consistent risk exposure increase from Q2 2022 through Q1 2023 — eighteen months of Trend Persistence at 0.85+. Every conventional risk system recorded the increases and classified them as within acceptable parameters. The OMNIX architecture would have generated a mandatory human review trigger in July 2022.
+**Why this matters for governance**: Treating a persistent trend as noise is one of the most common and most costly errors in institutional risk management. SVB's bond portfolio showed persistent, consistent risk exposure increase from Q2 2022 through Q1 2023 — eighteen months of Trend Persistence in sustained critical territory. Every conventional risk system recorded the increases and classified them as within acceptable parameters. The OMNIX architecture would have generated a mandatory human review trigger in July 2022.
 
-**The critical combination**: High Trend Persistence (> 0.7) combined with negative directional signals (rising exposure, falling resilience) is the pattern that produces the strongest governance alerts. It is the early signature of a system moving systematically toward failure.
+**The critical combination**: High Trend Persistence combined with negative directional signals (rising exposure, falling resilience) is the pattern that produces the strongest governance alerts. It is the early signature of a system moving systematically toward failure.
 
 #### Signal Six: Logic Consistency
 
@@ -1301,7 +1301,7 @@ Logic Consistency is the most distinctive signal in the AVM architecture. It ask
 - Credit models whose default probability assumptions imply macro conditions inconsistent with their own stress scenarios
 - Algorithmic trading strategies whose edge assumption depends on market conditions the strategy itself would destroy if widely deployed
 
-**What triggers rejection at admission**: Logic Consistency below 0.6. Structures that are internally incoherent are not admissible regardless of what their quantitative metrics show — because the metrics are generated by a structure that is inherently unstable.
+**What triggers rejection at admission**: Logic Consistency below the calibrated admission floor. Structures that are internally incoherent are not admissible regardless of what their quantitative metrics show — because the metrics are generated by a structure that is inherently unstable.
 
 ---
 
@@ -1619,7 +1619,7 @@ When a mandatory review trigger fires:
 4. That decision is documented with the authority's credentials and the justification
 5. A signed receipt is generated for the review, the decision, and the time elapsed
 
-The trigger fires for: CAG SESSION_REVIEW outcomes, SRR systemic alerts, AVM Probability Score drops below domain threshold, and any Signal Six Logic Consistency reading below 0.4.
+The trigger fires for: CAG SESSION_REVIEW outcomes, SRR systemic alerts, AVM Probability Score drops below domain threshold, and any Signal Six Logic Consistency reading below the calibrated critical threshold.
 
 #### Level Two: Discretionary Override
 
@@ -2847,41 +2847,38 @@ AVM Signal Five (range: 0–1). Statistical persistence of directional signals a
 
 ---
 
-| **Signal** | **Name** | **Range** | **Measures** | **Warning** | **Critical** |
-|---|---|---|---|---|---|
-| 1 | Probability Score | 0–100 | Overall consistency with admission profile | < 65 | < 45 |
-| 2 | Signal Coherence | 0–1 | Internal consistency of signals 1,3,4,5,6 | < 0.5 | < 0.3 |
-| 3 | Risk Exposure | 0–100 | Exposure direction, velocity, acceleration | Directional trend | High velocity |
-| 4 | Stress Resilience | 0–100 | Domain tail-event performance | < 55 | < 35 |
-| 5 | Trend Persistence | 0–1 | Statistical persistence of directional signals | > 0.7 (neg. trend) | > 0.85 (neg. trend) |
-| 6 | Logic Consistency | 0–1 | Internal structural coherence | < 0.6 | < 0.4 |
+| **Signal** | **Name** | **Range** | **Measures** |
+|---|---|---|---|
+| 1 | Probability Score | 0–100 | Overall consistency with admission profile; trajectory matters more than absolute level |
+| 2 | Signal Coherence | 0–1 | Internal consistency of signals 1, 3, 4, 5, and 6 with each other |
+| 3 | Risk Exposure | 0–100 | Direction, velocity, and acceleration of exposure change |
+| 4 | Stress Resilience | 0–100 | Projected performance under domain-specific tail-event scenarios |
+| 5 | Trend Persistence | 0–1 | Statistical persistence of directional signals across evaluation cycles |
+| 6 | Logic Consistency | 0–1 | Internal logical coherence of the entity's structure |
 
 ---
 
 **Evaluation Intervals by Domain**
 
-| **Domain** | **Standard Interval** | **Rationale** |
-|---|---|---|
-| High-frequency trading | 1 minute | Market speed |
-| Stablecoin | 5 minutes | Peg monitoring cadence |
-| Medical AI | 15 minutes | Clinical decision frequency |
-| Trading (institutional) | 30 minutes | Position review cadence |
-| Real estate token | 1 hour | Market liquidity cadence |
-| Insurance parametric | 4 hours | Event monitoring cadence |
-| Islamic credit | 4 hours | Daily credit cycle |
+AVM evaluation intervals vary by domain according to the characteristic speed of risk in that context — from seconds in high-frequency trading to hours in domains where risk develops more slowly. Intervals are calibrated during the admission process and adjusted when domain conditions change structurally.
 
 ---
 
 **Human Review Trigger Conditions**
 
-The following conditions automatically trigger a mandatory human review — the governance system cannot proceed without documented human authority:
+The following categories of conditions automatically trigger a mandatory human review — the governance system cannot proceed without documented human authority:
 
-1. Any individual signal reaches critical level
-2. Signal Coherence (Signal 2) falls below warning level (0.5)
-3. Trend Persistence (Signal 5) exceeds warning level (0.7) with two or more signals in negative territory simultaneously
-4. SRR systemic alert generated
-5. Human Override Level One escalation initiated by authorized analyst
-6. Auto-recalibration engine proposes reference state update (requires human authorization)
+**Signals at critical level**: When any individual AVM signal or combination of signals reaches the calibrated critical thresholds for the domain, the system pauses the relevant governance process and notifies the credentialed reviewing authority.
+
+**Structural coherence failure**: When Signal Coherence falls to levels indicating the system's readings are internally contradictory — regardless of individual signal levels.
+
+**Persistent trend with deterioration**: When Trend Persistence indicates sustained directional movement combined with two or more signals simultaneously in negative territory.
+
+**Cross-entity systemic alerts**: When the Systemic Risk Router detects correlation or dependency patterns between entities indicating contagion risk, regardless of individual entity signal levels.
+
+**Operator-initiated escalations**: Any authorized analyst can initiate a mandatory review — human observation activates review even if no automated threshold has been reached.
+
+**Reference state recalibration proposals**: Reference state updates affect all subsequent governance calculations for an entity and require documented human authorization before being applied.
 
 ---
 

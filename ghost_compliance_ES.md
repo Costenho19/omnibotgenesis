@@ -598,7 +598,7 @@ Una stablecoin mostrando:
 
 Cada métrica individualmente dentro de los límites. En combinación, una falla de coherencia — el sistema es estable por métricas convencionales mientras se vuelve cada vez más sensible a la condición exacta (estrés del mercado) que expondría su inestabilidad.
 
-La Coherencia de Señales por debajo de 0.4 es una preocupación de gobernanza independientemente de los niveles de señales individuales.
+La Coherencia de Señales por debajo del umbral crítico calibrado es una preocupación de gobernanza independientemente de los niveles de señales individuales.
 
 #### Señal Tres: Exposición al Riesgo (0–100)
 
@@ -628,7 +628,7 @@ Uno de los errores más sistemáticos en la gestión de riesgos institucional es
 
 La Persistencia de Tendencia mide la persistencia estadística de las señales direccionales a través de ciclos de evaluación. Una lectura de 0.9 significa que las señales se mueven consistentemente en una dirección a lo largo del tiempo — estructuralmente. Una lectura de 0.2 significa que las señales son ruidosas.
 
-La combinación crítica de gobernanza: Alta Persistencia de Tendencia (> 0.7) combinada con señales direccionales negativas. Es la firma temprana de un sistema moviéndose sistemáticamente hacia el fallo.
+La combinación crítica de gobernanza: Alta Persistencia de Tendencia combinada con señales direccionales negativas. Es la firma temprana de un sistema moviéndose sistemáticamente hacia el fallo.
 
 Es el patrón que debería haber gobernado la cartera de bonos de SVB durante todo 2022. La revisión del disparador humano debería haber disparado en julio de 2022. No lo hizo, porque nadie lo estaba midiendo.
 
@@ -1104,7 +1104,7 @@ La Coherencia de Señales se calcula después de que se evalúan todas las demá
 
 **Por qué importa**: La falla de LTCM fue fundamentalmente una falla de coherencia. Las posiciones del fondo mostraban métricas individualmente aceptables — volatilidad, exposición, correlación — que eran, en combinación, estructuralmente inconsistentes. Ninguna señal individual era alarmante. La combinación fue catastrófica.
 
-**Lo que dispara la revisión**: Coherencia de Señales por debajo de 0.4, independientemente de los niveles de señales individuales. Una lectura de coherencia tan baja significa que las lecturas de señales del sistema de gobernanza son internamente contradictorias — lo que casi siempre es un precursor de inestabilidad.
+**Lo que dispara la revisión**: Coherencia de Señales por debajo del umbral crítico calibrado, independientemente de los niveles de señales individuales. Una lectura de coherencia tan baja significa que las lecturas de señales del sistema de gobernanza son internamente contradictorias — lo que casi siempre es un precursor de inestabilidad.
 
 **Lo que detecta que las señales individuales no pueden**: La clase de falla donde métricas individualmente aceptables se combinan para crear fragilidad estructural. La falla de coherencia de Terra/Luna era detectable cuatro meses antes del colapso.
 
@@ -1143,7 +1143,7 @@ La Resiliencia al Estrés es la señal más prospectiva en la arquitectura AVM. 
 
 **Lo que cambia con el tiempo**: La Resiliencia al Estrés se recalcula en cada ciclo de evaluación a medida que cambia la composición de la entidad. Una entidad admitida con Resiliencia al Estrés de 82 que deriva a 45 durante seis meses se ha vuelto dramáticamente más frágil — aunque todas las métricas operativas actuales permanezcan dentro de los umbrales de condiciones normales.
 
-**Lo que dispara la revisión**: Resiliencia al Estrés por debajo de 55 (advertencia), por debajo de 35 (crítico). Tendencia declinante con Persistencia de Tendencia por encima de 0.7.
+**Lo que dispara la revisión**: Resiliencia al Estrés por debajo de los umbrales de advertencia y crítico calibrados por dominio. Tendencia declinante sostenida por encima del umbral de persistencia calibrado.
 
 #### Señal Cinco: Persistencia de Tendencia
 
@@ -1153,9 +1153,9 @@ La Persistencia de Tendencia es la señal que responde la pregunta que los siste
 
 **Lo que mide**: La persistencia estadística de las señales direccionales a través de ciclos de evaluación. Una lectura de 0.9 significa que las señales se mueven consistentemente en una dirección a lo largo del tiempo — estructuralmente. Una lectura de 0.2 significa que las señales son ruidosas — fluctuando sin dirección consistente.
 
-**Por qué importa para la gobernanza**: Tratar una tendencia persistente como ruido es uno de los errores más comunes y costosos en la gestión de riesgos institucional. La cartera de bonos de SVB mostró un aumento persistente y consistente de la exposición al riesgo desde el segundo trimestre de 2022 hasta el primer trimestre de 2023 — dieciocho meses de Persistencia de Tendencia en 0.85+. Cada sistema de riesgo convencional registró los aumentos y los clasificó dentro de los parámetros aceptables. La arquitectura OMNIX habría generado un disparador de revisión humana obligatoria en julio de 2022.
+**Por qué importa para la gobernanza**: Tratar una tendencia persistente como ruido es uno de los errores más comunes y costosos en la gestión de riesgos institucional. La cartera de bonos de SVB mostró un aumento persistente y consistente de la exposición al riesgo desde el segundo trimestre de 2022 hasta el primer trimestre de 2023 — dieciocho meses de Persistencia de Tendencia en territorio crítico sostenido. Cada sistema de riesgo convencional registró los aumentos y los clasificó dentro de los parámetros aceptables. La arquitectura OMNIX habría generado un disparador de revisión humana obligatoria en julio de 2022.
 
-**La combinación crítica**: Alta Persistencia de Tendencia (> 0.7) combinada con señales direccionales negativas (exposición creciente, resiliencia declinante) es el patrón que produce las alertas de gobernanza más fuertes. Es la firma temprana de un sistema moviéndose sistemáticamente hacia el fallo.
+**La combinación crítica**: Alta Persistencia de Tendencia combinada con señales direccionales negativas (exposición creciente, resiliencia declinante) es el patrón que produce las alertas de gobernanza más fuertes. Es la firma temprana de un sistema moviéndose sistemáticamente hacia el fallo.
 
 #### Señal Seis: Consistencia Lógica
 
@@ -1172,7 +1172,7 @@ La Consistencia Lógica es la señal más distintiva en la arquitectura AVM. Hac
 - Modelos de crédito cuyos supuestos de probabilidad de incumplimiento implican condiciones macro inconsistentes con sus propios escenarios de estrés
 - Estrategias de trading algorítmico cuya suposición de ventaja depende de condiciones de mercado que la estrategia misma destruiría si se desplegara ampliamente
 
-**Lo que dispara el rechazo en la admisión**: Consistencia Lógica por debajo de 0.6. Las estructuras que son internamente incoherentes no son admisibles independientemente de lo que muestren sus métricas cuantitativas — porque las métricas son generadas por una estructura que es inherentemente inestable.
+**Lo que dispara el rechazo en la admisión**: Consistencia Lógica por debajo del umbral de admisión calibrado. Las estructuras que son internamente incoherentes no son admisibles independientemente de lo que muestren sus métricas cuantitativas — porque las métricas son generadas por una estructura que es inherentemente inestable.
 
 ---
 
@@ -1505,7 +1505,7 @@ Cuando se activa un disparador de revisión obligatoria:
 4. Esa decisión está documentada con las credenciales de la autoridad y la justificación
 5. Se genera un recibo firmado para la revisión, la decisión y el tiempo transcurrido
 
-El disparador se activa para: resultados SESIÓN_REVISIÓN del CAG, alertas sistémicas del SRR, caídas de la Puntuación de Probabilidad del AVM por debajo del umbral del dominio, y cualquier lectura de Consistencia Lógica (Señal Seis) por debajo de 0.4.
+El disparador se activa para: resultados SESIÓN_REVISIÓN del CAG, alertas sistémicas del SRR, caídas de la Puntuación de Probabilidad del AVM por debajo del umbral del dominio, y cualquier lectura de Consistencia Lógica (Señal Seis) por debajo del umbral crítico calibrado.
 
 #### Nivel Dos: Anulación Discrecional
 
@@ -2226,7 +2226,7 @@ La arquitectura de admisión de OMNIX. Evalúa cada entidad a través de cuatro 
 La capa arquitectónica para gobernanza de agentes autónomos. Define límites duros en las capacidades del agente en la capa de ejecución — aplicados antes de cada acción, no monitoreados después.
 
 **Coherencia de Señales**
-Señal AVM Dos (rango: 0–1). Mide la consistencia interna de las otras cinco señales. Detecta contradicciones estructurales que el análisis de señales individuales pasa por alto. Por debajo de 0.4: preocupación de gobernanza independientemente de los niveles individuales.
+Señal AVM Dos (rango: 0–1). Mide la consistencia interna de las otras cinco señales. Detecta contradicciones estructurales que el análisis de señales individuales pasa por alto. Por debajo del umbral crítico calibrado: preocupación de gobernanza independientemente de los niveles individuales.
 
 **Consistencia Lógica**
 Señal AVM Seis (rango: 0–1). Mide la coherencia lógica interna de la estructura de la entidad. Detecta dependencias circulares y auto-referenciales. La señal que habría rechazado FTX en la admisión.
@@ -2256,7 +2256,7 @@ Sistema de monitoreo de segundo orden para gobernanza de agentes autónomos. Mon
 Algoritmo de Firma Digital de Módulo-Red, Nivel de Seguridad 65. Estandarizado por el NIST como FIPS 204 en agosto de 2024. Post-cuántico, resistente a computadoras clásicas y cuánticas, verificable sin herramientas propietarias.
 
 **Persistencia de Tendencia**
-Señal AVM Cinco (rango: 0–1). Persistencia estadística de señales direccionales. Distingue fluctuaciones temporales de tendencias estructurales. Alta persistencia (>0.7) + señales negativas = firma de movimiento sistemático hacia el fallo.
+Señal AVM Cinco (rango: 0–1). Persistencia estadística de señales direccionales. Distingue fluctuaciones temporales de tendencias estructurales. Alta persistencia sostenida con señales negativas = firma de movimiento sistemático hacia el fallo.
 
 **Protección Anti-Repetición**
 Mecanismo arquitectónico que garantiza que cada decisión de gobernanza o disparador paramétrico sea único y no pueda replicarse.
@@ -2326,44 +2326,36 @@ La arquitectura de monitoreo entre entidades de OMNIX. Ejecuta tres análisis pa
 
 ---
 
-| **Señal** | **Nombre** | **Rango** | **Mide** | **Advertencia** | **Crítico** |
-|---|---|---|---|---|---|
-| 1 | Puntuación de Probabilidad | 0–100 | Consistencia general con perfil de admisión | < 65 | < 45 |
-| 2 | Coherencia de Señales | 0–1 | Consistencia interna de señales 1,3,4,5,6 | < 0.5 | < 0.3 |
-| 3 | Exposición al Riesgo | 0–100 | Dirección, velocidad y aceleración | Tendencia direccional | Alta velocidad |
-| 4 | Resiliencia al Estrés | 0–100 | Rendimiento bajo cola del dominio | < 55 | < 35 |
-| 5 | Persistencia de Tendencia | 0–1 | Persistencia estadística de señales | > 0.7 (tend. neg.) | > 0.85 (tend. neg.) |
-| 6 | Consistencia Lógica | 0–1 | Coherencia lógica interna | < 0.6 | < 0.4 |
+| **Señal** | **Nombre** | **Rango** | **Mide** |
+|---|---|---|---|
+| 1 | Puntuación de Probabilidad | 0–100 | Consistencia general con perfil de admisión; la trayectoria importa más que el nivel absoluto |
+| 2 | Coherencia de Señales | 0–1 | Consistencia interna de las señales 1, 3, 4, 5 y 6 entre sí |
+| 3 | Exposición al Riesgo | 0–100 | Dirección, velocidad y aceleración del cambio de exposición |
+| 4 | Resiliencia al Estrés | 0–100 | Rendimiento proyectado bajo escenarios de cola específicos del dominio |
+| 5 | Persistencia de Tendencia | 0–1 | Persistencia estadística de señales direccionales a través de ciclos |
+| 6 | Consistencia Lógica | 0–1 | Coherencia lógica interna de la estructura de la entidad |
 
 **Intervalos de Evaluación por Dominio**
 
-| **Dominio** | **Intervalo Estándar** |
-|---|---|
-| Trading de alta frecuencia | 1 minuto |
-| Stablecoin | 5 minutos |
-| IA Médica | 15 minutos |
-| Trading institucional | 30 minutos |
-| Token inmobiliario | 1 hora |
-| Seguro paramétrico | 4 horas |
-| Crédito islámico | 4 horas |
+Los intervalos de evaluación AVM varían por dominio según la velocidad característica del riesgo en ese contexto — desde segundos en trading de alta frecuencia hasta horas en dominios donde el riesgo se desarrolla más lentamente. Los intervalos se calibran durante el proceso de admisión y se ajustan cuando las condiciones del dominio cambian estructuralmente.
 
 ---
 
 ### Condiciones de Disparador de Revisión Humana
 
-Las siguientes condiciones activan automáticamente una revisión humana obligatoria. El sistema de gobernanza no puede proceder sin autoridad humana documentada:
+Las siguientes categorías de condiciones activan automáticamente una revisión humana obligatoria. El sistema de gobernanza no puede proceder sin autoridad humana documentada:
 
-**Condición 1 — Señal Individual en Nivel Crítico**: Cualquier señal AVM individual alcanza su umbral crítico. El sistema pausa el proceso de gobernanza relevante, notifica a la autoridad revisora con credenciales, y espera una decisión documentada.
+**Señales en nivel crítico**: Cuando cualquier señal AVM individual o combinación de señales alcanza los umbrales críticos calibrados por dominio, el sistema pausa el proceso de gobernanza relevante y notifica a la autoridad revisora con credenciales.
 
-**Condición 2 — Falla de Coherencia**: La Coherencia de Señales (Señal 2) cae por debajo del nivel de advertencia (0.5), independientemente de los niveles de señales individuales. Una lectura de coherencia tan baja indica que las lecturas de señales son internamente contradictorias — un precursor casi universal de inestabilidad.
+**Falla de coherencia estructural**: Cuando la Coherencia de Señales cae a niveles que indican que las lecturas del sistema son internamente contradictorias — independientemente de los niveles de señales individuales.
 
-**Condición 3 — Persistencia de Tendencia con Señales Negativas**: La Persistencia de Tendencia (Señal 5) supera el nivel de advertencia (0.7) con dos o más señales en territorio negativo simultáneamente. Esta combinación es la firma temprana de un sistema moviéndose sistemáticamente hacia el fallo.
+**Tendencia persistente combinada con deterioro**: Cuando la Persistencia de Tendencia indica movimiento direccional sostenido combinado con dos o más señales en territorio negativo simultáneamente.
 
-**Condición 4 — Alerta Sistémica SRR**: El Enrutador de Riesgo Sistémico genera una alerta sistémica — indicando que el patrón de relaciones entre entidades muestra señales de inestabilidad, independientemente de los niveles de señales de entidades individuales.
+**Alertas sistémicas entre entidades**: Cuando el Enrutador de Riesgo Sistémico detecta patrones de correlación o dependencia entre entidades que indican riesgo de contagio, independientemente de los niveles de señales individuales.
 
-**Condición 5 — Escalada de Anulación Nivel Uno**: Cualquier analista autorizado inicia una escalada de Anulación Humana Nivel Uno. La observación de un analista que identifica una preocupación de gobernanza activa la revisión obligatoria — incluso si no se ha alcanzado ningún umbral automático.
+**Escaladas iniciadas por operador**: Cualquier analista autorizado puede iniciar una revisión obligatoria — la observación humana activa la revisión incluso si no se ha alcanzado ningún umbral automático.
 
-**Condición 6 — Propuesta de Recalibración del Estado de Referencia**: El motor de recalibración automática propone una actualización del estado de referencia de una entidad. Las recalibraciones del estado de referencia afectan todos los cálculos de gobernanza posteriores para esa entidad, y por tanto requieren autorización humana documentada antes de aplicarse.
+**Propuestas de recalibración del estado de referencia**: Las actualizaciones del estado de referencia de una entidad afectan todos los cálculos de gobernanza posteriores y requieren autorización humana documentada antes de aplicarse.
 
 ---
 
