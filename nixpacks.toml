@@ -8,7 +8,10 @@ cmds = [
   "python3 -m venv /opt/venv",
   "/opt/venv/bin/pip install --upgrade pip",
   "/opt/venv/bin/pip install -r requirements.txt",
-  "/opt/venv/bin/python -c \"import site; open(site.getsitepackages()[0] + '/omnix_local.pth', 'w').write('/app\\n')\" || true"
+  "/opt/venv/bin/pip install ./omnix_core --no-deps --quiet",
+  "/opt/venv/bin/pip install ./omnix_services --no-deps --quiet",
+  "pip install ./omnix_core --no-deps --quiet || true",
+  "pip install ./omnix_services --no-deps --quiet || true"
 ]
 
 [start]
