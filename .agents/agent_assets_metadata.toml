@@ -432,3 +432,21 @@ id = "F6pzm-ur_6UO6RJQkYZJD"
 uri = "file://book_assets/06_pqc_timeline.svg"
 type = "image"
 title = "Gráfico 6 — Timeline Cuántica"
+
+[[outputs]]
+id = "crcFevM0qJMRjLOI-Glar"
+uri = "file://book_assets/00_cover.svg"
+type = "image"
+title = "Portada — Ghost Compliance"
+
+[[outputs]]
+id = "GzycnWAbcKVs_wmpJt6jq"
+uri = "file://ghost_compliance_EN.md"
+type = "text"
+title = "Libro Completo — ENGLISH"
+
+[[outputs]]
+id = "um03fSaUuGks8nNBRQMTz"
+uri = "file://ghost_compliance_ES.md"
+type = "text"
+title = "Libro Completo — ESPAÑOL"
