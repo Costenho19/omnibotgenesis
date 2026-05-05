@@ -53,7 +53,11 @@ def on_later_pages(canvas, doc):
     canvas.restoreState()
 
 def on_first_page(canvas, doc):
-    pass
+    """Paint full navy background for the cover page."""
+    canvas.saveState()
+    canvas.setFillColor(NAVY)
+    canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
+    canvas.restoreState()
 
 # ── Styles (generous for 220 pages) ──────────────────────────────────
 def build_styles():
