@@ -1,0 +1,119 @@
+<svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg" font-family="'Georgia', serif">
+  <defs>
+    <linearGradient id="bg8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#050D18"/>
+      <stop offset="100%" style="stop-color:#0A1628"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="620" fill="url(#bg8)"/>
+  <rect x="0" y="0" width="1000" height="3" fill="#C9A227"/>
+
+  <text x="500" y="48" text-anchor="middle" fill="#E5E4E2" font-size="24" font-weight="bold" letter-spacing="4">VARA — VIRTUAL ASSETS REGULATORY AUTHORITY</text>
+  <text x="500" y="72" text-anchor="middle" fill="#94A3B8" font-size="12" letter-spacing="3">DUBAI · UAE · THE WORLD'S MOST COMPREHENSIVE VIRTUAL ASSET FRAMEWORK</text>
+  <line x1="60" y1="85" x2="940" y2="85" stroke="#C9A227" stroke-width="1" opacity="0.5"/>
+
+  <!-- VARA Header center box -->
+  <rect x="330" y="100" width="340" height="70" rx="10" fill="#0A1F14" stroke="#C9A227" stroke-width="2"/>
+  <text x="500" y="128" text-anchor="middle" fill="#C9A227" font-size="14" font-weight="bold" letter-spacing="2">VARA REGULATORY PILLARS</text>
+  <text x="500" y="150" text-anchor="middle" fill="#94A3B8" font-size="10">Established 2022 · Dubai Law No. 4 · Full Framework 2023</text>
+  <text x="500" y="164" text-anchor="middle" fill="#64748B" font-size="9">Global model · 8 activity-specific rulebooks</text>
+
+  <!-- Arrows down from center -->
+  <line x1="220" y1="170" x2="180" y2="195" stroke="#C9A227" stroke-width="1" opacity="0.5"/>
+  <line x1="390" y1="170" x2="340" y2="195" stroke="#C9A227" stroke-width="1" opacity="0.5"/>
+  <line x1="500" y1="170" x2="500" y2="195" stroke="#C9A227" stroke-width="1" opacity="0.5"/>
+  <line x1="610" y1="170" x2="660" y2="195" stroke="#C9A227" stroke-width="1" opacity="0.5"/>
+  <line x1="780" y1="170" x2="820" y2="195" stroke="#C9A227" stroke-width="1" opacity="0.5"/>
+
+  <!-- Pillar 1: Licensing -->
+  <rect x="60" y="198" width="175" height="145" rx="8" fill="#071528" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="147" y="222" text-anchor="middle" fill="#3B82F6" font-size="11" font-weight="bold">LICENSING</text>
+  <line x1="75" y1="230" x2="220" y2="230" stroke="#1E293B" stroke-width="1"/>
+  <text x="147" y="248" text-anchor="middle" fill="#94A3B8" font-size="9">Mandatory authorization</text>
+  <text x="147" y="264" text-anchor="middle" fill="#94A3B8" font-size="9">for all VA activities</text>
+  <text x="147" y="280" text-anchor="middle" fill="#94A3B8" font-size="9">in Dubai / DIFC</text>
+  <text x="147" y="300" text-anchor="middle" fill="#64748B" font-size="8">8 activity rulebooks:</text>
+  <text x="147" y="314" text-anchor="middle" fill="#64748B" font-size="8">Exchange · Broker · Custody</text>
+  <text x="147" y="328" text-anchor="middle" fill="#64748B" font-size="8">Lending · Management</text>
+
+  <!-- Pillar 2: Governance -->
+  <rect x="255" y="198" width="175" height="145" rx="8" fill="#0A1400" stroke="#C9A227" stroke-width="1.5"/>
+  <text x="342" y="222" text-anchor="middle" fill="#C9A227" font-size="11" font-weight="bold">GOVERNANCE</text>
+  <line x1="270" y1="230" x2="415" y2="230" stroke="#1E293B" stroke-width="1"/>
+  <text x="342" y="248" text-anchor="middle" fill="#94A3B8" font-size="9">Board composition</text>
+  <text x="342" y="264" text-anchor="middle" fill="#94A3B8" font-size="9">requirements enforced</text>
+  <text x="342" y="280" text-anchor="middle" fill="#94A3B8" font-size="9">Risk frameworks mandatory</text>
+  <text x="342" y="300" text-anchor="middle" fill="#64748B" font-size="8">Technology governance</text>
+  <text x="342" y="314" text-anchor="middle" fill="#64748B" font-size="8">required at system level</text>
+  <text x="342" y="328" text-anchor="middle" fill="#64748B" font-size="8">not just policy level</text>
+
+  <!-- Pillar 3: Market Conduct -->
+  <rect x="450" y="198" width="175" height="145" rx="8" fill="#071512" stroke="#10B981" stroke-width="1.5"/>
+  <text x="537" y="222" text-anchor="middle" fill="#10B981" font-size="11" font-weight="bold">MARKET CONDUCT</text>
+  <line x1="465" y1="230" x2="610" y2="230" stroke="#1E293B" stroke-width="1"/>
+  <text x="537" y="248" text-anchor="middle" fill="#94A3B8" font-size="9">Manipulation prohibition</text>
+  <text x="537" y="264" text-anchor="middle" fill="#94A3B8" font-size="9">Insider trading rules</text>
+  <text x="537" y="280" text-anchor="middle" fill="#94A3B8" font-size="9">Disclosure standards</text>
+  <text x="537" y="300" text-anchor="middle" fill="#64748B" font-size="8">Continuous market</text>
+  <text x="537" y="314" text-anchor="middle" fill="#64748B" font-size="8">surveillance required</text>
+  <text x="537" y="328" text-anchor="middle" fill="#64748B" font-size="8">Real-time monitoring</text>
+
+  <!-- Pillar 4: Technology -->
+  <rect x="645" y="198" width="175" height="145" rx="8" fill="#120828" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="732" y="222" text-anchor="middle" fill="#8B5CF6" font-size="11" font-weight="bold">TECHNOLOGY</text>
+  <line x1="660" y1="230" x2="805" y2="230" stroke="#1E293B" stroke-width="1"/>
+  <text x="732" y="248" text-anchor="middle" fill="#94A3B8" font-size="9">System resilience</text>
+  <text x="732" y="264" text-anchor="middle" fill="#94A3B8" font-size="9">Security standards</text>
+  <text x="732" y="280" text-anchor="middle" fill="#94A3B8" font-size="9">Incident reporting</text>
+  <text x="732" y="300" text-anchor="middle" fill="#64748B" font-size="8">Cryptographic standards</text>
+  <text x="732" y="314" text-anchor="middle" fill="#64748B" font-size="8">mandatory for custody</text>
+  <text x="732" y="328" text-anchor="middle" fill="#64748B" font-size="8">PQC-ready preferred</text>
+
+  <!-- Pillar 5: Consumer Protection -->
+  <rect x="840" y="198" width="130" height="145" rx="8" fill="#1a0808" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="905" y="218" text-anchor="middle" fill="#EF4444" font-size="10" font-weight="bold">CONSUMER</text>
+  <text x="905" y="232" text-anchor="middle" fill="#EF4444" font-size="10" font-weight="bold">PROTECTION</text>
+  <line x1="855" y1="240" x2="955" y2="240" stroke="#1E293B" stroke-width="1"/>
+  <text x="905" y="258" text-anchor="middle" fill="#94A3B8" font-size="9">Suitability rules</text>
+  <text x="905" y="274" text-anchor="middle" fill="#94A3B8" font-size="9">Risk disclosure</text>
+  <text x="905" y="290" text-anchor="middle" fill="#94A3B8" font-size="9">mandatory</text>
+  <text x="905" y="310" text-anchor="middle" fill="#64748B" font-size="8">Complaint</text>
+  <text x="905" y="324" text-anchor="middle" fill="#64748B" font-size="8">resolution</text>
+  <text x="905" y="338" text-anchor="middle" fill="#64748B" font-size="8">framework</text>
+
+  <!-- OMNIX mapping section -->
+  <text x="500" y="372" text-anchor="middle" fill="#475569" font-size="10" letter-spacing="4">HOW OMNIX QUANTUM MAPS TO VARA REQUIREMENTS</text>
+
+  <rect x="60" y="384" width="880" height="150" rx="10" fill="#0A1628" stroke="#C9A227" stroke-width="1.5"/>
+
+  <!-- Row headers -->
+  <text x="150" y="408" text-anchor="middle" fill="#C9A227" font-size="10" font-weight="bold">VARA REQUIREMENT</text>
+  <line x1="290" y1="384" x2="290" y2="534" stroke="#1E293B" stroke-width="1"/>
+  <text x="500" y="408" text-anchor="middle" fill="#C9A227" font-size="10" font-weight="bold">CONVENTIONAL APPROACH</text>
+  <line x1="700" y1="384" x2="700" y2="534" stroke="#1E293B" stroke-width="1"/>
+  <text x="820" y="408" text-anchor="middle" fill="#C9A227" font-size="10" font-weight="bold">OMNIX QUANTUM</text>
+  <line x1="60" y1="415" x2="940" y2="415" stroke="#1E293B" stroke-width="1"/>
+
+  <text x="150" y="434" text-anchor="middle" fill="#E5E4E2" font-size="9">Technology Governance</text>
+  <text x="500" y="434" text-anchor="middle" fill="#EF4444" font-size="9">Policy documents · periodic review</text>
+  <text x="820" y="434" text-anchor="middle" fill="#10B981" font-size="9">CAG + AVM · continuous · automated</text>
+  <line x1="60" y1="443" x2="940" y2="443" stroke="#1E293B" stroke-width="0.5" opacity="0.4"/>
+
+  <text x="150" y="462" text-anchor="middle" fill="#E5E4E2" font-size="9">Market Surveillance</text>
+  <text x="500" y="462" text-anchor="middle" fill="#EF4444" font-size="9">End-of-day reports · human review</text>
+  <text x="820" y="462" text-anchor="middle" fill="#10B981" font-size="9">SRR · real-time · pre-threshold alert</text>
+  <line x1="60" y1="471" x2="940" y2="471" stroke="#1E293B" stroke-width="0.5" opacity="0.4"/>
+
+  <text x="150" y="490" text-anchor="middle" fill="#E5E4E2" font-size="9">Audit Trail</text>
+  <text x="500" y="490" text-anchor="middle" fill="#EF4444" font-size="9">Log files · modifiable · no signature</text>
+  <text x="820" y="490" text-anchor="middle" fill="#10B981" font-size="9">FAT 4 rounds · ML-DSA-65 · irrefutable</text>
+  <line x1="60" y1="499" x2="940" y2="499" stroke="#1E293B" stroke-width="0.5" opacity="0.4"/>
+
+  <text x="150" y="518" text-anchor="middle" fill="#E5E4E2" font-size="9">Human Accountability</text>
+  <text x="500" y="518" text-anchor="middle" fill="#EF4444" font-size="9">Email approvals · no cryptographic proof</text>
+  <text x="820" y="518" text-anchor="middle" fill="#10B981" font-size="9">Human Override · PQC-signed · auditable</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="588" width="1000" height="32" fill="#050D18"/>
+  <text x="500" y="608" text-anchor="middle" fill="#475569" font-size="10" letter-spacing="2">OMNIX QUANTUM  ·  omnixquantum.net  ·  VARA Compliance Infrastructure · Dubai UAE</text>
+</svg>

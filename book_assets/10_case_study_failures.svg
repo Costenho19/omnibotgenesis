@@ -1,0 +1,107 @@
+<svg viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg" font-family="'Georgia', serif">
+  <defs>
+    <linearGradient id="bg10" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#050D18"/>
+      <stop offset="100%" style="stop-color:#0A1628"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="640" fill="url(#bg10)"/>
+  <rect x="0" y="0" width="1000" height="3" fill="#EF4444"/>
+
+  <text x="500" y="48" text-anchor="middle" fill="#E5E4E2" font-size="24" font-weight="bold" letter-spacing="4">GHOST COMPLIANCE IN THE REAL WORLD</text>
+  <text x="500" y="72" text-anchor="middle" fill="#94A3B8" font-size="12" letter-spacing="3">THREE FAILURES · ONE PATTERN · ONE MISSING LAYER</text>
+  <line x1="60" y1="85" x2="940" y2="85" stroke="#EF4444" stroke-width="1" opacity="0.5"/>
+
+  <!-- TERRA/LUNA -->
+  <rect x="40" y="100" width="290" height="360" rx="10" fill="#0A0A0A" stroke="#EF4444" stroke-width="2"/>
+  <rect x="40" y="100" width="290" height="52" rx="10" fill="#1a0808"/>
+  <rect x="40" y="138" width="290" height="14" fill="#1a0808"/>
+  <text x="185" y="127" text-anchor="middle" fill="#EF4444" font-size="14" font-weight="bold">TERRA / LUNA</text>
+  <text x="185" y="145" text-anchor="middle" fill="#64748B" font-size="9">May 2022 · $40B destroyed in 72 hours</text>
+
+  <text x="185" y="175" text-anchor="middle" fill="#C9A227" font-size="10" font-weight="bold">WHAT GOVERNANCE SHOWED:</text>
+  <text x="185" y="193" text-anchor="middle" fill="#10B981" font-size="10">● UST: pegged · Dashboard: green</text>
+  <text x="185" y="210" text-anchor="middle" fill="#10B981" font-size="10">● LUNA: backing reserve: adequate</text>
+  <text x="185" y="227" text-anchor="middle" fill="#10B981" font-size="10">● Reserves: within parameters</text>
+
+  <line x1="60" y1="242" x2="310" y2="242" stroke="#1E293B" stroke-width="1"/>
+  <text x="185" y="262" text-anchor="middle" fill="#EF4444" font-size="10" font-weight="bold">WHAT WAS ACTUALLY TRUE:</text>
+  <text x="185" y="280" text-anchor="middle" fill="#94A3B8" font-size="9">Algorithmic peg: correlation 0.98 with</text>
+  <text x="185" y="295" text-anchor="middle" fill="#94A3B8" font-size="9">sentiment — not mathematically stable</text>
+  <text x="185" y="310" text-anchor="middle" fill="#94A3B8" font-size="9">Death spiral: structurally inevitable</text>
+  <text x="185" y="325" text-anchor="middle" fill="#94A3B8" font-size="9">at any sustained depeg event</text>
+
+  <line x1="60" y1="340" x2="310" y2="340" stroke="#1E293B" stroke-width="1"/>
+  <text x="185" y="360" text-anchor="middle" fill="#3B82F6" font-size="10" font-weight="bold">OMNIX WOULD HAVE DETECTED:</text>
+  <text x="185" y="378" text-anchor="middle" fill="#94A3B8" font-size="9">Signal Coherence: 0.12 — failing</text>
+  <text x="185" y="394" text-anchor="middle" fill="#94A3B8" font-size="9">Logic Consistency: unstable spiral</text>
+  <text x="185" y="410" text-anchor="middle" fill="#94A3B8" font-size="9">SRR: ALERT 18 hours before collapse</text>
+  <text x="185" y="430" text-anchor="middle" fill="#C9A227" font-size="9" font-weight="bold">Ghost Compliance Period: 11 months</text>
+  <text x="185" y="448" text-anchor="middle" fill="#C9A227" font-size="9" font-weight="bold">Undetected damage: $40 billion</text>
+
+  <!-- SVB -->
+  <rect x="355" y="100" width="290" height="360" rx="10" fill="#0A0A0A" stroke="#F59E0B" stroke-width="2"/>
+  <rect x="355" y="100" width="290" height="52" rx="10" fill="#1a1000"/>
+  <rect x="355" y="138" width="290" height="14" fill="#1a1000"/>
+  <text x="500" y="127" text-anchor="middle" fill="#F59E0B" font-size="14" font-weight="bold">SILICON VALLEY BANK</text>
+  <text x="500" y="145" text-anchor="middle" fill="#64748B" font-size="9">March 2023 · $209B in assets · 48hr collapse</text>
+
+  <text x="500" y="175" text-anchor="middle" fill="#C9A227" font-size="10" font-weight="bold">WHAT GOVERNANCE SHOWED:</text>
+  <text x="500" y="193" text-anchor="middle" fill="#10B981" font-size="10">● Capital ratios: above requirement</text>
+  <text x="500" y="210" text-anchor="middle" fill="#10B981" font-size="10">● Bond portfolio: valued at cost</text>
+  <text x="500" y="227" text-anchor="middle" fill="#10B981" font-size="10">● Liquidity: within standard ranges</text>
+
+  <line x1="375" y1="242" x2="625" y2="242" stroke="#1E293B" stroke-width="1"/>
+  <text x="500" y="262" text-anchor="middle" fill="#EF4444" font-size="10" font-weight="bold">WHAT WAS ACTUALLY TRUE:</text>
+  <text x="500" y="280" text-anchor="middle" fill="#94A3B8" font-size="9">$91B bond portfolio: marked at cost</text>
+  <text x="500" y="295" text-anchor="middle" fill="#94A3B8" font-size="9">not mark-to-market · reality: -$15B</text>
+  <text x="500" y="310" text-anchor="middle" fill="#94A3B8" font-size="9">Duration mismatch: 10yr bonds vs</text>
+  <text x="500" y="325" text-anchor="middle" fill="#94A3B8" font-size="9">demand deposits · post-admission drift</text>
+
+  <line x1="375" y1="340" x2="625" y2="340" stroke="#1E293B" stroke-width="1"/>
+  <text x="500" y="360" text-anchor="middle" fill="#3B82F6" font-size="10" font-weight="bold">OMNIX WOULD HAVE DETECTED:</text>
+  <text x="500" y="378" text-anchor="middle" fill="#94A3B8" font-size="9">Risk Exposure drift: rising since Q2 2022</text>
+  <text x="500" y="394" text-anchor="middle" fill="#94A3B8" font-size="9">Stress Resilience: deteriorating</text>
+  <text x="500" y="410" text-anchor="middle" fill="#94A3B8" font-size="9">AVM: REVIEW REQUIRED · 8 months prior</text>
+  <text x="500" y="430" text-anchor="middle" fill="#C9A227" font-size="9" font-weight="bold">Ghost Compliance Period: 18 months</text>
+  <text x="500" y="448" text-anchor="middle" fill="#C9A227" font-size="9" font-weight="bold">Undetected damage: $209 billion</text>
+
+  <!-- FTX -->
+  <rect x="670" y="100" width="290" height="360" rx="10" fill="#0A0A0A" stroke="#8B5CF6" stroke-width="2"/>
+  <rect x="670" y="100" width="290" height="52" rx="10" fill="#120828"/>
+  <rect x="670" y="138" width="290" height="14" fill="#120828"/>
+  <text x="815" y="127" text-anchor="middle" fill="#8B5CF6" font-size="14" font-weight="bold">FTX / ALAMEDA</text>
+  <text x="815" y="145" text-anchor="middle" fill="#64748B" font-size="9">November 2022 · $32B valuation · total fraud</text>
+
+  <text x="815" y="175" text-anchor="middle" fill="#C9A227" font-size="10" font-weight="bold">WHAT GOVERNANCE SHOWED:</text>
+  <text x="815" y="193" text-anchor="middle" fill="#10B981" font-size="10">● Audits: signed by Big-4 equivalent</text>
+  <text x="815" y="210" text-anchor="middle" fill="#10B981" font-size="10">● Reserves: claimed adequate</text>
+  <text x="815" y="227" text-anchor="middle" fill="#10B981" font-size="10">● Operations: normal appearance</text>
+
+  <line x1="690" y1="242" x2="940" y2="242" stroke="#1E293B" stroke-width="1"/>
+  <text x="815" y="262" text-anchor="middle" fill="#EF4444" font-size="10" font-weight="bold">WHAT WAS ACTUALLY TRUE:</text>
+  <text x="815" y="280" text-anchor="middle" fill="#94A3B8" font-size="9">Customer funds: commingled with</text>
+  <text x="815" y="295" text-anchor="middle" fill="#94A3B8" font-size="9">Alameda Research · no separation</text>
+  <text x="815" y="310" text-anchor="middle" fill="#94A3B8" font-size="9">FTT token: circular collateral</text>
+  <text x="815" y="325" text-anchor="middle" fill="#94A3B8" font-size="9">self-referential · zero real value</text>
+
+  <line x1="690" y1="340" x2="940" y2="340" stroke="#1E293B" stroke-width="1"/>
+  <text x="815" y="360" text-anchor="middle" fill="#3B82F6" font-size="10" font-weight="bold">OMNIX WOULD HAVE DETECTED:</text>
+  <text x="815" y="378" text-anchor="middle" fill="#94A3B8" font-size="9">Logic Consistency: circular structure</text>
+  <text x="815" y="394" text-anchor="middle" fill="#94A3B8" font-size="9">Signal Coherence: fabricated data</text>
+  <text x="815" y="410" text-anchor="middle" fill="#94A3B8" font-size="9">FAT: receipts would expose gaps</text>
+  <text x="815" y="430" text-anchor="middle" fill="#C9A227" font-size="9" font-weight="bold">Ghost Compliance Period: 3+ years</text>
+  <text x="815" y="448" text-anchor="middle" fill="#C9A227" font-size="9" font-weight="bold">Undetected damage: $32+ billion</text>
+
+  <!-- Common pattern banner -->
+  <rect x="40" y="476" width="920" height="50" rx="8" fill="#1a0808" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="500" y="498" text-anchor="middle" fill="#EF4444" font-size="13" font-weight="bold">THE COMMON PATTERN: ADMISSION WITHOUT CONTINUOUS VALIDATION</text>
+  <text x="500" y="517" text-anchor="middle" fill="#94A3B8" font-size="10">Each system was admitted under valid conditions · Each then drifted into failure · None had a mechanism to detect drift</text>
+
+  <rect x="40" y="540" width="920" height="50" rx="8" fill="#071512" stroke="#10B981" stroke-width="1.5"/>
+  <text x="500" y="562" text-anchor="middle" fill="#10B981" font-size="13" font-weight="bold">OMNIX QUANTUM: THE MISSING LAYER IN ALL THREE CASES</text>
+  <text x="500" y="581" text-anchor="middle" fill="#94A3B8" font-size="10">Continuous validation · 6 signals · Systemic routing · PQC-signed evidence · Human intervention window · Pre-threshold detection</text>
+
+  <rect x="0" y="608" width="1000" height="32" fill="#050D18"/>
+  <text x="500" y="628" text-anchor="middle" fill="#475569" font-size="10" letter-spacing="2">OMNIX QUANTUM  ·  omnixquantum.net  ·  Case Study Analysis</text>
+</svg>
