@@ -950,7 +950,7 @@ When Coinbase published Alameda's balance sheet in November 2022, showing FTT as
 
 Three assets. Three industries. Three regulatory environments. Three failure modes. One lesson:
 
-> **Every governance system that validates at admission and enforces forever is vulnerable to ghost compliance. Every single one. Without exception.**
+> **Every governance system that validates at admission and enforces forever is structurally exposed to ghost compliance. The vulnerability is architectural — not organizational. It applies regardless of how disciplined the team, how rigorous the rulebook, or how frequent the manual reviews.**
 
 The question is not whether ghost compliance will emerge in your system. It will. The question is whether you have the architecture to detect it while the intervention window is open — or whether you are waiting for the collapse to tell you.
 
@@ -1217,7 +1217,7 @@ SVB is the case that most clearly illustrates the difference between seeing and 
 
 > *What the AVM would have said is not hypothesis. It is the result of applying a consistent detection methodology to data that already existed. The system did not need new information. It needed a new architecture for converting existing information into timely action.*
 
-> *Every crisis documented here was preventable. Not in theory. With the correct architecture, in practice.*
+> *The crises documented here each showed detectable signals — weeks or months before the collapse — that a continuous governance architecture was designed to surface. The question was not whether the signals existed. It was whether any system was watching for them.*
 
 ---
 
@@ -2127,7 +2127,7 @@ The Structural Admissibility Engine (Layer 0) validates that the decision meets 
 
 Each checkpoint evaluates a specific governance dimension. The Forensic Audit Trail captures every checkpoint result, every veto, every pass, every override — cryptographically signed at millisecond precision.
 
-The output is not just a decision. It is an irrefutable, post-quantum cryptographically signed proof of governance — valid before any regulator, any auditor, any court.
+The output is not just a decision. It is a post-quantum cryptographically signed proof of governance — designed to satisfy the evidentiary requirements of regulators, auditors, and legal proceedings across jurisdictions.
 
 What follows is how this architecture is calibrated for each of the nine domains it currently governs.
 
@@ -2621,7 +2621,7 @@ The EBIP boundaries defined at admission are not operational parameters that can
 
 Changing an EBIP boundary is not a configuration update. It is a governance event. It requires justification, human authorization at the appropriate authority level, a complete record in the Forensic Audit Trail, and a new admission evaluation against the updated boundaries.
 
-This immutability is the governance guarantee. When a regulator, a hospital, a patient, or a court asks "what were this system's behavioral limits during the procedure?" — the answer is not a document that someone might have updated. It is a cryptographically sealed governance record that is mathematically impossible to alter retroactively.
+This immutability is the governance guarantee. When a regulator, a hospital, a patient, or a court asks "what were this system's behavioral limits during the procedure?" — the answer is not a document that someone might have updated. It is a cryptographically sealed governance record — designed so that any alteration would be immediately detectable by any verifying party, at any point in time.
 
 ---
 
@@ -2651,7 +2651,7 @@ When a governed robotic system is involved in an adverse event, the questions th
 
 The OMNIX FAT for robotics captures every one of these data points — at millisecond precision, cryptographically signed, immutable. Every movement command. Every EBIP check and its result. Every pass and every stop. Every human override: who authorized it, at what authority level, at what time, under what conditions. Every system state snapshot at the moment of each governance event.
 
-This is not logging. Logging can be altered. The FAT is a cryptographically sealed evidence chain — a forensic record of governance that cannot be altered, backdated, or disputed. In a liability event, it answers every governance question with mathematical certainty.
+This is not logging. Logging can be altered. The FAT is a cryptographically sealed evidence chain — a forensic record of governance that cannot be altered, backdated, or disputed. In a liability event, it answers every governance question with cryptographically signed, time-stamped precision.
 
 ---
 
@@ -2846,7 +2846,7 @@ A parametric insurance trigger is a digital event with financial consequences. W
 
 In conventional insurance, the adjuster's physical review and the manual payment process provide implicit replay protection. In parametric insurance, the automation that creates the elegance also creates the vulnerability.
 
-OMNIX Anti-Replay Protection addresses this at the cryptographic layer. Each triggering event receives a unique cryptographic identifier at the moment of first detection. The payment execution, when authorized, includes this identifier in the FAT receipt — post-quantum signed. Any subsequent payment execution referencing the same triggering event is rejected by the Anti-Replay gate before entering the pipeline: the identifier already exists in the sealed receipt record, and the mathematical properties of the PQC signature make duplicate execution impossible to disguise.
+OMNIX Anti-Replay Protection addresses this at the cryptographic layer. Each triggering event receives a unique cryptographic identifier at the moment of first detection. The payment execution, when authorized, includes this identifier in the FAT receipt — post-quantum signed. Any subsequent payment execution referencing the same triggering event is rejected by the Anti-Replay gate before entering the pipeline: the identifier already exists in the sealed receipt record, and the cryptographic properties of the PQC signature are designed to make duplicate execution detectable and architecturally blocked.
 
 One triggering event. One payment authorization. One sealed receipt. Cryptographic impossibility of a second payment for the same event, regardless of system state or adversarial intent.
 
@@ -3459,7 +3459,7 @@ MiCA requires CASPs to maintain records of all services, activities, orders, and
 - Accessible: regulators must be able to retrieve them on request
 - Complete: they must cover all relevant activities
 
-The OMNIX FAT receipts satisfy all three requirements with a solution that goes beyond what MiCA specifies: PQC-signed records that are not just accurate and accessible but mathematically impossible to alter. The irrefutability is not claimed. It is architectural.
+The OMNIX FAT receipts satisfy all three requirements with a solution that goes beyond what MiCA specifies: PQC-signed records that are not just accurate and accessible but mathematically impossible to alter. The tamper-evidence is not a policy claim. It is architectural — built into the cryptographic structure of the record itself.
 
 ### The Ghost Compliance Risk Within MiCA Compliance
 
@@ -3866,7 +3866,7 @@ By 2032, OMNIX is governance infrastructure in the same sense that payment rails
 
 By 2035, quantum computers are capable of breaking classical cryptographic signatures. The governance records of every institution that did not migrate to PQC are retroactively vulnerable. The irrefutability they believed they had is now conditional — conditional on quantum computers not being used against their records.
 
-OMNIX governance records created since 2024 are not conditional. They are irrefutable. In 2035, the difference between conditional irrefutability and genuine irrefutability is the difference between a governance record that can be challenged and one that cannot. In regulatory proceedings. In litigation. In board accountability.
+OMNIX governance records created since 2024 are not conditional. They are irrefutable. In 2035, the difference between a governance record signed with classical cryptography and one signed with post-quantum cryptography is the difference between a record whose long-term integrity depends on computational assumptions — and one whose integrity is designed to hold regardless of how computing power evolves.
 
 That is the decade. That is what 2026–2035 decides.
 
@@ -3913,7 +3913,7 @@ The ghost is visible now. What you do next is your decision.
 ---
 
 **Anti-Replay Protection**
-An architectural mechanism ensuring each governance decision or parametric trigger is unique and cannot be replicated. Each action is bound to a specific moment, context, and cryptographic receipt — making replay attacks mathematically impossible. Used in insurance parametric systems and autonomous agent governance.
+An architectural mechanism ensuring each governance decision or parametric trigger is unique and cannot be replicated. Each action is bound to a specific moment, context, and cryptographic receipt — making replay attacks architecturally blocked at the cryptographic layer. Used in insurance parametric systems and autonomous agent governance.
 
 **AVM — Assumption Validity Monitor**
 OMNIX's continuous monitoring engine. Evaluates six signals simultaneously from admission through the entity's entire governance lifecycle. Detects drift before thresholds are crossed. Generates signed receipts for every evaluation cycle. Interval: configurable by domain (1 min to 4 hours standard range).
@@ -4385,7 +4385,7 @@ A governance system without structural human oversight is not being governed. It
 ---
 
 **V. A record created today must be verifiable in 2045.**
-Irrefutability that depends on computational assumptions that will be false in ten years is not irrefutability. It is temporary irrefutability. Governance records must be permanently irrefutable by design, not by current convention.
+Evidence whose integrity depends on computational assumptions that will be invalidated by quantum computing is not permanent evidence. It is conditionally valid evidence — adequate today, vulnerable in the medium term. Governance records must be permanently irrefutable by design, not by current convention.
 
 ---
 

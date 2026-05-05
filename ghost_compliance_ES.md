@@ -860,7 +860,7 @@ La Señal Seis — Consistencia Lógica — habría rechazado esta estructura en
 
 ### La Lección Única
 
-> **Cada sistema de gobernanza que valida en la admisión y aplica para siempre es vulnerable al cumplimiento fantasma. Todos y cada uno. Sin excepción.**
+> **Cada sistema de gobernanza que valida en la admisión y aplica para siempre está estructuralmente expuesto al cumplimiento fantasma. La vulnerabilidad es arquitectónica, no organizacional. Se aplica independientemente de cuán disciplinado sea el equipo, cuán riguroso sea el manual de reglas, o cuán frecuentes sean las revisiones manuales.**
 
 ---
 
@@ -1125,7 +1125,7 @@ SVB es el caso que más claramente ilustra la diferencia entre ver y convertir e
 
 > *Lo que el AVM habría dicho no es hipótesis. Es el resultado de aplicar una metodología de detección consistente a datos que ya existían. El sistema no necesitaba información nueva. Necesitaba una arquitectura nueva para convertir la información existente en acción a tiempo.*
 
-> *Cada crisis documentada aquí fue prevenible. No en teoría. Con la arquitectura correcta, en la práctica.*
+> *Cada crisis documentada aquí mostró señales detectables — semanas o meses antes del colapso — que una arquitectura de gobernanza continua fue diseñada para hacer visibles. La pregunta no era si las señales existían. Era si algún sistema las estaba observando.*
 
 ---
 
@@ -1970,7 +1970,7 @@ El Motor de Admisibilidad Estructural (Capa 0) valida que la decisión cumple lo
 
 Cada checkpoint evalúa una dimensión específica de gobernanza. La Pista de Auditoría Forense captura cada resultado de checkpoint, cada veto, cada aprobación, cada anulación — firmados criptográficamente con precisión de milisegundo.
 
-El resultado no es solo una decisión. Es una prueba irrefutable, firmada criptográficamente con post-criptografía cuántica, de gobernanza — válida ante cualquier regulador, cualquier auditor, cualquier tribunal.
+El resultado no es solo una decisión. Es una prueba de gobernanza firmada con criptografía post-cuántica — diseñada para satisfacer los requisitos de evidencia de reguladores, auditores y procedimientos legales en múltiples jurisdicciones.
 
 Lo que sigue es cómo esta arquitectura se calibra para cada uno de los nueve dominios que actualmente gobierna.
 
@@ -3342,7 +3342,7 @@ La decisión PQC tomada en 2024 ha madurado. Registros OMNIX creados desde la fu
 
 Para 2032, la gobernanza de calidad institucional ha dejado de ser un diferenciador competitivo y se ha convertido en un requisito de entrada al mercado. OMNIX es infraestructura de gobernanza en el mismo sentido que los rieles de pago son infraestructura de pago — no una ventaja competitiva opcional sino un componente de la plataforma estándar. Para 2035, las computadoras cuánticas son capaces de romper las firmas criptográficas clásicas. El Día Q ha llegado. Los registros institucionales con firmas clásicas son retroactivamente vulnerables. Los registros de gobernanza OMNIX creados desde 2024 no son condicionales. Son irrefutables.
 
-Y en 2035, la diferencia entre irrefutabilidad condicional e irrefutabilidad genuina es la diferencia entre un registro que puede cuestionarse y uno que no puede.
+Y en 2035, la diferencia entre un registro firmado con criptografía clásica y uno firmado con criptografía post-cuántica es la diferencia entre un registro cuya integridad depende de supuestos computacionales — y uno cuya integridad está diseñada para mantenerse independientemente de cómo evolucione el poder de cómputo.
 
 ---
 
@@ -3576,7 +3576,7 @@ Las siguientes categorías de condiciones activan automáticamente una revisión
 
 **SECCIÓN 4: CALIDAD DE EVIDENCIA**
 
-13. ¿Tus registros de gobernanza son irrefutables — firmados de una manera que hace que la alteración sea matemáticamente imposible — o son registros que podrían ser modificados por los administradores del sistema?
+13. ¿Tus registros de gobernanza están firmados criptográficamente de manera que cualquier alteración sea inmediatamente detectable — o son registros de log que podrían ser modificados por los administradores del sistema sin dejar rastro?
 
 14. ¿Tus registros de gobernanza están firmados con criptografía resistente a cuántica, o con algoritmos clásicos que serán vulnerables a la computación cuántica para 2030–2035?
 
@@ -3733,7 +3733,7 @@ Las crisis son los eventos extremos. El cumplimiento fantasma también genera un
 
 **Fricción regulatoria**: Las instituciones sin gobernanza verificable pasan tiempo significativo respondiendo a solicitudes de información regulatoria que sistemas correctamente documentados habrían respondido automáticamente y en tiempo real. El costo no es solo monetario — es la atención ejecutiva desviada de la creación de valor.
 
-**Costo de reconstrucción de reputación**: Una falla de gobernanza que habría sido prevenible con detección temprana, cuando ocurre, genera costos legales, regulatorios y de relaciones públicas que típicamente son múltiplos del costo de la intervención preventiva.
+**Costo de reconstrucción de reputación**: Una falla de gobernanza que mostró señales detectables antes de materializarse, cuando ocurre sin haber sido detectada, genera costos legales, regulatorios y de relaciones públicas que típicamente son múltiplos del costo de la infraestructura de monitoreo continuo.
 
 **El costo del cumplimiento fantasma no es solo el costo del fracaso eventual. Es el costo diario de operar con riesgo no medido.**
 
@@ -3829,7 +3829,7 @@ Un sistema que monitorea si se siguen las reglas, cuando las reglas ya no corres
 ---
 
 **II. La evidencia debe ser irrefutable o no es evidencia.**
-Un registro de gobernanza que puede ser alterado por un administrador del sistema no es un registro de gobernanza. Un registro que será criptográficamente vulnerable en 2030 no es permanente. La evidencia que solo es válida bajo las condiciones tecnológicas actuales no satisface el estándar de gobernanza institucional. La irrefutabilidad no es una propiedad técnica. Es un requisito de diseño.
+Un registro de gobernanza que puede ser alterado por un administrador del sistema no es un registro de gobernanza. Un registro que será criptográficamente vulnerable en 2030 no es permanente. La evidencia que solo es válida bajo las condiciones tecnológicas actuales no satisface el estándar de gobernanza institucional. La resistencia verificable a la manipulación no es una propiedad técnica opcional. Es un requisito de diseño para cualquier sistema de gobernanza que deba rendir cuentas ante reguladores, auditores y tribunales.
 
 ---
 
