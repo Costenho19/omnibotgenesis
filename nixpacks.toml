@@ -1,4 +1,4 @@
-# Nixpacks configuration — omnibotgenesis Telegram Bot
+# Nixpacks configuration — OMNIX Dashboard
 
 [phases.setup]
 nixPkgs = ["python311", "python311Packages.pip", "python311Packages.virtualenv"]
@@ -7,8 +7,9 @@ nixPkgs = ["python311", "python311Packages.pip", "python311Packages.virtualenv"]
 cmds = [
   "python3 -m venv /opt/venv",
   "/opt/venv/bin/pip install --upgrade pip",
-  "/opt/venv/bin/pip install -r requirements.txt"
+  "/opt/venv/bin/pip install -r requirements.txt",
+  "/opt/venv/bin/python -c \"import site; open(site.getsitepackages()[0] + '/omnix_local.pth', 'w').write('/app\\n')\" || true"
 ]
 
 [start]
-cmd = "/opt/venv/bin/python -u main.py"
+cmd = "PYTHONPATH=/app:/app/omnix_web:$PYTHONPATH /opt/venv/bin/gunicorn --bind=0.0.0.0:${PORT:-8080} --reuse-port --workers=2 --timeout=120 omnix_dashboard.app:app"
