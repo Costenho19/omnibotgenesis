@@ -14,6 +14,15 @@ import os
 import sys
 import atexit
 import logging
+
+# ── Path bootstrap (production deployment) ────────────────────────────────────
+# Ensure omnix_core, omnix_services, etc. are importable when gunicorn runs
+# from within the omnix_dashboard directory or any subdirectory.
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+# ─────────────────────────────────────────────────────────────────────────────
+
 from flask import Flask
 from flask_cors import CORS
 
