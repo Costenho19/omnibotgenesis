@@ -401,34 +401,34 @@ title = "Detection Is Not Governance — OMNIX Whitepaper"
 id = "a153E73KsqSwMEjRggmZ7"
 uri = "file://book_assets/01_ghost_compliance.svg"
 type = "image"
-title = "Gráfico 1 — Ghost Compliance: Fotografía vs. Video"
+title = "Gráfico 1 — Ghost Compliance"
 
 [[outputs]]
 id = "4CRLK61aLsJGI4-HtVqGt"
 uri = "file://book_assets/02_avm_signals.svg"
 type = "image"
-title = "Gráfico 2 — AVM: Las 6 Señales de Gobernanza"
+title = "Gráfico 2 — AVM 6 Señales"
 
 [[outputs]]
 id = "H_E2XztgrOTe7uKn51UoO"
 uri = "file://book_assets/03_architecture.svg"
 type = "image"
-title = "Gráfico 3 — Arquitectura Completa OMNIX"
+title = "Gráfico 3 — Arquitectura OMNIX"
 
 [[outputs]]
 id = "k9rjgANj9RKxNr2jub4KV"
 uri = "file://book_assets/04_nine_domains.svg"
 type = "image"
-title = "Gráfico 4 — Los 9 Dominios Verticales"
+title = "Gráfico 4 — 9 Dominios"
 
 [[outputs]]
 id = "_2lSqX05Lcm2XIplZRn8u"
 uri = "file://book_assets/05_forensic_trail.svg"
 type = "image"
-title = "Gráfico 5 — Forensic Audit Trail: 4 Rondas"
+title = "Gráfico 5 — Forensic Audit Trail"
 
 [[outputs]]
 id = "F6pzm-ur_6UO6RJQkYZJD"
 uri = "file://book_assets/06_pqc_timeline.svg"
 type = "image"
-title = "Gráfico 6 — Timeline Amenaza Cuántica"
+title = "Gráfico 6 — Timeline Cuántica"

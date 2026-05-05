@@ -1,91 +1,122 @@
-<svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, serif">
-  <rect width="900" height="520" fill="#0a0a0f"/>
+<svg viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg" font-family="'Georgia', serif">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#050D18"/>
+      <stop offset="100%" style="stop-color:#0A1628"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="640" fill="url(#bg2)"/>
+  <rect x="0" y="0" width="1000" height="3" fill="#C9A227"/>
 
   <!-- Title -->
-  <text x="450" y="42" text-anchor="middle" fill="#e8d5a3" font-size="22" font-weight="bold" letter-spacing="2">ASSUMPTION VALIDITY MONITOR</text>
-  <text x="450" y="65" text-anchor="middle" fill="#888" font-size="13" letter-spacing="1">Six Signals. One Truth. Continuous.</text>
-  <line x1="150" y1="78" x2="750" y2="78" stroke="#c9a84c" stroke-width="1" opacity="0.6"/>
+  <text x="500" y="48" text-anchor="middle" fill="#E5E4E2" font-size="24" font-weight="bold" letter-spacing="4">ASSUMPTION VALIDITY MONITOR</text>
+  <text x="500" y="72" text-anchor="middle" fill="#94A3B8" font-size="12" letter-spacing="3">SIX SIGNALS · ONE TRUTH · CONTINUOUS EVALUATION</text>
+  <line x1="60" y1="85" x2="940" y2="85" stroke="#C9A227" stroke-width="1" opacity="0.5"/>
 
-  <!-- Hexagon center -->
-  <!-- Center point: 450, 300 -->
-  <!-- Hexagon vertices (radius 160): -->
-  <!-- Top: 450, 140 -->
-  <!-- Top-right: 589, 220 -->
-  <!-- Bottom-right: 589, 380 -->
-  <!-- Bottom: 450, 460 -->
-  <!-- Bottom-left: 311, 380 -->
-  <!-- Top-left: 311, 220 -->
+  <!-- Hexagon center: 500, 350 / radius 190 -->
+  <!-- Vertices:
+    Top:          500, 160
+    Top-Right:    665, 255
+    Bottom-Right: 665, 445
+    Bottom:       500, 540
+    Bottom-Left:  335, 445
+    Top-Left:     335, 255
+  -->
 
-  <!-- Outer hexagon (max value) -->
-  <polygon points="450,140 589,220 589,380 450,460 311,380 311,220" fill="none" stroke="#2a2a3a" stroke-width="1.5"/>
-  <!-- Mid hexagon -->
-  <polygon points="450,220 509,255 509,325 450,360 391,325 391,255" fill="none" stroke="#2a2a3a" stroke-width="1"/>
-  <!-- Inner hexagon -->
-  <polygon points="450,260 477,275 477,305 450,320 423,305 423,275" fill="none" stroke="#2a2a3a" stroke-width="0.5"/>
+  <!-- Grid rings -->
+  <!-- 25% -->
+  <polygon points="500,303 541,326 541,374 500,398 459,374 459,326" fill="none" stroke="#1E293B" stroke-width="1"/>
+  <!-- 50% -->
+  <polygon points="500,255 583,303 583,398 500,445 417,398 417,303" fill="none" stroke="#1E293B" stroke-width="1"/>
+  <!-- 75% -->
+  <polygon points="500,208 624,279 624,421 500,493 376,421 376,279" fill="none" stroke="#1E293B" stroke-width="1"/>
+  <!-- 100% outer -->
+  <polygon points="500,160 665,255 665,445 500,540 335,445 335,255" fill="none" stroke="#1E293B" stroke-width="1.5"/>
 
-  <!-- Axis lines -->
-  <line x1="450" y1="300" x2="450" y2="140" stroke="#333" stroke-width="1"/>
-  <line x1="450" y1="300" x2="589" y2="220" stroke="#333" stroke-width="1"/>
-  <line x1="450" y1="300" x2="589" y2="380" stroke="#333" stroke-width="1"/>
-  <line x1="450" y1="300" x2="450" y2="460" stroke="#333" stroke-width="1"/>
-  <line x1="450" y1="300" x2="311" y2="380" stroke="#333" stroke-width="1"/>
-  <line x1="450" y1="300" x2="311" y2="220" stroke="#333" stroke-width="1"/>
+  <!-- Axis lines from center -->
+  <line x1="500" y1="350" x2="500" y2="160" stroke="#1E293B" stroke-width="1"/>
+  <line x1="500" y1="350" x2="665" y2="255" stroke="#1E293B" stroke-width="1"/>
+  <line x1="500" y1="350" x2="665" y2="445" stroke="#1E293B" stroke-width="1"/>
+  <line x1="500" y1="350" x2="500" y2="540" stroke="#1E293B" stroke-width="1"/>
+  <line x1="500" y1="350" x2="335" y2="445" stroke="#1E293B" stroke-width="1"/>
+  <line x1="500" y1="350" x2="335" y2="255" stroke="#1E293B" stroke-width="1"/>
 
-  <!-- Data polygon (values: P=82%, SC=71%, RE=65%, SR=78%, TP=88%, LC=74%) -->
-  <!-- Probability: top, 82% of 160 = 131px up from center → y = 300-131 = 169, x=450 -->
-  <!-- Signal Coherence: top-right, 71% → 114px → 450+114*cos30, 300-114*sin30 = 450+98, 300-57 = 548, 243 -->
-  <!-- Risk Exposure: bottom-right, 65% → 104px → 450+104*cos30, 300+104*sin30 = 450+90, 300+52 = 540, 352 -->
-  <!-- Stress Resilience: bottom, 78% → 125px → 450, 300+125 = 450, 425 -->
-  <!-- Trend Persistence: bottom-left, 88% → 141px → 450-141*cos30, 300+141*sin30 = 450-122, 300+70 = 328, 370 -->
-  <!-- Logic Consistency: top-left, 74% → 118px → 450-118*cos30, 300-118*sin30 = 450-102, 300-59 = 348, 241 -->
-  <polygon points="450,169 548,243 540,352 450,425 328,370 348,241" 
-           fill="#c9a84c" fill-opacity="0.15" stroke="#c9a84c" stroke-width="2"/>
+  <!-- Data polygon (82%, 71%, 65%, 78%, 88%, 74%)
+    Top (82%):          500, 160 + (1-0.82)*190 = 160+34 = 194  → 500, 194
+    Top-Right (71%):    500+0.71*165, 255+0.71*(-95) = 500+117, 255-67 = 617, 188  wait let me recalc
 
-  <!-- Signal dots -->
-  <circle cx="450" cy="169" r="5" fill="#c9a84c"/>
-  <circle cx="548" cy="243" r="5" fill="#c9a84c"/>
-  <circle cx="540" cy="352" r="5" fill="#c9a84c"/>
-  <circle cx="450" cy="425" r="5" fill="#c9a84c"/>
-  <circle cx="328" cy="370" r="5" fill="#c9a84c"/>
-  <circle cx="348" cy="241" r="5" fill="#c9a84c"/>
+    Center: 500,350
+    Vertex directions (from center):
+    Top:         dx=0,   dy=-190  → at 100%: 500,160
+    Top-Right:   dx=+165, dy=-95  → at 100%: 665,255
+    Bot-Right:   dx=+165, dy=+95  → at 100%: 665,445
+    Bottom:      dx=0,   dy=+190  → at 100%: 500,540
+    Bot-Left:    dx=-165, dy=+95  → at 100%: 335,445
+    Top-Left:    dx=-165, dy=-95  → at 100%: 335,255
+
+    Prob(82%):      500+0*0.82, 350-190*0.82 = 500, 350-155.8 = 500, 194
+    SigCoh(71%):    500+165*0.71, 350-95*0.71 = 500+117, 350-67 = 617, 283
+    RiskExp(65%):   500+165*0.65, 350+95*0.65 = 500+107, 350+62 = 607, 412
+    StressRes(78%): 500+0*0.78, 350+190*0.78 = 500, 350+148 = 500, 498
+    TrendPer(88%):  500-165*0.88, 350+95*0.88 = 500-145, 350+84 = 355, 434
+    LogicCon(74%):  500-165*0.74, 350-95*0.74 = 500-122, 350-70 = 378, 280
+  -->
+  <polygon points="500,194 617,283 607,412 500,498 355,434 378,280"
+           fill="#C9A227" fill-opacity="0.12" stroke="#C9A227" stroke-width="2"/>
+
+  <!-- Signal endpoint dots -->
+  <circle cx="500" cy="194" r="6" fill="#C9A227"/>
+  <circle cx="617" cy="283" r="6" fill="#3B82F6"/>
+  <circle cx="607" cy="412" r="6" fill="#EF4444"/>
+  <circle cx="500" cy="498" r="6" fill="#10B981"/>
+  <circle cx="355" cy="434" r="6" fill="#8B5CF6"/>
+  <circle cx="378" cy="280" r="6" fill="#06B6D4"/>
 
   <!-- Center dot -->
-  <circle cx="450" cy="300" r="4" fill="#4a9eff"/>
+  <circle cx="500" cy="350" r="5" fill="#C9A227" opacity="0.6"/>
 
-  <!-- Labels -->
-  <!-- Probability Score - top -->
-  <text x="450" y="122" text-anchor="middle" fill="#e8d5a3" font-size="12" font-weight="bold">PROBABILITY SCORE</text>
-  <text x="450" y="136" text-anchor="middle" fill="#c9a84c" font-size="11">82%</text>
+  <!-- ========== LABELS — well spaced, nothing overlapping ========== -->
 
-  <!-- Signal Coherence - top right -->
-  <text x="618" y="215" text-anchor="start" fill="#e8d5a3" font-size="12" font-weight="bold">SIGNAL</text>
-  <text x="618" y="229" text-anchor="start" fill="#e8d5a3" font-size="12" font-weight="bold">COHERENCE</text>
-  <text x="618" y="245" text-anchor="start" fill="#c9a84c" font-size="11">71%</text>
+  <!-- TOP: Probability Score -->
+  <rect x="390" y="100" width="220" height="50" rx="6" fill="#0A1628" stroke="#C9A227" stroke-width="1"/>
+  <text x="500" y="121" text-anchor="middle" fill="#C9A227" font-size="11" font-weight="bold" letter-spacing="1">PROBABILITY SCORE</text>
+  <text x="500" y="140" text-anchor="middle" fill="#E5E4E2" font-size="18" font-weight="bold">82%</text>
+  <line x1="500" y1="150" x2="500" y2="192" stroke="#C9A227" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
 
-  <!-- Risk Exposure - bottom right -->
-  <text x="608" y="368" text-anchor="start" fill="#e8d5a3" font-size="12" font-weight="bold">RISK</text>
-  <text x="608" y="382" text-anchor="start" fill="#e8d5a3" font-size="12" font-weight="bold">EXPOSURE</text>
-  <text x="608" y="398" text-anchor="start" fill="#ff6b6b" font-size="11">65% ⚠</text>
+  <!-- TOP RIGHT: Signal Coherence -->
+  <rect x="680" y="210" width="210" height="50" rx="6" fill="#0A1628" stroke="#3B82F6" stroke-width="1"/>
+  <text x="785" y="231" text-anchor="middle" fill="#3B82F6" font-size="11" font-weight="bold" letter-spacing="1">SIGNAL COHERENCE</text>
+  <text x="785" y="250" text-anchor="middle" fill="#E5E4E2" font-size="18" font-weight="bold">71%</text>
+  <line x1="680" y1="235" x2="619" y2="285" stroke="#3B82F6" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
 
-  <!-- Stress Resilience - bottom -->
-  <text x="450" y="458" text-anchor="middle" fill="#e8d5a3" font-size="12" font-weight="bold">STRESS RESILIENCE</text>
-  <text x="450" y="474" text-anchor="middle" fill="#c9a84c" font-size="11">78%</text>
+  <!-- BOTTOM RIGHT: Risk Exposure -->
+  <rect x="680" y="390" width="210" height="55" rx="6" fill="#0A1628" stroke="#EF4444" stroke-width="1"/>
+  <text x="785" y="411" text-anchor="middle" fill="#EF4444" font-size="11" font-weight="bold" letter-spacing="1">RISK EXPOSURE</text>
+  <text x="785" y="430" text-anchor="middle" fill="#E5E4E2" font-size="18" font-weight="bold">65%</text>
+  <text x="785" y="446" text-anchor="middle" fill="#EF4444" font-size="9">⚠ Below threshold</text>
+  <line x1="680" y1="415" x2="609" y2="413" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
 
-  <!-- Trend Persistence - bottom left -->
-  <text x="190" y="368" text-anchor="middle" fill="#e8d5a3" font-size="12" font-weight="bold">TREND</text>
-  <text x="190" y="382" text-anchor="middle" fill="#e8d5a3" font-size="12" font-weight="bold">PERSISTENCE</text>
-  <text x="190" y="398" text-anchor="middle" fill="#44ff88" font-size="11">88% ✓</text>
+  <!-- BOTTOM: Stress Resilience -->
+  <rect x="390" y="516" width="220" height="50" rx="6" fill="#0A1628" stroke="#10B981" stroke-width="1"/>
+  <text x="500" y="537" text-anchor="middle" fill="#10B981" font-size="11" font-weight="bold" letter-spacing="1">STRESS RESILIENCE</text>
+  <text x="500" y="556" text-anchor="middle" fill="#E5E4E2" font-size="18" font-weight="bold">78%</text>
+  <line x1="500" y1="516" x2="500" y2="500" stroke="#10B981" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
 
-  <!-- Logic Consistency - top left -->
-  <text x="200" y="228" text-anchor="middle" fill="#e8d5a3" font-size="12" font-weight="bold">LOGIC</text>
-  <text x="200" y="242" text-anchor="middle" fill="#e8d5a3" font-size="12" font-weight="bold">CONSISTENCY</text>
-  <text x="200" y="258" text-anchor="middle" fill="#c9a84c" font-size="11">74%</text>
+  <!-- BOTTOM LEFT: Trend Persistence -->
+  <rect x="110" y="390" width="210" height="55" rx="6" fill="#0A1628" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="215" y="411" text-anchor="middle" fill="#8B5CF6" font-size="11" font-weight="bold" letter-spacing="1">TREND PERSISTENCE</text>
+  <text x="215" y="430" text-anchor="middle" fill="#E5E4E2" font-size="18" font-weight="bold">88%</text>
+  <text x="215" y="446" text-anchor="middle" fill="#10B981" font-size="9">✓ Strong signal</text>
+  <line x1="320" y1="415" x2="353" y2="435" stroke="#8B5CF6" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
 
-  <!-- Legend -->
-  <rect x="340" y="490" width="220" height="22" rx="4" fill="#1a1a2e" stroke="#333"/>
-  <polygon points="355,497 400,497 400,506 355,506" fill="#c9a84c" fill-opacity="0.3" stroke="#c9a84c" stroke-width="1"/>
-  <text x="410" y="507" fill="#888" font-size="10">Current governance state · Session active</text>
+  <!-- TOP LEFT: Logic Consistency -->
+  <rect x="110" y="210" width="210" height="50" rx="6" fill="#0A1628" stroke="#06B6D4" stroke-width="1"/>
+  <text x="215" y="231" text-anchor="middle" fill="#06B6D4" font-size="11" font-weight="bold" letter-spacing="1">LOGIC CONSISTENCY</text>
+  <text x="215" y="250" text-anchor="middle" fill="#E5E4E2" font-size="18" font-weight="bold">74%</text>
+  <line x1="320" y1="235" x2="376" y2="281" stroke="#06B6D4" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
 
-  <!-- Caption -->
-  <text x="450" y="515" text-anchor="middle" fill="#555" font-size="9" letter-spacing="1">OMNIX QUANTUM · AVM Continuous Evaluation · All six signals evaluated simultaneously</text>
+  <!-- Bottom bar -->
+  <rect x="0" y="610" width="1000" height="30" fill="#050D18"/>
+  <text x="500" y="630" text-anchor="middle" fill="#475569" font-size="10" letter-spacing="2">OMNIX QUANTUM  ·  omnixquantum.net  ·  AVM Continuous Signal Evaluation</text>
 </svg>

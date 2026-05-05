@@ -1,78 +1,121 @@
-<svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, serif">
-  <rect width="900" height="500" fill="#0a0a0f"/>
+<svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" font-family="'Georgia', serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#050D18"/>
+      <stop offset="100%" style="stop-color:#0A1628"/>
+    </linearGradient>
+    <linearGradient id="leftPanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F1E35"/>
+      <stop offset="100%" style="stop-color:#080F1E"/>
+    </linearGradient>
+    <linearGradient id="rightPanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A1F14"/>
+      <stop offset="100%" style="stop-color:#061210"/>
+    </linearGradient>
+  </defs>
 
-  <!-- Title -->
-  <text x="450" y="45" text-anchor="middle" fill="#e8d5a3" font-size="22" font-weight="bold" letter-spacing="2">THE ANATOMY OF GHOST COMPLIANCE</text>
-  <line x1="150" y1="58" x2="750" y2="58" stroke="#c9a84c" stroke-width="1" opacity="0.6"/>
+  <!-- Background -->
+  <rect width="1000" height="600" fill="url(#bgGrad)"/>
 
-  <!-- LEFT SIDE: Conventional System -->
-  <text x="225" y="95" text-anchor="middle" fill="#888" font-size="13" letter-spacing="1">CONVENTIONAL GOVERNANCE</text>
+  <!-- Top gold line -->
+  <rect x="0" y="0" width="1000" height="3" fill="#C9A227"/>
 
-  <!-- Timeline line left -->
-  <line x1="225" y1="110" x2="225" y2="420" stroke="#333" stroke-width="2"/>
+  <!-- Title block -->
+  <text x="500" y="48" text-anchor="middle" fill="#E5E4E2" font-size="24" font-weight="bold" letter-spacing="4">GHOST COMPLIANCE</text>
+  <text x="500" y="72" text-anchor="middle" fill="#94A3B8" font-size="12" letter-spacing="3">THE SILENT FAILURE MODE OF GOVERNANCE SYSTEMS</text>
+  <line x1="60" y1="85" x2="940" y2="85" stroke="#C9A227" stroke-width="1" opacity="0.5"/>
 
-  <!-- Admission point -->
-  <circle cx="225" cy="140" r="10" fill="#c9a84c"/>
-  <text x="250" y="145" fill="#e8d5a3" font-size="12">Admission — System captures state</text>
+  <!-- LEFT PANEL: Conventional -->
+  <rect x="40" y="100" width="420" height="450" rx="10" fill="url(#leftPanelGrad)" stroke="#1E293B" stroke-width="1.5"/>
+  <rect x="40" y="100" width="420" height="44" rx="10" fill="#1E293B"/>
+  <rect x="40" y="130" width="420" height="14" fill="#1E293B"/>
+  <text x="250" y="128" text-anchor="middle" fill="#94A3B8" font-size="12" letter-spacing="3">CONVENTIONAL GOVERNANCE</text>
 
-  <!-- Photo icon -->
-  <rect x="165" y="165" width="120" height="75" rx="6" fill="#1a1a2e" stroke="#c9a84c" stroke-width="1.5"/>
-  <text x="225" y="192" text-anchor="middle" fill="#c9a84c" font-size="11" font-weight="bold">📷 PHOTOGRAPH</text>
-  <text x="225" y="210" text-anchor="middle" fill="#888" font-size="10">Volatility: 12%</text>
-  <text x="225" y="224" text-anchor="middle" fill="#888" font-size="10">Correlation: 0.23 · Liquidity: HIGH</text>
+  <!-- Step 1: Admission -->
+  <rect x="80" y="165" width="340" height="70" rx="6" fill="#0F1E35" stroke="#1E293B" stroke-width="1"/>
+  <circle cx="108" cy="200" r="16" fill="#1E293B" stroke="#C9A227" stroke-width="1.5"/>
+  <text x="108" y="205" text-anchor="middle" fill="#C9A227" font-size="13" font-weight="bold">1</text>
+  <text x="230" y="191" text-anchor="middle" fill="#E5E4E2" font-size="12" font-weight="bold">ADMISSION — PHOTOGRAPH TAKEN</text>
+  <text x="230" y="212" text-anchor="middle" fill="#94A3B8" font-size="10">Volatility: 12% · Correlation: 0.23 · Liquidity: HIGH</text>
+  <text x="230" y="228" text-anchor="middle" fill="#94A3B8" font-size="10">Macro context: Stable · Score: APPROVED</text>
 
-  <!-- Drift zone -->
-  <rect x="140" y="255" width="170" height="90" rx="6" fill="#1a0a0a" stroke="#8b2222" stroke-width="1.5" stroke-dasharray="6,3"/>
-  <text x="225" y="275" text-anchor="middle" fill="#ff4444" font-size="11" font-weight="bold">REALITY DRIFTS</text>
-  <text x="225" y="293" text-anchor="middle" fill="#888" font-size="10">Volatility: 34%</text>
-  <text x="225" y="308" text-anchor="middle" fill="#888" font-size="10">Correlation: 0.81 · Liquidity: LOW</text>
-  <text x="225" y="324" text-anchor="middle" fill="#666" font-size="9">System still enforces against</text>
-  <text x="225" y="337" text-anchor="middle" fill="#666" font-size="9">the January photograph</text>
+  <!-- Arrow down -->
+  <line x1="250" y1="235" x2="250" y2="268" stroke="#1E293B" stroke-width="2"/>
+  <polygon points="244,265 250,275 256,265" fill="#1E293B"/>
 
-  <!-- System says GREEN -->
-  <rect x="165" y="360" width="120" height="40" rx="6" fill="#0d2a0d" stroke="#2a8a2a" stroke-width="1.5"/>
-  <text x="225" y="378" text-anchor="middle" fill="#44ff44" font-size="13" font-weight="bold">● COMPLIANT</text>
-  <text x="225" y="393" text-anchor="middle" fill="#666" font-size="9">Dashboard says green</text>
+  <!-- Step 2: World moves -->
+  <rect x="80" y="278" width="340" height="70" rx="6" fill="#0F1E35" stroke="#EF4444" stroke-width="1" stroke-dasharray="5,3"/>
+  <circle cx="108" cy="313" r="16" fill="#1a0808" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="108" y="318" text-anchor="middle" fill="#EF4444" font-size="13" font-weight="bold">2</text>
+  <text x="230" y="300" text-anchor="middle" fill="#EF4444" font-size="12" font-weight="bold">REALITY DRIFTS — UNDETECTED</text>
+  <text x="230" y="320" text-anchor="middle" fill="#94A3B8" font-size="10">Volatility: 34% · Correlation: 0.81 · Liquidity: LOW</text>
+  <text x="230" y="338" text-anchor="middle" fill="#94A3B8" font-size="10">Macro context: Stressed · System: still enforcing Jan data</text>
 
-  <!-- CRISIS label -->
-  <text x="225" y="435" text-anchor="middle" fill="#ff4444" font-size="11">Crisis arrives. No warning.</text>
+  <!-- Arrow down -->
+  <line x1="250" y1="348" x2="250" y2="378" stroke="#1E293B" stroke-width="2"/>
+  <polygon points="244,375 250,385 256,375" fill="#1E293B"/>
 
-  <!-- CENTER DIVIDER -->
-  <line x1="450" y1="70" x2="450" y2="460" stroke="#333" stroke-width="1" stroke-dasharray="8,4"/>
-  <text x="450" y="465" text-anchor="middle" fill="#444" font-size="11">vs</text>
+  <!-- Step 3: System says green -->
+  <rect x="80" y="388" width="340" height="60" rx="6" fill="#0A1F0A" stroke="#10B981" stroke-width="1.5"/>
+  <text x="250" y="412" text-anchor="middle" fill="#10B981" font-size="13" font-weight="bold">● COMPLIANT — Dashboard Green</text>
+  <text x="250" y="432" text-anchor="middle" fill="#64748B" font-size="10">System enforcing against January photograph</text>
 
-  <!-- RIGHT SIDE: OMNIX -->
-  <text x="675" y="95" text-anchor="middle" fill="#c9a84c" font-size="13" letter-spacing="1">OMNIX GOVERNANCE</text>
+  <!-- Arrow down -->
+  <line x1="250" y1="448" x2="250" y2="475" stroke="#EF4444" stroke-width="2"/>
+  <polygon points="244,472 250,482 256,472" fill="#EF4444"/>
 
-  <!-- Timeline line right -->
-  <line x1="675" y1="110" x2="675" y2="420" stroke="#c9a84c" stroke-width="2" opacity="0.4"/>
+  <!-- Step 4: Crisis -->
+  <rect x="80" y="482" width="340" height="42" rx="6" fill="#1a0808" stroke="#EF4444" stroke-width="2"/>
+  <text x="250" y="507" text-anchor="middle" fill="#EF4444" font-size="13" font-weight="bold">CRISIS — NO WARNING GENERATED</text>
 
-  <!-- CAG Point -->
-  <circle cx="675" cy="140" r="10" fill="#c9a84c"/>
-  <text x="700" y="145" fill="#e8d5a3" font-size="12">CAG — Admission Score: 87</text>
+  <!-- RIGHT PANEL: OMNIX -->
+  <rect x="540" y="100" width="420" height="450" rx="10" fill="url(#rightPanelGrad)" stroke="#1E293B" stroke-width="1.5"/>
+  <rect x="540" y="100" width="420" height="44" rx="10" fill="#0A1F14"/>
+  <rect x="540" y="130" width="420" height="14" fill="#0A1F14"/>
+  <text x="750" y="128" text-anchor="middle" fill="#C9A227" font-size="12" letter-spacing="3">OMNIX QUANTUM GOVERNANCE</text>
 
-  <!-- Continuous monitoring -->
-  <rect x="590" y="165" width="170" height="75" rx="6" fill="#0a1a2e" stroke="#4a9eff" stroke-width="1.5"/>
-  <text x="675" y="187" text-anchor="middle" fill="#4a9eff" font-size="11" font-weight="bold">🎥 LIVE MONITORING</text>
-  <text x="675" y="205" text-anchor="middle" fill="#888" font-size="10">AVM evaluating 6 signals</text>
-  <text x="675" y="220" text-anchor="middle" fill="#888" font-size="10">continuously · in real time</text>
-  <text x="675" y="234" text-anchor="middle" fill="#888" font-size="10">PQC receipt per decision</text>
+  <!-- Step 1: CAG -->
+  <rect x="580" y="165" width="340" height="70" rx="6" fill="#071512" stroke="#C9A227" stroke-width="1.5"/>
+  <circle cx="608" cy="200" r="16" fill="#1a1400" stroke="#C9A227" stroke-width="1.5"/>
+  <text x="608" y="205" text-anchor="middle" fill="#C9A227" font-size="13" font-weight="bold">1</text>
+  <text x="730" y="191" text-anchor="middle" fill="#E5E4E2" font-size="12" font-weight="bold">CAG — ADMISSION + COMPREHENSION</text>
+  <text x="730" y="212" text-anchor="middle" fill="#94A3B8" font-size="10">4 axes evaluated simultaneously · Admission Score: 87</text>
+  <text x="730" y="228" text-anchor="middle" fill="#94A3B8" font-size="10">Reference state captured with mathematical precision</text>
 
-  <!-- Drift detected -->
-  <rect x="590" y="255" width="170" height="70" rx="6" fill="#1a1500" stroke="#ffaa00" stroke-width="1.5"/>
-  <text x="675" y="275" text-anchor="middle" fill="#ffaa00" font-size="11" font-weight="bold">⚡ DRIFT DETECTED</text>
-  <text x="675" y="293" text-anchor="middle" fill="#888" font-size="10">Signal coherence falling</text>
-  <text x="675" y="308" text-anchor="middle" fill="#888" font-size="10">Stress resilience at threshold</text>
-  <text x="675" y="322" text-anchor="middle" fill="#888" font-size="9">Alert generated → Human review</text>
+  <!-- Arrow down -->
+  <line x1="750" y1="235" x2="750" y2="268" stroke="#C9A227" stroke-width="2" opacity="0.5"/>
+  <polygon points="744,265 750,275 756,265" fill="#C9A227" opacity="0.5"/>
 
-  <!-- System responds -->
-  <rect x="615" y="340" width="120" height="55" rx="6" fill="#0a1a0a" stroke="#44ff44" stroke-width="1.5"/>
-  <text x="675" y="358" text-anchor="middle" fill="#44ff44" font-size="11" font-weight="bold">GOVERNED</text>
-  <text x="675" y="374" text-anchor="middle" fill="#888" font-size="10">Intervention before</text>
-  <text x="675" y="388" text-anchor="middle" fill="#888" font-size="10">crisis materializes</text>
+  <!-- Step 2: AVM -->
+  <rect x="580" y="278" width="340" height="70" rx="6" fill="#071512" stroke="#3B82F6" stroke-width="1.5"/>
+  <circle cx="608" cy="313" r="16" fill="#071522" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="608" y="318" text-anchor="middle" fill="#3B82F6" font-size="13" font-weight="bold">2</text>
+  <text x="730" y="300" text-anchor="middle" fill="#E5E4E2" font-size="12" font-weight="bold">AVM — CONTINUOUS MONITORING</text>
+  <text x="730" y="320" text-anchor="middle" fill="#94A3B8" font-size="10">6 signals evaluated in real time · drift detected early</text>
+  <text x="730" y="338" text-anchor="middle" fill="#94A3B8" font-size="10">Signal coherence falling · stress resilience at threshold</text>
 
-  <text x="675" y="435" text-anchor="middle" fill="#44ff44" font-size="11">Problem resolved. Evidence preserved.</text>
+  <!-- Arrow down -->
+  <line x1="750" y1="348" x2="750" y2="378" stroke="#C9A227" stroke-width="2" opacity="0.5"/>
+  <polygon points="744,375 750,385 756,375" fill="#C9A227" opacity="0.5"/>
 
-  <!-- Bottom caption -->
-  <text x="450" y="490" text-anchor="middle" fill="#555" font-size="10" letter-spacing="1">OMNIX QUANTUM · omnixquantum.net · Ghost Compliance Framework</text>
+  <!-- Step 3: Alert -->
+  <rect x="580" y="388" width="340" height="60" rx="6" fill="#071520" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="750" y="412" text-anchor="middle" fill="#8B5CF6" font-size="13" font-weight="bold">⚡ ALERT — Human Review Triggered</text>
+  <text x="750" y="432" text-anchor="middle" fill="#64748B" font-size="10">PQC-signed receipt generated · intervention window open</text>
+
+  <!-- Arrow down -->
+  <line x1="750" y1="448" x2="750" y2="475" stroke="#10B981" stroke-width="2"/>
+  <polygon points="744,472 750,482 756,472" fill="#10B981"/>
+
+  <!-- Step 4: Resolved -->
+  <rect x="580" y="482" width="340" height="42" rx="6" fill="#071512" stroke="#10B981" stroke-width="2"/>
+  <text x="750" y="507" text-anchor="middle" fill="#10B981" font-size="13" font-weight="bold">RESOLVED — Evidence Preserved</text>
+
+  <!-- Center VS -->
+  <text x="500" y="335" text-anchor="middle" fill="#1E293B" font-size="28" font-weight="bold">VS</text>
+  <line x1="500" y1="100" x2="500" y2="550" stroke="#1E293B" stroke-width="1.5"/>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="570" width="1000" height="30" fill="#050D18"/>
+  <text x="500" y="590" text-anchor="middle" fill="#475569" font-size="10" letter-spacing="2">OMNIX QUANTUM  ·  omnixquantum.net  ·  Continuous Governance Infrastructure</text>
 </svg>
