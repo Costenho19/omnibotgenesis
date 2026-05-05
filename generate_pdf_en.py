@@ -218,14 +218,14 @@ def build_cover(styles):
     e.append(Paragraph('COMPLIANCE', styles['cover_title']))
     e.append(Spacer(1, 6*mm))
     e.append(HRFlowable(width='50%', thickness=1.5, color=GOLD, spaceAfter=16))
-    e.append(Paragraph('La Infraestructura de Gobernanza<br/>Que los Mercados Aún No Han Construido', styles['cover_sub']))
+    e.append(Paragraph('The Governance Infrastructure<br/>Markets Have Not Yet Built', styles['cover_sub']))
     e.append(Spacer(1, 3*cm))
     e.append(Paragraph('Harold Nunes', styles['cover_author']))
     e.append(Spacer(1, 4*mm))
     e.append(Paragraph('OMNIX Quantum', styles['cover_brand']))
     e.append(Spacer(1, 5*cm))
     e.append(HRFlowable(width='100%', thickness=1.5, color=GOLD, spaceAfter=12))
-    e.append(Paragraph('© 2026 Harold Nunes / OMNIX Quantum · omnixquantum.net · Primera Edición', styles['cover_copy']))
+    e.append(Paragraph('© 2026 Harold Nunes / OMNIX Quantum · omnixquantum.net · First Edition', styles['cover_copy']))
     e.append(PageBreak())
     return e
 
@@ -237,38 +237,38 @@ def build_toc(styles):
     e.append(HRFlowable(width='100%', thickness=1, color=GOLD, spaceAfter=18))
 
     sections = [
-        ('part', 'PART I: EL PROBLEMA DEL CUMPLIMIENTO FANTASMA'),
-        ('ch',   'Capítulo 1 — Cumplimiento Fantasma: El Nombre Para Lo Que Ya Sabes'),
-        ('ch',   'Capítulo 2 — Deriva Post-Admisión: Cuando la Fotografía Se Convierte en Mentira'),
-        ('ch',   'Capítulo 3 — Tres Fallas, Un Patrón: Terra, SVB y FTX'),
-        ('sp',   'Intermedio — Lo Que el AVM Habría Dicho'),
-        ('part', 'PART II: LA ARQUITECTURA OMNIX'),
-        ('ch',   'Capítulo 4 — La Puerta de Admisión de Contexto'),
-        ('ch',   'Capítulo 5 — Las Seis Señales: Cómo el AVM Lee la Realidad'),
-        ('ch',   'Capítulo 6 — El Enrutador de Riesgo Sistémico'),
-        ('ch',   'Capítulo 7 — El Rastro de Auditoría Forense'),
-        ('ch',   'Capítulo 8 — Anulación Humana: Autoridad Con Responsabilidad'),
-        ('ch',   'Capítulo 9 — Criptografía Post-Cuántica'),
-        ('part', 'PART III: NUEVE VERTICALES DE GOBERNANZA'),
-        ('ch',   'Capítulo 10 — La Arquitectura de Nueve Dominios'),
-        ('ch',   'Capítulos 11–19 — Stablecoins · Trading · IA Médica · Robótica · Tokenización · Seguros · Energía · Crédito Islámico · Agentes Autónomos'),
-        ('part', 'PARTE IV: EL CONTEXTO REGULATORIO'),
-        ('ch',   'Capítulo 20 — MiCA: La Respuesta de Europa'),
-        ('ch',   'Capítulo 21 — VARA: Cómo Dubái Construyó el Marco Más Completo'),
-        ('ch',   'Capítulo 22 — La Ley de IA de la UE: Cuando el Riesgo Se Convierte en Ley'),
-        ('part', 'PARTE V: EL FUNDADOR Y LA VISIÓN'),
-        ('ch',   'Capítulo 23 — Construido Desde Cero: La Historia de OMNIX'),
-        ('ch',   'Capítulo 24 — 2026–2035: La Década Que Decide Todo'),
-        ('sp',   'Epílogo — El Cumplimiento Fantasma No Sobrevivirá a la Luz'),
+        ('part', 'PART I: THE GHOST COMPLIANCE PROBLEM'),
+        ('ch',   'Chapter 1 — Ghost Compliance: The Name for What You Already Know'),
+        ('ch',   'Chapter 2 — Post-Admission Drift: When the Photograph Becomes a Lie'),
+        ('ch',   'Chapter 3 — Three Failures, One Pattern: Terra, SVB and FTX'),
+        ('sp',   'Interlude — What the AVM Would Have Said'),
+        ('part', 'PART II: THE OMNIX ARCHITECTURE'),
+        ('ch',   'Chapter 4 — The Context Admission Gate'),
+        ('ch',   'Chapter 5 — The Six Signals: How the AVM Reads Reality'),
+        ('ch',   'Chapter 6 — The Systemic Risk Router'),
+        ('ch',   'Chapter 7 — The Forensic Audit Trail'),
+        ('ch',   'Chapter 8 — Human Override: Authority With Accountability'),
+        ('ch',   'Chapter 9 — Post-Quantum Cryptography'),
+        ('part', 'PART III: NINE GOVERNANCE VERTICALS'),
+        ('ch',   'Chapter 10 — The Architecture of Nine Domains'),
+        ('ch',   'Chapters 11–19 — Stablecoins · Trading · Medical AI · Robotics · Real Estate · Insurance · Energy · Islamic Credit · Autonomous Agents'),
+        ('part', 'PART IV: THE REGULATORY CONTEXT'),
+        ('ch',   'Chapter 20 — MiCA: Europe\'s Answer'),
+        ('ch',   'Chapter 21 — VARA: How Dubai Built the World\'s Most Complete Framework'),
+        ('ch',   'Chapter 22 — The EU AI Act: When Risk Becomes Law'),
+        ('part', 'PART V: THE FOUNDER AND THE VISION'),
+        ('ch',   'Chapter 23 — Built From a Diagnosis: The OMNIX Story'),
+        ('ch',   'Chapter 24 — 2026–2035: The Decade That Decides Everything'),
+        ('sp',   'Epilogue — Ghost Compliance Will Not Survive the Light'),
         ('part', 'APPENDICES'),
-        ('sp',   'Apéndice A — Glosario Técnico'),
-        ('sp',   'Apéndice B — Marco Regulatorio Comparado'),
-        ('sp',   'Apéndice C — Descripción de Señales AVM'),
-        ('sp',   'Apéndice D — Índice Analítico'),
-        ('sp',   'Apéndice E — El Costo del Cumplimiento Fantasma'),
-        ('sp',   'Apéndice F — Manual del Consejo Directivo'),
-        ('sp',   'Apéndice G — El Manifiesto de Gobernanza OMNIX'),
-        ('sp',   'Apéndice H — El Recibo Verificable'),
+        ('sp',   'Appendix A — Technical Glossary'),
+        ('sp',   'Appendix B — Comparative Regulatory Framework'),
+        ('sp',   'Appendix C — AVM Signal Descriptions'),
+        ('sp',   'Appendix D — Analytical Index'),
+        ('sp',   'Appendix E — The Cost of Ghost Compliance'),
+        ('sp',   'Appendix F — Board of Directors Manual'),
+        ('sp',   'Appendix G — The OMNIX Governance Manifesto'),
+        ('sp',   'Appendix H — The Verifiable Receipt'),
     ]
 
     for kind, title in sections:
