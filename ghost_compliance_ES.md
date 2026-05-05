@@ -266,6 +266,36 @@ Este libro trata sobre la brecha entre esas dos preguntas. Sobre lo que vive en 
 
 ---
 
+## La Escala del Problema
+
+El cumplimiento fantasma no es un modo de falla de nicho. Es el modo de falla dominante en la gobernanza institucional en toda industria regulada:
+
+**En servicios financieros**: Desajustes de duración, deriva de estructura de correlación, reclasificación de liquidez bajo estrés — todas condiciones que se desarrollan gradualmente y se vuelven catastróficas en el punto de ruptura del umbral.
+
+**En mercados cripto**: Supuestos de estabilidad de stablecoins algorítmicas, estructuras circulares de colateral, dependencias de rendimiento concentradas — todas condiciones que parecen válidas en la admisión y se vuelven letales a medida que crece el ecosistema.
+
+**En IA médica**: Cambio distribucional entre la población de entrenamiento y la de despliegue, degradación del modelo en casos extremos, deriva de límites clínicos — todas condiciones que se desarrollan silenciosamente y se convierten en fallas de seguridad del paciente.
+
+**En sistemas autónomos**: Deriva de límites de capacidad, mutación del marco de decisión, corrupción de bucles de retroalimentación — todas condiciones que hacen un agente ingobernable sin activar ninguna alerta de umbral.
+
+**En tokenización inmobiliaria**: Deriva de valoración token-a-activo, manipulación de estructura de propiedad, degradación del cumplimiento jurisdiccional — todas condiciones que hacen un token inválido sin hacerlo obviamente no conforme.
+
+El patrón es universal. El mecanismo es el mismo. La solución es la misma.
+
+---
+
+## Lo Que Este Libro Propone
+
+El cumplimiento fantasma no es inevitable. Es un artefacto de una elección arquitectónica específica: la elección de validar en la admisión y aplicar para siempre.
+
+Cambia esa elección — reemplázala con validación continua, evaluación continua de señales, generación continua de evidencia — y el cumplimiento fantasma no tiene dónde vivir.
+
+La arquitectura que hace esto posible es OMNIX Quantum. No es un concepto. Es código funcionando, desplegado, firmando decisiones con criptografía post-cuántica ahora mismo. Cada capítulo en la Parte II describe un componente de esa arquitectura. Cada capítulo en la Parte III muestra cómo se adapta a un dominio de gobernanza específico.
+
+Este libro no argumenta que la gobernanza debería ser mejor. Muestra cómo hacerla mejor — específica, técnica e irrefutablemente.
+
+---
+
 ---
 
 # PARTE I
@@ -614,6 +644,46 @@ Una estructura es lógicamente inconsistente si su validez aparente depende de s
 Estas no son violaciones de umbrales. Son contradicciones lógicas. La Señal Seis es la capa de gobernanza que las detecta — en la admisión y continuamente después.
 
 Es la señal que habría rechazado la estructura de FTX el primer día.
+
+---
+
+### ¿Por Qué Seis? El Argumento de Completitud
+
+La elección de seis señales no es arbitraria ni mínima. Representa el resultado de un análisis sistemático de qué dimensiones de la realidad los sistemas de gobernanza están fallando en rastrear — y qué conjunto mínimo de señales se necesita para rastrearlas completamente.
+
+**Menos de seis crea puntos ciegos.** Un sistema que monitorea solo volatilidad y exposición pierde las fallas de coherencia — las contradicciones estructurales que métricas individualmente aceptables pueden producir. Un sistema que monitorea solo el estado actual pierde la dinámica de tendencias. Un sistema que monitorea solo señales cuantitativas pierde la estructura lógica.
+
+**Más de seis crea ruido sin ganancia de información proporcional.** Más allá de seis señales, el valor de información marginal cae bruscamente mientras el costo computacional y la complejidad interpretativa suben significativamente. El AVM fue diseñado para operación continua en tiempo real — lo que requiere un conjunto de señales que sea tanto completo como tratable.
+
+**Las seis señales son interdependientes por diseño.** Ninguna señal individual es suficiente. La conclusión de gobernanza deriva de la interpretación coherente de las seis juntas. Por eso existe la Señal Dos (Coherencia) como meta-señal — monitorea la consistencia de las otras cinco, asegurando que la lectura compuesta no sea una falsa agregación de lecturas individualmente aceptables.
+
+---
+
+### Detección Antes del Umbral: La Arquitectura de Indicadores Adelantados
+
+La diferencia fundamental entre la gobernanza convencional y la gobernanza OMNIX es la relación entre detección y umbral:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│               COMPARACIÓN DE TIMING DE DETECCIÓN               │
+│                                                                 │
+│  GOBERNANZA CONVENCIONAL                                        │
+│  ─────────────────────────                                      │
+│  Umbral cruzado → Alerta generada → Revisión iniciada          │
+│  [Problema detectado después de que se ha desarrollado]         │
+│                                                                 │
+│  GOBERNANZA OMNIX                                               │
+│  ──────────────────                                             │
+│  Deriva detectada → Alerta previa al umbral → Revisión          │
+│  [Problema detectado mientras la intervención es efectiva]      │
+│                                                                 │
+│  La diferencia: meses de ventana de intervención.               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Las brechas de umbral son indicadores rezagados. Detectan la crisis después de que se ha desarrollado, no antes. Para cuando una métrica cruza un umbral, el efecto compuesto lleva semanas o meses corriendo. La ventana de intervención — el período en que la acción preventiva puede cambiar significativamente el resultado — a menudo ya se ha cerrado.
+
+La detección de deriva del AVM es un indicador adelantado. Detecta el movimiento direccional de señales — la tendencia, la dirección, la coherencia — antes de que se cruce cualquier umbral. La revisión ocurre durante el período de acumulación. La ventana de intervención todavía está abierta.
 
 ---
 
@@ -1014,21 +1084,116 @@ El Monitor de Validez de Supuestos corre continuamente desde el momento de admis
 
 ### Profundidad en Cada Señal
 
-**Señal Uno — Puntuación de Probabilidad**: La señal titular. La propiedad crítica es la trayectoria, no el nivel absoluto. Indicador adelantado.
+#### Señal Uno: Puntuación de Probabilidad
 
-**Señal Dos — Coherencia de Señales**: La meta-señal. Monitorea la consistencia interna de las señales 1, 3, 4, 5 y 6 entre sí. La señal LTCM. Por debajo de 0.4: preocupación de gobernanza independientemente de los niveles individuales.
+*Rango: 0–100. Señal compuesta. Calculada en cada ciclo.*
 
-**Señal Tres — Exposición al Riesgo**: Posición + velocidad + aceleración. Una entidad en 65 que estaba en 40 hace un mes es categóricamente diferente de una entidad estable en 65.
+**Lo que mide**: Deriva compuesta. ¿Cuán lejos, en agregado, se ha movido la entidad de lo que fue admitido?
 
-**Señal Cuatro — Resiliencia al Estrés**: Prospectiva. Evaluación continua de rendimiento bajo escenarios de cola. Se recalcula a cada ciclo a medida que cambia la composición de la entidad.
+**Lo que dispara la revisión**: No el nivel absoluto, sino la trayectoria. Una entidad que deriva de 87 a 82 a 76 a 71 a lo largo de cuatro ciclos de evaluación genera una preocupación de gobernanza en 71 — no porque 71 esté por debajo de un umbral, sino porque la dirección y persistencia de la tendencia indican deriva estructural, no fluctuación aleatoria.
 
-**Señal Cinco — Persistencia de Tendencia**: Distingue el ruido temporal de las tendencias estructurales. Alta persistencia (>0.7) + señales negativas = firma temprana de movimiento sistemático hacia el fallo.
+**Lo que no puede medir sola**: La dinámica de señales individuales. Una Puntuación de Probabilidad de 72 podría reflejar deriva moderada en las seis señales, o deriva severa en una señal compensada por estabilidad en las otras. La lectura compuesta requiere descomposición para gobernar efectivamente.
 
-**Señal Seis — Consistencia Lógica**: ¿Es la estructura internamente coherente? Detecta dependencias circulares y auto-referenciales. La señal que habría rechazado FTX en la admisión.
+#### Señal Dos: Coherencia de Señales
+
+*Rango: 0–1. Meta-señal. Calculada de última.*
+
+La Coherencia de Señales se calcula después de que se evalúan todas las demás señales. Mide la consistencia interna de la lectura combinada de señales — si el patrón de señales es coherente o contradictorio.
+
+**Lo que mide**: Coherencia estructural. ¿Las otras cinco señales cuentan una historia consistente? ¿O se contradicen entre sí de formas que sugieren inestabilidad?
+
+**Por qué importa**: La falla de LTCM fue fundamentalmente una falla de coherencia. Las posiciones del fondo mostraban métricas individualmente aceptables — volatilidad, exposición, correlación — que eran, en combinación, estructuralmente inconsistentes. Ninguna señal individual era alarmante. La combinación fue catastrófica.
+
+**Lo que dispara la revisión**: Coherencia de Señales por debajo de 0.4, independientemente de los niveles de señales individuales. Una lectura de coherencia tan baja significa que las lecturas de señales del sistema de gobernanza son internamente contradictorias — lo que casi siempre es un precursor de inestabilidad.
+
+**Lo que detecta que las señales individuales no pueden**: La clase de falla donde métricas individualmente aceptables se combinan para crear fragilidad estructural. La falla de coherencia de Terra/Luna era detectable cuatro meses antes del colapso.
+
+#### Señal Tres: Exposición al Riesgo
+
+*Rango: 0–100. Direccional. Rastrea velocidad y aceleración.*
+
+La Exposición al Riesgo no mide solo dónde está la entidad, sino qué tan rápido se mueve y en qué dirección. Esta medición tridimensional — posición, velocidad, aceleración — es lo que distingue la señal de exposición al riesgo de OMNIX del monitoreo de exposición convencional.
+
+**Lo que mide**: Exposición actual relativa al perfil admitido, más la velocidad y aceleración del cambio.
+
+**La distinción de velocidad**: Una entidad en Exposición al Riesgo 65 que ha sido estable en ese nivel durante tres meses es una situación de gobernanza muy diferente de una entidad en Exposición al Riesgo 65 que estaba en 40 hace un mes. La posición es idéntica. La velocidad es la variable crítica.
+
+**La distinción de aceleración**: Una entidad cuya exposición sube a velocidad constante es diferente de una cuya exposición sube con aceleración creciente. La aceleración es la advertencia temprana de que la velocidad en sí está aumentando — un indicador adelantado de segundo orden.
+
+**Lo que dispara la revisión**: Trayectoria de exposición que se acelera rápidamente, incluso cuando la exposición actual está dentro de los límites. Porque si la aceleración continúa, la brecha está por llegar. La revisión ocurre mientras todavía puede prevenirla.
+
+#### Señal Cuatro: Resiliencia al Estrés
+
+*Rango: 0–100. Prospectiva. Escenarios específicos del dominio. Continua.*
+
+La Resiliencia al Estrés es la señal más prospectiva en la arquitectura AVM. No pregunta cómo está rindiendo la entidad hoy. Pregunta cómo se comportaría bajo las condiciones de peor caso de mañana — específicamente, bajo escenarios de estrés calibrados a eventos de cola históricos en su dominio.
+
+**Lo que mide**: Resiliencia prospectiva bajo escenarios de cola específicos del dominio. No pruebas retrospectivas. Evaluación de resiliencia prospectiva continua.
+
+**Escenarios específicos por dominio**:
+
+| **Dominio** | **Escenario Principal de Estrés** |
+|---|---|
+| Stablecoin | Caída del 40% del mercado cripto + evento de canje concentrado |
+| Cartera de préstamos | Subida de 400bps + pico del 30% en desempleo |
+| IA Médica | Cambio distribucional + degradación en casos extremos |
+| Estrategia de trading | Cambio de régimen de mercado + crisis de liquidez |
+| Token inmobiliario | Caída de valor del activo + crisis de liquidez + conflicto jurisdiccional |
+| Seguro paramétrico | Invalidación del modelo histórico + eventos desencadenantes correlacionados |
+
+**Lo que cambia con el tiempo**: La Resiliencia al Estrés se recalcula en cada ciclo de evaluación a medida que cambia la composición de la entidad. Una entidad admitida con Resiliencia al Estrés de 82 que deriva a 45 durante seis meses se ha vuelto dramáticamente más frágil — aunque todas las métricas operativas actuales permanezcan dentro de los umbrales de condiciones normales.
+
+**Lo que dispara la revisión**: Resiliencia al Estrés por debajo de 55 (advertencia), por debajo de 35 (crítico). Tendencia declinante con Persistencia de Tendencia por encima de 0.7.
+
+#### Señal Cinco: Persistencia de Tendencia
+
+*Rango: 0–1. Estadística. Distingue ruido de señal.*
+
+La Persistencia de Tendencia es la señal que responde la pregunta que los sistemas de gobernanza fallan con más frecuencia en hacer: *¿Es esto una fluctuación temporal o una tendencia estructural?*
+
+**Lo que mide**: La persistencia estadística de las señales direccionales a través de ciclos de evaluación. Una lectura de 0.9 significa que las señales se mueven consistentemente en una dirección a lo largo del tiempo — estructuralmente. Una lectura de 0.2 significa que las señales son ruidosas — fluctuando sin dirección consistente.
+
+**Por qué importa para la gobernanza**: Tratar una tendencia persistente como ruido es uno de los errores más comunes y costosos en la gestión de riesgos institucional. La cartera de bonos de SVB mostró un aumento persistente y consistente de la exposición al riesgo desde el segundo trimestre de 2022 hasta el primer trimestre de 2023 — dieciocho meses de Persistencia de Tendencia en 0.85+. Cada sistema de riesgo convencional registró los aumentos y los clasificó dentro de los parámetros aceptables. La arquitectura OMNIX habría generado un disparador de revisión humana obligatoria en julio de 2022.
+
+**La combinación crítica**: Alta Persistencia de Tendencia (> 0.7) combinada con señales direccionales negativas (exposición creciente, resiliencia declinante) es el patrón que produce las alertas de gobernanza más fuertes. Es la firma temprana de un sistema moviéndose sistemáticamente hacia el fallo.
+
+#### Señal Seis: Consistencia Lógica
+
+*Rango: 0–1. Estructural. Evaluada en admisión y continuamente.*
+
+La Consistencia Lógica es la señal más distintiva en la arquitectura AVM. Hace una pregunta que ningún sistema de gobernanza convencional está diseñado para hacer: *¿Es la estructura de esta entidad internamente coherente?*
+
+**Lo que mide**: La coherencia lógica interna de la estructura de la entidad — si su operación continuada depende de supuestos que son auto-referenciales, circulares o mutuamente contradictorios.
+
+**La prueba FTX**: La estructura de FTX falló la Consistencia Lógica en la admisión. El valor de FTT — el colateral principal — dependía de la operación de FTX. La operación de FTX dependía del valor de FTT. Esto es un círculo. La Consistencia Lógica evalúa tales estructuras y las marca como inadmisibles — no por lo que sus métricas actuales muestran, sino porque su estructura es internamente incoherente.
+
+**Otras fallas de consistencia lógica**:
+- Productos de seguro cuyo precio asume riesgos independientes que están estructuralmente correlacionados
+- Modelos de crédito cuyos supuestos de probabilidad de incumplimiento implican condiciones macro inconsistentes con sus propios escenarios de estrés
+- Estrategias de trading algorítmico cuya suposición de ventaja depende de condiciones de mercado que la estrategia misma destruiría si se desplegara ampliamente
+
+**Lo que dispara el rechazo en la admisión**: Consistencia Lógica por debajo de 0.6. Las estructuras que son internamente incoherentes no son admisibles independientemente de lo que muestren sus métricas cuantitativas — porque las métricas son generadas por una estructura que es inherentemente inestable.
 
 ---
 
 **[GRÁFICO 02: AVM Seis Señales — Visualización Completa con Deriva]**
+
+---
+
+### El Motor de Auto-Recalibración
+
+Uno de los elementos más sofisticados de la arquitectura AVM es el sistema de recalibración automática. Aborda un problema sutil pero crítico: el estado de referencia establecido en la admisión se vuelve parcialmente desactualizado con el tiempo — no porque la entidad haya cambiado, sino porque el entorno ha cambiado.
+
+Una stablecoin admitida en un entorno de baja volatilidad tiene su estado de referencia calibrado a condiciones de baja volatilidad. Seis meses después, si las condiciones macro estructurales han cambiado y la volatilidad en todo el mercado es más alta, el sistema de gobernanza necesita distinguir entre:
+
+- **Deriva específica de la entidad**: La stablecoin se ha vuelto más volátil que las entidades comparables en el nuevo entorno. Esta es una preocupación de gobernanza genuina.
+- **Deriva ambiental**: Todas las entidades comparables son más volátiles en el nuevo entorno. El estado de referencia necesita calibración a la nueva línea base.
+
+El motor de recalibración realiza esta distinción en cada ciclo de evaluación. Compara los movimientos de señales de la entidad con los movimientos de señales de entidades comparables en el sistema gobernado. Cuando la entidad se mueve consistentemente con sus pares — deriva ambiental — el motor actualiza los parámetros de calibración. Cuando la entidad se mueve de formas que divergen de sus pares — deriva específica de la entidad — genera la alerta correspondiente.
+
+Esto previene los dos modos de falla de la calibración estática:
+1. Falsos positivos por deriva ambiental tratada como deriva específica de la entidad
+2. Cumplimiento fantasma por deriva específica de la entidad enmascarada por movimiento ambiental
 
 ---
 
@@ -1077,17 +1242,78 @@ El Monitor de Validez de Supuestos corre continuamente desde el momento de admis
 
 ---
 
+```
+┌─────────────────────────────────────────────────────────┐
+│             RESUMEN DEL CAPÍTULO                        │
+│                                                         │
+│  ✓ Por qué la gobernanza de entidades individuales      │
+│    es necesaria pero no suficiente                      │
+│  ✓ Análisis de correlación entre posiciones             │
+│  ✓ Mapeo de dependencias compartidas                    │
+│  ✓ Detección de bucles de retroalimentación:            │
+│    la señal de espiral de muerte                        │
+│  ✓ Alertas sistémicas pre-umbral y sus                  │
+│    implicaciones de gobernanza                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
 La gobernanza de entidades individuales es necesaria. No es suficiente.
 
-El Enrutador de Riesgo Sistémico opera en todas las entidades dentro del sistema gobernado simultáneamente. No monitorea cada entidad independientemente. Monitorea las relaciones entre entidades.
+La historia de las crisis financieras demuestra consistentemente que las fallas más peligrosas y costosas no son fallas de entidades únicas. Son eventos de contagio — situaciones donde la tensión de una entidad crea condiciones que dañan a otras entidades, cuya tensión entonces daña a más entidades, hasta que lo que comenzó como un problema localizado se convierte en una crisis sistémica que la falla de la entidad original sola no habría producido.
 
-**Tres análisis paralelos**:
+Long-Term Capital Management no amenazó el sistema financiero global porque sus pérdidas de trading fueran grandes. Eran grandes, pero no amenazantes del sistema en aislamiento. LTCM amenazó el sistema porque sus posiciones eran tan grandes e interconectadas que su desapalancamiento forzado habría creado un cascada de impacto de mercado que afectaría a contrapartes, estrategias correlacionadas y proveedores de liquidez en todo el sistema financiero. El riesgo no era LTCM. Era la red.
 
-**Análisis de Correlación Entre Posiciones**: Mide continuamente cómo los movimientos de las señales AVM de una entidad afectan las señales de otras. Cuando la Señal Tres sube bruscamente en una entidad y la Coherencia de Señales comienza a caer en varias entidades correlacionadas simultáneamente — incluso antes de que cualquier entidad individual haya cruzado un umbral — el SRR detecta el patrón.
+Terra/Luna no solo destruyó $40 mil millones en su propio ecosistema. Creó contagio en todo el sector cripto — desestabilizando otras stablecoins, desencadenando ventas forzadas en activos correlacionados, contribuyendo a la caída más amplia del mercado cripto de 2022. Las pérdidas se extendieron mucho más allá del propio balance de Terra/Luna porque las conexiones de red no estaban gobernadas.
 
-**Mapeo de Dependencias Compartidas**: Identifica entidades que comparten dependencias subyacentes — contrapartes, activos de colateral, proveedores de liquidez. Cuando una dependencia compartida muestra estrés, todas las entidades dependientes de ella reciben una evaluación de riesgo correlacionada.
+El Enrutador de Riesgo Sistémico es la arquitectura de OMNIX para detectar este contagio entre entidades antes de que se vuelva auto-reforzante.
 
-**Detección de Bucles de Retroalimentación**: Identifica situaciones donde el estrés de una entidad crea condiciones que aumentan el estrés de otra. Estructuras de dependencia circular — las que produjeron la espiral de muerte de Terra/Luna — son detectables como bucles de retroalimentación antes de que se activen.
+---
+
+### ¿Cómo Funciona el SRR?
+
+El SRR opera en todas las entidades dentro del sistema gobernado simultáneamente. No monitorea cada entidad independientemente y agrega los resultados. Monitorea las relaciones entre entidades — las estructuras de correlación, las dependencias compartidas, las dinámicas de retroalimentación.
+
+El SRR ejecuta tres análisis paralelos en cada ciclo de evaluación:
+
+#### Análisis de Correlación Entre Posiciones
+
+Mide continuamente cómo los movimientos de las señales AVM de una entidad afectan las señales de otras. Esta es una matriz de correlación en vivo en todas las entidades — no una suposición de correlación estática establecida en la admisión, sino una medición dinámica que se actualiza en cada ciclo.
+
+Cuando la Señal Tres (Exposición al Riesgo) sube bruscamente en una entidad y la Coherencia de Señales comienza a caer simultáneamente en varias entidades correlacionadas — incluso antes de que cualquier entidad individual haya cruzado un umbral — el SRR detecta el patrón. Este es el contagio en etapa temprana: la tensión de una entidad ya se está expresando en la estructura de señales de entidades relacionadas.
+
+#### Mapeo de Dependencias Compartidas
+
+Identifica entidades que comparten dependencias subyacentes — contrapartes, activos de colateral, proveedores de liquidez, fuentes de oráculos, aprobaciones regulatorias, infraestructura. Cuando una dependencia compartida muestra estrés, todas las entidades dependientes de ella reciben una evaluación de riesgo correlacionada.
+
+Esto es crítico porque las entidades que parecen independientes a nivel de entidad a menudo son profundamente dependientes a nivel de infraestructura. Dos stablecoins respaldadas por reservas en el mismo custodio no son casos de gobernanza independientes. Su aparente independencia es organizacional, no estructural. Si el custodio experimenta tensión, ambas stablecoins se ven afectadas simultáneamente — independientemente de lo que muestren sus lecturas AVM individuales.
+
+#### Detección de Bucles de Retroalimentación
+
+La función SRR más sofisticada. Identifica situaciones donde la tensión de una entidad crea condiciones que aumentan la tensión de otra, que crea condiciones que aumentan la tensión de la primera. Las estructuras de dependencia circular — el tipo que produjo la espiral de muerte de Terra/Luna — son detectables como bucles de retroalimentación antes de que se activen.
+
+Un bucle de retroalimentación existe cuando:
+- La tensión de la Entidad A aumenta la exposición de la Entidad B
+- La tensión de la Entidad B aumenta la exposición de la Entidad A
+- La dinámica combinada es auto-reforzante
+
+El SRR modela estas dinámicas continuamente, usando el mapa de dependencias compartidas y la matriz de correlación en vivo para identificar estructuras de exposición circular. Cuando se detecta tal estructura — antes de que se haya cruzado cualquier umbral — se genera una alerta sistémica.
+
+---
+
+### Alertas Sistémicas Pre-Umbral
+
+Una alerta sistémica es categóricamente diferente de una alerta de entidad individual. No requiere que ninguna entidad individual esté en violación. Requiere que el patrón de relaciones entre entidades muestre señales de inestabilidad.
+
+Cuando se genera una alerta sistémica:
+
+1. El sistema de Anulación Humana se activa inmediatamente — se dispara una revisión obligatoria
+2. La autoridad revisora recibe el análisis SRR completo: entidades involucradas, estructura de correlación, mapa de dependencias compartidas, topología del bucle de retroalimentación, análogos históricos
+3. Se genera un recibo firmado documentando la alerta, el momento de detección y el momento en que se requirió revisión humana
+4. La ventana de intervención está explícitamente abierta — el registro de gobernanza muestra que el sistema detectó la condición y alertó a la autoridad humana
+
+Lo que ocurre dentro de esa ventana de intervención es una decisión humana. El sistema no puede hacer la intervención. Pero el sistema ha hecho todo lo arquitectónicamente posible para garantizar que la autoridad humana esté informada, a tiempo, con información completa, y con un registro irrefutable de que la información fue proporcionada.
 
 Cuando se genera una alerta sistémica, el sistema de Anulación Humana se activa inmediatamente. La ventana de intervención está abierta.
 
@@ -1115,15 +1341,37 @@ Cuando se genera una alerta sistémica, el sistema de Anulación Humana se activ
 
 ---
 
+```
+┌─────────────────────────────────────────────────────────┐
+│             RESUMEN DEL CAPÍTULO                        │
+│                                                         │
+│  ✓ Por qué los registros de auditoría convencionales    │
+│    no son irrefutables                                  │
+│  ✓ El proceso de recibo de cuatro rondas               │
+│  ✓ Lo que contiene un recibo de decisión               │
+│  ✓ Verificación en cadena: evidencia de manipulación    │
+│    por diseño                                           │
+│  ✓ Archivo forense: legible en 2045                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
 **[GRÁFICO 05: Rastro de Auditoría Forense — Proceso de Cuatro Rondas]**
 
 ---
 
+### Por Qué los Registros de Auditoría Convencionales No Son Irrefutables
+
 Los registros de auditoría convencionales son útiles. No son irrefutables.
 
-Un registro de auditoría convencional es creado por el sistema, almacenado en el sistema y legible por los administradores del sistema. Lo que significa que es modificable por los administradores del sistema.
+Esta distinción importa enormemente. Un registro de auditoría que es útil es un registro de eventos que proporciona información sobre lo que ocurrió. Un registro de auditoría que es irrefutable es un registro de eventos que definitivamente prueba lo que ocurrió, en una forma que no puede ser alterada, disputada o cambiada retroactivamente — por nadie, incluidos los administradores del sistema.
 
-El Rastro de Auditoría Forense de OMNIX fue diseñado para hacer que la pregunta central de gobernanza sea respondible definitivamente: *¿Qué sabía el sistema, y cuándo lo sabía?*
+Un registro de auditoría convencional es creado por el sistema, almacenado en el sistema y legible por los administradores del sistema. Lo que significa que es modificable por los administradores del sistema. Y aunque la modificación deliberada es un asunto grave, es precisamente el escenario que la evidencia de gobernanza debe hacer imposible — no difícil, sino imposible.
+
+En cada falla de gobernanza importante examinada en este libro — Terra/Luna, SVB, FTX — la reconstrucción de lo que el sistema de gobernanza realmente sabía, y cuándo lo sabía, requirió análisis forense de registros que en algunos casos estaban incompletos, en otros alterados, y en todos los casos insuficientes para responder la pregunta central de gobernanza: *¿Qué sabía el sistema, y cuándo lo sabía?*
+
+El Rastro de Auditoría Forense de OMNIX fue diseñado para hacer esa pregunta respondible — definitiva e irrefutablemente, ante cualquier tribunal en cualquier jurisdicción, bajo cualquier tecnología futura.
 
 ---
 
@@ -1155,6 +1403,28 @@ El Rastro de Auditoría Forense de OMNIX fue diseñado para hacer que la pregunt
 
 ---
 
+### Lo Que Contiene un Recibo de Decisión
+
+Cada recibo contiene siete secciones, cada una con un propósito forense y de gobernanza específico:
+
+**Sección 1 — Decisión**: Qué se decidió. Cuál fue el resultado de gobernanza. En qué dominio operó. Qué autoridad lo gobernó. Qué principios de gobernanza aplicaban.
+
+**Sección 2 — Estado de Señales**: Los valores precisos de las seis señales AVM en el momento de la decisión. La puntuación de admisión CAG si aplica. El estado SRR. El índice de coherencia MCM. Cada número que el sistema de gobernanza usó para llegar a su resultado.
+
+**Sección 3 — Marca de Tiempo**: Precisa al milisegundo. Sincronizada con UTC. Fuente de tiempo verificada. Referencia temporal de grado de auditoría que establece exactamente cuándo se tomó la decisión de gobernanza.
+
+**Sección 4 — Contexto**: El contexto ambiental en el momento de la decisión — indicadores macro, condiciones de mercado, estado regulatorio, contexto específico de la entidad. El registro de cómo era el mundo cuando se tomó la decisión de gobernanza.
+
+**Sección 5 — Referencia en Cadena**: El hash criptográfico del recibo anterior en la cadena. El número de secuencia. Marcas de detección de brechas. El vínculo matemático con cada decisión anterior en el historial de gobernanza.
+
+**Sección 6 — Autoridad Humana**: Si se involucró una anulación humana — quién, qué nivel de credencial, cuál fue la anulación, cuál fue la justificación, cuándo fue autorizada. El registro irrefutable de responsabilidad humana.
+
+**Sección 7 — Firma**: La firma ML-DSA-65. La referencia de la clave de firma. La versión del algoritmo. La referencia del estándar NIST. El sello cuántico-seguro.
+
+Este recibo responde definitivamente: *¿Qué sabía el sistema de gobernanza, y cuándo lo sabía?*
+
+---
+
 > 🔍 **DIAGNÓSTICO DE GOBERNANZA 7.1**
 >
 > *Ahora mismo, para una decisión de gobernanza tomada hace seis meses:*
@@ -1167,14 +1437,93 @@ El Rastro de Auditoría Forense de OMNIX fue diseñado para hacer que la pregunt
 
 ---
 
+```
+┌─────────────────────────────────────────────────────────┐
+│          CAPÍTULO 7: CONCLUSIÓN EJECUTIVA               │
+│                                                         │
+│  Un registro de gobernanza que puede ser alterado       │
+│  no es un registro de gobernanza. Es un documento.      │
+│                                                         │
+│  Un registro de gobernanza que será vulnerable a la     │
+│  computación cuántica en 2030 no es un registro         │
+│  permanente. Es uno temporal.                           │
+│                                                         │
+│  El Rastro de Auditoría Forense no es una función de    │
+│  cumplimiento. Es la base sobre la que se apoya toda    │
+│  la evidencia de gobernanza.                            │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
 # CAPÍTULO 8
 ## Anulación Humana: Autoridad Con Responsabilidad
 
 > *"La Ley de IA no prohíbe la gobernanza de IA. Exige la gobernanza humana de la gobernanza de IA."*
+>
+> — Ley de IA de la UE, interpretación del Artículo 14
 
 ---
 
-El Artículo 14 de la Ley de IA de la UE requiere que los sistemas de IA de alto riesgo incluyan mecanismos efectivos de supervisión humana — por diseño, no por política.
+```
+┌─────────────────────────────────────────────────────────┐
+│             RESUMEN DEL CAPÍTULO                        │
+│                                                         │
+│  ✓ Artículo 14 de la Ley de IA: el requisito de         │
+│    arquitectura que la política no puede satisfacer     │
+│  ✓ Arquitectura de anulación de tres niveles            │
+│  ✓ Modelo de autoridad granular: quién puede hacer qué  │
+│  ✓ La cadena de responsabilidad: del analista al        │
+│    consejo directivo                                    │
+│  ✓ Por qué la anulación humana hace la gobernanza       │
+│    confiable, no más débil                              │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Artículo 14: Requisito de Diseño, No de Política
+
+El Artículo 14 de la Ley de IA de la UE requiere que los sistemas de IA de alto riesgo incluyan mecanismos efectivos de supervisión humana — por diseño, no por política. Esta distinción es arquitectónica, no semántica.
+
+Una política que dice que los humanos pueden anular el sistema si lo desean no satisface el Artículo 14. Un sistema que está diseñado para apoyar la supervisión humana significativa — donde la intervención humana está estructuralmente integrada, donde cada intervención está documentada, donde los resultados del sistema son interpretables por un revisor humano, donde el humano no es una ocurrencia de último momento sino un participante diseñado — satisface el Artículo 14.
+
+La Anulación Humana de OMNIX es el Artículo 14 por arquitectura. El humano no es un respaldo. El humano es un participante requerido en el proceso de gobernanza, con un rol definido, autoridad definida y un registro documentado de cada ejercicio de esa autoridad.
+
+---
+
+### Arquitectura de Anulación de Tres Niveles
+
+#### Nivel Uno: Disparadores de Revisión Obligatoria
+
+Ciertas condiciones — especificadas en la configuración del sistema para cada dominio — requieren revisión humana antes de que el sistema proceda. Estas no son alertas opcionales. Son pausas arquitectónicas.
+
+Cuando se activa un disparador de revisión obligatoria:
+1. El sistema pausa el proceso de gobernanza relevante
+2. Una autoridad humana con credenciales recibe la notificación con el contexto completo
+3. La autoridad revisora toma una decisión — proceder, modificar, rechazar, escalar
+4. Esa decisión está documentada con las credenciales de la autoridad y la justificación
+5. Se genera un recibo firmado para la revisión, la decisión y el tiempo transcurrido
+
+El disparador se activa para: resultados SESIÓN_REVISIÓN del CAG, alertas sistémicas del SRR, caídas de la Puntuación de Probabilidad del AVM por debajo del umbral del dominio, y cualquier lectura de Consistencia Lógica (Señal Seis) por debajo de 0.4.
+
+#### Nivel Dos: Anulación Discrecional
+
+Los operadores humanos autorizados pueden anular cualquier decisión del sistema en cualquier momento. La anulación está sujeta a justificación documentada — el operador debe proporcionar la base para la anulación, que se registra, firma y archiva. La anulación en sí está firmada con las credenciales del operador.
+
+Lo que esto produce: un registro completo e irrefutable de quién decidió qué, cuándo y por qué — independientemente de lo que el sistema recomendó. La cadena de responsabilidad humana está documentada en el registro de gobernanza, no asumida.
+
+#### Nivel Tres: Suspensión de Emergencia
+
+En condiciones extremas, los operadores autorizados pueden suspender completamente las operaciones de gobernanza — el equivalente a un interruptor de circuito. La suspensión, su justificación, su alcance y su duración están todos documentados, firmados y reportados a las autoridades apropiadas.
+
+La suspensión de emergencia es el reconocimiento del sistema de gobernanza de que pueden surgir situaciones que requieren control humano completo. No es un modo de falla. Es una provisión arquitectónica para las situaciones que las arquitecturas no pueden anticipar.
+
+---
+
+### Arquitectura de Autoridad: Granular y Documentada
+
+No todas las anulaciones son iguales. No todos los operadores humanos tienen igual autoridad. La arquitectura de autoridad define, para cada tipo de anulación y cada dominio:
 
 **Arquitectura de Tres Niveles**:
 
@@ -1222,6 +1571,23 @@ Esto no es burocracia. Es infraestructura de responsabilidad — la arquitectura
 
 ---
 
+```
+┌─────────────────────────────────────────────────────────┐
+│             RESUMEN DEL CAPÍTULO                        │
+│                                                         │
+│  ✓ El ataque que ya está corriendo: Recolectar           │
+│    Ahora, Descifrar Después                             │
+│  ✓ Ventana de migración: 2024–2028                      │
+│  ✓ ML-DSA-65: el estándar, los números, el argumento    │
+│  ✓ Por qué los registros de gobernanza requieren PQC    │
+│    más que ningún otro tipo de dato                     │
+│  ✓ La implicación de gobernanza: irrefutabilidad        │
+│    permanente vs. condicional                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
 **[GRÁFICO 06: Línea de Tiempo de la Amenaza Cuántica — 2024 a 2040]**
 
 ---
@@ -1254,6 +1620,46 @@ Los registros de gobernanza creados hoy con firmas clásicas (RSA, ECDSA) serán
 │  Registros OMNIX desde 2024: irrefutables.                      │
 │  Registros sin PQC: condicionales.                             │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### ML-DSA-65: El Estándar
+
+ML-DSA-65 (Module-Lattice-Based Digital Signature Algorithm, parámetros de nivel de seguridad 3) es el estándar de firma cuántico-seguro publicado por NIST en agosto de 2024. Es el sucesor cuántico-seguro de los algoritmos de firma clásicos — ECDSA, RSA — que aseguran la mayor parte de la infraestructura digital actual.
+
+El "65" en ML-DSA-65 se refiere a su nivel de seguridad, no a un tamaño de clave. Proporciona seguridad equivalente de aproximadamente 128 bits — el estándar de seguridad criptográfica moderna — contra tanto ataques clásicos como cuánticos. Es el nivel de seguridad que el NIST ha especificado para las firmas de gobernanza de grado institucional.
+
+OMNIX implementa ML-DSA-65 en la capa de firma del Rastro de Auditoría Forense. Cada recibo de decisión está firmado con ML-DSA-65. La clave de verificación es pública. La verificación puede realizarse por cualquier parte, en cualquier momento, sin acceso a los sistemas de OMNIX.
+
+Esto significa: un recibo de decisión OMNIX creado hoy puede ser verificado criptográficamente en 2035 por un auditor que use herramientas estándar — independientemente de si OMNIX como empresa existe, independientemente de si los sistemas que crearon el recibo siguen operando.
+
+### La Implicación de Gobernanza
+
+La criptografía post-cuántica no es una mejora técnica incremental. Es la diferencia entre irrefutabilidad permanente e irrefutabilidad condicional.
+
+Un registro de gobernanza firmado con ECDSA hoy tiene irrefutabilidad condicional. Es irrefutable bajo la suposición de que las computadoras cuánticas no pueden romper ECDSA. Esa suposición será falsa alrededor de 2030–2035. En ese punto, el registro es retroactivamente vulnerable — no inmediatamente comprometido, sino comprometible por un adversario suficientemente motivado con acceso a capacidades cuánticas.
+
+Un registro de gobernanza firmado con ML-DSA-65 hoy tiene irrefutabilidad permanente. La seguridad de la firma no depende de ninguna suposición sobre capacidades computacionales futuras. El registro es tan irrefutable en 2045 como lo es hoy.
+
+Para los registros de gobernanza — los documentos que deben ser defendibles ante cualquier tribunal en cualquier jurisdicción bajo cualquier tecnología futura — la distinción entre irrefutabilidad condicional e irrefutabilidad permanente es fundamental.
+
+---
+
+```
+┌─────────────────────────────────────────────────────────┐
+│          CAPÍTULO 9: CONCLUSIÓN EJECUTIVA               │
+│                                                         │
+│  Los registros de gobernanza no son registros           │
+│  normales. Son la evidencia de que tu institución       │
+│  hizo lo correcto, cuándo lo hizo y por qué.            │
+│                                                         │
+│  Esa evidencia debe ser irrefutable en 2035.            │
+│  No condicionalmente irrefutable. Permanentemente.      │
+│                                                         │
+│  La ventana para construir esa irrefutabilidad          │
+│  es 2024–2028. No 2030. Ahora.                          │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -1663,6 +2069,8 @@ Cada decisión arquitectónica en OMNIX fue tomada para resolver un problema esp
 
 **La arquitectura de Anulación Humana**: Diseñada para satisfacer el Artículo 14 de la Ley de IA de la UE antes de que el Artículo 14 fuera finalizado — porque el principio de que los humanos deben gobernar la IA efectivamente no es una invención regulatoria. Es un requisito de ingeniería fundamental.
 
+**Los nueve verticales de gobernanza**: Trading algorítmico, IA Médica, Robótica, Tokenización Inmobiliaria, Seguro Paramétrico, Energía, Crédito Islámico, Stablecoins y Agentes Autónomos. No nueve dominios construidos con sistemas separados. Nueve dominios gobernados por la misma arquitectura fundamental — misma evaluación de admisión, mismas seis señales, mismo rastro forense, misma firma PQC — calibrada específicamente para las características de riesgo de cada dominio. La elección de nueve fue tan deliberada como la elección de seis señales. Representa el conjunto de dominios donde el cumplimiento fantasma causa daño sistémico demostrable — donde la diferencia entre gobernanza real y gobernanza aparente se mide en fallas de instituciones, vidas afectadas y capital perdido.
+
 ---
 
 ### Construido en Dubái
@@ -1673,6 +2081,8 @@ La ambición de gobernanza de Dubái — expresada a través de VARA y la estrat
 
 Construir dentro de los requisitos del marco VARA desde la creación, en lugar de en un denominador común más bajo, produjo una arquitectura más fuerte.
 
+El contexto de VARA también es comercial. El ecosistema de activos virtuales de Dubái — el marco regulatorio más claro del mundo para activos virtuales a principios de 2024 — necesita infraestructura de gobernanza de calidad institucional para atraer y retener el capital institucional que sus ambiciones requieren. OMNIX fue construido para proporcionar esa infraestructura: la capa de gobernanza que hace que el ecosistema de activos virtuales de Dubái sea defendible ante cualquier inversor institucional en cualquier jurisdicción.
+
 ---
 
 ### Lo Que Todavía Está Sin Terminar
@@ -1681,12 +2091,32 @@ El trabajo no está terminado. Nueve verticales son el comienzo, no el final.
 
 La transición de computación cuántica no llega en 2050. Los estándares NIST se publicaron en 2024 porque la ventana de migración es el período 2024–2028. Las instituciones que no hayan migrado para 2028 enfrentarán una crisis que es órdenes de magnitud más costosa que lo que habría sido la migración.
 
+Los marcos regulatorios que gobiernan los activos digitales, la IA y las finanzas están convergiendo hacia requisitos que la gobernanza de nombre no puede satisfacer. MiCA, VARA, la Ley de IA de la UE, las normas de IA del NIST, Basel IV — por primera vez en la historia, los marcos regulatorios en múltiples jurisdicciones están exigiendo simultáneamente lo que OMNIX fue construido para proporcionar: gobernanza que puede demostrarse, verificarse y defenderse. Esa convergencia es el catalizador del mercado, no un obstáculo. Las instituciones que entiendan esto antes que sus competidores tendrán una ventaja de posicionamiento que el tiempo hará irreversible.
+
+Lo que todavía no existe — y lo que OMNIX fue construido para hacer posible — es la tolerancia del mercado para la gobernanza de nombre en entornos de alto riesgo. Esa tolerancia se está agotando. Cada falla institucional importante de los últimos cinco años ha acelerado el agotamiento. El punto de inflexión no es un cambio regulatorio. Es el momento en que el capital institucional deja de aceptar la gobernanza de nombre como suficiente.
+
 OMNIX fue construido para ser la infraestructura que hace innecesaria esa crisis.
 
 ---
 
 # CAPÍTULO 24
 ## 2026–2035: La Década Que Decide Todo
+
+---
+
+```
+┌─────────────────────────────────────────────────────────┐
+│             RESUMEN DEL CAPÍTULO                        │
+│                                                         │
+│  ✓ Las cuatro fuerzas convergentes que hacen            │
+│    específica esta década                               │
+│  ✓ Por qué la ventana de diferenciación se cierra       │
+│    antes de 2030                                        │
+│  ✓ Hoja de ruta 2026–2035: de prueba de concepto        │
+│    a infraestructura estándar                           │
+│  ✓ Lo que OMNIX significa en cada etapa                 │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -1720,15 +2150,29 @@ OMNIX fue construido para ser la infraestructura que hace innecesaria esa crisis
 
 ---
 
-**2026: Fundación** — Los nueve verticales están operativos. Infraestructura de cumplimiento MiCA y VARA desplegada. Primeros clientes institucionales activos. Prueba de concepto a escala institucional.
+### La Ventana: Por Qué Esta Década Es Específica
 
-**2027–2028: Expansión** — La API de OMNIX hace disponible la infraestructura para integración de terceros. Proceso de certificación ISO en curso. Ventana de migración PQC cerrándose.
+La razón por la que esta década importa no es simplemente que sea el futuro. Es que cuatro fuerzas convergentes — regulatoria, cuántica, de maduración del mercado y de demanda de infraestructura — están alcanzando su punto de inflexión simultáneamente durante el período 2026–2035. Esta convergencia crea una ventana de diferenciación que se cierra. Las instituciones e infraestructuras que se posicionen durante este período establecerán la posición de mercado que definirá la siguiente década. Las que no lo hagan enfrentarán costos de migración, costos de cumplimiento y desventajas competitivas que se acumularán en lugar de desaparecer.
 
-**2030: La Inflexión Cuántica** — Vindicación de la decisión PQC de 2024. Registros OMNIX: irrefutables. Registros con firmas clásicas: visiblemente en riesgo.
+---
 
-**2032–2035: Infraestructura a Estándar** — Para 2032, OMNIX es infraestructura de gobernanza en el mismo sentido que los rieles de pago son infraestructura de pago. Para 2035, las computadoras cuánticas son capaces de romper las firmas clásicas. El Día Q ha llegado.
+**2026: Fundación**
 
-Los registros de gobernanza OMNIX creados desde 2024 no son condicionales. Son irrefutables. Y en 2035, la diferencia entre irrefutabilidad condicional e irrefutabilidad genuina es la diferencia entre un registro que puede cuestionarse y uno que no puede.
+Los nueve verticales de gobernanza OMNIX están operativos. MiCA entra en plena aplicación; VARA ha establecido el marco de licencias de activos virtuales más claro del mundo; la Ley de IA de la UE está en su fase de implementación. Por primera vez, los marcos regulatorios para cripto, activos virtuales e IA exigen simultáneamente gobernanza demostrable. Los primeros clientes institucionales están activos. Esta es la fase de prueba de concepto a escala: cada implementación demuestra que la gobernanza que puede demostrarse, verificarse y defenderse no es solo teóricamente posible — es operacional.
+
+**2027–2028: Expansión**
+
+La API de OMNIX hace disponible la infraestructura de gobernanza para integración de terceros — permitiendo a las instituciones construir sobre la arquitectura OMNIX en lugar de construir la suya propia. El proceso de certificación ISO está en curso. La ventana de migración PQC se está cerrando: las instituciones que no hayan iniciado la migración a firmas cuántico-seguras están entrando en territorio de urgencia creciente. El diferencial de costo entre migración ordenada y migración tardía se está ampliando.
+
+**2030: La Inflexión Cuántica**
+
+La decisión PQC tomada en 2024 ha madurado. Registros OMNIX creados desde la fundación: irrefutables bajo cualquier capacidad computacional conocida. Registros institucionales con firmas clásicas: visiblemente en riesgo, con las primeras demostraciones prácticas de vulnerabilidad comenzando a aparecer. Esta es la vindicación del posicionamiento temprano: la diferencia entre irrefutabilidad permanente y condicional deja de ser teórica y se vuelve operacionalmente visible.
+
+**2032–2035: Infraestructura a Estándar**
+
+Para 2032, la gobernanza de calidad institucional ha dejado de ser un diferenciador competitivo y se ha convertido en un requisito de entrada al mercado. OMNIX es infraestructura de gobernanza en el mismo sentido que los rieles de pago son infraestructura de pago — no una ventaja competitiva opcional sino un componente de la plataforma estándar. Para 2035, las computadoras cuánticas son capaces de romper las firmas criptográficas clásicas. El Día Q ha llegado. Los registros institucionales con firmas clásicas son retroactivamente vulnerables. Los registros de gobernanza OMNIX creados desde 2024 no son condicionales. Son irrefutables.
+
+Y en 2035, la diferencia entre irrefutabilidad condicional e irrefutabilidad genuina es la diferencia entre un registro que puede cuestionarse y uno que no puede.
 
 ---
 
@@ -1902,6 +2346,24 @@ La arquitectura de monitoreo entre entidades de OMNIX. Ejecuta tres análisis pa
 | Token inmobiliario | 1 hora |
 | Seguro paramétrico | 4 horas |
 | Crédito islámico | 4 horas |
+
+---
+
+### Condiciones de Disparador de Revisión Humana
+
+Las siguientes condiciones activan automáticamente una revisión humana obligatoria. El sistema de gobernanza no puede proceder sin autoridad humana documentada:
+
+**Condición 1 — Señal Individual en Nivel Crítico**: Cualquier señal AVM individual alcanza su umbral crítico. El sistema pausa el proceso de gobernanza relevante, notifica a la autoridad revisora con credenciales, y espera una decisión documentada.
+
+**Condición 2 — Falla de Coherencia**: La Coherencia de Señales (Señal 2) cae por debajo del nivel de advertencia (0.5), independientemente de los niveles de señales individuales. Una lectura de coherencia tan baja indica que las lecturas de señales son internamente contradictorias — un precursor casi universal de inestabilidad.
+
+**Condición 3 — Persistencia de Tendencia con Señales Negativas**: La Persistencia de Tendencia (Señal 5) supera el nivel de advertencia (0.7) con dos o más señales en territorio negativo simultáneamente. Esta combinación es la firma temprana de un sistema moviéndose sistemáticamente hacia el fallo.
+
+**Condición 4 — Alerta Sistémica SRR**: El Enrutador de Riesgo Sistémico genera una alerta sistémica — indicando que el patrón de relaciones entre entidades muestra señales de inestabilidad, independientemente de los niveles de señales de entidades individuales.
+
+**Condición 5 — Escalada de Anulación Nivel Uno**: Cualquier analista autorizado inicia una escalada de Anulación Humana Nivel Uno. La observación de un analista que identifica una preocupación de gobernanza activa la revisión obligatoria — incluso si no se ha alcanzado ningún umbral automático.
+
+**Condición 6 — Propuesta de Recalibración del Estado de Referencia**: El motor de recalibración automática propone una actualización del estado de referencia de una entidad. Las recalibraciones del estado de referencia afectan todos los cálculos de gobernanza posteriores para esa entidad, y por tanto requieren autorización humana documentada antes de aplicarse.
 
 ---
 
