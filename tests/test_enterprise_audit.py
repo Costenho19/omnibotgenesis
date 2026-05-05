@@ -160,7 +160,14 @@ class TestAVMPersistence:
 
         avm.save_calibration_snapshot(
             domain="trading",
-            baseline_signals={"momentum": 65.0, "liquidity": 72.0},
+            baseline_signals={
+                "risk_exposure": 65.0,
+                "signal_coherence": 72.0,
+                "logic_consistency": 80.0,
+                "probability_score": 70.0,
+                "stress_resilience": 68.0,
+                "trend_persistence": 75.0,
+            },
             description="Test baseline",
             tags=["test"],
         )

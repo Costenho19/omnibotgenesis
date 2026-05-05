@@ -301,9 +301,11 @@ class TestAntiReplayGuard:
             self.store.check_and_register("OMNIX-TRD-AABBCCDDEEFF", ttl_ms=-1000)
 
     def test_K13_stats_returns_correct_counts(self):
-        self.store.check_and_register("OMNIX-TRD-STAT000001AA", ttl_ms=30_000)
-        self.store.check_and_register("OMNIX-TRD-STAT000002BB", ttl_ms=30_000)
-        stats = self.store.stats()
+        from omnix_core.evidence.anti_replay import _InMemoryStore
+        store = _InMemoryStore()
+        store.check_and_register("OMNIX-TRD-STAT000001AA", ttl_ms=30_000)
+        store.check_and_register("OMNIX-TRD-STAT000002BB", ttl_ms=30_000)
+        stats = store.stats()
         assert stats["active_entries"] == 2
         assert stats["total_entries"] == 2
         assert stats["expired_entries"] == 0
@@ -398,9 +400,10 @@ class TestAntiReplayGuard:
         from malformed or adversarially short TTLs.
 
         Proof: register with ttl_ms=1, entry must still be present immediately.
+        Uses _InMemoryStore directly to inspect internal expiry state.
         """
-        from omnix_core.evidence.anti_replay import AntiReplayStore, ReplayDetected, MIN_WINDOW_MS
-        store = AntiReplayStore()
+        from omnix_core.evidence.anti_replay import _InMemoryStore, ReplayDetected, MIN_WINDOW_MS
+        store = _InMemoryStore()
         rid = "OMNIX-TRD-MINTESTFLOOR"
 
         store.check_and_register(rid, ttl_ms=1)   # 1ms — well below MIN_WINDOW_MS
@@ -419,9 +422,11 @@ class TestAntiReplayGuard:
         )
 
     def test_K20_purge_expired_reduces_store_size(self):
-        """Expired entries are purged on next check_and_register call."""
-        from omnix_core.evidence.anti_replay import AntiReplayStore
-        store = AntiReplayStore()
+        """Expired entries are purged on next check_and_register call.
+        Uses _InMemoryStore directly to inject and inspect expired entries.
+        """
+        from omnix_core.evidence.anti_replay import _InMemoryStore
+        store = _InMemoryStore()
 
         # Inject already-expired entries directly
         past_ms = int(time.time() * 1000) - 10_000   # expired 10s ago

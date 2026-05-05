@@ -1,24 +1,24 @@
 {
-  "snapshot_id": "AVM-B12F97ABA6",
-  "parameter_version": "1.b12f97aba6",
+  "snapshot_id": "AVM-BF3D3A30DF",
+  "parameter_version": "1.bf3d3a30df",
   "domain": "medical_ai",
   "baseline_signals": {
-    "risk_exposure": 45.99,
-    "signal_coherence": 75.29,
-    "logic_consistency": 62.72,
-    "probability_score": 77.25,
-    "stress_resilience": 51.85,
-    "trend_persistence": 49.3
+    "risk_exposure": 65.66,
+    "signal_coherence": 70.4,
+    "logic_consistency": 51.9,
+    "probability_score": 71.02,
+    "stress_resilience": 65.86,
+    "trend_persistence": 58.51
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=120h>=72h",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=81h>=72h",
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_5.6"
+    "prev_drift_5.8"
   ],
-  "calibrated_at": "2026-04-25T07:35:01.152668+00:00",
-  "calibrated_at_epoch": 1777102501.152668
+  "calibrated_at": "2026-05-04T17:43:22.557761+00:00",
+  "calibrated_at_epoch": 1777916602.557761
 }

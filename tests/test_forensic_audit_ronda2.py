@@ -205,7 +205,14 @@ class TestSilentFailureInjection:
         avm = _tmp_avm()
         avm.save_calibration_snapshot(
             "trading",
-            {"probability_score": 70.0, "signal_coherence": 65.0},
+            {
+                "probability_score": 70.0,
+                "signal_coherence": 65.0,
+                "risk_exposure": 60.0,
+                "stress_resilience": 55.0,
+                "trend_persistence": 50.0,
+                "logic_consistency": 45.0,
+            },
         )
         assert avm.load_snapshot("trading") is not None
         avm.invalidate_snapshot("trading")
@@ -317,12 +324,17 @@ class TestCrossDomainConsistency:
         # Sin snapshot
         r1 = avm.evaluate({}, domain="no_domain")
         assert isinstance(r1, AVMResult)
-        # Con snapshot vacío de señales
-        avm.save_calibration_snapshot("empty_domain", {})
-        r2 = avm.evaluate({}, domain="empty_domain")
+        # Con snapshot con señales completas (schema requerido por ADR-076)
+        full_signals = {
+            "probability_score": 70.0, "signal_coherence": 65.0,
+            "risk_exposure": 60.0, "stress_resilience": 55.0,
+            "trend_persistence": 50.0, "logic_consistency": 45.0,
+        }
+        avm.save_calibration_snapshot("full_domain", full_signals)
+        r2 = avm.evaluate({}, domain="full_domain")
         assert isinstance(r2, AVMResult)
         # Con señales que no coinciden con baseline
-        r3 = avm.evaluate({"unknown_signal": 99.0}, domain="empty_domain")
+        r3 = avm.evaluate({"unknown_signal": 99.0}, domain="full_domain")
         assert isinstance(r3, AVMResult)
 
     def test_B7_insurance_uses_build_receipt_id(self):
@@ -553,7 +565,14 @@ class TestEndToEndTruthAudit:
     def test_C5_avm_result_to_dict_contains_required_keys(self):
         """AVMResult.to_dict() tiene todas las claves que el API necesita."""
         avm = _tmp_avm()
-        avm.save_calibration_snapshot("trading", {"probability_score": 70.0})
+        avm.save_calibration_snapshot("trading", {
+            "probability_score": 70.0,
+            "signal_coherence": 65.0,
+            "risk_exposure": 60.0,
+            "stress_resilience": 55.0,
+            "trend_persistence": 50.0,
+            "logic_consistency": 45.0,
+        })
         result = avm.evaluate({"probability_score": 70.0}, domain="trading")
         d = result.to_dict()
         required = {"is_valid", "snapshot_id", "parameter_version", "drift_score",

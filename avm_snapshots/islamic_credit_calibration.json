@@ -1,24 +1,24 @@
 {
-  "snapshot_id": "AVM-5813F12DC0",
-  "parameter_version": "1.5813f12dc0",
+  "snapshot_id": "AVM-9EA11C8943",
+  "parameter_version": "1.9ea11c8943",
   "domain": "islamic_credit",
   "baseline_signals": {
-    "risk_exposure": 12.33,
-    "signal_coherence": 76.49,
+    "risk_exposure": 8.83,
+    "signal_coherence": 81.68,
     "logic_consistency": 100.0,
-    "probability_score": 53.81,
+    "probability_score": 61.77,
     "stress_resilience": 92.83,
     "trend_persistence": 57.7
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=120h>=72h",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=81h>=72h",
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_13.1"
+    "prev_drift_11.9"
   ],
-  "calibrated_at": "2026-04-25T07:34:59.387195+00:00",
-  "calibrated_at_epoch": 1777102499.387195
+  "calibrated_at": "2026-05-04T17:43:20.679035+00:00",
+  "calibrated_at_epoch": 1777916600.679035
 }

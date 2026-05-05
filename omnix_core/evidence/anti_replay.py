@@ -192,6 +192,8 @@ class _RedisStore:
         return {
             "backend": "redis",
             "active_entries": count,
+            "total_entries": count,
+            "expired_entries": 0,
             "mode": _MODE,
         }
 
@@ -320,6 +322,11 @@ class AntiReplayStore:
     @property
     def backend(self) -> str:
         return "redis" if self._redis else "in_memory"
+
+    @property
+    def _store(self) -> dict:
+        """Expose in-memory store dict for test compatibility (ADR-076)."""
+        return self._mem._store
 
 
 # ── Process-level singleton ────────────────────────────────────────────────────
