@@ -3960,7 +3960,7 @@ AVM Signal Three (range: 0–100). Measures current exposure relative to admitte
 The three possible outcomes of a CAG evaluation. Admitted: monitoring begins, reference state signed. Review: human review required before decision. Rejected: entity denied, reason documented and signed.
 
 **Signal Coherence**
-AVM Signal Two (range: 0–1). Measures internal consistency of signals 1, 3, 4, 5, and 6 relative to each other. Detects structural contradictions that individual signal analysis misses. Below 0.4 is a governance concern regardless of individual signal levels.
+AVM Signal Two (range: 0–1). Measures internal consistency of signals 1, 3, 4, 5, and 6 relative to each other. Detects structural contradictions that individual signal analysis misses. Sufficiently low coherence constitutes a governance concern regardless of individual signal levels — the composite picture matters as much as any single indicator.
 
 **SRR — Systemic Risk Router**
 OMNIX's cross-entity monitoring architecture. Runs three parallel analyses: cross-position correlation, shared dependency mapping, feedback loop detection. Detects contagion before it becomes self-reinforcing. Generates systemic alerts that are categorically different from individual entity alerts.
@@ -3969,7 +3969,7 @@ OMNIX's cross-entity monitoring architecture. Runs three parallel analyses: cros
 AVM Signal Four (range: 0–100). Prospective assessment of entity performance under domain-specific tail-event stress scenarios. Recalculated at every evaluation cycle as entity composition changes.
 
 **Trend Persistence**
-AVM Signal Five (range: 0–1). Statistical persistence of directional signals across evaluation cycles. Distinguishes structural trends from temporary fluctuations. High Trend Persistence (>0.7) combined with negative directional signals is the pattern associated with systematic drift toward failure.
+AVM Signal Five (range: 0–1). Statistical persistence of directional signals across evaluation cycles. Distinguishes structural trends from temporary fluctuations. Elevated Trend Persistence combined with negative directional signals is the pattern associated with systematic drift toward failure — direction and duration together, not magnitude alone.
 
 ---
 
