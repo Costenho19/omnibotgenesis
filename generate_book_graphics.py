@@ -68,7 +68,7 @@ def g01():
     reality = np.where(t < 24,
                        100 - 0.8*t - 0.04*t**2 + np.random.normal(0, 1.2, 360),
                        100 - 0.8*24 - 0.04*576 - 8*(t-24)**1.4)
-    reality = np.clip(reality, -20, 100)
+    reality = np.clip(reality, 0, 100)
 
     # Governance snapshot: flat between audit events (discrete steps)
     audit_times = [0, 6, 12, 18, 24, 30]
@@ -88,11 +88,19 @@ def g01():
             linestyle='--', dashes=(6, 3))
     ax.plot(t, reality, color=NAVY, linewidth=2.8, label='Entity Reality')
 
-    # Audit event markers
-    for at in audit_times[1:]:
+    # Structural failure threshold line at 0
+    ax.axhline(0, color=RED_ALERT, linewidth=1.2, linestyle='--', alpha=0.7)
+    ax.text(0.5, 2.5, 'Structural Failure Threshold', fontsize=7.5,
+            color=RED_ALERT, alpha=0.85, style='italic')
+
+    # Audit event markers with "Periodic Review" labels
+    for i, at in enumerate(audit_times[1:], 1):
         rv = np.interp(at, t, reality)
         ax.axvline(at, color=MID_GRAY, linewidth=0.7, linestyle=':', alpha=0.6)
-        ax.scatter([at], [rv], color=GOLD, s=60, zorder=5)
+        ax.scatter([at], [rv], color=GOLD, s=70, zorder=5, marker='D')
+        if at <= 18:
+            ax.text(at, rv + 4, 'Periodic\nReview', fontsize=6.5, color=GOLD,
+                    ha='center', va='bottom', alpha=0.9, style='italic')
 
     # Annotations
     ax.annotate('GHOST COMPLIANCE\nZONE', xy=(20, 55), xytext=(16, 30),
@@ -109,11 +117,11 @@ def g01():
                 arrowprops=dict(arrowstyle='->', color=NAVY, lw=1.2))
 
     ax.set_xlabel('Months Since Admission', fontsize=10, color=SLATE, labelpad=8)
-    ax.set_ylabel('Governance Validity Score', fontsize=10, color=SLATE, labelpad=8)
+    ax.set_ylabel('Entity Integrity Score', fontsize=10, color=SLATE, labelpad=8)
     ax.set_title('The Photograph Problem: Governance Snapshot vs. Entity Reality',
                  fontsize=13, color=NAVY, fontweight='bold', pad=14)
     ax.legend(fontsize=9, loc='upper right', framealpha=0.85)
-    ax.set_xlim(0, 36); ax.set_ylim(-25, 108)
+    ax.set_xlim(0, 36); ax.set_ylim(-8, 108)
     ax.set_xticks(audit_times)
     ax.set_xticklabels([f'M{x}' for x in audit_times], color=SLATE, fontsize=9)
     ax.yaxis.set_tick_params(labelcolor=SLATE, labelsize=9)

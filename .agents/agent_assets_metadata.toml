@@ -480,3 +480,9 @@ id = "C8WqGd1QDXTSVQljdK5D4"
 uri = "file://mansoor_integration_surface.pdf"
 type = "pdf"
 title = "Adjuntar a Mansoor — Integration Surface"
+
+[[outputs]]
+id = "9OXH-IcWZdHd9B181RAXE"
+uri = "file://figure1_updated.png"
+type = "image"
+title = "Figure 1 — Actualizada con los 3 cambios"
