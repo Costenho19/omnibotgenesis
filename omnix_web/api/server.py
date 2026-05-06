@@ -4780,6 +4780,58 @@ def cbg_expire():
         return jsonify({'error': 'Gate expiry failed', 'reference': ref}), 500
 
 
+@app.route('/api/book-lead', methods=['POST'])
+def book_lead():
+    import datetime
+    try:
+        data    = request.get_json(silent=True) or {}
+        name    = str(data.get('name',    '')).strip()[:120]
+        company = str(data.get('company', '')).strip()[:120]
+        email   = str(data.get('email',   '')).strip()[:120]
+        if not email:
+            return jsonify({'error': 'email required'}), 400
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS book_leads (
+                id         SERIAL PRIMARY KEY,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                name       TEXT,
+                company    TEXT,
+                email      TEXT,
+                ip         TEXT
+            )
+        """)
+        cur.execute(
+            "INSERT INTO book_leads (name, company, email, ip) VALUES (%s, %s, %s, %s)",
+            (name, company, email, request.remote_addr)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        logger.info(f"[BOOK_LEAD] saved: {email} | {company}")
+        return jsonify({'ok': True}), 200
+    except Exception as exc:
+        logger.error(f"[BOOK_LEAD] error: {exc}")
+        return jsonify({'ok': True}), 200
+
+
+@app.route('/api/book-leads', methods=['GET'])
+def get_book_leads():
+    try:
+        admin_ips = [ip.strip() for ip in os.environ.get('ADMIN_ALLOWED_IPS', '127.0.0.1').split(',')]
+        if request.remote_addr not in admin_ips:
+            return jsonify({'error': 'forbidden'}), 403
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("SELECT id, created_at, name, company, email FROM book_leads ORDER BY created_at DESC")
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+        return jsonify([{'id': r[0], 'ts': str(r[1]), 'name': r[2], 'company': r[3], 'email': r[4]} for r in rows])
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_frontend(path):
