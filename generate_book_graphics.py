@@ -418,39 +418,58 @@ def g06():
 # GRAPHIC 07 — MiCA Framework Three Asset Categories
 # ──────────────────────────────────────────────────────────────────────────────
 def g07():
-    fig = base_fig(12, 6.8)
+    fig = base_fig(12, 7.2)
     fig.patch.set_facecolor(LIGHT_BG)
     ax = fig.add_axes([0.02, 0.03, 0.96, 0.84])
-    ax.set_xlim(0, 12); ax.set_ylim(0, 6.8)
+    ax.set_xlim(0, 12); ax.set_ylim(0, 7.2)
     ax.axis('off')
 
+    # ── Main title (top, clear of everything)
+    ax.text(6.0, 7.10, 'MiCA Framework — Three Asset Categories and OMNIX Alignment',
+            ha='center', va='top', fontsize=13, color=NAVY, fontweight='bold')
+
+    # ── Regulation header banner (below title, does NOT overlap category boxes)
+    rect_top = FancyBboxPatch((1.0, 6.30), 10.0, 0.58,
+                               boxstyle='round,pad=0.08',
+                               facecolor=NAVY, edgecolor=GOLD, linewidth=2)
+    ax.add_patch(rect_top)
+    ax.text(6.0, 6.59, 'MiCA — Regulation (EU) 2023/1114 — Markets in Crypto-Assets',
+            ha='center', va='center', fontsize=11, color=WHITE, fontweight='bold')
+
+    # ── Three category boxes  (top=6.10, clear of header bottom=6.30 with 0.20 gap)
     categories = [
         ('Asset-Referenced\nTokens (ART)',
-         ['Backed by basket of assets', 'Art. 36: continuous reserve', 'Monthly reserve attestation',
-          'Redemption rights guaranteed', 'OMNIX: Signal 1 + Signal 3'],
-         '#1A5276', 1.0),
+         ['Backed by basket of assets', 'Art. 36: continuous reserve',
+          'Monthly reserve attestation', 'Redemption rights guaranteed',
+          'OMNIX: Signal 1 + Signal 3'],
+         '#1A5276', 2.0),
         ('Electronic Money\nTokens (EMT)',
-         ['Pegged to single fiat currency', 'Credit institution required', 'EBA oversight',
-          'Daily redemption at par', 'OMNIX: Anti-replay + Signal 2'],
-         '#1E8449', 4.75),
+         ['Pegged to single fiat currency', 'Credit institution required',
+          'EBA oversight', 'Daily redemption at par',
+          'OMNIX: Anti-replay + Signal 2'],
+         '#1E8449', 6.0),
         ('Other Crypto-Assets\n(General MiCA)',
-         ['Utility tokens, NFTs', 'Whitepaper requirement', 'Marketing restrictions',
-          'Insider dealing rules', 'OMNIX: Systemic Risk Radar'],
-         SLATE, 8.5),
+         ['Utility tokens, NFTs', 'Whitepaper requirement',
+          'Marketing restrictions', 'Insider dealing rules',
+          'OMNIX: Systemic Risk Radar'],
+         SLATE, 10.0),
     ]
+    box_h = 2.75
+    box_w = 3.2
+    box_y0 = 3.25   # bottom of category boxes
 
     for title, items, color, x_center in categories:
-        w = 3.2
-        x0 = x_center - w/2
-        rect = FancyBboxPatch((x0, 3.6), w, 2.4,
+        x0 = x_center - box_w / 2
+        rect = FancyBboxPatch((x0, box_y0), box_w, box_h,
                                boxstyle='round,pad=0.08',
                                facecolor=color, edgecolor=GOLD, linewidth=2)
         ax.add_patch(rect)
-        ax.text(x_center, 5.62, title, ha='center', va='center',
+        ax.text(x_center, box_y0 + box_h - 0.38, title,
+                ha='center', va='center',
                 fontsize=10, color=WHITE, fontweight='bold')
 
         for j, item in enumerate(items):
-            y_i = 4.85 - j * 0.38
+            y_i = box_y0 + box_h - 0.95 - j * 0.40
             bullet = '▸ ' if 'OMNIX' not in item else '● '
             fc = GOLD_L if 'OMNIX' in item else WHITE
             fs = 7.8 if 'OMNIX' in item else 7.5
@@ -458,29 +477,21 @@ def g07():
             ax.text(x_center, y_i, bullet + item,
                     ha='center', va='center', fontsize=fs, color=fc, fontweight=fw)
 
-    # Regulation header
-    rect_top = FancyBboxPatch((1.0, 5.8), 10.0, 0.75,
-                               boxstyle='round,pad=0.08',
-                               facecolor=NAVY, edgecolor=GOLD, linewidth=2)
-    ax.add_patch(rect_top)
-    ax.text(6.0, 6.19, 'MiCA — Regulation (EU) 2023/1114 — Markets in Crypto-Assets',
-            ha='center', va='center', fontsize=11, color=WHITE, fontweight='bold')
-
-    # Common requirements bar
-    rect_bot = FancyBboxPatch((0.5, 0.15), 11.0, 1.55,
+    # ── Common requirements bar (bottom)
+    rect_bot = FancyBboxPatch((0.5, 0.14), 11.0, 1.65,
                                boxstyle='round,pad=0.08',
                                facecolor='#F0EBE0', edgecolor=MID_GRAY, linewidth=1)
     ax.add_patch(rect_bot)
-    ax.text(6.0, 1.47, 'Common MiCA Requirements across all categories:',
+    ax.text(6.0, 1.55, 'Common MiCA Requirements across all categories:',
             ha='center', va='center', fontsize=8.5, color=NAVY, fontweight='bold')
-    commons = 'Whitepaper disclosure  ·  Conflicts of interest rules  ·  Complaint handling  ·  Cybersecurity requirements  ·  Reserve custody standards'
-    ax.text(6.0, 1.05, commons,
+    commons = ('Whitepaper disclosure  ·  Conflicts of interest rules  ·  '
+               'Complaint handling  ·  Cybersecurity requirements  ·  Reserve custody standards')
+    ax.text(6.0, 1.10, commons,
             ha='center', va='center', fontsize=8, color=SLATE)
-    ax.text(6.0, 0.58, 'OMNIX satisfies all cross-cutting requirements through continuous monitoring, PQC-signed receipts, and the Anti-Replay gate.',
+    ax.text(6.0, 0.58,
+            'OMNIX satisfies all cross-cutting requirements through continuous monitoring, '
+            'PQC-signed receipts, and the Anti-Replay gate.',
             ha='center', va='center', fontsize=7.8, color=NAVY, style='italic')
-
-    ax.text(6.0, 6.72, 'MiCA Framework — Three Asset Categories and OMNIX Alignment',
-            ha='center', va='top', fontsize=13, color=NAVY, fontweight='bold')
 
     add_branding(fig, 'FIGURE 7 — MiCA Framework')
     save(fig, '07_mica_framework.png')
