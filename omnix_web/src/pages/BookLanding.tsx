@@ -109,7 +109,7 @@ export default function BookLanding() {
 
           {/* COVER */}
           <div style={{ flexShrink: 0 }}>
-            <img src="/book_cover_en.png" alt="Ghost Compliance Cover"
+            <img src="/book_cover_en.png?v=2" alt="Ghost Compliance Cover"
               style={{ width: 200, borderRadius: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: `2px solid ${GOLD}` }} />
           </div>
 
