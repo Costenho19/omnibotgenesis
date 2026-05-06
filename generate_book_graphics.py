@@ -723,60 +723,62 @@ def g11():
     ax.set_xlim(0, 12); ax.set_ylim(0, 7)
     ax.axis('off')
 
+    # bar_w=2.6, gap=0.37 → 4 boxes from 0.25 to 11.73 — all within xlim 0-12
+    bar_w = 2.6
     phases = [
         ('2024–2025\nFoundation',
          ['9 verticals operational', 'PQC infrastructure live', 'SDK distribution',
           'VARA / MiCA alignment'],
-         GREEN_OK, 1.0),
+         GREEN_OK, 0.25),
         ('2025–2027\nExpansion',
          ['B2B enterprise rollout', 'Regulatory recognition', 'SDK ecosystem growth',
           '3 new verticals'],
-         '#1A5276', 4.1),
+         '#1A5276', 3.22),
         ('2027–2030\nScale',
          ['Cross-jurisdiction network', 'ISO / NIST standard input', 'Federated governance',
           'Institutional adoption'],
-         SLATE, 7.2),
+         SLATE, 6.19),
         ('2030–2035\nStandard',
          ['Global governance standard', 'Quantum-safe infrastructure', 'Regulatory embedding',
           '20+ verticals'],
-         NAVY, 10.3),
+         NAVY, 9.13),
     ]
 
-    bar_w = 2.8
     for title, items, color, x0 in phases:
-        rect = FancyBboxPatch((x0 - 0.05, 3.4), bar_w, 2.5,
+        rect = FancyBboxPatch((x0, 3.4), bar_w, 2.5,
                                boxstyle='round,pad=0.08',
                                facecolor=color, edgecolor=GOLD, linewidth=2)
         ax.add_patch(rect)
-        ax.text(x0 + bar_w/2 - 0.05, 5.55, title, ha='center', va='center',
+        cx = x0 + bar_w / 2
+        ax.text(cx, 5.55, title, ha='center', va='center',
                 fontsize=10, color=WHITE if color != GREEN_OK else NAVY,
                 fontweight='bold')
         for j, item in enumerate(items):
-            ax.text(x0 + bar_w/2 - 0.05, 4.98 - j*0.44, '▸ ' + item,
+            ax.text(cx, 4.98 - j*0.44, '▸ ' + item,
                     ha='center', va='center',
                     fontsize=7.8,
                     color=GOLD_L if color in [SLATE, NAVY, '#1A5276'] else WHITE)
 
-    # Timeline bar
-    rect_t = FancyBboxPatch((0.95, 2.85), 10.0, 0.36,
+    # Timeline bar — spans full width of boxes
+    rect_t = FancyBboxPatch((0.25, 2.85), 11.48, 0.36,
                               boxstyle='round,pad=0.04',
                               facecolor=GOLD, edgecolor=NAVY, linewidth=1.5)
     ax.add_patch(rect_t)
 
-    for x_tick in [0.95, 3.75, 6.55, 9.35, 10.95]:
-        yr = [2024, 2025, 2027, 2030, 2035][[0.95, 3.75, 6.55, 9.35, 10.95].index(x_tick)]
+    year_xs = [0.25, 3.22, 6.19, 9.13, 11.73]
+    for x_tick, yr in zip(year_xs, [2024, 2025, 2027, 2030, 2035]):
         ax.text(x_tick, 2.58, str(yr), ha='center', va='top',
                 fontsize=9, color=NAVY, fontweight='bold')
 
-    # Bottom metrics
+    # Bottom metrics — centered under each phase box
     metrics = [
-        ('9→20+', 'Governance\nVerticals'),
-        ('PQC', 'Cryptographic\nStandard'),
+        ('9→20+',        'Governance\nVerticals'),
+        ('PQC',          'Cryptographic\nStandard'),
         ('VARA+MiCA\n+AI Act', 'Regulatory\nFrameworks'),
-        ('< 50ms', 'Decision\nLatency'),
+        ('< 50ms',       'Decision\nLatency'),
     ]
-    for i, (val, lbl) in enumerate(metrics):
-        x_m = 1.3 + i * 2.95
+    centers = [0.25 + bar_w/2, 3.22 + bar_w/2, 6.19 + bar_w/2, 9.13 + bar_w/2]
+    for (val, lbl), x_m in zip(metrics, centers):
         rect_m = FancyBboxPatch((x_m - 1.1, 0.18), 2.2, 1.55,
                                  boxstyle='round,pad=0.06',
                                  facecolor=WHITE, edgecolor=GOLD, linewidth=1.5)
