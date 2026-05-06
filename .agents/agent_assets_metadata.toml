@@ -455,10 +455,10 @@ title = "Libro Completo — ESPAÑOL"
 id = "DVMz3LCR4DMJHW_wvqIun"
 uri = "file://Ghost_Compliance_ES.pdf"
 type = "pdf"
-title = "Ghost Compliance — ES — Portada premium (281 págs)"
+title = "Ghost Compliance — ES — Portada limpia v4 (281 págs)"
 
 [[outputs]]
 id = "CV1yR-1PUf_fhnFXTvrEz"
 uri = "file://Ghost_Compliance_EN.pdf"
 type = "pdf"
-title = "Ghost Compliance — EN — Portada premium (317 págs)"
+title = "Ghost Compliance — EN — Portada limpia v4 (317 págs)"
