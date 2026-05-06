@@ -18,6 +18,7 @@ import MedicalDashboard from './pages/MedicalDashboard'
 import AgentsGovernanceDemo from './pages/AgentsGovernanceDemo'
 import AgentsDashboard from './pages/AgentsDashboard'
 import RealEstateGovernanceDemo from './pages/RealEstateGovernanceDemo'
+import RoboticsGovernanceDemo from './pages/RoboticsGovernanceDemo'
 import RealEstateDashboard from './pages/RealEstateDashboard'
 import EnergyDashboard from './pages/EnergyDashboard'
 import StablecoinDashboard from './pages/StablecoinDashboard'
@@ -60,6 +61,7 @@ function App() {
           <Route path="/governance-demo-agents" element={<AgentsGovernanceDemo />} />
           <Route path="/agents" element={<AgentsDashboard />} />
           <Route path="/governance-demo-real-estate" element={<RealEstateGovernanceDemo />} />
+          <Route path="/governance-demo-robotics" element={<RoboticsGovernanceDemo />} />
           <Route path="/real-estate" element={<RealEstateDashboard />} />
           <Route path="/energy" element={<EnergyDashboard />} />
           <Route path="/governance-demo-stablecoin" element={<StablecoinGovernanceDemo />} />
