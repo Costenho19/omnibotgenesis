@@ -503,3 +503,15 @@ id = "YNtuXV3kdtS-2tBOSTBCl"
 uri = "file://attached_assets/ghost_compliance_cover_v2.png"
 type = "image"
 title = "Ghost Compliance — Portada con Logo"
+
+[[outputs]]
+id = "wl0rhCGyejRbh1N5m0nwz"
+uri = "file://attached_assets/gumroad_cover_banner.png"
+type = "image"
+title = "Gumroad — Portada horizontal (1280x720)"
+
+[[outputs]]
+id = "mXOSVjwazSCGJ9nkbEGUh"
+uri = "file://attached_assets/gumroad_thumbnail.png"
+type = "image"
+title = "Gumroad — Miniatura cuadrada (600x600)"
