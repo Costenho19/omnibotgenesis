@@ -179,7 +179,7 @@ Este no es un libro sobre malos actores. Las instituciones que examinamos en la 
 
 Este es un libro sobre un problema estructural en cómo se diseña la gobernanza. Y sobre la arquitectura que lo resuelve.
 
-*— Harold Nunes, Dubái, 2026*
+*— Harold Nunes, 2026*
 
 ---
 
@@ -3124,7 +3124,7 @@ VARA — Autoridad Reguladora de Activos Virtuales de Dubái — fue diseñada n
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-OMNIX fue construido en un contexto de Dubái, por un fundador que entendió los requisitos de VARA desde adentro.
+OMNIX fue construido para satisfacer los requisitos de VARA y otros marcos regulatorios de alta exigencia desde su diseño inicial.
 
 VARA quiere gobernanza continua. OMNIX proporciona gobernanza continua.
 VARA quiere decisiones documentadas. OMNIX proporciona recibos PQC irrefutables.
@@ -3237,15 +3237,15 @@ Cada decisión arquitectónica en OMNIX fue tomada para resolver un problema esp
 
 ---
 
-### Construido en Dubái
+### Construido para VARA
 
-OMNIX fue construido en Dubái. No incidentalmente.
+OMNIX fue diseñado para cumplir con los estándares del marco VARA desde su creación — no retroactivamente.
 
-La ambición de gobernanza de Dubái — expresada a través de VARA y la estrategia de IA de los EAU más amplia — está alineada con lo que OMNIX fue construido para proporcionar. VARA no quiere gobernanza de nombre. Quiere gobernanza que funcione — que pueda demostrarse, verificarse y defenderse.
+La ambición regulatoria de VARA — expresada a través de sus ocho rulebooks de actividad y requisitos operacionales continuos — está alineada con lo que OMNIX fue construido para proporcionar. VARA no quiere gobernanza de nombre. Quiere gobernanza que funcione — que pueda demostrarse, verificarse y defenderse.
 
-Construir dentro de los requisitos del marco VARA desde la creación, en lugar de en un denominador común más bajo, produjo una arquitectura más fuerte.
+Diseñar contra los requisitos del marco VARA desde el inicio, en lugar de un denominador común más bajo, produjo una arquitectura más fuerte. Cada componente — el AVM, el FAT, la PQC, el Anti-Replay — responde directamente a una exigencia operacional de VARA.
 
-El contexto de VARA también es comercial. El ecosistema de activos virtuales de Dubái — el marco regulatorio más claro del mundo para activos virtuales a principios de 2024 — necesita infraestructura de gobernanza de calidad institucional para atraer y retener el capital institucional que sus ambiciones requieren. OMNIX fue construido para proporcionar esa infraestructura: la capa de gobernanza que hace que el ecosistema de activos virtuales de Dubái sea defendible ante cualquier inversor institucional en cualquier jurisdicción.
+El contexto de VARA también es comercial. El ecosistema de activos virtuales regulado por VARA necesita infraestructura de gobernanza de calidad institucional para atraer y retener el capital institucional que sus ambiciones requieren. OMNIX fue construido para proporcionar esa infraestructura: la capa de gobernanza que hace que cualquier operación regulada sea defendible ante cualquier inversor institucional en cualquier jurisdicción.
 
 ---
 
@@ -3369,7 +3369,7 @@ OMNIX Quantum existe para hacer que la segunda respuesta sea alcanzable — téc
 
 El fantasma es visible ahora. Lo que hagas a continuación es tu decisión.
 
-*— Harold Nunes, Dubái, 2026*
+*— Harold Nunes, 2026*
 
 ---
 
