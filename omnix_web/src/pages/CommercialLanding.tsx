@@ -357,7 +357,7 @@ export default function CommercialLanding() {
             <strong className="text-white">OMNIX checks if it should exist at all.</strong>
           </p>
           <p className="text-base text-muted/70 max-w-2xl mx-auto mb-8 leading-relaxed">
-            Governance control architecture for automated decision systems. 11 checkpoints. Cryptographic proof. 9 domains live — trading, credit, insurance, robotics, medical AI, energy, real estate, agents, stablecoin.
+            Governance control architecture for automated decision systems. 11 checkpoints. Cryptographic proof. 10 domains live — trading, islamic credit, insurance, robotics, medical AI, energy, real estate, agents, stablecoin, defense.
           </p>
 
           {/* LIVE COUNTER GLOBAL */}

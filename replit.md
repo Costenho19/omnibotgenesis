@@ -65,7 +65,7 @@ OMNIX QUANTUM provides a robust decision governance platform that enables audita
 
 ## Product
 
-*   **AI-Powered Governance:** Provides real-time, auditable governance decisions across various domains (Trading, Credit, Insurance, Robotics, Medical AI, Autonomous Agents, Energy, Real Estate, Stablecoin Reserve).
+*   **AI-Powered Governance:** Provides real-time, auditable governance decisions across **10 live domains**: Trading, Islamic Credit, Insurance, Robotics, Medical AI, Autonomous Agents, Energy, Real Estate, Stablecoin Reserve, Defense. Each domain has a premium interactive governance demo at `/governance-demo-{domain}`.
 *   **Cryptographically Secure Receipts:** Generates Post-Quantum Cryptography (PQC) signed receipts for every decision, publicly verifiable and W3C Verifiable Credential compatible.
 *   **B2B API:** Offers a robust API for enterprise clients with API key authentication, RBAC, per-client quotas, webhooks, and Python/Node.js SDKs.
 *   **Telegram Bot Interface:** An enterprise-grade Telegram bot allows users to interact with the governance engine, query data, and manage client access.
@@ -86,7 +86,7 @@ OMNIX QUANTUM provides a robust decision governance platform that enables audita
 
 ## Pointers
 
-*   **ADRs:** `docs/adr/`
+*   **ADRs:** `docs/adr/` — 137 total (ADR-136: Robotics vertical · ADR-137: Islamic Credit vertical)
 *   **Full Architecture:** `docs/current/ARCHITECTURE.md`
 *   **Deployment Operations:** `docs/operations/DEPLOYMENT.md`
 *   **Governance Modules Roadmap:** `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md` § GOVERNANCE MODULES ROADMAP (Mar 2026)

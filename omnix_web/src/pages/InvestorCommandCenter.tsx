@@ -77,9 +77,9 @@ const FALLBACK_DATA: LiveMetricsResponse = {
     decisions_today:  0,
     receipts_total:   0,
     uptime_days:      _uptimeDays,
-    adr_count:        135,
+    adr_count:        137,
     checkpoint_count: 11,
-    verticals_live:   9,
+    verticals_live:   10,
     tam_usd:          '212B+',
   },
   pipeline: {
@@ -159,15 +159,21 @@ const FALLBACK_DATA: LiveMetricsResponse = {
       decisions: 0, approved: 0, blocked: 0, hold: 0,
       decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
     },
+    defense: {
+      label: 'Defense & Autonomous Weapons', market_size: '$130B+ Market', live_since: '2026-05-01',
+      cycle_sec: 45, color: '#0EA5E9', icon: <Shield size={22} strokeWidth={1.5} />,
+      decisions: 0, approved: 0, blocked: 0, hold: 0,
+      decisions_today: 0, latest_receipt_id: null, status: 'LIVE',
+    },
   },
   impact_phrases: [
-    'OMNIX is governing decisions across 9 industries simultaneously, right now, in real time.',
-    'One governance engine. Nine domains. Every decision cryptographically signed.',
-    'The same 11-checkpoint pipeline governing trading, credit, insurance, robotics, medical AI, autonomous agents, and more.',
+    'OMNIX is governing decisions across 10 industries simultaneously, right now, in real time.',
+    'One governance engine. Ten domains. Every decision cryptographically signed.',
+    'The same 11-checkpoint pipeline governing trading, islamic credit, insurance, robotics, defense, medical AI, autonomous agents, and more.',
     'Every 3 minutes, a robot or medical AI is evaluated before it\'s permitted to act.',
     'Every governance decision generates a post-quantum cryptographic receipt — independently verifiable.',
     'We didn\'t build a product. We built infrastructure. The live data proves it.',
-    '116 Architecture Decision Records. 11 governance checkpoints. Zero compromise.',
+    '137 Architecture Decision Records. 11 governance checkpoints. Zero compromise.',
   ],
 }
 
@@ -438,7 +444,7 @@ export default function InvestorCommandCenter() {
             <span style={{ color: '#C9A227' }}>Decisions Governed</span>
           </h1>
           <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
-            9 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 116} Architecture Decision Records
+            10 governance engines · 11 checkpoints · Post-quantum cryptography · {t?.adr_count ?? 137} Architecture Decision Records
           </p>
         </div>
 

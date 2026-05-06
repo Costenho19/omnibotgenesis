@@ -215,18 +215,19 @@ export default function GettingStarted() {
 
         {/* Domains */}
         <div className="mb-20">
-          <div className="text-xs text-gray-500 tracking-widest mb-8 font-mono">LIVE ACROSS 9 DOMAINS</div>
+          <div className="text-xs text-gray-500 tracking-widest mb-8 font-mono">LIVE ACROSS 10 DOMAINS</div>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
             {[
               { name: 'Trading',       color: '#C9A227', link: '/governance-demo' },
-              { name: 'Islamic Credit',color: '#a78bfa', link: '/governance-demo' },
+              { name: 'Islamic Credit',color: '#a78bfa', link: '/governance-demo-islamic-credit' },
               { name: 'Insurance',     color: '#60a5fa', link: '/governance-demo-insurance' },
-              { name: 'Robotics',      color: '#34d399', link: '/robotics' },
-              { name: 'Medical AI',    color: '#f472b6', link: '/medical' },
-              { name: 'Energy',        color: '#34d399', link: '/energy' },
-              { name: 'Real Estate',   color: '#fb923c', link: '/real-estate' },
-              { name: 'Agents',        color: '#f59e0b', link: '/agents' },
-              { name: 'Stablecoin',    color: '#818cf8', link: '/stablecoin' },
+              { name: 'Robotics',      color: '#6366F1', link: '/governance-demo-robotics' },
+              { name: 'Medical AI',    color: '#f472b6', link: '/governance-demo-medical' },
+              { name: 'Energy',        color: '#00B4D8', link: '/governance-demo-energy' },
+              { name: 'Real Estate',   color: '#fb923c', link: '/governance-demo-real-estate' },
+              { name: 'Agents',        color: '#f59e0b', link: '/governance-demo-agents' },
+              { name: 'Stablecoin',    color: '#818cf8', link: '/governance-demo-stablecoin' },
+              { name: 'Defense',       color: '#0EA5E9', link: '/governance-demo-defense' },
             ].map((d) => (
               <Link
                 key={d.name}

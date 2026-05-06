@@ -1,7 +1,7 @@
-# ADR-115: Engine Unification — All 8 Verticals on GovernanceEvaluationEngine
+# ADR-115: Engine Unification — All 10 Verticals on GovernanceEvaluationEngine
 
 **Status:** ACCEPTED  
-**Date:** 15 April 2026  
+**Date:** 15 April 2026 (updated 06 May 2026 — expanded to 10 verticals via ADR-136, ADR-137)  
 **Author:** Harold Nunes, OMNIX QUANTUM LTD  
 **Scope:** `omnix_core/medical/medical_simulator.py` · `omnix_core/real_estate/real_estate_simulator.py` · `omnix_core/agents/agents_simulator.py` · `omnix_core/energy/energy_simulator.py`  
 **Resolves:** Architecture gap — 4 of 8 verticals used independent local logic instead of the central governance engine
@@ -12,8 +12,8 @@
 
 ### Pre-ADR-115 state
 
-Following the multi-vertical expansion (ADR-026, ADR-091, ADR-112), OMNIX had 8 live
-verticals but two classes of engine integration:
+Following the multi-vertical expansion (ADR-026, ADR-091, ADR-112, ADR-136, ADR-137), OMNIX now has 10 live
+verticals, all on the same engine. The original gap (pre-ADR-115) was 8 verticals with two classes of engine integration:
 
 **Class A — Fully integrated (called `GovernanceEvaluationEngine`):**
 - Digital Asset Trading
@@ -48,7 +48,8 @@ hard blocks as pre-engine checks that bypass the engine with immediate BLOCKED r
 Maintain a rule-based fallback in case the engine is unavailable (defensive engineering).
 
 **This is the architectural change that makes the statement true:**
-> *"All 8 verticals run on the same 11-checkpoint OMNIX governance pipeline."*
+> *"All 10 verticals run on the same 11-checkpoint OMNIX governance pipeline."*
+> (8 original verticals via ADR-115; Robotics added via ADR-136; Islamic Credit standalone demo via ADR-137)
 
 ---
 

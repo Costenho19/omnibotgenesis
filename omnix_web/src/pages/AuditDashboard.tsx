@@ -64,11 +64,12 @@ const DOMAIN_COLORS: Record<string, string> = {
   credit:            '#a78bfa',
   insurance:         '#60a5fa',
   stablecoin:        '#8B5CF6',
-  robotics:          '#34d399',
+  robotics:          '#6366F1',
   energy_governance: '#00B4D8',
   real_estate:       '#38bdf8',
   medical_ai:        '#f472b6',
   autonomous_agent:  '#fb923c',
+  defense:           '#0EA5E9',
 }
 
 const DOMAIN_ICONS: Record<string, string> = {
@@ -81,11 +82,12 @@ const DOMAIN_ICONS: Record<string, string> = {
   real_estate:       '🏢',
   medical_ai:        '🏥',
   autonomous_agent:  '🧠',
+  defense:           '🎯',
 }
 
 const DOMAIN_LABELS: Record<string, string> = {
   trading:           'Trading',
-  credit:            'Credit',
+  credit:            'Islamic Credit',
   insurance:         'Insurance',
   stablecoin:        'Stablecoin',
   robotics:          'Robotics',
@@ -93,11 +95,12 @@ const DOMAIN_LABELS: Record<string, string> = {
   real_estate:       'Real Estate',
   medical_ai:        'Medical AI',
   autonomous_agent:  'Agents',
+  defense:           'Defense',
 }
 
 const DOMAIN_GROUPS: { label: string; emoji: string; color: string; domains: string[] }[] = [
   { label: 'Financial',  emoji: '💰', color: '#C9A227',  domains: ['trading', 'credit', 'insurance', 'stablecoin'] },
-  { label: 'Physical',   emoji: '⚙️', color: '#34d399',  domains: ['robotics', 'energy_governance', 'real_estate'] },
+  { label: 'Physical',   emoji: '⚙️', color: '#34d399',  domains: ['robotics', 'energy_governance', 'real_estate', 'defense'] },
   { label: 'AI',         emoji: '🧠', color: '#f472b6',  domains: ['medical_ai', 'autonomous_agent'] },
 ]
 
@@ -370,7 +373,7 @@ export default function AuditDashboard() {
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <PulseDot color="#10B981" />
-            <span style={{ fontSize: 10, color: '#475569' }}>LIVE · 9 verticals</span>
+            <span style={{ fontSize: 10, color: '#475569' }}>LIVE · 10 verticals</span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -484,7 +487,7 @@ export default function AuditDashboard() {
               label: 'Decisions Evaluated',
               value: totalDecisions > 0 ? totalDecisions.toLocaleString() : '—',
               color: '#C9A227', icon: <Activity size={15} />,
-              sub: 'all 9 verticals',
+              sub: 'all 10 verticals',
             },
             {
               label: 'Blocked %',
