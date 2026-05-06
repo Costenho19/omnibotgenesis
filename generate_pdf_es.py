@@ -55,10 +55,14 @@ def on_later_pages(canvas, doc):
     canvas.restoreState()
 
 def on_first_page(canvas, doc):
-    """Paint full navy background for the cover page."""
+    """Full-bleed premium cover image on page 1."""
     canvas.saveState()
-    canvas.setFillColor(NAVY)
-    canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
+    cover = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cover_es.png')
+    if os.path.exists(cover):
+        canvas.drawImage(cover, 0, 0, PAGE_W, PAGE_H, preserveAspectRatio=False)
+    else:
+        canvas.setFillColor(NAVY)
+        canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
     canvas.restoreState()
 
 # ── Styles (generous for 220 pages) ──────────────────────────────────
@@ -229,27 +233,8 @@ def _logo_box(width_cm, height_cm):
     return t
 
 def build_cover(styles):
-    e = []
-    # Logo al inicio de la portada
-    if os.path.exists(LOGO_PATH):
-        e.append(Spacer(1, 1.8*cm))
-        e.append(_logo_box(7.0, 4.8))
-        e.append(Spacer(1, 0.8*cm))
-    else:
-        e.append(Spacer(1, 3.5*cm))
-    e.append(HRFlowable(width='100%', thickness=4, color=GOLD, spaceAfter=24))
-    e.append(Paragraph('GHOST', styles['cover_title']))
-    e.append(Paragraph('COMPLIANCE', styles['cover_title']))
-    e.append(Spacer(1, 6*mm))
-    e.append(HRFlowable(width='50%', thickness=1.5, color=GOLD, spaceAfter=16))
-    e.append(Paragraph('La Infraestructura de Gobernanza<br/>Que los Mercados Aún No Han Construido', styles['cover_sub']))
-    e.append(Spacer(1, 3*cm))
-    e.append(Paragraph('Harold Nunes', styles['cover_author']))
-    e.append(Spacer(1, 5*cm))
-    e.append(HRFlowable(width='100%', thickness=1.5, color=GOLD, spaceAfter=12))
-    e.append(Paragraph('© 2026 Harold Nunes / OMNIX Quantum · omnixquantum.net · Primera Edición', styles['cover_copy']))
-    e.append(PageBreak())
-    return e
+    # on_first_page dibuja la portada via canvas; el story solo necesita un page break.
+    return [PageBreak()]
 
 # ── Table of Contents ─────────────────────────────────────────────────
 def build_toc(styles):
