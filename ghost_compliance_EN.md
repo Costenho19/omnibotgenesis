@@ -40,21 +40,15 @@
 
 ---
 
-> *"The governance problem Harold Nunes identifies is not theoretical. I have watched it materialize — in financial services, in technology, in regulated markets across the Gulf. Ghost Compliance gives this failure a name, a mechanism, and a solution. This is the book the governance conversation has been waiting for."*
->
-> — **Mohamed Al Hashemi**, CEO, Union Coop; Young Global Leader, World Economic Forum
+> *[Endorsement pending written authorization — slot reserved]*
 
 ---
 
-> *"Harold names the three failure modes worth pressure-testing first: trust inheritance at handoff points, state drift between the receipt snapshot and live execution context, and silent degradation in the audit chain under retry or failure conditions. This is not language. This is architecture."*
->
-> — **M. Mansoor Ul Haq**, Enterprise Technology Leader
+> *[Endorsement pending written authorization — slot reserved]*
 
 ---
 
-> *"The architecture Harold describes solves a real problem. The hardest challenge in regulated financial services isn't building the architecture — it's getting it adopted. Ghost Compliance makes the case for both."*
->
-> — **Rehan Kausar**, Chief AI Officer, Enterprise AI Governance
+> *[Endorsement pending written authorization — slot reserved]*
 
 ---
 
@@ -218,7 +212,7 @@ Use the glossary in Appendix A. The field has accumulated terminology that obscu
 
 > *"By the time the failure becomes visible, it is no longer a governance issue. It is already institutional."*
 >
-> — **Mohamed Al Hashemi**
+> — *Senior executive, regulated markets*
 
 ---
 
@@ -329,7 +323,7 @@ This book does not argue that governance should be better. It shows how to make 
 
 > *"Governance doesn't fail because of bad decisions. It fails because no one questions the acceptable ones."*
 >
-> — **Mohamed Al Hashemi**, CEO, Union Coop
+> — *Senior executive, regulated markets*
 
 ---
 

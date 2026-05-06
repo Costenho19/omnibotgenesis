@@ -40,21 +40,15 @@
 
 ---
 
-> *"El problema de gobernanza que Harold Nunes identifica no es teórico. Lo he visto materializarse — en servicios financieros, en tecnología, en mercados regulados a lo largo del Golfo. El Cumplimiento Fantasma le da a esta falla un nombre, un mecanismo y una solución. Este es el libro que la conversación sobre gobernanza estaba esperando."*
->
-> — **Mohamed Al Hashemi**, CEO, Union Coop; Líder Global Joven, Foro Económico Mundial
+> *[Elogio pendiente de autorización escrita — espacio reservado]*
 
 ---
 
-> *"Harold nombra los tres modos de falla que vale la pena probar bajo presión primero: herencia de confianza en los puntos de traspaso, deriva de estado entre el snapshot del recibo y el contexto de ejecución en vivo, y degradación silenciosa en la cadena de auditoría bajo condiciones de reintento. Esto no es lenguaje. Es arquitectura."*
->
-> — **M. Mansoor Ul Haq**, Líder Tecnológico Empresarial
+> *[Elogio pendiente de autorización escrita — espacio reservado]*
 
 ---
 
-> *"La arquitectura que Harold describe resuelve un problema real. El reto más difícil en los servicios financieros regulados no es construir la arquitectura — es lograr que sea adoptada. El Cumplimiento Fantasma argumenta ambas cosas."*
->
-> — **Rehan Kausar**, Chief AI Officer, Gobernanza de IA Empresarial
+> *[Elogio pendiente de autorización escrita — espacio reservado]*
 
 ---
 
@@ -218,7 +212,7 @@ Usa el glosario en el Apéndice A. El campo ha acumulado terminología que oscur
 
 > *"Para cuando el fallo se hace visible, ya no es un problema de gobernanza. Ya es institucional."*
 >
-> — **Mohamed Al Hashemi**
+> — *Ejecutivo senior, mercados regulados*
 
 ---
 
@@ -323,7 +317,7 @@ Este libro no argumenta que la gobernanza debería ser mejor. Muestra cómo hace
 
 > *"La gobernanza no falla por malas decisiones. Falla porque nadie cuestiona las aceptables."*
 >
-> — **Mohamed Al Hashemi**, CEO, Union Coop
+> — *Ejecutivo senior, mercados regulados*
 
 ---
 
