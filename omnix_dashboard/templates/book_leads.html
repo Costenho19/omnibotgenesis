@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Book Leads — Ghost Compliance{% endblock %}
+
+{% block content %}
+<div class="min-h-screen" style="background:#0A1628; font-family:'Inter',sans-serif;">
+
+  <!-- Header -->
+  <div style="background:#0A1628; border-bottom:3px solid #C9A227; padding:16px 32px; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <span style="color:#C9A227; font-weight:800; font-size:18px; letter-spacing:2px;">OMNIX QUANTUM</span>
+      <span style="color:#6A8A9A; font-size:12px; margin-left:16px;">Book Leads — Ghost Compliance</span>
+    </div>
+    <a href="/terminal" style="color:#6A8A9A; font-size:12px; text-decoration:none;">← Dashboard</a>
+  </div>
+
+  <div style="max-width:1100px; margin:0 auto; padding:40px 24px;">
+
+    <!-- Stats -->
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px;">
+      <div style="background:#0F1F35; border:1px solid #C9A227; border-radius:8px; padding:20px; text-align:center;">
+        <div style="color:#C9A227; font-size:36px; font-weight:800;" id="total-leads">—</div>
+        <div style="color:#AAC4D8; font-size:12px; margin-top:4px; text-transform:uppercase; letter-spacing:2px;">Total Leads</div>
+      </div>
+      <div style="background:#0F1F35; border:1px solid #2E86C1; border-radius:8px; padding:20px; text-align:center;">
+        <div style="color:#2E86C1; font-size:36px; font-weight:800;" id="today-leads">—</div>
+        <div style="color:#AAC4D8; font-size:12px; margin-top:4px; text-transform:uppercase; letter-spacing:2px;">Today</div>
+      </div>
+      <div style="background:#0F1F35; border:1px solid #27AE60; border-radius:8px; padding:20px; text-align:center;">
+        <div style="color:#27AE60; font-size:36px; font-weight:800;" id="unique-companies">—</div>
+        <div style="color:#AAC4D8; font-size:12px; margin-top:4px; text-transform:uppercase; letter-spacing:2px;">Unique Companies</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div style="background:#0F1F35; border:1px solid #1E3A5F; border-radius:8px; overflow:hidden;">
+      <div style="padding:16px 20px; border-bottom:1px solid #1E3A5F; display:flex; justify-content:space-between; align-items:center;">
+        <span style="color:#C9A227; font-weight:700; font-size:14px; letter-spacing:1px;">LEADS REGISTRADOS</span>
+        <button onclick="downloadCSV()" style="background:#C9A227; color:#0A1628; border:none; border-radius:4px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer;">
+          ⬇ Exportar CSV
+        </button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="background:#0A1628;">
+              <th style="padding:12px 16px; text-align:left; color:#6A8A9A; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #1E3A5F;">#</th>
+              <th style="padding:12px 16px; text-align:left; color:#6A8A9A; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #1E3A5F;">Fecha</th>
+              <th style="padding:12px 16px; text-align:left; color:#6A8A9A; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #1E3A5F;">Nombre</th>
+              <th style="padding:12px 16px; text-align:left; color:#6A8A9A; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #1E3A5F;">Empresa</th>
+              <th style="padding:12px 16px; text-align:left; color:#6A8A9A; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #1E3A5F;">Correo</th>
+              <th style="padding:12px 16px; text-align:left; color:#6A8A9A; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid #1E3A5F;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <tr>
+              <td colspan="6" style="padding:40px; text-align:center; color:#6A8A9A;">Cargando leads...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p style="color:#3A5A7A; font-size:11px; margin-top:16px; text-align:center;">
+      Datos guardados en PostgreSQL · omnixquantum.net/book
+    </p>
+  </div>
+</div>
+
+<script>
+let allLeads = [];
+
+async function loadLeads() {
+  try {
+    const res = await fetch('/api/book-leads-admin');
+    const data = await res.json();
+    allLeads = data.leads || [];
+    renderTable(allLeads);
+    updateStats(allLeads);
+  } catch(e) {
+    document.getElementById('leads-tbody').innerHTML =
+      '<tr><td colspan="6" style="padding:40px;text-align:center;color:#E74C3C;">Error cargando leads</td></tr>';
+  }
+}
+
+function updateStats(leads) {
+  document.getElementById('total-leads').textContent = leads.length;
+  const today = new Date().toISOString().split('T')[0];
+  const todayCount = leads.filter(l => l.ts && l.ts.startsWith(today)).length;
+  document.getElementById('today-leads').textContent = todayCount;
+  const companies = new Set(leads.map(l => (l.company||'').toLowerCase().trim()).filter(Boolean));
+  document.getElementById('unique-companies').textContent = companies.size;
+}
+
+function renderTable(leads) {
+  const tbody = document.getElementById('leads-tbody');
+  if (!leads.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#6A8A9A;">Sin leads todavía — comparte omnixquantum.net/book</td></tr>';
+    return;
+  }
+  tbody.innerHTML = leads.map((l, i) => {
+    const dt = l.ts ? new Date(l.ts).toLocaleString('es-US', {dateStyle:'short', timeStyle:'short'}) : '—';
+    return `<tr style="border-bottom:1px solid #1E3A5F; ${i%2===0?'background:#0F1F35':'background:#0A1D30'}">
+      <td style="padding:12px 16px; color:#6A8A9A;">${l.id}</td>
+      <td style="padding:12px 16px; color:#7FB3D3; font-size:12px;">${dt}</td>
+      <td style="padding:12px 16px; color:#FFFFFF; font-weight:500;">${l.name||'—'}</td>
+      <td style="padding:12px 16px; color:#C9A227;">${l.company||'—'}</td>
+      <td style="padding:12px 16px; color:#AAC4D8;">${l.email||'—'}</td>
+      <td style="padding:12px 16px;">
+        <a href="mailto:${l.email}" style="color:#2E86C1; font-size:12px; text-decoration:none; font-weight:600;">Contactar →</a>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function downloadCSV() {
+  if (!allLeads.length) return;
+  const header = ['id','fecha','nombre','empresa','correo'];
+  const rows = allLeads.map(l => [l.id, l.ts, l.name, l.company, l.email]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${(v||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'ghost_compliance_leads.csv';
+  a.click();
+}
+
+loadLeads();
+setInterval(loadLeads, 30000);
+</script>
+{% endblock %}

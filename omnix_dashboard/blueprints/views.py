@@ -8,13 +8,41 @@ import io
 import os
 import zipfile
 from flask import Blueprint, render_template, send_from_directory, redirect, jsonify, request, send_file
-from omnix_dashboard.utils.database import init_database
+from omnix_dashboard.utils.database import init_database, get_db_connection
 
 views_bp = Blueprint('views', __name__)
 
 REACT_DIST = os.path.normpath(
     os.path.join(os.path.dirname(__file__), '..', '..', 'omnix_web', 'dist')
 )
+
+
+@views_bp.route('/book-leads')
+def book_leads_page():
+    """Book leads dashboard — Ghost Compliance downloads"""
+    return render_template('book_leads.html')
+
+
+@views_bp.route('/api/book-leads-admin')
+def book_leads_admin():
+    """Return all book leads for internal dashboard"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS book_leads (
+                id SERIAL PRIMARY KEY,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                name TEXT, company TEXT, email TEXT, ip TEXT
+            )
+        """)
+        conn.commit()
+        cur.execute("SELECT id, created_at, name, company, email FROM book_leads ORDER BY created_at DESC")
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+        return jsonify({'leads': [{'id': r[0], 'ts': str(r[1]), 'name': r[2], 'company': r[3], 'email': r[4]} for r in rows]})
+    except Exception as exc:
+        return jsonify({'leads': [], 'error': str(exc)})
 
 
 @views_bp.route('/terminal')
