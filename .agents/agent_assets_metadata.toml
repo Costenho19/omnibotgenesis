@@ -1,5 +1,10 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "4LZCnN9ALNrtI5biy5Dgv"
+uri = "file://attached_assets/ghost_compliance_cover_linkedin.png"
+type = "image"
+title = "ghost compliance book cover linkedin"
 
 [[outputs]]
 id = "1wSIlrHhddlnvbp3eIEHS"
@@ -486,3 +491,9 @@ id = "9OXH-IcWZdHd9B181RAXE"
 uri = "file://figure1_updated.png"
 type = "image"
 title = "Figure 1 — Actualizada con los 3 cambios"
+
+[[outputs]]
+id = "ONSLgpL8-RLrWHNn6jSg2"
+uri = "file://attached_assets/ghost_compliance_cover_linkedin.png"
+type = "image"
+title = "Ghost Compliance — Portada LinkedIn"
