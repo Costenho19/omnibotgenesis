@@ -455,10 +455,22 @@ title = "Libro Completo — ESPAÑOL"
 id = "DVMz3LCR4DMJHW_wvqIun"
 uri = "file://Ghost_Compliance_ES.pdf"
 type = "pdf"
-title = "Ghost Compliance — ES — AUDITADO (287 págs)"
+title = "Ghost Compliance — PDF ES (subir a Gumroad)"
 
 [[outputs]]
 id = "CV1yR-1PUf_fhnFXTvrEz"
 uri = "file://Ghost_Compliance_EN.pdf"
 type = "pdf"
-title = "Ghost Compliance — EN — AUDITADO (322 págs)"
+title = "Ghost Compliance — PDF EN (subir a Gumroad)"
+
+[[outputs]]
+id = "BPV5NnDn8DT9Lw2EOx9hJ"
+uri = "file://gumroad_cover_en.png"
+type = "image"
+title = "Portada Gumroad — EN (1280x720)"
+
+[[outputs]]
+id = "ePGkI1SEEraQ6UAEcuEmq"
+uri = "file://gumroad_cover_es.png"
+type = "image"
+title = "Portada Gumroad — ES (1280x720)"
