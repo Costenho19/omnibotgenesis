@@ -35,6 +35,7 @@ import IndependentVerification from './pages/IndependentVerification'
 import GettingStarted from './pages/GettingStarted'
 import ARFCompliance from './pages/ARFCompliance'
 import FullDemo from './pages/FullDemo'
+import BookLanding from './pages/BookLanding'
 import './index.css'
 
 function App() {
@@ -76,6 +77,7 @@ function App() {
           <Route path="/docs" element={<GettingStarted />} />
           <Route path="/eidas" element={<ARFCompliance />} />
           <Route path="/full-demo" element={<FullDemo />} />
+          <Route path="/book" element={<BookLanding />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />
