@@ -4472,3 +4472,71 @@ Governance that cannot be independently verified is not governance. It is assert
 *Printed and distributed internationally*
 
 *The paper used in this publication meets the minimum requirements of American National Standard for Information Sciences — Permanence of Paper for Printed Library Materials, ANSI Z39.48-1992.*
+
+---
+
+# ABOUT THE AUTHOR
+
+Harold Nunes is the founder of OMNIX Quantum, an independent governance infrastructure initiative focused on runtime compliance, continuous validation, and post-quantum auditability across regulated systems.
+
+He approaches governance architecture as a self-taught builder and independent researcher — motivated by a fundamental observation: the governance infrastructure most regulated institutions rely on was not built for the systems they now operate.
+
+His work centers on a single question: what would it look like if governance decisions were not assertions to be audited later, but verifiable outputs — produced in real time, signed cryptographically, and independently verifiable by any party without access to proprietary systems?
+
+OMNIX Quantum is his answer to that question.
+
+He operates from the conviction that the most consequential infrastructure problems are rarely solved by those with the most credentials. They are solved by those who see the gap clearly enough, and are stubborn enough to build something real.
+
+---
+
+*For speaking engagements, institutional inquiries, and media:*
+*contact@omnixquantum.net · omnixquantum.net*
+
+---
+
+# ABOUT OMNIX QUANTUM
+
+OMNIX Quantum is an independent governance infrastructure initiative building the runtime compliance layer that regulated AI systems, financial institutions, and autonomous operations require — but do not yet have.
+
+**What OMNIX Quantum builds:**
+
+- **Runtime Governance Engine** — evaluates decisions in real time against jurisdiction-specific compliance frameworks, AVM calibration baselines, and multi-layer signal validation
+- **Post-Quantum Cryptographic Receipts** — every governance decision produces a signed, verifiable receipt using ML-DSA-65, independently verifiable without proprietary tools
+- **Multi-Vertical Coverage** — governance logic for trading, credit, insurance, medical AI, robotics, autonomous agents, energy, real estate, and stablecoin reserve operations
+- **B2B API** — enterprise-grade API with client authentication, per-client thresholds, RBAC, webhook delivery, and Python / Node.js SDKs
+- **W3C Verifiable Credentials** — governance receipts are structured as W3C VCs, compatible with eIDAS 2.0 and EU AI Act requirements
+- **Anti-Replay Protection** — cryptographic gates prevent receipt duplication or timestamp manipulation
+
+**Current status:** Operational. Nine governance verticals live. PQC infrastructure deployed.
+
+---
+
+*Enterprise inquiries, API access, and partnership:*
+*contact@omnixquantum.net · omnixquantum.net/enterprise*
+
+---
+
+# START WITH OMNIX QUANTUM
+
+The governance failures documented in this book were not edge cases. They were the predictable result of systems that evaluated risk with photographs while operating in real time.
+
+If your institution operates automated decision-making, regulated AI, or autonomous execution — and you want governance that produces verifiable outputs rather than retrospective reports — OMNIX Quantum is built for that conversation.
+
+**Request a live demonstration:**
+omnixquantum.net/demo
+
+**Enterprise API access:**
+omnixquantum.net/enterprise
+
+**Verify any OMNIX receipt:**
+omnixquantum.net/verify
+
+**Direct contact:**
+contact@omnixquantum.net
+
+---
+
+*Ghost Compliance is available in English and Spanish.*
+*For bulk licensing, institutional distribution, and translation rights: contact@omnixquantum.net*
+
+*© 2026 Harold Nunes / OMNIX Quantum. All rights reserved.*

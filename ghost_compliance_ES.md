@@ -3927,3 +3927,71 @@ La gobernanza que no puede ser verificada independientemente no es gobernanza. E
 
 *Primera Edición, 2026*
 *Impreso y distribuido internacionalmente*
+
+---
+
+# SOBRE EL AUTOR
+
+Harold Nunes es el fundador de OMNIX Quantum, una iniciativa independiente de infraestructura de gobernanza enfocada en cumplimiento en tiempo real, validación continua, y auditabilidad post-cuántica en sistemas regulados.
+
+Aborda la arquitectura de gobernanza como builder autodidacta e investigador independiente — impulsado por una observación fundamental: la infraestructura de gobernanza en la que confían la mayoría de las instituciones reguladas no fue construida para los sistemas que operan hoy.
+
+Su trabajo gira en torno a una sola pregunta: ¿cómo sería la gobernanza si las decisiones no fueran afirmaciones a auditar después, sino outputs verificables — producidos en tiempo real, firmados criptográficamente, e independientemente verificables por cualquier parte sin acceso a sistemas propietarios?
+
+OMNIX Quantum es su respuesta a esa pregunta.
+
+Opera desde la convicción de que los problemas de infraestructura más importantes rara vez son resueltos por quienes tienen más credenciales. Son resueltos por quienes ven la brecha con suficiente claridad, y son suficientemente persistentes para construir algo real.
+
+---
+
+*Para conferencias, consultas institucionales y medios:*
+*contact@omnixquantum.net · omnixquantum.net*
+
+---
+
+# SOBRE OMNIX QUANTUM
+
+OMNIX Quantum es una iniciativa independiente de infraestructura de gobernanza que construye la capa de cumplimiento en tiempo real que los sistemas de IA regulados, las instituciones financieras y las operaciones autónomas requieren — pero aún no tienen.
+
+**Lo que OMNIX Quantum construye:**
+
+- **Motor de Gobernanza en Tiempo Real** — evalúa decisiones en tiempo real contra marcos de cumplimiento por jurisdicción, líneas base AVM, y validación de señales multicapa
+- **Recibos Criptográficos Post-Cuánticos** — cada decisión de gobernanza produce un recibo firmado y verificable con ML-DSA-65, verificable independientemente sin herramientas propietarias
+- **Cobertura Multi-Vertical** — lógica de gobernanza para trading, crédito, seguros, IA médica, robótica, agentes autónomos, energía, bienes raíces y reservas de stablecoins
+- **API B2B** — API enterprise con autenticación de clientes, umbrales por cliente, RBAC, entrega de webhooks y SDKs en Python / Node.js
+- **Credenciales Verificables W3C** — los recibos de gobernanza están estructurados como VCs W3C, compatibles con eIDAS 2.0 y los requisitos del Acta de IA de la UE
+- **Protección Anti-Replay** — puertas criptográficas previenen duplicación de recibos o manipulación de marcas de tiempo
+
+**Estado actual:** Operativo. Nueve verticales de gobernanza activos. Infraestructura PQC desplegada.
+
+---
+
+*Consultas enterprise, acceso a API y asociaciones:*
+*contact@omnixquantum.net · omnixquantum.net/enterprise*
+
+---
+
+# COMIENZA CON OMNIX QUANTUM
+
+Los fallos de gobernanza documentados en este libro no fueron casos extremos. Fueron el resultado predecible de sistemas que evaluaban el riesgo con fotografías mientras operaban en tiempo real.
+
+Si tu institución opera toma de decisiones automatizada, IA regulada, o ejecución autónoma — y quieres gobernanza que produzca outputs verificables en lugar de informes retrospectivos — OMNIX Quantum está construido para esa conversación.
+
+**Solicita una demostración en vivo:**
+omnixquantum.net/demo
+
+**Acceso a API enterprise:**
+omnixquantum.net/enterprise
+
+**Verificar cualquier recibo OMNIX:**
+omnixquantum.net/verify
+
+**Contacto directo:**
+contact@omnixquantum.net
+
+---
+
+*Ghost Compliance está disponible en inglés y español.*
+*Para licencias a granel, distribución institucional y derechos de traducción: contact@omnixquantum.net*
+
+*© 2026 Harold Nunes / OMNIX Quantum. Todos los derechos reservados.*
