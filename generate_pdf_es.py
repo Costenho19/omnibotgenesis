@@ -3,6 +3,8 @@ Ghost Compliance — Generador PDF Premium v3
 Target: ~220 páginas · Cajas sin Unicode · Gráficos reales · TOC
 """
 import re, os
+LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         'omnix_web', 'public', 'book_logo.png')
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
@@ -210,9 +212,31 @@ def build_blockquote(text, styles):
     return [Spacer(1,4), t, Spacer(1,8)]
 
 # ── Cover ─────────────────────────────────────────────────────────────
+def _logo_box(width_cm, height_cm):
+    """Devuelve una Table con fondo navy conteniendo el logo OMNIX."""
+    img = Image(LOGO_PATH, width=width_cm*cm, height=height_cm*cm)
+    t = Table([[img]], colWidths=[width_cm*cm + 1.0*cm])
+    t.setStyle(TableStyle([
+        ('BACKGROUND',    (0,0), (-1,-1), colors.HexColor('#0A1628')),
+        ('ALIGN',         (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING',    (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('LEFTPADDING',   (0,0), (-1,-1), 6),
+        ('RIGHTPADDING',  (0,0), (-1,-1), 6),
+    ]))
+    t.hAlign = 'CENTER'
+    return t
+
 def build_cover(styles):
     e = []
-    e.append(Spacer(1, 3.5*cm))
+    # Logo al inicio de la portada
+    if os.path.exists(LOGO_PATH):
+        e.append(Spacer(1, 1.8*cm))
+        e.append(_logo_box(7.0, 4.8))
+        e.append(Spacer(1, 0.8*cm))
+    else:
+        e.append(Spacer(1, 3.5*cm))
     e.append(HRFlowable(width='100%', thickness=4, color=GOLD, spaceAfter=24))
     e.append(Paragraph('GHOST', styles['cover_title']))
     e.append(Paragraph('COMPLIANCE', styles['cover_title']))
@@ -221,8 +245,6 @@ def build_cover(styles):
     e.append(Paragraph('La Infraestructura de Gobernanza<br/>Que los Mercados Aún No Han Construido', styles['cover_sub']))
     e.append(Spacer(1, 3*cm))
     e.append(Paragraph('Harold Nunes', styles['cover_author']))
-    e.append(Spacer(1, 4*mm))
-    e.append(Paragraph('OMNIX Quantum', styles['cover_brand']))
     e.append(Spacer(1, 5*cm))
     e.append(HRFlowable(width='100%', thickness=1.5, color=GOLD, spaceAfter=12))
     e.append(Paragraph('© 2026 Harold Nunes / OMNIX Quantum · omnixquantum.net · Primera Edición', styles['cover_copy']))
@@ -288,10 +310,13 @@ def build_toc(styles):
 def build_part_page(label, styles):
     e = []
     e.append(PageBreak())
-    e.append(Spacer(1, 4.5*cm))
+    e.append(Spacer(1, 3.8*cm))
     e.append(HRFlowable(width='100%', thickness=3, color=GOLD, spaceAfter=22))
     e.append(Paragraph(label, styles['part_title']))
-    e.append(HRFlowable(width='100%', thickness=1, color=GOLD, spaceAfter=0))
+    e.append(HRFlowable(width='100%', thickness=1, color=GOLD, spaceAfter=18))
+    if os.path.exists(LOGO_PATH):
+        e.append(Spacer(1, 5*mm))
+        e.append(_logo_box(4.5, 3.1))
     e.append(PageBreak())
     return e
 
