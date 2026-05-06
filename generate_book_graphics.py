@@ -38,13 +38,13 @@ def base_fig(w=FIG_W, h=FIG_H, bg=LIGHT_BG):
     return fig
 
 def add_branding(fig, title_left='', title_right='OMNIX QUANTUM'):
-    fig.text(0.015, 0.97, title_left, ha='left', va='top',
-             fontsize=8, color=MID_GRAY, fontweight='normal',
+    fig.text(0.015, 0.985, title_left, ha='left', va='top',
+             fontsize=7.5, color=MID_GRAY, fontweight='normal',
              fontfamily='DejaVu Sans')
-    fig.text(0.985, 0.97, title_right, ha='right', va='top',
-             fontsize=8, color=GOLD, fontweight='bold',
+    fig.text(0.985, 0.985, title_right, ha='right', va='top',
+             fontsize=7.5, color=GOLD, fontweight='bold',
              fontfamily='DejaVu Sans')
-    fig.add_artist(plt.Line2D([0.015, 0.985], [0.955, 0.955],
+    fig.add_artist(plt.Line2D([0.015, 0.985], [0.968, 0.968],
                               transform=fig.transFigure,
                               color=GOLD, linewidth=0.8, alpha=0.7))
 
@@ -127,7 +127,7 @@ def g01():
 # GRAPHIC 02 — AVM Six Signals Radar
 # ──────────────────────────────────────────────────────────────────────────────
 def g02():
-    fig = base_fig(12, 6.8)
+    fig = base_fig(13, 7.5)
     fig.patch.set_facecolor(LIGHT_BG)
 
     labels = ['Probability\nScore', 'Signal\nCoherence', 'Risk\nExposure',
@@ -164,20 +164,21 @@ def g02():
         ax_r.fill(angles, v, alpha=alpha, color=color)
 
     ax_r.set_xticks(angles[:-1])
-    ax_r.set_xticklabels(labels, size=9.5, color=NAVY, fontweight='bold')
+    ax_r.set_xticklabels(labels, size=10, color=NAVY, fontweight='bold')
     ax_r.set_ylim(0, 1)
     ax_r.set_yticks([0.25, 0.5, 0.75, 1.0])
     ax_r.set_yticklabels(['0.25', '0.50', '0.75', '1.00'],
                           size=7.5, color=MID_GRAY)
-    ax_r.tick_params(pad=10)
+    ax_r.tick_params(pad=16)
     ax_r.spines['polar'].set_color(MID_GRAY)
     ax_r.grid(color=MID_GRAY, alpha=0.4, linewidth=0.6)
 
     ax_r.set_title('AVM — Six-Signal Assumption Validity Monitor',
-                   fontsize=13, color=NAVY, fontweight='bold', pad=22)
+                   fontsize=13, color=NAVY, fontweight='bold', pad=28)
 
-    ax_r.legend(loc='lower center', bbox_to_anchor=(0.5, -0.18),
-                ncol=3, fontsize=8.5, framealpha=0.85)
+    ax_r.legend(loc='lower center', bbox_to_anchor=(0.5, -0.22),
+                ncol=3, fontsize=9, framealpha=0.85)
+    fig.subplots_adjust(left=0.10, right=0.90, top=0.84, bottom=0.18)
     add_branding(fig, 'FIGURE 2 — AVM Six Signals Radar')
     save(fig, '02_avm_signals.png')
 
@@ -187,7 +188,7 @@ def g02():
 def g03():
     fig = base_fig(12, 7.2)
     fig.patch.set_facecolor(LIGHT_BG)
-    ax = fig.add_axes([0, 0, 1, 1])
+    ax = fig.add_axes([0.02, 0.03, 0.96, 0.84])
     ax.set_xlim(0, 12); ax.set_ylim(0, 7.2)
     ax.axis('off')
 
@@ -242,12 +243,12 @@ def g03():
 def g04():
     fig = base_fig(12, 7)
     fig.patch.set_facecolor(LIGHT_BG)
-    ax = fig.add_axes([0, 0, 1, 1])
-    ax.set_xlim(0, 12); ax.set_ylim(0, 7)
+    ax = fig.add_axes([0.02, 0.02, 0.96, 0.84])
+    ax.set_xlim(0, 12); ax.set_ylim(0, 7.8)
     ax.axis('off')
 
     # Center
-    cx, cy = 6.0, 3.5
+    cx, cy = 6.0, 3.7
     circle_c = plt.Circle((cx, cy), 0.9, facecolor=NAVY, edgecolor=GOLD, linewidth=3)
     ax.add_patch(circle_c)
     ax.text(cx, cy + 0.15, 'OMNIX', ha='center', va='center',
@@ -301,7 +302,7 @@ def g04():
 def g05():
     fig = base_fig(12, 6.8)
     fig.patch.set_facecolor(LIGHT_BG)
-    ax = fig.add_axes([0, 0, 1, 1])
+    ax = fig.add_axes([0.02, 0.03, 0.96, 0.84])
     ax.set_xlim(0, 12); ax.set_ylim(0, 6.8)
     ax.axis('off')
 
@@ -419,7 +420,7 @@ def g06():
 def g07():
     fig = base_fig(12, 6.8)
     fig.patch.set_facecolor(LIGHT_BG)
-    ax = fig.add_axes([0, 0, 1, 1])
+    ax = fig.add_axes([0.02, 0.03, 0.96, 0.84])
     ax.set_xlim(0, 12); ax.set_ylim(0, 6.8)
     ax.axis('off')
 
@@ -490,7 +491,7 @@ def g07():
 def g08():
     fig = base_fig(12, 7)
     fig.patch.set_facecolor(LIGHT_BG)
-    ax = fig.add_axes([0, 0, 1, 1])
+    ax = fig.add_axes([0.02, 0.03, 0.96, 0.84])
     ax.set_xlim(0, 12); ax.set_ylim(0, 7)
     ax.axis('off')
 
@@ -642,32 +643,52 @@ def g10():
     ax.set_facecolor(LIGHT_BG)
 
     cases = [
-        ('LTCM\n1998', 1998.7,  -125,  'Quant model\nassumption failure',  RED_ALERT),
-        ('Enron\n2001', 2001.9,  -63,   'Governance\nphantom structure',   AMBER),
-        ('Lehman\n2008', 2008.7, -691,  'Systemic risk\nnot detected',     RED_ALERT),
-        ('MF Global\n2011', 2011.8, -41, 'Risk model\nphoto problem',      AMBER),
-        ('Terra/Luna\n2022', 2022.4,-18,  'Mechanism\nghost compliance',   RED_ALERT),
-        ('SVB\n2023', 2023.2,    -20,   'Rate risk\nassumption drift',     AMBER),
-        ('FTX\n2022', 2022.9,    -32,   'Audit trail\ncomplete absence',   RED_ALERT),
+        ('LTCM\n1998',      1998.7, -125, 'Quant model\nassumption failure', RED_ALERT),
+        ('Enron\n2001',     2001.9,  -63, 'Governance\nphantom structure',   AMBER),
+        ('Lehman\n2008',    2008.7, -691, 'Systemic risk\nnot detected',     RED_ALERT),
+        ('MF Global\n2011', 2011.8,  -41, 'Risk model\nphoto problem',       AMBER),
+        ('Terra/Luna\n2022',2022.4,  -18, 'Mechanism\nghost compliance',     RED_ALERT),
+        ('FTX\n2022',       2022.9,  -32, 'Audit trail\ncomplete absence',   RED_ALERT),
+        ('SVB\n2023',       2023.2,  -20, 'Rate risk\nassumption drift',     AMBER),
     ]
 
     xs = [c[1] for c in cases]
     ys = [max(c[2]/691 * 90 + 15, -88) for c in cases]
+
+    # Custom label positions to avoid crowding at 2022-2023
+    custom_label = {
+        'Terra/Luna\n2022': dict(x_off=-0.8, y_off=-10, ha='right',  va='top',   reason_y_off=-20),
+        'FTX\n2022':        dict(x_off= 0.0, y_off= 20, ha='center', va='bottom', reason_y_off= 18),
+        'SVB\n2023':        dict(x_off= 0.9, y_off=-10, ha='left',   va='top',   reason_y_off=-20),
+    }
 
     ax.axhline(0, color=NAVY, linewidth=1.5, alpha=0.7)
 
     for (name, yr, loss_bn, reason, color), y in zip(cases, ys):
         ax.axvline(yr, color=color, linewidth=1.2, alpha=0.5, linestyle='--')
         ax.scatter([yr], [y], color=color, s=100, zorder=5)
-        offset = -12 if y > -40 else 12
-        va = 'top' if y > -40 else 'bottom'
-        ax.text(yr, y + offset, f'{name}', ha='center', va=va,
-                fontsize=8, color=NAVY, fontweight='bold',
-                bbox=dict(boxstyle='round,pad=0.25', facecolor=WHITE,
-                          edgecolor=color, alpha=0.9, linewidth=1.5))
-        ax.text(yr, y + offset - (18 if va == 'top' else -18),
-                reason, ha='center', va=va,
-                fontsize=6.8, color=SLATE, style='italic')
+
+        if name in custom_label:
+            cl = custom_label[name]
+            lx = yr + cl['x_off']
+            ly = y  + cl['y_off']
+            ax.text(lx, ly, name, ha=cl['ha'], va=cl['va'],
+                    fontsize=8, color=NAVY, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.25', facecolor=WHITE,
+                              edgecolor=color, alpha=0.9, linewidth=1.5))
+            ax.text(lx, ly + cl['reason_y_off'], reason,
+                    ha=cl['ha'], va=cl['va'],
+                    fontsize=6.5, color=SLATE, style='italic')
+        else:
+            offset = -12 if y > -40 else 12
+            va = 'top' if y > -40 else 'bottom'
+            ax.text(yr, y + offset, name, ha='center', va=va,
+                    fontsize=8, color=NAVY, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.25', facecolor=WHITE,
+                              edgecolor=color, alpha=0.9, linewidth=1.5))
+            ax.text(yr, y + offset - (18 if va == 'top' else -18),
+                    reason, ha='center', va=va,
+                    fontsize=6.8, color=SLATE, style='italic')
 
     ax.set_xlim(1996, 2026)
     ax.set_ylim(-95, 40)
@@ -698,7 +719,7 @@ def g10():
 def g11():
     fig = base_fig(12, 7)
     fig.patch.set_facecolor(LIGHT_BG)
-    ax = fig.add_axes([0, 0, 1, 1])
+    ax = fig.add_axes([0.02, 0.03, 0.96, 0.84])
     ax.set_xlim(0, 12); ax.set_ylim(0, 7)
     ax.axis('off')
 
