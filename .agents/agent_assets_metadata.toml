@@ -497,3 +497,9 @@ id = "ONSLgpL8-RLrWHNn6jSg2"
 uri = "file://attached_assets/ghost_compliance_cover_linkedin.png"
 type = "image"
 title = "Ghost Compliance — Portada LinkedIn"
+
+[[outputs]]
+id = "YNtuXV3kdtS-2tBOSTBCl"
+uri = "file://attached_assets/ghost_compliance_cover_v2.png"
+type = "image"
+title = "Ghost Compliance — Portada con Logo"
