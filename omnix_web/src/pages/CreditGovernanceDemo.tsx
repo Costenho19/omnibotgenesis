@@ -1,812 +1,387 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, CreditCard, TrendingUp, BarChart3, Zap, Activity, Layers, Target, Brain } from 'lucide-react'
-import { useLiveMetrics } from '../hooks/useLiveMetrics'
+import {
+  Shield, CheckCircle, XCircle, AlertTriangle, Activity, Clock,
+  Building2, CreditCard, TrendingUp, Layers, Target, Brain, ArrowRight, Zap, Lock,
+} from 'lucide-react'
 
-interface CheckpointResult {
-  name: string
-  genericName: string
-  icon: React.ReactNode
-  status: 'pending' | 'evaluating' | 'pass' | 'warn' | 'block'
-  score: number
-  threshold: number
-  reasoning: string
-  detail: string
-}
-
-interface LoanApplication {
-  loanAmount: number
-  creditScore: number
-  dtiRatio: number
-  sector: string
-  incomeStability: string
-  marketCondition: string
-}
+const CRD_GREEN  = '#10B981'
+const CRD_LIGHT  = '#34D399'
+const CRD_DARK   = '#080F0A'
+const CRD_BORDER = '#10B98133'
 
 const SECTORS = [
-  { value: 'technology', label: 'Technology', risk: 0.12 },
-  { value: 'healthcare', label: 'Healthcare', risk: 0.08 },
-  { value: 'retail', label: 'Retail', risk: 0.22 },
-  { value: 'real_estate', label: 'Real Estate', risk: 0.18 },
-  { value: 'energy', label: 'Energy', risk: 0.25 },
-  { value: 'manufacturing', label: 'Manufacturing', risk: 0.15 },
+  { value: 'technology',     label: 'Technology',      emoji: '💻', risk: 0.12 },
+  { value: 'healthcare',     label: 'Healthcare',      emoji: '🏥', risk: 0.08 },
+  { value: 'retail',         label: 'Retail',          emoji: '🛍️', risk: 0.22 },
+  { value: 'real_estate',    label: 'Real Estate',     emoji: '🏠', risk: 0.18 },
+  { value: 'energy',         label: 'Energy',          emoji: '⚡', risk: 0.25 },
+  { value: 'manufacturing',  label: 'Manufacturing',   emoji: '🏭', risk: 0.15 },
 ]
 
 const INCOME_STABILITY = [
   { value: 'stable_growing', label: 'Stable & Growing (2+ years)', factor: 0.95 },
-  { value: 'stable', label: 'Stable (1-2 years)', factor: 0.80 },
-  { value: 'variable', label: 'Variable / Contract', factor: 0.55 },
-  { value: 'declining', label: 'Declining Trend', factor: 0.30 },
+  { value: 'stable',         label: 'Stable (1-2 years)',          factor: 0.80 },
+  { value: 'variable',       label: 'Variable / Contract',         factor: 0.55 },
+  { value: 'declining',      label: 'Declining Trend',             factor: 0.30 },
 ]
 
 const MARKET_CONDITIONS = [
-  { value: 'expansion', label: 'Economic Expansion', factor: 0.90 },
-  { value: 'stable', label: 'Stable / Neutral', factor: 0.75 },
-  { value: 'uncertainty', label: 'Elevated Uncertainty', factor: 0.45 },
-  { value: 'contraction', label: 'Contraction / Recession', factor: 0.20 },
+  { value: 'expansion',    label: 'Economic Expansion',      factor: 0.90 },
+  { value: 'stable',       label: 'Stable / Neutral',        factor: 0.75 },
+  { value: 'uncertainty',  label: 'Elevated Uncertainty',    factor: 0.45 },
+  { value: 'contraction',  label: 'Contraction / Recession', factor: 0.20 },
 ]
 
-function evaluateCheckpoints(app: LoanApplication): CheckpointResult[] {
-  const sectorData = SECTORS.find(s => s.value === app.sector) || SECTORS[0]
-  const incomeData = INCOME_STABILITY.find(i => i.value === app.incomeStability) || INCOME_STABILITY[0]
-  const marketData = MARKET_CONDITIONS.find(m => m.value === app.marketCondition) || MARKET_CONDITIONS[0]
+interface LoanApp {
+  loanAmount:       number
+  creditScore:      number
+  dtiRatio:         number
+  sector:           string
+  incomeStability:  string
+  marketCondition:  string
+}
 
+const PRESETS: { label: string; emoji: string; s: LoanApp }[] = [
+  { label: 'Tech Startup — Prime',      emoji: '💻', s: { loanAmount: 150000, creditScore: 760, dtiRatio: 28, sector: 'technology',    incomeStability: 'stable_growing', marketCondition: 'expansion'   } },
+  { label: 'Healthcare Professional',   emoji: '🏥', s: { loanAmount: 350000, creditScore: 730, dtiRatio: 35, sector: 'healthcare',     incomeStability: 'stable',         marketCondition: 'stable'      } },
+  { label: 'Retail SME — Stressed',     emoji: '🛍️', s: { loanAmount: 200000, creditScore: 610, dtiRatio: 48, sector: 'retail',         incomeStability: 'variable',       marketCondition: 'uncertainty' } },
+  { label: 'Real Estate Investor',      emoji: '🏠', s: { loanAmount: 750000, creditScore: 690, dtiRatio: 42, sector: 'real_estate',    incomeStability: 'stable',         marketCondition: 'stable'      } },
+  { label: 'Manufacturing — Block Test',emoji: '⚠️', s: { loanAmount: 900000, creditScore: 490, dtiRatio: 58, sector: 'energy',         incomeStability: 'declining',      marketCondition: 'contraction' } },
+]
+
+interface CP {
+  name: string; genericName: string; icon: React.ReactNode
+  status: 'pending'|'evaluating'|'pass'|'warn'|'block'
+  score: number; threshold: number; reasoning: string; detail: string
+}
+
+function buildCheckpoints(app: LoanApp): CP[] {
+  const sec  = SECTORS.find(s => s.value === app.sector) || SECTORS[0]
+  const inc  = INCOME_STABILITY.find(i => i.value === app.incomeStability) || INCOME_STABILITY[0]
+  const mkt  = MARKET_CONDITIONS.find(m => m.value === app.marketCondition) || MARKET_CONDITIONS[0]
   const baseDefaultProb = (1 - (app.creditScore - 300) / 550) * 0.3
   const dtiPenalty = app.dtiRatio > 43 ? (app.dtiRatio - 43) * 0.008 : 0
-  const adjustedDefault = Math.min(0.95, Math.max(0.01, baseDefaultProb + sectorData.risk * 0.3 + dtiPenalty))
+  const adjustedDefault = Math.min(0.95, Math.max(0.01, baseDefaultProb + sec.risk * 0.3 + dtiPenalty))
   const probabilityScore = Math.round((1 - adjustedDefault) * 100)
-
   const loanToIncome = app.loanAmount / 80000
-  const sectorExposure = sectorData.risk * 100
+  const sectorExposure = sec.risk * 100
   const concentrationRisk = Math.min(100, Math.round(loanToIncome * 20 + sectorExposure * 1.5))
   const riskScore = 100 - concentrationRisk
-
   const creditSignal = app.creditScore >= 700 ? 90 : app.creditScore >= 650 ? 70 : app.creditScore >= 580 ? 50 : 30
   const dtiSignal = app.dtiRatio <= 30 ? 90 : app.dtiRatio <= 43 ? 65 : app.dtiRatio <= 50 ? 40 : 20
-  const sectorSignal = (1 - sectorData.risk) * 100
-  const coherenceScore = Math.round((creditSignal * 0.35 + dtiSignal * 0.30 + sectorSignal * 0.35))
-
-  const trendScore = Math.round(incomeData.factor * 100)
-
-  const stressScore = Math.round(marketData.factor * 100)
-
+  const sectorSignal = (1 - sec.risk) * 100
+  const coherenceScore = Math.round(creditSignal * 0.35 + dtiSignal * 0.30 + sectorSignal * 0.35)
+  const trendScore = Math.round(inc.factor * 100)
+  const stressScore = Math.round(mkt.factor * 100)
   const signals = [probabilityScore, riskScore, coherenceScore, trendScore, stressScore]
   const avg = signals.reduce((a, b) => a + b, 0) / signals.length
   const variance = signals.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / signals.length
   const divergence = Math.sqrt(variance)
   const logicScore = Math.round(Math.max(0, Math.min(100, 100 - divergence * 1.8)))
-
   const sivScore = Math.min(95, Math.round(70 + (app.creditScore - 300) / 550 * 20))
-  const temporalScore = Math.min(95, Math.round(incomeData.factor * 70 + marketData.factor * 30))
+  const temporalScore = Math.min(95, Math.round(inc.factor * 70 + mkt.factor * 30))
   const edgeScore = Math.round(probabilityScore * 0.55 + logicScore * 0.45)
   const amlScore = Math.min(95, Math.round(90 - Math.max(0, (app.loanAmount - 300000) / 200000 * 20)))
   const fraudScore = Math.min(95, Math.round(65 + coherenceScore * 0.30))
-
   return [
-    {
-      name: 'Signal Integrity Validation',
-      genericName: 'CP-1: Are all input signals valid?',
-      icon: <Shield className="w-5 h-5" />,
-      status: 'pending',
-      score: sivScore,
-      threshold: 60,
-      reasoning: sivScore >= 60
-        ? `All governance signals validated — credit score, DTI, sector, income, and market condition inputs are internally consistent`
-        : `Signal validation failed — one or more input parameters fall outside acceptable governance bounds`,
-      detail: `Signals validated: 6/6 | Credit factor: ${Math.round((app.creditScore - 300) / 550 * 100)}% range | SIV score: ${sivScore}/100`
-    },
-    {
-      name: 'Probability Check',
-      genericName: 'CP-1: Is this likely to succeed?',
-      icon: <Target className="w-5 h-5" />,
-      status: 'pending',
-      score: probabilityScore,
-      threshold: 70,
-      reasoning: probabilityScore >= 70
-        ? `Default probability ${(adjustedDefault * 100).toFixed(1)}% is within acceptable range`
-        : `Default probability ${(adjustedDefault * 100).toFixed(1)}% exceeds risk threshold`,
-      detail: `Credit score ${app.creditScore} + sector risk ${(sectorData.risk * 100).toFixed(0)}% + DTI impact → P(success) = ${probabilityScore}%`
-    },
-    {
-      name: 'Risk Limits',
-      genericName: 'CP-2: Would this exceed safe exposure?',
-      icon: <Shield className="w-5 h-5" />,
-      status: 'pending',
-      score: riskScore,
-      threshold: 55,
-      reasoning: riskScore >= 55
-        ? `Exposure within portfolio concentration limits`
-        : `Concentration risk elevated — ${sectorData.label} sector at ${(sectorData.risk * 100).toFixed(0)}% risk weight`,
-      detail: `Loan-to-income ratio: ${loanToIncome.toFixed(1)}x | Sector exposure: ${sectorExposure.toFixed(0)}% | Risk score: ${riskScore}/100`
-    },
-    {
-      name: 'Signal Agreement',
-      genericName: 'CP-3: Do multiple models agree?',
-      icon: <Layers className="w-5 h-5" />,
-      status: 'pending',
-      score: coherenceScore,
-      threshold: 50,
-      reasoning: coherenceScore >= 50
-        ? `Credit metrics, DTI, and sector outlook show sufficient agreement (${coherenceScore}%)`
-        : `Conflicting signals — credit score suggests ${creditSignal >= 70 ? 'approve' : 'caution'} but DTI at ${app.dtiRatio}% and sector risk diverge`,
-      detail: `Credit signal: ${creditSignal} | DTI signal: ${dtiSignal} | Sector signal: ${Math.round(sectorSignal)} → Coherence: ${coherenceScore}%`
-    },
-    {
-      name: 'Trend Confirmation',
-      genericName: 'CP-4: Is this sustained, not noise?',
-      icon: <TrendingUp className="w-5 h-5" />,
-      status: 'pending',
-      score: trendScore,
-      threshold: 50,
-      reasoning: trendScore >= 50
-        ? `Income trend (${incomeData.label}) confirms borrower stability`
-        : `Income trend (${incomeData.label}) does not confirm sustained repayment capacity`,
-      detail: `Income stability factor: ${(incomeData.factor * 100).toFixed(0)}% → Trend persistence score: ${trendScore}/100`
-    },
-    {
-      name: 'Stress Test',
-      genericName: 'CP-5: What if conditions deteriorate?',
-      icon: <AlertTriangle className="w-5 h-5" />,
-      status: 'pending',
-      score: stressScore,
-      threshold: 40,
-      reasoning: stressScore >= 40
-        ? `Market conditions (${marketData.label}) suggest adequate resilience under stress`
-        : `Market conditions (${marketData.label}) indicate high vulnerability to deterioration`,
-      detail: `Market condition factor: ${(marketData.factor * 100).toFixed(0)}% → Stress resilience: ${stressScore}/100`
-    },
-    {
-      name: 'Logic Check',
-      genericName: 'CP-6: Are signals contradicting each other?',
-      icon: <Brain className="w-5 h-5" />,
-      status: 'pending',
-      score: logicScore,
-      threshold: 45,
-      reasoning: logicScore >= 45
-        ? `Internal signal divergence is low — governance signals are consistent (${logicScore}%)`
-        : `High internal contradiction detected between signals — divergence score ${(divergence).toFixed(1)} indicates conflicting risk assessment`,
-      detail: `Signal variance: ${divergence.toFixed(1)} | Consistency: ${logicScore}% | ${logicScore < 45 ? 'CONTRADICTORY' : logicScore < 65 ? 'TENSIONED' : 'ALIGNED'}`
-    },
-    {
-      name: 'Temporal Coherence',
-      genericName: 'CP-7: Does this hold across time?',
-      icon: <Activity className="w-5 h-5" />,
-      status: 'pending',
-      score: temporalScore,
-      threshold: 45,
-      reasoning: temporalScore >= 45
-        ? `Historical income and market patterns support the temporal consistency of this credit decision`
-        : `Temporal analysis reveals pattern inconsistency — current conditions may be transient rather than structural`,
-      detail: `Income stability: ${(incomeData.factor * 100).toFixed(0)}% | Market factor: ${(marketData.factor * 100).toFixed(0)}% | Temporal score: ${temporalScore}/100`
-    },
-    {
-      name: 'Edge Confirmation (ECW)',
-      genericName: 'CP-8: Does the decision converge at the boundary?',
-      icon: <Target className="w-5 h-5" />,
-      status: 'pending',
-      score: edgeScore,
-      threshold: 48,
-      reasoning: edgeScore >= 48
-        ? `Decision boundary confirmed — probability and logic signals converge at the governance edge (${edgeScore}%)`
-        : `Weak boundary convergence — signals do not sufficiently reinforce each other at the decision threshold`,
-      detail: `Probability × 0.55: ${(probabilityScore * 0.55).toFixed(0)} | Logic × 0.45: ${(logicScore * 0.45).toFixed(0)} | Edge score: ${edgeScore}/100`
-    },
-    {
-      name: 'AML Gate',
-      genericName: 'CP-9: Does this pass compliance screening?',
-      icon: <Building2 className="w-5 h-5" />,
-      status: 'pending',
-      score: amlScore,
-      threshold: 60,
-      reasoning: amlScore >= 60
-        ? `AML compliance screen passed — loan amount and sector profile show no anomalous transaction patterns`
-        : `AML compliance flag — loan size and sector combination requires enhanced due diligence`,
-      detail: `Loan amount: $${(app.loanAmount / 1000).toFixed(0)}K | Sector flag: ${sectorData.risk > 0.20 ? 'ELEVATED' : 'NORMAL'} | AML score: ${amlScore}/100`
-    },
-    {
-      name: 'Fraud Detection Gate',
-      genericName: 'CP-10: Are there anomalous signal patterns?',
-      icon: <AlertTriangle className="w-5 h-5" />,
-      status: 'pending',
-      score: fraudScore,
-      threshold: 55,
-      reasoning: fraudScore >= 55
-        ? `Fraud screening passed — signal coherence and application profile show no anomalous behavioral patterns`
-        : `Fraud pattern detected — low coherence between financial signals indicates potential data misrepresentation`,
-      detail: `Coherence base: ${coherenceScore} | Fraud pattern score: ${fraudScore}/100 | ${fraudScore < 55 ? 'ELEVATED — manual review required' : 'CLEAN PROFILE'}`
-    },
+    { name:'Signal Integrity Validation', genericName:'CP-1: All input signals valid?', icon:<Shield size={15}/>, status:'pending', score:sivScore, threshold:60, reasoning:sivScore>=60?`Signals validated — credit score, DTI, sector, income, market inputs internally consistent`:`Validation failed — one or more parameters outside governance bounds`, detail:`6/6 signals valid | Credit range factor: ${Math.round((app.creditScore-300)/550*100)}% | SIV: ${sivScore}/100` },
+    { name:'Default Probability',          genericName:'CP-2: Likelihood of repayment?',  icon:<Target size={15}/>,  status:'pending', score:probabilityScore, threshold:70, reasoning:probabilityScore>=70?`P(default) = ${(adjustedDefault*100).toFixed(1)}% — within acceptable risk range`:`P(default) = ${(adjustedDefault*100).toFixed(1)}% exceeds approved risk threshold`, detail:`FICO ${app.creditScore} + sector risk ${(sec.risk*100).toFixed(0)}% + DTI impact → P(repay)=${probabilityScore}%` },
+    { name:'Portfolio Exposure Limits',    genericName:'CP-3: Concentration risk safe?',  icon:<Shield size={15}/>,  status:'pending', score:riskScore, threshold:55, reasoning:riskScore>=55?`Exposure within concentration limits`:`Concentration risk elevated — ${sec.label} at ${(sec.risk*100).toFixed(0)}% sector weight`, detail:`Loan/income: ${loanToIncome.toFixed(1)}× | Sector exposure: ${sectorExposure.toFixed(0)}% | Risk: ${riskScore}/100` },
+    { name:'Multi-Signal Coherence',       genericName:'CP-4: Do models agree?',          icon:<Layers size={15}/>,  status:'pending', score:coherenceScore, threshold:50, reasoning:coherenceScore>=50?`Credit, DTI, sector signals agree at ${coherenceScore}%`:`Conflicting signals — credit ${creditSignal>=70?'OK':'WEAK'} / DTI ${app.dtiRatio}% / sector diverge`, detail:`Credit: ${creditSignal} | DTI: ${dtiSignal} | Sector: ${Math.round(sectorSignal)} → Coherence: ${coherenceScore}%` },
+    { name:'Income Trend Persistence',     genericName:'CP-5: Sustained trend, not noise?',icon:<TrendingUp size={15}/>,status:'pending', score:trendScore, threshold:50, reasoning:trendScore>=50?`Income trend (${inc.label}) confirms borrower stability`:`Income trend (${inc.label}) doesn't confirm sustained repayment capacity`, detail:`Stability factor: ${(inc.factor*100).toFixed(0)}% → Trend persistence: ${trendScore}/100` },
+    { name:'Macro Stress Test',            genericName:'CP-6: Resilient to deterioration?',icon:<AlertTriangle size={15}/>,status:'pending', score:stressScore, threshold:40, reasoning:stressScore>=40?`Market conditions (${mkt.label}) — adequate resilience under stress`:`Market (${mkt.label}) — high vulnerability to deterioration`, detail:`Market factor: ${(mkt.factor*100).toFixed(0)}% → Stress resilience: ${stressScore}/100` },
+    { name:'Signal Contradiction (SCG)',   genericName:'CP-7: Contradicting signals?',    icon:<Brain size={15}/>,   status:'pending', score:logicScore, threshold:45, reasoning:logicScore>=45?`Internal divergence low — signals consistent (${logicScore}%)`:`High contradiction — divergence ${divergence.toFixed(1)} signals conflicting risk assessment`, detail:`Variance: ${divergence.toFixed(1)} | Consistency: ${logicScore}% | ${logicScore<45?'CONTRADICTORY':logicScore<65?'TENSIONED':'ALIGNED'}` },
+    { name:'Temporal Coherence',           genericName:'CP-8: Holds across time?',        icon:<Activity size={15}/>, status:'pending', score:temporalScore, threshold:45, reasoning:temporalScore>=45?`Historical income and market patterns support temporal consistency`:`Pattern inconsistency — current conditions may be transient`, detail:`Income stability: ${(inc.factor*100).toFixed(0)}% | Market: ${(mkt.factor*100).toFixed(0)}% | Temporal: ${temporalScore}/100` },
+    { name:'Edge Confirmation (ECW)',      genericName:'CP-9: Decision converges at boundary?',icon:<Target size={15}/>,status:'pending', score:edgeScore, threshold:48, reasoning:edgeScore>=48?`Boundary confirmed — probability and logic converge at governance edge (${edgeScore}%)`:`Weak boundary — signals don't reinforce at decision threshold`, detail:`Probability×0.55: ${(probabilityScore*0.55).toFixed(0)} | Logic×0.45: ${(logicScore*0.45).toFixed(0)} | Edge: ${edgeScore}/100` },
+    { name:'AML Compliance Gate',          genericName:'CP-10: Passes AML screening?',    icon:<Building2 size={15}/>,status:'pending', score:amlScore, threshold:60, reasoning:amlScore>=60?`AML screen passed — loan size and sector show no anomalous patterns`:`AML flag — loan size/sector requires enhanced due diligence`, detail:`Loan: $${(app.loanAmount/1000).toFixed(0)}K | Sector flag: ${sec.risk>0.20?'ELEVATED':'NORMAL'} | AML: ${amlScore}/100` },
+    { name:'Fraud Detection Gate',         genericName:'CP-11: Anomalous signal patterns?',icon:<AlertTriangle size={15}/>,status:'pending', score:fraudScore, threshold:55, reasoning:fraudScore>=55?`Fraud screen passed — no anomalous behavioral patterns`:`Fraud pattern detected — low coherence indicates possible misrepresentation`, detail:`Coherence base: ${coherenceScore} | Fraud score: ${fraudScore}/100 | ${fraudScore<55?'ELEVATED — manual review':'CLEAN PROFILE'}` },
   ]
 }
 
+function buildReceiptId() {
+  return `OMNIX-CRD-${Array.from({length:12},()=>Math.floor(Math.random()*16).toString(16).toUpperCase()).join('')}`
+}
+
+function ScoreBar({ score, threshold, color }: { score:number; threshold:number; color:string }) {
+  return (
+    <div style={{ position:'relative', height:6, background:'#0F1E0F', borderRadius:3, overflow:'visible' }}>
+      <div style={{ position:'absolute', left:`${threshold}%`, top:-3, width:2, height:12, background:'#F59E0B', borderRadius:1, zIndex:2 }}/>
+      <div style={{ height:'100%', width:`${Math.min(score,100)}%`, background:color, borderRadius:3, transition:'width 0.9s ease' }}/>
+    </div>
+  )
+}
+
 export default function CreditGovernanceDemo() {
-  const { metrics: liveMetrics, isLive, formatNumberFull } = useLiveMetrics()
-  const [application, setApplication] = useState<LoanApplication>({
-    loanAmount: 200000,
-    creditScore: 720,
-    dtiRatio: 35,
-    sector: 'technology',
-    incomeStability: 'stable_growing',
-    marketCondition: 'stable',
-  })
+  const [app, setApp] = useState<LoanApp>({ loanAmount:200000, creditScore:720, dtiRatio:35, sector:'technology', incomeStability:'stable_growing', marketCondition:'stable' })
+  const [checkpoints, setCheckpoints] = useState<CP[]>([])
+  const [currentCp, setCurrentCp]   = useState(-1)
+  const [finalResult, setFinalResult] = useState<string|null>(null)
+  const [receiptId, setReceiptId]   = useState<string|null>(null)
+  const [isRunning, setIsRunning]   = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout>|null>(null)
 
-  const [checkpoints, setCheckpoints] = useState<CheckpointResult[]>([])
-  const [isEvaluating, setIsEvaluating] = useState(false)
-  const [evaluationComplete, setEvaluationComplete] = useState(false)
-  const [_currentCheckpoint, setCurrentCheckpoint] = useState(-1)
-  const evaluationRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sec = SECTORS.find(s=>s.value===app.sector)||SECTORS[0]
+  const inc = INCOME_STABILITY.find(i=>i.value===app.incomeStability)||INCOME_STABILITY[0]
+  const mkt = MARKET_CONDITIONS.find(m=>m.value===app.marketCondition)||MARKET_CONDITIONS[0]
 
-  const runGovernanceEvaluation = () => {
-    const results = evaluateCheckpoints(application)
-    const finalResults = results.map(cp => {
-      const passed = cp.score >= cp.threshold
-      const finalStatus: 'pass' | 'warn' | 'block' = passed ? (cp.score >= cp.threshold + 15 ? 'pass' : 'warn') : 'block'
-      return { ...cp, finalStatus }
+  const hb_subprime    = app.creditScore < 500
+  const hb_dti_extreme = app.dtiRatio > 55
+  const hb_crisis      = app.marketCondition === 'contraction' && app.incomeStability === 'declining'
+  const anyHardBlock   = hb_subprime || hb_dti_extreme || hb_crisis
+
+  function applyPreset(p: typeof PRESETS[0]) { setApp({...p.s}); setCheckpoints([]); setFinalResult(null); setReceiptId(null); setCurrentCp(-1) }
+
+  function runEval() {
+    if (isRunning) return
+    const cps = buildCheckpoints(app)
+    setCheckpoints(cps.map(c=>({...c,status:'pending'})))
+    setCurrentCp(-1); setFinalResult(null); setReceiptId(null); setIsRunning(true)
+    cps.forEach((_,i)=>{
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(()=>{
+        setCurrentCp(i)
+        setCheckpoints(prev=>prev.map((c,idx)=>idx<i?{...c,status:(c.score>=c.threshold?'pass':c.score>=c.threshold*0.72?'warn':'block') as CP['status']}:idx===i?{...c,status:'evaluating' as CP['status']}:c))
+        if (i===cps.length-1) {
+          setTimeout(()=>{
+            const final:CP[]=cps.map(c=>({...c,status:(c.score>=c.threshold?'pass':c.score>=c.threshold*0.72?'warn':'block') as CP['status']}))
+            const hb=final.filter(c=>c.score<c.threshold*0.5).length
+            const bl=final.filter(c=>c.score<c.threshold).length
+            let verdict = anyHardBlock||hb>0?'BLOCKED':bl>=3?'BLOCKED':bl>0?'HOLD':'APPROVED'
+            setCheckpoints(final); setCurrentCp(-1); setFinalResult(verdict)
+            if (verdict==='APPROVED') setReceiptId(buildReceiptId())
+            setIsRunning(false)
+          }, 380)
+        }
+      }, i*300)
     })
-
-    setCheckpoints(results)
-    setIsEvaluating(true)
-    setEvaluationComplete(false)
-    setCurrentCheckpoint(0)
-
-    let step = 0
-    const animate = () => {
-      if (step < finalResults.length) {
-        setCheckpoints(prev => prev.map((cp, i) => {
-          if (i === step) return { ...cp, status: 'evaluating' as const }
-          return cp
-        }))
-
-        setTimeout(() => {
-          const finalStatus = finalResults[step].finalStatus
-          setCheckpoints(prev => prev.map((cp, i) => {
-            if (i === step) {
-              return { ...cp, status: finalStatus }
-            }
-            return cp
-          }))
-          setCurrentCheckpoint(step + 1)
-          step++
-          evaluationRef.current = setTimeout(animate, 600)
-        }, 800)
-      } else {
-        setCheckpoints(finalResults.map(fr => ({ ...fr, status: fr.finalStatus })))
-        setIsEvaluating(false)
-        setEvaluationComplete(true)
-      }
-    }
-
-    evaluationRef.current = setTimeout(animate, 400)
   }
 
-  useEffect(() => {
-    return () => {
-      if (evaluationRef.current) clearTimeout(evaluationRef.current)
-    }
-  }, [])
-
-  const getGovernanceDecision = () => {
-    if (!evaluationComplete || checkpoints.length === 0) return null
-    const blocked = checkpoints.filter(cp => cp.status === 'block')
-    const warned = checkpoints.filter(cp => cp.status === 'warn')
-    const passed = checkpoints.filter(cp => cp.status === 'pass')
-
-    if (blocked.length >= 2) return { decision: 'BLOCK', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', reason: `${blocked.length} checkpoints blocked. Governance recommendation: DO NOT APPROVE this loan until conditions improve.`, passed: passed.length + warned.length }
-    if (blocked.length === 1) return { decision: 'HOLD', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `1 checkpoint blocked (${blocked[0].name}). Governance recommendation: HOLD — review ${blocked[0].name.toLowerCase()} before proceeding.`, passed: passed.length + warned.length }
-    if (warned.length >= 3) return { decision: 'HOLD', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `${warned.length} checkpoints at marginal levels. Governance recommendation: HOLD — elevated cumulative risk requires additional review.`, passed: passed.length + warned.length }
-    return { decision: 'APPROVE', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', reason: 'All checkpoints passed. Governance recommendation: APPROVE — decision meets all governance thresholds.', passed: passed.length + warned.length }
+  const sIcon=(s:CP['status'])=>{
+    if(s==='pending')    return <Clock size={15} style={{color:'#1E3A1E'}}/>
+    if(s==='evaluating') return <Activity size={15} style={{color:CRD_GREEN,animation:'pulse 0.8s ease-in-out infinite'}}/>
+    if(s==='pass')       return <CheckCircle size={15} style={{color:'#10B981'}}/>
+    if(s==='warn')       return <AlertTriangle size={15} style={{color:'#F59E0B'}}/>
+    return <XCircle size={15} style={{color:'#EF4444'}}/>
   }
+  const sColor=(s:CP['status'])=>s==='pass'?'#10B981':s==='warn'?'#F59E0B':s==='block'?'#EF4444':s==='evaluating'?CRD_GREEN:'#1E3A1E'
+  const vColor=(v:string|null)=>v==='APPROVED'?'#10B981':v==='HOLD'?'#F59E0B':'#EF4444'
+  const vBg=(v:string|null)=>v==='APPROVED'?'rgba(16,185,129,0.10)':v==='HOLD'?'rgba(245,158,11,0.10)':'rgba(239,68,68,0.10)'
+  const vBdr=(v:string|null)=>v==='APPROVED'?'#10B98133':v==='HOLD'?'#F59E0B33':'#EF444433'
 
-  const decision = getGovernanceDecision()
-
-  const resetEvaluation = () => {
-    setCheckpoints([])
-    setEvaluationComplete(false)
-    setCurrentCheckpoint(-1)
-    setIsEvaluating(false)
-    if (evaluationRef.current) clearTimeout(evaluationRef.current)
-  }
+  const inp:React.CSSProperties={background:'#061008',border:'1px solid #1E3A1E',borderRadius:7,color:'#CBD5E1',padding:'9px 12px',fontSize:13,width:'100%',outline:'none',cursor:'pointer'}
+  const lbl:React.CSSProperties={fontSize:10,color:'#4B5563',marginBottom:5,display:'block',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em'}
+  const sld:React.CSSProperties={width:'100%',accentColor:CRD_GREEN,cursor:'pointer',height:4}
 
   return (
-    <div className="min-h-screen bg-institutional">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <img src="/logo.png" alt="OMNIX QUANTUM" className="w-12 h-12 object-contain" />
-            </Link>
-            <div>
-              <span className="text-lg font-bold text-white tracking-tight">OMNIX QUANTUM</span>
-              <span className="ml-3 px-2 py-0.5 text-[10px] font-semibold bg-[#C9A227]/20 text-[#C9A227] rounded uppercase tracking-wider">Governance Demo</span>
-            </div>
+    <div style={{minHeight:'100vh',background:`linear-gradient(160deg,${CRD_DARK} 0%,#071410 50%,#050C05 100%)`,color:'#E2E8F0',fontFamily:"'Inter',sans-serif",padding:'24px'}}>
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}} *{box-sizing:border-box} select option{background:#061008} input[type=range]::-webkit-slider-thumb{background:${CRD_GREEN}}`}</style>
+      <div style={{maxWidth:1320,margin:'0 auto'}}>
+
+        {/* Header */}
+        <div style={{marginBottom:24}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
+            <Link to="/" style={{color:'#374151',fontSize:12,textDecoration:'none'}}>← Home</Link>
+            <span style={{color:'#1E3A1E',fontSize:12}}>/</span>
+            <span style={{color:'#4B5563',fontSize:12}}>Credit & Lending Governance</span>
           </div>
-          <div className="flex items-center gap-8">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/governance-demo-insurance" className="nav-link">Insurance Demo</Link>
-            <Link to="/governance-demo-energy" className="nav-link">Energy Demo</Link>
-            <Link to="/governance-demo-biotech" className="nav-link">Biotech Demo</Link>
-            <Link to="/institutional" className="nav-link">Technical Details</Link>
-            <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX%20Governance" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm px-5 py-2">Talk to Us</a>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+            <div style={{display:'flex',alignItems:'center',gap:14}}>
+              <div style={{width:50,height:50,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,background:`${CRD_GREEN}18`,border:`1px solid ${CRD_GREEN}44`}}>💳</div>
+              <div>
+                <div style={{fontSize:22,fontWeight:800,letterSpacing:'-0.02em',color:'#F1F5F9'}}>Credit & Lending Governance — Interactive Demo</div>
+                <div style={{fontSize:12,color:'#374151',marginTop:3}}>ADR-CREDIT-001 · 11-Checkpoint Fail-Closed Pipeline · Basel III · CECL Framework · <span style={{color:CRD_LIGHT,fontFamily:'monospace'}}>OMNIX-CRD-{'{'+'12HEX'+'}'}</span> PQC Receipts</div>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              {['Basel III','CECL / IFRS9','AML / KYC','Fair Lending'].map(b=>(
+                <span key={b} style={{padding:'4px 10px',fontSize:10,fontWeight:700,borderRadius:5,background:`${CRD_GREEN}14`,border:`1px solid ${CRD_GREEN}33`,color:CRD_LIGHT,textTransform:'uppercase',letterSpacing:'0.04em'}}>{b}</span>
+              ))}
+            </div>
           </div>
         </div>
-      </nav>
 
-      <main className="pt-32 px-6 pb-20 max-w-7xl mx-auto">
-        <section className="text-center mb-16 animate-fade-in-up">
-          <p className="section-title">Multi-Vertical Governance Architecture</p>
-          <h1 className="heading-xl text-white mb-6">
-            Same Engine.<br />
-            <span className="gold-gradient">Different Domain.</span>
-          </h1>
-          <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
-            This interactive demo shows how OMNIX's 11-checkpoint governance architecture
-            applies to credit/lending decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}{' '}
-            evaluation cycles in digital asset trading — live production system.
-          </p>
-          <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
-            Adjust the loan parameters below and run the governance evaluation to see each checkpoint in action.
-          </p>
-        </section>
+        {/* Presets */}
+        <div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap',alignItems:'center'}}>
+          <span style={{fontSize:10,color:'#374151',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',marginRight:4}}>Quick Load</span>
+          {PRESETS.map(p=>(
+            <button key={p.label} onClick={()=>applyPreset(p)} style={{padding:'6px 14px',fontSize:12,borderRadius:7,cursor:'pointer',background:`${CRD_GREEN}10`,border:`1px solid ${CRD_GREEN}28`,color:'#6B7280',fontWeight:600,display:'flex',alignItems:'center',gap:5}}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor=CRD_GREEN;(e.currentTarget as HTMLElement).style.color=CRD_LIGHT}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor=`${CRD_GREEN}28`;(e.currentTarget as HTMLElement).style.color='#6B7280'}}
+            >{p.emoji} {p.label}</button>
+          ))}
+        </div>
 
-        <div className="grid lg:grid-cols-5 gap-8 mb-12">
-          <div className="lg:col-span-2">
-            <div className="glass-card p-8 sticky top-32">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-[#C9A227]/20 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 gold-text" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Loan Application</h3>
-                  <p className="text-xs text-muted">Adjust parameters to test governance</p>
-                </div>
+        {/* Two-column layout */}
+        <div style={{display:'grid',gridTemplateColumns:'390px 1fr',gap:18,alignItems:'start'}}>
+
+          {/* LEFT */}
+          <div>
+            <div style={{background:'rgba(6,16,8,0.95)',borderRadius:14,padding:22,border:`1px solid ${CRD_BORDER}`,marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:CRD_LIGHT,marginBottom:18,display:'flex',alignItems:'center',gap:7}}>
+                <CreditCard size={14} color={CRD_GREEN}/> Loan Application Parameters
               </div>
 
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Loan Amount</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={25000}
-                      max={1000000}
-                      step={25000}
-                      value={application.loanAmount}
-                      onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, loanAmount: parseInt(e.target.value) })) }}
-                      className="flex-1 accent-[#C9A227]"
-                    />
-                    <span className="text-white font-semibold text-sm w-24 text-right">${(application.loanAmount / 1000).toFixed(0)}K</span>
-                  </div>
+              {/* Loan Amount */}
+              <div style={{marginBottom:13}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+                  <label style={{...lbl,marginBottom:0}}>Loan Amount</label>
+                  <span style={{fontSize:13,fontWeight:700,color:app.loanAmount>500000?'#F59E0B':CRD_GREEN}}>${(app.loanAmount/1000).toFixed(0)}K</span>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Credit Score (FICO)</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={300}
-                      max={850}
-                      step={10}
-                      value={application.creditScore}
-                      onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, creditScore: parseInt(e.target.value) })) }}
-                      className="flex-1 accent-[#C9A227]"
-                    />
-                    <span className={`font-semibold text-sm w-12 text-right ${application.creditScore >= 700 ? 'text-emerald-400' : application.creditScore >= 580 ? 'text-amber-400' : 'text-red-400'}`}>{application.creditScore}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Debt-to-Income Ratio</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={5}
-                      max={65}
-                      step={1}
-                      value={application.dtiRatio}
-                      onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, dtiRatio: parseInt(e.target.value) })) }}
-                      className="flex-1 accent-[#C9A227]"
-                    />
-                    <span className={`font-semibold text-sm w-12 text-right ${application.dtiRatio <= 30 ? 'text-emerald-400' : application.dtiRatio <= 43 ? 'text-amber-400' : 'text-red-400'}`}>{application.dtiRatio}%</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Industry Sector</label>
-                  <select
-                    value={application.sector}
-                    onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, sector: e.target.value })) }}
-                    className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none"
-                  >
-                    {SECTORS.map(s => <option key={s.value} value={s.value}>{s.label} (Risk: {(s.risk * 100).toFixed(0)}%)</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Income Stability</label>
-                  <select
-                    value={application.incomeStability}
-                    onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, incomeStability: e.target.value })) }}
-                    className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none"
-                  >
-                    {INCOME_STABILITY.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Market Conditions</label>
-                  <select
-                    value={application.marketCondition}
-                    onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, marketCondition: e.target.value })) }}
-                    className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none"
-                  >
-                    {MARKET_CONDITIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
-                </div>
-
-                <button
-                  onClick={runGovernanceEvaluation}
-                  disabled={isEvaluating}
-                  className={`w-full btn-primary flex items-center justify-center gap-2 py-4 ${isEvaluating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isEvaluating ? (
-                    <>
-                      <Activity className="w-5 h-5 animate-spin" />
-                      Evaluating...
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="w-5 h-5" />
-                      Run Governance Evaluation
-                    </>
-                  )}
-                </button>
+                <input type="range" min={25000} max={1000000} step={25000} style={sld} value={app.loanAmount} onChange={e=>{setApp(p=>({...p,loanAmount:parseInt(e.target.value)}));setCheckpoints([]);setFinalResult(null)}}/>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#1E3A1E',marginTop:2}}><span>$25K</span><span>$1M</span></div>
               </div>
+
+              {/* Credit Score */}
+              <div style={{marginBottom:13}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+                  <label style={{...lbl,marginBottom:0}}>Credit Score (FICO)</label>
+                  <span style={{fontSize:13,fontWeight:700,color:hb_subprime?'#EF4444':app.creditScore>=700?CRD_GREEN:app.creditScore>=580?'#F59E0B':'#EF4444'}}>{app.creditScore}{hb_subprime?' ⚠ HARD BLOCK':''}</span>
+                </div>
+                <input type="range" min={300} max={850} step={10} style={sld} value={app.creditScore} onChange={e=>{setApp(p=>({...p,creditScore:parseInt(e.target.value)}));setCheckpoints([]);setFinalResult(null)}}/>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#1E3A1E',marginTop:2}}><span style={{color:'#EF4444'}}>300 Subprime</span><span style={{color:'#F59E0B'}}>580+</span><span style={{color:CRD_GREEN}}>700+ Prime</span></div>
+                {hb_subprime&&<div style={{fontSize:10,color:'#EF4444',marginTop:4,fontWeight:700}}>⚠ HARD BLOCK — FICO &lt;500 subprime threshold exceeded</div>}
+              </div>
+
+              {/* DTI */}
+              <div style={{marginBottom:13}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+                  <label style={{...lbl,marginBottom:0}}>Debt-to-Income Ratio</label>
+                  <span style={{fontSize:13,fontWeight:700,color:hb_dti_extreme?'#EF4444':app.dtiRatio<=30?CRD_GREEN:app.dtiRatio<=43?'#F59E0B':'#EF4444'}}>{app.dtiRatio}%{hb_dti_extreme?' ⚠ HARD BLOCK':''}</span>
+                </div>
+                <input type="range" min={5} max={65} step={1} style={sld} value={app.dtiRatio} onChange={e=>{setApp(p=>({...p,dtiRatio:parseInt(e.target.value)}));setCheckpoints([]);setFinalResult(null)}}/>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#1E3A1E',marginTop:2}}><span style={{color:CRD_GREEN}}>5% Ideal</span><span style={{color:'#F59E0B'}}>43% Max</span><span style={{color:'#EF4444'}}>65% Extreme</span></div>
+                {hb_dti_extreme&&<div style={{fontSize:10,color:'#EF4444',marginTop:4,fontWeight:700}}>⚠ HARD BLOCK — DTI &gt;55% exceeds maximum underwriting threshold</div>}
+              </div>
+
+              {/* Sector */}
+              <div style={{marginBottom:13}}>
+                <label style={lbl}>Industry Sector</label>
+                <select style={inp} value={app.sector} onChange={e=>{setApp(p=>({...p,sector:e.target.value}));setCheckpoints([]);setFinalResult(null)}}>
+                  {SECTORS.map(s=><option key={s.value} value={s.value}>{s.emoji} {s.label} — Base risk {(s.risk*100).toFixed(0)}%</option>)}
+                </select>
+              </div>
+
+              {/* Income Stability */}
+              <div style={{marginBottom:13}}>
+                <label style={lbl}>Income Stability</label>
+                <select style={inp} value={app.incomeStability} onChange={e=>{setApp(p=>({...p,incomeStability:e.target.value}));setCheckpoints([]);setFinalResult(null)}}>
+                  {INCOME_STABILITY.map(i=><option key={i.value} value={i.value}>{i.label}</option>)}
+                </select>
+              </div>
+
+              {/* Market Conditions */}
+              <div style={{marginBottom:18}}>
+                <label style={lbl}>Market Conditions</label>
+                <select style={inp} value={app.marketCondition} onChange={e=>{setApp(p=>({...p,marketCondition:e.target.value}));setCheckpoints([]);setFinalResult(null)}}>
+                  {MARKET_CONDITIONS.map(m=><option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                {hb_crisis&&<div style={{fontSize:10,color:'#EF4444',marginTop:4,fontWeight:700}}>⚠ HARD BLOCK — Recession + declining income = automatic decline</div>}
+              </div>
+
+              {anyHardBlock&&(
+                <div style={{background:'rgba(239,68,68,0.08)',border:'1px solid #EF444430',borderRadius:8,padding:'10px 14px',marginBottom:16}}>
+                  <div style={{color:'#EF4444',fontWeight:700,fontSize:11,marginBottom:6}}>⚠ Hard Block Conditions Active</div>
+                  {hb_subprime   &&<div style={{color:'#FCA5A5',fontSize:11,marginBottom:3}}>• FICO &lt;500 — subprime automatic decline</div>}
+                  {hb_dti_extreme&&<div style={{color:'#FCA5A5',fontSize:11,marginBottom:3}}>• DTI &gt;55% — exceeds Basel III underwriting limit</div>}
+                  {hb_crisis     &&<div style={{color:'#FCA5A5',fontSize:11}}>• Recession + declining income — loss risk unacceptable</div>}
+                </div>
+              )}
+
+              <button onClick={runEval} disabled={isRunning} style={{width:'100%',padding:'13px 20px',borderRadius:10,border:'none',background:isRunning?'#1E293B':`linear-gradient(135deg,#065F46,${CRD_GREEN})`,color:isRunning?'#374151':'#FFF',fontWeight:700,fontSize:14,cursor:isRunning?'not-allowed':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                <Shield size={15}/>{isRunning?'Evaluating Credit Decision…':'Run 11-Checkpoint Credit Governance'}{!isRunning&&<ArrowRight size={15}/>}
+              </button>
+            </div>
+
+            {/* Summary */}
+            <div style={{background:'rgba(6,16,8,0.95)',borderRadius:12,padding:16,border:'1px solid #1E3A1E',fontSize:12}}>
+              <div style={{color:'#374151',fontWeight:700,marginBottom:10,fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em'}}>Current Application</div>
+              {[['Loan Amount',`$${(app.loanAmount/1000).toFixed(0)}K`],['FICO Score',`${app.creditScore} (${app.creditScore>=700?'Prime':app.creditScore>=580?'Near-prime':'Subprime'})`],['DTI Ratio',`${app.dtiRatio}% (${app.dtiRatio<=30?'Excellent':app.dtiRatio<=43?'Acceptable':'Elevated'})`],['Sector',`${sec.emoji} ${sec.label}`],['Income',inc.label.split('(')[0].trim()],['Market',mkt.label]].map(([k,v])=>(
+                <div key={k as string} style={{display:'flex',justifyContent:'space-between',marginBottom:5,paddingBottom:5,borderBottom:'1px solid #061008'}}>
+                  <span style={{color:'#1E3A1E'}}>{k}</span><span style={{color:'#6B7280',fontWeight:600,textAlign:'right',maxWidth:200}}>{v}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="lg:col-span-3 space-y-4">
-            {checkpoints.length === 0 ? (
-              <div className="glass-card p-12 text-center">
-                <div className="w-20 h-20 rounded-full bg-[#C9A227]/10 flex items-center justify-center mx-auto mb-6">
-                  <Layers className="w-10 h-10 gold-text" />
+          {/* RIGHT */}
+          <div>
+            {checkpoints.length===0?(
+              <div style={{background:'rgba(6,16,8,0.95)',borderRadius:14,padding:52,border:`1px solid ${CRD_BORDER}`,textAlign:'center'}}>
+                <div style={{fontSize:52,marginBottom:18}}>💳</div>
+                <div style={{fontSize:18,fontWeight:700,color:CRD_LIGHT,marginBottom:10}}>Credit & Lending Governance Pipeline</div>
+                <div style={{color:'#374151',fontSize:13,maxWidth:460,margin:'0 auto',lineHeight:1.7}}>Configure a loan application on the left — credit score, DTI ratio, sector exposure, income stability, and market conditions. Run the 11-checkpoint Basel III / CECL governance pipeline. Every approved decision generates a PQC-signed <span style={{color:CRD_LIGHT,fontFamily:'monospace'}}>OMNIX-CRD</span> receipt.</div>
+                <div style={{marginTop:28,display:'flex',justifyContent:'center',gap:10,flexWrap:'wrap'}}>
+                  {['Default Probability','Concentration Risk','AML Gate','Fraud Detection','PQC Receipt'].map(s=>(
+                    <span key={s} style={{background:`${CRD_GREEN}12`,border:`1px solid ${CRD_BORDER}`,borderRadius:6,padding:'5px 12px',fontSize:11,color:CRD_LIGHT,fontWeight:500}}>{s}</span>
+                  ))}
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">11-Checkpoint Governance Engine</h3>
-                <p className="text-muted max-w-md mx-auto mb-8">
-                  Configure the loan application parameters and click "Run Governance Evaluation" to see each checkpoint evaluate the decision in real time.
-                </p>
-                <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-                  {[
-                    { icon: <Target className="w-4 h-4" />, label: 'Probability' },
-                    { icon: <Shield className="w-4 h-4" />, label: 'Risk Limits' },
-                    { icon: <Layers className="w-4 h-4" />, label: 'Agreement' },
-                    { icon: <TrendingUp className="w-4 h-4" />, label: 'Trend' },
-                    { icon: <AlertTriangle className="w-4 h-4" />, label: 'Stress Test' },
-                    { icon: <Brain className="w-4 h-4" />, label: 'Logic Check' },
-                  ].map((cp, i) => (
-                    <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-lg bg-[#0A1628]/40 border border-[#C9A227]/10">
-                      <div className="gold-text">{cp.icon}</div>
-                      <span className="text-xs text-muted">{cp.label}</span>
+                <div style={{marginTop:28,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,maxWidth:480,margin:'28px auto 0'}}>
+                  {[{icon:<Zap size={14}/>,label:'Sub-second evaluation'},{icon:<Shield size={14}/>,label:'3 hard block conditions'},{icon:<Lock size={14}/>,label:'Dilithium-3 PQC receipt'}].map((item,i)=>(
+                    <div key={i} style={{background:'#061008',border:'1px solid #1E3A1E',borderRadius:8,padding:'12px 10px',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+                      <div style={{color:CRD_GREEN}}>{item.icon}</div><div style={{fontSize:10,color:'#374151',textAlign:'center'}}>{item.label}</div>
                     </div>
                   ))}
                 </div>
               </div>
-            ) : (
-              <>
-                {checkpoints.map((cp, index) => (
-                  <div
-                    key={index}
-                    className={`glass-card p-6 transition-all duration-500 ${
-                      cp.status === 'evaluating' ? 'border-[#C9A227]/60 shadow-lg shadow-[#C9A227]/10' :
-                      cp.status === 'pass' ? 'border-emerald-500/30' :
-                      cp.status === 'warn' ? 'border-amber-500/30' :
-                      cp.status === 'block' ? 'border-red-500/30' :
-                      'opacity-40'
-                    }`}
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          cp.status === 'evaluating' ? 'bg-[#C9A227]/20 text-[#C9A227] animate-pulse' :
-                          cp.status === 'pass' ? 'bg-emerald-500/20 text-emerald-400' :
-                          cp.status === 'warn' ? 'bg-amber-500/20 text-amber-400' :
-                          cp.status === 'block' ? 'bg-red-500/20 text-red-400' :
-                          'bg-[#1E293B] text-[#64748B]'
-                        }`}>
-                          {cp.icon}
-                        </div>
-                        <div>
-                          <h4 className="text-white font-medium">{cp.name}</h4>
-                          <p className="text-xs text-muted">{cp.genericName}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {cp.status === 'evaluating' && (
-                          <span className="text-xs text-[#C9A227] font-medium uppercase tracking-wider animate-pulse">Evaluating...</span>
-                        )}
-                        {cp.status === 'pass' && (
-                          <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium uppercase tracking-wider">
-                            <CheckCircle className="w-4 h-4" /> PASS
-                          </span>
-                        )}
-                        {cp.status === 'warn' && (
-                          <span className="flex items-center gap-1 text-xs text-amber-400 font-medium uppercase tracking-wider">
-                            <Clock className="w-4 h-4" /> MARGINAL
-                          </span>
-                        )}
-                        {cp.status === 'block' && (
-                          <span className="flex items-center gap-1 text-xs text-red-400 font-medium uppercase tracking-wider">
-                            <XCircle className="w-4 h-4" /> BLOCKED
-                          </span>
-                        )}
+            ):(
+              <div>
+                {finalResult&&(
+                  <div style={{borderRadius:12,padding:'16px 20px',marginBottom:14,background:vBg(finalResult),border:`1px solid ${vBdr(finalResult)}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}>
+                      {finalResult==='APPROVED'?<CheckCircle size={22} style={{color:'#10B981'}}/>:finalResult==='HOLD'?<AlertTriangle size={22} style={{color:'#F59E0B'}}/>:<XCircle size={22} style={{color:'#EF4444'}}/>}
+                      <div>
+                        <div style={{fontWeight:800,fontSize:17,color:vColor(finalResult)}}>{finalResult==='APPROVED'?'LOAN APPROVED':finalResult==='HOLD'?'HOLD — SENIOR UNDERWRITER REVIEW':'DECLINED — GOVERNANCE THRESHOLD BREACH'}</div>
+                        {receiptId&&<div style={{fontSize:11,color:'#10B981',fontFamily:'monospace',marginTop:3}}>Receipt: {receiptId} · Dilithium-3 · ADR-CREDIT-001</div>}
+                        {!receiptId&&<div style={{fontSize:11,color:'#EF4444',marginTop:3}}>No receipt issued — decision declined by governance pipeline</div>}
                       </div>
                     </div>
-
-                    {cp.status !== 'pending' && (
-                      <div className="mt-3 space-y-2 animate-fade-in-up" style={{ animationDuration: '0.4s' }}>
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-[#0A1628] rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-1000 ${
-                                cp.status === 'pass' ? 'bg-emerald-500' :
-                                cp.status === 'warn' ? 'bg-amber-500' :
-                                cp.status === 'block' ? 'bg-red-500' :
-                                'bg-[#C9A227]'
-                              }`}
-                              style={{ width: cp.status === 'evaluating' ? '60%' : (cp.status === 'pass' || cp.status === 'warn') ? '100%' : '22%' }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    <div style={{textAlign:'right',fontSize:11,color:'#374151'}}>
+                      <div>FICO {app.creditScore} · DTI {app.dtiRatio}%</div>
+                      <div>${(app.loanAmount/1000).toFixed(0)}K · {sec.emoji} {sec.label}</div>
+                    </div>
                   </div>
-                ))}
-
-                {decision && evaluationComplete && (
-                  <>
-                    <div className={`glass-card p-8 border ${decision.bg} gold-glow mt-6`}>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${decision.bg}`}>
-                            {decision.decision === 'APPROVE' ? <CheckCircle className={`w-6 h-6 ${decision.color}`} /> :
-                             decision.decision === 'HOLD' ? <Clock className={`w-6 h-6 ${decision.color}`} /> :
-                             <XCircle className={`w-6 h-6 ${decision.color}`} />}
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted uppercase tracking-wider">Governance Decision</p>
-                            <h3 className={`text-2xl font-bold ${decision.color}`}>{decision.decision}</h3>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted">Checkpoints Passed</p>
-                          <p className="text-white font-semibold">
-                            {decision.passed}/11
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-muted text-sm">{decision.reason}</p>
-                      <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                        <p className="text-xs text-[#64748B]">
-                          Decision Trace ID: GOV-CREDIT-{Date.now().toString(36).toUpperCase()} | Architecture: 11-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
-                        </p>
-                      </div>
-                    </div>
-
-                    {decision.decision === 'APPROVE' && (() => {
-                      const principal = application.loanAmount
-                      const annualRate = 0.045
-                      const tenorYears = 20
-                      const totalRepayable = Math.round(principal * (1 + annualRate * tenorYears))
-                      const profitAmount = totalRepayable - principal
-                      const monthly = Math.round(totalRepayable / (tenorYears * 12))
-                      const fmt = (n: number) => n >= 1000 ? `$${(n / 1000).toFixed(0)}K` : `$${n}`
-                      return (
-                        <div className="glass-card p-6 border border-[#C9A227]/30 mt-4 animate-fade-in-up">
-                          <div className="mb-5 border-l-2 border-[#C9A227] pl-4">
-                            <p className="text-[#C9A227] text-xs uppercase tracking-widest font-semibold mb-1">Quran 2:275</p>
-                            <p className="text-white/80 text-sm italic leading-relaxed">
-                              "Allah has permitted trade and forbidden usury (Riba)."
-                            </p>
-                            <p className="text-muted text-xs mt-1">— Al-Baqarah · Sharia CP-6 basis</p>
-                          </div>
-                          <div className="border-t border-[#C9A227]/10 pt-5">
-                            <p className="text-xs font-semibold text-[#C9A227] uppercase tracking-widest mb-4">Murabaha Financing Structure</p>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="bg-[#0A1628]/60 rounded-xl p-3">
-                                <p className="text-xs text-muted mb-1">Purchase Price (Principal)</p>
-                                <p className="text-white font-bold text-lg">{fmt(principal)}</p>
-                              </div>
-                              <div className="bg-[#0A1628]/60 rounded-xl p-3">
-                                <p className="text-xs text-muted mb-1">Profit Rate (p.a.)</p>
-                                <p className="text-[#C9A227] font-bold text-lg">{(annualRate * 100).toFixed(1)}%</p>
-                              </div>
-                              <div className="bg-[#0A1628]/60 rounded-xl p-3">
-                                <p className="text-xs text-muted mb-1">Profit Amount ({tenorYears} yrs)</p>
-                                <p className="text-white font-bold text-lg">{fmt(profitAmount)}</p>
-                              </div>
-                              <div className="bg-[#0A1628]/60 rounded-xl p-3">
-                                <p className="text-xs text-muted mb-1">Total Sale Price</p>
-                                <p className="text-white font-bold text-lg">{fmt(totalRepayable)}</p>
-                              </div>
-                            </div>
-                            <div className="mt-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between">
-                              <div>
-                                <p className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Monthly Installment</p>
-                                <p className="text-xs text-muted mt-0.5">Fixed · {tenorYears} years · No Riba</p>
-                              </div>
-                              <p className="text-emerald-400 font-bold text-2xl">${monthly.toLocaleString()}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })()}
-                  </>
                 )}
-              </>
+                <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                  {checkpoints.map((cp,i)=>{
+                    const isActive=currentCp===i
+                    const bdrC=cp.status==='evaluating'?CRD_GREEN:cp.status==='pass'?'#10B981':cp.status==='warn'?'#F59E0B':cp.status==='block'?'#EF4444':'#1E3A1E'
+                    const barC=cp.status==='pass'?'#10B981':cp.status==='warn'?'#F59E0B':cp.status==='block'?'#EF4444':CRD_GREEN
+                    return (
+                      <div key={i} style={{background:isActive?`${CRD_GREEN}08`:'rgba(6,16,8,0.92)',borderRadius:10,padding:'13px 15px',border:`1px solid ${bdrC}44`,transition:'all 0.3s'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                          <div style={{display:'flex',alignItems:'center',gap:8,flex:1}}>
+                            {sIcon(cp.status)}
+                            <div><div style={{fontSize:13,fontWeight:700,color:'#E2E8F0'}}>{cp.name}</div><div style={{fontSize:10,color:'#374151'}}>{cp.genericName}</div></div>
+                          </div>
+                          <div style={{textAlign:'right',flexShrink:0,marginLeft:12}}>
+                            <div style={{fontSize:20,fontWeight:800,color:sColor(cp.status),lineHeight:1}}>{cp.score}</div>
+                            <div style={{fontSize:10,color:'#1E3A1E'}}>min {cp.threshold}</div>
+                          </div>
+                        </div>
+                        <ScoreBar score={cp.score} threshold={cp.threshold} color={barC}/>
+                        {cp.status!=='pending'&&(
+                          <div style={{marginTop:10}}>
+                            <div style={{fontSize:12,color:'#94A3B8',lineHeight:1.55,marginBottom:6}}>{cp.reasoning}</div>
+                            <div style={{fontSize:10,color:'#374151',fontFamily:'monospace',background:'#061008',padding:'6px 10px',borderRadius:5}}>{cp.detail}</div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="divider-gold" />
-
-        <section className="mb-16">
-          <div className="text-center mb-12">
-            <p className="section-title">Architecture Comparison</p>
-            <h2 className="text-3xl font-bold text-white">Same 11 Checkpoints. Every Domain.</h2>
-            <p className="text-muted text-sm mt-3 max-w-2xl mx-auto">
-              Each domain maps to <span className="text-white">CP-1 (Signal Integrity Validator) + CP-2–CP-7 (domain-specific signals) + CP-8 (Threshold &amp; Context) + CP-9 (AML Screening) + CP-10 (Fraud Detection) + CP-11 (Jurisdiction Compliance)</span>. The cards below show each domain's CP-2–CP-7 signal mapping — the universal checkpoints are identical across all verticals.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Digital Asset Trading</h4>
-                  <span className="text-xs text-emerald-400 font-medium">VALIDATED</span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-muted">
-                <p><span className="text-white">CP-1:</span> Monte Carlo simulation (10K paths)</p>
-                <p><span className="text-white">CP-2:</span> VaR95, per-trade limits, max drawdown</p>
-                <p><span className="text-white">CP-3:</span> EMA + HMM + Kalman + NM coherence</p>
-                <p><span className="text-white">CP-4:</span> Edge Confirmation Window (2+ cycles)</p>
-                <p><span className="text-white">CP-5:</span> Black Swan tail risk detector</p>
-                <p><span className="text-white">CP-6:</span> Decision Contradiction Index</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-emerald-400">{isLive ? '🟢' : '⏳'} {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles | {liveMetrics.capital_preserved_pct}% capital preserved — live production system</p>
-              </div>
-            </div>
-
-            <div className="glass-card p-6 border-[#C9A227]/30">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-[#C9A227]/20 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 gold-text" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Credit / Lending</h4>
-                  <span className="text-xs text-[#C9A227] font-medium">DEMO ABOVE</span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-muted">
-                <p><span className="text-white">CP-1:</span> Default probability model</p>
-                <p><span className="text-white">CP-2:</span> Concentration and exposure limits</p>
-                <p><span className="text-white">CP-3:</span> Credit score + DTI + sector agreement</p>
-                <p><span className="text-white">CP-4:</span> Income trend persistence (2+ quarters)</p>
-                <p><span className="text-white">CP-5:</span> Recession / rate hike stress scenarios</p>
-                <p><span className="text-white">CP-6:</span> Signal contradiction detection</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-[#C9A227]">Interactive demo — same architecture, different signals</p>
-              </div>
-            </div>
-
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Supply Chain</h4>
-                  <span className="text-xs text-blue-400 font-medium">ROADMAP</span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-muted">
-                <p><span className="text-white">CP-1:</span> Price forecast model (commodity trends)</p>
-                <p><span className="text-white">CP-2:</span> Supplier concentration, cash flow limits</p>
-                <p><span className="text-white">CP-3:</span> Price + demand + reliability coherence</p>
-                <p><span className="text-white">CP-4:</span> Procurement trend persistence (2+ periods)</p>
-                <p><span className="text-white">CP-5:</span> Supply disruption stress scenarios</p>
-                <p><span className="text-white">CP-6:</span> Demand vs. price contradiction check</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-blue-400">Year 2-3 roadmap — domain adapter in design</p>
-              </div>
-            </div>
-
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-orange-500" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Energy Trading</h4>
-                  <Link to="/governance-demo-energy" className="text-xs text-orange-500 font-medium hover:text-white transition-colors">VIEW DEMO →</Link>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-muted">
-                <p><span className="text-white">CP-1:</span> Price forecast confidence</p>
-                <p><span className="text-white">CP-2:</span> Grid exposure limits</p>
-                <p><span className="text-white">CP-3:</span> Supply-demand coherence</p>
-                <p><span className="text-white">CP-4:</span> Price trend persistence</p>
-                <p><span className="text-white">CP-5:</span> Regulatory & climate stress</p>
-                <p><span className="text-white">CP-6:</span> Signal contradiction detection</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-orange-500/20">
-                <p className="text-xs text-orange-500">Interactive demo — energy governance in action</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="glass-card p-10 gold-glow text-center mb-16">
-          <h2 className="text-2xl font-bold text-white mb-4">The Hardest Part Is Already Done</h2>
-          <p className="text-muted max-w-2xl mx-auto mb-6">
-            Building a robust, battle-tested governance engine is the hardest engineering challenge.
-            OMNIX has already done this — validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles. Expanding to new
-            domains is an adapter problem, not a research problem.
-          </p>
-          <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
-            <div>
-              <div className="text-2xl font-bold text-white">{formatNumberFull(liveMetrics.evaluation_cycles)}</div>
-              <div className="text-xs text-muted">Evaluation Cycles {isLive && '🟢'}</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-emerald-400">{liveMetrics.capital_preserved_pct}%</div>
-              <div className="text-xs text-muted">Capital Preserved*</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold gold-text">11</div>
-              <div className="text-xs text-muted">Independent Checkpoints</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-500">{liveMetrics.verticals_demo}</div>
-              <div className="text-xs text-muted">Verticals</div>
-            </div>
-          </div>
-          <a href="https://wa.me/16505078293?text=Hi%2C%20I%20saw%20the%20governance%20demo%20and%20I%27m%20interested" target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
-            Talk to Us About Multi-Vertical Governance
-            <ArrowRight className="w-4 h-4" />
-          </a>
-        </section>
-
-        <div className="text-center">
-          <p className="text-xs text-[#475569] max-w-2xl mx-auto leading-relaxed">
-            This is a governance architecture demonstration. The credit evaluation shown uses simplified models
-            for illustrative purposes. Production credit governance would integrate with real credit bureaus,
-            financial data providers, and regulatory frameworks. OMNIX's core 11-checkpoint architecture is
-            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles — live production system.
-            See ADR-026 for technical architecture details.
-          </p>
+        <div style={{marginTop:28,textAlign:'center',color:'#1E3A1E',fontSize:11}}>
+          OMNIX Quantum · Credit & Lending Governance · ADR-CREDIT-001 · 11-Checkpoint Fail-Closed Pipeline
+          &nbsp;·&nbsp; Basel III · CECL / IFRS 9 · AML / KYC · Fair Lending Act · Dilithium-3 PQC
+          &nbsp;·&nbsp; <Link to="/try" style={{color:CRD_GREEN,textDecoration:'none'}}>Public Sandbox →</Link>
+          &nbsp;·&nbsp; <Link to="/" style={{color:CRD_GREEN,textDecoration:'none'}}>Back to Platform →</Link>
         </div>
-      </main>
-
-      <footer className="border-t border-[#C9A227]/10 py-12 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="OMNIX" className="w-10 h-10 object-contain" />
-            <span className="text-muted text-sm">&copy; 2026 OMNIX QUANTUM. All rights reserved.</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-muted hover:text-white text-sm transition-colors">Home</Link>
-            <Link to="/governance-demo-energy" className="text-muted hover:text-white text-sm transition-colors">Energy Demo</Link>
-            <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">Technical Details</Link>
-            <a href="https://wa.me/16505078293" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">Contact</a>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   )
 }

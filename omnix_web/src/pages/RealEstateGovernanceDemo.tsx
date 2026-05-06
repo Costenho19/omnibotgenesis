@@ -1,855 +1,386 @@
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Shield, CheckCircle, XCircle, Clock, Activity,
-  AlertTriangle, TrendingUp, Lock
+  Shield, CheckCircle, XCircle, AlertTriangle, Activity, Clock,
+  TrendingUp, Lock, ArrowRight, Zap,
 } from 'lucide-react'
 
-interface CheckpointResult {
-  name: string
-  icon: React.ReactNode
-  status: 'pending' | 'evaluating' | 'pass' | 'warn' | 'block'
-  score: number
-  threshold: number
-  reasoning: string
-  detail: string
-}
-
-interface PropertyCase {
-  decisionType: string
-  propertyType: string
-  marketSegment: string
-  jurisdiction: string
-  financingMode: string
-  avmConfidence: number
-  priceDeviation: number
-  ltvRatio: number
-  marketTrend: number
-  liquidityScore: number
-  amlRiskScore: number
-  amlFlag: boolean
-  reraCompliant: boolean
-  shariaScreeningPassed: boolean
-  beneficialOwnerVerified: boolean
-}
+const REP_GOLD   = '#C9A227'
+const REP_LIGHT  = '#D4B24E'
+const REP_DARK   = '#120E00'
+const REP_BORDER = '#C9A22733'
 
 const DECISION_TYPES = [
-  { value: 'property_valuation', label: 'Property Valuation (AVM)', icon: '🏠', baseScore: 0.70 },
-  { value: 'mortgage_approval',  label: 'Mortgage Underwriting',    icon: '🏦', baseScore: 0.75 },
-  { value: 'tenant_screening',   label: 'Tenant Screening',         icon: '👤', baseScore: 0.65 },
-  { value: 'aml_transaction',    label: 'AML Transaction Screen',   icon: '🔍', baseScore: 0.80 },
-  { value: 'rental_pricing',     label: 'Algorithmic Rental Price', icon: '💰', baseScore: 0.68 },
+  { value:'property_valuation', label:'Property Valuation (AVM)',    emoji:'🏠', baseScore:0.70 },
+  { value:'mortgage_approval',  label:'Mortgage Underwriting',       emoji:'🏦', baseScore:0.75 },
+  { value:'tenant_screening',   label:'Tenant Screening',            emoji:'👤', baseScore:0.65 },
+  { value:'aml_transaction',    label:'AML Transaction Screen',      emoji:'🔍', baseScore:0.80 },
+  { value:'rental_pricing',     label:'Algorithmic Rental Price',    emoji:'💰', baseScore:0.68 },
 ]
-
 const PROPERTY_TYPES = [
-  { value: 'Residential', label: 'Residential', riskMod: 1.00 },
-  { value: 'Commercial',  label: 'Commercial',  riskMod: 1.15 },
-  { value: 'Industrial',  label: 'Industrial',  riskMod: 1.25 },
-  { value: 'Mixed_Use',   label: 'Mixed-Use',   riskMod: 1.10 },
-  { value: 'Land',        label: 'Land',        riskMod: 1.30 },
+  { value:'Residential', label:'Residential', riskMod:1.00 },
+  { value:'Commercial',  label:'Commercial',  riskMod:1.15 },
+  { value:'Industrial',  label:'Industrial',  riskMod:1.25 },
+  { value:'Mixed_Use',   label:'Mixed-Use',   riskMod:1.10 },
+  { value:'Land',        label:'Land',        riskMod:1.30 },
 ]
-
 const MARKET_SEGMENTS = [
-  { value: 'Affordable', label: 'Affordable',  amlMod: 0.85 },
-  { value: 'Mid_Market', label: 'Mid-Market',  amlMod: 1.00 },
-  { value: 'Premium',    label: 'Premium',     amlMod: 1.15 },
-  { value: 'Luxury',     label: 'Luxury',      amlMod: 1.40 },
+  { value:'Affordable', label:'Affordable', amlMod:0.85 },
+  { value:'Mid_Market', label:'Mid-Market', amlMod:1.00 },
+  { value:'Premium',    label:'Premium',    amlMod:1.15 },
+  { value:'Luxury',     label:'Luxury',     amlMod:1.40 },
 ]
-
 const JURISDICTIONS = [
-  { value: 'UAE',    label: '🇦🇪 UAE (RERA / DLD)',         strictness: 1.08 },
-  { value: 'GCC',    label: '🌙 GCC (SAMA / QFMA)',          strictness: 1.04 },
-  { value: 'UK',     label: '🇬🇧 UK (FCA / UKFI)',           strictness: 1.10 },
-  { value: 'EU',     label: '🇪🇺 EU (MCD / AMLD6)',          strictness: 1.06 },
-  { value: 'GLOBAL', label: '🌐 Global',                     strictness: 1.00 },
+  { value:'UAE',    label:'🇦🇪 UAE (RERA / DLD)',   strictness:1.08 },
+  { value:'GCC',    label:'🌙 GCC (SAMA / QFMA)',    strictness:1.04 },
+  { value:'UK',     label:'🇬🇧 UK (FCA / UKFI)',     strictness:1.10 },
+  { value:'EU',     label:'🇪🇺 EU (MCD / AMLD6)',    strictness:1.06 },
+  { value:'GLOBAL', label:'🌐 Global',               strictness:1.00 },
 ]
-
 const FINANCING_MODES = [
-  { value: 'Conventional', label: 'Conventional',         shariaRequired: false, ltvMax: 90 },
-  { value: 'Murabaha',     label: 'Murabaha (Islamic)',    shariaRequired: true,  ltvMax: 85 },
-  { value: 'Ijarah',       label: 'Ijarah (Islamic)',      shariaRequired: true,  ltvMax: 85 },
-  { value: 'Musharaka',    label: 'Musharaka (Islamic)',   shariaRequired: true,  ltvMax: 80 },
+  { value:'Conventional', label:'Conventional',       shariaRequired:false, ltvMax:90 },
+  { value:'Murabaha',     label:'Murabaha (Islamic)', shariaRequired:true,  ltvMax:85 },
+  { value:'Ijarah',       label:'Ijarah (Islamic)',   shariaRequired:true,  ltvMax:85 },
+  { value:'Musharaka',    label:'Musharaka (Islamic)',shariaRequired:true,  ltvMax:80 },
 ]
 
-function evaluatePropertyCheckpoints(c: PropertyCase): CheckpointResult[] {
-  const dtData   = DECISION_TYPES.find(d => d.value === c.decisionType) || DECISION_TYPES[0]
-  const propData = PROPERTY_TYPES.find(p => p.value === c.propertyType) || PROPERTY_TYPES[0]
-  const jxData   = JURISDICTIONS.find(j => j.value === c.jurisdiction) || JURISDICTIONS[0]
-  const finData  = FINANCING_MODES.find(f => f.value === c.financingMode) || FINANCING_MODES[0]
-  const segData  = MARKET_SEGMENTS.find(s => s.value === c.marketSegment) || MARKET_SEGMENTS[0]
+interface PropertyCase {
+  decisionType: string; propertyType: string; marketSegment: string
+  jurisdiction: string; financingMode: string
+  avmConfidence: number; priceDeviation: number; ltvRatio: number
+  marketTrend: number; liquidityScore: number; amlRiskScore: number
+  amlFlag: boolean; reraCompliant: boolean
+  shariaScreeningPassed: boolean; beneficialOwnerVerified: boolean
+}
 
-  const avm     = c.avmConfidence / 100
-  const dev     = c.priceDeviation / 100
-  const ltv     = c.ltvRatio / 100
-  const trend   = c.marketTrend / 100
-  const liq     = c.liquidityScore / 100
-  const aml     = c.amlRiskScore / 100
+const PRESETS: { label:string; emoji:string; s:PropertyCase }[] = [
+  { label:'UAE Murabaha — Standard', emoji:'🏦', s:{ decisionType:'mortgage_approval',  propertyType:'Residential', marketSegment:'Mid_Market', jurisdiction:'UAE',    financingMode:'Murabaha',     avmConfidence:80, priceDeviation:8,  ltvRatio:76, marketTrend:68, liquidityScore:72, amlRiskScore:15, amlFlag:false, reraCompliant:true,  shariaScreeningPassed:true,  beneficialOwnerVerified:true  } },
+  { label:'Dubai Luxury AVM',        emoji:'🏙️', s:{ decisionType:'property_valuation', propertyType:'Residential', marketSegment:'Luxury',     jurisdiction:'UAE',    financingMode:'Conventional', avmConfidence:85, priceDeviation:12, ltvRatio:65, marketTrend:75, liquidityScore:80, amlRiskScore:35, amlFlag:false, reraCompliant:true,  shariaScreeningPassed:true,  beneficialOwnerVerified:true  } },
+  { label:'UK Mortgage — Prime',     emoji:'🇬🇧', s:{ decisionType:'mortgage_approval',  propertyType:'Residential', marketSegment:'Mid_Market', jurisdiction:'UK',     financingMode:'Conventional', avmConfidence:82, priceDeviation:6,  ltvRatio:80, marketTrend:62, liquidityScore:68, amlRiskScore:10, amlFlag:false, reraCompliant:true,  shariaScreeningPassed:true,  beneficialOwnerVerified:true  } },
+  { label:'Commercial (EU)',         emoji:'🏢', s:{ decisionType:'mortgage_approval',  propertyType:'Commercial',  marketSegment:'Premium',    jurisdiction:'EU',     financingMode:'Conventional', avmConfidence:72, priceDeviation:15, ltvRatio:70, marketTrend:55, liquidityScore:58, amlRiskScore:22, amlFlag:false, reraCompliant:true,  shariaScreeningPassed:true,  beneficialOwnerVerified:true  } },
+  { label:'AML Flag — Block Test',   emoji:'⚠️', s:{ decisionType:'aml_transaction',    propertyType:'Land',        marketSegment:'Luxury',     jurisdiction:'GLOBAL', financingMode:'Conventional', avmConfidence:60, priceDeviation:25, ltvRatio:88, marketTrend:40, liquidityScore:35, amlRiskScore:75, amlFlag:true,  reraCompliant:false, shariaScreeningPassed:false, beneficialOwnerVerified:false } },
+]
 
-  // ── CP-1: Input Validation & Data Completeness ─────────────────────────
-  const cp1Score = Math.round((avm * 0.6 + (1 - dev) * 0.4) * 100)
-  const cp1Pass = cp1Score >= 55 && !c.amlFlag
+interface CP {
+  name:string; icon:React.ReactNode
+  status:'pending'|'evaluating'|'pass'|'warn'|'block'
+  score:number; threshold:number; reasoning:string; detail:string
+}
 
-  // ── CP-2: AVM Valuation Confidence ────────────────────────────────────
-  const baseConf = avm * 0.55 + (1 - dev * 0.5) * 0.30 + liq * 0.15
-  const cp2Score = Math.round((baseConf / jxData.strictness) * 100)
-  const cp2Threshold = Math.round(dtData.baseScore * 100)
-  const cp2Pass = cp2Score >= cp2Threshold
+function buildCheckpoints(c: PropertyCase): CP[] {
+  const dt   = DECISION_TYPES.find(d=>d.value===c.decisionType)||DECISION_TYPES[0]
+  const prop = PROPERTY_TYPES.find(p=>p.value===c.propertyType)||PROPERTY_TYPES[0]
+  const jx   = JURISDICTIONS.find(j=>j.value===c.jurisdiction)||JURISDICTIONS[0]
+  const fin  = FINANCING_MODES.find(f=>f.value===c.financingMode)||FINANCING_MODES[0]
+  const seg  = MARKET_SEGMENTS.find(s=>s.value===c.marketSegment)||MARKET_SEGMENTS[0]
 
-  // ── CP-3: Transaction Risk / LTV Exposure ─────────────────────────────
-  const ltvHardBlock = c.ltvRatio > finData.ltvMax
-  const rawRisk = (ltv * 0.40 + dev * 0.30 + aml * 0.20 + (c.amlFlag ? 0.10 : 0)) * segData.amlMod * propData.riskMod
-  const cp3Score = Math.round((1 - Math.min(rawRisk, 1)) * 100)
-  const cp3Pass = !ltvHardBlock && cp3Score >= 30
+  const avm=c.avmConfidence/100, dev=c.priceDeviation/100, ltv=c.ltvRatio/100
+  const trend=c.marketTrend/100, liq=c.liquidityScore/100, aml=c.amlRiskScore/100
 
-  // ── CP-4: Multi-Source Data Alignment (Coherence) ─────────────────────
-  const coherence = avm * 0.40 + (1 - dev * 0.6) * 0.35 + liq * 0.25
-  const cp4Score = Math.round(coherence * 100)
-  const cp4Pass = cp4Score >= 58
+  const cp1Score = Math.round((avm*0.6+(1-dev)*0.4)*100)
+  const cp1Pass  = cp1Score>=55 && !c.amlFlag
 
-  // ── CP-5: Market Trajectory Stability ─────────────────────────────────
-  const trajectory = trend * 0.55 + liq * 0.30 + (1 - dev * 0.3) * 0.15
-  const cp5Score = Math.round(trajectory * 100)
-  const cp5Pass = cp5Score >= 52
+  const baseConf = avm*0.55+(1-dev*0.5)*0.30+liq*0.15
+  const cp2Score = Math.round((baseConf/jx.strictness)*100)
+  const cp2Threshold = Math.round(dt.baseScore*100)
+  const cp2Pass  = cp2Score>=cp2Threshold
 
-  // ── CP-6: Portfolio Stress Resilience ─────────────────────────────────
-  const resilience = liq * 0.45 + (1 - aml * 0.4) * 0.30 + (1 - Math.max(0, ltv - 0.7)) * 0.25
-  const cp6Score = Math.round(resilience * 100)
-  const cp6Pass = cp6Score >= 50
+  const ltvHardBlock = c.ltvRatio > fin.ltvMax
+  const rawRisk = (ltv*0.40+dev*0.30+aml*0.20+(c.amlFlag?0.10:0))*seg.amlMod*prop.riskMod
+  const cp3Score = Math.round((1-Math.min(rawRisk,1))*100)
+  const cp3Pass  = !ltvHardBlock && cp3Score>=30
 
-  // ── CP-7: Regulatory & Compliance Alignment ───────────────────────────
-  let compliance = (1 - aml * 0.40) * 100
-  compliance += c.reraCompliant ? 25 : -40
-  compliance += c.beneficialOwnerVerified ? 15 : -25
-  if (finData.shariaRequired) {
-    compliance += c.shariaScreeningPassed ? 15 : -50
-  }
-  const cp7Score = Math.round(Math.max(0, Math.min(100, compliance / jxData.strictness)))
-  const cp7Pass = !c.amlFlag && c.reraCompliant
-    && (!finData.shariaRequired || c.shariaScreeningPassed)
-    && cp7Score >= 65
+  const coherence = avm*0.40+(1-dev*0.6)*0.35+liq*0.25
+  const cp4Score = Math.round(coherence*100); const cp4Pass = cp4Score>=58
 
-  // ── CP-8: Governance Score Threshold ──────────────────────────────────
-  const signals = [cp2Score, 100 - (100 - cp3Score), cp4Score, cp5Score, cp6Score, cp7Score]
-  const cp8Score = Math.round(signals.reduce((a, b) => a + b, 0) / signals.length)
-  const cp8Pass = cp8Score >= 60 && !c.amlFlag
+  const traj = trend*0.55+liq*0.30+(1-dev*0.3)*0.15
+  const cp5Score = Math.round(traj*100); const cp5Pass = cp5Score>=52
 
-  // ── CP-9: Probabilistic Risk Stress Test ──────────────────────────────
-  const stressLoad = aml * 0.4 + (1 - liq) * 0.3 + dev * 0.3
-  const cp9Score = Math.round((1 - stressLoad) * cp8Score)
-  const cp9Pass = cp9Score >= 55
+  const resil = liq*0.45+(1-aml*0.4)*0.30+(1-Math.max(0,ltv-0.7))*0.25
+  const cp6Score = Math.round(resil*100); const cp6Pass = cp6Score>=50
 
-  // ── CP-10: Receipt Authorization ──────────────────────────────────────
-  const cp10Score = (cp1Pass && cp2Pass && cp3Pass && cp4Pass && cp5Pass && cp6Pass && cp7Pass && cp8Pass && cp9Pass)
-    ? Math.round(90 + Math.random() * 10) : 0
-  const cp10Pass = cp10Score >= 85
+  let comp = (1-aml*0.40)*100
+  comp += c.reraCompliant?25:-40; comp += c.beneficialOwnerVerified?15:-25
+  if (fin.shariaRequired) comp += c.shariaScreeningPassed?15:-50
+  const cp7Score = Math.round(Math.max(0,Math.min(100,comp/jx.strictness)))
+  const cp7Pass  = !c.amlFlag && c.reraCompliant && (!fin.shariaRequired||c.shariaScreeningPassed) && cp7Score>=65
 
-  // ── CP-11: PQC Receipt Issuance ───────────────────────────────────────
-  const cp11Score = cp10Pass ? 100 : 0
-  const cp11Pass = cp10Pass
+  const sigs = [cp2Score,cp3Score,cp4Score,cp5Score,cp6Score,cp7Score]
+  const cp8Score = Math.round(sigs.reduce((a,b)=>a+b,0)/sigs.length); const cp8Pass = cp8Score>=60&&!c.amlFlag
 
-  const overall = cp1Pass && cp2Pass && cp3Pass && cp4Pass && cp5Pass && cp6Pass && cp7Pass && cp8Pass && cp9Pass
+  const stressLoad = aml*0.4+(1-liq)*0.3+dev*0.3
+  const cp9Score = Math.round((1-stressLoad)*cp8Score); const cp9Pass = cp9Score>=55
+
+  const overall = cp1Pass&&cp2Pass&&cp3Pass&&cp4Pass&&cp5Pass&&cp6Pass&&cp7Pass&&cp8Pass&&cp9Pass
+  const cp10Score = overall?Math.round(90+Math.random()*10):0; const cp10Pass = cp10Score>=85
+  const cp11Score = cp10Pass?100:0; const cp11Pass = cp10Pass
 
   return [
-    {
-      name: 'CP-1 · Input Validation',
-      icon: <Shield size={14} />,
-      status: !cp1Pass ? 'block' : cp1Score >= 75 ? 'pass' : 'warn',
-      score: cp1Score, threshold: 55,
-      reasoning: c.amlFlag
-        ? 'AML flag raised on input — hard block at intake before any processing'
-        : cp1Pass
-          ? `AVM data completeness: ${c.avmConfidence}% confidence · Price deviation: ${c.priceDeviation}% — inputs accepted`
-          : `Insufficient AVM data quality (${cp1Score}/55) — comparable sources inadequate`,
-      detail: 'Validates data completeness, AVM source quality, and pre-screens for immediate disqualifiers',
-    },
-    {
-      name: 'CP-2 · AVM Confidence',
-      icon: <TrendingUp size={14} />,
-      status: cp2Pass ? 'pass' : cp2Score >= cp2Threshold * 0.8 ? 'warn' : 'block',
-      score: cp2Score, threshold: cp2Threshold,
-      reasoning: cp2Pass
-        ? `AVM confidence ${cp2Score}/100 meets ${c.jurisdiction} threshold (${cp2Threshold}) — valuation model validated`
-        : `AVM confidence ${cp2Score} below ${c.jurisdiction} minimum ${cp2Threshold} — jurisdiction ${jxData.strictness}x strictness applied`,
-      detail: `${c.jurisdiction} regulatory strictness: ${jxData.strictness}× · Threshold: ${cp2Threshold} for ${c.decisionType}`,
-    },
-    {
-      name: 'CP-3 · Transaction Risk',
-      icon: <AlertTriangle size={14} />,
-      status: ltvHardBlock ? 'block' : c.amlFlag ? 'block' : cp3Pass ? (cp3Score >= 55 ? 'pass' : 'warn') : 'block',
-      score: cp3Score, threshold: 30,
-      reasoning: ltvHardBlock
-        ? `HARD BLOCK: LTV ${c.ltvRatio}% exceeds ${finData.label} maximum of ${finData.ltvMax}% (AAOIFI standard)`
-        : c.amlFlag
-          ? 'HARD BLOCK: AML alert — transaction frozen pending compliance investigation'
-          : cp3Pass
-            ? `Transaction risk ${cp3Score}/100 within safe limit · ${c.marketSegment} segment factor applied`
-            : `Transaction risk too high (${cp3Score}/30) · AML score: ${c.amlRiskScore}%`,
-      detail: `LTV limit: ${finData.ltvMax}% (${finData.label}) · Segment AML multiplier: ${segData.amlMod}× · Property risk: ${propData.riskMod}×`,
-    },
-    {
-      name: 'CP-4 · Data Coherence',
-      icon: <Activity size={14} />,
-      status: !overall ? 'block' : cp4Pass ? 'pass' : 'warn',
-      score: cp4Score, threshold: 58,
-      reasoning: cp4Pass
-        ? `Multi-source alignment ${cp4Score}/100 — AVM, comparables, and market data consistent`
-        : `Signal incoherence detected (${cp4Score}/58) — price deviation ${c.priceDeviation}% causing misalignment`,
-      detail: 'Cross-references AVM output with comparable sales data, market indices, and appraiser estimates',
-    },
-    {
-      name: 'CP-5 · Market Trajectory',
-      icon: <TrendingUp size={14} />,
-      status: !overall ? 'block' : cp5Pass ? 'pass' : 'warn',
-      score: cp5Score, threshold: 52,
-      reasoning: cp5Pass
-        ? `Market trajectory stable (${cp5Score}/100) · Trend: ${c.marketTrend}% · Liquidity: ${c.liquidityScore}`
-        : `Adverse market conditions (${cp5Score}/52) — declining demand or oversupply risk`,
-      detail: 'Evaluates price trend direction, demand vs supply dynamics, and absorption rate stability',
-    },
-    {
-      name: 'CP-6 · Stress Resilience',
-      icon: <Shield size={14} />,
-      status: !overall ? 'block' : cp6Pass ? 'pass' : 'warn',
-      score: cp6Score, threshold: 50,
-      reasoning: cp6Pass
-        ? `Asset resilience ${cp6Score}/100 — liquidity ${c.liquidityScore}, rate sensitivity adequate`
-        : `Stress resilience insufficient (${cp6Score}/50) — illiquid asset with high rate sensitivity`,
-      detail: 'Portfolio stress test: interest rate shock scenarios, vacancy risk, and market liquidity in downside',
-    },
-    {
-      name: 'CP-7 · Regulatory Compliance',
-      icon: <Lock size={14} />,
-      status: c.amlFlag ? 'block' : !c.reraCompliant ? 'block'
-        : (finData.shariaRequired && !c.shariaScreeningPassed) ? 'block'
-        : cp7Pass ? 'pass' : 'warn',
-      score: cp7Score, threshold: 65,
-      reasoning: c.amlFlag
-        ? 'HARD BLOCK: AML alert — FATF compliance violation'
-        : !c.reraCompliant
-          ? 'HARD BLOCK: RERA / regulatory non-compliance detected'
-          : finData.shariaRequired && !c.shariaScreeningPassed
-            ? `HARD BLOCK: Sharia parameter screening failed for ${finData.label} — Sharia Board clearance required`
-            : !c.beneficialOwnerVerified
-              ? 'UBO (Ultimate Beneficial Owner) verification incomplete — compliance hold'
-              : `Regulatory alignment ${cp7Score}/100 — AML, ${c.jurisdiction} compliance, and ${finData.label} governance passed`,
-      detail: `AML: FATF risk score ${c.amlRiskScore}% · RERA: ${c.reraCompliant ? '✓' : '✗'} · ${finData.shariaRequired ? `Sharia: ${c.shariaScreeningPassed ? '✓' : '✗'} · ` : ''}UBO: ${c.beneficialOwnerVerified ? '✓' : '✗'}`,
-    },
-    {
-      name: 'CP-8 · Governance Score',
-      icon: <BarChart3 size={14} />,
-      status: !overall ? 'block' : cp8Pass ? 'pass' : 'warn',
-      score: cp8Score, threshold: 60,
-      reasoning: cp8Pass
-        ? `Composite governance score ${cp8Score}/100 — all signal thresholds cleared`
-        : `Composite score ${cp8Score} below minimum 60 — aggregate signal health insufficient`,
-      detail: 'Weighted composite of all 6 OMNIX signals · Computed by 11-checkpoint engine identically across all domains',
-    },
-    {
-      name: 'CP-9 · Stress-Adjusted Score',
-      icon: <Activity size={14} />,
-      status: !overall ? 'block' : cp9Pass ? 'pass' : 'warn',
-      score: cp9Score, threshold: 55,
-      reasoning: cp9Pass
-        ? `Stress-adjusted score ${cp9Score}/100 — decision holds under adverse scenario loading`
-        : `Score degrades to ${cp9Score} under stress loading — resilience insufficient`,
-      detail: 'Applies downside scenario multipliers (AML amplification, liquidity crunch, market correction) to the governance score',
-    },
-    {
-      name: 'CP-10 · Receipt Authorization',
-      icon: <CheckCircle size={14} />,
-      status: cp10Pass ? 'pass' : 'block',
-      score: cp10Score, threshold: 85,
-      reasoning: cp10Pass
-        ? `Receipt authorized — decision passed all 9 prior checkpoints · Authorization score: ${cp10Score}`
-        : 'Receipt authorization denied — one or more checkpoints failed',
-      detail: 'Internal authorization gate: only decisions passing CP-1 through CP-9 receive a cryptographic receipt',
-    },
-    {
-      name: 'CP-11 · PQC Receipt Issuance',
-      icon: <Lock size={14} />,
-      status: cp11Pass ? 'pass' : 'block',
-      score: cp11Score, threshold: 100,
-      reasoning: cp11Pass
-        ? 'OMNIX-REP receipt sealed · CRYSTALS-Dilithium3 (NIST FIPS 204) · Immutable audit trail created'
-        : 'Receipt not issued — governance pipeline blocked',
-      detail: 'Post-quantum cryptographic seal using CRYSTALS-Dilithium3. Receipt prefix: OMNIX-REP. Verifiable at /verify',
-    },
+    { name:'CP-1 · Input Validation',       icon:<Shield size={13}/>,        status:'pending', score:cp1Score,    threshold:55,          reasoning:c.amlFlag?`AML flag on input — hard block at intake`:cp1Pass?`AVM quality ${c.avmConfidence}% · deviation ${c.priceDeviation}% — inputs accepted`:`Insufficient AVM quality (${cp1Score}/55)`,                                                      detail:`AVM confidence: ${c.avmConfidence}% | Price deviation: ${c.priceDeviation}% | AML flag: ${c.amlFlag?'YES':'No'}` },
+    { name:'CP-2 · AVM Confidence',         icon:<TrendingUp size={13}/>,    status:'pending', score:cp2Score,    threshold:cp2Threshold, reasoning:cp2Pass?`AVM confidence ${cp2Score} meets ${c.jurisdiction} threshold (${cp2Threshold})`:`AVM ${cp2Score} below ${c.jurisdiction} minimum ${cp2Threshold} — ${jx.strictness}× strictness`,                                                   detail:`${c.jurisdiction} strictness: ${jx.strictness}× | Decision: ${dt.label} | Threshold: ${cp2Threshold}` },
+    { name:'CP-3 · Transaction Risk',       icon:<AlertTriangle size={13}/>, status:'pending', score:cp3Score,    threshold:30,           reasoning:ltvHardBlock?`HARD BLOCK: LTV ${c.ltvRatio}% > ${fin.label} max ${fin.ltvMax}% (AAOIFI)`:c.amlFlag?`HARD BLOCK: AML alert — transaction frozen`:cp3Pass?`Risk ${cp3Score} within safe limit`:`Risk too high (${cp3Score}/30)`,                detail:`LTV limit: ${fin.ltvMax}% (${fin.label}) | AML mod: ${seg.amlMod}× | Prop risk: ${prop.riskMod}×` },
+    { name:'CP-4 · Data Coherence',         icon:<Activity size={13}/>,      status:'pending', score:cp4Score,    threshold:58,           reasoning:cp4Pass?`Multi-source alignment ${cp4Score} — AVM, comparables consistent`:`Signal incoherence (${cp4Score}/58) — deviation ${c.priceDeviation}% causing misalignment`,                                                                         detail:`AVM: ${c.avmConfidence}% | Deviation: ${c.priceDeviation}% | Liquidity: ${c.liquidityScore}%` },
+    { name:'CP-5 · Market Trajectory',      icon:<TrendingUp size={13}/>,    status:'pending', score:cp5Score,    threshold:52,           reasoning:cp5Pass?`Market trajectory stable (${cp5Score}) — trend ${c.marketTrend}% · liquidity ${c.liquidityScore}`:`Adverse conditions (${cp5Score}/52) — declining demand or oversupply`,                                                              detail:`Market trend: ${c.marketTrend}% | Liquidity: ${c.liquidityScore}% | Deviation drag: -${(dev*0.3*100).toFixed(0)}%` },
+    { name:'CP-6 · Stress Resilience',      icon:<Shield size={13}/>,        status:'pending', score:cp6Score,    threshold:50,           reasoning:cp6Pass?`Asset resilience ${cp6Score} — liquidity and rate sensitivity adequate`:`Stress insufficient (${cp6Score}/50) — illiquid with high rate sensitivity`,                                                                                  detail:`Liquidity: ${c.liquidityScore}% | AML score: ${c.amlRiskScore}% | LTV stress: ${Math.max(0,c.ltvRatio-70)}%` },
+    { name:'CP-7 · Regulatory Compliance',  icon:<Lock size={13}/>,          status:'pending', score:cp7Score,    threshold:65,           reasoning:c.amlFlag?`HARD BLOCK: FATF AML violation`:!c.reraCompliant?`HARD BLOCK: RERA non-compliance`:(fin.shariaRequired&&!c.shariaScreeningPassed)?`HARD BLOCK: ${fin.label} — Sharia Board clearance required`:!c.beneficialOwnerVerified?`UBO verification incomplete`:`Regulatory ${cp7Score} — AML, ${c.jurisdiction}, ${fin.label} passed`, detail:`AML: ${c.amlRiskScore}% | RERA: ${c.reraCompliant?'✓':'✗'} | ${fin.shariaRequired?`Sharia: ${c.shariaScreeningPassed?'✓':'✗'} | `:''}UBO: ${c.beneficialOwnerVerified?'✓':'✗'}` },
+    { name:'CP-8 · Governance Score',       icon:<Activity size={13}/>,      status:'pending', score:cp8Score,    threshold:60,           reasoning:cp8Pass?`Composite score ${cp8Score} — all signals cleared`:`Score ${cp8Score} below 60 — aggregate signal health insufficient`,                                                                                                              detail:`Avg of CP2-CP7 signals: ${cp8Score}/100` },
+    { name:'CP-9 · Stress-Adjusted Score',  icon:<AlertTriangle size={13}/>, status:'pending', score:cp9Score,    threshold:55,           reasoning:cp9Pass?`Stress-adjusted ${cp9Score} — holds under adverse loading`:`Score degrades to ${cp9Score} under stress — resilience insufficient`,                                                                                                  detail:`AML stress: ${(aml*0.4*100).toFixed(0)}% | Liquidity risk: ${((1-liq)*0.3*100).toFixed(0)}% | Dev stress: ${(dev*0.3*100).toFixed(0)}%` },
+    { name:'CP-10 · Receipt Authorization', icon:<CheckCircle size={13}/>,   status:'pending', score:cp10Score,   threshold:85,           reasoning:cp10Pass?`Receipt authorized — all 9 prior checkpoints passed (${cp10Score})`:`Receipt denied — one or more checkpoints failed`,                                                                                                             detail:`All CP-1 through CP-9 must pass for receipt authorization` },
+    { name:'CP-11 · PQC Receipt Issuance',  icon:<Lock size={13}/>,          status:'pending', score:cp11Score,   threshold:100,          reasoning:cp11Pass?`OMNIX-REP receipt sealed · CRYSTALS-Dilithium3 (NIST FIPS 204)`:`Receipt not issued — governance pipeline blocked`,                                                                                                              detail:`Algorithm: CRYSTALS-Dilithium3 | Standard: NIST FIPS 204 | Prefix: OMNIX-REP` },
   ]
 }
 
-function BarChart3({ size }: { size: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-    </svg>
-  )
+function buildReceiptId() {
+  return `OMNIX-REP-${Array.from({length:12},()=>Math.floor(Math.random()*16).toString(16).toUpperCase()).join('')}`
 }
 
-function Slider({ label, value, onChange, min = 0, max = 100, color = '#38bdf8', hint }: {
-  label: string; value: number; onChange: (v: number) => void;
-  min?: number; max?: number; color?: string; hint?: string
-}) {
-  const pct = ((value - min) / (max - min)) * 100
+function ScoreBar({ score, threshold, color }: { score:number; threshold:number; color:string }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 12, color: '#94a3b8' }}>{label}</span>
-        <span style={{ fontSize: 13, color, fontWeight: 600 }}>{value}{max > 1 ? (min === 0 && max === 100 ? '' : '') : ''}</span>
-      </div>
-      <input
-        type="range" min={min} max={max} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        style={{
-          width: '100%', appearance: 'none', height: 4,
-          background: `linear-gradient(to right, ${color} ${pct}%, rgba(255,255,255,0.12) ${pct}%)`,
-          borderRadius: 2, outline: 'none', cursor: 'pointer',
-        }}
-      />
-      {hint && <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>{hint}</div>}
+    <div style={{ position:'relative', height:6, background:'#1A1400', borderRadius:3, overflow:'visible' }}>
+      <div style={{ position:'absolute', left:`${threshold}%`, top:-3, width:2, height:12, background:'#F59E0B', borderRadius:1, zIndex:2 }}/>
+      <div style={{ height:'100%', width:`${Math.min(score,100)}%`, background:color, borderRadius:3, transition:'width 0.9s ease' }}/>
     </div>
   )
 }
 
-function Toggle({ label, value, onChange, blockLabel }: {
-  label: string; value: boolean; onChange: (v: boolean) => void; blockLabel?: string
-}) {
+function Toggle({ label, value, onChange, blockMsg }: { label:string; value:boolean; onChange:(v:boolean)=>void; blockMsg?:string }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
-    }}>
-      <div>
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>{label}</div>
-        {blockLabel && <div style={{ fontSize: 10, color: '#f87171' }}>{blockLabel}</div>}
-      </div>
-      <button
-        onClick={() => onChange(!value)}
-        style={{
-          width: 40, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer',
-          background: value ? '#34d399' : 'rgba(255,255,255,0.1)',
-          position: 'relative', transition: 'background 0.2s',
-        }}
-      >
-        <div style={{
-          width: 16, height: 16, borderRadius: '50%', background: '#fff',
-          position: 'absolute', top: 3,
-          left: value ? 21 : 3, transition: 'left 0.2s',
-        }} />
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #1A1400'}}>
+      <div><div style={{fontSize:12,color:'#94A3B8'}}>{label}</div>{blockMsg&&<div style={{fontSize:10,color:'#EF4444'}}>{blockMsg}</div>}</div>
+      <button onClick={()=>onChange(!value)} style={{width:40,height:22,borderRadius:11,border:'none',cursor:'pointer',background:value?REP_GOLD:'rgba(255,255,255,0.08)',position:'relative',transition:'background 0.2s'}}>
+        <div style={{width:16,height:16,borderRadius:'50%',background:'#FFF',position:'absolute',top:3,left:value?21:3,transition:'left 0.2s'}}/>
       </button>
     </div>
   )
 }
 
-const CP_COLORS = {
-  pending:    { bg: 'rgba(148,163,184,0.06)', border: 'rgba(148,163,184,0.15)', text: '#475569' },
-  evaluating: { bg: 'rgba(56,189,248,0.08)',  border: 'rgba(56,189,248,0.3)',   text: '#38bdf8' },
-  pass:       { bg: 'rgba(52,211,153,0.08)',  border: 'rgba(52,211,153,0.25)',  text: '#34d399' },
-  warn:       { bg: 'rgba(251,191,36,0.08)',  border: 'rgba(251,191,36,0.25)',  text: '#fbbf24' },
-  block:      { bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.3)',  text: '#f87171' },
-}
-
 export default function RealEstateGovernanceDemo() {
-  const [c, setC] = useState<PropertyCase>({
-    decisionType: 'mortgage_approval',
-    propertyType: 'Residential',
-    marketSegment: 'Mid_Market',
-    jurisdiction: 'UAE',
-    financingMode: 'Murabaha',
-    avmConfidence: 80,
-    priceDeviation: 8,
-    ltvRatio: 76,
-    marketTrend: 68,
-    liquidityScore: 72,
-    amlRiskScore: 15,
-    amlFlag: false,
-    reraCompliant: true,
-    shariaScreeningPassed: true,
-    beneficialOwnerVerified: true,
-  })
+  const [cas, setCas] = useState<PropertyCase>({ decisionType:'mortgage_approval', propertyType:'Residential', marketSegment:'Mid_Market', jurisdiction:'UAE', financingMode:'Murabaha', avmConfidence:80, priceDeviation:8, ltvRatio:76, marketTrend:68, liquidityScore:72, amlRiskScore:15, amlFlag:false, reraCompliant:true, shariaScreeningPassed:true, beneficialOwnerVerified:true })
+  const [checkpoints, setCheckpoints] = useState<CP[]>([])
+  const [currentCp, setCurrentCp]   = useState(-1)
+  const [finalResult, setFinalResult] = useState<string|null>(null)
+  const [receiptId, setReceiptId]   = useState<string|null>(null)
+  const [isRunning, setIsRunning]   = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout>|null>(null)
 
-  const [checkpoints, setCheckpoints] = useState<CheckpointResult[]>(() =>
-    evaluatePropertyCheckpoints({
-      decisionType: 'mortgage_approval',
-      propertyType: 'Residential',
-      marketSegment: 'Mid_Market',
-      jurisdiction: 'UAE',
-      financingMode: 'Murabaha',
-      avmConfidence: 80,
-      priceDeviation: 8,
-      ltvRatio: 76,
-      marketTrend: 68,
-      liquidityScore: 72,
-      amlRiskScore: 15,
-      amlFlag: false,
-      reraCompliant: true,
-      shariaScreeningPassed: true,
-      beneficialOwnerVerified: true,
-    }).map(cp => ({ ...cp, status: 'pending' as const }))
-  )
+  const dt  = DECISION_TYPES.find(d=>d.value===cas.decisionType)||DECISION_TYPES[0]
+  const fin = FINANCING_MODES.find(f=>f.value===cas.financingMode)||FINANCING_MODES[0]
+  const jx  = JURISDICTIONS.find(j=>j.value===cas.jurisdiction)||JURISDICTIONS[0]
 
-  const [running, setRunning]         = useState(false)
-  const [activeIdx, setActiveIdx]     = useState(-1)
-  const [receiptId, setReceiptId]     = useState<string | null>(null)
-  const [finalOutcome, setFinalOutcome] = useState<'APPROVED' | 'BLOCKED' | 'HOLD' | null>(null)
-  const abortRef = useRef(false)
+  const hb_aml    = cas.amlFlag
+  const hb_rera   = !cas.reraCompliant
+  const hb_ltv    = cas.ltvRatio > fin.ltvMax
+  const hb_sharia = fin.shariaRequired && !cas.shariaScreeningPassed
+  const anyHardBlock = hb_aml || hb_rera || hb_ltv || hb_sharia
 
-  const finData = FINANCING_MODES.find(f => f.value === c.financingMode) || FINANCING_MODES[0]
+  function applyPreset(p: typeof PRESETS[0]) { setCas({...p.s}); setCheckpoints([]); setFinalResult(null); setReceiptId(null); setCurrentCp(-1) }
 
-  const update = (patch: Partial<PropertyCase>) => {
-    if (running) return
-    setC(prev => ({ ...prev, ...patch }))
-    setCheckpoints(evaluatePropertyCheckpoints({ ...c, ...patch }).map(cp => ({ ...cp, status: 'pending' as const })))
-    setReceiptId(null)
-    setFinalOutcome(null)
-    setActiveIdx(-1)
+  function runEval() {
+    if (isRunning) return
+    const cps = buildCheckpoints(cas)
+    setCheckpoints(cps.map(c=>({...c,status:'pending'})))
+    setCurrentCp(-1); setFinalResult(null); setReceiptId(null); setIsRunning(true)
+    cps.forEach((_,i)=>{
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(()=>{
+        setCurrentCp(i)
+        setCheckpoints(prev=>prev.map((c,idx)=>idx<i?{...c,status:(c.score>=c.threshold?'pass':c.score>=c.threshold*0.72?'warn':'block') as CP['status']}:idx===i?{...c,status:'evaluating' as CP['status']}:c))
+        if (i===cps.length-1) {
+          setTimeout(()=>{
+            const final:CP[]=cps.map(c=>({...c,status:(c.score>=c.threshold?'pass':c.score>=c.threshold*0.72?'warn':'block') as CP['status']}))
+            const bl=final.filter(c=>c.score<c.threshold).length
+            const verdict = anyHardBlock||bl>0?'BLOCKED':final.filter(c=>c.score<c.threshold+10).length>=2?'HOLD':'APPROVED'
+            setCheckpoints(final); setCurrentCp(-1); setFinalResult(verdict)
+            if (verdict==='APPROVED') setReceiptId(buildReceiptId())
+            setIsRunning(false)
+          }, 380)
+        }
+      }, i*300)
+    })
   }
 
-  const runPipeline = async () => {
-    if (running) return
-    setRunning(true)
-    abortRef.current = false
-    setReceiptId(null)
-    setFinalOutcome(null)
-
-    const results = evaluatePropertyCheckpoints(c)
-    const statuses: CheckpointResult[] = results.map(cp => ({ ...cp, status: 'pending' as const }))
-    setCheckpoints([...statuses])
-
-    for (let i = 0; i < results.length; i++) {
-      if (abortRef.current) break
-      setActiveIdx(i)
-      setCheckpoints(prev => {
-        const copy = [...prev]
-        copy[i] = { ...copy[i], status: 'evaluating' }
-        return copy
-      })
-      await new Promise(r => setTimeout(r, 480 + Math.random() * 280))
-      if (abortRef.current) break
-      setCheckpoints(prev => {
-        const copy = [...prev]
-        copy[i] = { ...results[i] }
-        return copy
-      })
-    }
-
-    if (!abortRef.current) {
-      const allPassed = results.every(r => r.status === 'pass' || r.status === 'warn')
-      const anyBlock  = results.some(r => r.status === 'block')
-      const finalStatus = anyBlock ? 'BLOCKED' : allPassed ? 'APPROVED' : 'HOLD'
-      setFinalOutcome(finalStatus)
-
-      if (finalStatus !== 'BLOCKED') {
-        const hex = Array.from({ length: 12 }, () => '0123456789ABCDEF'[Math.floor(Math.random() * 16)]).join('')
-        setReceiptId(`OMNIX-REP-${hex}`)
-      }
-    }
-    setActiveIdx(-1)
-    setRunning(false)
+  const sIcon=(s:CP['status'])=>{
+    if(s==='pending')    return <Clock size={15} style={{color:'#2A2200'}}/>
+    if(s==='evaluating') return <Activity size={15} style={{color:REP_GOLD,animation:'pulse 0.8s ease-in-out infinite'}}/>
+    if(s==='pass')       return <CheckCircle size={15} style={{color:'#10B981'}}/>
+    if(s==='warn')       return <AlertTriangle size={15} style={{color:'#F59E0B'}}/>
+    return <XCircle size={15} style={{color:'#EF4444'}}/>
   }
+  const sColor=(s:CP['status'])=>s==='pass'?'#10B981':s==='warn'?'#F59E0B':s==='block'?'#EF4444':s==='evaluating'?REP_GOLD:'#2A2200'
+  const vColor=(v:string|null)=>v==='APPROVED'?'#10B981':v==='HOLD'?'#F59E0B':'#EF4444'
+  const vBg=(v:string|null)=>v==='APPROVED'?'rgba(16,185,129,0.10)':v==='HOLD'?'rgba(245,158,11,0.10)':'rgba(239,68,68,0.10)'
+  const vBdr=(v:string|null)=>v==='APPROVED'?'#10B98133':v==='HOLD'?'#F59E0B33':'#EF444433'
 
-  const resetPipeline = () => {
-    abortRef.current = true
-    setRunning(false)
-    setActiveIdx(-1)
-    setReceiptId(null)
-    setFinalOutcome(null)
-    setCheckpoints(evaluatePropertyCheckpoints(c).map(cp => ({ ...cp, status: 'pending' as const })))
-  }
-
-  const completedCount = checkpoints.filter(cp => cp.status !== 'pending' && cp.status !== 'evaluating').length
-  const passCount      = checkpoints.filter(cp => cp.status === 'pass' || cp.status === 'warn').length
-  const blockCount     = checkpoints.filter(cp => cp.status === 'block').length
-  const progress       = (completedCount / checkpoints.length) * 100
+  const inp:React.CSSProperties={background:'#120E00',border:'1px solid #2A2200',borderRadius:7,color:'#CBD5E1',padding:'9px 12px',fontSize:13,width:'100%',outline:'none',cursor:'pointer'}
+  const lbl:React.CSSProperties={fontSize:10,color:'#5C4A00',marginBottom:5,display:'block',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em'}
+  const sld:React.CSSProperties={width:'100%',accentColor:REP_GOLD,cursor:'pointer',height:4}
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0B0F1A', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif' }}>
-      <style>{`
-        input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #38bdf8; cursor: pointer; border: 2px solid #0B0F1A; box-shadow: 0 0 6px #38bdf840; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-      `}</style>
+    <div style={{minHeight:'100vh',background:`linear-gradient(160deg,${REP_DARK} 0%,#1A1700 50%,#0F0C00 100%)`,color:'#E2E8F0',fontFamily:"'Inter',sans-serif",padding:'24px'}}>
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}} *{box-sizing:border-box} select option{background:#120E00} input[type=range]::-webkit-slider-thumb{background:${REP_GOLD}}`}</style>
+      <div style={{maxWidth:1320,margin:'0 auto'}}>
 
-      {/* ── Header ── */}
-      <div style={{
-        background: 'rgba(56,189,248,0.06)',
-        borderBottom: '1px solid rgba(56,189,248,0.15)',
-        padding: '20px 32px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Link to="/real-estate" style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', fontSize: 13 }}>
-            ← Dashboard
-          </Link>
-          <div style={{ width: 1, height: 20, background: '#1e293b' }} />
-          <span style={{ fontSize: 22 }}>🏢</span>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: '#f1f5f9' }}>
-              Real Estate Governance — Interactive Demo
-            </div>
-            <div style={{ fontSize: 12, color: '#38bdf8' }}>
-              11-Checkpoint Pipeline · AVM · AML · Islamic Finance · RERA · PQC Receipt
-            </div>
+        <div style={{marginBottom:24}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
+            <Link to="/" style={{color:'#3D2E00',fontSize:12,textDecoration:'none'}}>← Home</Link>
+            <span style={{color:'#2A2200',fontSize:12}}>/</span>
+            <span style={{color:'#5C4A00',fontSize:12}}>Real Estate Governance</span>
           </div>
-        </div>
-        <Link to="/real-estate" style={{
-          padding: '8px 14px', borderRadius: 8,
-          background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)',
-          color: '#38bdf8', textDecoration: 'none', fontSize: 13,
-        }}>
-          Live Dashboard →
-        </Link>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 0, maxHeight: 'calc(100vh - 80px)', overflow: 'hidden' }}>
-
-        {/* ── Left Panel: Configuration ── */}
-        <div style={{
-          background: 'rgba(255,255,255,0.02)',
-          borderRight: '1px solid rgba(255,255,255,0.07)',
-          overflowY: 'auto', padding: '20px 22px',
-        }}>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-              Decision Type
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {DECISION_TYPES.map(dt => (
-                <button
-                  key={dt.value}
-                  disabled={running}
-                  onClick={() => update({ decisionType: dt.value })}
-                  style={{
-                    padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
-                    background: c.decisionType === dt.value ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)',
-                    color: c.decisionType === dt.value ? '#38bdf8' : '#94a3b8',
-                    textAlign: 'left', fontSize: 12, fontWeight: c.decisionType === dt.value ? 600 : 400,
-                    border: `1px solid ${c.decisionType === dt.value ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.06)'}`,
-                    display: 'flex', alignItems: 'center', gap: 8,
-                  }}
-                >
-                  <span>{dt.icon}</span> {dt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Property Type */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-              Property Type
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {PROPERTY_TYPES.map(pt => (
-                <button
-                  key={pt.value}
-                  disabled={running}
-                  onClick={() => update({ propertyType: pt.value })}
-                  style={{
-                    padding: '7px 10px', borderRadius: 7, cursor: 'pointer',
-                    background: c.propertyType === pt.value ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.04)',
-                    color: c.propertyType === pt.value ? '#38bdf8' : '#64748b',
-                    fontSize: 11, fontWeight: c.propertyType === pt.value ? 600 : 400,
-                    border: `1px solid ${c.propertyType === pt.value ? 'rgba(56,189,248,0.25)' : 'rgba(255,255,255,0.05)'}`,
-                  }}
-                >
-                  {pt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Market Segment */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-              Market Segment
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {MARKET_SEGMENTS.map(seg => (
-                <button
-                  key={seg.value}
-                  disabled={running}
-                  onClick={() => update({ marketSegment: seg.value })}
-                  style={{
-                    padding: '7px 10px', borderRadius: 7, cursor: 'pointer',
-                    background: c.marketSegment === seg.value ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.04)',
-                    color: c.marketSegment === seg.value ? '#a78bfa' : '#64748b',
-                    fontSize: 11, fontWeight: c.marketSegment === seg.value ? 600 : 400,
-                    border: `1px solid ${c.marketSegment === seg.value ? 'rgba(167,139,250,0.25)' : 'rgba(255,255,255,0.05)'}`,
-                  }}
-                >
-                  {seg.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Jurisdiction */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-              Jurisdiction
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {JURISDICTIONS.map(jx => (
-                <button
-                  key={jx.value}
-                  disabled={running}
-                  onClick={() => update({ jurisdiction: jx.value })}
-                  style={{
-                    padding: '7px 10px', borderRadius: 7, cursor: 'pointer',
-                    background: c.jurisdiction === jx.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)',
-                    color: c.jurisdiction === jx.value ? '#fbbf24' : '#64748b',
-                    fontSize: 11, textAlign: 'left', fontWeight: c.jurisdiction === jx.value ? 600 : 400,
-                    border: `1px solid ${c.jurisdiction === jx.value ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.05)'}`,
-                  }}
-                >
-                  {jx.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Financing Mode */}
-          {c.decisionType === 'mortgage_approval' && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                Financing Mode
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {FINANCING_MODES.map(fm => (
-                  <button
-                    key={fm.value}
-                    disabled={running}
-                    onClick={() => update({ financingMode: fm.value })}
-                    style={{
-                      padding: '7px 10px', borderRadius: 7, cursor: 'pointer',
-                      background: c.financingMode === fm.value ? 'rgba(192,132,252,0.12)' : 'rgba(255,255,255,0.03)',
-                      color: c.financingMode === fm.value ? '#c084fc' : '#64748b',
-                      fontSize: 11, textAlign: 'left', fontWeight: c.financingMode === fm.value ? 600 : 400,
-                      border: `1px solid ${c.financingMode === fm.value ? 'rgba(192,132,252,0.25)' : 'rgba(255,255,255,0.05)'}`,
-                    }}
-                  >
-                    {fm.label}
-                    {fm.shariaRequired && (
-                      <span style={{ marginLeft: 6, fontSize: 9, color: '#c084fc' }}>Sharia</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Sliders */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
-              Signal Parameters
-            </div>
-            <Slider label="AVM Confidence" value={c.avmConfidence} onChange={v => update({ avmConfidence: v })} color="#38bdf8" hint="Model accuracy / comparable quality" />
-            <Slider label={`Price Deviation from AVM  ${c.priceDeviation}%`} value={c.priceDeviation} onChange={v => update({ priceDeviation: v })} color="#fb923c" hint="% gap between asking price and AVM estimate" />
-            {c.decisionType === 'mortgage_approval' && (
-              <Slider label={`LTV Ratio  ${c.ltvRatio}% (max: ${finData.ltvMax}%)`} value={c.ltvRatio} onChange={v => update({ ltvRatio: v })} color={c.ltvRatio > finData.ltvMax ? '#f87171' : '#a78bfa'} hint={`Hard block if > ${finData.ltvMax}% for ${finData.label}`} />
-            )}
-            <Slider label="Market Trend Score" value={c.marketTrend} onChange={v => update({ marketTrend: v })} color="#34d399" hint="0 = declining · 100 = rising" />
-            <Slider label="Liquidity Score" value={c.liquidityScore} onChange={v => update({ liquidityScore: v })} color="#38bdf8" hint="Ease of exit in downside scenario" />
-            <Slider label={`AML Risk Score  ${c.amlRiskScore}%`} value={c.amlRiskScore} onChange={v => update({ amlRiskScore: v })} color={c.amlRiskScore > 70 ? '#f87171' : '#fbbf24'} hint="FATF composite risk — >75 triggers AML flag" />
-          </div>
-
-          {/* Compliance Flags */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-              Compliance Flags
-            </div>
-            <Toggle
-              label="AML Flag Raised"
-              value={c.amlFlag}
-              onChange={v => update({ amlFlag: v })}
-              blockLabel="→ HARD BLOCK on all checkpoints"
-            />
-            <Toggle
-              label="RERA / Regulatory Compliant"
-              value={c.reraCompliant}
-              onChange={v => update({ reraCompliant: v })}
-              blockLabel={!c.reraCompliant ? '→ HARD BLOCK at CP-7' : undefined}
-            />
-            {finData.shariaRequired && (
-              <Toggle
-                label="Sharia Parameter Screening"
-                value={c.shariaScreeningPassed}
-                onChange={v => update({ shariaScreeningPassed: v })}
-                blockLabel={!c.shariaScreeningPassed ? '→ HARD BLOCK (Islamic financing)' : undefined}
-              />
-            )}
-            <Toggle
-              label="Beneficial Owner Verified (UBO)"
-              value={c.beneficialOwnerVerified}
-              onChange={v => update({ beneficialOwnerVerified: v })}
-            />
-          </div>
-
-          {/* Run Button */}
-          <button
-            onClick={running ? resetPipeline : runPipeline}
-            style={{
-              width: '100%', padding: '13px 0', borderRadius: 10, border: 'none',
-              cursor: 'pointer', fontWeight: 700, fontSize: 14, letterSpacing: 0.5,
-              background: running
-                ? 'rgba(248,113,113,0.15)'
-                : 'linear-gradient(135deg, #0ea5e9, #38bdf8)',
-              color: running ? '#f87171' : '#0B0F1A',
-              transition: 'all 0.2s',
-            }}
-          >
-            {running ? '⬛ Reset Pipeline' : '▶ Run 11-Checkpoint Governance'}
-          </button>
-        </div>
-
-        {/* ── Right Panel: Pipeline ── */}
-        <div style={{ overflowY: 'auto', padding: '20px 28px' }}>
-
-          {/* Progress Bar */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>
-                {running ? `Evaluating checkpoint ${activeIdx + 1} of 11…` : finalOutcome ? 'Pipeline complete' : 'Configure parameters and run the pipeline'}
-              </div>
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>
-                {passCount} pass · {blockCount} block · {completedCount}/11 evaluated
-              </div>
-            </div>
-            <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', borderRadius: 2, transition: 'width 0.4s ease',
-                width: `${progress}%`,
-                background: blockCount > 0 ? '#f87171' : finalOutcome === 'APPROVED' ? '#34d399' : '#38bdf8',
-              }} />
-            </div>
-          </div>
-
-          {/* Final Outcome Banner */}
-          {finalOutcome && (
-            <div style={{
-              marginBottom: 20, padding: '16px 20px', borderRadius: 12,
-              background: finalOutcome === 'APPROVED'
-                ? 'rgba(52,211,153,0.1)'
-                : finalOutcome === 'BLOCKED'
-                  ? 'rgba(248,113,113,0.1)'
-                  : 'rgba(251,191,36,0.1)',
-              border: `1px solid ${finalOutcome === 'APPROVED' ? 'rgba(52,211,153,0.3)' : finalOutcome === 'BLOCKED' ? 'rgba(248,113,113,0.3)' : 'rgba(251,191,36,0.3)'}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+            <div style={{display:'flex',alignItems:'center',gap:14}}>
+              <div style={{width:50,height:50,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,background:`${REP_GOLD}18`,border:`1px solid ${REP_GOLD}44`}}>🏢</div>
               <div>
-                <div style={{
-                  fontSize: 16, fontWeight: 700,
-                  color: finalOutcome === 'APPROVED' ? '#34d399' : finalOutcome === 'BLOCKED' ? '#f87171' : '#fbbf24',
-                }}>
-                  {finalOutcome === 'APPROVED' ? '✓ TRANSACTION APPROVED' : finalOutcome === 'BLOCKED' ? '✗ TRANSACTION BLOCKED' : '⏸ COMPLIANCE REVIEW'}
-                </div>
-                {receiptId && (
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, fontFamily: 'monospace' }}>
-                    {receiptId} · CRYSTALS-Dilithium3 (NIST FIPS 204)
-                  </div>
-                )}
-                {finalOutcome === 'BLOCKED' && (
-                  <div style={{ fontSize: 11, color: '#f87171', marginTop: 4 }}>
-                    {checkpoints.find(cp => cp.status === 'block')?.reasoning?.slice(0, 120)}
-                  </div>
-                )}
+                <div style={{fontSize:22,fontWeight:800,letterSpacing:'-0.02em',color:'#F1F5F9'}}>Real Estate Governance — Interactive Demo</div>
+                <div style={{fontSize:12,color:'#3D2E00',marginTop:3}}>ADR-REP-001 · 11-Checkpoint Pipeline · AVM · AML / FATF · Islamic Finance · RERA · <span style={{color:REP_LIGHT,fontFamily:'monospace'}}>OMNIX-REP-{'{'+'12HEX'+'}'}</span> PQC Receipts</div>
               </div>
-              {finalOutcome === 'APPROVED' && (
-                <div style={{
-                  padding: '6px 14px', borderRadius: 8,
-                  background: 'rgba(52,211,153,0.15)',
-                  border: '1px solid rgba(52,211,153,0.3)',
-                  color: '#34d399', fontSize: 12, fontWeight: 600,
-                }}>
-                  Receipt Issued
+            </div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              {['RERA / DLD','FATF / AML','AAOIFI / Sharia','UBO Verification'].map(b=>(
+                <span key={b} style={{padding:'4px 10px',fontSize:10,fontWeight:700,borderRadius:5,background:`${REP_GOLD}14`,border:`1px solid ${REP_GOLD}33`,color:REP_LIGHT,textTransform:'uppercase',letterSpacing:'0.04em'}}>{b}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap',alignItems:'center'}}>
+          <span style={{fontSize:10,color:'#3D2E00',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',marginRight:4}}>Quick Load</span>
+          {PRESETS.map(p=>(
+            <button key={p.label} onClick={()=>applyPreset(p)} style={{padding:'6px 14px',fontSize:12,borderRadius:7,cursor:'pointer',background:`${REP_GOLD}10`,border:`1px solid ${REP_GOLD}28`,color:'#7A6000',fontWeight:600,display:'flex',alignItems:'center',gap:5}}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor=REP_GOLD;(e.currentTarget as HTMLElement).style.color=REP_LIGHT}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor=`${REP_GOLD}28`;(e.currentTarget as HTMLElement).style.color='#7A6000'}}
+            >{p.emoji} {p.label}</button>
+          ))}
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'390px 1fr',gap:18,alignItems:'start'}}>
+          <div>
+            <div style={{background:'rgba(18,14,0,0.95)',borderRadius:14,padding:22,border:`1px solid ${REP_BORDER}`,marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:REP_LIGHT,marginBottom:18}}>🏢 Property Deal Parameters</div>
+
+              {[['Decision Type','decisionType',DECISION_TYPES],['Property Type','propertyType',PROPERTY_TYPES],['Market Segment','marketSegment',MARKET_SEGMENTS],['Jurisdiction','jurisdiction',JURISDICTIONS],['Financing Mode','financingMode',FINANCING_MODES]].map(([lab,key,opts])=>(
+                <div key={key as string} style={{marginBottom:13}}>
+                  <label style={lbl}>{lab as string}</label>
+                  <select style={inp} value={(cas as any)[key as string]} onChange={e=>{setCas(p=>({...p,[key as string]:e.target.value}));setCheckpoints([]);setFinalResult(null)}}>
+                    {(opts as any[]).map((o:any)=><option key={o.value} value={o.value}>{o.emoji||''}{o.emoji?' ':''}{o.label}</option>)}
+                  </select>
+                </div>
+              ))}
+
+              {[['AVM Confidence %','avmConfidence',40,99,'Low','High'],['Price Deviation %','priceDeviation',0,40,'Stable','High'],['LTV Ratio %','ltvRatio',20,100,'Low','High'],['Market Trend %','marketTrend',10,99,'Declining','Strong'],['Liquidity Score','liquidityScore',10,99,'Illiquid','Liquid'],['AML Risk Score %','amlRiskScore',0,90,'Clean','High Risk']].map(([lab,key,min_,max_,low,high])=>(
+                <div key={key as string} style={{marginBottom:11}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                    <label style={{...lbl,marginBottom:0}}>{lab as string}</label>
+                    <span style={{fontSize:13,fontWeight:700,color:REP_LIGHT}}>{(cas as any)[key as string]}%</span>
+                  </div>
+                  <input type="range" min={min_ as number} max={max_ as number} step={1} style={sld} value={(cas as any)[key as string]} onChange={e=>{setCas(p=>({...p,[key as string]:parseInt(e.target.value)}));setCheckpoints([]);setFinalResult(null)}}/>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#2A2200',marginTop:2}}><span>{low as string}</span><span>{high as string}</span></div>
+                  {key==='ltvRatio'&&hb_ltv&&<div style={{fontSize:10,color:'#EF4444',marginTop:3,fontWeight:700}}>⚠ HARD BLOCK — LTV exceeds {fin.label} max ({fin.ltvMax}%)</div>}
+                </div>
+              ))}
+
+              <div style={{padding:'12px 0',borderTop:'1px solid #1A1400',marginBottom:16}}>
+                <div style={{fontSize:10,color:'#3D2E00',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:10}}>Compliance Flags</div>
+                <Toggle label="AML Flag (FATF Alert)" value={cas.amlFlag} onChange={v=>{setCas(p=>({...p,amlFlag:v}));setCheckpoints([]);setFinalResult(null)}} blockMsg={cas.amlFlag?'⚠ HARD BLOCK — transaction frozen':undefined}/>
+                <Toggle label="RERA / Regulatory Compliant" value={cas.reraCompliant} onChange={v=>{setCas(p=>({...p,reraCompliant:v}));setCheckpoints([]);setFinalResult(null)}} blockMsg={!cas.reraCompliant?'⚠ HARD BLOCK — non-compliance detected':undefined}/>
+                {fin.shariaRequired&&<Toggle label="Sharia Screening Passed" value={cas.shariaScreeningPassed} onChange={v=>{setCas(p=>({...p,shariaScreeningPassed:v}));setCheckpoints([]);setFinalResult(null)}} blockMsg={!cas.shariaScreeningPassed?`⚠ HARD BLOCK — ${fin.label} requires Sharia Board clearance`:undefined}/>}
+                <Toggle label="UBO (Beneficial Owner) Verified" value={cas.beneficialOwnerVerified} onChange={v=>{setCas(p=>({...p,beneficialOwnerVerified:v}));setCheckpoints([]);setFinalResult(null)}}/>
+              </div>
+
+              {anyHardBlock&&(
+                <div style={{background:'rgba(239,68,68,0.08)',border:'1px solid #EF444430',borderRadius:8,padding:'10px 14px',marginBottom:16}}>
+                  <div style={{color:'#EF4444',fontWeight:700,fontSize:11,marginBottom:6}}>⚠ Hard Block Active</div>
+                  {hb_aml   &&<div style={{color:'#FCA5A5',fontSize:11,marginBottom:3}}>• AML flag — FATF compliance violation</div>}
+                  {hb_rera  &&<div style={{color:'#FCA5A5',fontSize:11,marginBottom:3}}>• RERA non-compliance detected</div>}
+                  {hb_ltv   &&<div style={{color:'#FCA5A5',fontSize:11,marginBottom:3}}>• LTV {cas.ltvRatio}% exceeds {fin.label} max {fin.ltvMax}%</div>}
+                  {hb_sharia&&<div style={{color:'#FCA5A5',fontSize:11}}>• {fin.label} — Sharia Board clearance required</div>}
                 </div>
               )}
+
+              <button onClick={runEval} disabled={isRunning} style={{width:'100%',padding:'13px 20px',borderRadius:10,border:'none',background:isRunning?'#1E293B':`linear-gradient(135deg,#78550A,${REP_GOLD})`,color:isRunning?'#374151':'#000',fontWeight:700,fontSize:14,cursor:isRunning?'not-allowed':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                🏢{isRunning?'Evaluating Property…':'Run 11-Checkpoint Real Estate Governance'}{!isRunning&&<ArrowRight size={15}/>}
+              </button>
             </div>
-          )}
 
-          {/* Checkpoints Grid */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {checkpoints.map((cp, idx) => {
-              const style = CP_COLORS[cp.status]
-              const isActive = idx === activeIdx
-              return (
-                <div
-                  key={cp.name}
-                  style={{
-                    background: style.bg,
-                    border: `1px solid ${style.border}`,
-                    borderRadius: 10, padding: '12px 16px',
-                    transition: 'all 0.3s',
-                    boxShadow: isActive ? `0 0 16px ${style.border}` : 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {/* Status Icon */}
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                      background: `${style.border}30`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: style.text,
-                    }}>
-                      {cp.status === 'pending'    && <Clock size={13} />}
-                      {cp.status === 'evaluating' && <div style={{ width: 13, height: 13, borderRadius: '50%', border: `2px solid ${style.text}`, borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />}
-                      {cp.status === 'pass'       && <CheckCircle size={13} />}
-                      {cp.status === 'warn'       && <AlertTriangle size={13} />}
-                      {cp.status === 'block'      && <XCircle size={13} />}
+            <div style={{background:'rgba(18,14,0,0.95)',borderRadius:12,padding:16,border:'1px solid #2A2200',fontSize:12}}>
+              <div style={{color:'#3D2E00',fontWeight:700,marginBottom:10,fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em'}}>Current Deal</div>
+              {[[`Decision`,`${dt.emoji} ${dt.label}`],[`Financing`,fin.label],[`Jurisdiction`,jx.label.replace(/🇦🇪|🌙|🇬🇧|🇪🇺|🌐/g,'').trim()],[`LTV`,`${cas.ltvRatio}% (max ${fin.ltvMax}%)`],[`AVM`,`${cas.avmConfidence}% conf`],[`AML Score`,`${cas.amlRiskScore}%`],[`RERA`,cas.reraCompliant?'✓ Compliant':'✗ NOT COMPLIANT'],[`UBO`,cas.beneficialOwnerVerified?'✓ Verified':'✗ Not verified']].map(([k,v])=>(
+                <div key={k as string} style={{display:'flex',justifyContent:'space-between',marginBottom:5,paddingBottom:5,borderBottom:'1px solid #120E00'}}>
+                  <span style={{color:'#2A2200'}}>{k}</span><span style={{color:(v as string).includes('NOT')||(v as string).includes('✗')?'#EF4444':'#7A6000',fontWeight:600,textAlign:'right'}}>{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            {checkpoints.length===0?(
+              <div style={{background:'rgba(18,14,0,0.95)',borderRadius:14,padding:52,border:`1px solid ${REP_BORDER}`,textAlign:'center'}}>
+                <div style={{fontSize:52,marginBottom:18}}>🏢</div>
+                <div style={{fontSize:18,fontWeight:700,color:REP_LIGHT,marginBottom:10}}>Real Estate Governance Pipeline</div>
+                <div style={{color:'#3D2E00',fontSize:13,maxWidth:460,margin:'0 auto',lineHeight:1.7}}>Configure a property deal on the left — AVM confidence, LTV, AML score, RERA compliance, and financing mode. Run the 11-checkpoint pipeline. Every approved deal generates a PQC-signed <span style={{color:REP_LIGHT,fontFamily:'monospace'}}>OMNIX-REP</span> receipt.</div>
+                <div style={{marginTop:28,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,maxWidth:480,margin:'28px auto 0'}}>
+                  {[{icon:<Zap size={14}/>,label:'AVM + AML + Sharia'},{icon:<Shield size={14}/>,label:'4 hard block conditions'},{icon:<Lock size={14}/>,label:'Dilithium-3 PQC receipt'}].map((item,i)=>(
+                    <div key={i} style={{background:'#120E00',border:'1px solid #2A2200',borderRadius:8,padding:'12px 10px',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+                      <div style={{color:REP_GOLD}}>{item.icon}</div><div style={{fontSize:10,color:'#3D2E00',textAlign:'center'}}>{item.label}</div>
                     </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: style.text }}>
-                          {cp.name}
-                        </span>
-                        {cp.status !== 'pending' && cp.status !== 'evaluating' && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{
-                              width: 64, height: 4, background: 'rgba(255,255,255,0.08)',
-                              borderRadius: 2, overflow: 'hidden',
-                            }}>
-                              <div style={{
-                                width: `${Math.min(100, cp.score)}%`, height: '100%',
-                                background: style.text, borderRadius: 2,
-                                transition: 'width 0.6s ease',
-                              }} />
-                            </div>
-                            <span style={{ fontSize: 11, color: style.text, fontWeight: 600, minWidth: 28 }}>
-                              {cp.score}
-                            </span>
-                            <span style={{ fontSize: 10, color: '#475569' }}>
-                              /{cp.threshold}
-                            </span>
+                  ))}
+                </div>
+              </div>
+            ):(
+              <div>
+                {finalResult&&(
+                  <div style={{borderRadius:12,padding:'16px 20px',marginBottom:14,background:vBg(finalResult),border:`1px solid ${vBdr(finalResult)}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}>
+                      {finalResult==='APPROVED'?<CheckCircle size={22} style={{color:'#10B981'}}/>:finalResult==='HOLD'?<AlertTriangle size={22} style={{color:'#F59E0B'}}/>:<XCircle size={22} style={{color:'#EF4444'}}/>}
+                      <div>
+                        <div style={{fontWeight:800,fontSize:17,color:vColor(finalResult)}}>{finalResult==='APPROVED'?'TRANSACTION APPROVED':finalResult==='HOLD'?'HOLD — COMPLIANCE REVIEW':'BLOCKED — GOVERNANCE THRESHOLD BREACH'}</div>
+                        {receiptId&&<div style={{fontSize:11,color:'#10B981',fontFamily:'monospace',marginTop:3}}>Receipt: {receiptId} · Dilithium-3 · ADR-REP-001</div>}
+                        {!receiptId&&<div style={{fontSize:11,color:'#EF4444',marginTop:3}}>No receipt — transaction blocked by real estate governance</div>}
+                      </div>
+                    </div>
+                    <div style={{textAlign:'right',fontSize:11,color:'#3D2E00'}}>
+                      <div>{dt.emoji} {dt.label}</div>
+                      <div>{fin.label} · LTV {cas.ltvRatio}%</div>
+                    </div>
+                  </div>
+                )}
+                <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                  {checkpoints.map((cp,i)=>{
+                    const isActive=currentCp===i
+                    const bdrC=cp.status==='evaluating'?REP_GOLD:cp.status==='pass'?'#10B981':cp.status==='warn'?'#F59E0B':cp.status==='block'?'#EF4444':'#2A2200'
+                    const barC=cp.status==='pass'?'#10B981':cp.status==='warn'?'#F59E0B':cp.status==='block'?'#EF4444':REP_GOLD
+                    return (
+                      <div key={i} style={{background:isActive?`${REP_GOLD}08`:'rgba(18,14,0,0.92)',borderRadius:10,padding:'13px 15px',border:`1px solid ${bdrC}44`,transition:'all 0.3s'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                          <div style={{display:'flex',alignItems:'center',gap:8,flex:1}}>
+                            {sIcon(cp.status)}
+                            <div style={{fontSize:13,fontWeight:700,color:'#E2E8F0'}}>{cp.name}</div>
+                          </div>
+                          <div style={{textAlign:'right',flexShrink:0,marginLeft:12}}>
+                            <div style={{fontSize:20,fontWeight:800,color:sColor(cp.status),lineHeight:1}}>{cp.score}</div>
+                            <div style={{fontSize:10,color:'#2A2200'}}>min {cp.threshold}</div>
+                          </div>
+                        </div>
+                        <ScoreBar score={cp.score} threshold={cp.threshold} color={barC}/>
+                        {cp.status!=='pending'&&(
+                          <div style={{marginTop:10}}>
+                            <div style={{fontSize:12,color:'#94A3B8',lineHeight:1.55,marginBottom:6}}>{cp.reasoning}</div>
+                            <div style={{fontSize:10,color:'#3D2E00',fontFamily:'monospace',background:'#120E00',padding:'6px 10px',borderRadius:5}}>{cp.detail}</div>
                           </div>
                         )}
                       </div>
-
-                      {cp.status !== 'pending' && (
-                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, lineHeight: 1.4 }}>
-                          {cp.reasoning}
-                        </div>
-                      )}
-                      {(cp.status === 'pass' || cp.status === 'warn' || cp.status === 'block') && cp.detail && (
-                        <div style={{ fontSize: 10, color: '#334155', marginTop: 3, fontStyle: 'italic' }}>
-                          {cp.detail}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    )
+                  })}
                 </div>
-              )
-            })}
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Footer note */}
-          <div style={{
-            marginTop: 24, padding: '12px 16px', borderRadius: 10,
-            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-            fontSize: 11, color: '#334155', lineHeight: 1.6,
-          }}>
-            ADR-RES-001 · OMNIX Real Estate Governance Vertical · Same 11-checkpoint engine across all 9 domains: Trading, Islamic Credit, Insurance, Robotics, Medical AI, Autonomous Agents, Energy, Real Estate, Stablecoin Reserve · Receipt prefix: OMNIX-REP · PQC: CRYSTALS-Dilithium3 (NIST FIPS 204)
-          </div>
+        <div style={{marginTop:28,textAlign:'center',color:'#2A2200',fontSize:11}}>
+          OMNIX Quantum · Real Estate Governance · ADR-REP-001 · 11-Checkpoint Fail-Closed Pipeline
+          &nbsp;·&nbsp; RERA / DLD · FATF AML · AAOIFI Sharia · UBO Verification · Dilithium-3 PQC
+          &nbsp;·&nbsp; <Link to="/try" style={{color:REP_GOLD,textDecoration:'none'}}>Public Sandbox →</Link>
+          &nbsp;·&nbsp; <Link to="/" style={{color:REP_GOLD,textDecoration:'none'}}>Back to Platform →</Link>
         </div>
       </div>
     </div>

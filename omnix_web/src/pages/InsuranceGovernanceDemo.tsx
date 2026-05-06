@@ -1,768 +1,379 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, ArrowRight, AlertTriangle, CheckCircle, XCircle, Clock, Building2, TrendingUp, BarChart3, Zap, Activity, Layers, Target, Brain, Umbrella } from 'lucide-react'
-import { useLiveMetrics } from '../hooks/useLiveMetrics'
+import {
+  Shield, CheckCircle, XCircle, AlertTriangle, Activity, Clock,
+  Building2, Umbrella, TrendingUp, Layers, Target, Brain, ArrowRight, Zap, Lock,
+} from 'lucide-react'
 
-interface CheckpointResult {
-  name: string
-  genericName: string
-  icon: React.ReactNode
-  status: 'pending' | 'evaluating' | 'pass' | 'warn' | 'block'
-  score: number
-  threshold: number
-  reasoning: string
-  detail: string
-}
-
-interface PolicyApplication {
-  policyType: string
-  applicantAge: number
-  coverageAmount: number
-  claimsHistory: number
-  geographicZone: string
-  marketCondition: string
-}
+const INS_AMBER  = '#F59E0B'
+const INS_LIGHT  = '#FCD34D'
+const INS_DARK   = '#150F00'
+const INS_BORDER = '#F59E0B33'
 
 const POLICY_TYPES = [
-  { value: 'property', label: 'Property Insurance', baseRisk: 0.12, avgCoverage: 350000 },
-  { value: 'health', label: 'Health Insurance', baseRisk: 0.18, avgCoverage: 200000 },
-  { value: 'auto', label: 'Auto Insurance', baseRisk: 0.15, avgCoverage: 50000 },
-  { value: 'life', label: 'Life Insurance', baseRisk: 0.08, avgCoverage: 500000 },
-  { value: 'commercial', label: 'Commercial Liability', baseRisk: 0.22, avgCoverage: 500000 },
-  { value: 'cyber', label: 'Cyber Insurance', baseRisk: 0.28, avgCoverage: 250000 },
+  { value: 'property',    label: 'Property Insurance',       emoji: '🏠', baseRisk: 0.12, avgCoverage: 350000 },
+  { value: 'health',      label: 'Health Insurance',         emoji: '🏥', baseRisk: 0.18, avgCoverage: 200000 },
+  { value: 'auto',        label: 'Auto Insurance',           emoji: '🚗', baseRisk: 0.15, avgCoverage: 50000  },
+  { value: 'life',        label: 'Life Insurance',           emoji: '💼', baseRisk: 0.08, avgCoverage: 500000 },
+  { value: 'commercial',  label: 'Commercial Liability',     emoji: '🏢', baseRisk: 0.22, avgCoverage: 500000 },
+  { value: 'cyber',       label: 'Cyber Insurance',          emoji: '💻', baseRisk: 0.28, avgCoverage: 250000 },
 ]
 
 const GEOGRAPHIC_ZONES = [
-  { value: 'low_risk', label: 'Low Risk Zone (Urban, Stable)', factor: 0.90 },
-  { value: 'moderate', label: 'Moderate Risk Zone (Suburban)', factor: 0.70 },
-  { value: 'elevated', label: 'Elevated Risk Zone (Coastal, Seismic)', factor: 0.45 },
-  { value: 'high_risk', label: 'High Risk Zone (Flood/Hurricane Prone)', factor: 0.25 },
+  { value: 'low_risk',  label: 'Low Risk Zone (Urban, Stable)',          factor: 0.90 },
+  { value: 'moderate',  label: 'Moderate Risk (Suburban)',               factor: 0.70 },
+  { value: 'elevated',  label: 'Elevated Risk (Coastal, Seismic)',       factor: 0.45 },
+  { value: 'high_risk', label: 'High Risk Zone (Flood / Hurricane)',     factor: 0.25 },
 ]
 
 const MARKET_CONDITIONS = [
-  { value: 'soft', label: 'Soft Market (Buyer Favorable)', factor: 0.85 },
-  { value: 'stable', label: 'Stable Market', factor: 0.75 },
-  { value: 'hardening', label: 'Hardening Market (Rising Premiums)', factor: 0.50 },
-  { value: 'hard', label: 'Hard Market (Capacity Constrained)', factor: 0.30 },
+  { value: 'soft',       label: 'Soft Market (Buyer Favorable)',         factor: 0.85 },
+  { value: 'stable',     label: 'Stable Market',                         factor: 0.75 },
+  { value: 'hardening',  label: 'Hardening Market (Rising Premiums)',    factor: 0.50 },
+  { value: 'hard',       label: 'Hard Market (Capacity Constrained)',    factor: 0.30 },
 ]
 
-function evaluateCheckpoints(app: PolicyApplication): CheckpointResult[] {
-  const policyData = POLICY_TYPES.find(p => p.value === app.policyType) || POLICY_TYPES[0]
-  const geoData = GEOGRAPHIC_ZONES.find(g => g.value === app.geographicZone) || GEOGRAPHIC_ZONES[0]
-  const marketData = MARKET_CONDITIONS.find(m => m.value === app.marketCondition) || MARKET_CONDITIONS[0]
+interface PolicyApp {
+  policyType:       string
+  applicantAge:     number
+  coverageAmount:   number
+  claimsHistory:    number
+  geographicZone:   string
+  marketCondition:  string
+}
 
-  const ageFactor = app.applicantAge < 25 ? 0.55 : app.applicantAge < 35 ? 0.90 : app.applicantAge < 50 ? 0.85 : app.applicantAge < 65 ? 0.65 : app.applicantAge < 75 ? 0.45 : 0.25
-  const claimsPenalty = app.claimsHistory <= 1 ? app.claimsHistory * 0.10 : app.claimsHistory <= 3 ? 0.10 + (app.claimsHistory - 1) * 0.15 : 0.40 + (app.claimsHistory - 3) * 0.20
-  const coverageRatio = app.coverageAmount / policyData.avgCoverage
-  const baseClaimProb = policyData.baseRisk + claimsPenalty + (1 - ageFactor) * 0.15
-  const adjustedClaimProb = Math.min(0.98, Math.max(0.02, baseClaimProb * (1 + Math.max(0, coverageRatio - 1) * 0.2)))
-  const probabilityScore = Math.round((1 - adjustedClaimProb) * 100)
+const PRESETS: { label: string; emoji: string; s: PolicyApp }[] = [
+  { label: 'Property — Low Risk',       emoji: '🏠', s: { policyType:'property',   applicantAge:38, coverageAmount:250000,  claimsHistory:0, geographicZone:'low_risk',  marketCondition:'stable'    } },
+  { label: 'Life Insurance — Mid-Age',  emoji: '💼', s: { policyType:'life',        applicantAge:42, coverageAmount:500000,  claimsHistory:0, geographicZone:'low_risk',  marketCondition:'soft'      } },
+  { label: 'Cyber — High Risk',         emoji: '💻', s: { policyType:'cyber',       applicantAge:35, coverageAmount:1000000, claimsHistory:2, geographicZone:'moderate',  marketCondition:'hardening' } },
+  { label: 'Commercial (Coastal)',       emoji: '🏢', s: { policyType:'commercial',  applicantAge:50, coverageAmount:750000,  claimsHistory:1, geographicZone:'elevated',  marketCondition:'hard'      } },
+  { label: 'High Claims — Block Test',  emoji: '⚠️', s: { policyType:'health',      applicantAge:72, coverageAmount:500000,  claimsHistory:5, geographicZone:'high_risk', marketCondition:'hard'      } },
+]
 
-  const coverageExposure = Math.min(100, Math.round(coverageRatio * 40))
-  const geoExposure = Math.round((1 - geoData.factor) * 60)
-  const claimsExposure = Math.min(40, app.claimsHistory * 10)
-  const concentrationRisk = Math.min(100, Math.round((coverageExposure + geoExposure + claimsExposure) * 0.7))
-  const riskScore = Math.max(0, 100 - concentrationRisk)
+interface CP {
+  name: string; genericName: string; icon: React.ReactNode
+  status: 'pending'|'evaluating'|'pass'|'warn'|'block'
+  score: number; threshold: number; reasoning: string; detail: string
+}
 
-  const ageSignal = Math.round(ageFactor * 100)
-  const claimsSignal = Math.max(0, Math.round((1 - app.claimsHistory * 0.25) * 100))
-  const geoSignal = Math.round(geoData.factor * 100)
-  const coherenceScore = Math.round(ageSignal * 0.25 + claimsSignal * 0.50 + geoSignal * 0.25)
-
-  const claimsTrend = app.claimsHistory === 0 ? 95 : app.claimsHistory === 1 ? 70 : app.claimsHistory === 2 ? 45 : app.claimsHistory === 3 ? 25 : app.claimsHistory === 4 ? 12 : 5
-  const trendScore = Math.round(claimsTrend * (ageFactor * 0.6 + geoData.factor * 0.4))
-
-  const marketStress = marketData.factor
-  const claimsStress = Math.max(0, 1 - app.claimsHistory * 0.15)
-  const stressScore = Math.round(marketStress * 60 + claimsStress * 40)
-
-  const signals = [probabilityScore, riskScore, coherenceScore, trendScore, stressScore]
-  const avg = signals.reduce((a, b) => a + b, 0) / signals.length
-  const variance = signals.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / signals.length
+function buildCheckpoints(app: PolicyApp): CP[] {
+  const pol  = POLICY_TYPES.find(p=>p.value===app.policyType)||POLICY_TYPES[0]
+  const geo  = GEOGRAPHIC_ZONES.find(g=>g.value===app.geographicZone)||GEOGRAPHIC_ZONES[0]
+  const mkt  = MARKET_CONDITIONS.find(m=>m.value===app.marketCondition)||MARKET_CONDITIONS[0]
+  const ageFactor = app.applicantAge<25?0.55:app.applicantAge<35?0.90:app.applicantAge<50?0.85:app.applicantAge<65?0.65:app.applicantAge<75?0.45:0.25
+  const claimsPenalty = app.claimsHistory<=1?app.claimsHistory*0.10:app.claimsHistory<=3?0.10+(app.claimsHistory-1)*0.15:0.40+(app.claimsHistory-3)*0.20
+  const coverageRatio = app.coverageAmount/pol.avgCoverage
+  const baseClaimProb = pol.baseRisk+claimsPenalty+(1-ageFactor)*0.15
+  const adjustedClaimProb = Math.min(0.98,Math.max(0.02,baseClaimProb*(1+Math.max(0,coverageRatio-1)*0.2)))
+  const probabilityScore = Math.round((1-adjustedClaimProb)*100)
+  const coverageExposure = Math.min(100,Math.round(coverageRatio*40))
+  const geoExposure = Math.round((1-geo.factor)*60)
+  const claimsExposure = Math.min(40,app.claimsHistory*10)
+  const concentrationRisk = Math.min(100,Math.round((coverageExposure+geoExposure+claimsExposure)*0.7))
+  const riskScore = Math.max(0,100-concentrationRisk)
+  const ageSignal = Math.round(ageFactor*100)
+  const claimsSignal = Math.max(0,Math.round((1-app.claimsHistory*0.25)*100))
+  const geoSignal = Math.round(geo.factor*100)
+  const coherenceScore = Math.round(ageSignal*0.25+claimsSignal*0.50+geoSignal*0.25)
+  const claimsTrend = app.claimsHistory===0?95:app.claimsHistory===1?70:app.claimsHistory===2?45:app.claimsHistory===3?25:app.claimsHistory===4?12:5
+  const trendScore = Math.round(claimsTrend*(ageFactor*0.6+geo.factor*0.4))
+  const stressScore = Math.round(mkt.factor*60+(Math.max(0,1-app.claimsHistory*0.15))*40)
+  const signals = [probabilityScore,riskScore,coherenceScore,trendScore,stressScore]
+  const avg = signals.reduce((a,b)=>a+b,0)/signals.length
+  const variance = signals.reduce((a,b)=>a+Math.pow(b-avg,2),0)/signals.length
   const divergence = Math.sqrt(variance)
-  const logicScore = Math.round(Math.max(0, Math.min(100, 100 - divergence * 2.0)))
-
-  const sivScore = Math.min(95, Math.round(75 + ageFactor * 15 + (app.claimsHistory === 0 ? 5 : 0)))
-  const temporalScore = Math.min(95, Math.round(claimsTrend * 0.60 + geoData.factor * 100 * 0.40))
-  const edgeScore = Math.round(probabilityScore * 0.55 + logicScore * 0.45)
-  const amlScore = Math.min(95, Math.round(88 - Math.max(0, (app.coverageAmount - 500000) / 100000 * 5)))
-  const fraudScore = Math.min(95, Math.round(60 + coherenceScore * 0.35))
-
+  const logicScore = Math.round(Math.max(0,Math.min(100,100-divergence*2.0)))
+  const sivScore = Math.min(95,Math.round(75+ageFactor*15+(app.claimsHistory===0?5:0)))
+  const temporalScore = Math.min(95,Math.round(claimsTrend*0.60+geo.factor*100*0.40))
+  const edgeScore = Math.round(probabilityScore*0.55+logicScore*0.45)
+  const amlScore = Math.min(95,Math.round(88-Math.max(0,(app.coverageAmount-500000)/100000*5)))
+  const fraudScore = Math.min(95,Math.round(60+coherenceScore*0.35))
   return [
-    {
-      name: 'Signal Integrity Validation',
-      genericName: 'CP-1: Are all input signals valid?',
-      icon: <Shield className="w-5 h-5" />,
-      status: 'pending',
-      score: sivScore,
-      threshold: 60,
-      reasoning: sivScore >= 60
-        ? `All underwriting signals validated — age profile, claims history, coverage amount, and geographic zone inputs are internally consistent`
-        : `Signal validation failed — one or more underwriting parameters fall outside acceptable governance bounds`,
-      detail: `Signals validated: 5/5 | Age factor: ${(ageFactor * 100).toFixed(0)}% | Claims clean record: ${app.claimsHistory === 0 ? 'YES' : 'NO'} | SIV score: ${sivScore}/100`
-    },
-    {
-      name: 'Claim Probability',
-      genericName: 'CP-1: Is this likely to succeed?',
-      icon: <Target className="w-5 h-5" />,
-      status: 'pending',
-      score: probabilityScore,
-      threshold: 65,
-      reasoning: probabilityScore >= 65
-        ? `Estimated claim probability ${(adjustedClaimProb * 100).toFixed(1)}% is within acceptable underwriting range`
-        : `Estimated claim probability ${(adjustedClaimProb * 100).toFixed(1)}% exceeds acceptable risk for this policy type`,
-      detail: `Age factor: ${(ageFactor * 100).toFixed(0)}% | Claims penalty: +${(claimsPenalty * 100).toFixed(0)}% | Coverage ratio: ${coverageRatio.toFixed(1)}x avg | P(no claim) = ${probabilityScore}%`
-    },
-    {
-      name: 'Exposure Limits',
-      genericName: 'CP-2: Would this exceed safe exposure?',
-      icon: <Shield className="w-5 h-5" />,
-      status: 'pending',
-      score: riskScore,
-      threshold: 50,
-      reasoning: riskScore >= 50
-        ? `Coverage exposure within portfolio concentration limits`
-        : `Excessive exposure — $${(app.coverageAmount / 1000).toFixed(0)}K coverage in ${geoData.label} creates concentration risk`,
-      detail: `Coverage exposure: ${coverageExposure}% | Geo risk: ${geoExposure}% | Claims exposure: ${claimsExposure}% | Concentration: ${concentrationRisk}% | Risk score: ${riskScore}/100`
-    },
-    {
-      name: 'Underwriting Coherence',
-      genericName: 'CP-3: Do multiple models agree?',
-      icon: <Layers className="w-5 h-5" />,
-      status: 'pending',
-      score: coherenceScore,
-      threshold: 50,
-      reasoning: coherenceScore >= 50
-        ? `Age profile, claims history, and geographic factors show sufficient agreement (${coherenceScore}%)`
-        : `Conflicting signals — age profile suggests ${ageSignal >= 70 ? 'approve' : 'caution'} but claims history (${app.claimsHistory} prior claims) and ${geoData.label} diverge`,
-      detail: `Age signal: ${ageSignal} | Claims signal: ${claimsSignal} | Geo signal: ${geoSignal} → Coherence: ${coherenceScore}%`
-    },
-    {
-      name: 'Claims Trend',
-      genericName: 'CP-4: Is this sustained, not noise?',
-      icon: <TrendingUp className="w-5 h-5" />,
-      status: 'pending',
-      score: trendScore,
-      threshold: 35,
-      reasoning: trendScore >= 45
-        ? `Claims history trend (${app.claimsHistory} prior claims) confirms acceptable risk trajectory`
-        : `Claims history trend (${app.claimsHistory} prior claims) indicates deteriorating risk profile`,
-      detail: `Prior claims impact: ${claimsTrend}% | Age-adjusted trend: ${trendScore}/100 | ${app.claimsHistory === 0 ? 'CLEAN RECORD' : app.claimsHistory <= 2 ? 'MODERATE HISTORY' : 'HIGH FREQUENCY'}`
-    },
-    {
-      name: 'Catastrophe Stress Test',
-      genericName: 'CP-5: What if conditions deteriorate?',
-      icon: <AlertTriangle className="w-5 h-5" />,
-      status: 'pending',
-      score: stressScore,
-      threshold: 40,
-      reasoning: stressScore >= 40
-        ? `Market conditions (${marketData.label}) suggest adequate capacity and reserves under stress`
-        : `Market conditions (${marketData.label}) indicate constrained capacity — elevated reinsurance costs and reduced margins`,
-      detail: `Market condition factor: ${(marketData.factor * 100).toFixed(0)}% → Stress resilience: ${stressScore}/100`
-    },
-    {
-      name: 'Signal Contradiction',
-      genericName: 'CP-6: Are signals contradicting each other?',
-      icon: <Brain className="w-5 h-5" />,
-      status: 'pending',
-      score: logicScore,
-      threshold: 45,
-      reasoning: logicScore >= 45
-        ? `Internal signal divergence is low — underwriting signals are consistent (${logicScore}%)`
-        : `High internal contradiction detected — divergence score ${divergence.toFixed(1)} indicates conflicting risk assessment across checkpoints`,
-      detail: `Signal variance: ${divergence.toFixed(1)} | Consistency: ${logicScore}% | ${logicScore < 45 ? 'CONTRADICTORY' : logicScore < 65 ? 'TENSIONED' : 'ALIGNED'}`
-    },
-    {
-      name: 'Temporal Coherence',
-      genericName: 'CP-7: Does this hold across time?',
-      icon: <Activity className="w-5 h-5" />,
-      status: 'pending',
-      score: temporalScore,
-      threshold: 40,
-      reasoning: temporalScore >= 40
-        ? `Historical claims trend and geographic patterns support temporal consistency of this underwriting decision`
-        : `Temporal analysis reveals pattern inconsistency — claims trajectory may be worsening`,
-      detail: `Claims trend: ${claimsTrend}% | Geo factor: ${(geoData.factor * 100).toFixed(0)}% | Temporal score: ${temporalScore}/100`
-    },
-    {
-      name: 'Edge Confirmation (ECW)',
-      genericName: 'CP-8: Does the decision converge at the boundary?',
-      icon: <Target className="w-5 h-5" />,
-      status: 'pending',
-      score: edgeScore,
-      threshold: 45,
-      reasoning: edgeScore >= 45
-        ? `Decision boundary confirmed — claim probability and logic signals converge at the governance edge (${edgeScore}%)`
-        : `Weak boundary convergence — probability and coherence signals do not reinforce each other at threshold`,
-      detail: `Probability × 0.55: ${(probabilityScore * 0.55).toFixed(0)} | Logic × 0.45: ${(logicScore * 0.45).toFixed(0)} | Edge score: ${edgeScore}/100`
-    },
-    {
-      name: 'AML Gate',
-      genericName: 'CP-9: Does this pass compliance screening?',
-      icon: <Building2 className="w-5 h-5" />,
-      status: 'pending',
-      score: amlScore,
-      threshold: 60,
-      reasoning: amlScore >= 60
-        ? `AML compliance screen passed — coverage amount and policy type show no anomalous financial patterns`
-        : `AML flag — coverage level requires enhanced due diligence before binding`,
-      detail: `Coverage: $${(app.coverageAmount / 1000).toFixed(0)}K | Policy type: ${policyData.label} | AML score: ${amlScore}/100`
-    },
-    {
-      name: 'Fraud Detection Gate',
-      genericName: 'CP-10: Are there anomalous signal patterns?',
-      icon: <AlertTriangle className="w-5 h-5" />,
-      status: 'pending',
-      score: fraudScore,
-      threshold: 55,
-      reasoning: fraudScore >= 55
-        ? `Fraud screening passed — claims history and signal coherence show no anomalous behavioral patterns`
-        : `Fraud pattern flag — signal inconsistency indicates potential misrepresentation in application`,
-      detail: `Coherence base: ${coherenceScore} | Claims: ${app.claimsHistory} prior | Fraud score: ${fraudScore}/100 | ${fraudScore < 55 ? 'ELEVATED — manual review' : 'CLEAN PROFILE'}`
-    },
+    { name:'Signal Integrity Validation', genericName:'CP-1: All underwriting signals valid?', icon:<Shield size={15}/>, status:'pending', score:sivScore, threshold:60, reasoning:sivScore>=60?`Underwriting signals validated — age, claims, coverage, geo zone inputs are consistent`:`Signal validation failed — one or more underwriting parameters outside governance bounds`, detail:`5/5 signals valid | Age factor: ${(ageFactor*100).toFixed(0)}% | Claims clean: ${app.claimsHistory===0?'YES':'NO'} | SIV: ${sivScore}/100` },
+    { name:'Claim Probability Assessment', genericName:'CP-2: Likelihood of claims?',          icon:<Target size={15}/>, status:'pending', score:probabilityScore, threshold:65, reasoning:probabilityScore>=65?`Claim probability ${(adjustedClaimProb*100).toFixed(1)}% — within acceptable underwriting range`:`Claim probability ${(adjustedClaimProb*100).toFixed(1)}% exceeds acceptable risk for ${pol.label}`, detail:`Age factor: ${(ageFactor*100).toFixed(0)}% | Claims penalty: +${(claimsPenalty*100).toFixed(0)}% | Coverage ratio: ${coverageRatio.toFixed(1)}× avg | P(no claim)=${probabilityScore}%` },
+    { name:'Portfolio Exposure Limits',    genericName:'CP-3: Concentration risk safe?',       icon:<Shield size={15}/>, status:'pending', score:riskScore, threshold:50, reasoning:riskScore>=50?`Coverage exposure within portfolio concentration limits`:`Excessive exposure — $${(app.coverageAmount/1000).toFixed(0)}K in ${geo.label} creates concentration risk`, detail:`Coverage: ${coverageExposure}% | Geo risk: ${geoExposure}% | Claims: ${claimsExposure}% | Conc: ${concentrationRisk}% | Score: ${riskScore}/100` },
+    { name:'Underwriting Coherence',       genericName:'CP-4: Multi-signal agreement?',        icon:<Layers size={15}/>, status:'pending', score:coherenceScore, threshold:50, reasoning:coherenceScore>=50?`Age, claims, geo factors show sufficient agreement (${coherenceScore}%)`:`Conflicting signals — age ${ageSignal>=70?'OK':'WEAK'} / ${app.claimsHistory} prior claims / ${geo.label} diverge`, detail:`Age: ${ageSignal} | Claims: ${claimsSignal} | Geo: ${geoSignal} → Coherence: ${coherenceScore}%` },
+    { name:'Claims Trend Persistence',     genericName:'CP-5: Sustained pattern, not noise?',  icon:<TrendingUp size={15}/>, status:'pending', score:trendScore, threshold:35, reasoning:trendScore>=45?`Claims history (${app.claimsHistory} prior) confirms acceptable risk trajectory`:`Claims history (${app.claimsHistory} prior claims) indicates deteriorating risk profile`, detail:`Prior claims impact: ${claimsTrend}% | Age-adjusted trend: ${trendScore}/100 | ${app.claimsHistory===0?'CLEAN RECORD':app.claimsHistory<=2?'MODERATE HISTORY':'HIGH FREQUENCY'}` },
+    { name:'Catastrophe Stress Test',      genericName:'CP-6: Resilient to market stress?',    icon:<AlertTriangle size={15}/>, status:'pending', score:stressScore, threshold:40, reasoning:stressScore>=40?`Market (${mkt.label}) — adequate capacity and reserves under stress`:`Market (${mkt.label}) — constrained capacity, elevated reinsurance costs, reduced margins`, detail:`Market factor: ${(mkt.factor*100).toFixed(0)}% → Stress resilience: ${stressScore}/100` },
+    { name:'Signal Contradiction (SCG)',   genericName:'CP-7: Contradicting signals?',         icon:<Brain size={15}/>, status:'pending', score:logicScore, threshold:45, reasoning:logicScore>=45?`Internal divergence low — underwriting signals consistent (${logicScore}%)`:`High contradiction — divergence ${divergence.toFixed(1)} indicates conflicting risk assessment`, detail:`Variance: ${divergence.toFixed(1)} | Consistency: ${logicScore}% | ${logicScore<45?'CONTRADICTORY':logicScore<65?'TENSIONED':'ALIGNED'}` },
+    { name:'Temporal Coherence',           genericName:'CP-8: Pattern holds across time?',     icon:<Activity size={15}/>, status:'pending', score:temporalScore, threshold:40, reasoning:temporalScore>=40?`Historical claims and geo patterns support temporal consistency`:`Pattern inconsistency — claims trajectory may be worsening`, detail:`Claims trend: ${claimsTrend}% | Geo: ${(geo.factor*100).toFixed(0)}% | Temporal: ${temporalScore}/100` },
+    { name:'Edge Confirmation (ECW)',      genericName:'CP-9: Decision converges at boundary?',icon:<Target size={15}/>, status:'pending', score:edgeScore, threshold:45, reasoning:edgeScore>=45?`Boundary confirmed — claim probability and logic converge at governance edge (${edgeScore}%)`:`Weak boundary — probability and coherence don't reinforce at threshold`, detail:`Probability×0.55: ${(probabilityScore*0.55).toFixed(0)} | Logic×0.45: ${(logicScore*0.45).toFixed(0)} | Edge: ${edgeScore}/100` },
+    { name:'AML Compliance Gate',          genericName:'CP-10: Passes AML/financial screening?',icon:<Building2 size={15}/>, status:'pending', score:amlScore, threshold:60, reasoning:amlScore>=60?`AML screen passed — coverage and policy show no anomalous financial patterns`:`AML flag — coverage level requires enhanced due diligence`, detail:`Coverage: $${(app.coverageAmount/1000).toFixed(0)}K | Policy: ${pol.label} | AML: ${amlScore}/100` },
+    { name:'Fraud Detection Gate',         genericName:'CP-11: Anomalous signal patterns?',    icon:<AlertTriangle size={15}/>, status:'pending', score:fraudScore, threshold:55, reasoning:fraudScore>=55?`Fraud screen passed — claims history and coherence show no anomalous patterns`:`Fraud flag — signal inconsistency indicates possible misrepresentation`, detail:`Coherence base: ${coherenceScore} | Claims: ${app.claimsHistory} prior | Fraud: ${fraudScore}/100 | ${fraudScore<55?'ELEVATED — manual review':'CLEAN PROFILE'}` },
   ]
 }
 
+function buildReceiptId() {
+  return `OMNIX-INS-${Array.from({length:12},()=>Math.floor(Math.random()*16).toString(16).toUpperCase()).join('')}`
+}
+
+function ScoreBar({ score, threshold, color }: { score:number; threshold:number; color:string }) {
+  return (
+    <div style={{ position:'relative', height:6, background:'#1A1200', borderRadius:3, overflow:'visible' }}>
+      <div style={{ position:'absolute', left:`${threshold}%`, top:-3, width:2, height:12, background:'#F59E0B', borderRadius:1, zIndex:2 }}/>
+      <div style={{ height:'100%', width:`${Math.min(score,100)}%`, background:color, borderRadius:3, transition:'width 0.9s ease' }}/>
+    </div>
+  )
+}
+
 export default function InsuranceGovernanceDemo() {
-  const { metrics: liveMetrics, isLive, formatNumberFull } = useLiveMetrics()
-  const [application, setApplication] = useState<PolicyApplication>({
-    policyType: 'property',
-    applicantAge: 40,
-    coverageAmount: 250000,
-    claimsHistory: 0,
-    geographicZone: 'low_risk',
-    marketCondition: 'stable',
-  })
+  const [app, setApp] = useState<PolicyApp>({ policyType:'property', applicantAge:40, coverageAmount:250000, claimsHistory:0, geographicZone:'low_risk', marketCondition:'stable' })
+  const [checkpoints, setCheckpoints] = useState<CP[]>([])
+  const [currentCp, setCurrentCp]   = useState(-1)
+  const [finalResult, setFinalResult] = useState<string|null>(null)
+  const [receiptId, setReceiptId]   = useState<string|null>(null)
+  const [isRunning, setIsRunning]   = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout>|null>(null)
 
-  const [checkpoints, setCheckpoints] = useState<CheckpointResult[]>([])
-  const [isEvaluating, setIsEvaluating] = useState(false)
-  const [evaluationComplete, setEvaluationComplete] = useState(false)
-  const [_currentCheckpoint, setCurrentCheckpoint] = useState(-1)
-  const evaluationRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pol = POLICY_TYPES.find(p=>p.value===app.policyType)||POLICY_TYPES[0]
+  const geo = GEOGRAPHIC_ZONES.find(g=>g.value===app.geographicZone)||GEOGRAPHIC_ZONES[0]
+  const mkt = MARKET_CONDITIONS.find(m=>m.value===app.marketCondition)||MARKET_CONDITIONS[0]
 
-  const runGovernanceEvaluation = () => {
-    const results = evaluateCheckpoints(application)
-    const finalResults = results.map(cp => {
-      const passed = cp.score >= cp.threshold
-      const finalStatus: 'pass' | 'warn' | 'block' = passed ? (cp.score >= cp.threshold + 15 ? 'pass' : 'warn') : 'block'
-      return { ...cp, finalStatus }
+  const hb_high_claims = app.claimsHistory >= 5
+  const hb_catastrophe = geo.value === 'high_risk' && app.coverageAmount > 1000000
+  const hb_hard_market = app.marketCondition === 'hard' && app.claimsHistory >= 3
+  const anyHardBlock   = hb_high_claims || hb_catastrophe || hb_hard_market
+
+  function applyPreset(p: typeof PRESETS[0]) { setApp({...p.s}); setCheckpoints([]); setFinalResult(null); setReceiptId(null); setCurrentCp(-1) }
+
+  function runEval() {
+    if (isRunning) return
+    const cps = buildCheckpoints(app)
+    setCheckpoints(cps.map(c=>({...c,status:'pending'})))
+    setCurrentCp(-1); setFinalResult(null); setReceiptId(null); setIsRunning(true)
+    cps.forEach((_,i)=>{
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(()=>{
+        setCurrentCp(i)
+        setCheckpoints(prev=>prev.map((c,idx)=>idx<i?{...c,status:(c.score>=c.threshold?'pass':c.score>=c.threshold*0.72?'warn':'block') as CP['status']}:idx===i?{...c,status:'evaluating' as CP['status']}:c))
+        if (i===cps.length-1) {
+          setTimeout(()=>{
+            const final:CP[]=cps.map(c=>({...c,status:(c.score>=c.threshold?'pass':c.score>=c.threshold*0.72?'warn':'block') as CP['status']}))
+            const hb=final.filter(c=>c.score<c.threshold*0.5).length
+            const bl=final.filter(c=>c.score<c.threshold).length
+            const verdict = anyHardBlock||hb>0?'DECLINED':bl>=3?'DECLINED':bl>0?'REFER':'BIND'
+            setCheckpoints(final); setCurrentCp(-1); setFinalResult(verdict)
+            if (verdict==='BIND') setReceiptId(buildReceiptId())
+            setIsRunning(false)
+          }, 380)
+        }
+      }, i*300)
     })
-
-    setCheckpoints(results)
-    setIsEvaluating(true)
-    setEvaluationComplete(false)
-    setCurrentCheckpoint(0)
-
-    let step = 0
-    const animate = () => {
-      if (step < finalResults.length) {
-        setCheckpoints(prev => prev.map((cp, i) => {
-          if (i === step) return { ...cp, status: 'evaluating' as const }
-          return cp
-        }))
-
-        setTimeout(() => {
-          const finalStatus = finalResults[step].finalStatus
-          setCheckpoints(prev => prev.map((cp, i) => {
-            if (i === step) {
-              return { ...cp, status: finalStatus }
-            }
-            return cp
-          }))
-          setCurrentCheckpoint(step + 1)
-          step++
-          evaluationRef.current = setTimeout(animate, 600)
-        }, 800)
-      } else {
-        setCheckpoints(finalResults.map(fr => ({ ...fr, status: fr.finalStatus })))
-        setIsEvaluating(false)
-        setEvaluationComplete(true)
-      }
-    }
-
-    evaluationRef.current = setTimeout(animate, 400)
   }
 
-  useEffect(() => {
-    return () => {
-      if (evaluationRef.current) clearTimeout(evaluationRef.current)
-    }
-  }, [])
-
-  const getGovernanceDecision = () => {
-    if (!evaluationComplete || checkpoints.length === 0) return null
-    const blocked = checkpoints.filter(cp => cp.status === 'block')
-    const warned = checkpoints.filter(cp => cp.status === 'warn')
-    const passed = checkpoints.filter(cp => cp.status === 'pass')
-
-    if (blocked.length >= 2) return { decision: 'DECLINE', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', reason: `${blocked.length} checkpoints blocked. Underwriting recommendation: DECLINE this policy — risk profile exceeds acceptable thresholds.`, passed: passed.length + warned.length }
-    if (blocked.length === 1) return { decision: 'REFER', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `1 checkpoint blocked (${blocked[0].name}). Underwriting recommendation: REFER to senior underwriter for manual review of ${blocked[0].name.toLowerCase()}.`, passed: passed.length + warned.length }
-    if (warned.length >= 3) return { decision: 'REFER', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', reason: `${warned.length} checkpoints at marginal levels. Underwriting recommendation: REFER — cumulative marginal risk requires senior review and possible premium adjustment.`, passed: passed.length + warned.length }
-    return { decision: 'BIND', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', reason: 'All checkpoints passed. Underwriting recommendation: BIND — policy meets all governance thresholds for automated approval.', passed: passed.length + warned.length }
+  const sIcon=(s:CP['status'])=>{
+    if(s==='pending')    return <Clock size={15} style={{color:'#2A1F00'}}/>
+    if(s==='evaluating') return <Activity size={15} style={{color:INS_AMBER,animation:'pulse 0.8s ease-in-out infinite'}}/>
+    if(s==='pass')       return <CheckCircle size={15} style={{color:'#10B981'}}/>
+    if(s==='warn')       return <AlertTriangle size={15} style={{color:'#F59E0B'}}/>
+    return <XCircle size={15} style={{color:'#EF4444'}}/>
   }
+  const sColor=(s:CP['status'])=>s==='pass'?'#10B981':s==='warn'?'#F59E0B':s==='block'?'#EF4444':s==='evaluating'?INS_AMBER:'#2A1F00'
+  const vColor=(v:string|null)=>v==='BIND'?'#10B981':v==='REFER'?'#F59E0B':'#EF4444'
+  const vBg=(v:string|null)=>v==='BIND'?'rgba(16,185,129,0.10)':v==='REFER'?'rgba(245,158,11,0.10)':'rgba(239,68,68,0.10)'
+  const vBdr=(v:string|null)=>v==='BIND'?'#10B98133':v==='REFER'?'#F59E0B33':'#EF444433'
 
-  const decision = getGovernanceDecision()
-
-  const resetEvaluation = () => {
-    setCheckpoints([])
-    setEvaluationComplete(false)
-    setCurrentCheckpoint(-1)
-    setIsEvaluating(false)
-    if (evaluationRef.current) clearTimeout(evaluationRef.current)
-  }
+  const inp:React.CSSProperties={background:'#150F00',border:'1px solid #2A1F00',borderRadius:7,color:'#CBD5E1',padding:'9px 12px',fontSize:13,width:'100%',outline:'none',cursor:'pointer'}
+  const lbl:React.CSSProperties={fontSize:10,color:'#6B5500',marginBottom:5,display:'block',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em'}
+  const sld:React.CSSProperties={width:'100%',accentColor:INS_AMBER,cursor:'pointer',height:4}
 
   return (
-    <div className="min-h-screen bg-institutional">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <img src="/logo.png" alt="OMNIX QUANTUM" className="w-12 h-12 object-contain" />
-            </Link>
-            <div>
-              <span className="text-lg font-bold text-white tracking-tight">OMNIX QUANTUM</span>
-              <span className="ml-3 px-2 py-0.5 text-[10px] font-semibold bg-blue-500/20 text-blue-400 rounded uppercase tracking-wider">Insurance Demo</span>
-            </div>
+    <div style={{minHeight:'100vh',background:`linear-gradient(160deg,${INS_DARK} 0%,#1A1400 50%,#0F0A00 100%)`,color:'#E2E8F0',fontFamily:"'Inter',sans-serif",padding:'24px'}}>
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}} *{box-sizing:border-box} select option{background:#150F00} input[type=range]::-webkit-slider-thumb{background:${INS_AMBER}}`}</style>
+      <div style={{maxWidth:1320,margin:'0 auto'}}>
+
+        <div style={{marginBottom:24}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
+            <Link to="/" style={{color:'#4B3800',fontSize:12,textDecoration:'none'}}>← Home</Link>
+            <span style={{color:'#2A1F00',fontSize:12}}>/</span>
+            <span style={{color:'#6B5500',fontSize:12}}>Insurance Underwriting Governance</span>
           </div>
-          <div className="flex items-center gap-8">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/governance-demo" className="nav-link">Credit Demo</Link>
-            <Link to="/governance-demo-energy" className="nav-link">Energy Demo</Link>
-            <Link to="/governance-demo-biotech" className="nav-link">Biotech Demo</Link>
-            <Link to="/institutional" className="nav-link">Technical Details</Link>
-            <a href="https://wa.me/16505078293?text=Hi%2C%20I%27m%20interested%20in%20OMNIX%20Governance" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm px-5 py-2">Talk to Us</a>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+            <div style={{display:'flex',alignItems:'center',gap:14}}>
+              <div style={{width:50,height:50,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,background:`${INS_AMBER}18`,border:`1px solid ${INS_AMBER}44`}}>☂️</div>
+              <div>
+                <div style={{fontSize:22,fontWeight:800,letterSpacing:'-0.02em',color:'#F1F5F9'}}>Insurance Underwriting Governance — Interactive Demo</div>
+                <div style={{fontSize:12,color:'#4B3800',marginTop:3}}>ADR-INS-001 · 11-Checkpoint Fail-Closed Pipeline · Solvency II · NAIC Framework · <span style={{color:INS_LIGHT,fontFamily:'monospace'}}>OMNIX-INS-{'{'+'12HEX'+'}'}</span> PQC Receipts</div>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              {['Solvency II','NAIC Standards','AML Gate','Cat Stress Test'].map(b=>(
+                <span key={b} style={{padding:'4px 10px',fontSize:10,fontWeight:700,borderRadius:5,background:`${INS_AMBER}14`,border:`1px solid ${INS_AMBER}33`,color:INS_LIGHT,textTransform:'uppercase',letterSpacing:'0.04em'}}>{b}</span>
+              ))}
+            </div>
           </div>
         </div>
-      </nav>
 
-      <main className="pt-32 px-6 pb-20 max-w-7xl mx-auto">
-        <section className="text-center mb-16 animate-fade-in-up">
-          <p className="section-title">Insurance Underwriting Governance</p>
-          <h1 className="heading-xl text-white mb-6">
-            Govern Every Policy.<br />
-            <span className="gold-gradient">Before It Binds.</span>
-          </h1>
-          <p className="text-xl text-muted max-w-3xl mx-auto mb-4 leading-relaxed">
-            This interactive demo shows how OMNIX's 11-checkpoint governance architecture
-            applies to insurance underwriting decisions — the same pattern validated across {formatNumberFull(liveMetrics.evaluation_cycles)}{' '}
-            evaluation cycles in digital asset trading (live production system — continuously verified).
-          </p>
-          <p className="text-sm text-[#64748B] max-w-2xl mx-auto">
-            Adjust the policy parameters below and run the governance evaluation to see each checkpoint assess the risk.
-          </p>
-        </section>
+        <div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap',alignItems:'center'}}>
+          <span style={{fontSize:10,color:'#4B3800',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',marginRight:4}}>Quick Load</span>
+          {PRESETS.map(p=>(
+            <button key={p.label} onClick={()=>applyPreset(p)} style={{padding:'6px 14px',fontSize:12,borderRadius:7,cursor:'pointer',background:`${INS_AMBER}10`,border:`1px solid ${INS_AMBER}28`,color:'#78600A',fontWeight:600,display:'flex',alignItems:'center',gap:5}}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor=INS_AMBER;(e.currentTarget as HTMLElement).style.color=INS_LIGHT}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor=`${INS_AMBER}28`;(e.currentTarget as HTMLElement).style.color='#78600A'}}
+            >{p.emoji} {p.label}</button>
+          ))}
+        </div>
 
-        <div className="grid lg:grid-cols-5 gap-8 mb-12">
-          <div className="lg:col-span-2">
-            <div className="glass-card p-8 sticky top-32">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <Umbrella className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Policy Application</h3>
-                  <p className="text-xs text-muted">Adjust parameters to test governance</p>
-                </div>
+        <div style={{display:'grid',gridTemplateColumns:'390px 1fr',gap:18,alignItems:'start'}}>
+          <div>
+            <div style={{background:'rgba(21,15,0,0.95)',borderRadius:14,padding:22,border:`1px solid ${INS_BORDER}`,marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:INS_LIGHT,marginBottom:18,display:'flex',alignItems:'center',gap:7}}>
+                <Umbrella size={14} color={INS_AMBER}/> Policy Application Parameters
               </div>
 
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Policy Type</label>
-                  <select
-                    value={application.policyType}
-                    onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, policyType: e.target.value })) }}
-                    className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none"
-                  >
-                    {POLICY_TYPES.map(p => <option key={p.value} value={p.value}>{p.label} (Base Risk: {(p.baseRisk * 100).toFixed(0)}%)</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Applicant Age</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={18}
-                      max={80}
-                      step={1}
-                      value={application.applicantAge}
-                      onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, applicantAge: parseInt(e.target.value) })) }}
-                      className="flex-1 accent-[#C9A227]"
-                    />
-                    <span className={`font-semibold text-sm w-16 text-right ${application.applicantAge >= 25 && application.applicantAge < 55 ? 'text-emerald-400' : application.applicantAge < 70 ? 'text-amber-400' : 'text-red-400'}`}>{application.applicantAge} yrs</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Coverage Amount</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={10000}
-                      max={2000000}
-                      step={10000}
-                      value={application.coverageAmount}
-                      onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, coverageAmount: parseInt(e.target.value) })) }}
-                      className="flex-1 accent-[#C9A227]"
-                    />
-                    <span className="text-white font-semibold text-sm w-24 text-right">${(application.coverageAmount / 1000).toFixed(0)}K</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Prior Claims (Last 5 Years)</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={0}
-                      max={6}
-                      step={1}
-                      value={application.claimsHistory}
-                      onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, claimsHistory: parseInt(e.target.value) })) }}
-                      className="flex-1 accent-[#C9A227]"
-                    />
-                    <span className={`font-semibold text-sm w-16 text-right ${application.claimsHistory === 0 ? 'text-emerald-400' : application.claimsHistory <= 2 ? 'text-amber-400' : 'text-red-400'}`}>{application.claimsHistory} claims</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Geographic Zone</label>
-                  <select
-                    value={application.geographicZone}
-                    onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, geographicZone: e.target.value })) }}
-                    className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none"
-                  >
-                    {GEOGRAPHIC_ZONES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted mb-2">Market Conditions</label>
-                  <select
-                    value={application.marketCondition}
-                    onChange={(e) => { resetEvaluation(); setApplication(prev => ({ ...prev, marketCondition: e.target.value })) }}
-                    className="w-full bg-[#0A1628] border border-[#C9A227]/20 rounded-lg px-4 py-3 text-white text-sm focus:border-[#C9A227] focus:outline-none"
-                  >
-                    {MARKET_CONDITIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
-                </div>
-
-                <button
-                  onClick={runGovernanceEvaluation}
-                  disabled={isEvaluating}
-                  className={`w-full btn-primary flex items-center justify-center gap-2 py-4 ${isEvaluating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isEvaluating ? (
-                    <>
-                      <Activity className="w-5 h-5 animate-spin" />
-                      Evaluating...
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="w-5 h-5" />
-                      Run Underwriting Governance
-                    </>
-                  )}
-                </button>
+              <div style={{marginBottom:13}}>
+                <label style={lbl}>Policy Type</label>
+                <select style={inp} value={app.policyType} onChange={e=>{setApp(p=>({...p,policyType:e.target.value}));setCheckpoints([]);setFinalResult(null)}}>
+                  {POLICY_TYPES.map(p=><option key={p.value} value={p.value}>{p.emoji} {p.label} — Base risk {(p.baseRisk*100).toFixed(0)}%</option>)}
+                </select>
+                <div style={{fontSize:10,color:'#6B5500',marginTop:4}}>Avg coverage: ${(pol.avgCoverage/1000).toFixed(0)}K · Base claim risk: {(pol.baseRisk*100).toFixed(0)}%</div>
               </div>
+
+              <div style={{marginBottom:13}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+                  <label style={{...lbl,marginBottom:0}}>Applicant Age</label>
+                  <span style={{fontSize:13,fontWeight:700,color:app.applicantAge>=25&&app.applicantAge<55?'#10B981':app.applicantAge<75?'#F59E0B':'#EF4444'}}>{app.applicantAge} yrs</span>
+                </div>
+                <input type="range" min={18} max={80} step={1} style={sld} value={app.applicantAge} onChange={e=>{setApp(p=>({...p,applicantAge:parseInt(e.target.value)}));setCheckpoints([]);setFinalResult(null)}}/>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#2A1F00',marginTop:2}}><span style={{color:'#F59E0B'}}>18 Young</span><span style={{color:'#10B981'}}>25-54 Prime</span><span style={{color:'#EF4444'}}>75+ Senior</span></div>
+              </div>
+
+              <div style={{marginBottom:13}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+                  <label style={{...lbl,marginBottom:0}}>Coverage Amount</label>
+                  <span style={{fontSize:13,fontWeight:700,color:app.coverageAmount>1000000?'#F59E0B':INS_LIGHT}}>${(app.coverageAmount/1000).toFixed(0)}K</span>
+                </div>
+                <input type="range" min={10000} max={2000000} step={10000} style={sld} value={app.coverageAmount} onChange={e=>{setApp(p=>({...p,coverageAmount:parseInt(e.target.value)}));setCheckpoints([]);setFinalResult(null)}}/>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#2A1F00',marginTop:2}}><span>$10K</span><span>$2M</span></div>
+              </div>
+
+              <div style={{marginBottom:13}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+                  <label style={{...lbl,marginBottom:0}}>Prior Claims (Last 5 Years)</label>
+                  <span style={{fontSize:13,fontWeight:700,color:hb_high_claims?'#EF4444':app.claimsHistory===0?'#10B981':app.claimsHistory<=2?'#F59E0B':'#EF4444'}}>{app.claimsHistory} claims{hb_high_claims?' ⚠ HARD BLOCK':''}</span>
+                </div>
+                <input type="range" min={0} max={6} step={1} style={sld} value={app.claimsHistory} onChange={e=>{setApp(p=>({...p,claimsHistory:parseInt(e.target.value)}));setCheckpoints([]);setFinalResult(null)}}/>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#2A1F00',marginTop:2}}><span style={{color:'#10B981'}}>0 Clean</span><span style={{color:'#F59E0B'}}>1-2 Moderate</span><span style={{color:'#EF4444'}}>5+ Block</span></div>
+                {hb_high_claims&&<div style={{fontSize:10,color:'#EF4444',marginTop:4,fontWeight:700}}>⚠ HARD BLOCK — 5+ prior claims exceed underwriting acceptance threshold</div>}
+              </div>
+
+              <div style={{marginBottom:13}}>
+                <label style={lbl}>Geographic Zone</label>
+                <select style={inp} value={app.geographicZone} onChange={e=>{setApp(p=>({...p,geographicZone:e.target.value}));setCheckpoints([]);setFinalResult(null)}}>
+                  {GEOGRAPHIC_ZONES.map(g=><option key={g.value} value={g.value}>{g.label}</option>)}
+                </select>
+                {hb_catastrophe&&<div style={{fontSize:10,color:'#EF4444',marginTop:4,fontWeight:700}}>⚠ HARD BLOCK — High-risk zone + $1M+ coverage = catastrophe exposure</div>}
+              </div>
+
+              <div style={{marginBottom:18}}>
+                <label style={lbl}>Market Conditions</label>
+                <select style={inp} value={app.marketCondition} onChange={e=>{setApp(p=>({...p,marketCondition:e.target.value}));setCheckpoints([]);setFinalResult(null)}}>
+                  {MARKET_CONDITIONS.map(m=><option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                {hb_hard_market&&<div style={{fontSize:10,color:'#EF4444',marginTop:4,fontWeight:700}}>⚠ HARD BLOCK — Hard market + 3+ prior claims = capacity breach</div>}
+              </div>
+
+              {anyHardBlock&&(
+                <div style={{background:'rgba(239,68,68,0.08)',border:'1px solid #EF444430',borderRadius:8,padding:'10px 14px',marginBottom:16}}>
+                  <div style={{color:'#EF4444',fontWeight:700,fontSize:11,marginBottom:6}}>⚠ Hard Block Conditions Active</div>
+                  {hb_high_claims   &&<div style={{color:'#FCA5A5',fontSize:11,marginBottom:3}}>• 5+ prior claims — automatic decline threshold</div>}
+                  {hb_catastrophe   &&<div style={{color:'#FCA5A5',fontSize:11,marginBottom:3}}>• High-risk zone + $1M+ coverage — catastrophe exposure</div>}
+                  {hb_hard_market   &&<div style={{color:'#FCA5A5',fontSize:11}}>• Hard market + 3+ claims — capacity unavailable</div>}
+                </div>
+              )}
+
+              <button onClick={runEval} disabled={isRunning} style={{width:'100%',padding:'13px 20px',borderRadius:10,border:'none',background:isRunning?'#1E293B':`linear-gradient(135deg,#78350F,${INS_AMBER})`,color:isRunning?'#374151':'#000',fontWeight:700,fontSize:14,cursor:isRunning?'not-allowed':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                <Shield size={15}/>{isRunning?'Evaluating Policy…':'Run 11-Checkpoint Underwriting Governance'}{!isRunning&&<ArrowRight size={15}/>}
+              </button>
+            </div>
+
+            <div style={{background:'rgba(21,15,0,0.95)',borderRadius:12,padding:16,border:'1px solid #2A1F00',fontSize:12}}>
+              <div style={{color:'#4B3800',fontWeight:700,marginBottom:10,fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em'}}>Current Policy</div>
+              {[['Policy Type',`${pol.emoji} ${pol.label}`],['Applicant Age',`${app.applicantAge} yrs`],['Coverage',`$${(app.coverageAmount/1000).toFixed(0)}K`],['Prior Claims',`${app.claimsHistory} claims (${app.claimsHistory===0?'Clean':app.claimsHistory<=2?'Moderate':'High'})`],['Geo Zone',geo.label.split('(')[0].trim()],['Market',mkt.label]].map(([k,v])=>(
+                <div key={k as string} style={{display:'flex',justifyContent:'space-between',marginBottom:5,paddingBottom:5,borderBottom:'1px solid #150F00'}}>
+                  <span style={{color:'#2A1F00'}}>{k}</span><span style={{color:'#78600A',fontWeight:600,textAlign:'right',maxWidth:200}}>{v}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="lg:col-span-3 space-y-4">
-            {checkpoints.length === 0 ? (
-              <div className="glass-card p-12 text-center">
-                <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
-                  <Umbrella className="w-10 h-10 text-blue-400" />
+          <div>
+            {checkpoints.length===0?(
+              <div style={{background:'rgba(21,15,0,0.95)',borderRadius:14,padding:52,border:`1px solid ${INS_BORDER}`,textAlign:'center'}}>
+                <div style={{fontSize:52,marginBottom:18}}>☂️</div>
+                <div style={{fontSize:18,fontWeight:700,color:INS_LIGHT,marginBottom:10}}>Insurance Underwriting Governance Pipeline</div>
+                <div style={{color:'#4B3800',fontSize:13,maxWidth:460,margin:'0 auto',lineHeight:1.7}}>Configure a policy application on the left — type, age, coverage, claims history, geographic zone, and market conditions. Run the 11-checkpoint Solvency II / NAIC governance pipeline. Every bound policy generates a PQC-signed <span style={{color:INS_LIGHT,fontFamily:'monospace'}}>OMNIX-INS</span> receipt.</div>
+                <div style={{marginTop:28,display:'flex',justifyContent:'center',gap:10,flexWrap:'wrap'}}>
+                  {['Claim Probability','Catastrophe Stress','AML Gate','Fraud Detection','PQC Receipt'].map(s=>(
+                    <span key={s} style={{background:`${INS_AMBER}12`,border:`1px solid ${INS_BORDER}`,borderRadius:6,padding:'5px 12px',fontSize:11,color:INS_LIGHT,fontWeight:500}}>{s}</span>
+                  ))}
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">11-Checkpoint Underwriting Engine</h3>
-                <p className="text-muted max-w-md mx-auto mb-8">
-                  Configure the policy application parameters and click "Run Underwriting Governance" to see each checkpoint evaluate the risk in real time.
-                </p>
-                <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-                  {[
-                    { icon: <Target className="w-4 h-4" />, label: 'Claim Prob.' },
-                    { icon: <Shield className="w-4 h-4" />, label: 'Exposure' },
-                    { icon: <Layers className="w-4 h-4" />, label: 'Coherence' },
-                    { icon: <TrendingUp className="w-4 h-4" />, label: 'Claims Trend' },
-                    { icon: <AlertTriangle className="w-4 h-4" />, label: 'Catastrophe' },
-                    { icon: <Brain className="w-4 h-4" />, label: 'Contradiction' },
-                  ].map((cp, i) => (
-                    <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-lg bg-[#0A1628]/40 border border-blue-500/10">
-                      <div className="text-blue-400">{cp.icon}</div>
-                      <span className="text-xs text-muted">{cp.label}</span>
+                <div style={{marginTop:28,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,maxWidth:480,margin:'28px auto 0'}}>
+                  {[{icon:<Zap size={14}/>,label:'Sub-second evaluation'},{icon:<Shield size={14}/>,label:'3 hard block conditions'},{icon:<Lock size={14}/>,label:'Dilithium-3 PQC receipt'}].map((item,i)=>(
+                    <div key={i} style={{background:'#150F00',border:'1px solid #2A1F00',borderRadius:8,padding:'12px 10px',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+                      <div style={{color:INS_AMBER}}>{item.icon}</div><div style={{fontSize:10,color:'#4B3800',textAlign:'center'}}>{item.label}</div>
                     </div>
                   ))}
                 </div>
               </div>
-            ) : (
-              <>
-                {checkpoints.map((cp, index) => (
-                  <div
-                    key={index}
-                    className={`glass-card p-6 transition-all duration-500 ${
-                      cp.status === 'evaluating' ? 'border-blue-500/60 shadow-lg shadow-blue-500/10' :
-                      cp.status === 'pass' ? 'border-emerald-500/30' :
-                      cp.status === 'warn' ? 'border-amber-500/30' :
-                      cp.status === 'block' ? 'border-red-500/30' :
-                      'opacity-40'
-                    }`}
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          cp.status === 'evaluating' ? 'bg-blue-500/20 text-blue-400 animate-pulse' :
-                          cp.status === 'pass' ? 'bg-emerald-500/20 text-emerald-400' :
-                          cp.status === 'warn' ? 'bg-amber-500/20 text-amber-400' :
-                          cp.status === 'block' ? 'bg-red-500/20 text-red-400' :
-                          'bg-[#1E293B] text-[#64748B]'
-                        }`}>
-                          {cp.icon}
-                        </div>
-                        <div>
-                          <h4 className="text-white font-medium">{cp.name}</h4>
-                          <p className="text-xs text-muted">{cp.genericName}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {cp.status === 'evaluating' && (
-                          <span className="text-xs text-blue-400 font-medium uppercase tracking-wider animate-pulse">Evaluating...</span>
-                        )}
-                        {cp.status === 'pass' && (
-                          <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium uppercase tracking-wider">
-                            <CheckCircle className="w-4 h-4" /> PASS
-                          </span>
-                        )}
-                        {cp.status === 'warn' && (
-                          <span className="flex items-center gap-1 text-xs text-amber-400 font-medium uppercase tracking-wider">
-                            <Clock className="w-4 h-4" /> MARGINAL
-                          </span>
-                        )}
-                        {cp.status === 'block' && (
-                          <span className="flex items-center gap-1 text-xs text-red-400 font-medium uppercase tracking-wider">
-                            <XCircle className="w-4 h-4" /> BLOCKED
-                          </span>
-                        )}
+            ):(
+              <div>
+                {finalResult&&(
+                  <div style={{borderRadius:12,padding:'16px 20px',marginBottom:14,background:vBg(finalResult),border:`1px solid ${vBdr(finalResult)}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}>
+                      {finalResult==='BIND'?<CheckCircle size={22} style={{color:'#10B981'}}/>:finalResult==='REFER'?<AlertTriangle size={22} style={{color:'#F59E0B'}}/>:<XCircle size={22} style={{color:'#EF4444'}}/>}
+                      <div>
+                        <div style={{fontWeight:800,fontSize:17,color:vColor(finalResult)}}>{finalResult==='BIND'?'POLICY BOUND':finalResult==='REFER'?'REFER — SENIOR UNDERWRITER REVIEW':'DECLINED — GOVERNANCE THRESHOLD BREACH'}</div>
+                        {receiptId&&<div style={{fontSize:11,color:'#10B981',fontFamily:'monospace',marginTop:3}}>Receipt: {receiptId} · Dilithium-3 · ADR-INS-001</div>}
+                        {!receiptId&&<div style={{fontSize:11,color:'#EF4444',marginTop:3}}>No receipt issued — policy declined by underwriting governance</div>}
                       </div>
                     </div>
-
-                    {cp.status !== 'pending' && (
-                      <div className="mt-3 space-y-2 animate-fade-in-up" style={{ animationDuration: '0.4s' }}>
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-[#0A1628] rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-1000 ${
-                                cp.status === 'pass' ? 'bg-emerald-500' :
-                                cp.status === 'warn' ? 'bg-amber-500' :
-                                cp.status === 'block' ? 'bg-red-500' :
-                                'bg-blue-500'
-                              }`}
-                              style={{ width: cp.status === 'evaluating' ? '60%' : (cp.status === 'pass' || cp.status === 'warn') ? '100%' : '22%' }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {decision && evaluationComplete && (
-                  <div className={`glass-card p-8 border ${decision.bg} mt-6`}>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${decision.bg}`}>
-                          {decision.decision === 'BIND' ? <CheckCircle className={`w-6 h-6 ${decision.color}`} /> :
-                           decision.decision === 'REFER' ? <Clock className={`w-6 h-6 ${decision.color}`} /> :
-                           <XCircle className={`w-6 h-6 ${decision.color}`} />}
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted uppercase tracking-wider">Underwriting Decision</p>
-                          <h3 className={`text-2xl font-bold ${decision.color}`}>{decision.decision}</h3>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted">Checkpoints Passed</p>
-                        <p className="text-white font-semibold">
-                          {decision.passed}/11
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-muted text-sm">{decision.reason}</p>
-                    <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                      <p className="text-xs text-[#64748B]">
-                        Decision Trace ID: GOV-INS-{Date.now().toString(36).toUpperCase()} | Architecture: 11-Checkpoint Fail-Closed | Engine: OMNIX Governance Core v1.0
-                      </p>
+                    <div style={{textAlign:'right',fontSize:11,color:'#4B3800'}}>
+                      <div>{pol.emoji} {pol.label}</div>
+                      <div>${(app.coverageAmount/1000).toFixed(0)}K · Age {app.applicantAge}</div>
                     </div>
                   </div>
                 )}
-              </>
+                <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                  {checkpoints.map((cp,i)=>{
+                    const isActive=currentCp===i
+                    const bdrC=cp.status==='evaluating'?INS_AMBER:cp.status==='pass'?'#10B981':cp.status==='warn'?'#F59E0B':cp.status==='block'?'#EF4444':'#2A1F00'
+                    const barC=cp.status==='pass'?'#10B981':cp.status==='warn'?'#F59E0B':cp.status==='block'?'#EF4444':INS_AMBER
+                    return (
+                      <div key={i} style={{background:isActive?`${INS_AMBER}08`:'rgba(21,15,0,0.92)',borderRadius:10,padding:'13px 15px',border:`1px solid ${bdrC}44`,transition:'all 0.3s'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                          <div style={{display:'flex',alignItems:'center',gap:8,flex:1}}>
+                            {sIcon(cp.status)}
+                            <div><div style={{fontSize:13,fontWeight:700,color:'#E2E8F0'}}>{cp.name}</div><div style={{fontSize:10,color:'#4B3800'}}>{cp.genericName}</div></div>
+                          </div>
+                          <div style={{textAlign:'right',flexShrink:0,marginLeft:12}}>
+                            <div style={{fontSize:20,fontWeight:800,color:sColor(cp.status),lineHeight:1}}>{cp.score}</div>
+                            <div style={{fontSize:10,color:'#2A1F00'}}>min {cp.threshold}</div>
+                          </div>
+                        </div>
+                        <ScoreBar score={cp.score} threshold={cp.threshold} color={barC}/>
+                        {cp.status!=='pending'&&(
+                          <div style={{marginTop:10}}>
+                            <div style={{fontSize:12,color:'#94A3B8',lineHeight:1.55,marginBottom:6}}>{cp.reasoning}</div>
+                            <div style={{fontSize:10,color:'#4B3800',fontFamily:'monospace',background:'#150F00',padding:'6px 10px',borderRadius:5}}>{cp.detail}</div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="divider-gold" />
-
-        <section className="mb-16">
-          <div className="text-center mb-12">
-            <p className="section-title">Multi-Vertical Governance</p>
-            <h2 className="text-3xl font-bold text-white">Same 11 Checkpoints. Every Domain.</h2>
-            <p className="text-muted text-sm mt-3 max-w-2xl mx-auto">
-              Each domain maps to <span className="text-white">CP-1 (Signal Integrity Validator) + CP-2–CP-7 (domain-specific signals) + CP-8 (Threshold &amp; Context) + CP-9 (AML Screening) + CP-10 (Fraud Detection) + CP-11 (Jurisdiction Compliance)</span>. The cards below show each domain's CP-2–CP-7 signal mapping — the universal checkpoints are identical across all verticals.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Digital Asset Trading</h4>
-                  <span className="text-xs text-emerald-400 font-medium">VALIDATED</span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-muted">
-                <p><span className="text-white">CP-1:</span> Monte Carlo simulation (10K paths)</p>
-                <p><span className="text-white">CP-2:</span> VaR95, per-trade limits, max drawdown</p>
-                <p><span className="text-white">CP-3:</span> EMA + HMM + Kalman + NM coherence</p>
-                <p><span className="text-white">CP-4:</span> Edge Confirmation Window (2+ cycles)</p>
-                <p><span className="text-white">CP-5:</span> Black Swan tail risk detector</p>
-                <p><span className="text-white">CP-6:</span> Decision Contradiction Index</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-emerald-400">{isLive ? '🟢' : '⏳'} {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles | {liveMetrics.capital_preserved_pct}% capital preserved (live production system — continuously verified)</p>
-              </div>
-            </div>
-
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-[#C9A227]/20 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 gold-text" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Credit / Lending</h4>
-                  <Link to="/governance-demo" className="text-xs text-[#C9A227] font-medium hover:text-white transition-colors">VIEW DEMO →</Link>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-muted">
-                <p><span className="text-white">CP-1:</span> Default probability model</p>
-                <p><span className="text-white">CP-2:</span> Concentration and exposure limits</p>
-                <p><span className="text-white">CP-3:</span> Credit score + DTI + sector agreement</p>
-                <p><span className="text-white">CP-4:</span> Income trend persistence (2+ quarters)</p>
-                <p><span className="text-white">CP-5:</span> Recession / rate hike stress scenarios</p>
-                <p><span className="text-white">CP-6:</span> Signal contradiction detection</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-[#C9A227]/10">
-                <p className="text-xs text-[#C9A227]">Interactive demo — same architecture, different signals</p>
-              </div>
-            </div>
-
-            <div className="glass-card p-6 border-blue-500/30">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <Umbrella className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Insurance Underwriting</h4>
-                  <span className="text-xs text-blue-400 font-medium">DEMO ABOVE</span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-muted">
-                <p><span className="text-white">CP-1:</span> Claim probability model</p>
-                <p><span className="text-white">CP-2:</span> Coverage exposure and concentration</p>
-                <p><span className="text-white">CP-3:</span> Age + claims + geographic coherence</p>
-                <p><span className="text-white">CP-4:</span> Claims frequency trend analysis</p>
-                <p><span className="text-white">CP-5:</span> Catastrophe / hard market stress test</p>
-                <p><span className="text-white">CP-6:</span> Signal contradiction detection</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-blue-500/20">
-                <p className="text-xs text-blue-400">Interactive demo — underwriting governance in action</p>
-              </div>
-            </div>
-
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-orange-500" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium">Energy Trading</h4>
-                  <Link to="/governance-demo-energy" className="text-xs text-orange-500 font-medium hover:text-white transition-colors">VIEW DEMO →</Link>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-muted">
-                <p><span className="text-white">CP-1:</span> Price forecast confidence</p>
-                <p><span className="text-white">CP-2:</span> Grid exposure limits</p>
-                <p><span className="text-white">CP-3:</span> Supply-demand coherence</p>
-                <p><span className="text-white">CP-4:</span> Price trend persistence</p>
-                <p><span className="text-white">CP-5:</span> Regulatory & climate stress</p>
-                <p><span className="text-white">CP-6:</span> Signal contradiction detection</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-orange-500/20">
-                <p className="text-xs text-orange-500">Interactive demo — energy governance in action</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="glass-card p-10 text-center mb-16" style={{ borderColor: 'rgba(59, 130, 246, 0.3)' }}>
-          <h2 className="text-2xl font-bold text-white mb-4">Nine Verticals. One Governance Engine.</h2>
-          <p className="text-muted max-w-2xl mx-auto mb-6">
-            OMNIX governs decisions across nine distinct domains — trading, Islamic credit, insurance, robotics, medical AI, energy, real estate, autonomous agents, and stablecoin reserve.
-            Each uses the same 11-checkpoint fail-closed architecture with domain-specific signals.
-            The core engine is validated across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles.
-          </p>
-          <div className="grid grid-cols-4 gap-6 max-w-xl mx-auto mb-8">
-            <div>
-              <div className="text-2xl font-bold text-white">{formatNumberFull(liveMetrics.evaluation_cycles)}</div>
-              <div className="text-xs text-muted">Evaluation Cycles {isLive && '🟢'}</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-emerald-400">{liveMetrics.capital_preserved_pct}%</div>
-              <div className="text-xs text-muted">Capital Preserved*</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold gold-text">11</div>
-              <div className="text-xs text-muted">Checkpoints</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-500">{liveMetrics.verticals_demo}</div>
-              <div className="text-xs text-muted">Verticals</div>
-            </div>
-          </div>
-          <a href="https://wa.me/16505078293?text=Hi%2C%20I%20saw%20the%20insurance%20governance%20demo%20and%20I%27m%20interested" target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
-            Talk to Us About Multi-Vertical Governance
-            <ArrowRight className="w-4 h-4" />
-          </a>
-        </section>
-
-        <div className="text-center">
-          <p className="text-xs text-[#475569] max-w-2xl mx-auto leading-relaxed">
-            This is a governance architecture demonstration. The insurance evaluation shown uses simplified actuarial models
-            for illustrative purposes. Production insurance governance would integrate with real actuarial tables,
-            claims databases, reinsurance systems, and regulatory frameworks. OMNIX's core 11-checkpoint architecture is
-            validated in digital asset trading across {formatNumberFull(liveMetrics.evaluation_cycles)} evaluation cycles (live production system — continuously verified).
-            See ADR-026 for technical architecture details.
-          </p>
+        <div style={{marginTop:28,textAlign:'center',color:'#2A1F00',fontSize:11}}>
+          OMNIX Quantum · Insurance Underwriting Governance · ADR-INS-001 · 11-Checkpoint Fail-Closed Pipeline
+          &nbsp;·&nbsp; Solvency II · NAIC Standards · AML / KYC · Dilithium-3 PQC
+          &nbsp;·&nbsp; <Link to="/try" style={{color:INS_AMBER,textDecoration:'none'}}>Public Sandbox →</Link>
+          &nbsp;·&nbsp; <Link to="/" style={{color:INS_AMBER,textDecoration:'none'}}>Back to Platform →</Link>
         </div>
-      </main>
-
-      <footer className="border-t border-[#C9A227]/10 py-12 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="OMNIX" className="w-10 h-10 object-contain" />
-            <span className="text-muted text-sm">&copy; 2026 OMNIX QUANTUM. All rights reserved.</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-muted hover:text-white text-sm transition-colors">Home</Link>
-            <Link to="/governance-demo" className="text-muted hover:text-white text-sm transition-colors">Credit Demo</Link>
-            <Link to="/governance-demo-energy" className="text-muted hover:text-white text-sm transition-colors">Energy Demo</Link>
-            <Link to="/institutional" className="text-muted hover:text-white text-sm transition-colors">Technical Details</Link>
-            <a href="https://wa.me/16505078293" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white text-sm transition-colors">Contact</a>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   )
 }
