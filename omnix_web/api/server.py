@@ -371,6 +371,70 @@ def _ensure_vertical_tables():
             created_at          TIMESTAMPTZ DEFAULT NOW()
         )
         """,
+        # ── Autonomous Defense Governance (ADR-DEF-001) ───────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS defense_decisions (
+            id                          SERIAL PRIMARY KEY,
+            decision_id                 VARCHAR(64)   NOT NULL UNIQUE,
+            decision_type               VARCHAR(40)   NOT NULL DEFAULT '',
+            platform_type               VARCHAR(40)   NOT NULL DEFAULT '',
+            operational_theater         VARCHAR(40)   NOT NULL DEFAULT '',
+            engagement_range_km         FLOAT         NOT NULL DEFAULT 0,
+            mission_duration_hrs        FLOAT         NOT NULL DEFAULT 0,
+            target_confidence           FLOAT,
+            target_discrimination       FLOAT,
+            collateral_damage_estimate  FLOAT,
+            roe_compliance_score        FLOAT,
+            comms_integrity             FLOAT,
+            cyber_vulnerability_score   FLOAT,
+            mission_necessity_score     FLOAT,
+            human_oversight_available   FLOAT,
+            legal_authorization_score   FLOAT,
+            environmental_conditions    FLOAT,
+            platform_readiness          FLOAT,
+            geofence_compliance         FLOAT,
+            iff_confidence              FLOAT,
+            engagement_risk_index       FLOAT         DEFAULT 0,
+            civilian_proximity_flag     BOOLEAN       DEFAULT FALSE,
+            roe_violation_flag          BOOLEAN       DEFAULT FALSE,
+            cyber_intrusion_flag        BOOLEAN       DEFAULT FALSE,
+            friendly_fire_risk_flag     BOOLEAN       DEFAULT FALSE,
+            chain_of_command_break      BOOLEAN       DEFAULT FALSE,
+            legal_prohibition_flag      BOOLEAN       DEFAULT FALSE,
+            decision                    VARCHAR(10)   NOT NULL DEFAULT 'PENDING',
+            decision_score              FLOAT,
+            block_reason                TEXT,
+            hard_block_reason           TEXT,
+            probability_score           FLOAT,
+            risk_exposure               FLOAT,
+            signal_coherence            FLOAT,
+            trend_persistence           FLOAT,
+            stress_resilience           FLOAT,
+            logic_consistency           FLOAT,
+            trajectory_score            FLOAT,
+            receipt_id                  VARCHAR(64),
+            domain                      VARCHAR(32)   DEFAULT 'defense_governance',
+            created_at                  TIMESTAMPTZ   DEFAULT NOW()
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS defense_cycle_metrics (
+            id                  SERIAL PRIMARY KEY,
+            cycle_id            VARCHAR(64) NOT NULL,
+            total_decisions     INTEGER     NOT NULL DEFAULT 0,
+            approved            INTEGER     NOT NULL DEFAULT 0,
+            blocked             INTEGER     NOT NULL DEFAULT 0,
+            held                INTEGER     NOT NULL DEFAULT 0,
+            hard_blocks         INTEGER     NOT NULL DEFAULT 0,
+            avg_target_conf     FLOAT       DEFAULT 0,
+            avg_collateral_est  FLOAT       DEFAULT 0,
+            avg_roe_compliance  FLOAT       DEFAULT 0,
+            missions_authorized INTEGER     DEFAULT 0,
+            targets_validated   INTEGER     DEFAULT 0,
+            duration_ms         INTEGER     DEFAULT 0,
+            created_at          TIMESTAMPTZ DEFAULT NOW()
+        )
+        """,
         # ── VC Trust Revocation Registry (ADR-130) ────────────────────────────
         """
         CREATE TABLE IF NOT EXISTS vc_revocation_registry (
@@ -542,6 +606,14 @@ def _start_vertical_simulators():
         print("[simulators] ✅ Stablecoin Reserve Governance — started")
     except Exception as e:
         print(f"[simulators] ⚠️  Stablecoin: {e}")
+
+    # ── Autonomous Defense Governance (ADR-DEF-001) ───────────────────────────
+    try:
+        from omnix_core.defense.defense_simulator import start_background_simulator as _def
+        _def()
+        print("[simulators] ✅ Autonomous Defense Governance — started")
+    except Exception as e:
+        print(f"[simulators] ⚠️  Defense: {e}")
 
 
 _start_vertical_simulators()

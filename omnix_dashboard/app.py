@@ -71,7 +71,7 @@ def create_app():
         governance_sandbox_bp, governance_alerts_bp,
         public_sandbox_bp, public_verify_bp,
     )
-    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp, medical_bp, agents_bp, real_estate_bp, energy_bp, stablecoin_bp
+    from omnix_dashboard.blueprints import credit_bp, insurance_bp, robotics_bp, medical_bp, agents_bp, real_estate_bp, energy_bp, stablecoin_bp, defense_bp
     from omnix_dashboard.blueprints.live_metrics import live_metrics_bp
     from omnix_dashboard.blueprints.receipt_verification import receipt_pki_bp
 
@@ -85,6 +85,7 @@ def create_app():
     app.register_blueprint(real_estate_bp)
     app.register_blueprint(energy_bp)
     app.register_blueprint(stablecoin_bp)
+    app.register_blueprint(defense_bp)
     app.register_blueprint(views_bp)
     app.register_blueprint(core_bp)
     app.register_blueprint(market_bp)
@@ -244,6 +245,27 @@ def create_app():
         logger.info("✅ [Stablecoin] Reserve Governance engine started (24/7 simulation)")
     except Exception as _srg_err:
         logger.warning(f"[Stablecoin] Simulation engine startup skipped: {_srg_err}")
+
+    # Initialize Autonomous Defense Governance tables
+    try:
+        import psycopg2 as _psycopg2
+        _db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
+        if _db_url:
+            from omnix_core.defense.defense_simulator import _create_defense_tables
+            _def_conn = _psycopg2.connect(_db_url)
+            _create_defense_tables(_def_conn)
+            _def_conn.close()
+            logger.info("✅ [Defense] Tables initialized")
+    except Exception as _def_tbl_err:
+        logger.warning(f"[Defense] Table init skipped: {_def_tbl_err}")
+
+    # Start Autonomous Defense Governance simulation engine in background
+    try:
+        from omnix_core.defense.defense_simulator import start_background_simulator as _def_start
+        _def_start()
+        logger.info("✅ [Defense] Autonomous Defense Governance engine started (24/7 simulation)")
+    except Exception as _def_err:
+        logger.warning(f"[Defense] Simulation engine startup skipped: {_def_err}")
 
     try:
         from scripts.initialize_avm_baselines import initialize_avm_baselines

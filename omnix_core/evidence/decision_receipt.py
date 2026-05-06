@@ -244,6 +244,7 @@ class DecisionReceiptEngine:
         "real_estate":       "REP",
         "energy_governance": "EGV",
         "stablecoin":        "SRG",
+        "defense_governance": "DEF",
     }
 
     @classmethod

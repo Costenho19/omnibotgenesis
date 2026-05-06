@@ -22,6 +22,7 @@ import RealEstateDashboard from './pages/RealEstateDashboard'
 import EnergyDashboard from './pages/EnergyDashboard'
 import StablecoinDashboard from './pages/StablecoinDashboard'
 import StablecoinGovernanceDemo from './pages/StablecoinGovernanceDemo'
+import DefenseGovernanceDemo from './pages/DefenseGovernanceDemo'
 import InvestorCommandCenter from './pages/InvestorCommandCenter'
 import AuditDashboard from './pages/AuditDashboard'
 import ClientDashboard from './pages/ClientDashboard'
@@ -62,6 +63,7 @@ function App() {
           <Route path="/real-estate" element={<RealEstateDashboard />} />
           <Route path="/energy" element={<EnergyDashboard />} />
           <Route path="/governance-demo-stablecoin" element={<StablecoinGovernanceDemo />} />
+          <Route path="/governance-demo-defense" element={<DefenseGovernanceDemo />} />
           <Route path="/stablecoin" element={<StablecoinDashboard />} />
           <Route path="/try" element={<PublicGovernanceSandbox />} />
           <Route path="/verify" element={<PublicDecisionVerify />} />
