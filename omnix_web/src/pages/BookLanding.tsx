@@ -193,6 +193,7 @@ export default function BookLanding() {
         <a href="/try" style={{ color: BLUE, fontSize: 15, fontWeight: 'bold', textDecoration: 'none' }}>{t.demo}</a>
         <p style={{ color: '#AAA', fontSize: 11, marginTop: 32, fontFamily: 'Arial, sans-serif' }}>
           © 2026 Harold Nunes / OMNIX Quantum · <a href="mailto:contact@omnixquantum.net" style={{ color: '#AAA' }}>contact@omnixquantum.net</a>
+          &nbsp;·&nbsp;<a href="/book-leads" style={{ color: '#C9A22766', fontSize: 11, textDecoration: 'none' }}>Admin: Ver Leads</a>
         </p>
       </div>
     </div>

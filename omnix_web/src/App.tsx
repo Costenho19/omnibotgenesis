@@ -36,6 +36,7 @@ import GettingStarted from './pages/GettingStarted'
 import ARFCompliance from './pages/ARFCompliance'
 import FullDemo from './pages/FullDemo'
 import BookLanding from './pages/BookLanding'
+import BookLeadsDashboard from './pages/BookLeadsDashboard'
 import './index.css'
 
 function App() {
@@ -78,6 +79,7 @@ function App() {
           <Route path="/eidas" element={<ARFCompliance />} />
           <Route path="/full-demo" element={<FullDemo />} />
           <Route path="/book" element={<BookLanding />} />
+          <Route path="/book-leads" element={<BookLeadsDashboard />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />

@@ -4816,6 +4816,27 @@ def book_lead():
         return jsonify({'ok': True}), 200
 
 
+@app.route('/api/book-leads-admin', methods=['GET'])
+def get_book_leads_admin():
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS book_leads (
+                id SERIAL PRIMARY KEY,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                name TEXT, company TEXT, email TEXT, ip TEXT
+            )
+        """)
+        conn.commit()
+        cur.execute("SELECT id, created_at, name, company, email FROM book_leads ORDER BY created_at DESC")
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+        return jsonify({'leads': [{'id': r[0], 'ts': str(r[1]), 'name': r[2], 'company': r[3], 'email': r[4]} for r in rows]})
+    except Exception as exc:
+        return jsonify({'leads': [], 'error': str(exc)}), 500
+
+
 @app.route('/api/book-leads', methods=['GET'])
 def get_book_leads():
     try:
