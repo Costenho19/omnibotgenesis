@@ -887,8 +887,10 @@ class UnifiedDecisionControlLayer:
         ) else cp_decision
 
         # ── Layer 5: CTAG — Commit-Time Admissibility Gate (opt-in) ──────────
+        # CTAG is only meaningful when execution is being considered.
+        # QUARANTINE and REBOUND already suspend/redirect execution — skip CTAG.
         ctag_dict = None
-        if ctag_enabled:
+        if ctag_enabled and final_decision in ("APPROVED", "NARROW"):
             original_control = metadata.get("ctag_original_control")
             ctag_r, ctag_dict = self._run_ctag(s_margin, original_control)
             pillar_results.append(ctag_r)
@@ -961,6 +963,11 @@ class UnifiedDecisionControlLayer:
                 "cbg_enabled":       "Whether CBG (Layer 0c) was active for this evaluation",
                 "pillars_evaluated": "Number of pillars that ran",
                 "pillars_passed":    "Number of pillars that returned passed=true",
+                "standing_margin":   "ADR-139: numeric margin [-1.0, +1.0] from SBE; positive = admitted",
+                "sbe_result":        "ADR-139: full Standing Boundary Engine result dict",
+                "ctag_result":       "ADR-140: Commit-Time Admissibility Gate result dict (opt-in, null if not run)",
+                "issued_at":         "Unix timestamp (float) when this ControlReceipt was created",
+                "version":           "UDCL schema version string (e.g. '1.1')",
             },
             "design_invariants": [
                 "All pillar results are returned even on block — full transparency.",

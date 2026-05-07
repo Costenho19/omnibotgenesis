@@ -2891,9 +2891,27 @@ def _parse_veto_chain_executive(veto_chain_raw):
 
 def _build_executive_summary(decision: str, outcomes: list) -> str:
     blocked = [o for o in outcomes if o['status'] == 'BLOCKED']
-    if decision in ('BLOCKED', 'BLOCK') or blocked:
+    if decision in ('BLOCKED', 'BLOCK'):
         first = blocked[0]['executive_reason'] if blocked else 'A governance control raised a concern.'
         return f"This decision was BLOCKED. {first}"
+    if decision == 'NARROW':
+        total = len(outcomes)
+        return (
+            f"This decision was NARROW after {total} institutional governance checkpoints — "
+            "execution permitted at reduced scope only."
+        )
+    if decision == 'QUARANTINE':
+        return (
+            "This decision was QUARANTINED — payload isolated, bind suspended "
+            "pending signal integrity restoration."
+        )
+    if decision == 'REBOUND':
+        return (
+            "This decision was REBOUNDED — standing margin below floor. "
+            "Execution must return to last admissible posture."
+        )
+    if decision == 'HOLD':
+        return "This decision is on HOLD — supervisor escalation required before execution."
     total = len(outcomes)
     return f"This decision was APPROVED after passing all {total} institutional governance checkpoints."
 
@@ -3019,8 +3037,9 @@ def api_audit_decisions():
     date_from       = (request.args.get('date_from', '') or '').strip()
     date_to         = (request.args.get('date_to', '') or '').strip()
 
-    if decision_filter and decision_filter not in ('APPROVED', 'BLOCKED', 'HOLD'):
-        return jsonify({'error': 'decision must be APPROVED, BLOCKED, or HOLD'}), 400
+    _VALID_DECISIONS = ('APPROVED', 'NARROW', 'QUARANTINE', 'REBOUND', 'HOLD', 'BLOCKED')
+    if decision_filter and decision_filter not in _VALID_DECISIONS:
+        return jsonify({'error': 'decision must be one of: APPROVED, NARROW, QUARANTINE, REBOUND, HOLD, BLOCKED'}), 400
 
     try:
         conn = _get_db_conn()
@@ -3630,6 +3649,10 @@ def _ensure_udcl_table() -> None:
                 total_latency_ms FLOAT,
                 pillars_evaluated INTEGER      NOT NULL DEFAULT 0,
                 pillars_passed    INTEGER      NOT NULL DEFAULT 0,
+                standing_margin  FLOAT,
+                sbe_result       JSONB,
+                ctag_result      JSONB,
+                issued_at        FLOAT,
                 adr              VARCHAR(16)   NOT NULL DEFAULT 'ADR-138',
                 created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW()
             )
@@ -3665,8 +3688,9 @@ def _persist_control_receipt(receipt_dict: dict, client_id: str) -> None:
             INSERT INTO udcl_control_receipts
                 (control_id, client_id, decision, blocking_pillar, block_reason,
                  receipt_id, domain, asset, pillar_results, control_hash,
-                 cbg_enabled, total_latency_ms, pillars_evaluated, pillars_passed)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                 cbg_enabled, total_latency_ms, pillars_evaluated, pillars_passed,
+                 standing_margin, sbe_result, ctag_result, issued_at)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             ON CONFLICT (control_id) DO NOTHING
         """, (
             receipt_dict.get("control_id"),
@@ -3683,6 +3707,10 @@ def _persist_control_receipt(receipt_dict: dict, client_id: str) -> None:
             receipt_dict.get("total_latency_ms"),
             receipt_dict.get("pillars_evaluated", 0),
             receipt_dict.get("pillars_passed", 0),
+            receipt_dict.get("standing_margin"),
+            json.dumps(receipt_dict.get("sbe_result")) if receipt_dict.get("sbe_result") else None,
+            json.dumps(receipt_dict.get("ctag_result")) if receipt_dict.get("ctag_result") else None,
+            receipt_dict.get("issued_at"),
         ))
         conn.commit()
         cur.close()

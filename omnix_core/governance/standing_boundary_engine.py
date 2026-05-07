@@ -48,12 +48,11 @@ ADR-139
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import ClassVar, Optional
 
 logger = logging.getLogger("OMNIX.SBE")
 
@@ -87,7 +86,8 @@ class StandingVector:
     debt_load_inverted:   float = 1.0
 
     # Dimension weights — must sum to 1.0
-    _WEIGHTS: dict = field(default_factory=lambda: {
+    # ClassVar: not part of __init__, not overridable by positional args
+    _WEIGHTS: ClassVar[dict] = {
         "authority_score":      0.18,
         "policy_compliance":    0.18,
         "signal_integrity":     0.16,
@@ -96,10 +96,11 @@ class StandingVector:
         "trajectory_stability": 0.10,
         "execution_readiness":  0.07,
         "debt_load_inverted":   0.05,
-    })
+    }
 
     # Minimum per-dimension thresholds — falling below triggers dimension failure
-    _MIN_THRESHOLDS: dict = field(default_factory=lambda: {
+    # ClassVar: not part of __init__, not overridable by positional args
+    _MIN_THRESHOLDS: ClassVar[dict] = {
         "authority_score":      0.50,
         "policy_compliance":    0.60,
         "signal_integrity":     0.40,
@@ -108,7 +109,7 @@ class StandingVector:
         "trajectory_stability": 0.20,
         "execution_readiness":  0.30,
         "debt_load_inverted":   0.10,
-    })
+    }
 
     def weighted_score(self) -> float:
         """Weighted sum of all standing dimensions. Range [0, 1]."""
@@ -249,7 +250,8 @@ class StandingBoundaryEngine:
         This avoids re-running evaluations — it composes the vector from
         data already collected by the UDCL pipeline.
         """
-        score = float(evaluation.get("score") or 0.75)
+        raw_score        = evaluation.get("score")
+        score            = float(raw_score) if raw_score is not None else 75.0
         score_normalized = min(max(score / 100.0, 0.0), 1.0) if score > 1.0 else score
 
         # -- authority_score: from SAE admission status
@@ -489,11 +491,12 @@ class StandingBoundaryEngine:
 
         except Exception as exc:
             logger.error("[SBE] evaluation exception: %s", exc)
+            safe_vector = vector if isinstance(vector, StandingVector) else StandingVector()
             return SBEResult(
                 sbe_id            = sbe_id,
                 decision          = ExtendedDecision.BLOCKED,
                 standing_margin   = -1.0,
-                standing_vector   = vector,
+                standing_vector   = safe_vector,
                 failed_dimensions = ["system_error"],
                 narrowed_scope    = None,
                 quarantine_token  = None,
