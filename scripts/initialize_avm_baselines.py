@@ -136,6 +136,18 @@ DOMAIN_BASELINES = {
         "description": "Baseline calibration — stablecoin reserve governance Q2 2026 (avg 1,385 decisions, SIGNAL_WEIGHTS keys)",
         "tags": ["initial", "q2-2026", "stablecoin"],
     },
+    "defense_governance": {
+        "signals": {
+            "probability_score":  67.5,
+            "signal_coherence":   85.0,
+            "risk_exposure":      42.0,
+            "stress_resilience":  68.0,
+            "trend_persistence":  60.0,
+            "logic_consistency":  80.0,
+        },
+        "description": "Baseline calibration — defense AI governance Q2 2026 (high-precision, strict coherence mandate, SIGNAL_WEIGHTS keys)",
+        "tags": ["initial", "q2-2026", "defense"],
+    },
 }
 
 

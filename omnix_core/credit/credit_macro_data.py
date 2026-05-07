@@ -147,16 +147,29 @@ class CreditMacroDataProvider:
         )
 
     def _fetch_from_fred(self) -> MacroSnapshot:
-        """Fetch from FRED public API — no API key required for public series."""
-        url = (
-            "https://fred.stlouisfed.org/graph/fredgraph.csv"
-            "?id=FEDFUNDS&vintage_date="
-            + time.strftime("%Y-%m-%d")
-        )
-        # Simplified: just use the known current rate range
-        ffr = 5.33
+        """Fetch from FRED public CSV API — no API key required."""
+        url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS"
+        req = urllib.request.Request(url, headers={"User-Agent": "OMNIX-Credit/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw = resp.read().decode()
+
+        lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
+        # Skip header line (DATE,FEDFUNDS), parse last data row
+        data_lines = [ln for ln in lines if not ln.startswith("DATE")]
+        if not data_lines:
+            raise ValueError("FRED CSV returned no data rows")
+
+        last_line = data_lines[-1]
+        parts = last_line.split(",")
+        if len(parts) < 2 or parts[1] in (".", ""):
+            raise ValueError(f"FRED CSV last row has no valid value: {last_line!r}")
+
+        ffr = float(parts[1])
+        date_str = parts[0]
         credit_idx = min(90.0, max(20.0, ffr * 10.0 + 15.0))
         stress = self._stress_from_credit_idx(credit_idx)
+
+        logger.info(f"📊 [MacroData] FRED: FFR={ffr}% as of {date_str}, credit_idx={credit_idx:.1f}")
 
         return MacroSnapshot(
             credit_conditions_index=credit_idx,
@@ -164,11 +177,11 @@ class CreditMacroDataProvider:
             liquidity_score=max(20.0, 100.0 - credit_idx * 0.8),
             macro_volatility=40.0,
             fed_funds_rate=ffr,
-            us_10yr_yield=4.50,
-            credit_spread_bps=120.0,
-            vix_proxy=18.0,
+            us_10yr_yield=ffr + 0.86,
+            credit_spread_bps=80.0 + credit_idx * 0.6,
+            vix_proxy=12.0 + credit_idx * 0.12,
             stress_level=stress,
-            source="fred_proxy",
+            source="fred_live",
         )
 
     def _calibrated_defaults(self) -> MacroSnapshot:
