@@ -515,3 +515,9 @@ id = "mXOSVjwazSCGJ9nkbEGUh"
 uri = "file://attached_assets/gumroad_thumbnail.png"
 type = "image"
 title = "Gumroad — Miniatura cuadrada (600x600)"
+
+[[outputs]]
+id = "8FoL0ly8A9gdXjTMMyzcs"
+uri = "file://docs/briefing/OMNIX_Production_Review_Brief.md"
+type = "text"
+title = "OMNIX Production Review Brief"
