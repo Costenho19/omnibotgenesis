@@ -3600,6 +3600,522 @@ def api_governance_due_diligence_report():
     }), 200
 
 
+
+# ── MOD-014: UNIFIED DECISION CONTROL LAYER (ADR-138) ─────────────────────────
+
+_UDCL_TABLE_ENSURED = False
+
+
+def _ensure_udcl_table() -> None:
+    """Create udcl_control_receipts table lazily on first use. ADR-138."""
+    global _UDCL_TABLE_ENSURED
+    if _UDCL_TABLE_ENSURED:
+        return
+    try:
+        conn = _get_db_conn()
+        cur  = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS udcl_control_receipts (
+                control_id       VARCHAR(64)   PRIMARY KEY,
+                client_id        VARCHAR(128)  NOT NULL,
+                decision         VARCHAR(16)   NOT NULL,
+                blocking_pillar  VARCHAR(64),
+                block_reason     TEXT,
+                receipt_id       VARCHAR(128),
+                domain           VARCHAR(64)   NOT NULL DEFAULT 'generic',
+                asset            VARCHAR(64)   NOT NULL DEFAULT '',
+                pillar_results   JSONB         NOT NULL DEFAULT '{}',
+                control_hash     VARCHAR(80)   NOT NULL DEFAULT '',
+                cbg_enabled      BOOLEAN       NOT NULL DEFAULT FALSE,
+                total_latency_ms FLOAT,
+                pillars_evaluated INTEGER      NOT NULL DEFAULT 0,
+                pillars_passed    INTEGER      NOT NULL DEFAULT 0,
+                adr              VARCHAR(16)   NOT NULL DEFAULT 'ADR-138',
+                created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+            )
+        """)
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_udcl_client_id "
+            "ON udcl_control_receipts(client_id)"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_udcl_decision "
+            "ON udcl_control_receipts(decision)"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_udcl_created_at "
+            "ON udcl_control_receipts(created_at DESC)"
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        _UDCL_TABLE_ENSURED = True
+        logger.info("[UDCL] udcl_control_receipts table ready")
+    except Exception as exc:
+        logger.warning("[UDCL] Table ensure failed: %s", exc)
+
+
+def _persist_control_receipt(receipt_dict: dict, client_id: str) -> None:
+    """Persist ControlReceipt to udcl_control_receipts. Runs in caller thread."""
+    try:
+        _ensure_udcl_table()
+        conn = _get_db_conn()
+        cur  = conn.cursor()
+        cur.execute("""
+            INSERT INTO udcl_control_receipts
+                (control_id, client_id, decision, blocking_pillar, block_reason,
+                 receipt_id, domain, asset, pillar_results, control_hash,
+                 cbg_enabled, total_latency_ms, pillars_evaluated, pillars_passed)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            ON CONFLICT (control_id) DO NOTHING
+        """, (
+            receipt_dict.get("control_id"),
+            client_id,
+            receipt_dict.get("decision"),
+            receipt_dict.get("blocking_pillar"),
+            receipt_dict.get("block_reason"),
+            receipt_dict.get("receipt_id"),
+            receipt_dict.get("domain"),
+            receipt_dict.get("asset"),
+            json.dumps(receipt_dict.get("pillar_results", {})),
+            receipt_dict.get("control_hash", ""),
+            bool(receipt_dict.get("cbg_enabled", False)),
+            receipt_dict.get("total_latency_ms"),
+            receipt_dict.get("pillars_evaluated", 0),
+            receipt_dict.get("pillars_passed", 0),
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as exc:
+        logger.warning("[UDCL] Persist control receipt failed: %s", exc)
+
+
+def _load_udcl() -> object | None:
+    """
+    Lazy-load UnifiedDecisionControlLayer, reusing the already-loaded
+    governance engine instances to avoid duplicate module objects.
+    Returns UDCL instance or None on failure.
+    """
+    if not _load_engine():
+        return None
+    try:
+        import sys as _sys
+        import os as _os
+        _root = _os.path.dirname(_os.path.dirname(_os.path.dirname(__file__)))
+        if _root not in _sys.path:
+            _sys.path.insert(0, _root)
+        from omnix_core.governance.unified_control_layer import UnifiedDecisionControlLayer
+        return UnifiedDecisionControlLayer(
+            governance_engine_cls = _GovernanceEvaluationEngine,
+            receipt_engine_cls    = _DecisionReceiptEngine,
+        )
+    except Exception as exc:
+        logger.error("[UDCL] Load failed: %s", exc)
+        return None
+
+
+@governance_bp.route('/api/governance/control/schema', methods=['GET'])
+def api_udcl_schema():
+    """
+    GET /api/governance/control/schema
+    MOD-014: UDCL schema — pillar catalog, endpoint docs, design invariants.
+    Public endpoint — no authentication required.
+    ADR-138.
+    """
+    udcl = _load_udcl()
+    if udcl is None:
+        try:
+            from omnix_core.governance.unified_control_layer import UnifiedDecisionControlLayer
+            schema = UnifiedDecisionControlLayer.get_schema()
+        except Exception:
+            return jsonify({"error": "UDCL module not available", "status": 503}), 503
+    else:
+        schema = type(udcl).get_schema()
+    return jsonify({"status": "ok", **schema}), 200
+
+
+@governance_bp.route('/api/governance/control/health', methods=['GET'])
+def api_udcl_health():
+    """
+    GET /api/governance/control/health
+    MOD-014: Real-time pillar health check.
+    Requires X-API-Key authentication.
+    ADR-138.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+    try:
+        from omnix_core.governance.unified_control_layer import UnifiedDecisionControlLayer
+        health = UnifiedDecisionControlLayer.check_pillar_health()
+        return jsonify({
+            "status": "ok",
+            "health": health,
+            "module": "MOD-014",
+            "adr": "ADR-138",
+        }), 200
+    except Exception as exc:
+        logger.error("[UDCL] Health check error: %s", exc)
+        return jsonify({"error": "Health check failed", "status": 500}), 500
+
+
+@governance_bp.route('/api/governance/control/evaluate', methods=['POST'])
+def api_udcl_evaluate():
+    """
+    POST /api/governance/control/evaluate
+    MOD-014: Unified Decision Control Layer — full multi-pillar evaluation.
+
+    Coordinates all OMNIX governance pillars in sequence:
+      Layer 0   → SAE  (Structural Admissibility Engine)   ADR-092
+      Layer 0b  → SPG  (State Provenance Guard)            ADR-133
+      Layer 0c  → CBG  (Conditional Bind Gate, opt-in)     ADR-135
+      Layer 1-2 → CP   (11-Checkpoint Pipeline + TIE)      ADR-028/053
+      Layer 3   → PQC  (Cryptographic Receipt)             ADR-096
+
+    Requires X-API-Key authentication.
+    ADR-138.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    client_id  = client["client_id"]
+    client_ip  = _get_client_ip()
+
+    if _is_ip_blocked(client_ip):
+        return jsonify({"error": "Access denied — try again later", "status": 403}), 403
+
+    if _is_client_rate_limited(client_id):
+        ref_id = str(uuid.uuid4())[:8]
+        return jsonify({
+            "error":    f"Rate limit exceeded — {_CLIENT_RATE_LIMIT_MAX} requests per minute",
+            "status":   429,
+            "reference": ref_id,
+            "retry_after_seconds": _CLIENT_RATE_LIMIT_WINDOW,
+        }), 429
+
+    quota_ok, quota_error = _check_client_quota(client_id)
+    if not quota_ok:
+        return jsonify({"error": quota_error, "status": 429, "type": "quota_exceeded"}), 429
+
+    if not request.is_json:
+        return jsonify({"error": "Request must be Content-Type: application/json", "status": 400}), 400
+    try:
+        body = request.get_json(force=True)
+    except Exception:
+        return jsonify({"error": "Invalid JSON body", "status": 400}), 400
+
+    if not isinstance(body, dict) or "signals" not in body:
+        return jsonify({
+            "error": "Request body must include a 'signals' field. See GET /api/governance/control/schema.",
+            "status": 400,
+        }), 400
+
+    _ALLOWED_UDCL_KEYS = {
+        "signals", "asset", "domain", "metadata",
+        "compliance_config", "cbg_enabled", "include_vc",
+    }
+    unknown = set(body.keys()) - _ALLOWED_UDCL_KEYS
+    if unknown:
+        return jsonify({
+            "error": f"Request contains unrecognised fields: {sorted(unknown)}",
+            "status": 400,
+        }), 400
+
+    asset_raw  = body.get("asset", "UNKNOWN")
+    domain_raw = body.get("domain", "generic")
+    if not isinstance(asset_raw,  str):
+        return jsonify({"error": '"asset" must be a string.',  "status": 400}), 400
+    if not isinstance(domain_raw, str):
+        return jsonify({"error": '"domain" must be a string.', "status": 400}), 400
+
+    meta_raw = body.get("metadata", {})
+    if meta_raw is not None and not isinstance(meta_raw, dict):
+        return jsonify({"error": '"metadata" must be a JSON object or omitted.', "status": 400}), 400
+    if isinstance(meta_raw, dict) and len(meta_raw) > 50:
+        return jsonify({"error": "Request payload exceeds allowed limits.", "status": 400}), 400
+
+    cc_raw = body.get("compliance_config", {})
+    if not isinstance(cc_raw, dict):
+        return jsonify({"error": '"compliance_config" must be a JSON object or omitted.', "status": 400}), 400
+
+    cbg_enabled = bool(body.get("cbg_enabled", False))
+
+    udcl = _load_udcl()
+    if udcl is None:
+        return jsonify({"error": "Unified Decision Control Layer unavailable", "status": 503}), 503
+
+    signals = body.get("signals", {})
+    is_valid, error_msg = _GovernanceEvaluationEngine.validate_signals(signals)
+    if not is_valid:
+        return jsonify({
+            "error":  f"Invalid signals: {error_msg}",
+            "status": 400,
+            "hint":   "See GET /api/governance/control/schema for required signal fields.",
+        }), 400
+
+    asset    = asset_raw[:64]
+    domain   = domain_raw[:32]
+    metadata = meta_raw if isinstance(meta_raw, dict) else {}
+    compliance_config = {**cc_raw, "client_id": client_id}
+    compliance_config["layer0_enabled"] = True  # Layer 0 always active
+
+    checkpoint_overrides = _load_client_checkpoint_overrides(client_id)
+    thresholds_source = "client_custom" if any(
+        cp.get("_source") == "client_custom" for cp in checkpoint_overrides
+    ) else "default"
+    clean_overrides = [
+        {k: v for k, v in cp.items() if k != "_source"} for cp in checkpoint_overrides
+    ]
+
+    try:
+        control_receipt = udcl.evaluate(
+            signals              = signals,
+            asset                = asset,
+            domain               = domain,
+            client_id            = client_id,
+            metadata             = metadata,
+            compliance_config    = compliance_config,
+            checkpoint_overrides = clean_overrides or None,
+            cbg_enabled          = cbg_enabled,
+        )
+    except Exception as exc:
+        ref_id = str(uuid.uuid4())[:8]
+        logger.error("[UDCL] evaluate exception ref=%s: %s", ref_id, exc)
+        return jsonify({"error": "Internal UDCL evaluation error", "status": 500, "reference": ref_id}), 500
+
+    receipt_dict = control_receipt.to_dict()
+
+    # Persist control receipt to DB (non-blocking on failure)
+    try:
+        threading.Thread(
+            target=_persist_control_receipt,
+            args=(receipt_dict, client_id),
+            daemon=True,
+        ).start()
+    except Exception as _pe:
+        logger.debug("[UDCL] Persist thread start failed: %s", _pe)
+
+    # Monthly usage alert
+    _check_monthly_alert(client_id)
+
+    # Key expiry warning
+    key_expires_in_days = client.get("key_expires_in_days")
+    if key_expires_in_days is not None:
+        receipt_dict["key_expiry_warning"] = {
+            "expires_in_days": key_expires_in_days,
+            "message": (
+                f"Your API key expires in {key_expires_in_days} day(s). "
+                "Rotate via POST /api/governance/admin/clients/<id>/rotate."
+            ),
+        }
+
+    receipt_dict["thresholds_source"] = thresholds_source
+    receipt_dict["verify_url"] = (
+        f"https://omnixquantum.net/verify#{receipt_dict.get('receipt_id')}"
+        if receipt_dict.get("receipt_id") else None
+    )
+    receipt_dict["module"] = "MOD-014"
+
+    logger.info(
+        "[UDCL] evaluate: client=%s asset=%s domain=%s decision=%s "
+        "blocking=%s receipt=%s pillars=%s/%s cbg=%s thresholds=%s ip=%s",
+        client_id, asset, domain,
+        receipt_dict.get("decision"),
+        receipt_dict.get("blocking_pillar"),
+        receipt_dict.get("receipt_id"),
+        receipt_dict.get("pillars_passed"),
+        receipt_dict.get("pillars_evaluated"),
+        cbg_enabled,
+        thresholds_source,
+        client_ip,
+    )
+
+    # Webhook push (reuse existing infrastructure — same as /evaluate)
+    try:
+        webhook_cfg = get_client_webhook(client_id)
+        if webhook_cfg and webhook_cfg.get("webhook_url"):
+            webhook_payload = {
+                "event":           "control.evaluated",
+                "control_id":      receipt_dict.get("control_id"),
+                "receipt_id":      receipt_dict.get("receipt_id"),
+                "client_id":       client_id,
+                "asset":           asset,
+                "domain":          domain,
+                "decision":        receipt_dict.get("decision"),
+                "blocking_pillar": receipt_dict.get("blocking_pillar"),
+                "control_hash":    receipt_dict.get("control_hash"),
+                "module":          "MOD-014",
+                "adr":             "ADR-138",
+            }
+            threading.Thread(
+                target=_push_receipt_webhook,
+                args=(
+                    client_id,
+                    receipt_dict.get("control_id", ""),
+                    receipt_dict.get("decision", ""),
+                    webhook_payload,
+                    webhook_cfg["webhook_url"],
+                    webhook_cfg["webhook_secret"],
+                ),
+                daemon=True,
+            ).start()
+    except Exception as _we:
+        logger.debug("[UDCL] Webhook push thread skipped: %s", _we)
+
+    return jsonify({"success": True, **receipt_dict}), 200
+
+
+@governance_bp.route('/api/governance/control/receipts/<control_id>', methods=['GET'])
+def api_udcl_receipt(control_id: str):
+    """
+    GET /api/governance/control/receipts/<control_id>
+    MOD-014: Fetch a previously-generated UDCL control receipt by ID.
+    Authenticated clients may only retrieve their own receipts.
+    ADR-138.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    client_id = client["client_id"]
+
+    if not control_id or not control_id.startswith("UDCL-"):
+        return jsonify({"error": "Invalid control_id format. Expected UDCL-{16 hex}.", "status": 400}), 400
+
+    try:
+        _ensure_udcl_table()
+        conn = _get_db_conn()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            """
+            SELECT control_id, decision, blocking_pillar, block_reason,
+                   receipt_id, domain, asset, pillar_results, control_hash,
+                   cbg_enabled, total_latency_ms, pillars_evaluated, pillars_passed,
+                   adr, created_at
+            FROM udcl_control_receipts
+            WHERE control_id = %s AND client_id = %s
+            """,
+            (control_id, client_id),
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not row:
+            return jsonify({
+                "error": f"Control receipt {control_id} not found for this client.",
+                "status": 404,
+            }), 404
+
+        return jsonify({
+            "status":         "ok",
+            "control_id":     row["control_id"],
+            "decision":       row["decision"],
+            "blocking_pillar": row["blocking_pillar"],
+            "block_reason":   row["block_reason"],
+            "receipt_id":     row["receipt_id"],
+            "domain":         row["domain"],
+            "asset":          row["asset"],
+            "pillar_results": row["pillar_results"],
+            "control_hash":   row["control_hash"],
+            "cbg_enabled":    row["cbg_enabled"],
+            "total_latency_ms": float(row["total_latency_ms"]) if row["total_latency_ms"] else None,
+            "pillars_evaluated": row["pillars_evaluated"],
+            "pillars_passed":    row["pillars_passed"],
+            "adr":            row["adr"],
+            "created_at":     str(row["created_at"]),
+            "verify_url": (
+                f"https://omnixquantum.net/verify#{row['receipt_id']}"
+                if row.get("receipt_id") else None
+            ),
+            "module": "MOD-014",
+        }), 200
+
+    except Exception as exc:
+        logger.error("[UDCL] receipt fetch error control=%s: %s", control_id, exc)
+        return jsonify({"error": "Internal server error", "status": 500}), 500
+
+
+@governance_bp.route('/api/governance/control/receipts', methods=['GET'])
+def api_udcl_receipts_list():
+    """
+    GET /api/governance/control/receipts
+    MOD-014: Paginated list of UDCL control receipts for authenticated client.
+    Query params: page (default 1), per_page (default 20, max 100).
+    ADR-138.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    client_id = client["client_id"]
+    page     = max(1, int(request.args.get("page", 1)))
+    per_page = min(100, max(1, int(request.args.get("per_page", 20))))
+    offset   = (page - 1) * per_page
+
+    try:
+        _ensure_udcl_table()
+        conn = _get_db_conn()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute(
+            "SELECT COUNT(*) AS cnt FROM udcl_control_receipts WHERE client_id = %s",
+            (client_id,),
+        )
+        total = int((cur.fetchone() or {}).get("cnt", 0))
+
+        cur.execute(
+            """
+            SELECT control_id, decision, blocking_pillar, receipt_id,
+                   domain, asset, total_latency_ms, pillars_evaluated, pillars_passed,
+                   cbg_enabled, created_at
+            FROM udcl_control_receipts
+            WHERE client_id = %s
+            ORDER BY created_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            (client_id, per_page, offset),
+        )
+        rows = cur.fetchall() or []
+        cur.close()
+        conn.close()
+
+        items = [
+            {
+                "control_id":      r["control_id"],
+                "decision":        r["decision"],
+                "blocking_pillar": r["blocking_pillar"],
+                "receipt_id":      r["receipt_id"],
+                "domain":          r["domain"],
+                "asset":           r["asset"],
+                "total_latency_ms": float(r["total_latency_ms"]) if r["total_latency_ms"] else None,
+                "pillars_evaluated": r["pillars_evaluated"],
+                "pillars_passed":    r["pillars_passed"],
+                "cbg_enabled":     r["cbg_enabled"],
+                "created_at":      str(r["created_at"]),
+            }
+            for r in rows
+        ]
+
+        return jsonify({
+            "status":   "ok",
+            "total":    total,
+            "page":     page,
+            "per_page": per_page,
+            "items":    items,
+            "module":   "MOD-014",
+            "adr":      "ADR-138",
+        }), 200
+
+    except Exception as exc:
+        logger.error("[UDCL] receipts list error client=%s: %s", client_id, exc)
+        return jsonify({"error": "Internal server error", "status": 500}), 500
+
+
+# ── EXECUTION INTEGRITY STATUS (ADR-045) ──────────────────────────────────────
+
 @governance_bp.route('/api/governance/execution-integrity', methods=['GET'])
 def api_execution_integrity_status():
     """

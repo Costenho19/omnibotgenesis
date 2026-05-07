@@ -399,7 +399,14 @@ All critical, high-priority, and nice-to-have features have been delivered.
 
 #### MOD-014: Unified Decision Control Layer
 - **Descripción:** API externa que coordina todos los pilares de gobernanza y bloquea si cualquiera falla. Versión formalizada del pipeline actual para consumo B2B.
-- **Status:** BACKLOG
+- **Implementación:**
+  - Core: `omnix_core/governance/unified_control_layer.py` — UnifiedDecisionControlLayer, PillarResult, ControlReceipt
+  - API: 5 endpoints en `omnix_web/api/gov_blueprint.py` — POST /control/evaluate, GET /control/schema, GET /control/health, GET /control/receipts, GET /control/receipts/\<id\>
+  - DB: Tabla `udcl_control_receipts` (creada lazy, 3 índices)
+  - Pillars coordinados: SAE (Layer 0) → SPG (Layer 0b) → CBG (Layer 0c, opt-in) → 11-Checkpoint+TIE (Layer 1-2) → PQC Receipt (Layer 3)
+  - ControlReceipt: `control_id` UDCL-{hex}, per-pillar latency, `control_hash` SHA-256, `blocking_pillar` field
+  - Webhook: `event: "control.evaluated"` usando infraestructura ADR-053
+- **Status:** ✅ IMPLEMENTADO — May 6, 2026 (ADR-138)
 
 #### MOD-013: Multi-Domain Risk Governance
 - **Descripción:** Unifica riesgo financiero, técnico, legal y humano en un único score de gobernanza. Permite a clientes no-financieros usar OMNIX como capa de control.

@@ -53,7 +53,8 @@ OMNIX QUANTUM provides a robust decision governance platform that enables audita
 *   `omnix_core/governance/state_provenance_guard.py`: State Provenance Guard logic.
 *   `omnix_core/evidence/receipt_archival.py`: Receipt archival (HOT/WARM/COLD storage).
 *   `omnix_core/governance/oversight_surface.py`: Oversight Surface Engine for human supervision quality.
-*   Database schema for `decision_receipts`, `b2b_clients`, `avm_calibration_snapshots`, `client_thresholds`, `vc_revocation_registry`, `execution_receipts` etc. is defined implicitly by the Python models and `ensure_table()` calls.
+*   `omnix_core/governance/unified_control_layer.py`: MOD-014 UDCL — UnifiedDecisionControlLayer, PillarResult, ControlReceipt (ADR-138).
+*   Database schema for `decision_receipts`, `b2b_clients`, `avm_calibration_snapshots`, `client_thresholds`, `vc_revocation_registry`, `execution_receipts`, `udcl_control_receipts` etc. is defined implicitly by the Python models and `ensure_table()` calls.
 
 ## Architecture decisions
 
@@ -86,7 +87,7 @@ OMNIX QUANTUM provides a robust decision governance platform that enables audita
 
 ## Pointers
 
-*   **ADRs:** `docs/adr/` — 137 total (ADR-136: Robotics vertical · ADR-137: Islamic Credit vertical)
+*   **ADRs:** `docs/adr/` — 138 total (ADR-136: Robotics vertical · ADR-137: Islamic Credit vertical · ADR-138: Unified Decision Control Layer / MOD-014)
 *   **Full Architecture:** `docs/current/ARCHITECTURE.md`
 *   **Deployment Operations:** `docs/operations/DEPLOYMENT.md`
 *   **Governance Modules Roadmap:** `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md` § GOVERNANCE MODULES ROADMAP (Mar 2026)

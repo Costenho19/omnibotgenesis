@@ -2,8 +2,8 @@
 
 **Internal Build Reference**: 6.5.4e  
 **Actualizado**: 15 de Abril 2026  
-**Estado**: Producción 24/7 — 11-checkpoint pipeline + EBIP + TIE + 9 Verticals activos  
-**Último Cambio**: TelegramBotAdapter activado (handler fix 15-Apr-2026) + ADR-085 Cross-Border Semantic Governance — Apr 15, 2026
+**Estado**: Producción 24/7 — 11-checkpoint pipeline + EBIP + TIE + 10 Verticals activos  
+**Último Cambio**: MOD-014 Unified Decision Control Layer (ADR-138) — May 6, 2026
 
 ---
 
@@ -715,6 +715,55 @@ Modern prompt engineering architecture with language-neutral base prompts:
 - `language_code='auto'` as DB default
 - `trading_terms` dictionaries for intent detection only (not language restriction)
 - TTS audio generated in detected response language
+
+---
+
+## MOD-014: Unified Decision Control Layer — ADR-138 (May 6, 2026)
+
+Capa de orquestación B2B que coordina todos los pilares de gobernanza en secuencia estricta.
+Fail-closed: cualquier pilar obligatorio no-advisory que falle → BLOCKED.
+Retorna `ControlReceipt` con visibilidad por pilar, latency breakdown y sello SHA-256 tamper-evident.
+
+```
+POST /api/governance/control/evaluate
+    │
+    ├── [Layer 0]   SAE  — Structural Admissibility Engine        ADR-092
+    ├── [Layer 0b]  SPG  — State Provenance Guard [advisory]      ADR-133
+    ├── [Layer 0c]  CBG  — Conditional Bind Gate [opt-in]         ADR-135
+    ├── [Layer 1-2] CP   — 11-Checkpoint Pipeline + TIE           ADR-028/053
+    └── [Layer 3]   PQC  — Cryptographic Receipt (Dilithium-3)    ADR-096
+```
+
+| Componente | Clase / Archivo | Función |
+|------------|-----------------|---------|
+| **UnifiedDecisionControlLayer** | `omnix_core/governance/unified_control_layer.py` | Orquestador — 5 pillars en secuencia |
+| **PillarResult** | `unified_control_layer.py` | DTO por pilar: passed, advisory, latency_ms, detail |
+| **ControlReceipt** | `unified_control_layer.py` | Resultado final: control_id, decision, blocking_pillar, control_hash |
+| **UDCL API** | `omnix_web/api/gov_blueprint.py` | 5 endpoints /control/\* |
+| **udcl_control_receipts** | PostgreSQL | Tabla audit trail (creada lazy, 3 índices) |
+
+**Endpoints:**
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| GET  | `/api/governance/control/schema`                 | Público  | Catálogo de pilares, invariants, schema |
+| GET  | `/api/governance/control/health`                 | Cliente  | Estado en tiempo real de cada pilar |
+| POST | `/api/governance/control/evaluate`               | Cliente  | Evaluación multi-pilar completa |
+| GET  | `/api/governance/control/receipts/<control_id>`  | Cliente  | Fetch receipt por ID |
+| GET  | `/api/governance/control/receipts`               | Cliente  | Lista paginada de receipts del cliente |
+
+**ControlReceipt fields:**
+- `control_id`: UDCL-{16 hex} — identificador único de la evaluación
+- `blocking_pillar`: nombre del primer pilar que bloqueó, o null
+- `control_hash`: SHA-256 de `control_id + decision + pillar outcomes` (tamper-evident)
+- `pillar_latency_ms`: desglose de latencia por pilar
+
+**Invariants de diseño:**
+- Todos los resultados por pilar se retornan incluso en BLOCKED — transparencia total
+- SPG (Layer 0b) es advisory — AMBIGUOUS avisa pero no bloquea solo
+- CBG (Layer 0c) es opt-in — activar con `cbg_enabled=true` en el body
+- PQC receipt se genera para TODAS las decisiones, incluyendo BLOCKED
+- Exception en pilar mandatorio → BLOCKED con `blocking_pillar="system_error"`
 
 ---
 
