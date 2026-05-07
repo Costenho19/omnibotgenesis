@@ -156,7 +156,7 @@ class UnifiedDecisionControlLayer:
         response_dict = receipt.to_dict()
     """
 
-    VERSION = "1.0.0"
+    VERSION = "1.2.0"
     ADR     = "ADR-138"
 
     PILLAR_CATALOG = [
@@ -197,6 +197,21 @@ class UnifiedDecisionControlLayer:
                 "Opt-in gate. When SPG returns AMBIGUOUS above severity threshold, "
                 "CBG blocks the bind and requires explicit human attestation before "
                 "consequence is allowed. Disabled by default — enable via cbg_enabled=true."
+            ),
+        },
+        {
+            "id":        "context_admission_gate",
+            "layer":     "Layer 0d",
+            "name":      "Context Admission Gate",
+            "adr":       "ADR-050",
+            "mandatory": False,
+            "advisory":  False,
+            "description": (
+                "Opt-in session-level gate. Evaluates GLOBAL market conditions before any "
+                "individual signal enters the checkpoint pipeline: volatility, cross-pair "
+                "correlation, liquidity score, macro risk. Fail-closed: exception → BLOCKED. "
+                "Disabled by default — enable via cag_enabled=true. "
+                "Parameters supplied via metadata.cag_* keys (volatility, correlation, liquidity, macro_risk)."
             ),
         },
         {
@@ -496,6 +511,72 @@ class UnifiedDecisionControlLayer:
                 },
             )
 
+    # ── Layer 0d: CAG — Context Admission Gate (opt-in) ──────────────────────
+
+    def _run_cag(
+        self,
+        domain:               str,
+        global_volatility:    float,
+        cross_pair_correlation: float,
+        liquidity_score:      float,
+        macro_risk:           float,
+    ) -> PillarResult:
+        """
+        Session-level pre-admission gate — ADR-050.
+
+        Evaluates global market conditions before any individual signal enters
+        the checkpoint pipeline. Parameters are extracted from metadata.cag_* keys.
+
+        Fail-closed: any module exception → BLOCKED (ADR-116).
+        Disabled path: pass-through with evaluation_state=DISABLED.
+        """
+        t0 = time.perf_counter()
+        try:
+            from omnix_core.governance.context_admission_gate import ContextAdmissionGate
+            gate   = ContextAdmissionGate()
+            result = gate.evaluate(
+                global_volatility      = global_volatility,
+                cross_pair_correlation = cross_pair_correlation,
+                liquidity_score        = liquidity_score,
+                macro_risk             = macro_risk,
+            )
+            passed = result.admitted or result.pass_through
+            return PillarResult(
+                pillar    = "context_admission_gate",
+                layer     = "Layer 0d",
+                passed    = passed,
+                advisory  = False,
+                latency_ms= self._elapsed_ms(t0),
+                detail    = {
+                    "admitted":            result.admitted,
+                    "pass_through":        result.pass_through,
+                    "evaluation_state":    result.evaluation_state,
+                    "admission_score":     result.admission_score,
+                    "reason":              result.reason,
+                    "global_volatility":   global_volatility,
+                    "cross_pair_correlation": cross_pair_correlation,
+                    "liquidity_score":     liquidity_score,
+                    "macro_risk":          macro_risk,
+                    "adr": "ADR-050",
+                },
+            )
+        except Exception as exc:
+            logger.error("[UDCL][CAG] fail-closed exception: %s", exc)
+            return PillarResult(
+                pillar    = "context_admission_gate",
+                layer     = "Layer 0d",
+                passed    = False,
+                advisory  = False,
+                latency_ms= self._elapsed_ms(t0),
+                detail    = {
+                    "admitted":         False,
+                    "evaluation_state": "FAIL_CLOSED",
+                    "reason":           f"CAG module error — fail-closed per ADR-116: {str(exc)[:120]}",
+                    "adr":              "ADR-050",
+                },
+                error = str(exc)[:200],
+            )
+
     # ── Layer 1-2: 11-Checkpoint Pipeline + TIE ──────────────────────────────
 
     def _run_checkpoint_pipeline(
@@ -776,12 +857,13 @@ class UnifiedDecisionControlLayer:
         checkpoint_overrides: Optional[list] = None,
         cbg_enabled:          bool           = False,
         ctag_enabled:         bool           = False,
+        cag_enabled:          bool           = False,
     ) -> ControlReceipt:
         """
         Full multi-pillar governance evaluation. Returns ControlReceipt.
 
         Execution order:
-          SAE → SPG → [CBG] → 11-Checkpoint + TIE → PQC Receipt → SBE → [CTAG]
+          SAE → SPG → [CBG] → [CAG] → 11-Checkpoint + TIE → PQC Receipt → SBE → [CTAG]
 
         Fail-closed: any mandatory non-advisory pillar failure → BLOCKED.
         Fail-open: advisory pillar (SPG) failure → warning only, continues.
@@ -790,6 +872,13 @@ class UnifiedDecisionControlLayer:
           APPROVED | NARROW | QUARANTINE | REBOUND | HOLD | BLOCKED
 
         Args:
+            cag_enabled:  If True, Context Admission Gate (Layer 0d) runs before the
+                          checkpoint pipeline. Supply global market conditions via:
+                            metadata["cag_volatility"]    — composite vol index (0–100)
+                            metadata["cag_correlation"]   — cross-pair correlation (0–100)
+                            metadata["cag_liquidity"]     — liquidity score (0–100)
+                            metadata["cag_macro_risk"]    — macro risk composite (0–100)
+                          Fail-closed: exception → BLOCKED per ADR-116.
             ctag_enabled: If True, Commit-Time Admissibility Gate (Layer 5) runs.
                           Requires metadata["ctag_original_control"] to be set.
         """
@@ -823,6 +912,23 @@ class UnifiedDecisionControlLayer:
                 return self._blocked(
                     control_id, "cbg",
                     cbg_r.detail.get("reason", "Conditional bind gate blocked — human attestation required"),
+                    pillar_results, domain, asset, t_total, cbg_enabled=cbg_enabled,
+                )
+
+        # ── Layer 0d: CAG — Context Admission Gate (opt-in) ───────────────────
+        if cag_enabled:
+            cag_r = self._run_cag(
+                domain               = domain,
+                global_volatility    = float(metadata.get("cag_volatility", 0.0)),
+                cross_pair_correlation = float(metadata.get("cag_correlation", 0.0)),
+                liquidity_score      = float(metadata.get("cag_liquidity", 0.0)),
+                macro_risk           = float(metadata.get("cag_macro_risk", 0.0)),
+            )
+            pillar_results.append(cag_r)
+            if not cag_r.passed:
+                return self._blocked(
+                    control_id, "context_admission_gate",
+                    cag_r.detail.get("reason", "Context Admission Gate: global market conditions inadmissible"),
                     pillar_results, domain, asset, t_total, cbg_enabled=cbg_enabled,
                 )
 
@@ -949,6 +1055,7 @@ class UnifiedDecisionControlLayer:
                 "compliance_config":  "dict (optional) — gate activation params",
                 "cbg_enabled":        "bool (optional, default false) — enable Conditional Bind Gate (Layer 0c)",
                 "ctag_enabled":       "bool (optional, default false) — enable Commit-Time Admissibility Gate (Layer 5). Requires metadata.ctag_original_control.",
+                "cag_enabled":        "bool (optional, default false) — enable Context Admission Gate (Layer 0d). Supply market conditions via metadata.cag_* keys.",
             },
             "control_receipt_fields": {
                 "control_id":        "UDCL-{16 hex} — unique ID for this multi-pillar evaluation",
@@ -975,6 +1082,7 @@ class UnifiedDecisionControlLayer:
                 "control_hash seals the entire multi-pillar outcome — tamper-evident.",
                 "SPG (Layer 0b) is advisory — AMBIGUOUS warns but does not block alone.",
                 "CBG (Layer 0c) is opt-in — enable via cbg_enabled=true in request.",
+                "CAG (Layer 0d) is opt-in — enable via cag_enabled=true. Fail-closed per ADR-116.",
                 "PQC receipt is generated for ALL decisions including BLOCKED.",
             ],
         }
@@ -988,10 +1096,11 @@ class UnifiedDecisionControlLayer:
         """
         health = {}
         checks = [
-            ("sae",                "omnix_core.governance.structural_admissibility_engine", "get_layer0_metrics"),
-            ("spg",                "omnix_core.governance.state_provenance_guard",          "evaluate_provenance"),
-            ("cbg",                "omnix_core.governance.conditional_bind_gate",           "ConditionalBindGate"),
-            ("checkpoint_pipeline","omnix_core.governance.external_evaluator",              "GovernanceEvaluationEngine"),
+            ("sae",                  "omnix_core.governance.structural_admissibility_engine", "get_layer0_metrics"),
+            ("spg",                  "omnix_core.governance.state_provenance_guard",          "evaluate_provenance"),
+            ("cbg",                  "omnix_core.governance.conditional_bind_gate",           "ConditionalBindGate"),
+            ("context_admission_gate","omnix_core.governance.context_admission_gate",         "ContextAdmissionGate"),
+            ("checkpoint_pipeline",  "omnix_core.governance.external_evaluator",              "GovernanceEvaluationEngine"),
         ]
         for pillar_id, module_path, symbol in checks:
             t0 = time.perf_counter()

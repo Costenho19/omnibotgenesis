@@ -3842,7 +3842,7 @@ def api_udcl_evaluate():
 
     _ALLOWED_UDCL_KEYS = {
         "signals", "asset", "domain", "metadata",
-        "compliance_config", "cbg_enabled", "include_vc",
+        "compliance_config", "cbg_enabled", "ctag_enabled", "cag_enabled", "include_vc",
     }
     unknown = set(body.keys()) - _ALLOWED_UDCL_KEYS
     if unknown:
@@ -3868,7 +3868,9 @@ def api_udcl_evaluate():
     if not isinstance(cc_raw, dict):
         return jsonify({"error": '"compliance_config" must be a JSON object or omitted.', "status": 400}), 400
 
-    cbg_enabled = bool(body.get("cbg_enabled", False))
+    cbg_enabled  = bool(body.get("cbg_enabled",  False))
+    ctag_enabled = bool(body.get("ctag_enabled", False))
+    cag_enabled  = bool(body.get("cag_enabled",  False))
 
     udcl = _load_udcl()
     if udcl is None:
@@ -3907,6 +3909,8 @@ def api_udcl_evaluate():
             compliance_config    = compliance_config,
             checkpoint_overrides = clean_overrides or None,
             cbg_enabled          = cbg_enabled,
+            ctag_enabled         = ctag_enabled,
+            cag_enabled          = cag_enabled,
         )
     except Exception as exc:
         ref_id = str(uuid.uuid4())[:8]
@@ -3959,6 +3963,8 @@ def api_udcl_evaluate():
         thresholds_source,
         client_ip,
     )
+    receipt_dict["cag_enabled"]  = cag_enabled
+    receipt_dict["ctag_enabled"] = ctag_enabled
 
     # Webhook push (reuse existing infrastructure — same as /evaluate)
     try:
@@ -4178,3 +4184,605 @@ def api_execution_integrity_status():
                 'ebip_version': '1.0',
             }
         }), 200
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OSCILLATION INSIGHT ENGINE  (ADR-134)
+# GET /api/analytics/oscillation
+# Public endpoint — aggregated temporal governance metrics, no PII.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@governance_bp.route('/api/analytics/oscillation', methods=['GET'])
+def api_oscillation_insight():
+    """
+    GET /api/analytics/oscillation
+
+    Temporal governance degradation analysis — ADR-134.
+
+    Detects pre-capture governance degradation through four complementary
+    longitudinal analysis methods operating on the permanent decision record.
+
+    Query parameters:
+      domain    — governance vertical (trading, credit, …) or omit for all domains.
+      num_weeks — rolling window count (1–26, default 8).
+      view      — full | profile | phases | asymmetry | dampening (default: full).
+
+    Authentication: None — aggregated metrics only, no PII.
+    """
+    domain    = request.args.get("domain")   or None
+    view      = request.args.get("view",     "full").strip().lower()
+    try:
+        num_weeks = int(request.args.get("num_weeks", "8"))
+        if not (1 <= num_weeks <= 26):
+            return jsonify({
+                "error":  "num_weeks must be between 1 and 26.",
+                "status": 400,
+            }), 400
+    except (ValueError, TypeError):
+        return jsonify({"error": "num_weeks must be an integer.", "status": 400}), 400
+
+    _VALID_VIEWS = {"full", "profile", "phases", "asymmetry", "dampening"}
+    if view not in _VALID_VIEWS:
+        return jsonify({
+            "error":  f"view must be one of: {', '.join(sorted(_VALID_VIEWS))}.",
+            "status": 400,
+        }), 400
+
+    try:
+        from omnix_core.governance.oscillation_insight import OscillationInsightEngine
+        engine = OscillationInsightEngine()
+
+        if view == "profile":
+            data = engine.oscillation_profile(domain=domain, num_weeks=num_weeks)
+        elif view == "phases":
+            data = engine.phase_segmented_analysis(domain=domain, num_weeks=num_weeks)
+        elif view == "asymmetry":
+            data = engine.hesitation_asymmetry(domain=domain)
+        elif view == "dampening":
+            data = engine.dampening_curve(domain=domain, num_weeks=num_weeks)
+        else:
+            data = engine.oscillation_report(domain=domain, num_weeks=num_weeks)
+
+    except Exception as exc:
+        logger.error("[OIE] oscillation endpoint error: %s", exc)
+        return jsonify({
+            "available": False,
+            "error":     "Oscillation engine unavailable.",
+            "adr":       "ADR-134",
+        }), 503
+
+    resp = jsonify({"status": "ok", "adr": "ADR-134", **data})
+    resp.headers["X-OMNIX-ADR"]   = "ADR-134"
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return resp, 200
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ANOMALY RESPONSE ENGINE  (ADR-129)
+# POST /api/governance/anomaly/response
+# GET  /api/governance/anomaly/active
+# GET  /api/governance/anomaly/summary
+# GET  /api/governance/anomaly/history
+# POST /api/governance/anomaly/<rec_id>/acknowledge
+# POST /api/governance/anomaly/<rec_id>/resolve
+#
+# Authentication: X-API-Key (B2B clients).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _get_anomaly_engine():
+    """Lazy-load AnomalyResponseEngine with process-level singleton."""
+    import os
+    from omnix_core.governance.anomaly_response import AnomalyResponseEngine
+    return AnomalyResponseEngine(db_url=os.environ.get("DATABASE_URL"))
+
+
+@governance_bp.route('/api/governance/anomaly/response', methods=['POST'])
+def api_anomaly_response():
+    """
+    POST /api/governance/anomaly/response
+
+    Run a full anomaly detection → recommendation generation → persistence cycle.
+    Calls CalibrationInsightEngine.detect_anomalies() then maps each anomaly
+    to a traceable, reversible, non-destructive governance recommendation.
+
+    Request body (JSON):
+      { "domain": "trading" }   — governance vertical, or omit for all domains.
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-129.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    body   = request.get_json(force=True, silent=True) or {}
+    domain = body.get("domain") if isinstance(body, dict) else None
+
+    try:
+        engine = _get_anomaly_engine()
+        result = engine.full_response_cycle(domain=domain)
+    except Exception as exc:
+        logger.error("[ARE] full_response_cycle error: %s", exc)
+        return jsonify({"error": "Anomaly response engine unavailable.", "status": 503}), 503
+
+    resp = jsonify({"status": "ok", "adr": "ADR-129", **result})
+    resp.headers["X-OMNIX-ADR"] = "ADR-129"
+    return resp, 200
+
+
+@governance_bp.route('/api/governance/anomaly/active', methods=['GET'])
+def api_anomaly_active():
+    """
+    GET /api/governance/anomaly/active
+
+    List all ACTIVE governance recommendations.
+
+    Query parameters:
+      domain — filter by governance vertical (optional).
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-129.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    domain = request.args.get("domain") or None
+
+    try:
+        engine = _get_anomaly_engine()
+        active = engine.get_active(domain=domain)
+    except Exception as exc:
+        logger.error("[ARE] get_active error: %s", exc)
+        return jsonify({"error": "Anomaly engine unavailable.", "status": 503}), 503
+
+    resp = jsonify({
+        "status":  "ok",
+        "adr":     "ADR-129",
+        "domain":  domain,
+        "count":   len(active),
+        "recommendations": active,
+    })
+    resp.headers["X-OMNIX-ADR"] = "ADR-129"
+    return resp, 200
+
+
+@governance_bp.route('/api/governance/anomaly/summary', methods=['GET'])
+def api_anomaly_summary():
+    """
+    GET /api/governance/anomaly/summary
+
+    Summary counts by status and action_code for all governance recommendations.
+
+    Query parameters:
+      domain — filter by governance vertical (optional).
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-129.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    domain = request.args.get("domain") or None
+
+    try:
+        engine  = _get_anomaly_engine()
+        summary = engine.summary(domain=domain)
+    except Exception as exc:
+        logger.error("[ARE] summary error: %s", exc)
+        return jsonify({"error": "Anomaly engine unavailable.", "status": 503}), 503
+
+    resp = jsonify({"status": "ok", "adr": "ADR-129", **summary})
+    resp.headers["X-OMNIX-ADR"] = "ADR-129"
+    return resp, 200
+
+
+@governance_bp.route('/api/governance/anomaly/history', methods=['GET'])
+def api_anomaly_history():
+    """
+    GET /api/governance/anomaly/history
+
+    Full recommendation history (all statuses), newest first.
+
+    Query parameters:
+      domain — filter by governance vertical (optional).
+      limit  — max records (default 50, max 200).
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-129.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    domain = request.args.get("domain") or None
+    try:
+        limit = min(int(request.args.get("limit", "50")), 200)
+    except (ValueError, TypeError):
+        limit = 50
+
+    try:
+        engine  = _get_anomaly_engine()
+        history = engine.get_history(domain=domain, limit=limit)
+    except Exception as exc:
+        logger.error("[ARE] get_history error: %s", exc)
+        return jsonify({"error": "Anomaly engine unavailable.", "status": 503}), 503
+
+    resp = jsonify({
+        "status":  "ok",
+        "adr":     "ADR-129",
+        "domain":  domain,
+        "count":   len(history),
+        "limit":   limit,
+        "recommendations": history,
+    })
+    resp.headers["X-OMNIX-ADR"] = "ADR-129"
+    return resp, 200
+
+
+@governance_bp.route('/api/governance/anomaly/<rec_id>/acknowledge', methods=['POST'])
+def api_anomaly_acknowledge(rec_id: str):
+    """
+    POST /api/governance/anomaly/<rec_id>/acknowledge
+
+    Acknowledge an ACTIVE recommendation. Transitions ACTIVE → ACKNOWLEDGED.
+
+    Request body (JSON):
+      { "acknowledged_by": "operator_name_or_id" }
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-129.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    if not rec_id or len(rec_id) > 64:
+        return jsonify({"error": "Invalid recommendation ID.", "status": 400}), 400
+
+    body            = request.get_json(force=True, silent=True) or {}
+    acknowledged_by = str(body.get("acknowledged_by", client.get("client_id", "unknown")))[:128]
+
+    try:
+        engine  = _get_anomaly_engine()
+        success = engine.acknowledge(rec_id=rec_id, acknowledged_by=acknowledged_by)
+    except Exception as exc:
+        logger.error("[ARE] acknowledge error rec_id=%s: %s", rec_id, exc)
+        return jsonify({"error": "Anomaly engine unavailable.", "status": 503}), 503
+
+    if not success:
+        return jsonify({
+            "error":  "Recommendation not found, already acknowledged, or not in ACTIVE state.",
+            "rec_id": rec_id,
+            "status": 404,
+        }), 404
+
+    return jsonify({
+        "status":          "ok",
+        "rec_id":          rec_id,
+        "new_status":      "ACKNOWLEDGED",
+        "acknowledged_by": acknowledged_by,
+        "adr":             "ADR-129",
+    }), 200
+
+
+@governance_bp.route('/api/governance/anomaly/<rec_id>/resolve', methods=['POST'])
+def api_anomaly_resolve(rec_id: str):
+    """
+    POST /api/governance/anomaly/<rec_id>/resolve
+
+    Resolve a recommendation. Transitions ACTIVE | ACKNOWLEDGED → RESOLVED.
+
+    Request body (JSON):
+      { "resolved_note": "optional note describing the resolution" }
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-129.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    if not rec_id or len(rec_id) > 64:
+        return jsonify({"error": "Invalid recommendation ID.", "status": 400}), 400
+
+    body          = request.get_json(force=True, silent=True) or {}
+    resolved_note = str(body.get("resolved_note", ""))[:512]
+
+    try:
+        engine  = _get_anomaly_engine()
+        success = engine.resolve(rec_id=rec_id, resolved_note=resolved_note)
+    except Exception as exc:
+        logger.error("[ARE] resolve error rec_id=%s: %s", rec_id, exc)
+        return jsonify({"error": "Anomaly engine unavailable.", "status": 503}), 503
+
+    if not success:
+        return jsonify({
+            "error":  "Recommendation not found or already RESOLVED/EXPIRED.",
+            "rec_id": rec_id,
+            "status": 404,
+        }), 404
+
+    return jsonify({
+        "status":        "ok",
+        "rec_id":        rec_id,
+        "new_status":    "RESOLVED",
+        "resolved_note": resolved_note,
+        "adr":           "ADR-129",
+    }), 200
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXECUTION INTEGRITY LAYER  (ADR-131)
+# GET  /api/governance/execution/receipts
+# GET  /api/governance/execution/receipts/<order_id>
+# POST /api/governance/execution/intent
+#
+# Authentication: X-API-Key (B2B clients).
+# Closes the decision → execution audit chain per ADR-131.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _get_execution_receipt_engine():
+    """Lazy-load ExecutionReceiptRegistry (ADR-131)."""
+    from omnix_web.api.omnix_engine.execution_receipt import ExecutionReceiptRegistry
+    engine = ExecutionReceiptRegistry()
+    engine.ensure_table()
+    return engine
+
+
+@governance_bp.route('/api/governance/execution/receipts', methods=['GET'])
+def api_execution_receipts_list():
+    """
+    GET /api/governance/execution/receipts
+
+    List execution receipts for the authenticated client, newest first.
+
+    Query parameters:
+      decision_receipt_id — filter by linked governance decision ID.
+      status              — filter by final_status: PENDING | FILLED | PARTIAL | FAILED.
+      limit               — max records (default 20, max 100).
+      offset              — pagination offset (default 0).
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-131.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    client_id           = client["client_id"]
+    decision_receipt_id = request.args.get("decision_receipt_id") or None
+    status_filter       = request.args.get("status") or None
+    try:
+        limit  = min(int(request.args.get("limit",  "20")), 100)
+        offset = max(int(request.args.get("offset", "0")),   0)
+    except (ValueError, TypeError):
+        limit, offset = 20, 0
+
+    _VALID_STATUSES = {"PENDING", "FILLED", "PARTIAL", "FAILED"}
+    if status_filter and status_filter.upper() not in _VALID_STATUSES:
+        return jsonify({
+            "error":  f"status must be one of: {', '.join(sorted(_VALID_STATUSES))}.",
+            "status": 400,
+        }), 400
+
+    try:
+        import os
+        import psycopg2
+        import psycopg2.extras
+        db_url = os.environ.get("DATABASE_URL")
+        if not db_url:
+            return jsonify({"error": "Database unavailable.", "status": 503}), 503
+
+        conn = psycopg2.connect(db_url)
+        conn.cursor_factory = psycopg2.extras.RealDictCursor
+        cur = conn.cursor()
+
+        where_clauses = ["decision_receipt_id IS NOT NULL"]
+        params: list = []
+
+        if decision_receipt_id:
+            where_clauses.append("decision_receipt_id = %s")
+            params.append(decision_receipt_id)
+        if status_filter:
+            where_clauses.append("final_status = %s")
+            params.append(status_filter.upper())
+
+        where_sql = " AND ".join(where_clauses)
+
+        cur.execute(f"""
+            SELECT
+                order_id, decision_receipt_id, symbol, side, size_usd,
+                requested_price, requested_quantity, executed_price,
+                filled_quantity, fill_ratio, slippage_bps,
+                execution_style, final_status, failure_reason,
+                receipt_hash, vc_issued, created_at, updated_at
+            FROM execution_receipts
+            WHERE {where_sql}
+            ORDER BY created_at DESC
+            LIMIT %s OFFSET %s
+        """, params + [limit, offset])
+
+        rows = cur.fetchall() or []
+
+        cur.execute(f"SELECT COUNT(*) FROM execution_receipts WHERE {where_sql}", params)
+        total = (cur.fetchone() or {}).get("count", 0)
+
+        cur.close()
+        conn.close()
+
+        items = []
+        for r in rows:
+            item = dict(r)
+            if item.get("created_at"):
+                item["created_at"] = str(item["created_at"])
+            if item.get("updated_at"):
+                item["updated_at"] = str(item["updated_at"])
+            items.append(item)
+
+    except Exception as exc:
+        logger.error("[EIL] execution receipts list error: %s", exc)
+        return jsonify({"error": "Execution receipts unavailable.", "status": 503}), 503
+
+    resp = jsonify({
+        "status": "ok",
+        "adr":    "ADR-131",
+        "total":  int(total),
+        "limit":  limit,
+        "offset": offset,
+        "items":  items,
+    })
+    resp.headers["X-OMNIX-ADR"] = "ADR-131"
+    return resp, 200
+
+
+@governance_bp.route('/api/governance/execution/receipts/<order_id>', methods=['GET'])
+def api_execution_receipt_get(order_id: str):
+    """
+    GET /api/governance/execution/receipts/<order_id>
+
+    Fetch a single execution receipt by order_id.
+    Returns the full ExecutionReceipt including audit_trail and exchange_response.
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-131.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    if not order_id or len(order_id) > 128:
+        return jsonify({"error": "Invalid order_id.", "status": 400}), 400
+
+    try:
+        import os, psycopg2, psycopg2.extras
+        db_url = os.environ.get("DATABASE_URL")
+        if not db_url:
+            return jsonify({"error": "Database unavailable.", "status": 503}), 503
+
+        conn = psycopg2.connect(db_url)
+        conn.cursor_factory = psycopg2.extras.RealDictCursor
+        cur  = conn.cursor()
+        cur.execute(
+            "SELECT * FROM execution_receipts WHERE order_id = %s",
+            (order_id,),
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not row:
+            return jsonify({
+                "error":    f"Execution receipt not found for order_id: {order_id}",
+                "order_id": order_id,
+                "status":   404,
+            }), 404
+
+        item = dict(row)
+        for ts_col in ("created_at", "updated_at"):
+            if item.get(ts_col):
+                item[ts_col] = str(item[ts_col])
+
+    except Exception as exc:
+        logger.error("[EIL] execution receipt get error order_id=%s: %s", order_id, exc)
+        return jsonify({"error": "Execution receipt unavailable.", "status": 503}), 503
+
+    resp = jsonify({"status": "ok", "adr": "ADR-131", "execution_receipt": item})
+    resp.headers["X-OMNIX-ADR"] = "ADR-131"
+    return resp, 200
+
+
+@governance_bp.route('/api/governance/execution/intent', methods=['POST'])
+def api_execution_log_intent():
+    """
+    POST /api/governance/execution/intent
+
+    Log an ExecutionIntent before sending an order to the exchange.
+
+    Invariant 2 (ADR-131): The intent record is captured BEFORE the order is sent.
+    If this call fails, the trade MUST NOT proceed (fail-closed).
+
+    Request body (JSON):
+      {
+        "order_id":             "string — caller-generated unique order ID",
+        "decision_receipt_id":  "string — links to the governance decision that authorised this trade",
+        "symbol":               "string — e.g. BTC-USD",
+        "side":                 "BUY | SELL",
+        "size_usd":             float,
+        "execution_style":      "string (optional) — e.g. MARKET, LIMIT",
+        "requested_price":      float (optional),
+        "requested_quantity":   float (optional)
+      }
+
+    Returns: { "status": "ok", "order_id": "...", "intent_logged": true, "adr": "ADR-131" }
+
+    Authentication: X-API-Key (B2B clients).
+    ADR-131.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    if not request.is_json:
+        return jsonify({"error": "Request must be Content-Type: application/json", "status": 400}), 400
+
+    body = request.get_json(force=True, silent=True) or {}
+    if not isinstance(body, dict):
+        return jsonify({"error": "Invalid JSON body.", "status": 400}), 400
+
+    required = ["order_id", "decision_receipt_id", "symbol", "side", "size_usd"]
+    missing  = [f for f in required if not body.get(f)]
+    if missing:
+        return jsonify({
+            "error":   f"Missing required fields: {', '.join(missing)}",
+            "status":  400,
+        }), 400
+
+    side = str(body.get("side", "")).upper()
+    if side not in ("BUY", "SELL"):
+        return jsonify({"error": "side must be BUY or SELL.", "status": 400}), 400
+
+    try:
+        size_usd = float(body["size_usd"])
+    except (ValueError, TypeError):
+        return jsonify({"error": "size_usd must be a number.", "status": 400}), 400
+
+    try:
+        from omnix_web.api.omnix_engine.execution_receipt import (
+            ExecutionReceiptRegistry, ExecutionIntent,
+        )
+        engine = ExecutionReceiptRegistry()
+        engine.ensure_table()
+
+        intent = ExecutionIntent(
+            order_id            = str(body["order_id"])[:128],
+            decision_receipt_id = str(body["decision_receipt_id"])[:128],
+            symbol              = str(body["symbol"])[:32],
+            side                = side,
+            size_usd            = size_usd,
+            execution_style     = str(body.get("execution_style", ""))[:32],
+            requested_price     = float(body["requested_price"])    if body.get("requested_price")    else None,
+            requested_quantity  = float(body["requested_quantity"]) if body.get("requested_quantity") else None,
+        )
+
+        receipt_id = engine.log_intent(intent)
+
+    except Exception as exc:
+        logger.error("[EIL] log_intent error: %s", exc)
+        return jsonify({
+            "error":        "Failed to log execution intent. Do not proceed with the trade. (ADR-131 §Invariant 2)",
+            "intent_logged": False,
+            "status":       503,
+        }), 503
+
+    resp = jsonify({
+        "status":        "ok",
+        "order_id":      intent.order_id,
+        "receipt_id":    receipt_id,
+        "intent_logged": True,
+        "adr":           "ADR-131",
+        "invariant":     "Intent captured pre-execution. Decision→execution audit chain preserved.",
+    })
+    resp.headers["X-OMNIX-ADR"] = "ADR-131"
+    return resp, 201
