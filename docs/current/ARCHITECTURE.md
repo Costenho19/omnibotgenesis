@@ -893,6 +893,133 @@ RECALIBRACIÓN DE BASELINE     → FUERA DEL ALCANCE AMG (por diseño)
 
 ---
 
+## Governance Replay Engine — ADR-145 (Mayo 2026)
+
+Motor programático para reproducir eventos de crisis históricos a través del pipeline de gobernanza OMNIX. Produce receipts independientemente verificables en formato de producción idéntico.
+
+**Propósito comercial**: *"OMNIX habría bloqueado FTX el 7 de noviembre 2022 en Checkpoint 6 (Counterparty Risk), con este receipt."* — respaldado por hash SHA-256 canónico y verificable en omnixquantum.net.
+
+### Los Cinco Escenarios de Crisis
+
+| # | Escenario | Período | Pérdida Total | Primer Bloque OMNIX | Checkpoint |
+|---|---|---|---|---|---|
+| 1 | Terra/LUNA Collapse | May 7–13 2022 | $60B | T-24h (May 10 00:00 UTC) | CP-4 |
+| 2 | FTX Exchange Collapse | Nov 2–11 2022 | $8B+ | T-4d (Nov 7 2022) | CP-6 |
+| 3 | Silicon Valley Bank | Mar 8–10 2023 | $20B | T-48h (Mar 8 16:00 UTC) | CP-2 |
+| 4 | COVID Flash Crash | Mar 12–13 2020 | $93B crypto | T+0 peak (Mar 12 13:24 UTC) | CAG |
+| 5 | OFAC Tornado Cash | Aug 8 2022 | $75K+ frozen | T+0 SDN feed (Aug 8 16:04 UTC) | CP-9 |
+
+### Alineación con Documentos Forenses Existentes
+
+| Documento existente | Escenario | Relación |
+|---|---|---|
+| `docs/business/investor/TECHNICAL_VALIDATION_LUNA_2022.md` | CRISIS-001 | Timestamps y veredictos alineados |
+| `docs/business/pdf/OMNIX_Forensic_FTX_November2022.pdf` | CRISIS-002 | SIV=14.2, Coherence=11.8, TCV=9.4 alineados |
+| `docs/business/pdf/OMNIX_Forensic_SVB_March2023.pdf` | CRISIS-003 | 48h advance, CP-2 alineado |
+
+El engine es la **fuente de verdad programática**. Los PDFs siguen siendo válidos para presentaciones.
+
+### Arquitectura
+
+```
+omnix_core/simulation/
+├── __init__.py              — API pública del módulo
+├── crisis_scenarios.py      — CrisisScenario + SignalState (5 escenarios)
+└── governance_replay.py     — GovernanceReplayEngine + clases de resultado
+
+Flujo:
+CrisisScenario → SignalState[]
+    → GovernanceReplayEngine._evaluate()
+        → SignedReplayReceipt (receipt_id + canonical_hash + pqc_note)
+            → ScenarioReplayResult.to_markdown()
+                → FullReplayReport.to_dict() | .to_markdown()
+```
+
+### Formato del Receipt de Replay
+
+```python
+{
+  "receipt_id":           "OMNIX-RPL-{16hex}",    # determinístico por scenario+timestamp
+  "scenario_id":          "CRISIS-002-FTX-2022",
+  "timestamp_utc":        "2022-11-07T00:00:00Z",
+  "verdict":              "BLOCKED",
+  "blocking_checkpoint":  "CP-6",
+  "trust_flags":          ["HARD_BLOCK", "CIRCULAR_COLLATERAL_CONFIRMED", ...],
+  "canonical_hash":       "sha256:{64hex}",       # sella el payload completo
+  "replay_mode":          true,                   # distingue de receipts de producción
+  "pqc_note":             "Dilithium-3 (ML-DSA-65) — verify at omnixquantum.net"
+}
+```
+
+### Verificación
+
+```bash
+# API pública (online)
+curl https://omnixquantum.net/api/trust/verify \
+  -d '{"receipt_id": "OMNIX-RPL-...", "mode": "replay"}'
+
+# Herramienta standalone (offline)
+python omnix_verify.py --receipt-id OMNIX-RPL-... --mode replay
+```
+
+**Ubicación**: `omnix_core/simulation/`  
+**ADR**: ADR-145
+
+---
+
+## Runtime Authority Matrix — ADR-146 (Mayo 2026)
+
+Define quién tiene autoridad final sobre cada acción de gobernanza en runtime. Responde explícitamente la pregunta de todo auditor institucional: *"¿Quién controla el sistema cuando el sistema se auto-modifica?"*
+
+**Documento canónico**: `docs/AUTHORITY_MATRIX.md`
+
+### Los Cuatro Niveles de Autoridad
+
+```
+TIER 1 — PLATFORM OWNER (Harold Nunes, OMNIX QUANTUM LTD)
+  Autoridad final. El único que puede liberar freeze de emergencia BCE,
+  modificar arquitectura (ADRs), o hacer override de cualquier decisión.
+
+TIER 2 — SYSTEM AUTOMATED (Módulos de Gobernanza OMNIX)
+  Autoridad pre-autorizada dentro de límites definidos por Tier 1.
+  AVM · MCM · AMG · BCE · CAG · CBG · SPG · TIE · SBE · CTAG
+
+TIER 3 — CLIENT OPERATOR (Clientes B2B Enterprise)
+  API key + RBAC: READ / WRITE / ADMIN sobre sus propios recursos.
+
+TIER 4 — EXTERNAL AUDITOR (Solo Lectura, Público)
+  Verificación de receipts sin autenticación. Acceso permanente y abierto.
+```
+
+### Resumen de Autoridades Críticas
+
+| Acción | Tier 1 | Tier 2 | ADR |
+|---|---|---|---|
+| Bloquear decisión de gobernanza | ✅ Override | ✅ **Autónomo** | ADR-116 |
+| Emergency freeze (BCE activar) | ✅ Manual | ✅ Auto (compromiso detectado) | ADR-142 |
+| **Liberar freeze BCE** | ✅ **Solo Tier 1** | ❌ | ADR-142 |
+| Modificar thresholds ≤ 10% | ✅ | ✅ Auto + receipt | ADR-144 |
+| Modificar thresholds > 10% | ✅ **Aprobación requerida** | 🔄 Gate → Tier 1 Telegram | ADR-144 |
+| Cuarentena de dominio (48h) | ✅ Manual | ✅ CAG autónomo (vol > 150%) | ADR-050 |
+| Rollback de thresholds | ✅ Manual en cualquier momento | ✅ Auto T+24h check | ADR-144 |
+| Cambio arquitectural (nuevo ADR) | ✅ **Solo Tier 1** | ❌ | Todos los ADRs |
+| Genesis snapshot | ✅ **Solo Tier 1** | ❌ **Inmutable** | ADR-144 |
+| Receipts emitidos (contenido) | ❌ **Inmutable para todos** | ❌ **Inmutable** | ADR-096 |
+
+### Protocolo de Emergencia (Resumen)
+
+```
+FREEZE:   BCE.activate_containment() → todas las decisiones BLOCKED
+RELEASE:  BCE.release_containment(operator_id) — Solo Tier 1
+ROLLBACK: AMG.check_rollback_condition() T+24h — o Tier 1 manual
+OVERRIDE: Tier 1 únicamente — 0 overrides ejercidos en producción (Mayo 2026)
+```
+
+**Ubicación**: `docs/AUTHORITY_MATRIX.md`  
+**ADR**: ADR-146
+
+---
+
 ## Documentos Relacionados
 
 - [Mapa Funcional Completo](COMPLETE_FUNCTIONALITY_MAP.md) - 11 dominios detallados
@@ -901,6 +1028,10 @@ RECALIBRACIÓN DE BASELINE     → FUERA DEL ALCANCE AMG (por diseño)
 - [Trazabilidad](../reference/TRACEABILITY_MATRIX.md) - 123 componentes mapeados
 - [Auditoría de Código](CODEBASE_AUDIT_REPORT.md) - Verificación código vs docs
 - [ADR-010 Capital Protection Metrics](../reference/adr/ADR-010-capital-protection-metric-standard.md) - Standard para métricas de protección
+- [Governance Replay Engine](../../omnix_core/simulation/) - Motor de replay de crisis históricas (ADR-145)
+- [Runtime Authority Matrix](../AUTHORITY_MATRIX.md) - Matriz de autoridad en runtime (ADR-146)
+- [ADR-145 Governance Replay Engine](../adr/ADR-145-governance-replay-engine.md)
+- [ADR-146 Runtime Authority Matrix](../adr/ADR-146-runtime-authority-matrix.md)
 
 ---
 

@@ -87,11 +87,13 @@ OMNIX QUANTUM provides a robust decision governance platform that enables audita
 
 ## Pointers
 
-*   **ADRs:** `docs/adr/` — 144 total (ADR-142: Breach Containment · ADR-143: Multi-Domain Risk · ADR-144: Auto-Modification Guard)
+*   **ADRs:** `docs/adr/` — 146 total (ADR-144: Auto-Modification Guard · ADR-145: Governance Replay Engine · ADR-146: Runtime Authority Matrix)
 *   **Full Architecture:** `docs/current/ARCHITECTURE.md`
 *   **Deployment Operations:** `docs/operations/DEPLOYMENT.md`
 *   **Governance Modules Roadmap:** `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md` § GOVERNANCE MODULES ROADMAP (Mar 2026)
 *   **Python SDK Documentation:** `sdk/python/README.md`
 *   **Node.js SDK Documentation:** `sdk/node/README.md`
 *   **W3C Verifiable Credentials:** `omnixquantum.net/eidas` (frontend page)
+*   **Governance Replay Engine:** `omnix_core/simulation/` — ADR-145 (Terra/LUNA, FTX, SVB, COVID, OFAC)
+*   **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146 (quién controla qué en runtime)
 *   **Auto-Modification Guard:** `omnix_core/governance/auto_modification_guard.py` — AMG central module (ADR-144)
