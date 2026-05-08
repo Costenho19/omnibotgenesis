@@ -44,8 +44,8 @@ class RoutingAIGateway:
         self.providers = providers or {}
         self.primary_provider = primary_provider
         self.fallback_order = fallback_order or [
-            ModelProvider.GEMINI,
             ModelProvider.OPENAI,
+            ModelProvider.GEMINI,
             ModelProvider.ANTHROPIC,
         ]
         self.max_retries = max_retries

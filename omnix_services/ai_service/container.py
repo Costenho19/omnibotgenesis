@@ -29,7 +29,7 @@ def _create_routing_gateway(
 ) -> RoutingAIGateway:
     """Factory function to create and configure the routing gateway."""
     gateway = RoutingAIGateway(
-        primary_provider=ModelProvider.GEMINI,
+        primary_provider=ModelProvider.OPENAI,
         max_retries=3,
     )
     gateway.register_provider(gemini)
