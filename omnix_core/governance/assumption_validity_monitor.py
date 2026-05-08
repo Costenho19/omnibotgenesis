@@ -736,6 +736,24 @@ class AssumptionValidityMonitor:
                 pass_through=False,
             )
 
+        # ── ADR-144: AUTO_MODIFIED trust flag ──────────────────────────────────
+        # If this domain's current snapshot was produced by an automated
+        # modification (PHASE4_LIVE_DEPLOY, MCM_AUTO_TIGHTEN, etc.), surface a
+        # warning so the trust flag propagates into governance receipts.
+        auto_modified_tags = {"PHASE4_LIVE_DEPLOY", "MCM_AUTO_TIGHTEN", "AUTO_MODIFIED_SNAPSHOT", "AMG_ROLLBACK"}
+        snapshot_tags = set(snapshot.tags or [])
+        if snapshot_tags & auto_modified_tags:
+            amg_mod_id = next(
+                (t.split(":", 1)[1] for t in snapshot_tags if t.startswith("AMG:")),
+                "UNKNOWN",
+            )
+            warnings.append(
+                f"AUTO_MODIFIED_SNAPSHOT: this domain's AVM thresholds were last set "
+                f"by an automated process (tags={sorted(snapshot_tags & auto_modified_tags)}). "
+                f"modification_id={amg_mod_id}. "
+                "Governance receipts carry trust_flags.auto_modified_snapshot=true (ADR-144)."
+            )
+
         logger.debug(
             f"[AVM] VALID — domain={domain} | drift={drift_score:.1f} ≤ {effective_threshold:.1f} | "
             f"age={age_hours:.1f}h | snapshot={snapshot.snapshot_id}"
@@ -953,15 +971,17 @@ class AssumptionValidityMonitor:
             conn = psycopg2.connect(_db_url)
             cur  = conn.cursor()
 
+            from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+            cutoff_ts = _dt.now(_tz.utc) - _td(days=lookback_days)
             cur.execute(
                 """
                 SELECT veto_chain, decision
                   FROM decision_receipts
                  WHERE domain = %s
-                   AND timestamp_utc >= NOW() - INTERVAL '%s days'
+                   AND timestamp_utc >= %s
                    AND veto_chain IS NOT NULL
                 """,
-                (domain, lookback_days),
+                (domain, cutoff_ts),
             )
             rows = cur.fetchall()
             conn.close()
@@ -1034,16 +1054,24 @@ class AssumptionValidityMonitor:
         domain: str,
         optimized_thresholds: dict[str, float],
         db_url: str | None = None,
+        source: str = "PHASE4_OPT",
     ) -> bool:
         """
-        ADR-120 Phase 4: Apply optimized thresholds from Phase 3 to the live
-        AVM calibration snapshot for the given domain.
+        ADR-120 Phase 4 + ADR-144: Apply optimized thresholds from Phase 3 to the
+        live AVM calibration snapshot for the given domain.
 
-        Only executes if the domain has an existing snapshot with signals.
-        Persists to both JSON and DB for Railway survival across restarts.
+        All modifications pass through the Auto-Modification Guard (ADR-144) before
+        any change is written. The guard enforces:
+          1. Cumulative drift cap from genesis (AVM_MAX_CUMULATIVE_DRIFT_PCT, default 30%)
+          2. Signed diff proof (SHA-256 + Dilithium-3 when available)
+          3. Approval gate for changes > AVM_APPROVAL_THRESHOLD_PCT (default 10%)
+          4. Trust flag propagation (AUTO_MODIFIED_SNAPSHOT) to all future receipts
+
+        Rollback eligibility is registered automatically — the guard sets a
+        performance_check_at timestamp 24h after deployment.
 
         Returns:
-            True if deployment succeeded, False otherwise.
+            True if deployment succeeded (allowed by guard), False otherwise.
         """
         if not optimized_thresholds:
             logger.warning(f"[AVM.PHASE4] {domain}: empty thresholds dict — nothing to deploy")
@@ -1054,44 +1082,129 @@ class AssumptionValidityMonitor:
             logger.warning(f"[AVM.PHASE4] {domain}: no existing snapshot — cannot deploy")
             return False
 
+        _db_url = db_url or os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
+
+        # ── ADR-144: Auto-Modification Guard ───────────────────────────────────
+        if _db_url:
+            try:
+                from omnix_core.governance.auto_modification_guard import (
+                    run_guard, check_rollback_needed, mark_modification_status
+                )
+
+                # Before deploying: check if a previous modification needs rollback
+                needs_rollback, rollback_thresholds = check_rollback_needed(domain, _db_url)
+                if needs_rollback and rollback_thresholds:
+                    logger.warning(
+                        f"[AVM.PHASE4] {domain}: AMG rollback triggered — "
+                        f"restoring previous thresholds instead of deploying new ones"
+                    )
+                    # Deploy the rollback thresholds (bypass guard for rollbacks)
+                    self._apply_thresholds_to_snapshot(
+                        domain=domain,
+                        snapshot=snapshot,
+                        thresholds=rollback_thresholds,
+                        description=f"AMG AUTO-ROLLBACK (ADR-144): performance degraded post-deployment",
+                        tags=["AMG_ROLLBACK", "ADR-144"],
+                    )
+                    return True
+
+                # Run the full AMG gate sequence
+                amg_result = run_guard(
+                    domain=domain,
+                    thresholds_before=dict(snapshot.checkpoint_thresholds or {}),
+                    thresholds_after=optimized_thresholds,
+                    source=source,
+                    db_url=_db_url,
+                )
+
+                if not amg_result.allowed:
+                    logger.warning(
+                        f"[AVM.PHASE4] {domain}: AMG BLOCKED deployment — "
+                        f"{amg_result.blocked_reason}"
+                    )
+                    return False
+
+                # Embed trust flags in tags for receipt propagation
+                amg_tags = [
+                    "PHASE4_LIVE_DEPLOY", "THRESHOLD_OPTIMIZATION", "ADR-120",
+                    "AUTO_MODIFIED_SNAPSHOT",
+                    f"AMG:{amg_result.modification_id}",
+                    f"cumulative_drift_{amg_result.cumulative_drift_pct:.1f}pct",
+                ]
+
+                self._apply_thresholds_to_snapshot(
+                    domain=domain,
+                    snapshot=snapshot,
+                    thresholds=optimized_thresholds,
+                    description=(
+                        f"ADR-120 Phase 4 LIVE DEPLOYMENT (ADR-144 approved): "
+                        f"{len(optimized_thresholds)} checkpoints | "
+                        f"mod={amg_result.modification_id} | "
+                        f"cumulative_drift={amg_result.cumulative_drift_pct:.1f}%"
+                    ),
+                    tags=amg_tags,
+                )
+
+                # Persist to DB
+                if _db_url:
+                    try:
+                        from omnix_core.governance.avm_db_bridge import AVMDatabaseBridge
+                        bridge   = AVMDatabaseBridge(db_url=_db_url)
+                        new_snap = self.load_snapshot(domain)
+                        if new_snap:
+                            bridge.save_snapshot(
+                                snapshot_dict=new_snap.to_dict(),
+                                reason=f"PHASE4_OPT|AMG:{amg_result.modification_id}",
+                                actor="avm_phase4_auto",
+                                action="RECALIBRATE",
+                            )
+                    except Exception as _db_exc:
+                        logger.warning(f"[AVM.PHASE4] DB persist failed for {domain}: {_db_exc}")
+
+                logger.info(
+                    f"[AVM.PHASE4] ✅ {domain}: {len(optimized_thresholds)} thresholds deployed "
+                    f"| mod={amg_result.modification_id} "
+                    f"| cumulative_drift={amg_result.cumulative_drift_pct:.1f}% "
+                    f"| max_delta={amg_result.max_single_delta_pct:.1f}%"
+                )
+                return True
+
+            except ImportError:
+                logger.warning(f"[AVM.PHASE4] AMG not available — deploying without guard (DB URL missing)")
+        else:
+            logger.warning(f"[AVM.PHASE4] {domain}: no DB URL — AMG guard skipped, proceeding without audit trail")
+
+        # Fallback: no DB, deploy directly (dev/test only)
         try:
-            self.save_calibration_snapshot(
+            self._apply_thresholds_to_snapshot(
                 domain=domain,
-                baseline_signals=snapshot.baseline_signals,
-                checkpoint_thresholds=optimized_thresholds,
-                description=(
-                    f"ADR-120 Phase 4 LIVE DEPLOYMENT: performance-optimized thresholds "
-                    f"({len(optimized_thresholds)} checkpoints updated)"
-                ),
-                tags=["PHASE4_LIVE_DEPLOY", "THRESHOLD_OPTIMIZATION", "ADR-120"],
+                snapshot=snapshot,
+                thresholds=optimized_thresholds,
+                description=f"ADR-120 Phase 4 (no DB — unguarded): {len(optimized_thresholds)} checkpoints updated",
+                tags=["PHASE4_LIVE_DEPLOY", "ADR-120", "UNGUARDED_NO_DB"],
             )
-
-            # Persist to DB as well
-            _db_url = db_url or os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
-            if _db_url:
-                try:
-                    from omnix_core.governance.avm_db_bridge import AVMDatabaseBridge
-                    bridge  = AVMDatabaseBridge(db_url=_db_url)
-                    new_snap = self.load_snapshot(domain)
-                    if new_snap:
-                        bridge.save_snapshot(
-                            snapshot_dict=new_snap.to_dict(),
-                            reason="PHASE4_THRESHOLD_OPTIMIZATION",
-                            actor="avm_phase4_auto",
-                            action="RECALIBRATE",
-                        )
-                except Exception as _db_exc:
-                    logger.warning(f"[AVM.PHASE4] DB persist failed for {domain}: {_db_exc}")
-
-            logger.info(
-                f"[AVM.PHASE4] ✅ {domain}: {len(optimized_thresholds)} thresholds "
-                f"deployed to live snapshot"
-            )
+            logger.warning(f"[AVM.PHASE4] {domain}: deployed WITHOUT AMG guard (no DB)")
             return True
-
         except Exception as exc:
             logger.error(f"[AVM.PHASE4] {domain}: deploy failed — {exc}")
             return False
+
+    def _apply_thresholds_to_snapshot(
+        self,
+        domain: str,
+        snapshot: "CalibrationSnapshot",
+        thresholds: dict[str, float],
+        description: str,
+        tags: list[str],
+    ) -> None:
+        """Internal helper: write new thresholds to AVM snapshot store."""
+        self.save_calibration_snapshot(
+            domain=domain,
+            baseline_signals=snapshot.baseline_signals,
+            checkpoint_thresholds=thresholds,
+            description=description,
+            tags=tags,
+        )
 
     def run_threshold_optimization_cycle(
         self,

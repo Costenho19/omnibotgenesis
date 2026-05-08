@@ -3,7 +3,7 @@
 **Internal Build Reference**: 6.5.4e  
 **Actualizado**: 15 de Abril 2026  
 **Estado**: Producción 24/7 — 11-checkpoint pipeline + EBIP + TIE + 10 Verticals activos  
-**Último Cambio**: MOD-014 Unified Decision Control Layer (ADR-138) — May 6, 2026
+**Último Cambio**: Auto-Modification Guard (ADR-144) — May 8, 2026
 
 ---
 
@@ -783,6 +783,66 @@ Capa de 4 componentes que opera en la frontera de ejecución del pipeline de gob
 **Ubicación**: `omnix_services/governance_service/execution_integrity.py`  
 
 **Diseño fail-safe**: EBIP falla de forma silenciosa — nunca bloquea el pipeline principal.
+
+---
+
+## Auto-Modification Guard — ADR-144 (May 8, 2026)
+
+Capa de meta-gobernanza obligatoria que envuelve **toda** modificación automática de umbrales AVM.
+
+### Problema que resuelve
+
+ADR-118 y ADR-120 introdujeron auto-remediación y auto-recalibración. Sin control, esto crea tres riesgos:
+
+| Riesgo | Descripción |
+|---|---|
+| Deriva cumulativa silenciosa | Cambios del +10% compuestos 10 veces → +159% respecto al baseline original |
+| Bucle MCM→MCM | MCM detecta BLOCK_RATE_COLLAPSE → tightening → más bloqueos → MCM detecta de nuevo |
+| Confianza degradada sin aviso | Contrapartes reciben receipts producidos bajo umbrales auto-modificados sin saberlo |
+
+### Los 6 invariantes (omnix_core/governance/auto_modification_guard.py)
+
+| # | Invariant | Variable de entorno | Default |
+|---|---|---|---|
+| 1 | **Cap de deriva cumulativa** desde genesis | `AVM_MAX_CUMULATIVE_DRIFT_PCT` | 30% |
+| 2 | **Rollback automático** si performance degradó en T+24h | `AVM_ROLLBACK_WINDOW_HOURS` | 24h |
+| 3 | **Signed diff proof** SHA-256 + Dilithium-3 opcional | — | siempre activo |
+| 4 | **Approval gate**: delta > 10% requiere aprobación humana por Telegram | `AVM_APPROVAL_THRESHOLD_PCT` | 10% |
+| 5 | **AUTO_MODIFIED trust flag** en todos los receipts post-modificación | — | siempre activo |
+| 6 | **Anti-loop guard**: bloquea MCM→MCM si ≥2 remediaciones en 24h | `AVM_ANTI_LOOP_WINDOW_HOURS` | 24h |
+
+### Tabla de base de datos
+
+```
+avm_modification_registry
+  ├── modification_id    — AMG-{DOMAIN}-{8hex} (índice único)
+  ├── thresholds_before  — JSONB snapshot pre-cambio
+  ├── thresholds_after   — JSONB snapshot post-cambio
+  ├── diff_proof         — AMG-DIFF-v1:{sha256}:{algo}
+  ├── cumulative_drift_pct
+  ├── status             — DEPLOYED | PENDING_APPROVAL | ROLLED_BACK | REJECTED
+  └── performance_check_at — timestamp para verificación T+24h
+```
+
+### Flujo de llamadas
+
+```
+AVM Phase 3 optimización
+    → deploy_optimized_thresholds()
+        → AMG.run_guard()                   # 6 safeguards
+            → avm_modification_registry     # registro permanente
+            → Telegram (si approval needed)
+        → _apply_thresholds_to_snapshot()   # solo si AMG aprueba
+
+MCM auto_remediate() TIGHTEN
+    → AMG.is_auto_loop()                    # anti-loop primero
+    → deploy_optimized_thresholds(source=MCM_AUTO_TIGHTEN)
+        → AMG.run_guard()                   # mismos 6 safeguards
+```
+
+**Ubicación**: `omnix_core/governance/auto_modification_guard.py`  
+**DB tabla**: `avm_modification_registry`  
+**ADR**: ADR-144
 
 ---
 

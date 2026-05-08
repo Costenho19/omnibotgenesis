@@ -505,6 +505,38 @@ def _ensure_vertical_tables():
     )
     """
 
+    # ADR-144: Auto-Modification Guard registry — tracks every automated threshold change
+    AMG_REGISTRY_DDL = """
+    CREATE TABLE IF NOT EXISTS avm_modification_registry (
+        id                   SERIAL PRIMARY KEY,
+        modification_id      TEXT        NOT NULL UNIQUE,
+        domain               TEXT        NOT NULL,
+        source               TEXT        NOT NULL,
+        thresholds_before    JSONB       NOT NULL,
+        thresholds_after     JSONB       NOT NULL,
+        diff_proof           TEXT        NOT NULL,
+        diff_proof_algorithm TEXT        NOT NULL DEFAULT 'SHA-256',
+        cumulative_drift_pct FLOAT       NOT NULL DEFAULT 0.0,
+        max_single_delta_pct FLOAT       NOT NULL DEFAULT 0.0,
+        status               TEXT        NOT NULL DEFAULT 'DEPLOYED',
+        approval_required    BOOLEAN     NOT NULL DEFAULT FALSE,
+        approved_by          TEXT,
+        approved_at          TIMESTAMPTZ,
+        rollback_snapshot_id TEXT,
+        performance_check_at TIMESTAMPTZ,
+        created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_amr_domain_status
+        ON avm_modification_registry (domain, status, created_at DESC);
+    """
+
+    # ADR-144: trust flag for auto-modified receipts
+    AMG_RECEIPT_ALTER = [
+        "ALTER TABLE decision_receipts ADD COLUMN IF NOT EXISTS auto_modified_snapshot BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE decision_receipts ADD COLUMN IF NOT EXISTS amg_modification_id TEXT",
+        "ALTER TABLE mcm_remediation_log ADD COLUMN IF NOT EXISTS loop_detected BOOLEAN DEFAULT FALSE",
+    ]
+
     try:
         conn = psycopg2.connect(db_url)
         conn.autocommit = False
@@ -516,12 +548,18 @@ def _ensure_vertical_tables():
                 cur.execute(sql)
             except Exception as _ae:
                 print(f"[startup] ALTER TABLE (non-fatal): {_ae}")
-        # ADR-118 + ADR-096 + ADR-120: additional governance infrastructure tables
-        for extra_ddl in [MCM_REMEDIATION_DDL, TRANSPARENCY_LOG_DDL, AVM_PERF_LOG_DDL]:
+        # ADR-118 + ADR-096 + ADR-120 + ADR-144: additional governance infrastructure tables
+        for extra_ddl in [MCM_REMEDIATION_DDL, TRANSPARENCY_LOG_DDL, AVM_PERF_LOG_DDL, AMG_REGISTRY_DDL]:
             try:
                 cur.execute(extra_ddl)
             except Exception as _ae:
                 print(f"[startup] Extra DDL (non-fatal): {_ae}")
+        # ADR-144: AMG receipt trust flag columns
+        for amg_sql in AMG_RECEIPT_ALTER:
+            try:
+                cur.execute(amg_sql)
+            except Exception as _ae:
+                print(f"[startup] AMG ALTER (non-fatal): {_ae}")
         conn.commit()
         cur.close()
         conn.close()

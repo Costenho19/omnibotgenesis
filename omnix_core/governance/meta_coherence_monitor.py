@@ -1764,6 +1764,72 @@ class MetaCoherenceMonitor:
                 conn.close()
                 return False
 
+            # ── ADR-144: Anti-loop guard ────────────────────────────────────────
+            # Check before any action is determined or executed. If a MCM→MCM
+            # feedback loop is detected (≥2 auto-remediations within the
+            # anti-loop window), escalate to human instead of executing.
+            loop_detected = False
+            try:
+                from omnix_core.governance.auto_modification_guard import is_auto_loop
+                loop_detected = is_auto_loop(domain, self._db_url)
+            except Exception as _loop_exc:
+                logger.warning(f"[MCM.REMEDIATE] {domain}: anti-loop check failed — {_loop_exc}")
+
+            if loop_detected:
+                import uuid as _uuid
+                loop_alert_id = f"MCM-LOOP-{domain.upper()}-{_uuid.uuid4().hex[:8].upper()}"
+                logger.error(
+                    f"[MCM.REMEDIATE] ⛔ LOOP DETECTED: domain={domain} — "
+                    f"auto-remediation BLOCKED, escalating to human. "
+                    f"loop_alert_id={loop_alert_id}"
+                )
+                # Write LOOP_DETECTED entry to mcm_remediation_log
+                cur.execute(
+                    """
+                    INSERT INTO mcm_remediation_log
+                        (mcm_alert_id, domain, alert_pattern, action_taken,
+                         pre_remediation_state, outcome, loop_detected)
+                    VALUES (%s, %s, %s, %s, %s::jsonb, %s, TRUE)
+                    """,
+                    (
+                        loop_alert_id, domain, "LOOP_DETECTED",
+                        "ESCALATE_HUMAN",
+                        json.dumps({"composite_score": report.composite_score,
+                                    "alert_level": report.alert_level,
+                                    "loop_guard": "ADR-144"}),
+                        "LOOP_BLOCKED",
+                    ),
+                )
+                conn.commit()
+                conn.close()
+
+                # Telegram notification with explicit loop context
+                try:
+                    import os as _os
+                    bot_token = _os.environ.get("TELEGRAM_BOT_TOKEN", "")
+                    admin_id  = _os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
+                    if bot_token and admin_id:
+                        import urllib.request as _req
+                        msg = (
+                            f"⛔ MCM LOOP DETECTED — HUMAN REVIEW REQUIRED\n"
+                            f"Domain: {domain}\n"
+                            f"Loop Alert ID: {loop_alert_id}\n"
+                            f"Score: {report.composite_score:.1f}/100\n"
+                            f"Reason: ≥2 auto-remediations within anti-loop window.\n"
+                            f"Action: BLOCKED — auto-remediation suspended for this domain.\n"
+                            f"ADR-144 §6 anti-loop guard triggered."
+                        )
+                        payload = json.dumps({"chat_id": admin_id, "text": msg}).encode()
+                        _req.urlopen(
+                            f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                            data=payload,
+                            timeout=5,
+                        )
+                except Exception:
+                    pass
+
+                return False
+
             # ── Determine remediation action ───────────────────────────────────
             sig_ids = {s.signal_id for s in report.transition_signatures}
             rl      = report.reference_legitimacy
@@ -1821,6 +1887,10 @@ class MetaCoherenceMonitor:
                     logger.error(f"[MCM.REMEDIATE] {domain}: AVM recalibration error — {exc}")
 
             elif action == "TIGHTEN_CHECKPOINT_THRESHOLDS":
+                # ADR-144: route through deploy_optimized_thresholds() so ALL
+                # AMG safeguards apply (cumulative cap, diff proof, approval gate).
+                # Direct save_calibration_snapshot() bypasses the guard and is
+                # prohibited for automated modifications.
                 try:
                     from omnix_core.governance.assumption_validity_monitor import get_avm_instance
                     avm = get_avm_instance()
@@ -1830,18 +1900,17 @@ class MetaCoherenceMonitor:
                             k: round(v * 0.90, 4)
                             for k, v in snap.checkpoint_thresholds.items()
                         }
-                        avm.save_calibration_snapshot(
+                        deployed = avm.deploy_optimized_thresholds(
                             domain=domain,
-                            baseline_signals=snap.baseline_signals,
-                            checkpoint_thresholds=tightened,
-                            description=(
-                                f"MCM-AUTO-TIGHTEN (ADR-118): block rate collapse detected — "
-                                f"thresholds reduced 10% | alert={alert_id}"
-                            ),
-                            tags=["MCM_AUTO_TIGHTEN", f"alert_{alert_id}"],
+                            optimized_thresholds=tightened,
+                            db_url=self._db_url,
+                            source="MCM_AUTO_TIGHTEN",
                         )
-                        outcome = f"THRESHOLDS_TIGHTENED:{len(tightened)}_checkpoints"
-                        logger.info(f"[MCM.REMEDIATE] {domain}: thresholds tightened — {outcome}")
+                        if deployed:
+                            outcome = f"THRESHOLDS_TIGHTENED:{len(tightened)}_checkpoints|AMG_APPROVED"
+                        else:
+                            outcome = "HELD_OR_BLOCKED_BY_AMG"
+                        logger.info(f"[MCM.REMEDIATE] {domain}: tighten via AMG — {outcome}")
                     else:
                         outcome = "SKIPPED:no_snapshot_or_thresholds"
                 except Exception as exc:

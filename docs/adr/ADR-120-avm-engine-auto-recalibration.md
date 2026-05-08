@@ -1,9 +1,10 @@
 # ADR-120 — AVMEngine: Structured Access Layer & Auto-Recalibración de Dominios
 
-**Status:** Accepted — Implemented 25 Apr 2026  
+**Status:** Accepted — Extended May 2026 (ADR-144 Auto-Modification Guard)  
 **Author:** Harold Alberto Nunes Rodelo  
 **Scope:** Assumption Validity Monitor — external API, auto-recalibration daemon  
-**Triggered by:** OMNIX Hardcore Audit Suite v2.0 — findings A-03, C-01
+**Triggered by:** OMNIX Hardcore Audit Suite v2.0 — findings A-03, C-01  
+**Extended by:** ADR-144 (Auto-Modification Guard) — all Phase 4 deployments now pass through AMG
 
 ---
 
@@ -157,3 +158,34 @@ This is the structural implementation of what Dr. Khan describes as the conditio
 - TESTING bypass cannot activate in Railway production deployments
 - 0 silent exception swallows remain in core governance path
 - AVM is architecturally designed to preserve governance tension, not resolve it — consistent with dual-layer governance theory
+
+## 8. ADR-144 Extension — Auto-Modification Guard on Phase 4 (May 2026)
+
+`deploy_optimized_thresholds()` now runs the full Auto-Modification Guard (AMG) pipeline before writing any threshold change. This means every Phase 4 deployment:
+
+1. **Checks cumulative drift from genesis** — if the total drift from the original genesis snapshot exceeds `AVM_MAX_CUMULATIVE_DRIFT_PCT` (default 30%), the deployment is **rejected** and logged in `avm_modification_registry` with `status=REJECTED`.
+
+2. **Builds a signed diff proof** — SHA-256 of `{domain, before, after, actor, ts_utc}`, optionally signed with Dilithium-3 if PQC keys are available.
+
+3. **Checks the approval gate** — if any single threshold changes by more than `AVM_APPROVAL_THRESHOLD_PCT` (default 10%), the deployment is **held** at `PENDING_APPROVAL` and the Telegram admin is notified. `AVM_AUTO_APPROVE=true` bypasses this for dev environments only.
+
+4. **Records the modification** — every deployment (whether DEPLOYED, PENDING_APPROVAL, or REJECTED) is persisted to `avm_modification_registry` with full before/after state.
+
+5. **AUTO_MODIFIED trust flag** — the snapshot tags include `AUTO_MODIFIED_SNAPSHOT` and `AMG:{modification_id}`. Subsequent `evaluate()` calls on this domain surface an `AUTO_MODIFIED_SNAPSHOT` warning in `AVMResult.warnings`, which propagates into governance receipts as `trust_flags.auto_modified_snapshot=true`.
+
+6. **Rollback eligibility** — every DEPLOYED modification records a `performance_check_at = NOW() + 24h`. The next call to `deploy_optimized_thresholds()` for this domain first checks whether the previous modification degraded performance (block rate worsening > 50% relative to pre-deployment). If so, the previous `thresholds_before` is automatically restored.
+
+### SQL bug fix (included in this extension)
+
+The `optimize_checkpoint_thresholds()` method contained a psycopg2 parameter binding bug:
+
+```python
+# BEFORE (broken — psycopg2 does not interpolate INTERVAL format strings):
+WHERE timestamp_utc >= NOW() - INTERVAL '%s days'  -- %s rendered as literal string
+
+# AFTER (correct — Python computes the cutoff timestamp):
+cutoff_ts = datetime.now(timezone.utc) - timedelta(days=lookback_days)
+WHERE timestamp_utc >= %s  -- passes cutoff_ts as a proper TIMESTAMPTZ
+```
+
+This bug would have produced an empty result set for all lookback queries when running against PostgreSQL, causing Phase 3 to always report "insufficient data". The fix is included in the same commit as the AMG integration.

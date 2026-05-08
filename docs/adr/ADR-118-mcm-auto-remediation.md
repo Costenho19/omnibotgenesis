@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| **Status** | Accepted |
+| **Status** | Accepted — Extended May 2026 (ADR-144 anti-loop guard) |
 | **Date** | 2026-04-25 |
 | **Author** | Harold Nunes — OMNIX QUANTUM LTD |
 | **Scope** | `omnix_core/governance/meta_coherence_monitor.py` · `omnix_core/governance/unified_control_layer.py` |
-| **Extends** | ADR-117 (Meta-Coherence Monitor) |
+| **Extends** | ADR-117 (Meta-Coherence Monitor) · ADR-144 (Auto-Modification Guard) |
 | **Replaces** | — |
 
 ---
@@ -84,9 +84,42 @@ Auto-remediation **never modifies** the governance decision outcome retroactivel
 - Automated threshold tightening during a volatile market period could increase false-positive BLOCKED decisions.
 - Remediation cooldown (6h) means a persistent degradation pattern may re-trigger after the window expires.
 
+## ADR-144 Extension — Anti-Loop Guard (May 2026)
+
+ADR-144 added a mandatory anti-loop guard to `auto_remediate()` that runs **before** any action is determined or executed.
+
+### What it does
+
+When `auto_remediate()` is invoked, the guard queries `mcm_remediation_log` for the target domain. If it finds ≥2 entries in the last `AVM_ANTI_LOOP_WINDOW_HOURS` (default 24h) with `action_taken IN ('TIGHTEN_CHECKPOINT_THRESHOLDS', 'FORCE_AVM_RECALIBRATION')`, the current remediation is **blocked** and escalated to human review.
+
+### Why it matters
+
+Without this guard, the following loop was possible:
+```
+MCM detects BLOCK_RATE_COLLAPSE (from previous tightening)
+    → auto-tighten 10%
+    → MCM detects BLOCK_RATE_COLLAPSE again (over-blocking)
+    → auto-tighten 10% again
+    → ...
+```
+The 6-hour rate limit constrained frequency but did not prevent the loop from completing across two windows. The anti-loop guard detects the pattern structurally.
+
+### TIGHTEN now routes through AMG
+
+The `TIGHTEN_CHECKPOINT_THRESHOLDS` action no longer calls `save_calibration_snapshot()` directly. It calls `deploy_optimized_thresholds()` with `source="MCM_AUTO_TIGHTEN"`, which runs all six Auto-Modification Guard safeguards before writing any change.
+
+If AMG blocks or holds the tightening (cumulative cap exceeded, approval gate triggered), `outcome` is recorded as `HELD_OR_BLOCKED_BY_AMG` in `mcm_remediation_log`. The domain is not tightened until human approval is received.
+
+### Loop detection record
+
+When a loop is detected, a `LOOP_DETECTED` entry is written to `mcm_remediation_log` with `loop_detected=TRUE` and `outcome=LOOP_BLOCKED`. Telegram admin notification is sent with explicit loop context including `loop_alert_id`.
+
+---
+
 ## Related
 
 - ADR-117: Meta-Coherence Monitor
 - ADR-120: AVM Engine Auto-Recalibration
 - ADR-116: Fail-Closed Enforcement Policy
 - ADR-124: Oversight Surface Engine
+- ADR-144: Auto-Modification Guard (anti-loop guard, approval gate, cumulative drift cap)
