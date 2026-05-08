@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Activity, ArrowLeft, RefreshCw, TrendingUp, TrendingDown,
@@ -62,7 +62,7 @@ const PHASE_COLORS: Record<string, string> = {
   NEUTRAL:      'text-slate-400',
 }
 
-const PHASE_ICONS: Record<string, JSX.Element> = {
+const PHASE_ICONS: Record<string, React.ReactElement> = {
   CONTRACTION:  <TrendingDown className="w-4 h-4 text-red-400" />,
   EXPANSION:    <TrendingUp   className="w-4 h-4 text-emerald-400" />,
   STABILIZING:  <Minus        className="w-4 h-4 text-blue-400" />,

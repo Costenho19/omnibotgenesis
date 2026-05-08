@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ShieldOff, ArrowLeft, RefreshCw, CheckCircle, XCircle,
+  ShieldOff, ArrowLeft, RefreshCw, CheckCircle,
   AlertTriangle, Clock, Shield, Activity, Lock, Unlock
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'

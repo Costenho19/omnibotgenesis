@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Zap, ArrowLeft, RefreshCw, CheckCircle, XCircle,
-  AlertTriangle, Clock, Filter, Shield, ChevronRight, Activity
+  Zap, ArrowLeft, RefreshCw, CheckCircle,
+  AlertTriangle, Filter, Shield, ChevronRight, Activity
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
 
@@ -50,10 +50,6 @@ const DIR_STYLES: Record<string, string> = {
 
 const API_KEY_HEADER = { 'X-API-Key': 'OMNIX-DEMO-DASHBOARD-KEY' }
 
-function fmt(n: number | null | undefined, decimals = 2, prefix = '') {
-  if (n == null) return '—'
-  return prefix + n.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
-}
 
 export default function ExecutionDashboard() {
   const [receipts,  setReceipts]  = useState<ExecutionReceipt[]>([])

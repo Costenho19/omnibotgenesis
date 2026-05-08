@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  BarChart3, ArrowLeft, RefreshCw, CheckCircle, XCircle,
-  AlertTriangle, Shield, Activity, Filter, Layers, ChevronRight
+  BarChart3, ArrowLeft, RefreshCw, CheckCircle,
+  AlertTriangle, Filter, Layers, ChevronRight
 } from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
 
