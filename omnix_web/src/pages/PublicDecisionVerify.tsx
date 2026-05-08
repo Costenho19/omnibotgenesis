@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Shield, CheckCircle, XCircle, Clock, ExternalLink, Copy, ArrowLeft, Lock, AlertTriangle, Search, Activity } from 'lucide-react'
-
+import {
+  Shield, CheckCircle, XCircle, Clock, ExternalLink, Copy,
+  ArrowLeft, Lock, AlertTriangle, Search, Activity, Download,
+  ChevronDown, ChevronUp, Terminal, Hash, Fingerprint, Eye
+} from 'lucide-react'
 import { API_BASE } from '../lib/apiBase'
 
 interface Checkpoint {
@@ -55,110 +58,6 @@ interface VerifyData {
   ebip_at_verification: EbipSnapshot | null
 }
 
-function formatTimestamp(ts: string): string {
-  try {
-    const d = new Date(ts)
-    return d.toLocaleString('en-US', {
-      month: 'long', day: 'numeric', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-      timeZone: 'UTC', timeZoneName: 'short'
-    })
-  } catch {
-    return ts
-  }
-}
-
-function decisionColors(color: string) {
-  if (color === 'green')  return { bg: 'rgba(34,197,94,0.10)',  border: 'rgba(34,197,94,0.30)',  text: '#22c55e',  pill: 'rgba(34,197,94,0.15)' }
-  if (color === 'red')    return { bg: 'rgba(239,68,68,0.10)',   border: 'rgba(239,68,68,0.30)',   text: '#ef4444',  pill: 'rgba(239,68,68,0.15)' }
-  if (color === 'yellow') return { bg: 'rgba(234,179,8,0.10)',   border: 'rgba(234,179,8,0.30)',   text: '#eab308',  pill: 'rgba(234,179,8,0.15)' }
-  return                         { bg: 'rgba(99,102,241,0.10)',  border: 'rgba(99,102,241,0.30)',  text: '#818cf8',  pill: 'rgba(99,102,241,0.15)' }
-}
-
-function CheckpointCard({ cp, index: _index }: { cp: Checkpoint; index: number }) {
-  const isPass    = cp.result === 'PASS'
-  const isBlocked = cp.result === 'BLOCKED'
-
-  return (
-    <div style={{
-      display: 'flex', gap: '12px', alignItems: 'flex-start',
-      padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
-    }}>
-      <div style={{ flexShrink: 0, paddingTop: '2px' }}>
-        {isPass    && <CheckCircle size={16} color="#22c55e" />}
-        {isBlocked && <XCircle    size={16} color="#ef4444" />}
-        {!isPass && !isBlocked && <Clock size={16} color="#6b7280" />}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.88rem', fontWeight: 500, color: '#e5e7eb' }}>
-            {cp.code && <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#6b7280', marginRight: '6px' }}>{cp.code}</span>}
-            {cp.label_en}
-          </span>
-          <span style={{
-            fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em',
-            fontFamily: 'monospace', flexShrink: 0,
-            color: isPass ? '#22c55e' : isBlocked ? '#ef4444' : '#6b7280',
-          }}>
-            {cp.result}
-          </span>
-        </div>
-        {cp.metric_label && cp.metric_value && (
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '3px' }}>
-            {cp.metric_label}: <span style={{ fontFamily: 'monospace', color: '#9ca3af' }}>{cp.metric_value}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function HashDisplay({ label, value }: { label: string; value: string }) {
-  const [copied, setCopied] = useState(false)
-  function copy() {
-    navigator.clipboard.writeText(value).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-  return (
-    <div style={{ marginBottom: '10px' }}>
-      <div style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#60a5fa', wordBreak: 'break-all', flex: 1 }}>{value}</span>
-        <button onClick={copy} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#22c55e' : '#6b7280', padding: '2px', flexShrink: 0 }} title="Copy">
-          <Copy size={12} />
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function SearchBox({ onSearch }: { onSearch: (id: string) => void }) {
-  const [val, setVal] = useState('')
-  function go() { const t = val.trim(); if (t) onSearch(t) }
-  return (
-    <div style={{ display: 'flex', gap: '8px', maxWidth: '560px', width: '100%' }}>
-      <input
-        value={val} onChange={e => setVal(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && go()}
-        placeholder="Enter receipt ID (e.g. OMNIX-A1B2C3D4E5F6)"
-        style={{
-          flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
-          color: '#fff', padding: '10px 14px', borderRadius: '6px',
-          fontFamily: 'monospace', fontSize: '0.9rem', outline: 'none',
-        }}
-      />
-      <button onClick={go} style={{
-        background: '#3b82f6', color: '#fff', border: 'none',
-        padding: '10px 20px', borderRadius: '6px', cursor: 'pointer',
-        fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px',
-      }}>
-        <Search size={14} /> Verify
-      </button>
-    </div>
-  )
-}
-
 interface RecentReceipt {
   receipt_id: string
   timestamp: string
@@ -168,143 +67,554 @@ interface RecentReceipt {
   hash_prefix: string
 }
 
-function EmptyStateWithFeed() {
-  const navigate = useNavigate()
-  const [feed, setFeed]         = useState<RecentReceipt[]>([])
-  const [feedLoading, setFL]    = useState(true)
-
-  useEffect(() => {
-    fetch(`${API_BASE}/api/verify/recent?limit=8`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.receipts) setFeed(d.receipts) })
-      .catch(() => {})
-      .finally(() => setFL(false))
-  }, [])
-
-  const decColor = (d: string) => {
-    if (d === 'APPROVED') return '#22c55e'
-    if (d === 'BLOCKED')  return '#ef4444'
-    return '#eab308'
-  }
-
-  function fmtTime(ts: string) {
-    try {
-      return new Date(ts).toLocaleString('en-US', {
+function fmtTs(ts: string, short = false): string {
+  try {
+    const d = new Date(ts)
+    if (short) {
+      return d.toLocaleString('en-US', {
         month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
       }) + ' UTC'
-    } catch { return ts }
+    }
+    return d.toLocaleString('en-US', {
+      month: 'long', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      timeZone: 'UTC', timeZoneName: 'short',
+    })
+  } catch { return ts }
+}
+
+function decColor(d: string) {
+  if (d === 'green'  || d === 'APPROVED') return { text: '#22c55e', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.25)'  }
+  if (d === 'red'    || d === 'BLOCKED')  return { text: '#ef4444', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.25)'  }
+  if (d === 'yellow' || d === 'HOLD')     return { text: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  border: 'rgba(245,158,11,0.25)' }
+  return                                         { text: '#818cf8', bg: 'rgba(99,102,241,0.12)',  border: 'rgba(99,102,241,0.25)' }
+}
+
+function CopyBtn({ value, size = 12 }: { value: string; size?: number }) {
+  const [ok, setOk] = useState(false)
+  function copy() {
+    navigator.clipboard.writeText(value).catch(() => {})
+    setOk(true)
+    setTimeout(() => setOk(false), 1600)
+  }
+  return (
+    <button onClick={copy} title="Copy" style={{
+      background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
+      color: ok ? '#22c55e' : '#4b5563', display: 'inline-flex', alignItems: 'center', gap: 3,
+      fontSize: '0.68rem', transition: 'color 0.2s',
+    }}>
+      <Copy size={size} />
+      {ok ? 'Copied' : ''}
+    </button>
+  )
+}
+
+function HashLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ fontSize: '0.65rem', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '8px 12px' }}>
+        <Hash size={11} color="#3b82f6" style={{ flexShrink: 0 }} />
+        <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#60a5fa', wordBreak: 'break-all', flex: 1 }}>{value}</span>
+        <CopyBtn value={value} size={11} />
+      </div>
+    </div>
+  )
+}
+
+function CheckpointRow({ cp, index }: { cp: Checkpoint; index: number }) {
+  const isPass    = cp.result === 'PASS'
+  const isBlocked = cp.result === 'BLOCKED'
+  return (
+    <div style={{
+      display: 'flex', gap: 12, alignItems: 'flex-start',
+      padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+    }}>
+      <div style={{ flexShrink: 0, paddingTop: 2, width: 20, textAlign: 'center' }}>
+        {isPass    && <CheckCircle size={15} color="#22c55e" />}
+        {isBlocked && <XCircle    size={15} color="#ef4444" />}
+        {!isPass && !isBlocked && <Clock size={15} color="#4b5563" />}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.84rem', fontWeight: 500, color: '#e5e7eb' }}>
+            {cp.code && (
+              <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#4b5563', marginRight: 6 }}>{cp.code}</span>
+            )}
+            {cp.label_en}
+          </span>
+          <span style={{
+            fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em',
+            fontFamily: 'monospace', padding: '2px 8px', borderRadius: 4,
+            color: isPass ? '#22c55e' : isBlocked ? '#ef4444' : '#4b5563',
+            background: isPass ? 'rgba(34,197,94,0.08)' : isBlocked ? 'rgba(239,68,68,0.08)' : 'rgba(75,85,99,0.15)',
+            border: `1px solid ${isPass ? 'rgba(34,197,94,0.2)' : isBlocked ? 'rgba(239,68,68,0.2)' : 'rgba(75,85,99,0.2)'}`,
+            flexShrink: 0,
+          }}>
+            {cp.result}
+          </span>
+        </div>
+        {cp.metric_label && cp.metric_value && (
+          <div style={{ fontSize: '0.72rem', color: '#4b5563', marginTop: 3 }}>
+            {cp.metric_label}: <span style={{ fontFamily: 'monospace', color: '#6b7280' }}>{cp.metric_value}</span>
+          </div>
+        )}
+      </div>
+      <div style={{ fontSize: '0.65rem', color: '#374151', fontFamily: 'monospace', flexShrink: 0, paddingTop: 2 }}>
+        {String(index + 1).padStart(2, '0')}
+      </div>
+    </div>
+  )
+}
+
+function ReceiptResult({ data }: { data: VerifyData }) {
+  const [showHashes, setShowHashes] = useState(false)
+  const [showEbip, setShowEbip]     = useState(false)
+  const [copied, setCopied]         = useState(false)
+  const c = decColor(data.decision_color)
+
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
+  const passCount  = data.checkpoints.filter(c => c.result === 'PASS').length
+  const blockCount = data.checkpoints.filter(c => c.result === 'BLOCKED').length
+
   return (
-    <div>
-      {/* ── Enter prompt ── */}
+    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+      <style>{`@keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }`}</style>
+
+      {/* ── Decision banner ── */}
       <div style={{
-        padding: '2rem', background: 'rgba(59,130,246,0.04)',
-        border: '1px solid rgba(59,130,246,0.15)', borderRadius: '12px',
-        textAlign: 'center', marginBottom: '2rem',
+        borderRadius: 14, padding: '20px 24px', marginBottom: 16,
+        background: c.bg, border: `1px solid ${c.border}`,
+        position: 'relative', overflow: 'hidden',
       }}>
-        <Shield size={32} color="#3b82f6" style={{ marginBottom: '12px' }} />
-        <div style={{ fontWeight: 600, color: '#e5e7eb', marginBottom: '8px', fontSize: '1rem' }}>
-          Enter a Receipt ID above to verify
-        </div>
-        <div style={{ fontSize: '0.84rem', color: '#6b7280', lineHeight: 1.6 }}>
-          Every OMNIX governance decision generates a cryptographically signed receipt.<br />
-          Try the{' '}
-          <Link to="/try" style={{ color: '#3b82f6', fontWeight: 600 }}>public sandbox</Link>
-          {' '}to generate your own, or click any receipt below to inspect a live one.
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.03,
+          backgroundImage: 'repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)',
+          backgroundSize: '20px 20px', color: c.text,
+        }} />
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <span style={{
+                fontSize: '0.65rem', fontWeight: 900, letterSpacing: '0.12em',
+                fontFamily: 'monospace', padding: '4px 12px', borderRadius: 6,
+                color: c.text, background: `${c.bg}`, border: `1.5px solid ${c.border}`,
+                textTransform: 'uppercase',
+              }}>
+                {data.decision}
+              </span>
+              <span style={{ fontSize: '0.8rem', color: '#4b5563' }}>·</span>
+              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{fmtTs(data.timestamp_utc)}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: c.text, fontWeight: 600 }}>
+                {data.receipt_id}
+              </span>
+              <CopyBtn value={data.receipt_id} />
+            </div>
+            <p style={{ color: '#d1d5db', fontSize: '0.9rem', margin: 0, lineHeight: 1.6 }}>
+              {data.human_summary_en}
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+            <button onClick={copyLink} style={{
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+              color: copied ? '#22c55e' : '#9ca3af', padding: '6px 12px', borderRadius: 7,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.75rem',
+            }}>
+              <Copy size={12} /> {copied ? 'Copied!' : 'Share receipt'}
+            </button>
+            <a href={`data:application/json,${encodeURIComponent(JSON.stringify({ receipt_id: data.receipt_id, decision: data.decision, asset: data.asset, domain: data.domain, timestamp_utc: data.timestamp_utc, integrity: data.integrity, policy_version: data.policy_version }, null, 2))}`}
+              download={`${data.receipt_id}.json`}
+              style={{
+                background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)',
+                color: '#60a5fa', padding: '6px 12px', borderRadius: 7,
+                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.75rem',
+              }}>
+              <Download size={12} /> receipt.json
+            </a>
+          </div>
         </div>
       </div>
 
-      {/* ── Live recent receipts ── */}
-      <div>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: '12px',
-        }}>
-          <div style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-            Recent Governance Receipts — Live Ledger
+      {/* ── Key metrics grid ── */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+        gap: 8, marginBottom: 16,
+      }}>
+        {[
+          { icon: <Activity size={13} color="#818cf8" />, label: 'Asset · Domain', value: `${data.asset} · ${data.domain}` },
+          { icon: <Shield size={13} color="#22c55e" />, label: 'Checkpoints', value: data.decision === 'BLOCKED' ? `${blockCount} blocked of ${data.checkpoints_total}` : `${passCount} / ${data.checkpoints_total} passed` },
+          { icon: <Fingerprint size={13} color="#f59e0b" />, label: 'Signature', value: data.integrity.is_pqc ? 'Dilithium-3 · FIPS 204' : data.integrity.signature_algorithm },
+          { icon: <Lock size={13} color="#60a5fa" />, label: 'Policy', value: data.policy_version },
+        ].map(f => (
+          <div key={f.label} style={{
+            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 10, padding: '12px 14px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+              {f.icon}
+              <span style={{ fontSize: '0.62rem', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{f.label}</span>
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#e5e7eb', fontFamily: 'monospace', fontWeight: 500 }}>{f.value}</div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-            <span style={{ fontSize: '0.68rem', color: '#4b5563' }}>Public · append-only · PQC signed</span>
+        ))}
+      </div>
+
+      {/* ── Checkpoint pipeline ── */}
+      {data.checkpoints.length > 0 && (
+        <div style={{
+          background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 12, padding: '16px 20px', marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Shield size={13} color="#4b5563" />
+              <span style={{ fontSize: '0.7rem', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
+                Governance Checkpoint Pipeline
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 10, fontSize: '0.72rem' }}>
+              {passCount  > 0 && <span style={{ color: '#22c55e' }}>✓ {passCount} passed</span>}
+              {blockCount > 0 && <span style={{ color: '#ef4444' }}>✗ {blockCount} blocked</span>}
+            </div>
+          </div>
+          {data.checkpoints.map((cp, i) => <CheckpointRow key={i} cp={cp} index={i} />)}
+        </div>
+      )}
+
+      {/* ── EBIP section (collapsible) ── */}
+      {data.ebip_at_verification && (
+        <div style={{
+          background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.15)',
+          borderRadius: 12, marginBottom: 16, overflow: 'hidden',
+        }}>
+          <button
+            onClick={() => setShowEbip(v => !v)}
+            style={{
+              width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 20px', color: '#a78bfa',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Activity size={13} color="#a78bfa" />
+              <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
+                Execution Boundary Integrity · ADR-045
+              </span>
+              <span style={{
+                fontSize: '0.6rem', fontFamily: 'monospace', fontWeight: 700,
+                color: data.ebip_at_verification.overall_score >= 90 ? '#a78bfa' : '#fbbf24',
+                background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)',
+                borderRadius: 4, padding: '1px 7px',
+              }}>
+                {data.ebip_at_verification.overall_score}/100
+              </span>
+            </div>
+            {showEbip ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {showEbip && (
+            <div style={{ padding: '0 20px 16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
+                {[
+                  { code: 'ACV', label: 'Consistency Validator', ok: data.ebip_at_verification.violations_24h === 0 },
+                  { code: 'ECP', label: 'Commitment Protocol',   ok: true },
+                  { code: 'NPM', label: 'Navigation Monitor',    ok: ['NOMINAL','WATCH'].includes(data.ebip_at_verification.alert_level) },
+                  { code: 'CP',  label: 'Concentration Pred.',   ok: ['LOW','INSUFFICIENT_DATA'].includes(data.ebip_at_verification.concentration_risk) },
+                ].map(c => (
+                  <div key={c.code} style={{
+                    padding: 8, borderRadius: 6, textAlign: 'center',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${c.ok ? 'rgba(139,92,246,0.2)' : 'rgba(251,191,36,0.25)'}`,
+                  }}>
+                    <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', fontWeight: 700, color: c.ok ? '#a78bfa' : '#fbbf24', marginBottom: 3 }}>
+                      {c.ok ? '✓' : '⚠'} {c.code}
+                    </div>
+                    <div style={{ fontSize: '0.58rem', color: '#4b5563', lineHeight: 1.3 }}>{c.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.75rem' }}>
+                <span style={{ color: '#6b7280' }}>Alert: <strong style={{ color: '#a78bfa' }}>{data.ebip_at_verification.alert_level}</strong></span>
+                <span style={{ color: '#6b7280' }}>Risk: <strong style={{ color: '#9ca3af' }}>{data.ebip_at_verification.concentration_risk}</strong></span>
+                <span style={{ color: '#6b7280' }}>Components: <strong style={{ color: '#9ca3af' }}>{data.ebip_at_verification.components_active}</strong></span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Cryptographic integrity ── */}
+      <div style={{
+        background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.15)',
+        borderRadius: 12, padding: '16px 20px', marginBottom: 16,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <Lock size={13} color="#60a5fa" />
+            <span style={{ fontSize: '0.7rem', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
+              Cryptographic Integrity
+            </span>
+          </div>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.68rem',
+            color: '#22c55e', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+            borderRadius: 20, padding: '3px 10px', fontWeight: 700,
+          }}>
+            <CheckCircle size={11} /> VERIFIED · TAMPER-PROOF
           </div>
         </div>
 
-        {feedLoading && (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#4b5563', fontSize: '0.85rem' }}>
-            Loading ledger...
+        <div style={{
+          display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 8,
+          background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.12)', marginBottom: 14,
+        }}>
+          <CheckCircle size={15} color="#22c55e" style={{ flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <div style={{ fontSize: '0.84rem', color: '#22c55e', fontWeight: 600, marginBottom: 3 }}>
+              Signed with {data.integrity.signature_algorithm}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+              {data.integrity.nist_note} · Post-quantum cryptography · NIST FIPS 204
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowHashes(v => !v)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 5,
+            color: '#4b5563', fontSize: '0.78rem', padding: '0 0 12px', width: '100%',
+          }}
+        >
+          <Eye size={13} />
+          {showHashes ? 'Hide' : 'Show'} cryptographic proof
+          {showHashes ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        </button>
+
+        {showHashes && (
+          <div>
+            <HashLine label="Content Hash (SHA-256)" value={data.integrity.content_hash} />
+            {data.integrity.prev_hash && (
+              <HashLine label="Previous Receipt Hash (Chain Link)" value={data.integrity.prev_hash} />
+            )}
+            <div style={{
+              marginTop: 12, padding: '10px 14px', borderRadius: 8,
+              background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.05)',
+            }}>
+              <div style={{ fontSize: '0.68rem', color: '#374151', marginBottom: 6 }}>Verify locally — no OMNIX server required:</div>
+              <code style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#60a5fa', display: 'block', lineHeight: 1.8 }}>
+                python omnix_verify.py {data.receipt_id}.json
+              </code>
+              <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <a href="/omnix_verify.py" download style={{
+                  fontSize: '0.7rem', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4,
+                  textDecoration: 'none', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 5, padding: '3px 8px',
+                }}>
+                  <Download size={11} /> omnix_verify.py
+                </a>
+                <Link to="/verify-independently" style={{
+                  fontSize: '0.7rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: 4,
+                  textDecoration: 'none', border: '1px solid rgba(75,85,99,0.3)', borderRadius: 5, padding: '3px 8px',
+                }}>
+                  <ExternalLink size={11} /> Verification guide
+                </Link>
+              </div>
+            </div>
           </div>
         )}
+      </div>
 
-        {!feedLoading && feed.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '1.5rem', color: '#4b5563', fontSize: '0.85rem' }}>
-            No public receipts available yet.
-          </div>
-        )}
+      {/* ── Footer ── */}
+      <div style={{ textAlign: 'center', marginTop: 24, fontSize: '0.72rem', color: '#374151', lineHeight: 1.8 }}>
+        Append-only hash chain · Post-quantum signatures · eIDAS 2.0 · ARF · NIST FIPS 204<br />
+        <Link to="/try" style={{ color: '#3b82f6' }}>Submit your own scenario</Link>
+        {' · '}
+        <Link to="/crisis-replay" style={{ color: '#3b82f6' }}>Crisis Replay</Link>
+        {' · '}
+        <Link to="/" style={{ color: '#3b82f6' }}>OMNIX Home</Link>
+      </div>
+    </div>
+  )
+}
 
-        {!feedLoading && feed.length > 0 && (
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', overflow: 'hidden' }}>
-            {feed.map((r, i) => (
+function LiveFeed({ onSelect }: { onSelect: (id: string) => void }) {
+  const [feed, setFeed]   = useState<RecentReceipt[]>([])
+  const [loading, setLoading] = useState(true)
+  const [tick, setTick]   = useState(0)
+
+  const fetchFeed = useCallback(() => {
+    fetch(`${API_BASE}/api/verify/recent?limit=10`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.receipts) setFeed(d.receipts) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    fetchFeed()
+    const t = setInterval(() => { fetchFeed(); setTick(v => v + 1) }, 15000)
+    return () => clearInterval(t)
+  }, [fetchFeed])
+
+  const c = (d: string) => d === 'APPROVED' ? '#22c55e' : d === 'BLOCKED' ? '#ef4444' : '#f59e0b'
+
+  return (
+    <div>
+      {/* Intro card */}
+      <div style={{
+        padding: '24px', background: 'rgba(59,130,246,0.04)',
+        border: '1px solid rgba(59,130,246,0.15)', borderRadius: 14,
+        textAlign: 'center', marginBottom: 24,
+      }}>
+        <Shield size={36} color="#3b82f6" style={{ marginBottom: 14 }} />
+        <div style={{ fontWeight: 700, color: '#e5e7eb', marginBottom: 8, fontSize: '1.05rem' }}>
+          Paste any Receipt ID above to verify
+        </div>
+        <div style={{ fontSize: '0.84rem', color: '#4b5563', lineHeight: 1.7, maxWidth: 420, margin: '0 auto' }}>
+          Every OMNIX governance decision produces a cryptographically signed receipt,
+          sealed with Dilithium-3 (NIST FIPS 204) post-quantum cryptography.
+          <br />
+          <Link to="/try" style={{ color: '#3b82f6', fontWeight: 600 }}>Generate your own</Link>
+          {' '}in the public sandbox, or click any live receipt below.
+        </div>
+        <div style={{ marginTop: 16, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {[
+            { icon: <Lock size={12} />,        label: 'Dilithium-3 · FIPS 204', color: '#60a5fa' },
+            { icon: <Hash size={12} />,         label: 'SHA-256 hash chain',      color: '#22c55e' },
+            { icon: <Fingerprint size={12} />,  label: 'Independently verifiable', color: '#f59e0b' },
+          ].map(b => (
+            <span key={b.label} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: '0.7rem', fontWeight: 600, color: b.color,
+              background: `${b.color}12`, border: `1px solid ${b.color}30`,
+              borderRadius: 20, padding: '4px 12px',
+            }}>
+              {b.icon} {b.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Live ledger */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
+      }}>
+        <div style={{ fontSize: '0.68rem', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
+          Live Governance Ledger
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontSize: '0.65rem', color: '#374151' }}>
+            Live · PQC signed · refresh {tick > 0 ? `${tick}×` : 'now'}
+          </span>
+        </div>
+      </div>
+
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#374151', fontSize: '0.85rem' }}>
+          Connecting to ledger...
+        </div>
+      )}
+
+      {!loading && feed.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#374151', fontSize: '0.85rem' }}>
+          No receipts yet — try the <Link to="/try" style={{ color: '#3b82f6' }}>sandbox</Link>.
+        </div>
+      )}
+
+      {!loading && feed.length > 0 && (
+        <div style={{
+          background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 12, overflow: 'hidden',
+        }}>
+          {feed.map((r, i) => {
+            const col = c(r.decision)
+            return (
               <button
                 key={r.receipt_id}
-                onClick={() => navigate(`/verify/${encodeURIComponent(r.receipt_id)}`)}
+                onClick={() => onSelect(r.receipt_id)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
-                  padding: '11px 16px', background: 'none', border: 'none',
+                  display: 'grid',
+                  gridTemplateColumns: '70px 1fr auto auto',
+                  alignItems: 'center', gap: 12,
+                  width: '100%', padding: '12px 16px',
+                  background: 'none', border: 'none',
                   borderBottom: i < feed.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                  cursor: 'pointer', textAlign: 'left',
-                  transition: 'background 0.15s',
+                  cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}
               >
-                {/* Decision badge */}
                 <span style={{
-                  fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.08em',
-                  fontFamily: 'monospace', padding: '2px 7px', borderRadius: '4px', flexShrink: 0,
-                  color: decColor(r.decision),
-                  background: `${decColor(r.decision)}18`,
-                  border: `1px solid ${decColor(r.decision)}33`,
+                  fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.06em',
+                  fontFamily: 'monospace', padding: '3px 8px', borderRadius: 5,
+                  color: col, background: `${col}14`, border: `1px solid ${col}30`,
+                  textAlign: 'center',
                 }}>
                   {r.decision}
                 </span>
-
-                {/* Asset */}
-                <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: '#e5e7eb', fontWeight: 600, minWidth: '90px' }}>
-                  {r.asset}
-                </span>
-
-                {/* Receipt ID */}
-                <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#6b7280', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {r.receipt_id}
-                </span>
-
-                {/* Timestamp */}
-                <span style={{ fontSize: '0.7rem', color: '#4b5563', flexShrink: 0, display: 'none' }} className="ts-col">
-                  {fmtTime(r.timestamp)}
-                </span>
-
-                {/* PQC badge */}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#e5e7eb', fontWeight: 600, marginBottom: 2 }}>
+                    {r.asset}
+                  </div>
+                  <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: '#4b5563', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {r.receipt_id}
+                  </div>
+                </div>
+                <div style={{ fontFamily: 'monospace', fontSize: '0.62rem', color: '#374151', flexShrink: 0, textAlign: 'right' }}>
+                  {fmtTs(r.timestamp, true)}
+                </div>
                 <span style={{
-                  fontSize: '0.58rem', fontFamily: 'monospace', fontWeight: 700,
+                  fontSize: '0.55rem', fontFamily: 'monospace', fontWeight: 800,
                   color: '#60a5fa', background: 'rgba(96,165,250,0.08)',
-                  border: '1px solid rgba(96,165,250,0.2)', borderRadius: '4px',
+                  border: '1px solid rgba(96,165,250,0.2)', borderRadius: 4,
                   padding: '2px 6px', flexShrink: 0,
                 }}>
                   PQC ✓
                 </span>
               </button>
-            ))}
-          </div>
-        )}
+            )
+          })}
+        </div>
+      )}
 
-        {!feedLoading && feed.length > 0 && (
-          <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.72rem', color: '#374151' }}>
-            Showing {feed.length} most recent signed receipts ·{' '}
-            <span style={{ color: '#4b5563' }}>click any row to inspect the full governance receipt</span>
+      {!loading && feed.length > 0 && (
+        <div style={{ marginTop: 10, fontSize: '0.68rem', color: '#374151', textAlign: 'center' }}>
+          {feed.length} most recent signed receipts · click any row to inspect the full governance record
+        </div>
+      )}
+
+      {/* Crisis replay CTA */}
+      <div style={{
+        marginTop: 24, padding: '16px 20px',
+        background: 'rgba(201,162,39,0.04)', border: '1px solid rgba(201,162,39,0.15)',
+        borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#C9A227', marginBottom: 3 }}>
+            Want to see OMNIX in action?
           </div>
-        )}
+          <div style={{ fontSize: '0.75rem', color: '#4b5563' }}>
+            Replay Terra/LUNA, FTX, SVB, COVID & OFAC — 12 signed receipts from real crises.
+          </div>
+        </div>
+        <Link to="/crisis-replay" style={{
+          fontSize: '0.78rem', fontWeight: 700, color: '#C9A227',
+          background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)',
+          borderRadius: 8, padding: '8px 16px', textDecoration: 'none',
+          display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+          whiteSpace: 'nowrap',
+        }}>
+          Crisis Replay <ExternalLink size={12} />
+        </Link>
       </div>
     </div>
   )
@@ -313,341 +623,185 @@ function EmptyStateWithFeed() {
 export default function PublicDecisionVerify() {
   const { receiptId } = useParams<{ receiptId?: string }>()
   const navigate = useNavigate()
-  const [data, setData]       = useState<VerifyData | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [data, setData]         = useState<VerifyData | null>(null)
+  const [loading, setLoading]   = useState(false)
   const [notFound, setNotFound] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
-  const [showRaw, setShowRaw] = useState(false)
-  const [copied, setCopied]   = useState(false)
+  const [error, setError]       = useState<string | null>(null)
+  const [inputVal, setInputVal] = useState(receiptId ?? '')
 
-  function doFetch(id: string) {
+  const doFetch = useCallback((id: string) => {
     if (!id) return
-    setLoading(true)
-    setData(null)
-    setNotFound(false)
-    setError(null)
+    setLoading(true); setData(null); setNotFound(false); setError(null)
     fetch(`${API_BASE}/api/public/verify/${encodeURIComponent(id)}`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json()
-      })
-      .then((d: VerifyData) => {
-        if (!d.found) setNotFound(true)
-        else setData(d)
-      })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then((d: VerifyData) => { if (!d.found) setNotFound(true); else setData(d) })
       .catch(() => setError('Verification service temporarily unavailable. Please try again.'))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (receiptId) { setInputVal(receiptId); doFetch(receiptId) }
+  }, [receiptId, doFetch])
+
+  function handleSearch() {
+    const t = inputVal.trim()
+    if (t) navigate(`/verify/${encodeURIComponent(t)}`)
   }
 
-  useEffect(() => { if (receiptId) doFetch(receiptId) }, [receiptId])
-
-  function handleSearch(id: string) {
+  function handleSelect(id: string) {
+    setInputVal(id)
     navigate(`/verify/${encodeURIComponent(id)}`)
   }
 
-  function copyLink() {
-    navigator.clipboard.writeText(window.location.href).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const colors = data ? decisionColors(data.decision_color) : decisionColors('gray')
-
   return (
     <div style={{
-      minHeight: '100vh', background: '#0a0e17', color: '#e5e7eb',
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #060c18 0%, #0a0e17 100%)',
+      color: '#e5e7eb',
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
-      {/* ── Header ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050D18]/90 backdrop-blur-xl border-b border-[#C9A227]/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 no-underline">
-            <img src="/omnix_logo.png" alt="OMNIX QUANTUM" className="h-10 w-auto object-contain" />
-          </Link>
-          <Link to="/try" className="flex items-center gap-1 text-sm text-[#C9A227] border border-[#C9A227]/30 px-3 py-1.5 rounded no-underline hover:bg-[#C9A227]/10 transition-colors">
-            Try the sandbox <ExternalLink size={12} />
+      <style>{`
+        @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+        input::placeholder { color: #374151 }
+      `}</style>
+
+      {/* ── Nav ── */}
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        background: 'rgba(6,12,24,0.92)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(201,162,39,0.1)',
+        padding: '0 24px', height: 60,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <img src="/omnix_logo.png" alt="OMNIX" style={{ height: 36, objectFit: 'contain' }} />
+        </Link>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: '0.8rem' }}>
+          <Link to="/try"          style={{ color: '#6b7280', textDecoration: 'none' }}>Sandbox</Link>
+          <Link to="/crisis-replay" style={{ color: '#6b7280', textDecoration: 'none' }}>Crisis Replay</Link>
+          <Link to="/verify-independently" style={{
+            color: '#C9A227', border: '1px solid rgba(201,162,39,0.3)',
+            borderRadius: 6, padding: '5px 12px', textDecoration: 'none', fontWeight: 600,
+          }}>
+            Verify offline →
           </Link>
         </div>
       </nav>
-      <div style={{ height: '64px' }} />
 
-      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '40px 20px 60px' }}>
 
-        {/* ── Page title + search ── */}
-        <div style={{ marginBottom: '2.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <Link to="/" style={{ color: '#6b7280', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem' }}>
-              <ArrowLeft size={14} /> Home
+        {/* ── Hero ── */}
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+            <Link to="/" style={{ color: '#374151', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.78rem' }}>
+              <ArrowLeft size={13} /> Home
             </Link>
+            <span style={{ color: '#1f2937' }}>·</span>
+            <span style={{ fontSize: '0.78rem', color: '#374151' }}>Receipt Verifier</span>
           </div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
-            Governance Receipt Verification
-          </h1>
-          <p style={{ color: '#9ca3af', fontSize: '0.88rem', margin: '0 0 20px' }}>
-            Independently verify the authenticity of any OMNIX governance decision.
-            Receipts are cryptographically signed — tamper-proof and publicly auditable.
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)',
+            }}>
+              <Shield size={20} color="#3b82f6" />
+            </div>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+              Governance Receipt Verifier
+            </h1>
+          </div>
+          <p style={{ color: '#4b5563', fontSize: '0.88rem', margin: '0 0 24px', lineHeight: 1.6 }}>
+            Every OMNIX decision is sealed in a cryptographically signed receipt.
+            Paste any receipt ID to verify its authenticity — independently, without trusting OMNIX.
           </p>
-          <SearchBox onSearch={handleSearch} />
+
+          {/* ── Search bar ── */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <Terminal size={14} style={{
+                position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#374151',
+              }} />
+              <input
+                value={inputVal}
+                onChange={e => setInputVal(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                placeholder="OMNIX-TRD-A1B2C3D4E5F6  or  OMNIX-RPL-9202F596F3FDB439"
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#e5e7eb', padding: '12px 14px 12px 38px',
+                  borderRadius: 9, fontFamily: 'monospace', fontSize: '0.88rem',
+                  outline: 'none', transition: 'border-color 0.2s',
+                }}
+                onFocus={e => (e.target.style.borderColor = 'rgba(59,130,246,0.5)')}
+                onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
+              />
+            </div>
+            <button onClick={handleSearch} style={{
+              background: '#3b82f6', color: '#fff', border: 'none',
+              padding: '12px 24px', borderRadius: 9, cursor: 'pointer',
+              fontWeight: 700, fontSize: '0.88rem',
+              display: 'flex', alignItems: 'center', gap: 7,
+              flexShrink: 0, transition: 'background 0.2s',
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#2563eb')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#3b82f6')}
+            >
+              <Search size={15} /> Verify
+            </button>
+          </div>
         </div>
 
-        {/* ── Loading ── */}
+        {/* ── States ── */}
         {loading && (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
-            <div style={{ fontSize: '0.9rem', marginBottom: '8px' }}>Verifying receipt...</div>
-            <div style={{ width: '40px', height: '2px', background: '#3b82f6', margin: '0 auto', animation: 'pulse 1s infinite' }} />
+          <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%',
+                border: '2px solid rgba(59,130,246,0.2)', borderTopColor: '#3b82f6',
+                animation: 'spin 0.8s linear infinite',
+              }} />
+              <div style={{ fontSize: '0.88rem', color: '#4b5563' }}>Verifying cryptographic integrity...</div>
+            </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
           </div>
         )}
 
-        {/* ── Error ── */}
-        {error && (
-          <div style={{ padding: '1.5rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '10px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-            <AlertTriangle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+        {error && !loading && (
+          <div style={{
+            padding: '16px 20px', borderRadius: 12,
+            background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)',
+            display: 'flex', gap: 12, alignItems: 'flex-start',
+          }}>
+            <AlertTriangle size={17} color="#ef4444" style={{ flexShrink: 0, marginTop: 1 }} />
             <div>
-              <div style={{ fontWeight: 600, color: '#ef4444', marginBottom: '4px' }}>Verification Error</div>
-              <div style={{ fontSize: '0.85rem', color: '#9ca3af' }}>{error}</div>
+              <div style={{ fontWeight: 600, color: '#ef4444', marginBottom: 4 }}>Verification Error</div>
+              <div style={{ fontSize: '0.84rem', color: '#9ca3af' }}>{error}</div>
             </div>
           </div>
         )}
 
-        {/* ── Not found ── */}
         {notFound && !loading && (
-          <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🔍</div>
-            <div style={{ fontWeight: 600, color: '#e5e7eb', marginBottom: '8px' }}>Receipt not found</div>
-            <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-              <code style={{ color: '#ef4444' }}>{receiptId}</code> does not exist in the governance ledger.
+          <div style={{
+            padding: '32px', borderRadius: 12, textAlign: 'center',
+            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
+          }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: 14 }}>🔍</div>
+            <div style={{ fontWeight: 700, color: '#e5e7eb', marginBottom: 8, fontSize: '1rem' }}>Receipt not found</div>
+            <div style={{ fontSize: '0.84rem', color: '#4b5563' }}>
+              <code style={{ color: '#6b7280', fontFamily: 'monospace' }}>{receiptId}</code> does not exist in the governance ledger.
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#4b5563', marginTop: '12px' }}>
-              Receipts are generated by the <Link to="/try" style={{ color: '#3b82f6' }}>public governance sandbox</Link> and live trading pipeline.
-            </div>
-          </div>
-        )}
-
-        {/* ── Verified receipt ── */}
-        {data && !loading && (
-          <div>
-            {/* ── Status banner ── */}
-            <div style={{
-              padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem',
-              background: colors.bg, border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '1.4rem' }}>{data.decision_icon}</span>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '1.1rem', color: colors.text }}>{data.decision}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>{data.receipt_id}</div>
-                    </div>
-                  </div>
-                  <p style={{ color: '#d1d5db', fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>{data.human_summary_en}</p>
-                  <p style={{ color: '#4b5563', fontSize: '0.72rem', margin: '10px 0 0', lineHeight: 1.4, letterSpacing: '0.03em' }}>
-                    Generated by{' '}
-                    <a href="https://omnixquantum.net" target="_blank" rel="noopener noreferrer" style={{ color: '#6b7280', textDecoration: 'none', borderBottom: '1px solid rgba(107,114,128,0.3)' }}>
-                      OMNIX Quantum
-                    </a>
-                    {' '}· Decision Governance Infrastructure · omnixquantum.net
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                  <button onClick={copyLink} title="Copy link" style={{
-                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                    color: copied ? '#22c55e' : '#9ca3af', padding: '6px 10px', borderRadius: '6px',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem',
-                  }}>
-                    <Copy size={12} /> {copied ? 'Copied!' : 'Share'}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Key facts ── */}
-            <div style={{
-              padding: '1rem 1.25rem', background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', marginBottom: '1.5rem',
-            }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
-                {[
-                  { label: 'Asset / Domain', value: `${data.asset} · ${data.domain}` },
-                  { label: 'Decision Time', value: formatTimestamp(data.timestamp_utc) },
-                  { label: 'Checkpoints', value: data.decision === 'BLOCKED'
-                    ? `${data.checkpoints_blocked} blocked`
-                    : `${data.checkpoints_passed} / ${data.checkpoints_total} passed` },
-                  { label: 'Policy Version', value: data.policy_version },
-                ].map(f => (
-                  <div key={f.label}>
-                    <div style={{ fontSize: '0.68rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>{f.label}</div>
-                    <div style={{ fontSize: '0.85rem', color: '#e5e7eb', fontFamily: f.label === 'Decision Time' ? 'inherit' : 'monospace' }}>{f.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ── Checkpoint pipeline ── */}
-            {data.checkpoints.length > 0 && (
-              <div style={{
-                padding: '1.25rem', background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', marginBottom: '1.5rem',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-                    Safety Checkpoint Pipeline
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', fontSize: '0.75rem' }}>
-                    {data.checkpoints_passed > 0 && <span style={{ color: '#22c55e' }}>✓ {data.checkpoints_passed} passed</span>}
-                    {data.checkpoints_blocked > 0 && <span style={{ color: '#ef4444' }}>✗ {data.checkpoints_blocked} blocked</span>}
-                  </div>
-                </div>
-                <div>
-                  {data.checkpoints.map((cp, i) => (
-                    <CheckpointCard key={i} cp={cp} index={i} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ── EBIP Integrity at Verification Time ── */}
-            {data.ebip_at_verification && (
-              <div style={{
-                padding: '1.25rem', background: 'rgba(139,92,246,0.05)',
-                border: '1px solid rgba(139,92,246,0.20)', borderRadius: '10px', marginBottom: '1.5rem',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                  <Activity size={14} color="#a78bfa" />
-                  <span style={{ fontSize: '0.75rem', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-                    Execution Boundary Integrity
-                  </span>
-                  <span style={{
-                    fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.08em',
-                    fontFamily: 'monospace', color: '#6b7280', marginLeft: 'auto',
-                  }}>ADR-045 · EBIP v{data.ebip_at_verification.ebip_version}</span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '12px' }}>
-                  {[
-                    { code: 'ACV', label: 'Consistency Validator', ok: data.ebip_at_verification.violations_24h === 0 },
-                    { code: 'ECP', label: 'Commitment Protocol', ok: true },
-                    { code: 'NPM', label: 'Navigation Monitor', ok: data.ebip_at_verification.alert_level === 'NOMINAL' || data.ebip_at_verification.alert_level === 'WATCH' },
-                    { code: 'CP',  label: 'Concentration Predictor', ok: data.ebip_at_verification.concentration_risk === 'LOW' || data.ebip_at_verification.concentration_risk === 'INSUFFICIENT_DATA' },
-                  ].map(c => (
-                    <div key={c.code} style={{
-                      padding: '8px', background: 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${c.ok ? 'rgba(139,92,246,0.2)' : 'rgba(251,191,36,0.25)'}`,
-                      borderRadius: '6px', textAlign: 'center',
-                    }}>
-                      <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', fontWeight: 700, color: c.ok ? '#a78bfa' : '#fbbf24', marginBottom: '3px' }}>
-                        {c.ok ? '✓' : '⚠'} {c.code}
-                      </div>
-                      <div style={{ fontSize: '0.58rem', color: '#6b7280', lineHeight: 1.3 }}>{c.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '0.6rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Integrity Score</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'monospace', color: data.ebip_at_verification.overall_score >= 90 ? '#a78bfa' : data.ebip_at_verification.overall_score >= 70 ? '#fbbf24' : '#ef4444' }}>
-                      {data.ebip_at_verification.overall_score} <span style={{ fontSize: '0.7rem', color: '#4b5563' }}>/ 100</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.6rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Alert Level</div>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, fontFamily: 'monospace', color: data.ebip_at_verification.alert_level === 'NOMINAL' ? '#a78bfa' : '#fbbf24' }}>
-                      {data.ebip_at_verification.alert_level}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.6rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Concentration Risk</div>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, fontFamily: 'monospace', color: '#9ca3af' }}>
-                      {data.ebip_at_verification.concentration_risk.replace('_', ' ')}
-                    </div>
-                  </div>
-                  <div style={{ marginLeft: 'auto', fontSize: '0.6rem', color: '#4b5563', fontFamily: 'monospace' }}>
-                    {data.ebip_at_verification.components_active} components active
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── Integrity & PQC ── */}
-            <div style={{
-              padding: '1.25rem', background: 'rgba(59,130,246,0.05)',
-              border: '1px solid rgba(59,130,246,0.15)', borderRadius: '10px', marginBottom: '1.5rem',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <Lock size={14} color="#60a5fa" />
-                <span style={{ fontSize: '0.75rem', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-                  Cryptographic Integrity
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '14px', padding: '10px', background: 'rgba(34,197,94,0.06)', borderRadius: '6px', border: '1px solid rgba(34,197,94,0.15)' }}>
-                <CheckCircle size={16} color="#22c55e" style={{ flexShrink: 0, marginTop: '1px' }} />
-                <div>
-                  <div style={{ fontSize: '0.85rem', color: '#22c55e', fontWeight: 600, marginBottom: '2px' }}>Receipt Verified — Tamper-Proof</div>
-                  <div style={{ fontSize: '0.78rem', color: '#9ca3af' }}>
-                    Signed with {data.integrity.signature_algorithm} · {data.integrity.nist_note}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowRaw(r => !r)}
-                style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.78rem', padding: 0, marginBottom: '10px', textDecoration: 'underline' }}
-              >
-                {showRaw ? 'Hide' : 'Show'} cryptographic hashes
-              </button>
-
-              {showRaw && (
-                <div>
-                  <HashDisplay label="Content Hash (SHA-256)" value={data.integrity.content_hash} />
-                  {data.integrity.prev_hash && (
-                    <HashDisplay label="Previous Receipt Hash" value={data.integrity.prev_hash} />
-                  )}
-                  <div style={{ fontSize: '0.72rem', color: '#4b5563', marginTop: '8px' }}>
-                    Hash chain links every receipt to the previous one — any modification breaks the chain permanently.
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ── Independent verification CTA ── */}
-            <div style={{
-              padding: '1rem 1.25rem', background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap',
-            }}>
-              <div>
-                <div style={{ fontSize: '0.85rem', color: '#e5e7eb', fontWeight: 500, marginBottom: '3px' }}>Independent Verification</div>
-                <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>
-                  Verify this receipt through the independent public ledger — requires no OMNIX infrastructure.
-                </div>
-              </div>
-              {data.independent_verify_url ? (
-                <a href={data.independent_verify_url} target="_blank" rel="noopener noreferrer" style={{
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-                  color: '#e5e7eb', padding: '8px 16px', borderRadius: '6px',
-                  textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600,
-                  display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0,
-                }}>
-                  Open Ledger <ExternalLink size={12} />
-                </a>
-              ) : (
-                <span style={{ fontSize: '0.78rem', color: '#4b5563' }}>Ledger URL not configured</span>
-              )}
-            </div>
-
-            {/* ── Footer note ── */}
-            <div style={{ textAlign: 'center', marginTop: '2rem', fontSize: '0.75rem', color: '#4b5563' }}>
-              All governance decisions are logged in an append-only hash chain with post-quantum cryptographic signatures.<br />
-              <Link to="/try" style={{ color: '#3b82f6' }}>Submit your own scenario</Link> · <Link to="/" style={{ color: '#3b82f6' }}>Learn about OMNIX</Link>
+            <div style={{ fontSize: '0.78rem', color: '#374151', marginTop: 10 }}>
+              Receipts are generated by the <Link to="/try" style={{ color: '#3b82f6' }}>public sandbox</Link> and the live trading pipeline.
             </div>
           </div>
         )}
 
-        {/* ── Empty state (no receipt ID in URL) — with live recent receipts ── */}
-        {!receiptId && !loading && !error && (
-          <EmptyStateWithFeed />
-        )}
+        {data && !loading && <ReceiptResult data={data} />}
+
+        {!receiptId && !loading && !error && <LiveFeed onSelect={handleSelect} />}
+
       </div>
     </div>
   )

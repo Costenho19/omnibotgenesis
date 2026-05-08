@@ -93,8 +93,13 @@ def _get_receipt_from_db(receipt_id: str) -> dict:
 
 
 @verification_bp.route('/verify')
-def verify_page():
-    return render_template('verify.html')
+@verification_bp.route('/verify/<path:receipt_id>')
+@verification_bp.route('/crisis-replay')
+def verify_page(receipt_id=None):
+    import os as _os
+    from flask import send_from_directory as _sfd
+    react_dist = _os.path.normpath(_os.path.join(_os.path.dirname(__file__), '..', '..', 'omnix_web', 'dist'))
+    return _sfd(react_dist, 'index.html')
 
 
 @verification_bp.route('/api/public_key')
