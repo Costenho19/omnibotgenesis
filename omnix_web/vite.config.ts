@@ -55,14 +55,20 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/api/governance/control': {
+      '/api/governance': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         proxyTimeout: 30000,
         timeout: 30000,
       },
-      '/api/governance': {
-        target: 'http://localhost:5000',
+      '/api/analytics': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        proxyTimeout: 30000,
+        timeout: 30000,
+      },
+      '/api/trust': {
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/api/credit': {

@@ -1020,6 +1020,104 @@ OVERRIDE: Tier 1 únicamente — 0 overrides ejercidos en producción (Mayo 2026
 
 ---
 
+## Governance Monitoring Layer — ADR-129 · ADR-131 · ADR-142 · ADR-143 (Mayo 2026)
+
+Cinco dashboards de auditoría con APIs reales respaldadas por tablas PostgreSQL. Todos los endpoints siguen el patrón de fail-open con fallback a array vacío — nunca devuelven 5xx al dashboard.
+
+### Dashboards y Rutas API
+
+| Dashboard | Ruta frontend | Endpoints Flask | ADR |
+|---|---|---|---|
+| Anomaly Response Engine | `/anomaly` | `GET /api/governance/anomaly/active` · `/summary` | ADR-129 |
+| Breach Containment Engine | `/breach` | `GET /api/governance/breach/status` · `/history` | ADR-142 |
+| Execution Integrity Layer | `/execution` | `GET /api/governance/execution/receipts` | ADR-131 |
+| Multi-Domain Risk Governance | `/risk` | `GET /api/governance/risk/history` · `/summary` · `/catalog` | ADR-143 |
+| Oscillation Insight Engine | `/oscillation` | `GET /api/analytics/oscillation` | ADR-134 |
+
+### Tablas de Base de Datos
+
+```sql
+-- ADR-129: Anomaly Response Engine
+anomaly_recommendations (
+    rec_id TEXT PK, domain TEXT, action_code TEXT,
+    severity TEXT, urgency TEXT, status TEXT,
+    summary TEXT, detail TEXT,
+    created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ,
+    resolved_at TIMESTAMPTZ, ack_at TIMESTAMPTZ, resolution_note TEXT
+)
+
+-- ADR-142: Breach Containment Engine
+breach_events (
+    event_id TEXT PK, status TEXT, trigger_code TEXT, severity TEXT,
+    summary TEXT, triggered_by TEXT, released_by TEXT, release_note TEXT,
+    triggered_at TIMESTAMPTZ, released_at TIMESTAMPTZ, is_active BOOLEAN
+)
+
+-- ADR-143: Multi-Domain Risk Governance
+risk_assessments (
+    assessment_id TEXT PK, subject TEXT, client_domain TEXT, decision TEXT,
+    composite_score FLOAT, financial_score FLOAT, technical_score FLOAT,
+    legal_score FLOAT, human_score FLOAT,
+    hard_block_vector TEXT, assessed_by TEXT, assessed_at TIMESTAMPTZ
+)
+
+-- ADR-131: Execution Integrity Layer (shared with SDK write path)
+execution_receipts (
+    receipt_id TEXT PK, decision_receipt_id TEXT, order_id TEXT,
+    asset TEXT, domain TEXT, direction TEXT, size_usd FLOAT,
+    final_status TEXT, intent_captured_at TIMESTAMPTZ, filled_at TIMESTAMPTZ,
+    fill_price_usd FLOAT, fill_pct FLOAT, slippage_bps FLOAT,
+    rejection_code TEXT, rejection_detail TEXT,
+    audit_trail JSONB, created_at TIMESTAMPTZ
+)
+```
+
+Todas las tablas se crean con `CREATE TABLE IF NOT EXISTS` en el primer request — no requieren migración manual.
+
+### Risk Vector Catalog (ADR-143)
+
+```json
+{
+  "vectors":         ["financial", "technical", "legal", "human"],
+  "default_weights": {"financial": 0.35, "technical": 0.25, "legal": 0.25, "human": 0.15},
+  "thresholds":      {"blocked": 75, "review": 55, "hard_block_per_vector": 90},
+  "decision_logic":  "BLOCKED if composite ≥ 75 or any single vector ≥ 90. REVIEW if composite ≥ 55."
+}
+```
+
+### Breach Containment Invariant (ADR-142)
+
+```
+FREEZE:   breach_events INSERT + is_active = TRUE → todas las decisiones BLOCKED
+RELEASE:  Solo Tier-1 (Harold Nunes). BCE.release_containment() requiere attestación humana.
+HISTORY:  Inmutable — cada evento queda registrado con triggered_by + released_by.
+```
+
+---
+
+## Variables de Entorno — Estado de Producción (Mayo 2026)
+
+### Presentes en Railway ✓
+
+`DATABASE_URL` · `REDIS_URL` · `GEMINI_API_KEY` · `TELEGRAM_BOT_TOKEN` · `OMNIX_WEB_URL` · `OPENAI_API_KEY` · `SESSION_SECRET` · `PAYLOAD_ENCRYPTION_KEY` · `FINNHUB_API_KEY` · `ALPHA_VANTAGE_API_KEY` · `KRAKEN_API_KEY` · `KRAKEN_API_SECRET` · `COINBASE_API_KEY` · `COINBASE_PASSPHRASE` · `COINBASE_SECRET` · `DASHBOARD_API_KEY` · `PAPER_MODE` · `TRADING_MODE` · `TRADING_PROFILE`
+
+### Ausentes en Railway — Acción Requerida ⚠️
+
+| Variable | Impacto | Acción |
+|---|---|---|
+| `OMNIX_SIGNING_SECRET_KEY_B64` | Receipts en producción sin firma PQC (Dilithium-3) | Copiar de Replit Secrets → Railway |
+| `OMNIX_SIGNING_PUBLIC_KEY_B64` | Verificación PQC deshabilitada en producción | Copiar de Replit Secrets → Railway |
+| `TELEGRAM_ADMIN_USER_ID` | Comandos admin del bot deshabilitados | Obtener via @userinfobot → añadir en Railway y Replit |
+
+### Nombres Canónicos (importantes — confusión frecuente)
+
+| Lo que se lee en el código | NO usar |
+|---|---|
+| `SESSION_SECRET` (Flask Dashboard) | ~~`SECRET_KEY`~~ |
+| `PAYLOAD_ENCRYPTION_KEY` (Fernet webhooks) | ~~`WEBHOOK_ENCRYPTION_KEY`~~ |
+
+---
+
 ## Documentos Relacionados
 
 - [Mapa Funcional Completo](COMPLETE_FUNCTIONALITY_MAP.md) - 11 dominios detallados
@@ -1032,6 +1130,7 @@ OVERRIDE: Tier 1 únicamente — 0 overrides ejercidos en producción (Mayo 2026
 - [Runtime Authority Matrix](../AUTHORITY_MATRIX.md) - Matriz de autoridad en runtime (ADR-146)
 - [ADR-145 Governance Replay Engine](../adr/ADR-145-governance-replay-engine.md)
 - [ADR-146 Runtime Authority Matrix](../adr/ADR-146-runtime-authority-matrix.md)
+- [Crisis Replay Page](/crisis-replay) - 5 crisis históricas con receipts verificables (ADR-145)
 
 ---
 

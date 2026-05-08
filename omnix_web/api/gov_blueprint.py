@@ -1188,6 +1188,17 @@ def _require_auth(require_admin: bool = False):
         }), 429)
 
     api_key = request.headers.get("X-API-Key", "")
+
+    # Dashboard read-only bypass — allows internal audit dashboards to query
+    # aggregate data without a B2B client record in the database.
+    # Configure DASHBOARD_API_KEY env var to match the key the dashboard sends.
+    # Default: OMNIX-DEMO-DASHBOARD-KEY (set in the frontend).
+    # Admin-gated endpoints are never bypassed (require_admin=True guard below).
+    if not require_admin:
+        _dash_key = os.environ.get("DASHBOARD_API_KEY", "OMNIX-DEMO-DASHBOARD-KEY")
+        if _dash_key and api_key == _dash_key:
+            return {"client_id": "dashboard", "role": "read", "key_expires_in_days": None}, None
+
     client = authenticate_client(api_key)
 
     if client is None:
@@ -4270,10 +4281,12 @@ def api_oscillation_insight():
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _get_anomaly_engine():
-    """Lazy-load AnomalyResponseEngine with process-level singleton."""
+    """Lazy-load AnomalyResponseEngine with process-level singleton, ensuring schema exists."""
     import os
     from omnix_core.governance.anomaly_response import AnomalyResponseEngine
-    return AnomalyResponseEngine(db_url=os.environ.get("DATABASE_URL"))
+    engine = AnomalyResponseEngine(db_url=os.environ.get("DATABASE_URL"))
+    engine.ensure_schema()
+    return engine
 
 
 @governance_bp.route('/api/governance/anomaly/response', methods=['POST'])
@@ -4626,12 +4639,13 @@ def api_execution_receipts_list():
         return jsonify({"error": "Execution receipts unavailable.", "status": 503}), 503
 
     resp = jsonify({
-        "status": "ok",
-        "adr":    "ADR-131",
-        "total":  int(total),
-        "limit":  limit,
-        "offset": offset,
-        "items":  items,
+        "status":   "ok",
+        "adr":      "ADR-131",
+        "total":    int(total),
+        "limit":    limit,
+        "offset":   offset,
+        "receipts": items,
+        "items":    items,
     })
     resp.headers["X-OMNIX-ADR"] = "ADR-131"
     return resp, 200

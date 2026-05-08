@@ -630,10 +630,9 @@ class OscillationInsightEngine:
         Returns list ordered most-recent-first (week_offset=0 is current week).
         """
         domain_filter = "AND domain = %s" if domain else ""
-        params: list = []
+        params: list = [num_weeks]
         if domain:
             params.append(domain)
-        params.append(num_weeks)
 
         with _db_conn(self._db_url) as conn, conn.cursor() as cur:
             cur.execute(

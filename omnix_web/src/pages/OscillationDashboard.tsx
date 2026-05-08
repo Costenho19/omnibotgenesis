@@ -122,6 +122,13 @@ export default function OscillationDashboard() {
     return () => clearInterval(t)
   }, [fetchData])
 
+  // Fast retry on error (3 s) — recovers from startup race condition
+  useEffect(() => {
+    if (!error) return
+    const t = setTimeout(fetchData, 3000)
+    return () => clearTimeout(t)
+  }, [error, fetchData])
+
   const profile   = data?.oscillation_profile
   const asymmetry = data?.asymmetry
   const dampening = data?.dampening

@@ -2576,14 +2576,19 @@ def analytics_oscillation():
         else:
             result = engine.oscillation_report(domain=domain, num_weeks=num_weeks)
 
-        return jsonify({
+        resp_body = {
             'success':      True,
-            'adr':          'ADR-134 — Governance Oscillation & Hesitation Asymmetry Engine',
+            'adr':          'ADR-134',
             'view':         view,
             'domain':       domain,
-            'result':       result,
+            'num_weeks':    num_weeks,
             'generated_at': datetime.now(timezone.utc).isoformat(),
-        }), 200, {
+        }
+        if isinstance(result, dict):
+            resp_body.update(result)
+        else:
+            resp_body['result'] = result
+        return jsonify(resp_body), 200, {
             'Content-Type':               'application/json',
             'Access-Control-Allow-Origin': '*',
             'Cache-Control':              'no-cache, no-store, must-revalidate',
@@ -5019,6 +5024,14 @@ def get_book_leads():
     except Exception as exc:
         return jsonify({'error': str(exc)}), 500
 
+
+# NOTE: Governance monitoring routes (anomaly/active, anomaly/summary,
+# breach/status, breach/history, execution/receipts, risk/catalog,
+# risk/history, risk/summary) are implemented in gov_blueprint.py and
+# registered via app.register_blueprint(governance_bp) above.
+# Do NOT add duplicate @app.route definitions for these URLs here.
+
+# ── SPA catch-all ─────────────────────────────────────────────────────────────
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

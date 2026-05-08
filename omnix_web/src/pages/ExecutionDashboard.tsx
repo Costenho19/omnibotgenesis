@@ -93,6 +93,13 @@ export default function ExecutionDashboard() {
     return () => clearInterval(t)
   }, [fetchData])
 
+  // Fast retry on error (3 s) — recovers from startup race condition
+  useEffect(() => {
+    if (!error) return
+    const t = setTimeout(fetchData, 3000)
+    return () => clearTimeout(t)
+  }, [error, fetchData])
+
   const filled  = receipts.filter(r => r.final_status === 'FILLED').length
   const pending = receipts.filter(r => r.final_status === 'PENDING').length
   const failed  = receipts.filter(r => r.final_status === 'FAILED').length

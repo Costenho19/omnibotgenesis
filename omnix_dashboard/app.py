@@ -325,6 +325,60 @@ def proxy_execution_api(subpath):
     return _proxy_to_omnix_web(f'api/execution/{subpath}')
 
 
+@app.route('/api/governance/execution/<path:subpath>', methods=['GET', 'POST', 'OPTIONS'])
+def proxy_governance_execution_api(subpath):
+    """Forward /api/governance/execution/* to OMNIX Web API on port 8080 (ADR-131)."""
+    return _proxy_to_omnix_web(f'api/governance/execution/{subpath}')
+
+
+@app.route('/api/governance/anomaly/active', methods=['GET', 'OPTIONS'])
+def proxy_governance_anomaly_active():
+    """Forward /api/governance/anomaly/active to OMNIX Web API on port 8080 (ADR-129)."""
+    return _proxy_to_omnix_web('api/governance/anomaly/active')
+
+
+@app.route('/api/governance/anomaly/summary', methods=['GET', 'OPTIONS'])
+def proxy_governance_anomaly_summary():
+    """Forward /api/governance/anomaly/summary to OMNIX Web API on port 8080 (ADR-129)."""
+    return _proxy_to_omnix_web('api/governance/anomaly/summary')
+
+
+@app.route('/api/governance/breach/status', methods=['GET', 'OPTIONS'])
+def proxy_governance_breach_status():
+    """Forward /api/governance/breach/status to OMNIX Web API on port 8080 (ADR-142)."""
+    return _proxy_to_omnix_web('api/governance/breach/status')
+
+
+@app.route('/api/governance/breach/history', methods=['GET', 'OPTIONS'])
+def proxy_governance_breach_history():
+    """Forward /api/governance/breach/history to OMNIX Web API on port 8080 (ADR-142)."""
+    return _proxy_to_omnix_web('api/governance/breach/history')
+
+
+@app.route('/api/governance/risk/catalog', methods=['GET', 'OPTIONS'])
+def proxy_governance_risk_catalog():
+    """Forward /api/governance/risk/catalog to OMNIX Web API on port 8080 (ADR-143)."""
+    return _proxy_to_omnix_web('api/governance/risk/catalog')
+
+
+@app.route('/api/governance/risk/history', methods=['GET', 'OPTIONS'])
+def proxy_governance_risk_history():
+    """Forward /api/governance/risk/history to OMNIX Web API on port 8080 (ADR-143)."""
+    return _proxy_to_omnix_web('api/governance/risk/history')
+
+
+@app.route('/api/governance/risk/summary', methods=['GET', 'OPTIONS'])
+def proxy_governance_risk_summary():
+    """Forward /api/governance/risk/summary to OMNIX Web API on port 8080 (ADR-143)."""
+    return _proxy_to_omnix_web('api/governance/risk/summary')
+
+
+@app.route('/api/analytics/<path:subpath>', methods=['GET', 'POST', 'OPTIONS'])
+def proxy_analytics_api(subpath):
+    """Forward /api/analytics/* to OMNIX Web API on port 8080 (ADR-134 oscillation)."""
+    return _proxy_to_omnix_web(f'api/analytics/{subpath}')
+
+
 @app.after_request
 def strip_server_header(response):
     response.headers['Server'] = 'OMNIX-DGI'
