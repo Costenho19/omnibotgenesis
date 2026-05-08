@@ -131,6 +131,294 @@ export class OmnixClient {
     return this.get('/.well-known/omnix-public-key.json', false)
   }
 
+  // ── Oscillation Insight Engine (ADR-134) ─────────────────────────────────
+
+  /**
+   * Fetch governance oscillation analytics for a domain.
+   * No authentication required — public analytics endpoint.
+   *
+   * @param domain    Governance domain (trading | insurance | energy | …)
+   * @param view      "full" | "profile" | "phases" | "asymmetry" | "dampening"
+   * @param numWeeks  Analysis window 1–26 weeks (default 12)
+   * ADR-134.
+   */
+  async oscillation(
+    domain:   string,
+    view     = 'full',
+    numWeeks = 12,
+  ): Promise<Record<string, unknown>> {
+    return this.get(
+      `/api/analytics/oscillation?domain=${domain}&view=${view}&num_weeks=${numWeeks}`,
+      false,
+    )
+  }
+
+  // ── Anomaly Response Engine (ADR-129) ────────────────────────────────────
+
+  /**
+   * Run a full anomaly detection and response cycle for a domain.
+   * ADR-129.
+   */
+  async anomalyResponse(domain: string): Promise<Record<string, unknown>> {
+    return this.post('/api/governance/anomaly/response', { domain })
+  }
+
+  /**
+   * List all ACTIVE anomaly recommendations.
+   * ADR-129.
+   */
+  async anomalyActive(domain?: string): Promise<Record<string, unknown>> {
+    const q = domain ? `?domain=${domain}` : ''
+    return this.get(`/api/governance/anomaly/active${q}`)
+  }
+
+  /**
+   * Summary of anomaly recommendations by status and action code.
+   * ADR-129.
+   */
+  async anomalySummary(domain?: string): Promise<Record<string, unknown>> {
+    const q = domain ? `?domain=${domain}` : ''
+    return this.get(`/api/governance/anomaly/summary${q}`)
+  }
+
+  /**
+   * Acknowledge an active anomaly recommendation.
+   * ADR-129.
+   */
+  async anomalyAcknowledge(recId: string, note = ''): Promise<Record<string, unknown>> {
+    return this.post(`/api/governance/anomaly/${recId}/acknowledge`, { acknowledge_note: note })
+  }
+
+  /**
+   * Resolve an active or acknowledged anomaly recommendation.
+   * ADR-129.
+   */
+  async anomalyResolve(recId: string, note = ''): Promise<Record<string, unknown>> {
+    return this.post(`/api/governance/anomaly/${recId}/resolve`, { resolution_note: note })
+  }
+
+  // ── Execution Integrity Layer (ADR-131) ──────────────────────────────────
+
+  /**
+   * Capture execution intent BEFORE placing a trade.
+   *
+   * If this call fails (503), the trade must NOT proceed.
+   * This is an ADR-131 hard invariant.
+   * ADR-131.
+   */
+  async executionIntent(opts: {
+    orderId:           string
+    decisionReceiptId: string
+    asset:             string
+    domain:            string
+    direction:         string
+    sizeUsd:           number
+  }): Promise<Record<string, unknown>> {
+    return this.post('/api/governance/execution/intent', {
+      order_id:            opts.orderId,
+      decision_receipt_id: opts.decisionReceiptId,
+      asset:               opts.asset,
+      domain:              opts.domain,
+      direction:           opts.direction,
+      size_usd:            opts.sizeUsd,
+    })
+  }
+
+  /**
+   * List execution receipts.
+   * ADR-131.
+   */
+  async executionReceipts(opts: {
+    decisionReceiptId?: string
+    status?:            string
+    limit?:             number
+    offset?:            number
+  } = {}): Promise<Record<string, unknown>> {
+    const p = new URLSearchParams()
+    p.set('limit',  String(opts.limit  ?? 20))
+    p.set('offset', String(opts.offset ?? 0))
+    if (opts.decisionReceiptId) p.set('decision_receipt_id', opts.decisionReceiptId)
+    if (opts.status)            p.set('status', opts.status)
+    return this.get(`/api/governance/execution/receipts?${p}`)
+  }
+
+  /**
+   * Fetch a single execution receipt by order ID.
+   * ADR-131.
+   */
+  async executionReceipt(orderId: string): Promise<Record<string, unknown>> {
+    return this.get(`/api/governance/execution/receipts/${orderId}`)
+  }
+
+  // ── Breach Containment Engine (ADR-142) ──────────────────────────────────
+
+  /**
+   * Get current containment status.
+   * No authentication required. Fail-closed: DB error → is_contained=true.
+   * ADR-142.
+   */
+  async breachStatus(): Promise<Record<string, unknown>> {
+    return this.get('/api/governance/breach/status', false)
+  }
+
+  /**
+   * Activate breach containment. Blocks ALL governance decisions immediately.
+   *
+   * WARNING: After activation, all governance decisions return BLOCKED
+   * until breachRelease() is called with human authorization.
+   *
+   * @param triggerCode MANUAL_OPERATOR | TIMING_ANOMALY | CHECKSUM_MISMATCH |
+   *                    PROCESS_ANOMALY | REPEATED_AUTH_FAILURE | API_TRIGGERED
+   * @param severity    CRITICAL | HIGH | MEDIUM
+   * @param summary     Human-readable description of the threat
+   * @param triggeredBy Operator/system identifier
+   * @param detail      Optional extra context
+   * ADR-142.
+   */
+  async breachActivate(opts: {
+    triggerCode:  string
+    severity:     string
+    summary:      string
+    triggeredBy?: string
+    detail?:      Record<string, unknown>
+  }): Promise<Record<string, unknown>> {
+    return this.post('/api/governance/breach/activate', {
+      trigger_code:  opts.triggerCode,
+      severity:      opts.severity,
+      summary:       opts.summary,
+      triggered_by:  opts.triggeredBy ?? 'node-sdk',
+      detail:        opts.detail ?? {},
+    })
+  }
+
+  /**
+   * Release an active containment event. Requires human authorization.
+   * ADR-142.
+   */
+  async breachRelease(opts: {
+    eventId:      string
+    authorizedBy: string
+    releaseNote:  string
+  }): Promise<Record<string, unknown>> {
+    return this.post('/api/governance/breach/release', {
+      event_id:      opts.eventId,
+      authorized_by: opts.authorizedBy,
+      release_note:  opts.releaseNote,
+    })
+  }
+
+  /**
+   * Run automated threat assessment. Does NOT auto-activate containment.
+   * If result.recommended_action === 'ACTIVATE_CONTAINMENT', call breachActivate().
+   * ADR-142.
+   */
+  async breachAssess(opts: {
+    latencyMs?:          number
+    expectedLatencyMs?:  number
+    latencySigma?:       number
+    avmSnapshotHash?:    string
+    expectedHash?:       string
+    authFailureCount?:   number
+    authFailureWindow?:  number
+  } = {}): Promise<Record<string, unknown>> {
+    return this.post('/api/governance/breach/assess', {
+      latency_ms:           opts.latencyMs,
+      expected_latency_ms:  opts.expectedLatencyMs,
+      latency_sigma:        opts.latencySigma,
+      avm_snapshot_hash:    opts.avmSnapshotHash,
+      expected_hash:        opts.expectedHash,
+      auth_failure_count:   opts.authFailureCount ?? 0,
+      auth_failure_window:  opts.authFailureWindow ?? 300,
+    })
+  }
+
+  /**
+   * Return paginated breach event history.
+   * ADR-142.
+   */
+  async breachHistory(opts: {
+    status?: string
+    limit?:  number
+    offset?: number
+  } = {}): Promise<Record<string, unknown>> {
+    const p = new URLSearchParams()
+    p.set('limit',  String(opts.limit  ?? 20))
+    p.set('offset', String(opts.offset ?? 0))
+    if (opts.status) p.set('status', opts.status)
+    return this.get(`/api/governance/breach/history?${p}`)
+  }
+
+  // ── Multi-Domain Risk Governance (ADR-143) ───────────────────────────────
+
+  /**
+   * Evaluate multi-domain risk for a subject.
+   *
+   * @param subject      Entity or deployment identifier
+   * @param riskSignals  Per-vector signals: financial, technical, legal, human
+   * @param weights      Optional custom weights (normalized to sum to 1.0)
+   * @param clientDomain Client's operational domain context
+   * @param assessedBy   Operator/system identifier
+   *
+   * Decision logic:
+   *   composite ≥ 80 → BLOCKED | 60–79 → REVIEW | < 60 → APPROVED
+   *   Any single vector ≥ 95 → BLOCKED regardless of composite.
+   * ADR-143.
+   */
+  async riskEvaluate(opts: {
+    subject:       string
+    riskSignals:   Record<string, Record<string, number>>
+    weights?:      Record<string, number>
+    clientDomain?: string
+    assessedBy?:   string
+  }): Promise<Record<string, unknown>> {
+    const body: Record<string, unknown> = {
+      subject:      opts.subject,
+      risk_signals: opts.riskSignals,
+      assessed_by:  opts.assessedBy ?? 'node-sdk',
+    }
+    if (opts.weights)      body.weights       = opts.weights
+    if (opts.clientDomain) body.client_domain = opts.clientDomain
+    return this.post('/api/governance/risk/evaluate', body)
+  }
+
+  /**
+   * Fetch supported risk vectors, signal definitions, and thresholds.
+   * No authentication required — public endpoint.
+   * ADR-143.
+   */
+  async riskCatalog(): Promise<Record<string, unknown>> {
+    return this.get('/api/governance/risk/catalog', false)
+  }
+
+  /**
+   * Return paginated risk assessment history.
+   * ADR-143.
+   */
+  async riskHistory(opts: {
+    subject?:       string
+    clientDomain?:  string
+    decision?:      string
+    limit?:         number
+    offset?:        number
+  } = {}): Promise<Record<string, unknown>> {
+    const p = new URLSearchParams()
+    p.set('limit',  String(opts.limit  ?? 20))
+    p.set('offset', String(opts.offset ?? 0))
+    if (opts.subject)      p.set('subject',       opts.subject)
+    if (opts.clientDomain) p.set('client_domain',  opts.clientDomain)
+    if (opts.decision)     p.set('decision',       opts.decision)
+    return this.get(`/api/governance/risk/history?${p}`)
+  }
+
+  /**
+   * Aggregate statistics across all risk assessments.
+   * ADR-143.
+   */
+  async riskSummary(clientDomain?: string): Promise<Record<string, unknown>> {
+    const q = clientDomain ? `?client_domain=${clientDomain}` : ''
+    return this.get(`/api/governance/risk/summary${q}`)
+  }
+
   // ── Internal ───────────────────────────────────────────────────────────
 
   private headers(authenticated = true): Record<string, string> {

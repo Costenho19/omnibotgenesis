@@ -87,7 +87,7 @@ OMNIX QUANTUM provides a robust decision governance platform that enables audita
 
 ## Pointers
 
-*   **ADRs:** `docs/adr/` — 138 total (ADR-136: Robotics vertical · ADR-137: Islamic Credit vertical · ADR-138: Unified Decision Control Layer / MOD-014)
+*   **ADRs:** `docs/adr/` — 143 total (ADR-141: Module API Wiring · ADR-142: Breach Containment Engine / MOD-010 · ADR-143: Multi-Domain Risk Governance / MOD-013)
 *   **Full Architecture:** `docs/current/ARCHITECTURE.md`
 *   **Deployment Operations:** `docs/operations/DEPLOYMENT.md`
 *   **Governance Modules Roadmap:** `docs/DASHBOARD_IMPROVEMENT_BACKLOG.md` § GOVERNANCE MODULES ROADMAP (Mar 2026)

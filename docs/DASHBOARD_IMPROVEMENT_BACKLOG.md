@@ -395,7 +395,15 @@ All critical, high-priority, and nice-to-have features have been delivered.
 
 #### MOD-010: Breach Containment Engine
 - **Descripción:** Modifica el comportamiento del pipeline bajo condición de ciberataque detectado. Bloquea decisiones automáticamente si el entorno de ejecución está comprometido.
-- **Status:** BACKLOG
+- **Implementación:**
+  - Core: `omnix_core/governance/breach_containment.py` — BreachContainmentEngine, ContainmentStatus, BreachEvent
+  - API: 5 endpoints en `omnix_web/api/gov_blueprint.py` — GET /breach/status (público), POST /breach/activate, POST /breach/release, POST /breach/assess, GET /breach/history
+  - DB: Tabla `breach_containment_events` (creada lazy)
+  - Fail-closed ADR-116: error en BCE → `is_contained=True`, HTTP 503
+  - Frontend: `omnix_web/src/pages/BreachDashboard.tsx` — `/breach`
+  - SDK Python + Node.js: métodos `breach_status`, `breach_activate`, `breach_release`, `breach_assess`, `breach_history`
+  - Tests: 19 tests (T01–T10 módulo, T37–T46 API) en `tests/test_adr142_143_api.py`
+- **Status:** ✅ IMPLEMENTADO — May 8, 2026 (ADR-142)
 
 #### MOD-014: Unified Decision Control Layer
 - **Descripción:** API externa que coordina todos los pilares de gobernanza y bloquea si cualquiera falla. Versión formalizada del pipeline actual para consumo B2B.
@@ -410,7 +418,15 @@ All critical, high-priority, and nice-to-have features have been delivered.
 
 #### MOD-013: Multi-Domain Risk Governance
 - **Descripción:** Unifica riesgo financiero, técnico, legal y humano en un único score de gobernanza. Permite a clientes no-financieros usar OMNIX como capa de control.
-- **Status:** BACKLOG
+- **Implementación:**
+  - Core: `omnix_core/governance/multi_domain_risk.py` — MultiDomainRiskEngine, 4 vectores, scoring rule-based 0–100
+  - API: 4 endpoints en `omnix_web/api/gov_blueprint.py` — POST /risk/evaluate, GET /risk/catalog (público), GET /risk/history, GET /risk/summary
+  - DB: Tabla `multi_domain_risk_assessments` (creada lazy)
+  - Thresholds: composite ≥ 80 → BLOCKED | 60–79 → REVIEW | <60 → APPROVED; vector ≥ 95 → hard block
+  - Frontend: `omnix_web/src/pages/RiskDashboard.tsx` — `/risk`
+  - SDK Python + Node.js: métodos `risk_evaluate`, `risk_catalog`, `risk_history`, `risk_summary`
+  - Tests: 18 tests (T19–T36 módulo, T47–T55 API) en `tests/test_adr142_143_api.py`
+- **Status:** ✅ IMPLEMENTADO — May 8, 2026 (ADR-143)
 
 ---
 

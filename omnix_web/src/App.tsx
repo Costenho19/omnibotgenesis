@@ -40,6 +40,11 @@ import ARFCompliance from './pages/ARFCompliance'
 import FullDemo from './pages/FullDemo'
 import BookLanding from './pages/BookLanding'
 import BookLeadsDashboard from './pages/BookLeadsDashboard'
+import OscillationDashboard from './pages/OscillationDashboard'
+import AnomalyDashboard from './pages/AnomalyDashboard'
+import ExecutionDashboard from './pages/ExecutionDashboard'
+import BreachDashboard from './pages/BreachDashboard'
+import RiskDashboard from './pages/RiskDashboard'
 import './index.css'
 
 function App() {
@@ -86,6 +91,11 @@ function App() {
           <Route path="/full-demo" element={<FullDemo />} />
           <Route path="/book" element={<BookLanding />} />
           <Route path="/book-leads" element={<BookLeadsDashboard />} />
+          <Route path="/oscillation" element={<OscillationDashboard />} />
+          <Route path="/anomaly" element={<AnomalyDashboard />} />
+          <Route path="/execution" element={<ExecutionDashboard />} />
+          <Route path="/breach" element={<BreachDashboard />} />
+          <Route path="/risk" element={<RiskDashboard />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />

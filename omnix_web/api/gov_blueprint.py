@@ -4786,3 +4786,469 @@ def api_execution_log_intent():
     })
     resp.headers["X-OMNIX-ADR"] = "ADR-131"
     return resp, 201
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MOD-010 — BREACH CONTAINMENT ENGINE (ADR-142)
+# Endpoints: status, activate, release, assess, history
+# Authentication: X-API-Key (B2B clients). Admin-only for activate/release.
+# Fail-closed: any BCE error → is_contained=True (ADR-116).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _get_bce():
+    """Lazy-load BreachContainmentEngine (ADR-142)."""
+    from omnix_core.governance.breach_containment import BreachContainmentEngine
+    engine = BreachContainmentEngine()
+    engine.ensure_table()
+    return engine
+
+
+@governance_bp.route('/api/governance/breach/status', methods=['GET'])
+def api_breach_status():
+    """
+    GET /api/governance/breach/status
+
+    Returns current containment status.
+    Public endpoint (no auth) — status must be queryable without credentials
+    so monitoring systems can check before attempting authenticated calls.
+
+    Response:
+      is_contained:    bool — True if system is in containment mode
+      active_event_id: str | null
+      trigger_code:    str | null
+      severity:        str | null
+      summary:         str | null
+      triggered_at:    ISO8601 | null
+      triggered_by:    str | null
+      total_events:    int
+      adr:             "ADR-142"
+
+    ADR-142.
+    """
+    try:
+        bce    = _get_bce()
+        status = bce.get_status()
+        resp   = jsonify(status.to_dict())
+        resp.headers["X-OMNIX-ADR"] = "ADR-142"
+        return resp
+    except Exception as exc:
+        logger.error("[BCE] /breach/status unhandled: %s", exc)
+        return jsonify({
+            "is_contained":    True,
+            "trigger_code":    "ENDPOINT_ERROR",
+            "severity":        "CRITICAL",
+            "summary":         f"BCE status endpoint error — fail-closed: {type(exc).__name__}",
+            "adr":             "ADR-142",
+        }), 503
+
+
+@governance_bp.route('/api/governance/breach/activate', methods=['POST'])
+def api_breach_activate():
+    """
+    POST /api/governance/breach/activate
+
+    Activate containment. Admin-only (requires X-Admin-Key header or
+    X-API-Key with admin scope).
+
+    Body (JSON):
+      trigger_code: str  — MANUAL_OPERATOR | TIMING_ANOMALY | CHECKSUM_MISMATCH |
+                           PROCESS_ANOMALY | REPEATED_AUTH_FAILURE | API_TRIGGERED
+      severity:     str  — CRITICAL | HIGH | MEDIUM
+      summary:      str  — Human-readable description (max 512 chars)
+      triggered_by: str  — Operator/system identifier
+      detail:       dict — Optional extra context
+
+    Response:
+      event_id, status, trigger_code, severity, summary, triggered_at, adr
+
+    ADR-142.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    body = request.get_json(silent=True) or {}
+
+    trigger_code = str(body.get("trigger_code", "API_TRIGGERED"))[:64]
+    severity     = str(body.get("severity", "HIGH"))[:32]
+    summary      = str(body.get("summary", "Manual containment activation via API"))[:512]
+    triggered_by = str(body.get("triggered_by", client.get("client_id", "api")))[:128]
+    detail       = body.get("detail") if isinstance(body.get("detail"), dict) else {}
+
+    _VALID_TRIGGERS = {
+        "MANUAL_OPERATOR", "TIMING_ANOMALY", "CHECKSUM_MISMATCH",
+        "PROCESS_ANOMALY", "REPEATED_AUTH_FAILURE", "API_TRIGGERED",
+    }
+    _VALID_SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM"}
+
+    if trigger_code not in _VALID_TRIGGERS:
+        return jsonify({
+            "error":   f"trigger_code must be one of: {', '.join(sorted(_VALID_TRIGGERS))}.",
+            "status":  400,
+        }), 400
+    if severity not in _VALID_SEVERITIES:
+        return jsonify({
+            "error":   f"severity must be one of: {', '.join(sorted(_VALID_SEVERITIES))}.",
+            "status":  400,
+        }), 400
+    if not summary.strip():
+        return jsonify({"error": "summary is required.", "status": 400}), 400
+
+    try:
+        bce   = _get_bce()
+        event = bce.activate_containment(
+            trigger_code = trigger_code,
+            severity     = severity,
+            summary      = summary,
+            triggered_by = triggered_by,
+            detail       = detail,
+        )
+        resp = jsonify({
+            "status":        "CONTAINMENT_ACTIVATED",
+            "event":         event.to_dict(),
+            "warning":       "All automated governance decisions are now BLOCKED. Release requires explicit authorization.",
+            "adr":           "ADR-142",
+        })
+        resp.headers["X-OMNIX-ADR"] = "ADR-142"
+        return resp, 201
+    except Exception as exc:
+        logger.error("[BCE] /breach/activate unhandled: %s", exc)
+        return jsonify({"error": f"BCE activation failed: {type(exc).__name__}", "status": 503}), 503
+
+
+@governance_bp.route('/api/governance/breach/release', methods=['POST'])
+def api_breach_release():
+    """
+    POST /api/governance/breach/release
+
+    Release an active containment event. Requires human authorization.
+    Authentication: X-API-Key.
+
+    Body (JSON):
+      event_id:      str — BCE event ID to release
+      authorized_by: str — Authorizing operator identifier
+      release_note:  str — Required: reason for release (max 512 chars)
+
+    ADR-142.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    body = request.get_json(silent=True) or {}
+
+    event_id      = str(body.get("event_id", "")).strip()
+    authorized_by = str(body.get("authorized_by", client.get("client_id", "api"))).strip()
+    release_note  = str(body.get("release_note", "")).strip()
+
+    if not event_id:
+        return jsonify({"error": "event_id is required.", "status": 400}), 400
+    if not release_note:
+        return jsonify({
+            "error":  "release_note is required. Document the reason for containment release.",
+            "status": 400,
+        }), 400
+
+    try:
+        bce    = _get_bce()
+        result = bce.release_containment(
+            event_id      = event_id,
+            authorized_by = authorized_by,
+            release_note  = release_note,
+        )
+        if not result.get("success"):
+            return jsonify({"error": result.get("error", "Release failed."), "status": 404}), 404
+
+        resp = jsonify({**result, "adr": "ADR-142"})
+        resp.headers["X-OMNIX-ADR"] = "ADR-142"
+        return resp
+    except Exception as exc:
+        logger.error("[BCE] /breach/release unhandled: %s", exc)
+        return jsonify({"error": f"BCE release failed: {type(exc).__name__}", "status": 503}), 503
+
+
+@governance_bp.route('/api/governance/breach/assess', methods=['POST'])
+def api_breach_assess():
+    """
+    POST /api/governance/breach/assess
+
+    Run automated environment threat assessment.
+    Returns indicators and recommended action — does NOT auto-activate.
+    Caller decides whether to call /breach/activate based on result.
+    Authentication: X-API-Key.
+
+    Body (JSON):
+      latency_ms:            float | null
+      expected_latency_ms:   float | null
+      latency_sigma:         float | null
+      avm_snapshot_hash:     str   | null
+      expected_hash:         str   | null
+      auth_failure_count:    int   (default 0)
+      auth_failure_window:   int   seconds (default 300)
+
+    ADR-142.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    body = request.get_json(silent=True) or {}
+
+    def _optfloat(k):
+        v = body.get(k)
+        return float(v) if v is not None else None
+
+    try:
+        bce    = _get_bce()
+        result = bce.assess_environment(
+            latency_ms           = _optfloat("latency_ms"),
+            expected_latency_ms  = _optfloat("expected_latency_ms"),
+            latency_sigma        = _optfloat("latency_sigma"),
+            avm_snapshot_hash    = body.get("avm_snapshot_hash"),
+            expected_hash        = body.get("expected_hash"),
+            auth_failure_count   = int(body.get("auth_failure_count", 0)),
+            auth_failure_window  = int(body.get("auth_failure_window", 300)),
+        )
+        resp = jsonify(result)
+        resp.headers["X-OMNIX-ADR"] = "ADR-142"
+        return resp
+    except Exception as exc:
+        logger.error("[BCE] /breach/assess unhandled: %s", exc)
+        return jsonify({"error": f"Assessment failed: {type(exc).__name__}", "status": 503}), 503
+
+
+@governance_bp.route('/api/governance/breach/history', methods=['GET'])
+def api_breach_history():
+    """
+    GET /api/governance/breach/history
+
+    Return paginated breach containment event history.
+    Authentication: X-API-Key.
+
+    Query parameters:
+      status — filter: ACTIVE | RELEASED
+      limit  — max records (default 20, max 100)
+      offset — pagination offset (default 0)
+
+    ADR-142.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    status_filter = request.args.get("status") or None
+    try:
+        limit  = min(int(request.args.get("limit",  "20")), 100)
+        offset = max(int(request.args.get("offset", "0")),   0)
+    except (ValueError, TypeError):
+        limit, offset = 20, 0
+
+    try:
+        bce    = _get_bce()
+        result = bce.get_history(limit=limit, offset=offset, status=status_filter)
+        resp   = jsonify({**result, "adr": "ADR-142"})
+        resp.headers["X-OMNIX-ADR"] = "ADR-142"
+        return resp
+    except Exception as exc:
+        logger.error("[BCE] /breach/history unhandled: %s", exc)
+        return jsonify({"error": f"History fetch failed: {type(exc).__name__}", "status": 503}), 503
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MOD-013 — MULTI-DOMAIN RISK GOVERNANCE (ADR-143)
+# Endpoints: evaluate, catalog, history, summary
+# Authentication: X-API-Key (B2B clients).
+# Fail-closed: DB error → BLOCKED (ADR-116).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _get_mdrg():
+    """Lazy-load MultiDomainRiskEngine (ADR-143)."""
+    from omnix_core.governance.multi_domain_risk import MultiDomainRiskEngine
+    engine = MultiDomainRiskEngine()
+    engine.ensure_table()
+    return engine
+
+
+@governance_bp.route('/api/governance/risk/evaluate', methods=['POST'])
+def api_risk_evaluate():
+    """
+    POST /api/governance/risk/evaluate
+
+    Evaluate multi-domain risk for a subject across financial, technical,
+    legal, and human risk vectors. Returns a composite governance decision.
+
+    Body (JSON):
+      subject:       str  — Entity or deployment identifier (required)
+      risk_signals:  dict — Per-vector signals:
+        financial: { capital_exposure_pct, liquidity_ratio, leverage_ratio,
+                     credit_score, concentration_pct }
+        technical: { uptime_pct, error_rate_pct, latency_p99_ms,
+                     dependency_failure_count, last_incident_hours }
+        legal:     { regulatory_violations, jurisdiction_risk_score,
+                     pending_litigation, license_expiry_days, aml_flag }
+        human:     { operator_error_rate_pct, oversight_coverage_pct,
+                     fatigue_index, training_currency_days, escalation_backlog }
+      weights:       dict | null — Custom vector weights (must sum to 1.0)
+      client_domain: str  | null — Client's operational domain
+      assessed_by:   str  | null — Operator/system identifier
+
+    Response:
+      assessment_id, decision (APPROVED|REVIEW|BLOCKED), composite_score,
+      vector_scores, breakdown, hard_block_vector, thresholds, adr
+
+    Authentication: X-API-Key. ADR-143.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    body = request.get_json(silent=True) or {}
+
+    subject = str(body.get("subject", "")).strip()
+    if not subject:
+        return jsonify({"error": "subject is required.", "status": 400}), 400
+
+    risk_signals = body.get("risk_signals")
+    if not isinstance(risk_signals, dict) or not risk_signals:
+        return jsonify({
+            "error":  "risk_signals is required and must be a dict with at least one vector.",
+            "status": 400,
+        }), 400
+
+    _VALID_VECTORS = {"financial", "technical", "legal", "human"}
+    invalid = set(risk_signals.keys()) - _VALID_VECTORS
+    if invalid:
+        return jsonify({
+            "error":   f"Unknown risk vectors: {sorted(invalid)}. Valid: {sorted(_VALID_VECTORS)}.",
+            "status":  400,
+        }), 400
+
+    weights       = body.get("weights") if isinstance(body.get("weights"), dict) else None
+    client_domain = str(body.get("client_domain", ""))[:128] or None
+    assessed_by   = str(body.get("assessed_by", client.get("client_id", "api")))[:128]
+
+    if weights:
+        total_w = sum(float(v) for v in weights.values() if isinstance(v, (int, float)))
+        if total_w <= 0:
+            return jsonify({"error": "weights must have positive values.", "status": 400}), 400
+
+    try:
+        mdrg   = _get_mdrg()
+        result = mdrg.evaluate(
+            subject       = subject[:256],
+            risk_signals  = risk_signals,
+            weights       = weights,
+            client_domain = client_domain,
+            assessed_by   = assessed_by,
+        )
+        resp = jsonify(result)
+        resp.headers["X-OMNIX-ADR"] = "ADR-143"
+        status_code = 200 if result["decision"] != "BLOCKED" else 200
+        return resp, status_code
+    except Exception as exc:
+        logger.error("[MDRG] /risk/evaluate unhandled: %s", exc)
+        return jsonify({
+            "decision":    "BLOCKED",
+            "error":       f"MDRG evaluation failed — fail-closed: {type(exc).__name__}",
+            "composite_score": 100.0,
+            "adr":         "ADR-143",
+            "status":      503,
+        }), 503
+
+
+@governance_bp.route('/api/governance/risk/catalog', methods=['GET'])
+def api_risk_catalog():
+    """
+    GET /api/governance/risk/catalog
+
+    Return supported risk vectors, signal definitions, default weights,
+    and decision thresholds. Public endpoint — no authentication required.
+
+    ADR-143.
+    """
+    try:
+        from omnix_core.governance.multi_domain_risk import MultiDomainRiskEngine
+        engine = MultiDomainRiskEngine()
+        resp   = jsonify(engine.get_catalog())
+        resp.headers["X-OMNIX-ADR"] = "ADR-143"
+        return resp
+    except Exception as exc:
+        logger.error("[MDRG] /risk/catalog unhandled: %s", exc)
+        return jsonify({"error": str(exc), "status": 503}), 503
+
+
+@governance_bp.route('/api/governance/risk/history', methods=['GET'])
+def api_risk_history():
+    """
+    GET /api/governance/risk/history
+
+    Return paginated multi-domain risk assessment history.
+    Authentication: X-API-Key.
+
+    Query parameters:
+      subject       — partial match filter on subject
+      client_domain — exact match filter on client_domain
+      decision      — filter: APPROVED | REVIEW | BLOCKED
+      limit         — max records (default 20, max 100)
+      offset        — pagination offset (default 0)
+
+    ADR-143.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    subject       = request.args.get("subject")       or None
+    client_domain = request.args.get("client_domain") or None
+    decision      = request.args.get("decision")      or None
+    try:
+        limit  = min(int(request.args.get("limit",  "20")), 100)
+        offset = max(int(request.args.get("offset", "0")),   0)
+    except (ValueError, TypeError):
+        limit, offset = 20, 0
+
+    try:
+        mdrg   = _get_mdrg()
+        result = mdrg.get_history(
+            subject       = subject,
+            client_domain = client_domain,
+            decision      = decision,
+            limit         = limit,
+            offset        = offset,
+        )
+        resp = jsonify({**result, "adr": "ADR-143"})
+        resp.headers["X-OMNIX-ADR"] = "ADR-143"
+        return resp
+    except Exception as exc:
+        logger.error("[MDRG] /risk/history unhandled: %s", exc)
+        return jsonify({"error": f"History fetch failed: {type(exc).__name__}", "status": 503}), 503
+
+
+@governance_bp.route('/api/governance/risk/summary', methods=['GET'])
+def api_risk_summary():
+    """
+    GET /api/governance/risk/summary
+
+    Return aggregate statistics across all MDRG assessments.
+    Authentication: X-API-Key.
+
+    Query parameters:
+      client_domain — filter statistics by domain
+
+    ADR-143.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    client_domain = request.args.get("client_domain") or None
+
+    try:
+        mdrg   = _get_mdrg()
+        result = mdrg.get_summary(client_domain=client_domain)
+        resp   = jsonify(result)
+        resp.headers["X-OMNIX-ADR"] = "ADR-143"
+        return resp
+    except Exception as exc:
+        logger.error("[MDRG] /risk/summary unhandled: %s", exc)
+        return jsonify({"error": f"Summary fetch failed: {type(exc).__name__}", "status": 503}), 503
