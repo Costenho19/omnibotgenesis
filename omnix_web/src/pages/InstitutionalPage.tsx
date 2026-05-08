@@ -399,6 +399,16 @@ export default function InstitutionalPage() {
                 <p className="section-title">Forensic Evidence</p>
                 <h2 className="text-3xl font-bold text-white">Technical Validation — Terra/LUNA May 2022</h2>
                 <p className="text-muted mt-4 max-w-3xl mx-auto">First documented proof of Architectural Certainty. OMNIX governance checkpoints applied to the $40B Terra/LUNA collapse using real historical data.</p>
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    to="/crisis-replay"
+                    className="btn-primary flex items-center gap-2 px-6 py-3"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    View all 5 crisis scenarios — with verifiable receipts
+                  </Link>
+                  <span className="text-xs text-muted">Terra · FTX · SVB · COVID · OFAC · Cryptographic receipts included</span>
+                </div>
               </div>
 
               <div className="glass-card p-8 gold-glow relative overflow-hidden">

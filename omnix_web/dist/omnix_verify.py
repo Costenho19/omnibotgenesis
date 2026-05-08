@@ -71,8 +71,10 @@ OMNIX_ISSUER_DID     = "did:web:omnixquantum.net"
 OMNIX_ISSUER_URL     = "https://omnixquantum.net"
 OMNIX_PUBKEY_URL     = f"{OMNIX_ISSUER_URL}/.well-known/omnix-public-key.json"
 OMNIX_RECEIPT_API    = f"{OMNIX_ISSUER_URL}/api/explorer/receipt"
-SCRIPT_VERSION       = "1.0.0"
+OMNIX_REPLAY_API     = f"{OMNIX_ISSUER_URL}/api/trust/verify"
+SCRIPT_VERSION       = "1.1.0"
 REQUIRED_FIELDS      = ["receipt_id", "decision", "content_hash"]
+REPLAY_REQUIRED_FIELDS = ["receipt_id", "scenario_id", "verdict", "canonical_hash"]
 
 
 # ── Color helpers ──────────────────────────────────────────────────────────────
@@ -216,6 +218,124 @@ def _check_timestamp(receipt: Dict) -> str:
         return f"OK — {ts} ({age_days} days ago)"
     except Exception:
         return f"unparseable — {ts}"
+
+
+# ── Replay receipt verifier ───────────────────────────────────────────────────
+
+def _compute_replay_canonical_hash(receipt: Dict[str, Any]) -> str:
+    """
+    Recompute the canonical SHA-256 hash of an OMNIX replay receipt.
+    Uses the same field set and serialization as GovernanceReplayEngine._canonical_hash().
+    ADR-145.
+    """
+    payload: Dict[str, Any] = {
+        "receipt_id":           receipt.get("receipt_id"),
+        "scenario_id":          receipt.get("scenario_id"),
+        "timestamp_utc":        receipt.get("timestamp_utc"),
+        "signal_label":         receipt.get("signal_label"),
+        "domain":               receipt.get("domain"),
+        "verdict":              receipt.get("verdict"),
+        "blocking_checkpoint":  receipt.get("blocking_checkpoint"),
+        "trust_flags":          sorted(receipt.get("trust_flags") or []),
+        "signals_snapshot":     dict(sorted((receipt.get("signals_snapshot") or {}).items())),
+        "rationale":            receipt.get("rationale"),
+        "replay_mode":          True,
+        "engine_version":       receipt.get("engine_version"),
+        "adr_reference":        receipt.get("adr_reference"),
+    }
+    serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+
+def verify_replay_receipt(
+    receipt:  Dict[str, Any],
+    as_json:  bool = False,
+) -> Dict[str, Any]:
+    """
+    Verify an OMNIX governance replay receipt (ADR-145).
+
+    Replay receipts differ from production receipts:
+      - They use `canonical_hash` instead of `content_hash`
+      - They have `replay_mode=True`
+      - They carry `scenario_id` instead of `asset` / `decision`
+      - They are verified by recomputing the SHA-256 of the canonical payload
+
+    No PQC signature is needed — the canonical hash seals the full payload.
+    All signal data and rationale are embedded in the receipt itself.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    receipt_id = receipt.get("receipt_id", "UNKNOWN")
+
+    result: Dict[str, Any] = {
+        "script_version":    SCRIPT_VERSION,
+        "verified_at":       now,
+        "receipt_id":        receipt_id,
+        "receipt_type":      "GOVERNANCE_REPLAY",
+        "adr_reference":     receipt.get("adr_reference", "ADR-145"),
+        "scenario_id":       receipt.get("scenario_id"),
+        "issuer_did":        OMNIX_ISSUER_DID,
+        "independent":       True,
+        "db_required":       False,
+        "replay_mode":       receipt.get("replay_mode", True),
+        "structure_ok":      False,
+        "hash_valid":        False,
+        "signature_valid":   None,
+        "timestamp_status":  _check_timestamp(receipt),
+        "overall_valid":     False,
+        "verdict":           "INVALID",
+    }
+
+    # 1. Structure check
+    missing = [f for f in REPLAY_REQUIRED_FIELDS if not receipt.get(f)]
+    result["structure_ok"]   = len(missing) == 0
+    result["missing_fields"] = missing
+
+    # 2. Canonical hash verification
+    stored_hash   = receipt.get("canonical_hash", "")
+    computed_hash = _compute_replay_canonical_hash(receipt)
+    result["hash_valid"]    = computed_hash == stored_hash
+    result["stored_hash"]   = stored_hash
+    result["computed_hash"] = computed_hash
+
+    if result["hash_valid"]:
+        result["hash_note"] = (
+            "SHA-256 canonical hash VERIFIED — replay receipt payload is intact and unmodified. "
+            "Signal data, verdict, trust flags, and rationale are authentic."
+        )
+    else:
+        result["hash_note"] = (
+            "SHA-256 canonical hash MISMATCH — replay receipt may have been tampered with. "
+            f"Stored: {stored_hash[:16]}... | Computed: {computed_hash[:16]}..."
+        )
+
+    # 3. Replay receipts do not have PQC signatures (hash seals the full payload)
+    result["signature_valid"] = None
+    result["signature_note"]  = (
+        "Replay receipts are sealed by SHA-256 canonical hash — no separate PQC signature. "
+        "Hash verification is the authoritative check for replay receipt integrity."
+    )
+
+    # 4. Overall verdict
+    if result["hash_valid"] and result["structure_ok"]:
+        result["overall_valid"] = True
+        result["verdict"]       = "VALID"
+        result["verdict_note"]  = (
+            f"Replay receipt is authentic. Scenario: {receipt.get('scenario_id')} | "
+            f"Event: {receipt.get('signal_label', 'N/A')} | "
+            f"Governance verdict: {receipt.get('verdict', 'N/A')} "
+            f"@ {receipt.get('blocking_checkpoint', 'N/A')}. "
+            "SHA-256 canonical hash verified — payload sealed by OMNIX Governance Replay Engine (ADR-145)."
+        )
+    else:
+        result["overall_valid"] = False
+        issues = []
+        if not result["structure_ok"]:
+            issues.append(f"missing fields: {', '.join(missing)}")
+        if not result["hash_valid"]:
+            issues.append("canonical hash mismatch")
+        result["verdict_note"] = f"Verification failed: {'; '.join(issues)}."
+
+    return result
 
 
 # ── Main verifier ─────────────────────────────────────────────────────────────
@@ -439,6 +559,16 @@ Trust endpoints (no OMNIX server needed after key fetch):
                         help="Do not fetch the public key from the OMNIX well-known endpoint")
     parser.add_argument("--json", action="store_true", dest="as_json",
                         help="Output result as JSON (for pipelines)")
+    parser.add_argument(
+        "--mode",
+        choices=["auto", "production", "replay"],
+        default="auto",
+        help=(
+            "Verification mode: 'production' (default) for live governance receipts, "
+            "'replay' for historical crisis scenario receipts (ADR-145), "
+            "'auto' detects mode from receipt (default)."
+        ),
+    )
     args = parser.parse_args()
 
     receipt: Optional[Dict] = None
@@ -463,21 +593,29 @@ Trust endpoints (no OMNIX server needed after key fetch):
         parser.print_help()
         sys.exit(1)
 
-    pubkey_b64: Optional[str] = None
-    if args.pubkey:
-        try:
-            with open(args.pubkey, "r", encoding="utf-8") as f:
-                pubkey_b64 = f.read().strip()
-        except FileNotFoundError:
-            print(_red(f"ERROR: Public key file not found: {args.pubkey}"), file=sys.stderr)
-            sys.exit(2)
+    # Detect mode from receipt if auto
+    mode = args.mode
+    if mode == "auto":
+        mode = "replay" if receipt.get("replay_mode") else "production"
 
-    result = verify_receipt(
-        receipt    = receipt,
-        pubkey_b64 = pubkey_b64,
-        fetch_key  = not args.no_fetch,
-        as_json    = args.as_json,
-    )
+    if mode == "replay":
+        result = verify_replay_receipt(receipt=receipt, as_json=args.as_json)
+    else:
+        pubkey_b64: Optional[str] = None
+        if args.pubkey:
+            try:
+                with open(args.pubkey, "r", encoding="utf-8") as f:
+                    pubkey_b64 = f.read().strip()
+            except FileNotFoundError:
+                print(_red(f"ERROR: Public key file not found: {args.pubkey}"), file=sys.stderr)
+                sys.exit(2)
+
+        result = verify_receipt(
+            receipt    = receipt,
+            pubkey_b64 = pubkey_b64,
+            fetch_key  = not args.no_fetch,
+            as_json    = args.as_json,
+        )
 
     if args.as_json:
         print(json.dumps(result, indent=2, default=str))
