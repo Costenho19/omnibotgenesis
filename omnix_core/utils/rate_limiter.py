@@ -204,8 +204,8 @@ def rate_limit(
 class RateLimiters:
     """Collection of predefined rate limiters"""
     
-    # AI Generation: 30 requests per minute per user
-    AI_GENERATION = RateLimiter(max_requests=30, window=60, key_prefix="ai_gen")
+    # AI Generation: 60 requests per minute per user
+    AI_GENERATION = RateLimiter(max_requests=60, window=60, key_prefix="ai_gen")
     
     # Trading: 15 requests per minute per user (conservative for API protection)
     TRADING = RateLimiter(max_requests=15, window=60, key_prefix="trading")

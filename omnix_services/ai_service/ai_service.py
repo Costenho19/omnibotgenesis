@@ -124,10 +124,10 @@ class ConversationalAIService:
         return self._ai_gateway
     
     @rate_limit(
-        max_requests=30, 
+        max_requests=60, 
         window=60,
         identifier_func=lambda self, *args, **kwargs: str(kwargs.get('chat_id', args[0] if args else 'global'))
-    )  # 30 requests per minute PER USER (robust extraction)
+    )  # 60 requests per minute PER USER (robust extraction)
     async def generate_response(
         self,
         chat_id: int,
