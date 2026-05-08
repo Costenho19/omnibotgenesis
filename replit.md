@@ -133,6 +133,7 @@ Variables are read with these **exact names** in the source code. Use the same n
 ## User Preferences
 
 *   Always respond to Harold in Spanish.
+*   **Arquitectura inamovible:** React SPA = único frontend. Flask/API = único backend. Nunca crear rutas de página en blueprints Flask que dupliquen rutas del SPA. Nunca usar `render_template` para páginas que ya existen en React. Toda ruta de página nueva va en `omnix_web/src/pages/` y se registra en el router React. Flask solo sirve APIs y el `dist/index.html` para el SPA catch-all.
 
 ---
 
