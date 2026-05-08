@@ -506,6 +506,8 @@ def _ensure_vertical_tables():
     """
 
     # ADR-144: Auto-Modification Guard registry — tracks every automated threshold change
+    # Split into two DDLs: psycopg2 cur.execute() does not reliably handle
+    # multiple semicolon-separated statements in a single call.
     AMG_REGISTRY_DDL = """
     CREATE TABLE IF NOT EXISTS avm_modification_registry (
         id                   SERIAL PRIMARY KEY,
@@ -525,9 +527,12 @@ def _ensure_vertical_tables():
         rollback_snapshot_id TEXT,
         performance_check_at TIMESTAMPTZ,
         created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+    )
+    """
+
+    AMG_INDEX_DDL = """
     CREATE INDEX IF NOT EXISTS idx_amr_domain_status
-        ON avm_modification_registry (domain, status, created_at DESC);
+        ON avm_modification_registry (domain, status, created_at DESC)
     """
 
     # ADR-144: trust flag for auto-modified receipts
@@ -549,7 +554,7 @@ def _ensure_vertical_tables():
             except Exception as _ae:
                 print(f"[startup] ALTER TABLE (non-fatal): {_ae}")
         # ADR-118 + ADR-096 + ADR-120 + ADR-144: additional governance infrastructure tables
-        for extra_ddl in [MCM_REMEDIATION_DDL, TRANSPARENCY_LOG_DDL, AVM_PERF_LOG_DDL, AMG_REGISTRY_DDL]:
+        for extra_ddl in [MCM_REMEDIATION_DDL, TRANSPARENCY_LOG_DDL, AVM_PERF_LOG_DDL, AMG_REGISTRY_DDL, AMG_INDEX_DDL]:
             try:
                 cur.execute(extra_ddl)
             except Exception as _ae:

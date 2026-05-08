@@ -846,6 +846,53 @@ MCM auto_remediate() TIGHTEN
 
 ---
 
+## Validación Forense — AMG (Mayo 2026)
+
+**Reporte completo**: `docs/FORENSIC_VALIDATION_REPORT.md` — FVR-AMG-2026-001
+
+Auditoría de 7 puntos realizada post-implementación. Resultado: todos los puntos pasan. Se corrigieron 3 defectos.
+
+### Resumen ejecutivo de hallazgos
+
+| Punto | Descripción | Veredicto |
+|---|---|---|
+| P1 | `run_guard()` se ejecuta antes de todo write a `checkpoint_thresholds` | PASS |
+| P2 | Sin rutas de bypass para modificación de thresholds | PASS (ver §4.1 para baseline recalib) |
+| P3 | Lógica de rollback segura — conservadora en datos insuficientes | PASS |
+| P4 | Trust flag `AUTO_MODIFIED_SNAPSHOT` aparece correctamente en receipts | PASS |
+| P5 | Bucle MCM→recalib→MCM bloqueado en el 2° intento (24h) | PASS |
+| P6 | DDLs Railway idempotentes, separados, en orden correcto | PASS (DEF-002 corregido) |
+| P7 | Invariant report completo con garantías documentadas | PASS |
+
+### Defectos encontrados y corregidos
+
+**DEF-001 (HIGH)** — Env vars leídas en tiempo de importación del módulo:  
+`AVM_AUTO_APPROVE`, `AVM_MAX_CUMULATIVE_DRIFT_PCT`, etc. eran constantes de módulo. Un override vía Railway o tests no tenía efecto hasta reiniciar el proceso.  
+**Fix**: Reemplazadas por funciones accessor dinámicas `_auto_approve()`, `_approval_threshold_pct()`, etc. — se leen en cada llamada.
+
+**DEF-002 (MEDIUM)** — DDL multi-sentencia en un solo `cur.execute()`:  
+`AMG_REGISTRY_DDL` contenía `CREATE TABLE` + `CREATE INDEX` separados por `;`. psycopg2 puede omitir la segunda sentencia silenciosamente.  
+**Fix**: Separados en `AMG_REGISTRY_DDL` e `AMG_INDEX_DDL`, ejecutados como dos llamadas independientes.
+
+**DEF-003 (LOW)** — `auto_recalibrate_stale_domains()` sin documentación sobre por qué no pasa por AMG:  
+Un auditor futuro podría reportarlo como bypass. Se añadió la sección `AMG SCOPE BOUNDARY (ADR-144 §4)` al docstring.
+
+### Frontera de alcance del AMG
+
+El AMG protege modificaciones de `checkpoint_thresholds`. No protege recalibraciones de `baseline_signals`, que tienen sus propios safeguards (cap 80%, intervalo 72h, guard de schema).
+
+```
+MODIFICACIÓN DE THRESHOLDS    → run_guard() OBLIGATORIO
+  deploy_optimized_thresholds()
+  MCM TIGHTEN
+
+RECALIBRACIÓN DE BASELINE     → FUERA DEL ALCANCE AMG (por diseño)
+  auto_recalibrate_stale_domains()
+  MCM FORCE_AVM_RECALIBRATION
+```
+
+---
+
 ## Documentos Relacionados
 
 - [Mapa Funcional Completo](COMPLETE_FUNCTIONALITY_MAP.md) - 11 dominios detallados

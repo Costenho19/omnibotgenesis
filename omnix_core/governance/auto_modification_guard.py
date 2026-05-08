@@ -53,7 +53,10 @@ from typing import Any, Optional
 
 logger = logging.getLogger("OMNIX.AMG")
 
-# ── Environment configuration ──────────────────────────────────────────────────
+# ── Environment configuration — dynamic readers ────────────────────────────────
+# All env vars are read at call time (not import time) so that Railway can set
+# them before server startup and test suites can patch os.environ reliably.
+# Module-level constants are NEVER used for guard decisions.
 
 def _env_float(key: str, default: float) -> float:
     try:
@@ -61,11 +64,40 @@ def _env_float(key: str, default: float) -> float:
     except (ValueError, TypeError):
         return default
 
-MAX_CUMULATIVE_DRIFT_PCT  = _env_float("AVM_MAX_CUMULATIVE_DRIFT_PCT",  30.0)
-APPROVAL_THRESHOLD_PCT    = _env_float("AVM_APPROVAL_THRESHOLD_PCT",    10.0)
-ROLLBACK_WINDOW_HOURS     = _env_float("AVM_ROLLBACK_WINDOW_HOURS",     24.0)
-ANTI_LOOP_WINDOW_HOURS    = _env_float("AVM_ANTI_LOOP_WINDOW_HOURS",    24.0)
-AUTO_APPROVE              = os.environ.get("AVM_AUTO_APPROVE", "false").lower() == "true"
+
+def _max_cumulative_drift_pct() -> float:
+    """AVM_MAX_CUMULATIVE_DRIFT_PCT — hard cap on total drift from genesis (default 30%)."""
+    return _env_float("AVM_MAX_CUMULATIVE_DRIFT_PCT", 30.0)
+
+
+def _approval_threshold_pct() -> float:
+    """AVM_APPROVAL_THRESHOLD_PCT — single-threshold delta requiring human approval (default 10%)."""
+    return _env_float("AVM_APPROVAL_THRESHOLD_PCT", 10.0)
+
+
+def _rollback_window_hours() -> float:
+    """AVM_ROLLBACK_WINDOW_HOURS — hours after deployment before performance rollback check (default 24)."""
+    return _env_float("AVM_ROLLBACK_WINDOW_HOURS", 24.0)
+
+
+def _anti_loop_window_hours() -> float:
+    """AVM_ANTI_LOOP_WINDOW_HOURS — anti-loop detection window in hours (default 24)."""
+    return _env_float("AVM_ANTI_LOOP_WINDOW_HOURS", 24.0)
+
+
+def _auto_approve() -> bool:
+    """AVM_AUTO_APPROVE — bypass approval gate (true only for dev/test environments)."""
+    return os.environ.get("AVM_AUTO_APPROVE", "false").lower() == "true"
+
+
+# ── Backward-compatible module-level aliases (read-only, never used in guards) ─
+# These exist solely for external code that may have imported the old constants.
+# Do NOT use these in guard logic — use the _xxx() accessor functions instead.
+MAX_CUMULATIVE_DRIFT_PCT: float = 30.0   # noqa — see _max_cumulative_drift_pct()
+APPROVAL_THRESHOLD_PCT:   float = 10.0   # noqa — see _approval_threshold_pct()
+ROLLBACK_WINDOW_HOURS:    float = 24.0   # noqa — see _rollback_window_hours()
+ANTI_LOOP_WINDOW_HOURS:   float = 24.0   # noqa — see _anti_loop_window_hours()
+AUTO_APPROVE:             bool  = False  # noqa — see _auto_approve()
 
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
@@ -296,7 +328,8 @@ def check_approval_gate(
     """
     max_delta = _max_single_delta_pct(thresholds_before, thresholds_after)
 
-    if max_delta <= APPROVAL_THRESHOLD_PCT or AUTO_APPROVE:
+    _approval_thresh = _approval_threshold_pct()
+    if max_delta <= _approval_thresh or _auto_approve():
         return True, max_delta, None
 
     # Approval required — record PENDING and notify
@@ -319,7 +352,7 @@ def check_approval_gate(
 
     logger.warning(
         f"[AMG] APPROVAL GATE HELD: domain={domain} mod_id={mod_id} "
-        f"max_delta={max_delta:.1f}% > threshold={APPROVAL_THRESHOLD_PCT:.1f}% "
+        f"max_delta={max_delta:.1f}% > threshold={_approval_thresh:.1f}% "
         f"source={source}"
     )
 
@@ -354,7 +387,8 @@ def is_auto_loop(domain: str, db_url: str) -> bool:
         logger.warning(f"[AMG] is_auto_loop: DB unavailable for {domain} — assuming no loop")
         return False
     try:
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=ANTI_LOOP_WINDOW_HOURS)
+        _loop_window = _anti_loop_window_hours()
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=_loop_window)
         cur = conn.cursor()
         cur.execute(
             """
@@ -376,7 +410,7 @@ def is_auto_loop(domain: str, db_url: str) -> bool:
         if count >= 2:
             logger.warning(
                 f"[AMG] LOOP DETECTED: domain={domain} has {count} auto-remediations "
-                f"in the last {ANTI_LOOP_WINDOW_HOURS:.0f}h — escalating to human"
+                f"in the last {_loop_window:.0f}h — escalating to human"
             )
             return True
         return False
@@ -508,7 +542,7 @@ def mark_modification_status(modification_id: str, status: str, db_url: str) -> 
                    END
              WHERE modification_id = %s
             """,
-            (status, status, ROLLBACK_WINDOW_HOURS, modification_id),
+            (status, status, _rollback_window_hours(), modification_id),
         )
         conn.commit()
         conn.close()
@@ -597,11 +631,12 @@ def run_guard(
         genesis_thresholds = thresholds_before
 
     # ── Step 2: cumulative drift cap ───────────────────────────────────────────
+    _drift_cap = _max_cumulative_drift_pct()
     cumulative_drift = compute_cumulative_drift(genesis_thresholds, thresholds_after)
-    if cumulative_drift > MAX_CUMULATIVE_DRIFT_PCT:
+    if cumulative_drift > _drift_cap:
         reason = (
             f"Cumulative drift from genesis {cumulative_drift:.1f}% exceeds hard cap "
-            f"{MAX_CUMULATIVE_DRIFT_PCT:.1f}% (AVM_MAX_CUMULATIVE_DRIFT_PCT). "
+            f"{_drift_cap:.1f}% (AVM_MAX_CUMULATIVE_DRIFT_PCT). "
             f"Auto-modification BLOCKED. Manual human review required."
         )
         logger.error(f"[AMG] DRIFT CAP EXCEEDED: domain={domain} {reason}")
@@ -609,7 +644,7 @@ def run_guard(
             f"🚨 AMG DRIFT CAP EXCEEDED\n"
             f"Domain: {domain}\n"
             f"Source: {source}\n"
-            f"Cumulative drift: {cumulative_drift:.1f}% (cap: {MAX_CUMULATIVE_DRIFT_PCT:.1f}%)\n"
+            f"Cumulative drift: {cumulative_drift:.1f}% (cap: {_drift_cap:.1f}%)\n"
             f"Modification BLOCKED. Manual review required."
         )
         diff_proof, algo = build_signed_diff_proof(domain, thresholds_before, thresholds_after, source)
@@ -651,7 +686,7 @@ def run_guard(
     if not gate_passed:
         reason = (
             f"Approval gate HELD: max single delta {max_delta:.1f}% > "
-            f"{APPROVAL_THRESHOLD_PCT:.1f}% threshold. "
+            f"{_approval_threshold_pct():.1f}% threshold. "
             f"Awaiting human approval — modification_id={pending_mod_id}"
         )
         return AutoModificationResult(

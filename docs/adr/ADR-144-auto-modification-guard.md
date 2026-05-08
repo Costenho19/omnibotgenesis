@@ -224,6 +224,66 @@ The rollback is conservative: it only fires when the performance check indicates
 
 ---
 
+## 9. Forensic Validation Findings (May 2026)
+
+**Report reference**: `docs/FORENSIC_VALIDATION_REPORT.md` — FVR-AMG-2026-001
+
+A formal 7-point production hardening audit was conducted after full implementation. All 7 points passed. The following findings are summarized here for in-document traceability.
+
+### 9.1 — Three defects corrected during audit
+
+| ID | Severity | Description | Fix |
+|---|---|---|---|
+| DEF-001 | HIGH | `AVM_AUTO_APPROVE` and all AMG env vars read at module import time — runtime overrides unreliable | Replaced all module-level constants with dynamic accessor functions `_auto_approve()`, `_approval_threshold_pct()`, etc. |
+| DEF-002 | MEDIUM | `AMG_REGISTRY_DDL` in `server.py` contained two SQL statements in one `execute()` call — psycopg2 may drop the second | Split into `AMG_REGISTRY_DDL` (table) and `AMG_INDEX_DDL` (index) — two separate `cur.execute()` calls |
+| DEF-003 | LOW | `auto_recalibrate_stale_domains()` had no documentation explaining why it bypasses AMG | Added comprehensive docstring section `AMG SCOPE BOUNDARY (ADR-144 §4)` |
+
+### 9.2 — AMG scope boundary clarification
+
+The audit identified a design boundary that requires explicit documentation:
+
+**`auto_recalibrate_stale_domains()`** calls `save_calibration_snapshot()` directly without going through `run_guard()`. This is correct behavior. The function performs **baseline recalibration** — it re-anchors `baseline_signals` to current market state while `checkpoint_thresholds` are preserved unchanged. The AMG is designed to protect threshold modifications, not baseline signal re-anchoring. These carry different governance semantics:
+
+- **Threshold modification** (AMG scope): changes what decisions get blocked
+- **Baseline recalibration** (outside AMG scope): changes what counts as "normal" drift
+
+This boundary is enforced by inspection: `auto_recalibrate_stale_domains()` always passes `checkpoint_thresholds=snapshot.checkpoint_thresholds` (the existing values, unchanged) to `save_calibration_snapshot()`.
+
+### 9.3 — Rollback data sufficiency
+
+The rollback check requires 24h of bidirectional decision data. For sparse domains (defense, energy), this may never accumulate sufficient data to fire. This is **conservative behavior** — the system does not roll back blindly on insufficient data. Operators on sparse domains should use manual review of modification registry records.
+
+### 9.4 — Anti-loop guard simulation results
+
+| Remediation count in 24h | Loop detected | Expected |
+|---|---|---|
+| 0 | False | False — PASS |
+| 1 | False | False — PASS |
+| 2 | True | True — PASS |
+| 5 | True | True — PASS |
+
+### 9.5 — Signed diff proof properties verified
+
+- Format: `AMG-DIFF-v1:{sha256_64hex}:{algorithm}` ✅
+- Non-repudiation: different inputs → different hashes ✅
+- Domain isolation: same thresholds, different domain → different hash ✅
+- Algorithm: `Dilithium-3 (ML-DSA-65)` when PQC keys available ✅
+
+### 9.6 — Full invariant table
+
+| Invariant | Implementation | Env var | Default | Test result |
+|---|---|---|---|---|
+| Cumulative drift cap | `compute_cumulative_drift()` vs genesis | `AVM_MAX_CUMULATIVE_DRIFT_PCT` | 30% | PASS |
+| Automatic rollback | `check_rollback_needed()` at T+24h | `AVM_ROLLBACK_WINDOW_HOURS` | 24h | PASS (conservative) |
+| Signed diff proof | `build_signed_diff_proof()` SHA-256 + Dilithium-3 | — | — | PASS |
+| Approval gate | `check_approval_gate()` > 10% → HOLD | `AVM_APPROVAL_THRESHOLD_PCT` | 10% | PASS |
+| Trust flag | `evaluate()` detects auto-modified tags | — | — | PASS |
+| Anti-loop guard | `is_auto_loop()` ≥2 in window → block | `AVM_ANTI_LOOP_WINDOW_HOURS` | 24h | PASS |
+
+**Status post-audit: Production-complete. All 7 audit points pass.**
+
+---
+
 *"The goal is not just to make OMNIX adaptive — it must remain auditable, bounded, reversible, and incapable of silently changing its own decision behavior beyond safe limits."*
 
 — Harold Nunes, OMNIX QUANTUM LTD, May 8, 2026

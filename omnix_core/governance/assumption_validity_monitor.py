@@ -792,6 +792,29 @@ class AssumptionValidityMonitor:
           - Tags snapshot with ["AUTO_RECALIBRATION"] for audit trail.
           - Always persists to DB and JSON — same path as manual recalibration.
 
+        AMG SCOPE BOUNDARY (ADR-144 §4):
+          This method intentionally does NOT pass through the Auto-Modification Guard.
+          Rationale: auto_recalibrate_stale_domains() performs BASELINE RECALIBRATION
+          — it re-anchors baseline_signals to current live market state while
+          PRESERVING checkpoint_thresholds unchanged (line: checkpoint_thresholds=
+          snapshot.checkpoint_thresholds). The AMG is designed to protect threshold
+          modifications (checkpoint_thresholds), not baseline signal re-anchoring.
+
+          The two modification types carry different governance semantics:
+            THRESHOLD MODIFICATION (AMG-protected):
+              Changes the veto sensitivity of each governance checkpoint.
+              A 20% threshold tightening directly changes what decisions get blocked.
+              This is what run_guard() protects.
+
+            BASELINE RECALIBRATION (outside AMG scope):
+              Updates the market reference against which drift is measured.
+              Does not change what gets blocked — changes what counts as "normal".
+              Governed by its own safeguards: max_drift_for_auto cap (80%),
+              SIGNAL_SCHEMA_MISMATCH guard, and 72h minimum interval.
+
+          The forensic audit (May 2026) confirmed this boundary is by design
+          and documented in FORENSIC_VALIDATION_REPORT.md §4.1.
+
         Returns:
             List of domain names that were successfully recalibrated.
         """
