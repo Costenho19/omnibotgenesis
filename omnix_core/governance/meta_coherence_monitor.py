@@ -510,6 +510,10 @@ class MetaCoherenceMonitor:
         if persist:
             self.persist_to_db(report)
 
+        # ADR-118: auto-remediate on CRITICAL alert
+        if report.alert_level == "CRITICAL":
+            self.auto_remediate(report)
+
         return report
 
     def run_all_domains(
@@ -1716,6 +1720,186 @@ class MetaCoherenceMonitor:
         except Exception as exc:
             logger.warning(f"[MCM] _get_active_domains failed: {exc}")
             return []
+
+    # ── ADR-118: Auto-Remediation ──────────────────────────────────────────────
+
+    def auto_remediate(self, report: "MetaCoherenceReport") -> bool:
+        """
+        ADR-118: Automated remediation when MCM detects a CRITICAL alert.
+
+        Remediation policy (ordered, first-applicable wins):
+          1. RECALIBRATION_ANCHORING — force AVM recalibration via
+             auto_recalibrate_stale_domains() with a short recalib_interval=0h.
+          2. BLOCK_RATE_COLLAPSE — tighten checkpoint thresholds by 10% on the
+             affected domain, recorded to mcm_remediation_log.
+          3. DEFAULT — log the alert and flag the domain for human review.
+
+        Rate-limit: at most 1 auto-remediation per domain per 6 hours.
+
+        Returns:
+            True if a remediation action was taken, False if rate-limited or skipped.
+        """
+        domain = report.domain
+
+        if not self._db_url:
+            logger.warning(f"[MCM.REMEDIATE] No DB URL — cannot persist remediation for {domain}")
+            return False
+
+        try:
+            import psycopg2
+            conn = psycopg2.connect(self._db_url)
+            cur  = conn.cursor()
+
+            # ── Rate-limit: 1 remediation per domain per 6h ────────────────────
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM mcm_remediation_log
+                WHERE domain = %s AND triggered_at > NOW() - INTERVAL '6 hours'
+                """,
+                (domain,),
+            )
+            row = cur.fetchone()
+            if row and int(row[0]) > 0:
+                logger.info(f"[MCM.REMEDIATE] {domain}: rate-limited (1 per 6h) — skipping")
+                conn.close()
+                return False
+
+            # ── Determine remediation action ───────────────────────────────────
+            sig_ids = {s.signal_id for s in report.transition_signatures}
+            rl      = report.reference_legitimacy
+
+            if rl and rl.recalibration_anchoring_risk:
+                action   = "FORCE_AVM_RECALIBRATION"
+                pattern  = "RECALIBRATION_ANCHORING_RISK"
+            elif "BLOCK_RATE_COLLAPSE" in sig_ids:
+                action   = "TIGHTEN_CHECKPOINT_THRESHOLDS"
+                pattern  = "BLOCK_RATE_COLLAPSE"
+            else:
+                action   = "FLAG_FOR_HUMAN_REVIEW"
+                pattern  = "CRITICAL_ALERT_DEFAULT"
+
+            pre_state = {
+                "composite_score":      report.composite_score,
+                "alert_level":          report.alert_level,
+                "transition_signatures": [s.signal_id for s in report.transition_signatures],
+                "evaluation_frame_stable": report.evaluation_frame_stable,
+            }
+
+            # ── Log to mcm_remediation_log ─────────────────────────────────────
+            import uuid as _uuid
+            alert_id = f"MCM-{domain.upper()}-{_uuid.uuid4().hex[:8].upper()}"
+            cur.execute(
+                """
+                INSERT INTO mcm_remediation_log
+                    (mcm_alert_id, domain, alert_pattern, action_taken,
+                     pre_remediation_state, outcome)
+                VALUES (%s, %s, %s, %s, %s::jsonb, %s)
+                """,
+                (alert_id, domain, pattern, action,
+                 json.dumps(pre_state), "IN_PROGRESS"),
+            )
+            conn.commit()
+
+            logger.warning(
+                f"[MCM.REMEDIATE] ⚡ {domain}: CRITICAL alert — "
+                f"action={action} pattern={pattern} alert_id={alert_id}"
+            )
+
+            # ── Execute remediation action ─────────────────────────────────────
+            outcome = "UNKNOWN"
+            if action == "FORCE_AVM_RECALIBRATION":
+                try:
+                    from omnix_core.governance.assumption_validity_monitor import get_avm_instance
+                    avm = get_avm_instance()
+                    recalibrated = avm.auto_recalibrate_stale_domains(
+                        recalib_interval_hours=0.0,
+                    )
+                    outcome = f"RECALIBRATED:{','.join(recalibrated) if recalibrated else 'NONE'}"
+                    logger.info(f"[MCM.REMEDIATE] {domain}: AVM recalibration result — {outcome}")
+                except Exception as exc:
+                    outcome = f"FAILED:{exc}"
+                    logger.error(f"[MCM.REMEDIATE] {domain}: AVM recalibration error — {exc}")
+
+            elif action == "TIGHTEN_CHECKPOINT_THRESHOLDS":
+                try:
+                    from omnix_core.governance.assumption_validity_monitor import get_avm_instance
+                    avm = get_avm_instance()
+                    snap = avm.load_snapshot(domain)
+                    if snap and snap.checkpoint_thresholds:
+                        tightened = {
+                            k: round(v * 0.90, 4)
+                            for k, v in snap.checkpoint_thresholds.items()
+                        }
+                        avm.save_calibration_snapshot(
+                            domain=domain,
+                            baseline_signals=snap.baseline_signals,
+                            checkpoint_thresholds=tightened,
+                            description=(
+                                f"MCM-AUTO-TIGHTEN (ADR-118): block rate collapse detected — "
+                                f"thresholds reduced 10% | alert={alert_id}"
+                            ),
+                            tags=["MCM_AUTO_TIGHTEN", f"alert_{alert_id}"],
+                        )
+                        outcome = f"THRESHOLDS_TIGHTENED:{len(tightened)}_checkpoints"
+                        logger.info(f"[MCM.REMEDIATE] {domain}: thresholds tightened — {outcome}")
+                    else:
+                        outcome = "SKIPPED:no_snapshot_or_thresholds"
+                except Exception as exc:
+                    outcome = f"FAILED:{exc}"
+                    logger.error(f"[MCM.REMEDIATE] {domain}: threshold tighten error — {exc}")
+
+            else:
+                outcome = "FLAGGED_FOR_HUMAN_REVIEW"
+                logger.warning(
+                    f"[MCM.REMEDIATE] {domain}: flagged for human review — "
+                    f"score={report.composite_score:.1f} sigs={len(report.transition_signatures)}"
+                )
+
+            # ── Update outcome in remediation log ──────────────────────────────
+            cur.execute(
+                """
+                UPDATE mcm_remediation_log
+                   SET outcome = %s, resolved_at = NOW()
+                 WHERE mcm_alert_id = %s
+                """,
+                (outcome, alert_id),
+            )
+            conn.commit()
+            conn.close()
+
+            # ── Telegram notification ──────────────────────────────────────────
+            try:
+                import os as _os
+                bot_token = _os.environ.get("TELEGRAM_BOT_TOKEN", "")
+                admin_id  = _os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
+                if bot_token and admin_id:
+                    import urllib.request as _req
+                    msg = (
+                        f"⚠️ MCM AUTO-REMEDIATION\n"
+                        f"Domain: {domain}\n"
+                        f"Alert ID: {alert_id}\n"
+                        f"Pattern: {pattern}\n"
+                        f"Action: {action}\n"
+                        f"Outcome: {outcome}\n"
+                        f"Score: {report.composite_score:.1f}/100"
+                    )
+                    payload = json.dumps({
+                        "chat_id": admin_id,
+                        "text": msg,
+                    }).encode()
+                    _req.urlopen(
+                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                        data=payload,
+                        timeout=5,
+                    )
+            except Exception:
+                pass
+
+            return True
+
+        except Exception as exc:
+            logger.error(f"[MCM.REMEDIATE] {domain}: auto_remediate failed — {exc}")
+            return False
 
 
 # ── Module-level convenience ───────────────────────────────────────────────────

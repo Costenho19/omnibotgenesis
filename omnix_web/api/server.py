@@ -453,11 +453,57 @@ def _ensure_vertical_tables():
         """,
     ]
 
-    # ADR-130 v2: ALTER TABLE migrations for existing prod tables
+    # ADR-130 v2 + ADR-097 + ADR-118: ALTER TABLE migrations for existing prod tables
     # CREATE TABLE IF NOT EXISTS does not add columns to already-existing tables.
     ALTER_TABLE_SQL = [
         "ALTER TABLE vc_revocation_registry ADD COLUMN IF NOT EXISTS status_list_index INTEGER",
+        # ADR-097: canonical_hash_v2 persistence — binds execution proof to receipt row
+        "ALTER TABLE decision_receipts ADD COLUMN IF NOT EXISTS canonical_hash_v2 TEXT",
+        "ALTER TABLE decision_receipts ADD COLUMN IF NOT EXISTS execution_bound BOOLEAN DEFAULT FALSE",
     ]
+
+    # ADR-118: MCM remediation log table
+    MCM_REMEDIATION_DDL = """
+    CREATE TABLE IF NOT EXISTS mcm_remediation_log (
+        id                    SERIAL PRIMARY KEY,
+        mcm_alert_id          TEXT NOT NULL,
+        domain                TEXT NOT NULL,
+        alert_pattern         TEXT NOT NULL,
+        action_taken          TEXT NOT NULL,
+        pre_remediation_state JSONB,
+        outcome               TEXT DEFAULT 'PENDING',
+        triggered_at          TIMESTAMPTZ DEFAULT NOW(),
+        resolved_at           TIMESTAMPTZ
+    )
+    """
+
+    # ADR-096 WAL chain: governance_transparency_log DDL (read side exists in proof_layer.py)
+    TRANSPARENCY_LOG_DDL = """
+    CREATE TABLE IF NOT EXISTS governance_transparency_log (
+        log_id        SERIAL PRIMARY KEY,
+        receipt_id    TEXT NOT NULL,
+        payload_hash  TEXT NOT NULL,
+        prev_log_hash TEXT,
+        domain        TEXT,
+        decision      TEXT,
+        ts_utc        TIMESTAMPTZ DEFAULT NOW()
+    )
+    """
+
+    # ADR-097 + ADR-120 phase 3: AVM performance log for threshold optimization
+    AVM_PERF_LOG_DDL = """
+    CREATE TABLE IF NOT EXISTS avm_performance_log (
+        id              SERIAL PRIMARY KEY,
+        domain          TEXT NOT NULL,
+        snapshot_id     TEXT NOT NULL,
+        decision        TEXT NOT NULL,
+        checkpoint_id   TEXT,
+        threshold_used  FLOAT,
+        signal_value    FLOAT,
+        outcome_label   TEXT DEFAULT 'UNKNOWN',
+        logged_at       TIMESTAMPTZ DEFAULT NOW()
+    )
+    """
 
     try:
         conn = psycopg2.connect(db_url)
@@ -470,6 +516,12 @@ def _ensure_vertical_tables():
                 cur.execute(sql)
             except Exception as _ae:
                 print(f"[startup] ALTER TABLE (non-fatal): {_ae}")
+        # ADR-118 + ADR-096 + ADR-120: additional governance infrastructure tables
+        for extra_ddl in [MCM_REMEDIATION_DDL, TRANSPARENCY_LOG_DDL, AVM_PERF_LOG_DDL]:
+            try:
+                cur.execute(extra_ddl)
+            except Exception as _ae:
+                print(f"[startup] Extra DDL (non-fatal): {_ae}")
         conn.commit()
         cur.close()
         conn.close()

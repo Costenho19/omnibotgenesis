@@ -400,14 +400,20 @@ class DecisionReceiptEngine:
             from datetime import timedelta
             retention_until = (datetime.now(timezone.utc) + timedelta(days=365)).date()
 
+            # ADR-097: extract canonical_hash_v2 from execution_proof
+            execution_proof = receipt.get('execution_proof') or {}
+            canonical_hash_v2 = execution_proof.get('canonical_hash')
+            execution_bound = bool(canonical_hash_v2)
+
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO decision_receipts 
                 (receipt_id, timestamp_utc, asset, decision, veto_chain, 
                  policy_version, engine_version, prev_hash, content_hash,
                  signature, signature_algorithm, public_key,
-                 client_id, encrypted_payload, retention_until, domain)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 client_id, encrypted_payload, retention_until, domain,
+                 canonical_hash_v2, execution_bound)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (receipt_id) DO NOTHING
             """, (
                 receipt['receipt_id'],
@@ -426,10 +432,18 @@ class DecisionReceiptEngine:
                 receipt.get('encrypted_payload'),
                 retention_until,
                 receipt.get('domain'),
+                canonical_hash_v2,
+                execution_bound,
             ))
             conn.commit()
             cur.close()
             conn.close()
+            if canonical_hash_v2:
+                logger.debug(
+                    f"[ADR-097] canonical_hash_v2 persisted "
+                    f"receipt={receipt['receipt_id'][:12]}... "
+                    f"hash={canonical_hash_v2[:16]}..."
+                )
             return True
         except Exception as e:
             logger.error(f"Failed to store receipt: {e}")

@@ -909,6 +909,241 @@ class AssumptionValidityMonitor:
 
         return recalibrated
 
+    # ── ADR-120 Phase 3: Performance-Based Threshold Optimization ──────────────
+
+    def optimize_checkpoint_thresholds(
+        self,
+        domain: str,
+        lookback_days: int = 30,
+        target_block_rate: float = 0.15,
+        max_adjustment_pct: float = 0.20,
+        db_url: str | None = None,
+    ) -> dict[str, float] | None:
+        """
+        ADR-120 Phase 3: Analyze recent governance decisions and optimize
+        checkpoint thresholds to achieve target_block_rate.
+
+        Algorithm:
+          1. Query decision_receipts for the last lookback_days.
+          2. Compute actual block rate per checkpoint (from veto_chain).
+          3. Compare each checkpoint's firing rate to target.
+          4. Adjust thresholds: over-firing → loosen (+); under-firing → tighten (−).
+          5. Cap adjustment at max_adjustment_pct per cycle.
+
+        Returns:
+            Dict of {checkpoint_id → optimized_threshold} or None if insufficient data.
+        """
+        _db_url = db_url or os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
+        if not _db_url:
+            logger.warning(f"[AVM.PHASE3] {domain}: no DB URL — skipping")
+            return None
+
+        snapshot = self.load_snapshot(domain)
+        if snapshot is None:
+            logger.warning(f"[AVM.PHASE3] {domain}: no baseline snapshot found")
+            return None
+
+        current_thresholds = dict(snapshot.checkpoint_thresholds or {})
+        if not current_thresholds:
+            logger.info(f"[AVM.PHASE3] {domain}: no checkpoint_thresholds in snapshot — skipping")
+            return None
+
+        try:
+            import psycopg2
+            conn = psycopg2.connect(_db_url)
+            cur  = conn.cursor()
+
+            cur.execute(
+                """
+                SELECT veto_chain, decision
+                  FROM decision_receipts
+                 WHERE domain = %s
+                   AND timestamp_utc >= NOW() - INTERVAL '%s days'
+                   AND veto_chain IS NOT NULL
+                """,
+                (domain, lookback_days),
+            )
+            rows = cur.fetchall()
+            conn.close()
+
+            if len(rows) < 20:
+                logger.info(
+                    f"[AVM.PHASE3] {domain}: only {len(rows)} receipts in last "
+                    f"{lookback_days}d — need >=20 for optimization"
+                )
+                return None
+
+            total          = len(rows)
+            actual_blocks  = sum(1 for _, dec in rows if (dec or "").upper() == "BLOCKED")
+            actual_block_rate = actual_blocks / total
+
+            logger.info(
+                f"[AVM.PHASE3] {domain}: {total} decisions | "
+                f"block_rate={actual_block_rate:.1%} | target={target_block_rate:.1%}"
+            )
+
+            # Count per-checkpoint firing frequency from veto_chains
+            import json as _json
+            import re as _re
+            cp_fires: dict[str, int] = {}
+            gate_pattern = _re.compile(r"^([A-Z][A-Z0-9_()\\-]+):")
+            for veto_raw, _ in rows:
+                try:
+                    chain = _json.loads(veto_raw) if isinstance(veto_raw, str) else (veto_raw or [])
+                    for entry in (chain if isinstance(chain, list) else []):
+                        if isinstance(entry, str):
+                            m = gate_pattern.match(entry.strip())
+                            if m:
+                                cp = m.group(1)
+                                cp_fires[cp] = cp_fires.get(cp, 0) + 1
+                except Exception:
+                    continue
+
+            # Compute ratio (actual_rate / target_rate) — if > 1 system over-blocks
+            ratio = actual_block_rate / target_block_rate if target_block_rate > 0 else 1.0
+
+            optimized: dict[str, float] = {}
+            for cp_id, current_val in current_thresholds.items():
+                cp_fire_rate = cp_fires.get(cp_id, 0) / total
+                if cp_fire_rate == 0:
+                    # Never fired — threshold may be too high, loosen slightly
+                    adj = current_val * (1.0 + max_adjustment_pct * 0.5)
+                elif ratio > 1.05:
+                    # Over-blocking: loosen (increase threshold)
+                    adj = current_val * (1.0 + min(ratio - 1.0, max_adjustment_pct))
+                elif ratio < 0.95:
+                    # Under-blocking: tighten (decrease threshold)
+                    adj = current_val * (1.0 - min(1.0 - ratio, max_adjustment_pct))
+                else:
+                    adj = current_val
+
+                optimized[cp_id] = round(max(0.01, min(adj, 0.99)), 4)
+
+            logger.info(
+                f"[AVM.PHASE3] {domain}: optimized {len(optimized)} thresholds | "
+                f"ratio={ratio:.2f} | block_delta={actual_block_rate - target_block_rate:+.1%}"
+            )
+            return optimized
+
+        except Exception as exc:
+            logger.error(f"[AVM.PHASE3] {domain}: threshold optimization failed — {exc}")
+            return None
+
+    def deploy_optimized_thresholds(
+        self,
+        domain: str,
+        optimized_thresholds: dict[str, float],
+        db_url: str | None = None,
+    ) -> bool:
+        """
+        ADR-120 Phase 4: Apply optimized thresholds from Phase 3 to the live
+        AVM calibration snapshot for the given domain.
+
+        Only executes if the domain has an existing snapshot with signals.
+        Persists to both JSON and DB for Railway survival across restarts.
+
+        Returns:
+            True if deployment succeeded, False otherwise.
+        """
+        if not optimized_thresholds:
+            logger.warning(f"[AVM.PHASE4] {domain}: empty thresholds dict — nothing to deploy")
+            return False
+
+        snapshot = self.load_snapshot(domain)
+        if snapshot is None:
+            logger.warning(f"[AVM.PHASE4] {domain}: no existing snapshot — cannot deploy")
+            return False
+
+        try:
+            self.save_calibration_snapshot(
+                domain=domain,
+                baseline_signals=snapshot.baseline_signals,
+                checkpoint_thresholds=optimized_thresholds,
+                description=(
+                    f"ADR-120 Phase 4 LIVE DEPLOYMENT: performance-optimized thresholds "
+                    f"({len(optimized_thresholds)} checkpoints updated)"
+                ),
+                tags=["PHASE4_LIVE_DEPLOY", "THRESHOLD_OPTIMIZATION", "ADR-120"],
+            )
+
+            # Persist to DB as well
+            _db_url = db_url or os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
+            if _db_url:
+                try:
+                    from omnix_core.governance.avm_db_bridge import AVMDatabaseBridge
+                    bridge  = AVMDatabaseBridge(db_url=_db_url)
+                    new_snap = self.load_snapshot(domain)
+                    if new_snap:
+                        bridge.save_snapshot(
+                            snapshot_dict=new_snap.to_dict(),
+                            reason="PHASE4_THRESHOLD_OPTIMIZATION",
+                            actor="avm_phase4_auto",
+                            action="RECALIBRATE",
+                        )
+                except Exception as _db_exc:
+                    logger.warning(f"[AVM.PHASE4] DB persist failed for {domain}: {_db_exc}")
+
+            logger.info(
+                f"[AVM.PHASE4] ✅ {domain}: {len(optimized_thresholds)} thresholds "
+                f"deployed to live snapshot"
+            )
+            return True
+
+        except Exception as exc:
+            logger.error(f"[AVM.PHASE4] {domain}: deploy failed — {exc}")
+            return False
+
+    def run_threshold_optimization_cycle(
+        self,
+        domain: str,
+        lookback_days: int = 30,
+        target_block_rate: float = 0.15,
+        db_url: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        ADR-120 Phase 3 + 4: Full optimization cycle.
+
+        Runs Phase 3 (analysis) and — if results are ready — Phase 4 (deployment).
+
+        Returns a status dict with keys:
+          phase3_complete, phase4_complete, optimized_thresholds, message
+        """
+        result: dict[str, Any] = {
+            "domain":              domain,
+            "phase3_complete":     False,
+            "phase4_complete":     False,
+            "optimized_thresholds": None,
+            "message":             "",
+        }
+
+        optimized = self.optimize_checkpoint_thresholds(
+            domain=domain,
+            lookback_days=lookback_days,
+            target_block_rate=target_block_rate,
+            db_url=db_url,
+        )
+
+        if optimized is None:
+            result["message"] = "Phase 3 skipped — insufficient data or no snapshot"
+            return result
+
+        result["phase3_complete"]      = True
+        result["optimized_thresholds"] = optimized
+
+        deployed = self.deploy_optimized_thresholds(
+            domain=domain,
+            optimized_thresholds=optimized,
+            db_url=db_url,
+        )
+
+        result["phase4_complete"] = deployed
+        result["message"] = (
+            f"Phase 3 complete ({len(optimized)} thresholds optimized). "
+            + ("Phase 4 deployed to live snapshot." if deployed else "Phase 4 deployment failed.")
+        )
+        logger.info(f"[AVM.OPT_CYCLE] {domain}: {result['message']}")
+        return result
+
 
 # ── Singleton ──────────────────────────────────────────────────────────────────
 
