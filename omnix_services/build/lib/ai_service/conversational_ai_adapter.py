@@ -1083,7 +1083,14 @@ class ConversationalAI:
                 
                 logger.info(f"🧠 MEMORIA: chat_id={chat_id_int}")
                 
-                real_market_data = await self._fetch_real_market_data_async(trading_system, user_message, user_id=user_id)
+                try:
+                    real_market_data = await asyncio.wait_for(
+                        self._fetch_real_market_data_async(trading_system, user_message, user_id=user_id),
+                        timeout=10.0
+                    )
+                except (asyncio.TimeoutError, Exception) as _mde:
+                    logger.warning(f"⚠️ [ASYNC] Market data fetch failed ({type(_mde).__name__}) — continuing without market data")
+                    real_market_data = {'market_data_unavailable': True}
                 
                 # V6.5.4e: SYSTEMIC FRAMING ROUTER (ADR-013) - Classify and inject type-specific override
                 effective_user_message = user_message
@@ -1099,14 +1106,26 @@ class ConversationalAI:
                 current_message = effective_user_message
                 
                 while retry_count <= max_retries:
-                    result = await self.enterprise_service.generate_response(
-                        chat_id=chat_id_int,
-                        user_message=current_message,
-                        user_name=user_name,
-                        market_data=real_market_data,
-                        apply_visual_style=True,
-                        diagnostic_mode=diagnostic_mode
-                    )
+                    try:
+                        result = await asyncio.wait_for(
+                            self.enterprise_service.generate_response(
+                                chat_id=chat_id_int,
+                                user_message=current_message,
+                                user_name=user_name,
+                                market_data=real_market_data,
+                                apply_visual_style=True,
+                                diagnostic_mode=diagnostic_mode
+                            ),
+                            timeout=45.0
+                        )
+                    except asyncio.TimeoutError:
+                        logger.error("❌ Enterprise service timed out after 45s — using fallback")
+                        result = None
+                    except BaseException as _be:
+                        if isinstance(_be, (KeyboardInterrupt, SystemExit)):
+                            raise
+                        logger.error(f"❌ Enterprise service raised [{type(_be).__name__}]: {_be}", exc_info=True)
+                        result = None
                     
                     if result and 'response' in result:
                         response_text = result['response']
@@ -1144,9 +1163,15 @@ class ConversationalAI:
                 return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system))
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
-            return "⏳ Rate limit reached. Please wait a moment..."
+            return "⏳ Demasiadas solicitudes. Espera un momento e intenta de nuevo."
+        except asyncio.CancelledError:
+            logger.warning("⚠️ Response generation cancelled (Telegram timeout)")
+            return self._fallback_response()
+        except asyncio.TimeoutError:
+            logger.error("❌ Response generation timed out at outer level")
+            return self._fallback_response()
         except Exception as e:
-            logger.error(f"❌ Error generating async response: {e}", exc_info=True)
+            logger.error(f"❌ Error generating async response [{type(e).__name__}]: {e}", exc_info=True)
             return self._fallback_response()
     
     def generate_response(self, user_message, user_name="Usuario", chat_id="", user_id=None, trading_system=None):
@@ -2126,7 +2151,7 @@ class ConversationalAI:
     
     def _fallback_response(self):
         """Ultimate fallback if all AI fails"""
-        return "🤖 System temporarily unavailable. Please try again in a few moments."
+        return "⚠️ Servicio temporalmente no disponible. Por favor, intenta de nuevo en unos momentos."
     
     # Compatibility methods - delegate to enterprise or provide simple fallbacks
     def apply_ultra_visual_style(self, response_text, intent='general'):
