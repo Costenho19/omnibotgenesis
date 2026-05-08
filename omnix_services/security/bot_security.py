@@ -307,10 +307,16 @@ class BotSecurityMiddleware:
 
     @staticmethod
     def _is_admin(uid: str) -> bool:
-        """Returns True if uid matches TELEGRAM_ADMIN_USER_ID — admin bypasses rate limiting."""
-        import os
-        admin_id = os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
-        return bool(admin_id) and str(uid) == str(admin_id)
+        """Returns True if uid matches the admin user — admin bypasses rate limiting.
+        Uses settings.TELEGRAM_ADMIN_ID which has a hardcoded fallback, so it works
+        even when TELEGRAM_ADMIN_USER_ID is not set in the environment."""
+        try:
+            from omnix_config.settings import settings
+            admin_id = str(settings.TELEGRAM_ADMIN_ID)
+        except Exception:
+            import os
+            admin_id = os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
+        return bool(admin_id) and str(uid) == admin_id
 
     def check(
         self,

@@ -49,11 +49,18 @@ class RateLimiter:
     
     @staticmethod
     def _is_admin_bypass(identifier: str) -> bool:
-        """Returns True if the identifier matches TELEGRAM_ADMIN_USER_ID — admin is never rate-limited."""
-        import os
-        admin_id = os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
-        if admin_id and str(identifier) == str(admin_id):
+        """Returns True if the identifier matches the admin user — admin is never rate-limited.
+        Uses settings.TELEGRAM_ADMIN_ID which has a hardcoded fallback, so it works even
+        when TELEGRAM_ADMIN_USER_ID is not set in the environment."""
+        try:
+            from omnix_config.settings import settings
+            admin_id = str(settings.TELEGRAM_ADMIN_ID)
+        except Exception:
+            import os
+            admin_id = os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
+        if admin_id and str(identifier) == admin_id:
             return True
+        import os
         bypass_ids = os.environ.get("RATE_LIMIT_BYPASS_IDS", "")
         if bypass_ids:
             return str(identifier) in [x.strip() for x in bypass_ids.split(",")]
