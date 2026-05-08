@@ -47,6 +47,18 @@ class RateLimiter:
         """Generate Redis key for rate limit"""
         return f"{self.key_prefix}:{identifier}"
     
+    @staticmethod
+    def _is_admin_bypass(identifier: str) -> bool:
+        """Returns True if the identifier matches TELEGRAM_ADMIN_USER_ID — admin is never rate-limited."""
+        import os
+        admin_id = os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
+        if admin_id and str(identifier) == str(admin_id):
+            return True
+        bypass_ids = os.environ.get("RATE_LIMIT_BYPASS_IDS", "")
+        if bypass_ids:
+            return str(identifier) in [x.strip() for x in bypass_ids.split(",")]
+        return False
+
     def is_allowed(self, identifier: str) -> tuple[bool, int]:
         """
         Check if request is allowed for identifier
@@ -57,6 +69,10 @@ class RateLimiter:
         Returns:
             Tuple of (is_allowed, requests_remaining)
         """
+        # Admin / bypass list — always allowed, no Redis write
+        if self._is_admin_bypass(identifier):
+            return True, self.max_requests
+
         key = self._make_key(identifier)
         
         # If Redis not available, allow request (fail open)

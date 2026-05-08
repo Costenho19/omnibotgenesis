@@ -1141,7 +1141,10 @@ class ConversationalAI:
                 return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system))
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
-            return "⏳ Rate limit reached. Please wait a moment..."
+            import re as _re
+            _m = _re.search(r"Resets in (\d+)s", str(e))
+            _reset = f" Intenta de nuevo en {_m.group(1)} segundos." if _m else " Por favor espera un momento."
+            return f"⏳ Demasiadas solicitudes al servicio IA.{_reset}"
         except Exception as e:
             logger.error(f"❌ Error generating async response: {e}", exc_info=True)
             return self._fallback_response()
@@ -1259,7 +1262,10 @@ class ConversationalAI:
                 
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
-            return "⏳ Rate limit reached. Please wait a moment..."
+            import re as _re
+            _m = _re.search(r"Resets in (\d+)s", str(e))
+            _reset = f" Intenta de nuevo en {_m.group(1)} segundos." if _m else " Por favor espera un momento."
+            return f"⏳ Demasiadas solicitudes al servicio IA.{_reset}"
         except Exception as e:
             logger.error(f"❌ Error generating response: {e}", exc_info=True)
             return self._fallback_response()

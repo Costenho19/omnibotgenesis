@@ -34,9 +34,9 @@ MAX_BUFFER_PER_USER = 5            # messages buffered before oldest is dropped
 MAX_HISTORY_PER_USER = 30          # conversation turns kept in memory
 
 # Rate limiting (sliding window per user)
-RATE_LIMIT_MESSAGES = 10           # max messages
+RATE_LIMIT_MESSAGES = 20           # max messages per minute
 RATE_LIMIT_WINDOW_SECONDS = 60     # per minute
-RATE_LIMIT_BURST = 3               # max back-to-back in 5 s (anti-burst)
+RATE_LIMIT_BURST = 5               # max back-to-back in 5 s (anti-burst)
 RATE_LIMIT_BURST_WINDOW = 5        # seconds for burst window
 
 # Cooldown when limit exceeded (seconds)
@@ -305,6 +305,13 @@ class BotSecurityMiddleware:
         self._injection_count: dict[str, int] = defaultdict(int)
         self._auto_block_threshold = 3   # auto-block after N injection attempts
 
+    @staticmethod
+    def _is_admin(uid: str) -> bool:
+        """Returns True if uid matches TELEGRAM_ADMIN_USER_ID — admin bypasses rate limiting."""
+        import os
+        admin_id = os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
+        return bool(admin_id) and str(uid) == str(admin_id)
+
     def check(
         self,
         user_id: str,
@@ -335,8 +342,11 @@ class BotSecurityMiddleware:
                 reply_message=_GROUP_BLOCKED_MSG,
             )
 
-        # 3. Rate limiting
-        allowed, limit_reason = self.rate_limiter.check(uid)
+        # 3. Rate limiting — admin bypasses entirely
+        if self._is_admin(uid):
+            allowed, limit_reason = True, ""
+        else:
+            allowed, limit_reason = self.rate_limiter.check(uid)
         if not allowed:
             violations = self.rate_limiter.get_violations(uid)
             if violations >= 10:
