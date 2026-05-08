@@ -75,7 +75,7 @@ Variables are read with these **exact names** in the source code. Use the same n
 *   **Database:** PostgreSQL (Railway managed)
 *   **Cache / Anti-replay:** Redis (Railway managed)
 *   **PQC Library:** Dilithium-3 (ML-DSA-65), Kyber-768
-*   **AI Models:** Google Gemini 2.5 Flash (primary) → OpenAI GPT-4o mini → Anthropic Claude (fallbacks)
+*   **AI Models:** OpenAI GPT-4o-mini (primary) → GPT-4o → Google Gemini 2.5 Flash → Anthropic Claude (fallbacks)
 *   **Build Tool:** npm (React), Python setuptools (SDKs)
 
 ---

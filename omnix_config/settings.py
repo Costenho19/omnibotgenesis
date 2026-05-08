@@ -48,14 +48,14 @@ class AIConfig:
     """Configuración servicios IA"""
     openai_key: str = env_config.get('OPENAI_API_KEY', default='')
     gemini_key: str = env_config.get('GEMINI_API_KEY', default='')
-    primary_model: str = 'gemini-2.5-flash'
+    primary_model: str = 'gpt-4o-mini'
     fallback_models: Optional[list] = None
     max_retries: int = 1
     timeout: int = 10
     
     def __post_init__(self):
         if self.fallback_models is None:
-            self.fallback_models = ['gpt-4o', 'claude-sonnet-4-20250514']
+            self.fallback_models = ['gpt-4o', 'gemini-2.5-flash', 'claude-sonnet-4-20250514']
 
 
 @dataclass

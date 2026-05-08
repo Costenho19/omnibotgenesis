@@ -979,7 +979,11 @@ try:
     OMNIX_ENTERPRISE_AVAILABLE = True
 except ImportError:
     OMNIX_ENTERPRISE_AVAILABLE = False
-    RateLimitExceeded = Exception
+    # CRITICAL: never alias Exception — that would swallow ALL errors as rate-limit messages.
+    # Use a private sentinel that can only be raised explicitly.
+    class RateLimitExceeded(Exception):  # noqa: N818
+        """Sentinel — only raised by rate limiter, never by accident."""
+        pass
 
 # AI clients
 try:
