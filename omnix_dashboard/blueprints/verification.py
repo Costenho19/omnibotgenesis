@@ -3,7 +3,7 @@ import logging
 import os
 import time
 from collections import defaultdict
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, request
 from omnix_dashboard.utils.database import get_db_connection
 
 logger = logging.getLogger(__name__)

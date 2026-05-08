@@ -149,4 +149,4 @@ def catch_all(path):
     if os.path.isfile(react_index):
         return send_from_directory(REACT_DIST, 'index.html')
 
-    return render_template('terminal.html')
+    return jsonify({'error': 'React build not found', 'status': 503}), 503
