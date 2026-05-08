@@ -24,8 +24,8 @@ Variables are read with these **exact names** in the source code. Use the same n
 | `GEMINI_API_KEY` | AI governance engine | **REQUIRED** — Google Gemini billing must be active |
 | `OMNIX_WEB_URL` | webhook callbacks | **REQUIRED** — e.g. `https://omnixquantum.net` |
 | `VITE_RAILWAY_API_URL` | frontend build-time var | **REQUIRED** — public API URL for React app |
-| `OMNIX_SIGNING_SECRET_KEY_B64` | Dilithium-3 receipt signing | **REQUIRED** — PQC private key (base64). **Missing in Railway — receipts not signed in production.** |
-| `OMNIX_SIGNING_PUBLIC_KEY_B64` | Dilithium-3 verification | **REQUIRED** — PQC public key (base64). **Missing in Railway.** |
+| `OMNIX_SIGNING_SECRET_KEY_B64` | Dilithium-3 receipt signing | **REQUIRED** — PQC private key (base64). Present in Railway ✓ |
+| `OMNIX_SIGNING_PUBLIC_KEY_B64` | Dilithium-3 verification | **REQUIRED** — PQC public key (base64). Present in Railway ✓ |
 | `PAYLOAD_ENCRYPTION_KEY` | `gov_blueprint.py` — Fernet webhook encryption | REQUIRED for encrypted webhooks |
 | `OPENAI_API_KEY` | AI fallback chain | Optional |
 | `ANTHROPIC_API_KEY` | AI fallback chain | Optional |
@@ -60,11 +60,11 @@ Variables are read with these **exact names** in the source code. Use the same n
 | `PAPER_MODE` | Present in Railway ✓ |
 | `TRADING_MODE` / `TRADING_PROFILE` | Present in Railway ✓ |
 
-### Critical Gaps — Action Required
+### Critical Gaps — Resueltos ✓
 
-1. **`OMNIX_SIGNING_SECRET_KEY_B64`** — Not in Railway. PQC receipts are not signed in production. Copy from Replit Secrets → Railway.
-2. **`OMNIX_SIGNING_PUBLIC_KEY_B64`** — Not in Railway. Copy from Replit Secrets → Railway.
-3. **`TELEGRAM_ADMIN_USER_ID`** — Not in Railway or Replit. Add your Telegram user ID (obtain via [@userinfobot](https://t.me/userinfobot)).
+1. **`OMNIX_SIGNING_SECRET_KEY_B64`** — Present in Replit ✓ · Present in Railway ✓
+2. **`OMNIX_SIGNING_PUBLIC_KEY_B64`** — Present in Replit ✓ · Present in Railway ✓
+3. **`TELEGRAM_ADMIN_USER_ID`** — Present in Replit ✓ (7014748854). Agregar a Railway si el bot corre allí.
 
 ---
 
