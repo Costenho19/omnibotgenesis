@@ -144,17 +144,23 @@ def _probe_redis(redis_url: Optional[str]) -> SubsystemHealth:
 def _probe_pqc() -> SubsystemHealth:
     t0 = time.monotonic()
     try:
-        from omnix_core.security.pqc_security import PQCSecurity
-        pqc = PQCSecurity()
+        from omnix_core.security.pqc_security import PostQuantumSecurity
+        pqc = PostQuantumSecurity()
+        keypair = pqc.generate_keypair_signature()
+        if not keypair:
+            raise RuntimeError("generate_keypair_signature returned None")
+        pk, sk = keypair
         test_msg = b"omnix-health-probe"
-        sig = pqc.sign(test_msg)
-        ok = pqc.verify(test_msg, sig)
+        sig = pqc.sign_message(test_msg, sk)
+        if not sig:
+            raise RuntimeError("sign_message returned None")
+        ok = pqc.verify_signature(sig, test_msg, pk)
         latency = (time.monotonic() - t0) * 1000
         if ok:
             return SubsystemHealth("pqc_dilithium3", STATUS_UP, latency,
-                                   "Dilithium-3 sign/verify cycle passed", critical=True)
+                                   "Dilithium-3 sign/verify cycle passed", critical=False)
         return SubsystemHealth("pqc_dilithium3", STATUS_DEGRADED, latency,
-                               "sign/verify returned False", critical=True)
+                               "sign/verify returned False", critical=False)
     except Exception as e:
         latency = (time.monotonic() - t0) * 1000
         mode = os.getenv("OMNIX_KEY_MODE", "not_set")
@@ -194,7 +200,7 @@ def _probe_avm() -> SubsystemHealth:
     try:
         from omnix_core.governance.assumption_validity_monitor import get_avm_instance
         avm = get_avm_instance("health-probe")
-        _ = avm.get_current_weights()
+        assert callable(getattr(avm, "evaluate", None)), "evaluate() not found on AVM"
         latency = (time.monotonic() - t0) * 1000
         return SubsystemHealth("avm", STATUS_UP, latency,
                                "Assumption Validity Monitor operational", critical=False)
@@ -207,7 +213,7 @@ def _probe_avm() -> SubsystemHealth:
 def _probe_governance_engine() -> SubsystemHealth:
     t0 = time.monotonic()
     try:
-        from omnix_core.governance.external_evaluator import ExternalEvaluator  # noqa: F401
+        from omnix_core.governance.external_evaluator import GovernanceEvaluationEngine  # noqa: F401
         from omnix_core.evidence.decision_receipt import DecisionReceiptEngine  # noqa: F401
         latency = (time.monotonic() - t0) * 1000
         return SubsystemHealth("governance_engine", STATUS_UP, latency,

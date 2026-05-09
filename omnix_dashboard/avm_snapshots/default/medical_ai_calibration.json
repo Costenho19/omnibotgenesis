@@ -1,0 +1,24 @@
+{
+  "snapshot_id": "AVM-CB5FA1F5E3",
+  "parameter_version": "1.cb5fa1f5e3",
+  "domain": "medical_ai",
+  "baseline_signals": {
+    "risk_exposure": 28.49,
+    "signal_coherence": 72.0,
+    "logic_consistency": 67.11,
+    "probability_score": 71.84,
+    "stress_resilience": 68.03,
+    "trend_persistence": 62.3
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=75h>=72h",
+  "tags": [
+    "AUTO_RECALIBRATION",
+    "interval_72h",
+    "prev_drift_9.5"
+  ],
+  "calibrated_at": "2026-05-07T21:04:20.422860+00:00",
+  "calibrated_at_epoch": 1778187860.42286
+}
