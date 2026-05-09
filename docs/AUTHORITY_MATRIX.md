@@ -317,9 +317,34 @@ This matrix is versioned with every ADR update. Changes require a Tier 1 decisio
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-05-08 | Initial publication — ADR-146 |
+| 1.1 | 2026-05-09 | ADR-147 (Scope Authorization Record) — §2.6 extended, §2.7 added. Governance integrity validation: 124/124 tests PASS across 9 dimensions. All 6 invariants formally verified. |
+
+---
+
+## 9. ADR-147 Governance Integrity Certification
+
+**Date:** May 9, 2026  
+**Report:** GIR-2026-Q2-001 (`docs/GOVERNANCE_INTEGRITY_REPORT.md`)  
+**Tests:** 124/124 PASS — `tests/test_governance_integrity.py`
+
+This authority matrix has been validated as part of the post-ADR-147 governance integrity pass. The following invariants were formally verified by executable test:
+
+| Invariant | Authority Matrix Clause | Verified |
+|---|---|---|
+| I-1 Fail-Closed | §2.7 — All scope ops fail closed on invalid inputs | ✓ |
+| I-2 Bounded Adaptation | §2.7 — Drift ≥ 25% → mandatory REAPPROVAL_REQUIRED | ✓ |
+| I-3 Authority Separation | §2.7 — Revocation exclusive to Tier 1 | ✓ |
+| I-4 Replay Determinism | §2 — Scope hash stable across 5 independent runs | ✓ |
+| I-5 Signed Scope Defensibility | §2.7 — All 5 defensibility components cryptographically sealed | ✓ |
+| I-6 Anti-Drift Reapproval | §2.7 — `scope_reapproval_pending=True` blocks silent continuation | ✓ |
+
+**Canonical hashes (independently verifiable):**
+- `scope_hash` = `0c6ee2e16947a1bce2775d2997eea5d05dc818c894184727045769d777813a3d`
+- `context_hash` = `58721139dadc10755cd44e0b0c4ea75576b39744a5c804b72dc167514fd76b67`
+- Replay report hash = `34c9e5ef7e1bddff43015bf15e9b74fb62f92dd30194a27ab989fea23f41aafd`
 
 ---
 
 *OMNIX QUANTUM — Decision Governance Infrastructure*  
-*ADR-146 · Runtime Authority Matrix v1.0*  
+*ADR-146 · ADR-147 · Runtime Authority Matrix v1.1*  
 *omnixquantum.net*

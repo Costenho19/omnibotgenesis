@@ -269,3 +269,65 @@ When `drift_pct > defensibility_criteria.scope_reapproval_drift_threshold` (defa
 | ADR-064 — Assumption Validity Monitor | Context snapshot source + drift computation |
 | ADR-022 — PQC Cryptography | Dilithium-3 signing of scope records |
 | ADR-089 — RBAC | Tier 3 client scope access control |
+
+---
+
+## Appendix A — Governance Integrity Validation Evidence (May 2026)
+
+**Report:** `docs/GOVERNANCE_INTEGRITY_REPORT.md` — GIR-2026-Q2-001  
+**Test Suite:** `tests/test_governance_integrity.py`  
+**Result:** 124/124 PASS — 9 validation dimensions — 9.98s
+
+### A.1 Canonical Hash Evidence
+
+| Hash | Value |
+|---|---|
+| `scope_hash` (FINANCE/equity_trading Q2 2026) | `0c6ee2e16947a1bce2775d2997eea5d05dc818c894184727045769d777813a3d` |
+| `context_hash` (AVM baseline at issuance) | `58721139dadc10755cd44e0b0c4ea75576b39744a5c804b72dc167514fd76b67` |
+| PQC algorithm | Dilithium-3 (ML-DSA-65) — production key |
+| Replay report hash (5 scenarios, 12 receipts) | `34c9e5ef7e1bddff43015bf15e9b74fb62f92dd30194a27ab989fea23f41aafd` |
+
+### A.2 Validation Dimension Summary
+
+| Dimension | Tests | Verdict |
+|---|---|---|
+| V-01 Scope Authorization Lifecycle | 16 | PASS |
+| V-02 Drift-Triggered Reapproval | 10 | PASS |
+| V-03 Signed Defensibility Records | 15 | PASS |
+| V-04 Replay Engine Integration | 16 | PASS |
+| V-05 Authority Matrix Enforcement | 9 | PASS |
+| V-06 Runtime Boundary Validation | 8 | PASS |
+| V-07 Public Verifier Consistency | 7 | PASS |
+| V-08 Database Schema Integrity | 26 | PASS |
+| V-09 Governance Invariants | 17 | PASS |
+| **TOTAL** | **124** | **PASS** |
+
+### A.3 Governance Invariants — Formal Verification
+
+| Invariant | Mechanism | Status |
+|---|---|---|
+| I-1 Fail-Closed | `ValueError` before DB on all invalid inputs | VERIFIED |
+| I-2 Bounded Adaptation | 50% shift → 50.0% drift > 25.0% threshold | VERIFIED |
+| I-3 Authority Separation | `PermissionError` for Tier 2/3/4 revocation | VERIFIED |
+| I-4 Replay Determinism | `scope_hash` stable ×5 independent runs | VERIFIED |
+| I-5 Signed Scope Defensibility | All 5 components always present, 64-char SHA-256 | VERIFIED |
+| I-6 Anti-Drift Reapproval | `scope_reapproval_pending=True` prevents silent continuation | VERIFIED |
+
+### A.4 AVM Signal Weights (ADR-076) — Sum Verified
+
+| Signal | Weight |
+|---|---|
+| `probability_score` | 0.25 |
+| `signal_coherence` | 0.25 |
+| `risk_exposure` | 0.20 |
+| `stress_resilience` | 0.15 |
+| `trend_persistence` | 0.10 |
+| `logic_consistency` | 0.05 |
+| **Sum** | **1.00** — verified by test |
+
+### A.5 Hash Idempotency
+
+- `scope_hash` identical across 5 independent computations ✓
+- `context_hash` identical across 3 independent computations ✓
+- Replay receipt hashes identical across 3 full replay runs ✓
+- Full report hash: `34c9e5ef7e1bddff43015bf15e9b74fb62f92dd30194a27ab989fea23f41aafd` stable ✓

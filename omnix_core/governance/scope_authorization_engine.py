@@ -735,10 +735,10 @@ class ScopeAuthorizationEngine:
                 f"Scope revocation requires authority_tier=1 (Tier 1 Platform Owner). "
                 f"Got tier={authority_tier} actor={authorized_by}"
             )
-        if not self._available:
-            return False
         if not reason or not reason.strip():
             raise ValueError("reason is required for scope revocation")
+        if not self._available:
+            return False
 
         try:
             with self._get_conn() as conn:

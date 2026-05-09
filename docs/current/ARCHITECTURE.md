@@ -3,7 +3,7 @@
 **Internal Build Reference**: 6.5.4e  
 **Actualizado**: 15 de Abril 2026  
 **Estado**: Producción 24/7 — 11-checkpoint pipeline + EBIP + TIE + 10 Verticals activos  
-**Último Cambio**: Auto-Modification Guard (ADR-144) — May 8, 2026
+**Último Cambio**: Scope Authorization Record (ADR-147) — May 9, 2026
 
 ---
 
@@ -1020,6 +1020,122 @@ OVERRIDE: Tier 1 únicamente — 0 overrides ejercidos en producción (Mayo 2026
 
 ---
 
+## Scope Authorization Record — ADR-147 (Mayo 2026)
+
+Responde la pregunta del CAIO de Rehan Kausar: *"¿Fue el scope en sí mismo defensible?"*
+
+Antes de ADR-147, OMNIX podía demostrar que una decisión individual fue gobernada correctamente, pero no podía demostrar que el *scope operacional* bajo el que funcionaba fue autorizado explícitamente, documentado, y no había derivado de sus condiciones originales. ADR-147 cierra este gap mediante un registro criptográficamente firmado que se emite en el momento de la autorización de scope.
+
+**Documento canónico**: `omnix_core/governance/scope_authorization_engine.py`  
+**Tabla**: `governance_scope_authorizations`
+
+### Los 5 Componentes de Defensibilidad
+
+Cada `ScopeAuthorizationRecord` embebe y sella criptográficamente los 5 componentes:
+
+| Componente | Campo en Record | Qué responde |
+|---|---|---|
+| Qué está autorizado | `scope_definition` (JSONB) | Límites operacionales explícitos |
+| Por qué es defensible | `defensibility_criteria` (JSONB) | Fundamento regulatorio y de negocio |
+| Quién lo autorizó | `authorized_by` + `authority_tier` | Actor e identidad de autoridad |
+| En qué contexto | `context_snapshot` + `context_hash` | Estado AVM en el momento de issuance |
+| Prueba criptográfica | `scope_hash` + `pqc_signature` | Dilithium-3 (ML-DSA-65) + SHA-256 |
+
+### Hashes Canónicos (Evidencia Real — Mayo 2026)
+
+```
+scope_hash     = sha256(json.dumps({"scope_definition": {...}, "defensibility_criteria": {...}},
+                                   sort_keys=True, separators=(',',':')))
+               = 0c6ee2e16947a1bce2775d2997eea5d05dc818c894184727045769d777813a3d
+
+context_hash   = sha256(json.dumps(context_snapshot, sort_keys=True, separators=(',',':')))
+               = 58721139dadc10755cd44e0b0c4ea75576b39744a5c804b72dc167514fd76b67
+
+pqc_algorithm  = Dilithium-3 (ML-DSA-65)
+sign_payload   = b"OMNIX-SAR-v1|scope_hash=<scope_hash>|context_hash=<context_hash>"
+```
+
+### Ciclo de Vida del Scope
+
+```
+issue_scope()
+     │
+     ▼
+  ACTIVE ──── AVM drift check (cada governance cycle)
+     │               │
+     │        drift > threshold
+     │               │
+     ▼               ▼
+REVOKED ←── REAPPROVAL_REQUIRED
+                     │
+              reauthorize()
+                     │
+                     ▼
+               SUPERSEDED (old) → ACTIVE (nuevo scope)
+```
+
+### Detección de Deriva Contextual (Invariante 2)
+
+```python
+# AVM signal weights (ADR-076)
+SIGNAL_WEIGHTS = {
+    "probability_score":  0.25,
+    "signal_coherence":   0.25,
+    "risk_exposure":      0.20,
+    "stress_resilience":  0.15,
+    "trend_persistence":  0.10,
+    "logic_consistency":  0.05,
+}  # sum = 1.00
+
+drift_pct = sum(
+    weight * abs(current[s] - baseline[s]) / max(baseline[s], 0.01)
+    for s, weight in SIGNAL_WEIGHTS.items()
+) * 100  # en porcentaje
+
+# Umbral por defecto: 25.0%
+# Si drift_pct > threshold → status = REAPPROVAL_REQUIRED
+# trust_flags().scope_reapproval_pending = True → no puede continuar silenciosamente
+```
+
+### API Endpoints (6 endpoints en gov_blueprint.py)
+
+| Método | Ruta | Tier Mínimo | Descripción |
+|---|---|---|---|
+| `POST` | `/api/governance/scope/issue` | Tier 1 (admin) | Emitir nuevo scope PQC-firmado |
+| `GET` | `/api/governance/scope/active` | Tier 3 (client) | Scope activo por dominio/vertical |
+| `POST` | `/api/governance/scope/check-drift` | Tier 3 (client) | Verificar drift contextual AVM |
+| `POST` | `/api/governance/scope/flag-reapproval` | Tier 1 (admin) | Marcar manualmente REAPPROVAL_REQUIRED |
+| `POST` | `/api/governance/scope/reauthorize` | Tier 1 (admin) | Reautorizar: SUPERSEDED → nuevo ACTIVE |
+| `POST` | `/api/governance/scope/revoke` | Tier 1 (admin) | Revocar permanentemente (Solo Tier 1) |
+
+### Los 6 Invariantes de Gobernanza (Validados — 124/124 tests)
+
+| # | Invariante | Mecanismo |
+|---|---|---|
+| I-1 | Fail-Closed | `ValueError` antes de cualquier DB en inputs inválidos |
+| I-2 | Bounded Adaptation | Drift ≥ 25% → REAPPROVAL_REQUIRED, no silencioso |
+| I-3 | Authority Separation | `revoke_scope()` → `PermissionError` para Tier 2/3/4 |
+| I-4 | Replay Determinism | `scope_hash` estable × 5 runs, hash idempotency PASS |
+| I-5 | Signed Scope Defensibility | 5 componentes siempre presentes, SHA-256 hex 64 chars |
+| I-6 | Anti-Drift Reapproval | `scope_reapproval_pending=True` bloquea continuación silenciosa |
+
+### Validación Institucional (Mayo 2026)
+
+```
+Tests        : 124/124 PASS (tests/test_governance_integrity.py)
+Dimensiones  : 9 (V-01 a V-09)
+Evidencia    : docs/GOVERNANCE_INTEGRITY_REPORT.md
+Run time     : 9.98s
+Invariantes  : 6/6 VERIFIED
+Hash idempotency : PASS (3 runs independientes)
+PQC Signed   : Dilithium-3 (ML-DSA-65)
+```
+
+**Ubicación**: `omnix_core/governance/scope_authorization_engine.py`  
+**ADR**: ADR-147
+
+---
+
 ## Governance Monitoring Layer — ADR-129 · ADR-131 · ADR-142 · ADR-143 (Mayo 2026)
 
 Cinco dashboards de auditoría con APIs reales respaldadas por tablas PostgreSQL. Todos los endpoints siguen el patrón de fail-open con fallback a array vacío — nunca devuelven 5xx al dashboard.
@@ -1130,7 +1246,9 @@ HISTORY:  Inmutable — cada evento queda registrado con triggered_by + released
 - [Runtime Authority Matrix](../AUTHORITY_MATRIX.md) - Matriz de autoridad en runtime (ADR-146)
 - [ADR-145 Governance Replay Engine](../adr/ADR-145-governance-replay-engine.md)
 - [ADR-146 Runtime Authority Matrix](../adr/ADR-146-runtime-authority-matrix.md)
+- [ADR-147 Scope Authorization Record](../adr/ADR-147-scope-authorization-record.md)
 - [Crisis Replay Page](/crisis-replay) - 5 crisis históricas con receipts verificables (ADR-145)
+- [Governance Integrity Report](../GOVERNANCE_INTEGRITY_REPORT.md) - GIR-2026-Q2-001 — 124/124 tests (ADR-147)
 
 ---
 

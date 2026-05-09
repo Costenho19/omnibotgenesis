@@ -32,6 +32,10 @@ args = "OMNIX Web"
 task = "workflow.run"
 args = "Flask Dashboard"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Governance Integrity Tests"
+
 [[workflows.workflow]]
 name = "Code Verification"
 author = "agent"
@@ -88,6 +92,17 @@ outputType = "webview"
 task = "shell.exec"
 args = "cd omnix_dashboard && python -m flask run --host=0.0.0.0 --port=5000"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Governance Integrity Tests"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /home/runner/workspace && TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest tests/test_governance_integrity.py -v --tb=short"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 3000
