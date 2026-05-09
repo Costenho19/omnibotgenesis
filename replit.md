@@ -147,7 +147,8 @@ Variables are read with these **exact names** in the source code. Use the same n
 *   **PQC Keys in Railway:** `OMNIX_SIGNING_SECRET_KEY_B64` and `OMNIX_SIGNING_PUBLIC_KEY_B64` exist in Replit but not Railway — receipts in production are unsigned until these are added.
 *   **API Key Provisioning:** When provisioning B2B API keys via `provision_b2b_client.py`, copy the key immediately — it is only shown once.
 *   **Production Safeguards:** Never set `TESTING=true` in production — it bypasses critical security checks (suppresses AVM Telegram alerts, skips snapshot scheduler thread, skips simulators).
-*   **PQC Keys in Railway (URGENT):** `OMNIX_SIGNING_SECRET_KEY_B64` and `OMNIX_SIGNING_PUBLIC_KEY_B64` must be added to Railway — production receipts are SHA-256 only until then. Highest-impact pending action.
+*   **PQC Keys in Railway (URGENT):** `OMNIX_SIGNING_SECRET_KEY_B64` and `OMNIX_SIGNING_PUBLIC_KEY_B64` must be added to Railway — production receipts are SHA-256 only until then. Without them, every Railway restart generates new ephemeral keys and ALL previous receipts become permanently unverifiable (FMR-001).
+*   **Anti-Replay Mode in Railway (URGENT):** Set `OMNIX_ANTI_REPLAY_MODE=strict` in Railway. Default `best_effort` allows receipt replay across dynos when Redis is unavailable — cross-dyno split possible in multi-replica deployments (FMR-004).
 *   **ADMIN_ALLOWED_IPS in Railway:** Required for `/api/book-leads-admin` to be accessible. Without it, only `127.0.0.1` can call it (safe default but verify in Railway context).
 *   **AMG Threshold Env Vars are Security Parameters:** `AVM_MAX_CUMULATIVE_DRIFT_PCT` (default 30%) and `AVM_APPROVAL_THRESHOLD_PCT` (default 10%) must never be set above 50% in production — doing so silently degrades the cumulative drift guard. Treat them as security-sensitive, not operational config.
 *   **AVM_AUTO_APPROVE:** Never set `AVM_AUTO_APPROVE=true` in production — disables the AMG approval gate entirely. If accidentally set, the engine now logs an `ERROR`-level warning on every invocation.
@@ -173,3 +174,4 @@ Variables are read with these **exact names** in the source code. Use the same n
 *   **Scope Authorization Engine:** `omnix_core/governance/scope_authorization_engine.py` — ADR-147
 *   **Hidden Gap Audit — Stage 1:** `docs/HIDDEN_GAP_AUDIT_REPORT.md` — HGA-2026-Q2-001 (Mayo 2026)
 *   **Governance Deep Risk Report — Stage 2:** `docs/GOVERNANCE_DEEP_RISK_REPORT.md` — HGA-2026-Q2-002 (Mayo 2026)
+*   **Governance Failure Mode Report — Stage 3:** `docs/GOVERNANCE_FAILURE_MODE_REPORT.md` — HGA-2026-Q3-001 (Mayo 2026) — 11 failure modes, 4 collapse scenarios, 5 crypto trust risks, replay fidelity classification
