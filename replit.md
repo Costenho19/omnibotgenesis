@@ -175,3 +175,4 @@ Variables are read with these **exact names** in the source code. Use the same n
 *   **Hidden Gap Audit — Stage 1:** `docs/HIDDEN_GAP_AUDIT_REPORT.md` — HGA-2026-Q2-001 (Mayo 2026)
 *   **Governance Deep Risk Report — Stage 2:** `docs/GOVERNANCE_DEEP_RISK_REPORT.md` — HGA-2026-Q2-002 (Mayo 2026)
 *   **Governance Failure Mode Report — Stage 3:** `docs/GOVERNANCE_FAILURE_MODE_REPORT.md` — HGA-2026-Q3-001 (Mayo 2026) — 11 failure modes, 4 collapse scenarios, 5 crypto trust risks, replay fidelity classification
+*   **External Trust and Defensibility Report — Stage 4:** `docs/EXTERNAL_TRUST_AND_DEFENSIBILITY_REPORT.md` — HGA-2026-Q4-001 (Mayo 2026) — adversarial verifier tests, legal wording audit (52 claims), trust anchor validation, multi-instance consistency, enterprise security review, chain-of-custody gaps, 17 ranked actions

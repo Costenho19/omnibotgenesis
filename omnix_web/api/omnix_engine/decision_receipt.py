@@ -109,6 +109,18 @@ if PQC_AVAILABLE and _active_provider is not None:
             "Ephemeral signing keys will be generated — existing receipts will fail verification "
             "after any server restart. Set both env vars in Railway for institutional-grade persistence."
         )
+        # Hard-fail guard: set OMNIX_REQUIRE_PERSISTENT_KEYS=true in production
+        # to prevent accidental deployment without stable signing keys.
+        # When active, the process refuses to start rather than silently downgrading
+        # to ephemeral keys (which would permanently invalidate all prior receipts
+        # on the next restart).
+        _require_persistent = os.environ.get("OMNIX_REQUIRE_PERSISTENT_KEYS", "").strip().lower()
+        if _require_persistent == "true":
+            raise SystemExit(
+                "FATAL: OMNIX_REQUIRE_PERSISTENT_KEYS=true but persistent signing keys are absent. "
+                "Set OMNIX_SIGNING_SECRET_KEY_B64 and OMNIX_SIGNING_PUBLIC_KEY_B64 before starting. "
+                "Process will not start with ephemeral keys in hardened mode (FMR-001 guard)."
+            )
         try:
             _STABLE_SIGNING_KEYS   = _active_provider.generate_keypair()
             _STABLE_PUBLIC_KEY_B64 = _active_provider.serialize_public_key(_STABLE_SIGNING_KEYS[0])
