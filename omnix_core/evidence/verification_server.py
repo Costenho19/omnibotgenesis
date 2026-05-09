@@ -13,6 +13,20 @@ from aiohttp import web
 logger = logging.getLogger("OMNIX.VerificationServer")
 
 try:
+    from omnix_core.evidence.trust_anchor import (
+        build_trust_anchor_block,
+        TRUST_STATUS_VALID_OMNIX_ISSUED,
+        TRUST_STATUS_VALID_UNTRUSTED_ISSUER,
+        TRUST_STATUS_INVALID_SIGNATURE,
+        TRUST_STATUS_UNKNOWN_KEY,
+        TRUST_STATUS_DOWNGRADED_SHA_ONLY,
+    )
+    _TRUST_ANCHOR_AVAILABLE = True
+except ImportError:
+    _TRUST_ANCHOR_AVAILABLE = False
+    logger.warning("[VerificationServer] trust_anchor module not available — trust classification disabled")
+
+try:
     from pqc.sign import dilithium3
     PQC_AVAILABLE = True
 except ImportError:
@@ -189,18 +203,59 @@ function renderVerification(data) {
     var statusClass = isValid ? 'status-valid' : (isValid === false ? 'status-invalid' : 'status-pending');
     var statusText = isValid ? 'VALID' : (isValid === false ? 'INVALID' : 'PENDING');
 
+    var trustStatus = v.trust_status || 'UNKNOWN_KEY';
+    var issuerTrusted = v.issuer_trusted === true;
+    var trustColors = {
+        'VALID_OMNIX_ISSUED':            { cls: 'status-valid',   label: 'VALID · OMNIX ISSUED' },
+        'VALID_SIGNATURE_UNTRUSTED_ISSUER': { cls: 'status-pending', label: 'VALID · UNTRUSTED ISSUER' },
+        'INVALID_SIGNATURE':             { cls: 'status-invalid', label: 'INVALID SIGNATURE' },
+        'UNKNOWN_KEY':                   { cls: 'status-pending', label: 'UNKNOWN KEY' },
+        'DOWNGRADED_SHA_ONLY':           { cls: 'status-pending', label: 'SHA-256 ONLY' },
+    };
+    var tc = trustColors[trustStatus] || { cls: 'status-pending', label: trustStatus };
+
     var html = '<div style="padding:1.5rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px;">';
-    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;"><span class="status-badge ' + statusClass + '">' + statusText + '</span><span style="font-family:monospace; font-size:0.8rem; color:#6b7280;">' + r.receipt_id + '</span></div>';
+
+    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:6px;">';
+    html += '<span class="status-badge ' + statusClass + '">' + statusText + '</span>';
+    html += '<span class="status-badge ' + tc.cls + '" title="' + (v.trust_status_description||'') + '">' + tc.label + '</span>';
+    html += '<span style="font-family:monospace; font-size:0.8rem; color:#6b7280;">' + r.receipt_id + '</span>';
+    html += '</div>';
+
+    if (trustStatus === 'VALID_SIGNATURE_UNTRUSTED_ISSUER') {
+        html += '<div style="background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.3); border-radius:6px; padding:10px 14px; margin-bottom:1rem; font-size:0.8rem; color:#eab308;">';
+        html += '<strong>Warning:</strong> The PQC signature is mathematically valid, but the embedded public key does NOT match the trusted OMNIX anchor fingerprint. This receipt may have been signed by a third party or attacker keypair.';
+        html += '</div>';
+    }
+    if (trustStatus === 'INVALID_SIGNATURE') {
+        html += '<div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:10px 14px; margin-bottom:1rem; font-size:0.8rem; color:#ef4444;">';
+        html += '<strong>Reject:</strong> PQC signature is cryptographically invalid. This receipt has been tampered with or forged.';
+        html += '</div>';
+    }
+
     html += '<div style="margin-bottom:1.5rem;">';
     html += '<div class="receipt-field"><span class="label">Timestamp</span><span class="value">' + r.timestamp + '</span></div>';
     html += '<div class="receipt-field"><span class="label">Asset</span><span class="value">' + r.asset + '</span></div>';
     html += '<div class="receipt-field"><span class="label">Decision</span><span class="value" style="color:' + (r.decision==='APPROVE'?'#22c55e':r.decision==='BLOCK'?'#ef4444':'#eab308') + '">' + r.decision + '</span></div>';
     html += '<div class="receipt-field"><span class="label">Signature Algorithm</span><span class="value">' + r.signature_algorithm + '</span></div>';
     html += '</div>';
+
     html += '<div style="margin-bottom:1.5rem;"><div style="font-size:0.8rem; color:#6b7280; margin-bottom:6px;">VERIFICATION CHECKS</div>';
     html += '<div class="receipt-field"><span class="label">Hash Integrity</span><span class="value">' + renderCheck(v.hash_valid) + '</span></div>';
-    html += '<div class="receipt-field"><span class="label">Signature Valid</span><span class="value">' + renderCheck(v.signature_valid) + '</span></div>';
+    html += '<div class="receipt-field"><span class="label">PQC Signature Valid</span><span class="value">' + renderCheck(v.signature_valid) + '</span></div>';
+    html += '<div class="receipt-field"><span class="label">Issuer: OMNIX Verified</span><span class="value">' + renderCheck(issuerTrusted) + '</span></div>';
     html += '</div>';
+
+    html += '<div style="margin-bottom:1.5rem;"><div style="font-size:0.8rem; color:#6b7280; margin-bottom:6px;">TRUST ANCHOR</div>';
+    if (v.key_fingerprint) {
+        html += '<div class="receipt-field"><span class="label">Key Fingerprint (SHA-256)</span><span class="value" style="font-size:0.72rem;">' + v.key_fingerprint.slice(0,16) + '...</span></div>';
+    }
+    if (v.trusted_anchor_fingerprint) {
+        var fpMatch = v.key_fingerprint === v.trusted_anchor_fingerprint;
+        html += '<div class="receipt-field"><span class="label">Anchor Match</span><span class="value">' + (fpMatch ? '<span style="color:#22c55e;">MATCH ✓</span>' : '<span style="color:#ef4444;">MISMATCH ✗</span>') + '</span></div>';
+    }
+    html += '</div>';
+
     html += '<div style="margin-bottom:1rem;"><div style="font-size:0.8rem; color:#6b7280; margin-bottom:6px;">CONTENT HASH</div><div class="hash-display">' + r.content_hash + '</div></div>';
     html += '</div>';
     return html;
@@ -364,6 +419,7 @@ def _verify_receipt_crypto(receipt: dict) -> dict:
 
     sig_b64 = receipt.get('signature')
     pub_key_b64 = receipt.get('public_key')
+    sig_algo = receipt.get('signature_algorithm', '')
 
     if sig_b64 and pub_key_b64 and PQC_AVAILABLE:
         try:
@@ -377,10 +433,35 @@ def _verify_receipt_crypto(receipt: dict) -> dict:
     elif not PQC_AVAILABLE:
         result['signature_note'] = 'PQC library not available for verification'
     elif not sig_b64:
-        result['signature_note'] = 'Receipt was not signed'
+        result['signature_note'] = 'Receipt was not signed (SHA-256 hash-chain mode)'
 
     result['overall_valid'] = result['hash_valid'] and (result['signature_valid'] is not False)
-    result['algorithm'] = receipt.get('signature_algorithm', 'UNKNOWN')
+    result['algorithm'] = sig_algo or 'UNKNOWN'
+
+    # ── ETA-001: Trust Anchor Classification ──────────────────────────────────
+    if _TRUST_ANCHOR_AVAILABLE:
+        try:
+            trust_block = build_trust_anchor_block(
+                hash_valid=result['hash_valid'],
+                signature_valid=result['signature_valid'],
+                sig_b64=sig_b64,
+                pub_key_b64=pub_key_b64,
+                sig_algo=sig_algo,
+                allow_well_known=False,
+            )
+            result['trust_status']               = trust_block['trust_status']
+            result['issuer_trusted']             = trust_block['issuer_trusted']
+            result['key_fingerprint']            = trust_block['key_fingerprint']
+            result['trusted_anchor_fingerprint'] = trust_block['trusted_anchor_fingerprint']
+            result['anchor_source']              = trust_block['anchor_source']
+            result['trust_status_description']   = trust_block['trust_status_description']
+        except Exception as _ta_err:
+            logger.warning("[VerificationServer] trust anchor classification error: %s", _ta_err)
+            result['trust_status']   = 'UNKNOWN_KEY'
+            result['issuer_trusted'] = False
+    else:
+        result['trust_status']   = 'UNKNOWN_KEY'
+        result['issuer_trusted'] = False
 
     return result
 

@@ -452,7 +452,7 @@ There is no documented emergency freeze procedure for the web API. The Telegram 
 
 | ID | Action | File | Impact |
 |---|---|---|---|
-| **ETA-001** | Add OMNIX trusted key registry check to verifier. Cross-reference embedded `public_key` fingerprint against `/.well-known/omnix-public-key.json`. Return `issuer_key_trusted: true/false` in verify response. | `omnix_core/evidence/verification_server.py` | Closes forged receipt attack |
+| **ETA-001** ✅ RESOLVED | Add OMNIX trusted key registry check to verifier. Cross-reference embedded `public_key` fingerprint against `/.well-known/omnix-public-key.json`. Return `issuer_key_trusted: true/false` in verify response. | `omnix_core/evidence/trust_anchor.py` (new), `omnix_core/evidence/verification_server.py`, `omnix_web/api/server.py`, `omnix_web/api/omnix_engine/federated_trust.py`, `omnix_web/public/omnix_verify.py`, `omnix_web/src/pages/PublicDecisionVerify.tsx` | Closes forged receipt attack. Five trust status codes: `VALID_OMNIX_ISSUED`, `VALID_SIGNATURE_UNTRUSTED_ISSUER`, `INVALID_SIGNATURE`, `UNKNOWN_KEY`, `DOWNGRADED_SHA_ONLY`. Key fingerprint = SHA-256(raw_pubkey_bytes). Attacker-keypair attack fully blocked. Adversarial test suite: `tests/test_trust_anchor.py`. |
 | **ETA-003** | Confirm `REDIS_URL` is set in Railway **web service** (not just bot service). Without it, `strict` anti-replay mode is configured but inactive. | Railway environment variables | Closes cross-dyno replay risk |
 
 ### Priority 2 — High (Regulatory and Legal Defensibility)
@@ -490,7 +490,7 @@ There is no documented emergency freeze procedure for the web API. The Telegram 
 
 | Gap | Severity | Status |
 |---|---|---|
-| Forged receipt with attacker keypair passes verifier (ETA-001) | CRITICAL | Open |
+| Forged receipt with attacker keypair passes verifier (ETA-001) | CRITICAL | **RESOLVED** — `trust_anchor.py` + 5-status ETA-001 layer. Fingerprint match required for `VALID_OMNIX_ISSUED`. Attacker keypair returns `VALID_SIGNATURE_UNTRUSTED_ISSUER` (overall_valid=False). |
 | DB outage during evaluate() leaves orphaned decision (ETA-002) | HIGH | Open |
 | Anti-replay strict mode inactive without Redis in web service (ETA-003) | HIGH | Open — confirm REDIS_URL |
 | Chain integrity not verified on receipt read path (ETA-005) | HIGH | Open |

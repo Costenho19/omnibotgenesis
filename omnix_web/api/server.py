@@ -3179,6 +3179,60 @@ def public_recent_receipts():
     return jsonify({'receipts': receipts, 'count': len(receipts)})
 
 
+def _build_integrity_block(
+    content_hash, prev_hash, sig_algo, is_pqc, signature, public_key_b64
+):
+    """ETA-001: Build integrity block with trust anchor classification."""
+    block = {
+        'content_hash':             content_hash or '',
+        'prev_hash':                prev_hash or '',
+        'signature_algorithm':      sig_algo or 'SHA-256 (sandbox)',
+        'is_pqc':                   is_pqc,
+        'independently_verifiable': True,
+        'nist_note': (
+            'NIST-standardized cryptographic algorithms' if is_pqc
+            else 'SHA-256 hash chain integrity'
+        ),
+        'trust_status':   'UNKNOWN_KEY',
+        'issuer_trusted': False,
+    }
+    try:
+        from omnix_core.evidence.trust_anchor import build_trust_anchor_block as _bta
+        _hash_valid = bool(content_hash)
+        _sig_valid: Optional[bool] = None
+        if signature and public_key_b64 and is_pqc:
+            try:
+                import base64 as _b64
+                from pqc.sign import dilithium3 as _d3
+                _d3.verify(
+                    _b64.b64decode(signature),
+                    content_hash.encode('utf-8') if content_hash else b'',
+                    _b64.b64decode(public_key_b64),
+                )
+                _sig_valid = True
+            except Exception:
+                _sig_valid = False
+        ta = _bta(
+            hash_valid=_hash_valid,
+            signature_valid=_sig_valid,
+            sig_b64=signature,
+            pub_key_b64=public_key_b64,
+            sig_algo=sig_algo,
+            allow_well_known=False,
+        )
+        block.update({
+            'trust_status':               ta['trust_status'],
+            'issuer_trusted':             ta['issuer_trusted'],
+            'key_fingerprint':            ta.get('key_fingerprint'),
+            'trusted_anchor_fingerprint': ta.get('trusted_anchor_fingerprint'),
+            'anchor_source':              ta.get('anchor_source'),
+            'trust_status_description':   ta.get('trust_status_description', ''),
+        })
+    except Exception as _ta_err:
+        logger.debug("[server] trust anchor block error: %s", _ta_err)
+    return block
+
+
 @app.route('/api/public/verify/<path:receipt_id>', methods=['GET'])
 def public_verify_receipt(receipt_id):
     import json as _json
@@ -3192,7 +3246,8 @@ def public_verify_receipt(receipt_id):
         cur.execute("""
             SELECT receipt_id, timestamp_utc, asset, decision, veto_chain,
                    policy_version, engine_version, prev_hash, content_hash,
-                   signature_algorithm, signature, domain, encrypted_payload
+                   signature_algorithm, signature, domain, encrypted_payload,
+                   public_key
             FROM decision_receipts
             WHERE receipt_id = %s OR content_hash = %s
             LIMIT 1
@@ -3209,7 +3264,7 @@ def public_verify_receipt(receipt_id):
 
     (rid, ts, asset, decision, veto_chain_raw,
      policy_ver, engine_ver, prev_hash, content_hash,
-     sig_algo, signature, domain, encrypted_payload) = row
+     sig_algo, signature, domain, encrypted_payload, public_key_db) = row
 
     # Read metadata from encrypted_payload (stores governance context for EVL receipts)
     try:
@@ -3322,17 +3377,10 @@ def public_verify_receipt(receipt_id):
         'checkpoints_passed':  passed,
         'checkpoints_blocked': blocked,
         'checkpoints':         checkpoints,
-        'integrity': {
-            'content_hash':             content_hash or '',
-            'prev_hash':                prev_hash or '',
-            'signature_algorithm':      sig_algo or 'SHA-256 (sandbox)',
-            'is_pqc':                   is_pqc,
-            'independently_verifiable': True,
-            'nist_note': (
-                'NIST-standardized cryptographic algorithms' if is_pqc
-                else 'SHA-256 hash chain integrity'
-            ),
-        },
+        'integrity': _build_integrity_block(
+            content_hash, prev_hash, sig_algo, is_pqc,
+            signature, public_key_db,
+        ),
         'policy_version':         policy_ver or '',
         'engine_version':         engine_ver or '',
         'independent_verify_url': None,

@@ -1234,6 +1234,60 @@ HISTORY:  Inmutable — cada evento queda registrado con triggered_by + released
 
 ---
 
+## Trust Anchor Validation Layer — ETA-001 (Mayo 2026)
+
+**Archivo central:** `omnix_core/evidence/trust_anchor.py`
+
+Capa de validación de emisor que cierra el ataque de "keypair adversarial": un atacante genera su propio keypair Dilithium-3, firma un recibo falso con él, y el verificador anterior aceptaba la firma como válida. Con ETA-001, el verificador ahora distingue **quién firmó** del mero hecho de que la firma es matemáticamente válida.
+
+### Cinco Códigos de Estado de Trust (Exhaustivos y Mutuamente Excluyentes)
+
+| Código | Significado | `overall_valid` |
+|---|---|---|
+| `VALID_OMNIX_ISSUED` | Firma PQC válida + fingerprint de clave coincide con el anchor OMNIX | `True` |
+| `VALID_SIGNATURE_UNTRUSTED_ISSUER` | Firma PQC válida matemáticamente, pero la clave NO es del anchor OMNIX | `False` |
+| `INVALID_SIGNATURE` | Firma PQC presente pero matemáticamente inválida / recibo alterado | `False` |
+| `UNKNOWN_KEY` | Firma presente pero no hay clave pública disponible | `False` |
+| `DOWNGRADED_SHA_ONLY` | Sin firma PQC — solo integridad SHA-256 | `True` (solo si hash válido) |
+
+### Fingerprint de Clave
+
+```
+fingerprint = SHA-256(base64decode(public_key_b64)).hexdigest()  # 64 hex chars
+```
+
+### Fuentes del Anchor de Confianza (prioridad descendente)
+
+1. `OMNIX_TRUSTED_KEY_FINGERPRINT` env var (fingerprint hex pre-computado — máxima prioridad)
+2. `OMNIX_SIGNING_PUBLIC_KEY_B64` env var (clave pública — fingerprint calculado en runtime)
+3. Fetch desde `/.well-known/omnix-public-key.json` (opcional, red requerida)
+
+### Puntos de Integración
+
+| Módulo | Qué hace |
+|---|---|
+| `omnix_core/evidence/trust_anchor.py` | Registro central: `classify_receipt()`, `build_trust_anchor_block()`, `load_trusted_omnix_fingerprint()` |
+| `omnix_core/evidence/verification_server.py` | Trust anchor en `_verify_receipt_crypto()` + badges en HTML |
+| `omnix_web/api/server.py` | `_build_integrity_block()` + campo `public_key` en query DB + respuesta `/api/verify/receipt/{id}` |
+| `omnix_web/api/omnix_engine/federated_trust.py` | Clasificación en `independent_verify()` |
+| `omnix_web/public/omnix_verify.py` | CLI independiente con `--trusted-fingerprint` + sección TRUST ANCHOR en output |
+| `omnix_web/src/pages/PublicDecisionVerify.tsx` | Badge de trust status + panel de fingerprint en UI |
+
+### Tests Adversariales
+
+`tests/test_trust_anchor.py` — 24 tests incluyendo:
+- Keypair de atacante con firma PQC válida → rechazado como `VALID_SIGNATURE_UNTRUSTED_ISSUER`
+- Recibo alterado → `INVALID_SIGNATURE`
+- Sin clave pública → `UNKNOWN_KEY`
+- Clave OMNIX real en env → `VALID_OMNIX_ISSUED`
+- Sin firma PQC → `DOWNGRADED_SHA_ONLY`
+- Prioridad de fuentes del anchor
+- `OMNIX_TRUSTED_KEY_FINGERPRINT` invalido ignorado
+
+**Status:** IMPLEMENTADO · 24/24 tests pasando · ETA-001 RESOLVED
+
+---
+
 ## Documentos Relacionados
 
 - [Mapa Funcional Completo](COMPLETE_FUNCTIONALITY_MAP.md) - 11 dominios detallados

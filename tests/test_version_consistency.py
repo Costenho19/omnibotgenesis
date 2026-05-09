@@ -32,6 +32,8 @@ EXCLUDED_DIRS = {
     ".venv",
     "node_modules",
     ".local",
+    ".pythonlibs",
+    ".cache",
     "docs/history",
     "docs/business",
 }

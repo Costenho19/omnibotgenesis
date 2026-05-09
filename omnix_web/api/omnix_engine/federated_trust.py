@@ -22,6 +22,15 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+try:
+    import sys as _sys
+    import os as _os
+    _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))))
+    from omnix_core.evidence.trust_anchor import build_trust_anchor_block as _build_trust_anchor_block
+    _TRUST_ANCHOR_AVAILABLE = True
+except Exception:
+    _TRUST_ANCHOR_AVAILABLE = False
+
 logger = logging.getLogger("OMNIX.FederatedTrust")
 
 OMNIX_DID          = "did:web:omnixquantum.net"
@@ -296,6 +305,31 @@ def independent_verify(receipt_or_vc: Dict[str, Any]) -> Dict[str, Any]:
     result["overall_valid"] = (
         result["hash_valid"] and result["signature_valid"] is not False
     )
+
+    # ── ETA-001: Trust Anchor Classification ──────────────────────────────────
+    if _TRUST_ANCHOR_AVAILABLE:
+        try:
+            _ta = _build_trust_anchor_block(
+                hash_valid=result["hash_valid"],
+                signature_valid=result["signature_valid"],
+                sig_b64=sig_b64,
+                pub_key_b64=pub_key_b64,
+                sig_algo=sig_algo,
+                allow_well_known=False,
+            )
+            result["trust_status"]               = _ta["trust_status"]
+            result["issuer_trusted"]             = _ta["issuer_trusted"]
+            result["key_fingerprint"]            = _ta["key_fingerprint"]
+            result["trusted_anchor_fingerprint"] = _ta["trusted_anchor_fingerprint"]
+            result["anchor_source"]              = _ta["anchor_source"]
+            result["trust_status_description"]   = _ta["trust_status_description"]
+        except Exception as _ta_err:
+            logger.warning("[FederatedTrust] trust anchor error: %s", _ta_err)
+            result["trust_status"]   = "UNKNOWN_KEY"
+            result["issuer_trusted"] = False
+    else:
+        result["trust_status"]   = "UNKNOWN_KEY"
+        result["issuer_trusted"] = False
 
     # ------------------------------------------------------------------
     # ANTI-REPLAY / TIMESTAMP VALIDATION (ADR-085)

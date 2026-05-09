@@ -24,6 +24,12 @@ interface IntegrityBlock {
   is_pqc: boolean
   independently_verifiable: boolean
   nist_note: string
+  trust_status: string | null
+  issuer_trusted: boolean
+  key_fingerprint: string | null
+  trusted_anchor_fingerprint: string | null
+  anchor_source: string | null
+  trust_status_description: string | null
 }
 
 interface EbipSnapshot {
@@ -355,36 +361,126 @@ function ReceiptResult({ data }: { data: VerifyData }) {
         background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.15)',
         borderRadius: 12, padding: '16px 20px', marginBottom: 16,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <Lock size={13} color="#60a5fa" />
             <span style={{ fontSize: '0.7rem', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
               Cryptographic Integrity
             </span>
           </div>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.68rem',
-            color: '#22c55e', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
-            borderRadius: 20, padding: '3px 10px', fontWeight: 700,
-          }}>
-            <CheckCircle size={11} /> VERIFIED · TAMPER-PROOF
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            {(() => {
+              const ts = data.integrity.trust_status
+              const trusted = data.integrity.issuer_trusted
+              if (ts === 'VALID_OMNIX_ISSUED') return (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.66rem', color: '#22c55e', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: '3px 10px', fontWeight: 800, fontFamily: 'monospace', title: data.integrity.trust_status_description || '' }}>
+                  <CheckCircle size={10} /> OMNIX ISSUED ✓
+                </span>
+              )
+              if (ts === 'VALID_SIGNATURE_UNTRUSTED_ISSUER') return (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.66rem', color: '#f59e0b', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 20, padding: '3px 10px', fontWeight: 800, fontFamily: 'monospace' }}>
+                  <AlertTriangle size={10} /> UNTRUSTED ISSUER
+                </span>
+              )
+              if (ts === 'INVALID_SIGNATURE') return (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.66rem', color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 20, padding: '3px 10px', fontWeight: 800, fontFamily: 'monospace' }}>
+                  <XCircle size={10} /> INVALID SIGNATURE
+                </span>
+              )
+              if (ts === 'DOWNGRADED_SHA_ONLY') return (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.66rem', color: '#6b7280', background: 'rgba(107,114,128,0.08)', border: '1px solid rgba(107,114,128,0.25)', borderRadius: 20, padding: '3px 10px', fontWeight: 700, fontFamily: 'monospace' }}>
+                  SHA-256 ONLY
+                </span>
+              )
+              return (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.66rem', color: '#6b7280', background: 'rgba(107,114,128,0.06)', border: '1px solid rgba(107,114,128,0.2)', borderRadius: 20, padding: '3px 10px', fontFamily: 'monospace' }}>
+                  {ts || 'UNKNOWN KEY'}
+                </span>
+              )
+            })()}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.68rem',
+              color: '#22c55e', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+              borderRadius: 20, padding: '3px 10px', fontWeight: 700,
+            }}>
+              <CheckCircle size={11} /> TAMPER-PROOF
+            </div>
           </div>
         </div>
 
+        {data.integrity.trust_status === 'VALID_SIGNATURE_UNTRUSTED_ISSUER' && (
+          <div style={{
+            display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 8,
+            background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', marginBottom: 14,
+          }}>
+            <AlertTriangle size={15} color="#f59e0b" style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <div style={{ fontSize: '0.82rem', color: '#f59e0b', fontWeight: 700, marginBottom: 3 }}>
+                Untrusted Issuer — Receipt Rejected
+              </div>
+              <div style={{ fontSize: '0.74rem', color: '#6b7280', lineHeight: 1.5 }}>
+                The PQC signature is mathematically valid, but the embedded public key does <strong style={{ color: '#f59e0b' }}>not</strong> match the trusted OMNIX anchor fingerprint. This receipt may have been signed with an attacker keypair. Do not rely on it as OMNIX governance evidence.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {data.integrity.trust_status === 'INVALID_SIGNATURE' && (
+          <div style={{
+            display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 8,
+            background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)', marginBottom: 14,
+          }}>
+            <XCircle size={15} color="#ef4444" style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <div style={{ fontSize: '0.82rem', color: '#ef4444', fontWeight: 700, marginBottom: 3 }}>
+                Invalid Signature — Possible Forgery
+              </div>
+              <div style={{ fontSize: '0.74rem', color: '#6b7280' }}>
+                The PQC signature on this receipt is cryptographically invalid. The receipt has been tampered with or is forged.
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{
           display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 8,
-          background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.12)', marginBottom: 14,
+          background: data.integrity.issuer_trusted ? 'rgba(34,197,94,0.05)' : 'rgba(59,130,246,0.05)',
+          border: `1px solid ${data.integrity.issuer_trusted ? 'rgba(34,197,94,0.12)' : 'rgba(59,130,246,0.12)'}`,
+          marginBottom: 14,
         }}>
-          <CheckCircle size={15} color="#22c55e" style={{ flexShrink: 0, marginTop: 1 }} />
+          <CheckCircle size={15} color={data.integrity.issuer_trusted ? '#22c55e' : '#3b82f6'} style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
-            <div style={{ fontSize: '0.84rem', color: '#22c55e', fontWeight: 600, marginBottom: 3 }}>
+            <div style={{ fontSize: '0.84rem', color: data.integrity.issuer_trusted ? '#22c55e' : '#60a5fa', fontWeight: 600, marginBottom: 3 }}>
               Signed with {data.integrity.signature_algorithm}
+              {data.integrity.issuer_trusted && <span style={{ marginLeft: 8, fontSize: '0.72rem', fontWeight: 800 }}>· OMNIX KEY VERIFIED</span>}
             </div>
             <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
               {data.integrity.nist_note} · Post-quantum cryptography · NIST FIPS 204
             </div>
           </div>
         </div>
+
+        {data.integrity.key_fingerprint && (
+          <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ fontSize: '0.62rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
+              Trust Anchor — Key Fingerprint (SHA-256)
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Fingerprint size={11} color={data.integrity.issuer_trusted ? '#22c55e' : '#4b5563'} style={{ flexShrink: 0 }} />
+              <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: data.integrity.issuer_trusted ? '#22c55e' : '#6b7280', wordBreak: 'break-all' }}>
+                {data.integrity.key_fingerprint}
+              </span>
+              <CopyBtn value={data.integrity.key_fingerprint} size={10} />
+            </div>
+            {data.integrity.trusted_anchor_fingerprint && (
+              <div style={{ fontSize: '0.64rem', marginTop: 4, color: data.integrity.key_fingerprint === data.integrity.trusted_anchor_fingerprint ? '#22c55e' : '#ef4444' }}>
+                {data.integrity.key_fingerprint === data.integrity.trusted_anchor_fingerprint
+                  ? '✓ Matches trusted OMNIX anchor fingerprint'
+                  : '✗ Does NOT match trusted OMNIX anchor fingerprint'}
+              </div>
+            )}
+          </div>
+        )}
 
         <button
           onClick={() => setShowHashes(v => !v)}
