@@ -48,7 +48,9 @@ import base64
 import hashlib
 import json
 import logging
+import math
 import os
+import threading
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone, timedelta
@@ -260,19 +262,40 @@ class ScopeAuthorizationEngine:
         return conn
 
     @staticmethod
+    def _sanitize_for_hash(obj: Any) -> Any:
+        """
+        Recursively replace non-finite floats (NaN, Inf, -Inf) with None.
+
+        Python's json.dumps silently serializes NaN/Infinity as the bare tokens
+        NaN/Infinity — which are not valid JSON (RFC 8259) and will parse
+        differently across languages (JavaScript JSON.parse raises, Python
+        json.loads accepts). Replacing them with null produces deterministic,
+        spec-compliant canonical JSON for SHA-256 hashing.
+        """
+        if isinstance(obj, float) and not math.isfinite(obj):
+            return None
+        if isinstance(obj, dict):
+            return {k: ScopeAuthorizationEngine._sanitize_for_hash(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple)):
+            return [ScopeAuthorizationEngine._sanitize_for_hash(v) for v in obj]
+        return obj
+
+    @staticmethod
     def _compute_scope_hash(scope_definition: dict, defensibility_criteria: dict) -> str:
         """SHA-256 of canonicalized scope_definition + defensibility_criteria."""
         payload = {
             "scope_definition":        scope_definition,
             "defensibility_criteria":  defensibility_criteria,
         }
-        canon = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        clean = ScopeAuthorizationEngine._sanitize_for_hash(payload)
+        canon = json.dumps(clean, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canon.encode()).hexdigest()
 
     @staticmethod
     def _compute_context_hash(context_snapshot: dict) -> str:
         """SHA-256 of canonicalized context_snapshot."""
-        canon = json.dumps(context_snapshot, sort_keys=True, separators=(",", ":"))
+        clean = ScopeAuthorizationEngine._sanitize_for_hash(context_snapshot)
+        canon = json.dumps(clean, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canon.encode()).hexdigest()
 
     @staticmethod
@@ -799,11 +822,21 @@ class ScopeAuthorizationEngine:
 # ── Module-level singleton ─────────────────────────────────────────────────────
 
 _engine: Optional[ScopeAuthorizationEngine] = None
+_engine_lock: threading.Lock = threading.Lock()
 
 
 def get_scope_engine() -> ScopeAuthorizationEngine:
-    """Return the module-level ScopeAuthorizationEngine singleton."""
+    """
+    Return the module-level ScopeAuthorizationEngine singleton.
+
+    Thread-safe double-checked locking prevents TOCTOU race conditions under
+    multithreaded Flask (Werkzeug threaded=True default). Without the lock, two
+    simultaneous requests could both observe _engine is None and construct two
+    separate instances — diverging their in-memory DB connection state.
+    """
     global _engine
     if _engine is None:
-        _engine = ScopeAuthorizationEngine()
+        with _engine_lock:
+            if _engine is None:
+                _engine = ScopeAuthorizationEngine()
     return _engine

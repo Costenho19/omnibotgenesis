@@ -4990,6 +4990,12 @@ def book_lead():
 
 @app.route('/api/book-leads-admin', methods=['GET'])
 def get_book_leads_admin():
+    # IP allowlist guard — same policy as /api/book-leads (ADR-052).
+    # Configure ADMIN_ALLOWED_IPS env var with comma-separated allowed IPs.
+    admin_ips = {ip.strip() for ip in os.environ.get('ADMIN_ALLOWED_IPS', '127.0.0.1').split(',') if ip.strip()}
+    if request.remote_addr not in admin_ips:
+        logger.warning(f"[SECURITY] /api/book-leads-admin denied for IP={request.remote_addr}")
+        return jsonify({'error': 'forbidden'}), 403
     try:
         conn = get_db_connection()
         cur  = conn.cursor()
