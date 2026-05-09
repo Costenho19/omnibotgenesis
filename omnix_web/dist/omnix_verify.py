@@ -72,9 +72,39 @@ OMNIX_ISSUER_URL     = "https://omnixquantum.net"
 OMNIX_PUBKEY_URL     = f"{OMNIX_ISSUER_URL}/.well-known/omnix-public-key.json"
 OMNIX_RECEIPT_API    = f"{OMNIX_ISSUER_URL}/api/explorer/receipt"
 OMNIX_REPLAY_API     = f"{OMNIX_ISSUER_URL}/api/trust/verify"
-SCRIPT_VERSION       = "1.1.0"
+SCRIPT_VERSION       = "2.0.0"
 REQUIRED_FIELDS      = ["receipt_id", "decision", "content_hash"]
 REPLAY_REQUIRED_FIELDS = ["receipt_id", "scenario_id", "verdict", "canonical_hash"]
+
+# ── ETA-001 Trust Status Codes ─────────────────────────────────────────────────
+TRUST_VALID_OMNIX_ISSUED            = "VALID_OMNIX_ISSUED"
+TRUST_VALID_SIGNATURE_UNTRUSTED     = "VALID_SIGNATURE_UNTRUSTED_ISSUER"
+TRUST_INVALID_SIGNATURE             = "INVALID_SIGNATURE"
+TRUST_UNKNOWN_KEY                   = "UNKNOWN_KEY"
+TRUST_DOWNGRADED_SHA_ONLY           = "DOWNGRADED_SHA_ONLY"
+
+TRUST_STATUS_DESCRIPTIONS = {
+    TRUST_VALID_OMNIX_ISSUED: (
+        "Hash valid, PQC signature valid, key fingerprint matches the trusted OMNIX anchor. "
+        "Receipt is PROVEN to be issued by OMNIX Quantum Ltd."
+    ),
+    TRUST_VALID_SIGNATURE_UNTRUSTED: (
+        "Hash valid, PQC signature mathematically valid, but the embedded public key "
+        "does NOT match the trusted OMNIX anchor fingerprint. "
+        "Receipt may be signed by an attacker keypair. DO NOT treat as OMNIX-issued."
+    ),
+    TRUST_INVALID_SIGNATURE: (
+        "PQC signature is present but mathematically INVALID. "
+        "Receipt has been tampered with or is forged."
+    ),
+    TRUST_UNKNOWN_KEY: (
+        "No public key available for verification. Issuer cannot be determined."
+    ),
+    TRUST_DOWNGRADED_SHA_ONLY: (
+        "No PQC signature — hash-chain integrity mode only. Payload has not been tampered "
+        "with, but cryptographic issuer proof is absent."
+    ),
+}
 
 
 # ── Color helpers ──────────────────────────────────────────────────────────────
@@ -178,6 +208,87 @@ def _fetch_issuer_public_key(timeout: int = 5) -> Optional[str]:
             return data.get("key", {}).get("public_key_b64")
     except Exception as e:
         return None
+
+
+# ── ETA-001: Trust anchor helpers (inline — no omnix_core dependency) ──────────
+
+def _compute_key_fingerprint(pub_key_b64: str) -> Optional[str]:
+    """SHA-256 of raw public key bytes — canonical trust identity."""
+    try:
+        raw = base64.b64decode(pub_key_b64)
+        return hashlib.sha256(raw).hexdigest()
+    except Exception:
+        return None
+
+
+def _load_trusted_omnix_fingerprint(
+    trusted_key_b64: Optional[str] = None,
+    trusted_fp: Optional[str] = None,
+    fetch_well_known: bool = True,
+    timeout: int = 4,
+) -> Optional[str]:
+    """
+    Load the trusted OMNIX public key fingerprint.
+
+    Priority:
+      1. --trusted-fingerprint CLI arg (pre-computed hex)
+      2. --pubkey CLI arg (compute from provided key)
+      3. Fetched well-known key (if fetch_well_known=True)
+    """
+    if trusted_fp and len(trusted_fp) == 64:
+        return trusted_fp
+    if trusted_key_b64:
+        return _compute_key_fingerprint(trusted_key_b64)
+    if fetch_well_known:
+        fetched = _fetch_issuer_public_key(timeout=timeout)
+        if fetched:
+            return _compute_key_fingerprint(fetched)
+    return None
+
+
+def _classify_trust(
+    hash_valid: bool,
+    signature_valid: Optional[bool],
+    sig_b64: Optional[str],
+    pub_key_b64: Optional[str],
+    sig_algo: Optional[str],
+    trusted_fp: Optional[str],
+) -> tuple:
+    """
+    Classify receipt trust status per ETA-001.
+
+    Returns (trust_status, issuer_trusted, key_fingerprint).
+    """
+    key_fingerprint: Optional[str] = None
+    if pub_key_b64:
+        key_fingerprint = _compute_key_fingerprint(pub_key_b64)
+
+    algo_lower = (sig_algo or "").lower()
+    is_sha_only = "sha" in algo_lower and "dilithium" not in algo_lower and "ml-dsa" not in algo_lower
+
+    if not sig_b64 or is_sha_only:
+        if hash_valid:
+            return TRUST_DOWNGRADED_SHA_ONLY, False, key_fingerprint
+        return TRUST_INVALID_SIGNATURE, False, key_fingerprint
+
+    if sig_b64 and not pub_key_b64:
+        return TRUST_UNKNOWN_KEY, False, key_fingerprint
+
+    if signature_valid is False:
+        return TRUST_INVALID_SIGNATURE, False, key_fingerprint
+
+    if signature_valid is True:
+        if not key_fingerprint:
+            return TRUST_UNKNOWN_KEY, False, key_fingerprint
+        if trusted_fp:
+            if key_fingerprint == trusted_fp:
+                return TRUST_VALID_OMNIX_ISSUED, True, key_fingerprint
+            else:
+                return TRUST_VALID_SIGNATURE_UNTRUSTED, False, key_fingerprint
+        else:
+            return TRUST_VALID_SIGNATURE_UNTRUSTED, False, key_fingerprint
+
+    return TRUST_UNKNOWN_KEY, False, key_fingerprint
 
 
 def _fetch_receipt_by_id(receipt_id: str, timeout: int = 10) -> Optional[Dict]:
@@ -341,22 +452,25 @@ def verify_replay_receipt(
 # ── Main verifier ─────────────────────────────────────────────────────────────
 
 def verify_receipt(
-    receipt:        Dict[str, Any],
-    pubkey_b64:     Optional[str] = None,
-    fetch_key:      bool          = True,
-    as_json:        bool          = False,
+    receipt:           Dict[str, Any],
+    pubkey_b64:        Optional[str] = None,
+    fetch_key:         bool          = True,
+    as_json:           bool          = False,
+    trusted_fp:        Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Full independent verification of an OMNIX governance receipt.
 
     Args:
-        receipt:    Receipt dict (from JSON file or API)
-        pubkey_b64: Override public key (b64). If None, uses receipt's own key.
-        fetch_key:  If True and no key available, fetch from OMNIX well-known.
-        as_json:    If True, suppress console output (JSON mode).
+        receipt:     Receipt dict (from JSON file or API)
+        pubkey_b64:  Override public key (b64). If None, uses receipt's own key.
+        fetch_key:   If True and no key available, fetch from OMNIX well-known.
+        as_json:     If True, suppress console output (JSON mode).
+        trusted_fp:  Trusted OMNIX key fingerprint (64-char hex). If None,
+                     derived from --pubkey or fetched from well-known endpoint.
 
     Returns:
-        Verification result dict.
+        Verification result dict including ETA-001 trust_status field.
     """
     now     = datetime.now(timezone.utc).isoformat()
     receipt_id = receipt.get("receipt_id", "UNKNOWN")
@@ -375,6 +489,9 @@ def verify_receipt(
         "timestamp_status":   _check_timestamp(receipt),
         "overall_valid":      False,
         "verdict":            "INVALID",
+        "trust_status":       TRUST_UNKNOWN_KEY,
+        "issuer_trusted":     False,
+        "key_fingerprint":    None,
     }
 
     # ── 1. Structure check ─────────────────────────────────────────────────
@@ -412,17 +529,18 @@ def verify_receipt(
         else:
             result["key_source"] = "unavailable"
     elif pub_key:
-        result["key_source"] = "embedded in receipt"
+        result["key_source"] = "provided / embedded in receipt"
     else:
         result["key_source"] = "not provided"
 
-    sig_b64 = receipt.get("signature")
+    sig_b64  = receipt.get("signature")
+    sig_algo = receipt.get("signature_algorithm", "")
 
     if dilithium3 and sig_b64 and pub_key:
         try:
             sig_ok = _verify_pqc_signature(sig_b64, pub_key, stored_hash, dilithium3)
-            result["signature_valid"] = sig_ok
-            result["signature_algorithm"] = receipt.get("signature_algorithm", "dilithium3")
+            result["signature_valid"]    = sig_ok
+            result["signature_algorithm"] = sig_algo or "dilithium3"
             if sig_ok:
                 result["signature_note"] = (
                     "PQC signature VERIFIED — receipt is cryptographically authentic. "
@@ -452,30 +570,81 @@ def verify_receipt(
             f"{OMNIX_PUBKEY_URL}"
         )
 
-    # ── 4. Overall verdict ─────────────────────────────────────────────────
+    # ── 4. ETA-001 Trust Anchor Classification ─────────────────────────────
+    resolved_trusted_fp = _load_trusted_omnix_fingerprint(
+        trusted_key_b64=pubkey_b64,
+        trusted_fp=trusted_fp,
+        fetch_well_known=fetch_key,
+    )
+    trust_status, issuer_trusted, key_fp = _classify_trust(
+        hash_valid=result["hash_valid"],
+        signature_valid=result["signature_valid"],
+        sig_b64=sig_b64,
+        pub_key_b64=pub_key,
+        sig_algo=sig_algo,
+        trusted_fp=resolved_trusted_fp,
+    )
+    result["trust_status"]               = trust_status
+    result["issuer_trusted"]             = issuer_trusted
+    result["key_fingerprint"]            = key_fp
+    result["trusted_anchor_fingerprint"] = resolved_trusted_fp
+    result["trust_status_description"]   = TRUST_STATUS_DESCRIPTIONS.get(trust_status, "")
+
+    # ── 5. Overall verdict ─────────────────────────────────────────────────
     hash_ok = result["hash_valid"]
     sig_ok  = result["signature_valid"]
 
-    if hash_ok and sig_ok is True:
+    if trust_status == TRUST_VALID_OMNIX_ISSUED:
         result["overall_valid"] = True
-        result["verdict"]       = "VALID"
+        result["verdict"]       = "VALID_OMNIX_ISSUED"
         result["verdict_note"]  = (
-            "Receipt is cryptographically authentic. "
-            "Hash and PQC signature both verified independently."
+            "Receipt is cryptographically authentic AND proven to be issued by OMNIX. "
+            "Hash verified. PQC signature verified. Key fingerprint matches OMNIX trust anchor."
         )
-    elif hash_ok and sig_ok is None:
-        result["overall_valid"] = True
-        result["verdict"]       = "VALID (hash only)"
+    elif trust_status == TRUST_VALID_SIGNATURE_UNTRUSTED:
+        result["overall_valid"] = False
+        result["verdict"]       = "VALID_SIGNATURE_UNTRUSTED_ISSUER"
         result["verdict_note"]  = (
-            "Content hash verified. PQC signature check skipped (no key or library). "
-            "For full verification: pip install pqcrypto and re-run."
+            "PQC signature is mathematically valid, but the embedded public key does NOT match "
+            "the trusted OMNIX anchor fingerprint. REJECT — cannot confirm OMNIX issuance. "
+            "Possible forged receipt with attacker keypair."
+        )
+    elif trust_status == TRUST_DOWNGRADED_SHA_ONLY:
+        result["overall_valid"] = hash_ok
+        result["verdict"]       = "DOWNGRADED_SHA_ONLY"
+        result["verdict_note"]  = (
+            "Content hash verified. No PQC signature — issuer cannot be proven. "
+            "For full verification, use a PQC-signed receipt."
+        )
+    elif trust_status == TRUST_INVALID_SIGNATURE:
+        result["overall_valid"] = False
+        result["verdict"]       = "INVALID_SIGNATURE"
+        result["verdict_note"]  = (
+            "Receipt verification failed. PQC signature is invalid or payload has been tampered with."
+        )
+    elif trust_status == TRUST_UNKNOWN_KEY:
+        result["overall_valid"] = hash_ok and sig_ok is None
+        result["verdict"]       = "UNKNOWN_KEY"
+        result["verdict_note"]  = (
+            "Public key unavailable — issuer cannot be determined. "
+            "Hash integrity " + ("verified." if hash_ok else "FAILED.")
         )
     else:
-        result["overall_valid"] = False
-        result["verdict"]       = "INVALID"
-        result["verdict_note"]  = (
-            "Verification failed. See hash_note and signature_note for details."
-        )
+        if hash_ok and sig_ok is True:
+            result["overall_valid"] = True
+            result["verdict"]       = "VALID"
+            result["verdict_note"]  = "Hash and signature verified. Issuer trust status unknown."
+        elif hash_ok and sig_ok is None:
+            result["overall_valid"] = True
+            result["verdict"]       = "VALID (hash only)"
+            result["verdict_note"]  = (
+                "Content hash verified. PQC signature check skipped (no key or library). "
+                "For full verification: pip install pqcrypto and re-run."
+            )
+        else:
+            result["overall_valid"] = False
+            result["verdict"]       = "INVALID"
+            result["verdict_note"]  = "Verification failed. See hash_note and signature_note for details."
 
     return result
 
@@ -484,10 +653,10 @@ def verify_receipt(
 
 def _print_result(r: Dict[str, Any]) -> None:
     print()
-    print(_bold("=" * 60))
+    print(_bold("=" * 64))
     print(_bold("  OMNIX Independent Receipt Verifier"))
     print(_bold(f"  v{SCRIPT_VERSION} | {OMNIX_ISSUER_DID}"))
-    print(_bold("=" * 60))
+    print(_bold("=" * 64))
     print()
     print(f"  Receipt ID   : {r.get('receipt_id')}")
     print(f"  Verified at  : {r.get('verified_at')}")
@@ -517,19 +686,60 @@ def _print_result(r: Dict[str, Any]) -> None:
     print(f"  Timestamp    : {r.get('timestamp_status')}")
     print()
 
+    print(_bold("  ── TRUST ANCHOR (ETA-001) ─────────────────────────────"))
+    trust_status = r.get("trust_status", TRUST_UNKNOWN_KEY)
+    issuer_trusted = r.get("issuer_trusted", False)
+
+    if trust_status == TRUST_VALID_OMNIX_ISSUED:
+        ts_display = _green(_bold(f"  Trust Status : {trust_status}"))
+    elif trust_status == TRUST_VALID_SIGNATURE_UNTRUSTED:
+        ts_display = _yellow(_bold(f"  Trust Status : {trust_status}"))
+    elif trust_status == TRUST_INVALID_SIGNATURE:
+        ts_display = _red(_bold(f"  Trust Status : {trust_status}"))
+    elif trust_status == TRUST_DOWNGRADED_SHA_ONLY:
+        ts_display = _yellow(f"  Trust Status : {trust_status}")
+    else:
+        ts_display = _dim(f"  Trust Status : {trust_status}")
+    print(ts_display)
+
+    issuer_icon = _green("VERIFIED ✓") if issuer_trusted else _red("NOT VERIFIED ✗")
+    print(f"  OMNIX Issuer : {issuer_icon}")
+
+    fp = r.get("key_fingerprint")
+    if fp:
+        print(_dim(f"  Key Fingerpr.: {fp[:32]}..."))
+    anchor_fp = r.get("trusted_anchor_fingerprint")
+    if anchor_fp:
+        match = "MATCH ✓" if fp == anchor_fp else "MISMATCH ✗"
+        match_disp = _green(match) if fp == anchor_fp else _red(match)
+        print(f"  Anchor Match : {match_disp}")
+    print(_dim(f"  {r.get('trust_status_description', '')}"))
+
+    if trust_status == TRUST_VALID_SIGNATURE_UNTRUSTED:
+        print()
+        print(_red(_bold("  ⚠  WARNING: Receipt REJECTED as OMNIX-issued.")))
+        print(_red("     The PQC signature is mathematically valid but was NOT"))
+        print(_red("     produced by the trusted OMNIX keypair. This is the"))
+        print(_red("     classic attacker-keypair attack. Treat as UNTRUSTED."))
+
+    print()
+
     verdict = r.get("verdict", "UNKNOWN")
-    if "VALID" in verdict and "INVALID" not in verdict:
+    if verdict in (TRUST_VALID_OMNIX_ISSUED, "VALID", "VALID (hash only)"):
         verdict_display = _green(_bold(f"  VERDICT: {verdict}"))
+    elif verdict in (TRUST_VALID_SIGNATURE_UNTRUSTED, TRUST_DOWNGRADED_SHA_ONLY, TRUST_UNKNOWN_KEY):
+        verdict_display = _yellow(_bold(f"  VERDICT: {verdict}"))
     else:
         verdict_display = _red(_bold(f"  VERDICT: {verdict}"))
 
     print(verdict_display)
     print(_dim(f"  {r.get('verdict_note','')}"))
     print()
-    print(_bold("=" * 60))
+    print(_bold("=" * 64))
     print(_dim("  Independent verification — no OMNIX server access required."))
-    print(_dim(f"  Trust registry: {OMNIX_PUBKEY_URL}"))
-    print(_bold("=" * 60))
+    print(_dim(f"  Trust registry : {OMNIX_PUBKEY_URL}"))
+    print(_dim(f"  Trust anchor   : env OMNIX_TRUSTED_KEY_FINGERPRINT or --trusted-fingerprint"))
+    print(_bold("=" * 64))
     print()
 
 
@@ -559,6 +769,17 @@ Trust endpoints (no OMNIX server needed after key fetch):
                         help="Do not fetch the public key from the OMNIX well-known endpoint")
     parser.add_argument("--json", action="store_true", dest="as_json",
                         help="Output result as JSON (for pipelines)")
+    parser.add_argument(
+        "--trusted-fingerprint",
+        metavar="FINGERPRINT",
+        help=(
+            "SHA-256 hex fingerprint (64 chars) of the trusted OMNIX public key. "
+            "Used for trust anchor validation (ETA-001). If not provided, the fingerprint "
+            "is computed from --pubkey or fetched from the OMNIX well-known endpoint. "
+            "Example: a3f1... (64 hex chars). "
+            "Get it from: https://omnixquantum.net/.well-known/omnix-public-key.json"
+        ),
+    )
     parser.add_argument(
         "--mode",
         choices=["auto", "production", "replay"],
@@ -610,11 +831,13 @@ Trust endpoints (no OMNIX server needed after key fetch):
                 print(_red(f"ERROR: Public key file not found: {args.pubkey}"), file=sys.stderr)
                 sys.exit(2)
 
+        trusted_fp_arg = getattr(args, 'trusted_fingerprint', None)
         result = verify_receipt(
             receipt    = receipt,
             pubkey_b64 = pubkey_b64,
             fetch_key  = not args.no_fetch,
             as_json    = args.as_json,
+            trusted_fp = trusted_fp_arg,
         )
 
     if args.as_json:

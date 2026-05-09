@@ -371,9 +371,8 @@ function ReceiptResult({ data }: { data: VerifyData }) {
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {(() => {
               const ts = data.integrity.trust_status
-              const trusted = data.integrity.issuer_trusted
               if (ts === 'VALID_OMNIX_ISSUED') return (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.66rem', color: '#22c55e', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: '3px 10px', fontWeight: 800, fontFamily: 'monospace', title: data.integrity.trust_status_description || '' }}>
+                <span title={data.integrity.trust_status_description || ''} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.66rem', color: '#22c55e', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: '3px 10px', fontWeight: 800, fontFamily: 'monospace' }}>
                   <CheckCircle size={10} /> OMNIX ISSUED ✓
                 </span>
               )
