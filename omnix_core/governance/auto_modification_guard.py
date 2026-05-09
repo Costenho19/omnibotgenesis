@@ -87,7 +87,14 @@ def _anti_loop_window_hours() -> float:
 
 def _auto_approve() -> bool:
     """AVM_AUTO_APPROVE — bypass approval gate (true only for dev/test environments)."""
-    return os.environ.get("AVM_AUTO_APPROVE", "false").lower() == "true"
+    active = os.environ.get("AVM_AUTO_APPROVE", "false").lower() == "true"
+    if active:
+        logger.error(
+            "[AMG] SECURITY WARNING: AVM_AUTO_APPROVE=true is active — "
+            "the AMG approval gate is DISABLED. This must NEVER be set in production. "
+            "All threshold modifications will be auto-approved without human review."
+        )
+    return active
 
 
 # ── Backward-compatible module-level aliases (read-only, never used in guards) ─

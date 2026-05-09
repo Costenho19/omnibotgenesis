@@ -5547,7 +5547,7 @@ def api_scope_revoke(scope_id: str):
             authority_tier=1,
         )
         if not success:
-            return jsonify({"error": f"Scope not found or already in terminal state: {scope_id}", "status": 404}), 404
+            return jsonify({"error": f"Scope not found or already in a terminal state (REVOKED/SUPERSEDED): {scope_id}", "status": 404}), 404
 
         return jsonify({
             "revoked":  scope_id,
@@ -5559,6 +5559,9 @@ def api_scope_revoke(scope_id: str):
         return jsonify({"error": str(exc), "status": 403}), 403
     except ValueError as exc:
         return jsonify({"error": str(exc), "status": 400}), 400
+    except RuntimeError as exc:
+        logger.error(f"[SAE] /scope/{scope_id}/revoke service error: {exc}")
+        return jsonify({"error": str(exc), "status": 503}), 503
     except Exception as exc:
         logger.error(f"[SAE] /scope/{scope_id}/revoke unhandled: {exc}")
         return jsonify({"error": f"Revocation failed: {type(exc).__name__}", "status": 500}), 500

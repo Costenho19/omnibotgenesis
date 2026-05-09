@@ -1099,14 +1099,14 @@ drift_pct = sum(
 
 ### API Endpoints (6 endpoints en gov_blueprint.py)
 
-| Método | Ruta | Tier Mínimo | Descripción |
+| Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| `POST` | `/api/governance/scope/issue` | Tier 1 (admin) | Emitir nuevo scope PQC-firmado |
-| `GET` | `/api/governance/scope/active` | Tier 3 (client) | Scope activo por dominio/vertical |
-| `POST` | `/api/governance/scope/check-drift` | Tier 3 (client) | Verificar drift contextual AVM |
-| `POST` | `/api/governance/scope/flag-reapproval` | Tier 1 (admin) | Marcar manualmente REAPPROVAL_REQUIRED |
-| `POST` | `/api/governance/scope/reauthorize` | Tier 1 (admin) | Reautorizar: SUPERSEDED → nuevo ACTIVE |
-| `POST` | `/api/governance/scope/revoke` | Tier 1 (admin) | Revocar permanentemente (Solo Tier 1) |
+| `POST` | `/api/governance/scope/authorize` | Admin (Tier 1) | Emitir nuevo scope PQC-firmado |
+| `GET` | `/api/governance/scope/<domain>/active` | API key (Tier 3+) | Scope activo para el dominio/vertical |
+| `GET` | `/api/governance/scope/<domain>/history` | Admin (Tier 1) | Historial completo inmutable del dominio |
+| `POST` | `/api/governance/scope/<scope_id>/reauthorize` | Admin (Tier 1) | Nuevo scope que supersede al anterior |
+| `POST` | `/api/governance/scope/<scope_id>/revoke` | Admin (Tier 1) | Revocar permanentemente (Tier 1 only) |
+| `GET` | `/api/governance/scope/<scope_id>/drift` | API key (Tier 3+) | Calcular drift contextual AVM del scope |
 
 ### Los 6 Invariantes de Gobernanza (Validados — 124/124 tests)
 

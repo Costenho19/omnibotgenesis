@@ -772,21 +772,26 @@ class TestV05_AuthorityMatrixEnforcement:
             )
 
     def test_revoke_tier1_does_not_raise_permission_error(self):
-        """Tier 1 actor is permitted (no PermissionError from auth check)."""
+        """Tier 1 actor passes the authority check (no PermissionError raised).
+
+        In-memory mode (no DB), revoke_scope now raises RuntimeError (fail-closed
+        for DB unavailability — GAP-005 fix) instead of returning False silently.
+        The important invariant: PermissionError must NEVER be raised for Tier 1.
+        """
         from omnix_core.governance.scope_authorization_engine import ScopeAuthorizationEngine
         engine = ScopeAuthorizationEngine(db_url=None)
-        # In-memory mode (no DB), revoke_scope returns False but does not raise PermissionError
         try:
-            result = engine.revoke_scope(
+            engine.revoke_scope(
                 scope_id="SAR-TEST000000000000000000",
                 reason="Legitimate Tier 1 revocation",
                 authorized_by="harold_nunes_tier1",
                 authority_tier=1,
             )
-            # DB unavailable → returns False (not PermissionError)
-            assert result is False
+        except RuntimeError:
+            # Expected: no DB in in-memory mode → fail-closed RuntimeError (correct)
+            pass
         except PermissionError:
-            pytest.fail("Tier 1 should not raise PermissionError")
+            pytest.fail("Tier 1 should NEVER raise PermissionError — authority check failed")
 
     def test_issue_scope_invalid_tier_raises_value_error(self):
         """issue_scope() raises ValueError when authority_tier is not 1-4."""

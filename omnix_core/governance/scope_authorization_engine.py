@@ -738,7 +738,10 @@ class ScopeAuthorizationEngine:
         if not reason or not reason.strip():
             raise ValueError("reason is required for scope revocation")
         if not self._available:
-            return False
+            raise RuntimeError(
+                "[SAE] Scope revocation failed — database unavailable (no DATABASE_URL). "
+                "Revocation of a live governance scope requires a persistent DB."
+            )
 
         try:
             with self._get_conn() as conn:
@@ -751,7 +754,10 @@ class ScopeAuthorizationEngine:
                         WHERE scope_id = %(scope_id)s
                           AND status NOT IN ('REVOKED', 'SUPERSEDED')
                     """, {"scope_id": scope_id, "reason": f"REVOKED by {authorized_by}: {reason}"})
+                    rows_affected = cur.rowcount
                 conn.commit()
+            if rows_affected == 0:
+                return False  # Scope not found or already in terminal state
             logger.warning(
                 f"[SAE] Scope REVOKED — id={scope_id} "
                 f"by={authorized_by} (tier={authority_tier}) reason={reason[:80]}"
@@ -759,7 +765,7 @@ class ScopeAuthorizationEngine:
             return True
         except Exception as exc:
             logger.error(f"[SAE] revoke_scope failed scope_id={scope_id}: {exc}")
-            return False
+            raise RuntimeError(f"[SAE] revoke_scope DB error: {exc}") from exc
 
     def get_scope_history(
         self,
