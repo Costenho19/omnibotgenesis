@@ -89,15 +89,26 @@ CREATE INDEX IF NOT EXISTS idx_avm_change_log_domain
     ON avm_baseline_change_log(domain, logged_at DESC);
 """
 
+DDL_ALTER_TENANT_ID = """
+ALTER TABLE avm_calibration_snapshots
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(128) NOT NULL DEFAULT 'default';
+ALTER TABLE avm_baseline_change_log
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(128) NOT NULL DEFAULT 'default';
+CREATE UNIQUE INDEX IF NOT EXISTS uq_avm_snapshots_tenant_domain
+    ON avm_calibration_snapshots(tenant_id, domain);
+CREATE INDEX IF NOT EXISTS idx_avm_change_log_tenant_domain
+    ON avm_baseline_change_log(tenant_id, domain, logged_at DESC);
+"""
+
 UPSERT = """
 INSERT INTO avm_calibration_snapshots (
-    domain, snapshot_id, parameter_version, baseline_signals,
+    tenant_id, domain, snapshot_id, parameter_version, baseline_signals,
     baseline_hash, checkpoint_thresholds, drift_threshold, max_age_hours,
     description, tags, calibrated_at, calibrated_at_epoch,
     version, is_active, updated_at,
     is_genesis, genesis_snapshot_id, genesis_calibrated_at
 ) VALUES (
-    %(domain)s, %(snapshot_id)s, %(parameter_version)s,
+    %(tenant_id)s, %(domain)s, %(snapshot_id)s, %(parameter_version)s,
     %(baseline_signals)s::jsonb, %(baseline_hash)s,
     %(checkpoint_thresholds)s::jsonb,
     %(drift_threshold)s, %(max_age_hours)s, %(description)s,
@@ -105,7 +116,7 @@ INSERT INTO avm_calibration_snapshots (
     %(version)s, TRUE, NOW(),
     %(is_genesis)s, %(genesis_snapshot_id)s, %(genesis_calibrated_at)s
 )
-ON CONFLICT (domain) DO UPDATE SET
+ON CONFLICT (tenant_id, domain) DO UPDATE SET
     snapshot_id         = EXCLUDED.snapshot_id,
     parameter_version   = EXCLUDED.parameter_version,
     baseline_signals    = EXCLUDED.baseline_signals,
@@ -122,6 +133,7 @@ ON CONFLICT (domain) DO UPDATE SET
     updated_at          = NOW();
     -- NOTE: is_genesis, genesis_snapshot_id, genesis_calibrated_at are intentionally
     -- excluded from DO UPDATE SET — the genesis baseline is immutable once set.
+    -- ISR-001: ON CONFLICT target changed from (domain) to (tenant_id, domain).
 """
 
 SELECT_GENESIS = """
@@ -130,23 +142,24 @@ SELECT domain, snapshot_id, parameter_version, baseline_signals,
        calibrated_at, calibrated_at_epoch, version,
        is_genesis, genesis_snapshot_id, genesis_calibrated_at
 FROM avm_calibration_snapshots
-WHERE domain = %s AND is_genesis = TRUE;
+WHERE tenant_id = %s AND domain = %s AND is_genesis = TRUE;
 """
 
 SELECT_VERSION = """
-SELECT version FROM avm_calibration_snapshots WHERE domain = %s;
+SELECT version FROM avm_calibration_snapshots
+WHERE tenant_id = %s AND domain = %s;
 """
 
 INSERT_CHANGE_LOG = """
 INSERT INTO avm_baseline_change_log
-    (domain, snapshot_id, action, reason, actor, host, baseline_hash)
+    (tenant_id, domain, snapshot_id, action, reason, actor, host, baseline_hash)
 VALUES
-    (%(domain)s, %(snapshot_id)s, %(action)s, %(reason)s,
+    (%(tenant_id)s, %(domain)s, %(snapshot_id)s, %(action)s, %(reason)s,
      %(actor)s, %(host)s, %(baseline_hash)s);
 """
 
-SELECT_ALL = "SELECT * FROM avm_calibration_snapshots;"
-SELECT_ONE = "SELECT * FROM avm_calibration_snapshots WHERE domain = %s;"
+SELECT_ALL = "SELECT * FROM avm_calibration_snapshots WHERE tenant_id = %(tenant_id)s;"
+SELECT_ONE = "SELECT * FROM avm_calibration_snapshots WHERE tenant_id = %s AND domain = %s;"
 
 
 def _compute_hash(baseline_signals: dict) -> str:
@@ -187,8 +200,9 @@ class AVMDatabaseBridge:
                     cur.execute(DDL_ALTER_VERSIONING)
                     cur.execute(DDL_ALTER_GENESIS)
                     cur.execute(DDL_CHANGE_LOG)
+                    cur.execute(DDL_ALTER_TENANT_ID)
                 conn.commit()
-            logger.info("[AVM.DB] Tables ready: avm_calibration_snapshots, avm_baseline_change_log")
+            logger.info("[AVM.DB] Tables ready: avm_calibration_snapshots, avm_baseline_change_log (ISR-001: tenant_id column applied)")
             return True
         except Exception as e:
             logger.warning(f"[AVM.DB] Could not ensure tables: {e}")
@@ -223,6 +237,7 @@ class AVMDatabaseBridge:
         baseline_hash = _compute_hash(baseline_signals)
         host = socket.gethostname()
         domain = snapshot_dict["domain"]
+        tenant_id = snapshot_dict.get("tenant_id", "default") or "default"
 
         # Determine version + genesis status
         new_version = 1
@@ -231,8 +246,9 @@ class AVMDatabaseBridge:
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
                     cur.execute(
-                        "SELECT version, is_genesis FROM avm_calibration_snapshots WHERE domain = %s",
-                        (domain,)
+                        "SELECT version, is_genesis FROM avm_calibration_snapshots "
+                        "WHERE domain = %s AND tenant_id = %s",
+                        (domain, tenant_id)
                     )
                     row = cur.fetchone()
                     if row:
@@ -258,6 +274,7 @@ class AVMDatabaseBridge:
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
                     cur.execute(UPSERT, {
+                        "tenant_id":            tenant_id,
                         "domain":               domain,
                         "snapshot_id":          snapshot_dict["snapshot_id"],
                         "parameter_version":    snapshot_dict["parameter_version"],
@@ -276,7 +293,8 @@ class AVMDatabaseBridge:
                         "genesis_calibrated_at": _genesis_calibrated_at,
                     })
                     cur.execute(INSERT_CHANGE_LOG, {
-                        "domain":         snapshot_dict["domain"],
+                        "tenant_id":      tenant_id,
+                        "domain":         domain,
                         "snapshot_id":    snapshot_dict["snapshot_id"],
                         "action":         action,
                         "reason":         reason,
@@ -294,19 +312,21 @@ class AVMDatabaseBridge:
             logger.warning(f"[AVM.DB] Could not persist snapshot: {e}")
             return False
 
-    def load_all_snapshots(self) -> dict[str, dict]:
+    def load_all_snapshots(self, tenant_id: str = "default") -> dict[str, dict]:
         """
-        Load all snapshots from PostgreSQL.
+        Load all snapshots from PostgreSQL for a specific tenant.
         Verifies SHA-256 hash integrity of each snapshot's baseline_signals.
         Returns dict of {domain: snapshot_data}.
         Adds 'integrity_status': 'OK' | 'TAMPERED' | 'LEGACY_NO_HASH' to each.
+        ISR-001: tenant_id parameter isolates results per tenant.
         """
+        tenant_id = (tenant_id or "default").strip()
         if not self._available:
             return {}
         try:
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
-                    cur.execute(SELECT_ALL)
+                    cur.execute(SELECT_ALL, {"tenant_id": tenant_id})
                     cols = [d[0] for d in cur.description]
                     rows = cur.fetchall()
 
@@ -404,20 +424,22 @@ class AVMDatabaseBridge:
             logger.warning(f"[AVM.DB] Could not load snapshots: {e}")
             return {}
 
-    def restore_to_json(self, snapshots_dir: str = "avm_snapshots") -> tuple[int, int]:
+    def restore_to_json(self, snapshots_dir: str = "avm_snapshots", tenant_id: str = "default") -> tuple[int, int]:
         """
         Load DB snapshots → local JSON files for the core AVM module.
+        ISR-001: snapshots are written to {snapshots_dir}/{tenant_id}/ per tenant.
 
         Returns:
             (restored_count, tampered_count)
             tampered snapshots are NOT written to disk.
         """
         import pathlib
-        snapshots = self.load_all_snapshots()
+        tenant_id = (tenant_id or "default").strip()
+        snapshots = self.load_all_snapshots(tenant_id=tenant_id)
         if not snapshots:
             return 0, 0
 
-        p = pathlib.Path(snapshots_dir)
+        p = pathlib.Path(snapshots_dir) / tenant_id
         p.mkdir(parents=True, exist_ok=True)
 
         # Fields that exist in DB/bridge but NOT in CalibrationSnapshot dataclass
@@ -476,7 +498,7 @@ class AVMDatabaseBridge:
     def is_available(self) -> bool:
         return self._available
 
-    def get_genesis_snapshot(self, domain: str) -> Optional[dict]:
+    def get_genesis_snapshot(self, domain: str, tenant_id: str = "default") -> Optional[dict]:
         """
         Return the immutable genesis baseline for a domain.
 
@@ -485,14 +507,16 @@ class AVMDatabaseBridge:
         This is the external reference point for longitudinal drift detection
         (Amanulla insight: observer must be outside the local compensatory logic).
 
-        Returns None if genesis is not yet set for this domain.
+        ISR-001: tenant_id added to isolate genesis baselines per tenant.
+        Returns None if genesis is not yet set for this domain/tenant.
         """
+        tenant_id = (tenant_id or "default").strip()
         if not self._available:
             return None
         try:
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
-                    cur.execute(SELECT_GENESIS, (domain,))
+                    cur.execute(SELECT_GENESIS, (tenant_id, domain))
                     cols = [d[0] for d in cur.description]
                     row = cur.fetchone()
                     if not row:
@@ -507,7 +531,7 @@ class AVMDatabaseBridge:
             logger.warning(f"[AVM.DB] get_genesis_snapshot failed domain={domain}: {e}")
             return None
 
-    def compute_genesis_drift(self, domain: str, current_signals: dict) -> Optional[dict]:
+    def compute_genesis_drift(self, domain: str, current_signals: dict, tenant_id: str = "default") -> Optional[dict]:
         """
         Compute drift of current_signals against the immutable genesis baseline.
 
@@ -528,7 +552,7 @@ class AVMDatabaseBridge:
             }
             or None if genesis not found / DB unavailable.
         """
-        genesis = self.get_genesis_snapshot(domain)
+        genesis = self.get_genesis_snapshot(domain, tenant_id=tenant_id)
         if not genesis:
             return {
                 "domain": domain,

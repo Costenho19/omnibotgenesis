@@ -1066,6 +1066,13 @@ class ConversationalAI:
             diagnostic_mode: If True, uses DIAGNOSTIC_ONLY_PROMPT for RULE 13 compliance (Jan 1, 2026)
         """
         try:
+            from omnix_services.ai_service.input_sanitizer import sanitize_user_message as _sanitize
+            user_message, _san_flags = _sanitize(user_message)
+            if _san_flags:
+                logger.warning(f"[ISR-017] Async input sanitized — flags={_san_flags}")
+        except Exception:
+            pass
+        try:
             if self.using_enterprise:
                 logger.info(f"🚀 [ASYNC] Generando respuesta ENTERPRISE para {user_name} (diagnostic_mode={diagnostic_mode})")
                 
@@ -1186,6 +1193,13 @@ class ConversationalAI:
         FIX Nov 28, 2025: Ahora pasa DATOS REALES de Kraken al AI
         WARNING: NO usar desde handlers async de telegram - usar generate_response_async() en su lugar
         """
+        try:
+            from omnix_services.ai_service.input_sanitizer import sanitize_user_message as _sanitize
+            user_message, _san_flags = _sanitize(user_message)
+            if _san_flags:
+                logger.warning(f"[ISR-017] Sync input sanitized — flags={_san_flags}")
+        except Exception:
+            pass
         try:
             if self.using_enterprise:
                 # 🔥 USO DEL NUEVO SISTEMA ENTERPRISE

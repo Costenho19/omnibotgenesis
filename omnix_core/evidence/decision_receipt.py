@@ -9,6 +9,25 @@ from typing import Dict, Any, Optional, Tuple
 
 logger = logging.getLogger("OMNIX.Evidence")
 
+
+def _get_governance_schema_version() -> str:
+    """Return the schema version from the semantic registry (ISR-008)."""
+    try:
+        from omnix_core.governance.semantic_version_registry import get_current_entry
+        return get_current_entry().schema_version
+    except Exception:
+        return "1"
+
+
+def _get_checkpoint_logic_fingerprint() -> str:
+    """Return the checkpoint logic fingerprint for the current engine (ISR-008)."""
+    try:
+        from omnix_core.governance.semantic_version_registry import current_fingerprint
+        return current_fingerprint()
+    except Exception:
+        return ""
+
+
 try:
     from omnix_core.security.crypto_providers import get_active_provider, get_provider
     _active_provider = get_active_provider()
@@ -288,6 +307,8 @@ class DecisionReceiptEngine:
             'signing_provider': provider_id,
             'signing_key_id':   self.key_id,
             'domain':           domain if domain else None,
+            'governance_schema_version': _get_governance_schema_version(),
+            'checkpoint_logic_fingerprint': _get_checkpoint_logic_fingerprint(),
         }
 
         if 'sharia_compliance' in decision:

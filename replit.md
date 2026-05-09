@@ -162,6 +162,7 @@ Variables are read with these **exact names** in the source code. Use the same n
 ## Pointers
 
 *   **ADRs:** `docs/adr/` — 147 total. Last: ADR-145 (Replay Engine) · ADR-146 (Authority Matrix) · ADR-147 (Scope Authorization Record)
+*   **ISR Remediation modules:** `omnix_core/governance/assumption_validity_monitor.py` (ISR-001 registry) · `omnix_core/governance/avm_db_bridge.py` (ISR-001 tenant DDL) · `omnix_core/governance/semantic_version_registry.py` (ISR-008) · `omnix_core/evidence/decision_receipt.py` (ISR-008 fields) · `omnix_core/evidence/transparency_chain.py` (ISR-013 retry+pending) · `omnix_services/ai_service/input_sanitizer.py` (ISR-017) · `omnix_core/evidence/payload_key_manager.py` (ISR-021) · `omnix_web/api/gov_blueprint.py` (ISR-017+ISR-021 wired)
 *   **Full Architecture:** `docs/current/ARCHITECTURE.md`
 *   **Deployment Operations:** `docs/operations/DEPLOYMENT.md`
 *   **Python SDK:** `sdk/python/README.md`
@@ -177,3 +178,4 @@ Variables are read with these **exact names** in the source code. Use the same n
 *   **Governance Failure Mode Report — Stage 3:** `docs/GOVERNANCE_FAILURE_MODE_REPORT.md` — HGA-2026-Q3-001 (Mayo 2026) — 11 failure modes, 4 collapse scenarios, 5 crypto trust risks, replay fidelity classification
 *   **External Trust and Defensibility Report — Stage 4:** `docs/EXTERNAL_TRUST_AND_DEFENSIBILITY_REPORT.md` — HGA-2026-Q4-001 (Mayo 2026) — adversarial verifier tests, legal wording audit (52 claims), trust anchor validation, multi-instance consistency, enterprise security review, chain-of-custody gaps, 17 ranked actions
 *   **Institutional Survivability Report — Stage 5:** `docs/INSTITUTIONAL_SURVIVABILITY_REPORT.md` — ISR-2026-Q2-001 (Mayo 2026) — 23 risk vectors, multi-tenant isolation gaps (AVM singleton ISR-001 CRITICAL), long-term replay fragility (ISR-008 CRITICAL), prompt injection (ISR-017), economic attack vectors, jurisdictional conflict gaps, institutional corruption vectors, dependency failure modes, future evolution risks
+*   **ISR Remediation — Stage 5 Implementation:** `tests/test_isr_remediation.py` — 54 tests · 54 passing · ISR-001 ✓ ISR-008 ✓ ISR-013 ✓ ISR-017 ✓ ISR-021 ✓

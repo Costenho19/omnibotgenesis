@@ -29,11 +29,15 @@ import hmac
 import json
 import logging
 import os
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger("OMNIX.Evidence.TransparencyChain")
+
+_chain_degraded: bool = False
+_STORE_RETRY_DELAYS: tuple = (0.1, 0.3, 0.9)
 
 
 def _sha256(data: str) -> str:
@@ -95,6 +99,25 @@ class InternalTimestamp:
             return False
 
 
+_DDL_PENDING = """
+CREATE TABLE IF NOT EXISTS transparency_chain_pending (
+    id           SERIAL       PRIMARY KEY,
+    log_id       VARCHAR(32)  NOT NULL UNIQUE,
+    receipt_id   VARCHAR(64)  NOT NULL,
+    symbol       VARCHAR(32)  NOT NULL,
+    event_type   VARCHAR(32)  NOT NULL DEFAULT 'decision',
+    payload_hash VARCHAR(64)  NOT NULL,
+    prev_log_hash VARCHAR(64),
+    merkle_root  VARCHAR(64)  NOT NULL,
+    signing_provider VARCHAR(32) NOT NULL DEFAULT 'none',
+    signature_b64 TEXT,
+    ts_utc       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    pending_reason TEXT        NOT NULL DEFAULT '',
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+"""
+
+
 class TransparencyChain:
     """
     Append-only transparency log for OMNIX governance receipts.
@@ -104,16 +127,41 @@ class TransparencyChain:
       2. Retrieves prev_log_hash from DB (last entry)
       3. Computes new rolling Merkle root
       4. Signs the entry with the active crypto provider
-      5. Inserts into governance_transparency_log
+      5. Inserts into governance_transparency_log (with retry + pending fallback)
+
+    ISR-013 durability: _store_entry retries 3× with exponential backoff.
+    On all failures, falls back to transparency_chain_pending table.
+    If that also fails, sets process-level _chain_degraded flag.
 
     Self-verifiable: every entry contains all data needed to verify it
     without calling back into OMNIX.
     """
 
     TABLE = "governance_transparency_log"
+    TABLE_PENDING = "transparency_chain_pending"
 
     def __init__(self):
         self._db_url = os.environ.get("DATABASE_URL")
+        self._ensure_pending_table()
+
+    def _ensure_pending_table(self) -> None:
+        if not self._db_url:
+            return
+        conn = self._get_conn()
+        if not conn:
+            return
+        try:
+            cur = conn.cursor()
+            cur.execute(_DDL_PENDING)
+            conn.commit()
+            cur.close()
+            conn.close()
+        except Exception as exc:
+            logger.warning(f"[TransparencyChain] Could not create pending table: {exc}")
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def append(
         self,
@@ -296,18 +344,90 @@ class TransparencyChain:
             return None, "none"
 
     def _store_entry(self, entry: Dict[str, Any]) -> bool:
+        """
+        ISR-013: Store with retry (3×) + pending-table fallback + degraded flag.
+        Never raises. Returns True only if primary table write succeeded.
+        """
+        global _chain_degraded
         if not self._db_url:
             return False
+
+        last_exc: Optional[Exception] = None
+
+        for attempt, delay in enumerate(_STORE_RETRY_DELAYS, start=1):
+            conn = self._get_conn()
+            if not conn:
+                time.sleep(delay)
+                continue
+            try:
+                cur = conn.cursor()
+                cur.execute(f"""
+                    INSERT INTO {self.TABLE} (
+                        log_id, receipt_id, symbol, event_type,
+                        payload_hash, prev_log_hash, merkle_root,
+                        signing_provider, signature_b64, ts_utc, chain_version
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (log_id) DO NOTHING
+                """, (
+                    entry["log_id"],
+                    entry["receipt_id"],
+                    entry["symbol"],
+                    entry["event_type"],
+                    entry["payload_hash"],
+                    entry.get("prev_log_hash") or None,
+                    entry["merkle_root"],
+                    entry["signing_provider"],
+                    entry.get("signature_b64"),
+                    entry["ts_utc"],
+                    1,
+                ))
+                conn.commit()
+                cur.close()
+                conn.close()
+                if _chain_degraded:
+                    logger.info("[TransparencyChain][ISR-013] Primary write succeeded — degraded flag cleared.")
+                    _chain_degraded = False
+                return True
+            except Exception as exc:
+                last_exc = exc
+                logger.warning(
+                    f"[TransparencyChain][ISR-013] Primary write attempt {attempt}/{len(_STORE_RETRY_DELAYS)} failed: {exc}"
+                )
+                try:
+                    conn.rollback()
+                    conn.close()
+                except Exception:
+                    pass
+                if attempt < len(_STORE_RETRY_DELAYS):
+                    time.sleep(delay)
+
+        logger.error(
+            f"[TransparencyChain][ISR-013] All {len(_STORE_RETRY_DELAYS)} retry attempts failed — "
+            f"writing to pending table. last_error={last_exc}"
+        )
+        pending_ok = self._store_pending(entry, reason=str(last_exc))
+        if not pending_ok:
+            _chain_degraded = True
+            logger.error(
+                "[TransparencyChain][ISR-013] CRITICAL: Both primary and pending writes failed. "
+                "Audit chain has a gap. _chain_degraded=True. "
+                "Inspect DATABASE_URL and PostgreSQL connectivity."
+            )
+            self._send_degraded_alert(entry.get("log_id", "?"), str(last_exc))
+        return False
+
+    def _store_pending(self, entry: Dict[str, Any], reason: str = "") -> bool:
+        """Write to transparency_chain_pending as fallback (ISR-013)."""
         conn = self._get_conn()
         if not conn:
             return False
         try:
             cur = conn.cursor()
             cur.execute(f"""
-                INSERT INTO {self.TABLE} (
+                INSERT INTO {self.TABLE_PENDING} (
                     log_id, receipt_id, symbol, event_type,
                     payload_hash, prev_log_hash, merkle_root,
-                    signing_provider, signature_b64, ts_utc, chain_version
+                    signing_provider, signature_b64, ts_utc, pending_reason
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (log_id) DO NOTHING
             """, (
@@ -316,25 +436,135 @@ class TransparencyChain:
                 entry["symbol"],
                 entry["event_type"],
                 entry["payload_hash"],
-                entry["prev_log_hash"] or None,
+                entry.get("prev_log_hash") or None,
                 entry["merkle_root"],
                 entry["signing_provider"],
-                entry["signature_b64"],
+                entry.get("signature_b64"),
                 entry["ts_utc"],
-                1,
+                reason[:500],
             ))
             conn.commit()
             cur.close()
             conn.close()
+            logger.info(
+                f"[TransparencyChain][ISR-013] Entry {entry['log_id']} written to pending table. "
+                f"Will be reconciled when DB recovers."
+            )
             return True
-        except Exception as e:
-            logger.error(f"[TransparencyChain] _store_entry failed: {e}")
+        except Exception as exc:
+            logger.error(f"[TransparencyChain][ISR-013] Pending write also failed: {exc}")
             try:
                 conn.rollback()
                 conn.close()
             except Exception:
                 pass
             return False
+
+    def _send_degraded_alert(self, log_id: str, reason: str) -> None:
+        """Send Telegram alert when chain is fully degraded (ISR-013)."""
+        try:
+            admin_id = os.environ.get("TELEGRAM_ADMIN_USER_ID", "")
+            token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+            if not admin_id or not token or os.environ.get("TESTING"):
+                return
+            import urllib.request
+            msg = (
+                f"⚠️ [OMNIX ALERT] Transparency chain degraded!\n"
+                f"log_id={log_id}\n"
+                f"Both primary and pending writes failed.\n"
+                f"reason={reason[:200]}\n"
+                f"Investigate DATABASE_URL connectivity immediately."
+            )
+            url = f"https://api.telegram.org/bot{token}/sendMessage"
+            data = json.dumps({"chat_id": admin_id, "text": msg, "parse_mode": "HTML"}).encode()
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            urllib.request.urlopen(req, timeout=5)
+        except Exception:
+            pass
+
+    def reconcile_pending_entries(self) -> int:
+        """
+        Drain transparency_chain_pending into the main transparency log.
+        Call on startup and periodically (every 5 min) to recover from DB outages.
+        Returns number of entries successfully reconciled.
+        ISR-013 recovery path.
+        """
+        if not self._db_url:
+            return 0
+        conn = self._get_conn()
+        if not conn:
+            return 0
+        reconciled = 0
+        try:
+            cur = conn.cursor()
+            cur.execute(f"""
+                SELECT log_id, receipt_id, symbol, event_type, payload_hash,
+                       prev_log_hash, merkle_root, signing_provider, signature_b64, ts_utc
+                FROM {self.TABLE_PENDING}
+                ORDER BY created_at ASC
+                LIMIT 100
+            """)
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
+        except Exception as exc:
+            logger.warning(f"[TransparencyChain][ISR-013] reconcile: fetch pending failed: {exc}")
+            try:
+                conn.close()
+            except Exception:
+                pass
+            return 0
+
+        for row in rows:
+            (log_id, receipt_id, symbol, event_type, payload_hash,
+             prev_log_hash, merkle_root, signing_provider, signature_b64, ts_utc) = row
+            entry = {
+                "log_id": log_id,
+                "receipt_id": receipt_id,
+                "symbol": symbol,
+                "event_type": event_type,
+                "payload_hash": payload_hash,
+                "prev_log_hash": prev_log_hash,
+                "merkle_root": merkle_root,
+                "signing_provider": signing_provider or "none",
+                "signature_b64": signature_b64,
+                "ts_utc": ts_utc,
+            }
+            conn2 = self._get_conn()
+            if not conn2:
+                break
+            try:
+                cur2 = conn2.cursor()
+                cur2.execute(f"""
+                    INSERT INTO {self.TABLE} (
+                        log_id, receipt_id, symbol, event_type,
+                        payload_hash, prev_log_hash, merkle_root,
+                        signing_provider, signature_b64, ts_utc, chain_version
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (log_id) DO NOTHING
+                """, (
+                    log_id, receipt_id, symbol, event_type, payload_hash,
+                    prev_log_hash, merkle_root, signing_provider, signature_b64, ts_utc, 1,
+                ))
+                cur2.execute(
+                    f"DELETE FROM {self.TABLE_PENDING} WHERE log_id = %s",
+                    (log_id,),
+                )
+                conn2.commit()
+                cur2.close()
+                conn2.close()
+                reconciled += 1
+            except Exception as exc2:
+                logger.warning(f"[TransparencyChain][ISR-013] reconcile: failed for {log_id}: {exc2}")
+                try:
+                    conn2.rollback()
+                    conn2.close()
+                except Exception:
+                    pass
+
+        if reconciled:
+            logger.info(f"[TransparencyChain][ISR-013] Reconciled {reconciled} pending entries.")
+        return reconciled
 
     def _get_conn(self):
         if not self._db_url:

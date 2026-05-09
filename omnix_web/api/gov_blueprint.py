@@ -54,6 +54,12 @@ except ImportError:
     _FERNET_AVAILABLE = False
 
 try:
+    from omnix_core.evidence.payload_key_manager import get_payload_key_manager as _get_pkey_mgr
+    _PKM_AVAILABLE = True
+except Exception:
+    _PKM_AVAILABLE = False
+
+try:
     # Standalone deployment (omnix_web/api/ on Railway)
     from api.gov_auth_rbac import (
         authenticate_client,
@@ -229,17 +235,30 @@ _DecisionReceiptEngine = None
 
 # ── HELPERS ──────────────────────────────────────────────────────────────────
 
-def _encrypt_payload(data: str) -> str | None:
-    """Encrypt string payload using Fernet (AES-128-CBC + HMAC-SHA256)."""
+def _encrypt_payload(data: str) -> tuple[str | None, str]:
+    """
+    Encrypt string payload using versioned PayloadKeyManager (ISR-021).
+    Returns (versioned_token_or_None, key_version_id).
+    """
+    if _PKM_AVAILABLE:
+        try:
+            mgr = _get_pkey_mgr()
+            token = mgr.encrypt(data)
+            return token, mgr.active_version_id()
+        except Exception as e:
+            logger.warning(f"PayloadKeyManager encryption failed: {e}")
+    if not _FERNET_AVAILABLE:
+        return None, "none"
     key = os.environ.get("PAYLOAD_ENCRYPTION_KEY")
-    if not key or not _FERNET_AVAILABLE:
-        return None
+    if not key:
+        return None, "none"
     try:
         f = Fernet(key.encode() if isinstance(key, str) else key)
-        return f.encrypt(data.encode()).decode()
+        token = f.encrypt(data.encode()).decode()
+        return f"omnix-pek-v1:{token}", "v1"
     except Exception as e:
         logger.warning(f"Payload encryption failed: {e}")
-        return None
+        return None, "none"
 
 
 def _load_engine():
@@ -1536,7 +1555,7 @@ def api_governance_evaluate():
         logger.error(f"Governance evaluation error ref={ref_id}: {e}")
         return jsonify({'error': 'Internal evaluation error', 'status': 500, 'reference': ref_id}), 500
 
-    encrypted_payload = _encrypt_payload(json.dumps(signals, sort_keys=True))
+    encrypted_payload, _payload_key_version = _encrypt_payload(json.dumps(signals, sort_keys=True))
 
     try:
         receipt_engine = _DecisionReceiptEngine()
@@ -1562,6 +1581,7 @@ def api_governance_evaluate():
         )
         receipt['client_id'] = client_id
         receipt['encrypted_payload'] = encrypted_payload
+        receipt['payload_key_version'] = _payload_key_version
         receipt_engine.store_receipt(receipt)
     except Exception as e:
         ref_id = str(uuid.uuid4())[:8]

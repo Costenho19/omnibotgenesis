@@ -1281,24 +1281,62 @@ class AssumptionValidityMonitor:
         return result
 
 
-# ── Singleton ──────────────────────────────────────────────────────────────────
+# ── Tenant-Isolated Instance Registry (ISR-001) ────────────────────────────────
+#
+# Replaced process-level singleton with a per-tenant registry.
+# Each tenant_id gets its own AssumptionValidityMonitor instance with:
+#   - Isolated in-memory calibration store (_memory_store)
+#   - Isolated snapshot directory  (avm_snapshots/{tenant_id}/)
+#   - Isolated last-seen signals   (_last_seen_signals)
+#
+# Backward compatibility: tenant_id='default' preserves all single-tenant
+# deployments without any code change at call sites that don't pass tenant_id.
+#
+# For full DB-level isolation, see avm_db_bridge.py ISR-001 DDL_ALTER_TENANT_ID.
 
-_avm_instance: AssumptionValidityMonitor | None = None
+_avm_registry: dict[str, AssumptionValidityMonitor] = {}
+_avm_registry_lock = threading.Lock()
 
 
-def get_avm_instance() -> AssumptionValidityMonitor:
-    """Return the process-level singleton AVM instance."""
-    global _avm_instance
-    if _avm_instance is None:
-        _avm_instance = AssumptionValidityMonitor(
-            drift_threshold=float(
-                os.environ.get("AVM_DRIFT_THRESHOLD", str(AVM_DRIFT_THRESHOLD_DEFAULT))
-            ),
-            max_age_hours=float(
-                os.environ.get("AVM_MAX_AGE_HOURS", str(AVM_MAX_AGE_HOURS_DEFAULT))
-            ),
-            critical_age_hours=float(
-                os.environ.get("AVM_CRITICAL_AGE_HOURS", str(AVM_CRITICAL_AGE_HOURS_DEFAULT))
-            ),
-        )
-    return _avm_instance
+def get_avm_instance(tenant_id: str = "default") -> AssumptionValidityMonitor:
+    """
+    Return the tenant-isolated AVM instance for tenant_id.
+
+    Each tenant gets its own AssumptionValidityMonitor with isolated calibration
+    state and snapshot directory. 'default' preserves single-tenant behavior.
+
+    ISR-001: replaces process-level singleton to prevent cross-tenant
+    calibration contamination in multi-tenant deployments.
+    """
+    global _avm_registry
+    tenant_id = (tenant_id or "default").strip()
+    if tenant_id not in _avm_registry:
+        with _avm_registry_lock:
+            if tenant_id not in _avm_registry:
+                tenant_dir = AVM_SNAPSHOTS_DIR / tenant_id
+                _avm_registry[tenant_id] = AssumptionValidityMonitor(
+                    drift_threshold=float(
+                        os.environ.get("AVM_DRIFT_THRESHOLD", str(AVM_DRIFT_THRESHOLD_DEFAULT))
+                    ),
+                    max_age_hours=float(
+                        os.environ.get("AVM_MAX_AGE_HOURS", str(AVM_MAX_AGE_HOURS_DEFAULT))
+                    ),
+                    critical_age_hours=float(
+                        os.environ.get("AVM_CRITICAL_AGE_HOURS", str(AVM_CRITICAL_AGE_HOURS_DEFAULT))
+                    ),
+                    snapshots_dir=tenant_dir,
+                )
+                logger.info(
+                    f"[AVM][ISR-001] New tenant AVM instance created — "
+                    f"tenant_id='{tenant_id}' "
+                    f"snapshots_dir='{tenant_dir}'"
+                )
+    return _avm_registry[tenant_id]
+
+
+def get_avm_registry_stats() -> dict:
+    """Return summary of active tenant AVM instances (for admin/monitoring)."""
+    return {
+        "active_tenants": list(_avm_registry.keys()),
+        "count": len(_avm_registry),
+    }
