@@ -5,6 +5,7 @@ nixPkgs = ["python311", "nodejs_20"]
 cmds = [
   "python3 -m venv /opt/venv",
   "/opt/venv/bin/pip install -r requirements.txt",
+  "/opt/venv/bin/pip install ../omnix_core --no-deps --quiet || /opt/venv/bin/pip install ./omnix_core --no-deps --quiet || true",
   "npm install"
 ]
 
