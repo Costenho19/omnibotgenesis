@@ -5238,6 +5238,410 @@ def api_risk_history():
         return jsonify({"error": f"History fetch failed: {type(exc).__name__}", "status": 503}), 503
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# SCOPE AUTHORIZATION RECORD (ADR-147)
+# POST /api/governance/scope/authorize          — Issue new scope (admin only)
+# GET  /api/governance/scope/<domain>/active    — Active scope for domain (auth)
+# GET  /api/governance/scope/<domain>/history   — Full history (admin only)
+# POST /api/governance/scope/<scope_id>/reauthorize — Supersede scope (admin)
+# POST /api/governance/scope/<scope_id>/revoke  — Hard revoke (admin, Tier 1)
+# GET  /api/governance/scope/<scope_id>/drift   — Context drift check (auth)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _get_scope_engine():
+    """Lazy singleton loader for ScopeAuthorizationEngine."""
+    try:
+        from omnix_core.governance.scope_authorization_engine import get_scope_engine
+        engine = get_scope_engine()
+        engine.ensure_table()
+        return engine
+    except Exception as exc:
+        logger.warning(f"[SAE] ScopeAuthorizationEngine unavailable: {exc}")
+        return None
+
+
+@governance_bp.route('/api/governance/scope/authorize', methods=['POST'])
+def api_scope_authorize():
+    """
+    POST /api/governance/scope/authorize
+
+    Issue a new PQC-signed scope authorization record.
+
+    Authentication: X-API-Key (admin role required).
+
+    Body (JSON):
+        domain                  str  — governance domain (e.g. "FINANCE")
+        vertical                str  — sub-vertical (e.g. "equity_trading")
+        scope_definition        obj  — what is authorized (see ADR-147 §5)
+        defensibility_criteria  obj  — why it is defensible (see ADR-147 §6)
+        context_snapshot        obj  — AVM signals at authorization time (optional)
+        avm_snapshot_id         str  — active AVM calibration snapshot ID (optional)
+        avm_snapshot_version    int  — active AVM calibration version (optional)
+        expires_at              str  — ISO 8601 expiry (optional)
+
+    Returns:
+        201 + ScopeAuthorizationRecord JSON
+
+    ADR-147.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    body = request.get_json(silent=True) or {}
+    domain                  = body.get("domain", "")
+    vertical                = body.get("vertical", "general")
+    scope_definition        = body.get("scope_definition")
+    defensibility_criteria  = body.get("defensibility_criteria", {})
+    context_snapshot        = body.get("context_snapshot", {})
+    avm_snapshot_id         = body.get("avm_snapshot_id")
+    avm_snapshot_version    = body.get("avm_snapshot_version")
+    expires_at_raw          = body.get("expires_at")
+
+    if not domain:
+        return jsonify({"error": "domain is required", "status": 400}), 400
+    if not scope_definition:
+        return jsonify({"error": "scope_definition is required", "status": 400}), 400
+
+    from datetime import datetime, timezone
+    expires_at = None
+    if expires_at_raw:
+        try:
+            expires_at = datetime.fromisoformat(expires_at_raw.replace("Z", "+00:00"))
+        except ValueError:
+            return jsonify({"error": "expires_at must be ISO 8601 (e.g. 2026-12-31T00:00:00Z)", "status": 400}), 400
+
+    engine = _get_scope_engine()
+    if not engine:
+        return jsonify({"error": "Scope authorization service unavailable", "status": 503}), 503
+
+    try:
+        record = engine.issue_scope(
+            domain=domain,
+            vertical=vertical,
+            scope_definition=scope_definition,
+            defensibility_criteria=defensibility_criteria,
+            authorized_by=client.get("client_id", "unknown"),
+            authority_tier=1,
+            context_snapshot=context_snapshot,
+            avm_snapshot_id=avm_snapshot_id,
+            avm_snapshot_version=avm_snapshot_version,
+            expires_at=expires_at,
+        )
+        resp = jsonify({
+            "scope_authorization": record.to_dict(),
+            "trust_flags":         record.trust_flags(),
+            "adr":                 "ADR-147",
+            "message":             "Scope authorization issued and PQC-signed.",
+        })
+        resp.status_code = 201
+        resp.headers["X-OMNIX-ADR"]      = "ADR-147"
+        resp.headers["X-OMNIX-SCOPE-ID"] = record.scope_id
+        return resp
+    except (ValueError, PermissionError) as exc:
+        return jsonify({"error": str(exc), "status": 400}), 400
+    except RuntimeError as exc:
+        logger.error(f"[SAE] /scope/authorize RuntimeError: {exc}")
+        return jsonify({"error": str(exc), "status": 503}), 503
+    except Exception as exc:
+        logger.error(f"[SAE] /scope/authorize unhandled: {exc}")
+        return jsonify({"error": f"Unexpected error: {type(exc).__name__}", "status": 500}), 500
+
+
+@governance_bp.route('/api/governance/scope/<domain>/active', methods=['GET'])
+def api_scope_active(domain: str):
+    """
+    GET /api/governance/scope/<domain>/active
+
+    Return the current ACTIVE or REAPPROVAL_REQUIRED scope for a domain.
+
+    Authentication: X-API-Key.
+    Query params:
+        vertical — sub-vertical (default: "general")
+
+    ADR-147.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    vertical = request.args.get("vertical", "general")
+    engine   = _get_scope_engine()
+    if not engine:
+        return jsonify({"error": "Scope authorization service unavailable", "status": 503}), 503
+
+    try:
+        record = engine.get_active_scope(domain, vertical)
+        if not record:
+            return jsonify({
+                "scope_authorization": None,
+                "domain":   domain.upper(),
+                "vertical": vertical.lower(),
+                "message":  "No active scope authorization found for this domain.",
+                "adr":      "ADR-147",
+            }), 200
+
+        resp = jsonify({
+            "scope_authorization": record.to_dict(),
+            "trust_flags":         record.trust_flags(),
+            "adr":                 "ADR-147",
+        })
+        resp.headers["X-OMNIX-ADR"]      = "ADR-147"
+        resp.headers["X-OMNIX-SCOPE-ID"] = record.scope_id
+        return resp
+    except Exception as exc:
+        logger.error(f"[SAE] /scope/{domain}/active unhandled: {exc}")
+        return jsonify({"error": f"Fetch failed: {type(exc).__name__}", "status": 500}), 500
+
+
+@governance_bp.route('/api/governance/scope/<domain>/history', methods=['GET'])
+def api_scope_history(domain: str):
+    """
+    GET /api/governance/scope/<domain>/history
+
+    Return the full immutable scope authorization history for a domain.
+
+    Authentication: X-API-Key (admin role required).
+    Query params:
+        vertical — sub-vertical (default: "general")
+        limit    — max records (default: 50)
+
+    ADR-147.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    vertical = request.args.get("vertical", "general")
+    try:
+        limit = int(request.args.get("limit", 50))
+        limit = max(1, min(200, limit))
+    except (ValueError, TypeError):
+        limit = 50
+
+    engine = _get_scope_engine()
+    if not engine:
+        return jsonify({"error": "Scope authorization service unavailable", "status": 503}), 503
+
+    try:
+        records = engine.get_scope_history(domain, vertical, limit)
+        resp = jsonify({
+            "domain":               domain.upper(),
+            "vertical":             vertical.lower(),
+            "scope_authorizations": [r.to_dict() for r in records],
+            "count":                len(records),
+            "adr":                  "ADR-147",
+        })
+        resp.headers["X-OMNIX-ADR"] = "ADR-147"
+        return resp
+    except Exception as exc:
+        logger.error(f"[SAE] /scope/{domain}/history unhandled: {exc}")
+        return jsonify({"error": f"History fetch failed: {type(exc).__name__}", "status": 500}), 500
+
+
+@governance_bp.route('/api/governance/scope/<scope_id>/reauthorize', methods=['POST'])
+def api_scope_reauthorize(scope_id: str):
+    """
+    POST /api/governance/scope/<scope_id>/reauthorize
+
+    Issue a new scope superseding the given scope_id.
+    The old scope is marked SUPERSEDED. New scope is PQC-signed.
+
+    Authentication: X-API-Key (admin role required).
+
+    Body (JSON): same as /scope/authorize (domain/vertical inherited from old scope).
+
+    ADR-147.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    body = request.get_json(silent=True) or {}
+    scope_definition        = body.get("scope_definition")
+    defensibility_criteria  = body.get("defensibility_criteria", {})
+    context_snapshot        = body.get("context_snapshot", {})
+    avm_snapshot_id         = body.get("avm_snapshot_id")
+    avm_snapshot_version    = body.get("avm_snapshot_version")
+    expires_at_raw          = body.get("expires_at")
+
+    if not scope_definition:
+        return jsonify({"error": "scope_definition is required", "status": 400}), 400
+
+    from datetime import datetime, timezone
+    expires_at = None
+    if expires_at_raw:
+        try:
+            expires_at = datetime.fromisoformat(expires_at_raw.replace("Z", "+00:00"))
+        except ValueError:
+            return jsonify({"error": "expires_at must be ISO 8601", "status": 400}), 400
+
+    engine = _get_scope_engine()
+    if not engine:
+        return jsonify({"error": "Scope authorization service unavailable", "status": 503}), 503
+
+    try:
+        new_record = engine.reauthorize(
+            old_scope_id=scope_id,
+            scope_definition=scope_definition,
+            defensibility_criteria=defensibility_criteria,
+            authorized_by=client.get("client_id", "unknown"),
+            authority_tier=1,
+            context_snapshot=context_snapshot,
+            avm_snapshot_id=avm_snapshot_id,
+            avm_snapshot_version=avm_snapshot_version,
+            expires_at=expires_at,
+        )
+        resp = jsonify({
+            "new_scope":       new_record.to_dict(),
+            "trust_flags":     new_record.trust_flags(),
+            "superseded":      scope_id,
+            "adr":             "ADR-147",
+            "message":         f"Scope {scope_id} superseded. New scope {new_record.scope_id} issued and PQC-signed.",
+        })
+        resp.status_code = 201
+        resp.headers["X-OMNIX-ADR"]          = "ADR-147"
+        resp.headers["X-OMNIX-SCOPE-ID"]     = new_record.scope_id
+        resp.headers["X-OMNIX-SUPERSEDED-ID"] = scope_id
+        return resp
+    except (ValueError, PermissionError) as exc:
+        return jsonify({"error": str(exc), "status": 400}), 400
+    except Exception as exc:
+        logger.error(f"[SAE] /scope/{scope_id}/reauthorize unhandled: {exc}")
+        return jsonify({"error": f"Reauthorization failed: {type(exc).__name__}", "status": 500}), 500
+
+
+@governance_bp.route('/api/governance/scope/<scope_id>/revoke', methods=['POST'])
+def api_scope_revoke(scope_id: str):
+    """
+    POST /api/governance/scope/<scope_id>/revoke
+
+    Hard-revoke an active scope (Tier 1 authority only by governance policy).
+    A revoked scope cannot be reactivated.
+
+    Authentication: X-API-Key (admin role required).
+
+    Body (JSON):
+        reason  str  — mandatory revocation reason
+
+    ADR-147.
+    """
+    client, err = _require_auth(require_admin=True)
+    if err:
+        return err
+
+    body   = request.get_json(silent=True) or {}
+    reason = body.get("reason", "").strip()
+    if not reason:
+        return jsonify({"error": "reason is required for scope revocation", "status": 400}), 400
+
+    engine = _get_scope_engine()
+    if not engine:
+        return jsonify({"error": "Scope authorization service unavailable", "status": 503}), 503
+
+    try:
+        success = engine.revoke_scope(
+            scope_id=scope_id,
+            reason=reason,
+            authorized_by=client.get("client_id", "unknown"),
+            authority_tier=1,
+        )
+        if not success:
+            return jsonify({"error": f"Scope not found or already in terminal state: {scope_id}", "status": 404}), 404
+
+        return jsonify({
+            "revoked":  scope_id,
+            "reason":   reason,
+            "adr":      "ADR-147",
+            "message":  f"Scope {scope_id} has been permanently revoked.",
+        })
+    except PermissionError as exc:
+        return jsonify({"error": str(exc), "status": 403}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc), "status": 400}), 400
+    except Exception as exc:
+        logger.error(f"[SAE] /scope/{scope_id}/revoke unhandled: {exc}")
+        return jsonify({"error": f"Revocation failed: {type(exc).__name__}", "status": 500}), 500
+
+
+@governance_bp.route('/api/governance/scope/<scope_id>/drift', methods=['GET'])
+def api_scope_drift(scope_id: str):
+    """
+    GET /api/governance/scope/<scope_id>/drift
+
+    Compute context drift between current AVM signals and the scope's
+    context_snapshot captured at authorization time.
+
+    Authentication: X-API-Key.
+    Query params:
+        All AVM signal keys as query params, OR pass current_signals JSON body.
+        Signals: probability_score, signal_coherence, risk_exposure,
+                 stress_resilience, trend_persistence, logic_consistency
+
+    ADR-147.
+    """
+    client, err = _require_auth()
+    if err:
+        return err
+
+    _SIGNAL_KEYS = [
+        "probability_score", "signal_coherence", "risk_exposure",
+        "stress_resilience", "trend_persistence", "logic_consistency",
+    ]
+
+    engine = _get_scope_engine()
+    if not engine:
+        return jsonify({"error": "Scope authorization service unavailable", "status": 503}), 503
+
+    record = engine.get_scope_by_id(scope_id)
+    if not record:
+        return jsonify({"error": f"Scope not found: {scope_id}", "status": 404}), 404
+
+    body = request.get_json(silent=True) or {}
+    current_signals: dict[str, float] = {}
+
+    for key in _SIGNAL_KEYS:
+        val = request.args.get(key) or body.get("current_signals", {}).get(key)
+        if val is not None:
+            try:
+                current_signals[key] = float(val)
+            except (ValueError, TypeError):
+                pass
+
+    if not current_signals:
+        return jsonify({
+            "error": (
+                "Provide current AVM signals as query params or "
+                "JSON body {current_signals: {probability_score: 0.7, ...}}"
+            ),
+            "signal_keys": _SIGNAL_KEYS,
+            "status": 400,
+        }), 400
+
+    try:
+        result = engine.check_context_drift(
+            domain=record.domain,
+            vertical=record.vertical,
+            current_signals=current_signals,
+        )
+        if not result:
+            return jsonify({"error": "No active scope for this domain/vertical", "status": 404}), 404
+
+        resp = jsonify({
+            "context_drift":  result.to_dict(),
+            "adr":            "ADR-147",
+        })
+        resp.headers["X-OMNIX-ADR"]      = "ADR-147"
+        resp.headers["X-OMNIX-SCOPE-ID"] = scope_id
+        return resp
+    except Exception as exc:
+        logger.error(f"[SAE] /scope/{scope_id}/drift unhandled: {exc}")
+        return jsonify({"error": f"Drift check failed: {type(exc).__name__}", "status": 500}), 500
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+
+
 @governance_bp.route('/api/governance/risk/summary', methods=['GET'])
 def api_risk_summary():
     """

@@ -115,6 +115,7 @@ Variables are read with these **exact names** in the source code. Use the same n
 | `breach_events` | Breach Containment Engine | ADR-142 |
 | `risk_assessments` | Multi-Domain Risk Governance | ADR-143 |
 | `book_leads` | CRM / lead capture | — |
+| `governance_scope_authorizations` | Scope Authorization Record | ADR-147 |
 
 ---
 
@@ -127,6 +128,7 @@ Variables are read with these **exact names** in the source code. Use the same n
 *   **Governance Monitoring Layer:** Four real-time audit dashboards backed by live DB tables — Anomaly (ADR-129), Breach (ADR-142), Risk (ADR-143), Execution (ADR-131).
 *   **Governance Replay Engine (ADR-145):** Deterministic replay of 5 historical crises (Terra/LUNA, FTX, SVB, COVID, OFAC) with PQC-signed receipts. Live at `/crisis-replay`.
 *   **Runtime Authority Matrix (ADR-146):** Explicit four-tier authority model for all runtime governance actions.
+*   **Scope Authorization Record (ADR-147):** Every governance scope is PQC-signed at issuance with full defensibility criteria (who, why, under what context). AVM-integrated context drift detection triggers formal reapproval when operational context shifts beyond threshold. Answers Rehan Kausar's CAIO question: "Was the scope itself defensible?"
 
 ---
 

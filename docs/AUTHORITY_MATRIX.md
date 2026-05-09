@@ -122,6 +122,35 @@
 | Genesis AVM snapshot | ❌ **Immutable** | ❌ | Permanent drift anchor |
 | Transparency chain (WAL) | ❌ **Immutable** | ❌ | Append-only |
 | Replay receipts (ADR-145) | ❌ **Immutable** | ❌ | SHA-256 sealed at generation |
+| Issued scope authorization records | ❌ **Immutable** | ❌ | PQC-signed at issuance — ADR-147 |
+
+### 2.7 Scope Authorization Actions (ADR-147)
+
+> Answers: *"Was the scope itself defensible, who authorized it, and does it remain valid as operational context shifts?"*
+
+| Action | Tier 1 (Human) | Tier 2 (System) | Tier 3 (Client) | Tier 4 (Auditor) | ADR |
+|---|---|---|---|---|---|
+| Issue scope authorization | ✅ **Only Tier 1** | ❌ | ❌ | ❌ | ADR-147 |
+| Flag scope for reapproval (context drift) | ✅ Any time | ✅ **Autonomous** (drift > threshold) | ❌ | ❌ | ADR-147 |
+| Reauthorize scope after reapproval | ✅ **Only Tier 1** | ❌ | ❌ | ❌ | ADR-147 |
+| Revoke scope (hard, permanent) | ✅ **Only Tier 1** | ❌ | ❌ | ❌ | ADR-147 |
+| Read active scope for own domain | ✅ | ✅ | ✅ Own domain | ✅ | ADR-147 |
+| Read full scope history | ✅ | ✅ | ❌ | ✅ | ADR-147 |
+| Verify scope PQC signature | ✅ | ✅ | ✅ | ✅ **Public** | ADR-147 |
+
+**Scope status lifecycle:**
+```
+ACTIVE → REAPPROVAL_REQUIRED  (auto: context drift > threshold)
+       → SUPERSEDED            (Tier 1: reauthorize())
+       → REVOKED               (Tier 1 only: permanent)
+REAPPROVAL_REQUIRED → ACTIVE  (Tier 1: reauthorize() → new ACTIVE scope issued)
+```
+
+**Trust flags on governance receipts while scope reapproval is pending:**
+```
+trust_flags.scope_reapproval_pending = true
+```
+Existing decisions continue — no retroactive revocation. New scope required for clean receipts.
 
 ---
 
