@@ -117,6 +117,14 @@ def _api_error(exc: Exception, ctx: str = "") -> tuple:
 from api.sandbox import register_sandbox_routes
 register_sandbox_routes(app)
 
+# ── ADR-150: Health & Operational Readiness Blueprint ─────────────────────────
+try:
+    from api.health_blueprint import health_bp
+    app.register_blueprint(health_bp)
+    print("[startup] Health blueprint registered — /api/health, /api/health/live, /api/health/ready")
+except Exception as _hbp_err:
+    print(f"[startup] WARNING: Health blueprint failed to register: {_hbp_err}")
+
 
 # ── Startup: ensure all vertical governance tables exist ──────────────────────
 def _ensure_vertical_tables():
