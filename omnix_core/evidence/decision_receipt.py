@@ -9,6 +9,12 @@ from typing import Dict, Any, Optional, Tuple
 
 logger = logging.getLogger("OMNIX.Evidence")
 
+# ISR-010: Canonical hash algorithm version — embedded in every receipt.
+# Changing the hash algorithm requires bumping this constant AND creating a
+# migration plan. Never change this silently — historical receipts become
+# unverifiable if the verifier uses a different algorithm than what was used.
+CANONICAL_HASH_VERSION = "sha256-v1"
+
 
 def _get_governance_schema_version() -> str:
     """Return the schema version from the semantic registry (ISR-008)."""
@@ -309,6 +315,7 @@ class DecisionReceiptEngine:
             'domain':           domain if domain else None,
             'governance_schema_version': _get_governance_schema_version(),
             'checkpoint_logic_fingerprint': _get_checkpoint_logic_fingerprint(),
+            'hash_version': CANONICAL_HASH_VERSION,
         }
 
         if 'sharia_compliance' in decision:
@@ -410,6 +417,15 @@ class DecisionReceiptEngine:
         return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
 
     def store_receipt(self, receipt: Dict[str, Any]) -> bool:
+        # ISR-012: WAL-first — write to WAL before attempting DB write.
+        # If DB fails, receipt survives in WAL for reconcile_wal() on recovery.
+        _wal_id = ""
+        try:
+            from omnix_core.evidence.receipt_wal import get_receipt_wal
+            _wal_id = get_receipt_wal().wal_append(receipt)
+        except Exception as _wal_err:
+            logger.warning(f"[ISR-012] WAL append failed (non-blocking): {_wal_err}")
+
         if not self.db_url:
             logger.warning("No database URL configured - receipt not stored")
             return False
@@ -459,6 +475,13 @@ class DecisionReceiptEngine:
             conn.commit()
             cur.close()
             conn.close()
+            # ISR-012: DB write succeeded — commit (delete) WAL entry
+            if _wal_id:
+                try:
+                    from omnix_core.evidence.receipt_wal import get_receipt_wal
+                    get_receipt_wal().wal_commit(_wal_id)
+                except Exception:
+                    pass
             if canonical_hash_v2:
                 logger.debug(
                     f"[ADR-097] canonical_hash_v2 persisted "
@@ -472,6 +495,13 @@ class DecisionReceiptEngine:
                 conn.close()
             except Exception:
                 pass
+            # ISR-012: DB write failed — WAL entry is retained for reconcile_wal()
+            if _wal_id:
+                logger.warning(
+                    f"[ISR-012] DB write failed — receipt={receipt.get('receipt_id','?')} "
+                    f"retained in WAL wal_id={_wal_id}. "
+                    f"Call reconcile_wal() when DB recovers."
+                )
             return False
 
     def get_last_hash(self) -> str:

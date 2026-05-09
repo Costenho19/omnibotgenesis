@@ -74,8 +74,65 @@ from omnix_core.simulation.crisis_scenarios import (
 
 logger = logging.getLogger("OMNIX.GovernanceReplay")
 
-REPLAY_ENGINE_VERSION = "1.0.0"
+REPLAY_ENGINE_VERSION = "1.1.0"
 ADR_REFERENCE = "ADR-145"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REPLAY FIDELITY CLASSIFICATION (ADR-149)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ReplayFidelityClass:
+    """
+    Formal classification of replay receipt fidelity (ADR-149).
+
+    FORENSIC_SIMULATION: Verdict derived from historically-documented
+        expected outcome. Signal data is real; gate logic is not invoked.
+        Correct claim: "OMNIX governance framework applied to real signal
+        conditions of [event]."
+
+    COMPUTATIONAL_REPLAY: Verdict computed by live gate logic against
+        historical signals. Full computational fidelity. (Future.)
+
+    PARTIAL_COMPUTATIONAL: Some checkpoints computed live; others use
+        forensic expected verdicts. (Future — partial implementation.)
+    """
+    FORENSIC_SIMULATION   = "FORENSIC_SIMULATION"
+    COMPUTATIONAL_REPLAY  = "COMPUTATIONAL_REPLAY"
+    PARTIAL_COMPUTATIONAL = "PARTIAL_COMPUTATIONAL"
+
+    # Human-readable notes for each class
+    NOTES: Dict[str, str] = {
+        FORENSIC_SIMULATION: (
+            "Verdict derived from historically-verified expected outcome "
+            "(OMNIX forensic documents). Signal data sourced from public market records. "
+            "Canonical hash seals the full payload."
+        ),
+        COMPUTATIONAL_REPLAY: (
+            "Verdict computed by live governance gate logic applied to historical signals. "
+            "Full computational fidelity — identical to production evaluation."
+        ),
+        PARTIAL_COMPUTATIONAL: (
+            "Mixed fidelity: some checkpoints computed live, others use "
+            "historically-verified expected verdicts."
+        ),
+    }
+
+    # Admissible institutional claim for each class
+    ADMISSIBLE_CLAIMS: Dict[str, str] = {
+        FORENSIC_SIMULATION: (
+            "The OMNIX governance framework — applied retroactively to the exact signal "
+            "conditions that existed when this crisis unfolded — producing this verifiable receipt."
+        ),
+        COMPUTATIONAL_REPLAY: (
+            "The live OMNIX governance engine — executed against historical signal data — "
+            "producing this computationally-verified receipt."
+        ),
+        PARTIAL_COMPUTATIONAL: (
+            "The OMNIX governance framework — partially computed, partially forensic — "
+            "applied to historical signal conditions."
+        ),
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -111,24 +168,41 @@ class SignedReplayReceipt:
     replay_mode: bool = True
     engine_version: str = REPLAY_ENGINE_VERSION
     adr_reference: str = ADR_REFERENCE
+    # ADR-149: Fidelity classification fields
+    fidelity_classification: str = ReplayFidelityClass.FORENSIC_SIMULATION
+    fidelity_note: str = ""
+    admissible_claim: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.fidelity_note:
+            self.fidelity_note = ReplayFidelityClass.NOTES.get(
+                self.fidelity_classification, ""
+            )
+        if not self.admissible_claim:
+            self.admissible_claim = ReplayFidelityClass.ADMISSIBLE_CLAIMS.get(
+                self.fidelity_classification, ""
+            )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "receipt_id": self.receipt_id,
-            "scenario_id": self.scenario_id,
-            "timestamp_utc": self.timestamp_utc,
-            "signal_label": self.signal_label,
-            "domain": self.domain,
-            "verdict": self.verdict,
-            "blocking_checkpoint": self.blocking_checkpoint,
-            "trust_flags": self.trust_flags,
-            "signals_snapshot": self.signals_snapshot,
-            "rationale": self.rationale,
-            "canonical_hash": self.canonical_hash,
-            "pqc_note": self.pqc_note,
-            "replay_mode": self.replay_mode,
-            "engine_version": self.engine_version,
-            "adr_reference": self.adr_reference,
+            "receipt_id":             self.receipt_id,
+            "scenario_id":            self.scenario_id,
+            "timestamp_utc":          self.timestamp_utc,
+            "signal_label":           self.signal_label,
+            "domain":                 self.domain,
+            "verdict":                self.verdict,
+            "blocking_checkpoint":    self.blocking_checkpoint,
+            "trust_flags":            self.trust_flags,
+            "signals_snapshot":       self.signals_snapshot,
+            "rationale":              self.rationale,
+            "canonical_hash":         self.canonical_hash,
+            "pqc_note":               self.pqc_note,
+            "replay_mode":            self.replay_mode,
+            "engine_version":         self.engine_version,
+            "adr_reference":          self.adr_reference,
+            "fidelity_classification": self.fidelity_classification,
+            "fidelity_note":          self.fidelity_note,
+            "admissible_claim":       self.admissible_claim,
         }
 
     def to_markdown_row(self) -> str:
@@ -542,6 +616,70 @@ class GovernanceReplayEngine:
         )
 
     # ── Public API ───────────────────────────────────────────────────────────
+
+    @staticmethod
+    def verify_replay_chain(receipts: List[SignedReplayReceipt]) -> Dict[str, Any]:
+        """
+        Verify the canonical hash of every receipt in a replay session.
+
+        ADR-149: enables independent external verification of a complete
+        replay without OMNIX infrastructure.
+
+        Steps for each receipt:
+          1. Re-build the canonical payload (fields that were hashed)
+          2. Re-compute SHA-256 canonical hash
+          3. Compare to receipt.canonical_hash
+
+        Returns a verification report:
+          {
+            "total": N,
+            "verified": N,
+            "failed": [...],
+            "valid": True/False,
+            "engine_version": "1.1.0"
+          }
+        """
+        failed: List[Dict[str, Any]] = []
+        verified = 0
+
+        for r in receipts:
+            payload: Dict[str, Any] = {
+                "receipt_id":          r.receipt_id,
+                "scenario_id":         r.scenario_id,
+                "timestamp_utc":       r.timestamp_utc,
+                "signal_label":        r.signal_label,
+                "domain":              r.domain,
+                "verdict":             r.verdict,
+                "blocking_checkpoint": r.blocking_checkpoint,
+                "trust_flags":         sorted(r.trust_flags),
+                "signals_snapshot":    dict(sorted(r.signals_snapshot.items())),
+                "rationale":           r.rationale,
+                "replay_mode":         True,
+                "engine_version":      r.engine_version,
+                "adr_reference":       r.adr_reference,
+            }
+            serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+            recomputed = hashlib.sha256(serialized.encode()).hexdigest()
+
+            if recomputed == r.canonical_hash:
+                verified += 1
+            else:
+                failed.append({
+                    "receipt_id":     r.receipt_id,
+                    "scenario_id":    r.scenario_id,
+                    "timestamp_utc":  r.timestamp_utc,
+                    "expected_hash":  r.canonical_hash,
+                    "computed_hash":  recomputed,
+                })
+
+        return {
+            "total":          len(receipts),
+            "verified":       verified,
+            "failed":         failed,
+            "valid":          len(failed) == 0,
+            "engine_version": REPLAY_ENGINE_VERSION,
+            "adr_reference":  ADR_REFERENCE,
+        }
 
     def replay_crisis(self, scenario_id: str) -> ScenarioReplayResult:
         """

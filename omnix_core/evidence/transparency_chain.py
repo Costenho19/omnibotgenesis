@@ -210,7 +210,13 @@ class TransparencyChain:
             return None
 
     def get_chain(self, symbol: Optional[str] = None, limit: int = 20) -> List[Dict[str, Any]]:
-        """Return recent transparency log entries, optionally filtered by symbol."""
+        """
+        Return recent transparency log entries, optionally filtered by symbol.
+
+        ISR-022: Internally verifies chain integrity on every read.
+        If chain breaks are detected, logs a WARNING.
+        Returns entries newest-first (as before); integrity check uses oldest-first.
+        """
         if not self._db_url:
             return []
         conn = self._get_conn()
@@ -244,14 +250,51 @@ class TransparencyChain:
             for r in rows:
                 if r.get("ts_utc"):
                     r["ts_utc"] = r["ts_utc"].isoformat()
+
+            # ISR-022: Read-path chain integrity verification
+            # Entries arrive newest-first from DB; verify needs oldest-first
+            if rows:
+                ordered_oldest_first = list(reversed(rows))
+                integrity = self.verify_chain_integrity(ordered_oldest_first)
+                if not integrity["valid"]:
+                    logger.warning(
+                        f"[TransparencyChain][ISR-022] CHAIN INTEGRITY VIOLATION DETECTED "
+                        f"on read path — breaks={integrity['breaks']} "
+                        f"length={integrity['length']} symbol={symbol or 'ALL'}"
+                    )
+
             return rows
         except Exception as e:
             logger.error(f"[TransparencyChain] get_chain failed: {e}")
             try:
                 conn.close()
             except Exception:
-                pass  # conn.close() cleanup — error en cierre es no-crítico
+                pass
             return []
+
+    def get_chain_with_integrity(
+        self, symbol: Optional[str] = None, limit: int = 20
+    ) -> Dict[str, Any]:
+        """
+        Return transparency log entries WITH an attached integrity report.
+
+        ISR-022: This is the recommended method for audit tooling and
+        external verifiers. Returns a dict with:
+          - entries:   list of chain entries (newest-first)
+          - integrity: verification report {valid, length, breaks}
+
+        Example:
+            result = chain.get_chain_with_integrity(symbol="BTC", limit=50)
+            if not result["integrity"]["valid"]:
+                # handle tampering
+        """
+        rows = self.get_chain(symbol=symbol, limit=limit)
+        ordered_oldest_first = list(reversed(rows))
+        integrity = self.verify_chain_integrity(ordered_oldest_first)
+        return {
+            "entries":   rows,
+            "integrity": integrity,
+        }
 
     def verify_chain_integrity(self, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
