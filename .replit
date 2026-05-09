@@ -144,6 +144,7 @@ OMNIX_SIGNING_SECRET_KEY_B64 = "WskCxmBmwJ1Rt2KSO6//muKUQ8LC0ziPBnJanH+ynYQe92rX
 PYTHONPATH = "/home/runner/workspace:/home/runner/workspace/omnix_web"
 VITE_RAILWAY_API_URL = "https://omnibotgenesis-production.up.railway.app"
 OMNIX_WEB_URL = "https://omnibotgenesis-production.up.railway.app"
+OMNIX_ANTI_REPLAY_MODE = "strict"
 
 [userenv.development]
 
