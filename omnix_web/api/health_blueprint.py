@@ -93,7 +93,8 @@ def health_full():
         return jsonify(report.to_dict()), status_code
 
     except Exception as e:
-        logger.warning(f"[health_bp] Deep probe unavailable — using fallback: {e}")
+        _fallback_reason = f"{type(e).__name__}: {e}"
+        logger.warning(f"[health_bp] Deep probe unavailable — using fallback: {_fallback_reason}")
 
     # Fallback — direct DB probe only
     db_ok, db_detail = _probe_db_direct(os.getenv("DATABASE_URL"))
@@ -107,7 +108,7 @@ def health_full():
         "wal_pending":         0,
         "adr_count":           150,
         "pqc_mode":            "dilithium3-persistent" if os.getenv("OMNIX_SIGNING_SECRET_KEY_B64") else "sha256-only",
-        "note":                "fallback mode — omnix_core not in path",
+        "note":                f"fallback mode — {_fallback_reason}",
         "subsystems": [
             {"name": "database", "status": "UP" if db_ok else "DOWN",
              "latency_ms": None, "detail": db_detail, "critical": True},
