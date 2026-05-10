@@ -351,141 +351,6 @@ class TransparencyChain:
         }
 
 
-def compute_chain_completeness_score(
-    entries: List[Dict[str, Any]],
-    pending_table_count: int = 0,
-) -> Dict[str, Any]:
-    """
-    OMNIX DIFFERENTIATOR — Chain Completeness Score (CCS)
-
-    A single 0–100 defensibility score for the transparency audit trail.
-    No other governance framework publishes a single completeness metric.
-    Regulators and CAIOs can answer: "Is the audit trail complete?"
-    with a quantitative breakdown — not just a boolean "valid/invalid".
-
-    Components (max points):
-      chain_integrity_score    (0–40): 40 pts with no breaks; -8 per break.
-      temporal_consistency     (0–30): checks for anomalous time gaps (>10× avg
-                                       or >24 h between consecutive entries).
-      minimum_coverage_score   (0–10): flat 10 pts when chain has ≥1 entry.
-      pending_penalty          (0–30): -3 pts per pending entry (max deduction 30).
-
-    CCS ≥ 90  → COMPLETE     — audit trail fully defensible
-    CCS 70–89 → DEGRADED     — minor gaps; escalation recommended
-    CCS 50–69 → PARTIAL      — significant gaps; integrity uncertain
-    CCS < 50  → COMPROMISED  — audit trail cannot be trusted as complete
-
-    ADR-044 extension | OMNIX-CCS-001
-    """
-    if not entries:
-        return {
-            "ccs":                       0.0,
-            "ccs_verdict":               "NO_DATA",
-            "chain_integrity_score":     0.0,
-            "temporal_consistency_score": 0.0,
-            "pending_penalty":           0.0,
-            "minimum_coverage_score":    0.0,
-            "ccs_breakdown": {
-                "chain_breaks":      0,
-                "pending_entries":   pending_table_count,
-                "entries_analyzed":  0,
-            },
-        }
-
-    # 1. Chain integrity score (0–50)
-    # 50 pts with no breaks; -8 per detected break (Merkle root mismatch OR
-    # prev_log_hash mismatch). Two break types can fire per entry.
-    break_count = 0
-    for i, entry in enumerate(entries):
-        computed_root = compute_rolling_merkle_root(
-            entries[i - 1]["merkle_root"] if i > 0 else "0" * 64,
-            entry.get("payload_hash", ""),
-        )
-        if computed_root != entry.get("merkle_root", ""):
-            break_count += 1
-        if i > 0:
-            if entries[i - 1].get("payload_hash", "") != entry.get("prev_log_hash", ""):
-                break_count += 1
-
-    chain_integrity_score = max(0.0, 50.0 - break_count * 8.0)
-
-    # 2. Temporal consistency score (0–30)
-    # Detects anomalous time gaps: any gap that is both > 24 h (86 400 s)
-    # AND more than 100× the smallest gap in the window is flagged.
-    # Using min_gap (not mean) as the reference prevents a single large gap
-    # from inflating the baseline and hiding itself from detection.
-    temporal_consistency_score = 30.0
-    try:
-        ts_list = []
-        for e in entries:
-            ts_raw = e.get("ts_utc")
-            if ts_raw:
-                if isinstance(ts_raw, str):
-                    from datetime import datetime as _dt, timezone as _tz
-                    ts_list.append(_dt.fromisoformat(ts_raw.replace("Z", "+00:00")))
-                else:
-                    ts_list.append(ts_raw)
-
-        if len(ts_list) >= 2:
-            ts_sorted = sorted(ts_list)
-            gaps = [
-                (ts_sorted[j + 1] - ts_sorted[j]).total_seconds()
-                for j in range(len(ts_sorted) - 1)
-            ]
-            positive_gaps = [g for g in gaps if g > 0]
-            min_gap_s = min(positive_gaps) if positive_gaps else 1.0
-            anomalous = sum(
-                1 for g in gaps
-                if g > 86400 and g > min_gap_s * 100
-            )
-            temporal_consistency_score = max(0.0, 30.0 - anomalous * 10.0)
-    except Exception:
-        pass
-
-    # 3. Minimum coverage (0–20)
-    minimum_coverage_score = 20.0 if len(entries) >= 1 else 0.0
-
-    # 4. Pending penalty (max 30)
-    pending_penalty = min(30.0, pending_table_count * 3.0)
-
-    # Max score: 50 + 30 + 20 = 100 (with 0 pending, 0 breaks, 0 time anomalies)
-    ccs_raw = (
-        chain_integrity_score
-        + temporal_consistency_score
-        + minimum_coverage_score
-        - pending_penalty
-    )
-    ccs = round(max(0.0, min(100.0, ccs_raw)), 1)
-
-    if ccs >= 90:
-        verdict = "COMPLETE"
-    elif ccs >= 70:
-        verdict = "DEGRADED"
-    elif ccs >= 50:
-        verdict = "PARTIAL"
-    else:
-        verdict = "COMPROMISED"
-
-    logger.debug(
-        f"[TransparencyChain][CCS] score={ccs} verdict={verdict} "
-        f"breaks={break_count} pending={pending_table_count} "
-        f"entries={len(entries)}"
-    )
-
-    return {
-        "ccs":                        ccs,
-        "ccs_verdict":                verdict,
-        "chain_integrity_score":      round(chain_integrity_score, 1),
-        "temporal_consistency_score": round(temporal_consistency_score, 1),
-        "pending_penalty":            round(pending_penalty, 1),
-        "minimum_coverage_score":     round(minimum_coverage_score, 1),
-        "ccs_breakdown": {
-            "chain_breaks":     break_count,
-            "pending_entries":  pending_table_count,
-            "entries_analyzed": len(entries),
-        },
-    }
-
     def _get_last_entry(self) -> tuple:
         """Returns (prev_payload_hash, prev_merkle_root) from the last log entry."""
         if not self._db_url:
@@ -802,3 +667,111 @@ def compute_chain_completeness_score(
             json.dumps(payload, sort_keys=True, default=str).encode()
         ).hexdigest()
         return self.append(receipt_id, symbol, decision, payload_hash, event_type)
+
+
+def compute_chain_completeness_score(
+    entries: List[Dict[str, Any]],
+    pending_table_count: int = 0,
+    min_gap_s: int = 60,
+) -> Dict[str, Any]:
+    """
+    OMNIX DIFFERENTIATOR — Chain Completeness Score (CCS)
+    ADR-155: Quantitative Defensibility Metric for Governance Audit Trails.
+
+    Computes a 0-100 score representing the reliability and completeness
+    of the transparency log.
+
+    Scoring Logic:
+      1. Chain Integrity (50 pts): -8 pts per detected break (Merkle mismatch/prev_hash).
+      2. Temporal Consistency (30 pts): -10 pts per anomalous gap (>24h AND >100x min_gap).
+      3. Minimum Coverage (20 pts): 20 if entries exist, 0 if empty.
+      4. Pending Penalty: -3 pts per entry in pending table (max -30).
+
+    Verdicts:
+      90-100: COMPLETE
+      70-89:  DEGRADED
+      50-69:  PARTIAL
+      <50:    COMPROMISED
+      EMPTY:  NO_DATA
+    """
+    if not entries:
+        return {
+            "ccs": 0.0,
+            "ccs_verdict": "NO_DATA",
+            "chain_integrity_score": 0.0,
+            "temporal_consistency_score": 0.0,
+            "pending_penalty": 0.0,
+            "minimum_coverage_score": 0.0,
+            "ccs_breakdown": {
+                "chain_breaks": 0,
+                "pending_entries": pending_table_count,
+                "entries_analyzed": 0,
+            }
+        }
+
+    # 1. Chain Integrity Score (max 50)
+    # verify_chain_integrity logic but integrated for scoring
+    breaks = 0
+    for i in range(len(entries)):
+        # Merkle break
+        computed_root = compute_rolling_merkle_root(
+            entries[i-1]["merkle_root"] if i > 0 else "0" * 64,
+            entries[i]["payload_hash"]
+        )
+        if computed_root != entries[i]["merkle_root"]:
+            breaks += 1
+
+        # Continuity break
+        if i > 0:
+            if entries[i-1]["payload_hash"] != entries[i].get("prev_log_hash"):
+                breaks += 1
+
+    integrity_score = max(0.0, 50.0 - (breaks * 8.0))
+
+    # 2. Temporal Consistency Score (max 30)
+    anomalous_gaps = 0
+    for i in range(1, len(entries)):
+        try:
+            ts1 = datetime.fromisoformat(entries[i-1]["ts_utc"])
+            ts2 = datetime.fromisoformat(entries[i]["ts_utc"])
+            gap = (ts2 - ts1).total_seconds()
+            # Gap > 24h AND > 100x the minimum expected gap
+            if gap > 86400 and gap > (min_gap_s * 100):
+                anomalous_gaps += 1
+        except Exception:
+            continue
+
+    temporal_score = max(0.0, 30.0 - (anomalous_gaps * 10.0))
+
+    # 3. Minimum Coverage (20 pts)
+    coverage_score = 20.0 if len(entries) > 0 else 0.0
+
+    # 4. Pending Penalty
+    pending_penalty = min(30.0, pending_table_count * 3.0)
+
+    # Final CCS
+    ccs = max(0.0, integrity_score + temporal_score + coverage_score - pending_penalty)
+
+    # Verdict
+    if ccs >= 90:
+        verdict = "COMPLETE"
+    elif ccs >= 70:
+        verdict = "DEGRADED"
+    elif ccs >= 50:
+        verdict = "PARTIAL"
+    else:
+        verdict = "COMPROMISED"
+
+    return {
+        "ccs": round(ccs, 1),
+        "ccs_verdict": verdict,
+        "chain_integrity_score": integrity_score,
+        "temporal_consistency_score": temporal_score,
+        "pending_penalty": pending_penalty,
+        "minimum_coverage_score": coverage_score,
+        "ccs_breakdown": {
+            "chain_breaks": breaks,
+            "pending_entries": pending_table_count,
+            "entries_analyzed": len(entries),
+        }
+    }

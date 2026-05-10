@@ -102,7 +102,11 @@ class TestGTPDNormal:
         domain = f"gtpd-valid-{uuid.uuid4().hex[:8]}"
         avm = AssumptionValidityMonitor(drift_threshold=40.0)
 
-        baseline = {"volatility": 20.0, "liquidity": 50.0, "sentiment": 60.0}
+        baseline = {
+            "probability_score": 65.0, "signal_coherence": 70.0,
+            "risk_exposure": 35.0, "stress_resilience": 60.0,
+            "trend_persistence": 55.0, "logic_consistency": 72.0,
+        }
         avm.save_calibration_snapshot(domain=domain, baseline_signals=baseline)
 
         # Force near-threshold drift scores into history (adversarial-like)
@@ -115,7 +119,11 @@ class TestGTPDNormal:
             _gtpd_drift_history[domain] = near_threshold_scores
 
         # Signals close to baseline → low drift → VALID
-        current = {"volatility": 21.0, "liquidity": 51.0, "sentiment": 61.0}
+        current = {
+            "probability_score": 66.0, "signal_coherence": 71.0,
+            "risk_exposure": 36.0, "stress_resilience": 61.0,
+            "trend_persistence": 56.0, "logic_consistency": 73.0,
+        }
         result = avm.evaluate(domain=domain, signals=current)
 
         # GTPD may fire CONFIRMED but must NEVER flip is_valid to False
@@ -133,10 +141,18 @@ class TestGTPDNormal:
         avm = AssumptionValidityMonitor(drift_threshold=40.0)
         avm.save_calibration_snapshot(
             domain=domain,
-            baseline_signals={"volatility": 20.0, "liquidity": 50.0, "sentiment": 60.0},
+            baseline_signals={
+                "probability_score": 65.0, "signal_coherence": 70.0,
+                "risk_exposure": 35.0, "stress_resilience": 60.0,
+                "trend_persistence": 55.0, "logic_consistency": 72.0,
+            },
         )
 
-        result = avm.evaluate(domain=domain, signals={"volatility": 21.0, "liquidity": 51.0, "sentiment": 61.0})
+        result = avm.evaluate(domain=domain, signals={
+            "probability_score": 66.0, "signal_coherence": 71.0,
+            "risk_exposure": 36.0, "stress_resilience": 61.0,
+            "trend_persistence": 56.0, "logic_consistency": 73.0,
+        })
         assert result.is_valid is True
         assert isinstance(result.probe_report, dict)
         required_keys = {"probe_id", "domain", "probe_score", "clustering_coefficient",
@@ -151,10 +167,18 @@ class TestGTPDNormal:
         avm = AssumptionValidityMonitor(drift_threshold=40.0)
         avm.save_calibration_snapshot(
             domain=domain,
-            baseline_signals={"volatility": 20.0, "liquidity": 50.0, "sentiment": 60.0},
+            baseline_signals={
+                "probability_score": 65.0, "signal_coherence": 70.0,
+                "risk_exposure": 35.0, "stress_resilience": 60.0,
+                "trend_persistence": 55.0, "logic_consistency": 72.0,
+            },
         )
 
-        result = avm.evaluate(domain=domain, signals={"volatility": 20.5, "liquidity": 50.5, "sentiment": 60.5})
+        result = avm.evaluate(domain=domain, signals={
+            "probability_score": 65.5, "signal_coherence": 70.5,
+            "risk_exposure": 35.5, "stress_resilience": 60.5,
+            "trend_persistence": 55.5, "logic_consistency": 72.5,
+        })
         d = result.to_dict()
         assert "probe_report" in d
         assert d["probe_report"]["probe_verdict"] in {
@@ -392,11 +416,11 @@ class TestNUAAdversarial:
     def test_identical_values_are_fabrication_likely(self):
         """All signals exactly equal → FABRICATION_LIKELY."""
         packet = self._form_packet({
-            "volatility":     75.0,
-            "liquidity":      75.0,
-            "sentiment":      75.0,
-            "momentum":       75.0,
-            "trend_strength": 75.0,
+            "volatility":      75.0,
+            "correlation":     75.0,
+            "liquidity_score": 75.0,
+            "sentiment_score": 75.0,
+            "drawdown_pct":    75.0,
         })
         nua = packet.nua_report
         assert nua["nua_verdict"] == "FABRICATION_LIKELY", (
@@ -406,13 +430,13 @@ class TestNUAAdversarial:
         assert nua["uniformity_score"] >= 70.0
 
     def test_round_multiples_with_narrow_range_are_fabrication_likely(self):
-        """Values all on ×0.05 multiples with narrow range → FABRICATION_LIKELY."""
+        """Values all on ×0.25 multiples with narrow range → FABRICATION_LIKELY."""
         packet = self._form_packet({
-            "volatility":     50.00,
-            "liquidity":      50.25,
-            "sentiment":      50.50,
-            "momentum":       50.75,
-            "trend_strength": 51.00,
+            "volatility":      50.00,
+            "correlation":     50.25,
+            "liquidity_score": 50.50,
+            "sentiment_score": 50.75,
+            "drawdown_pct":    51.00,
         })
         nua = packet.nua_report
         # Range=1.0, all round, CV very low → high uniformity score
@@ -765,16 +789,16 @@ class TestCCSAdversarial:
 
         result = compute_chain_completeness_score(tampered, pending_table_count=0)
         assert result["ccs_breakdown"]["chain_breaks"] >= 1
-        assert result["chain_integrity_score"] < 40.0
+        assert result["chain_integrity_score"] < 50.0
 
     def test_many_breaks_reaches_compromised(self):
-        """5 breaks (40 pts - 40 pts = 0) should push ccs into COMPROMISED."""
+        """7 breaks (7×8=56 > max 50) should push chain_integrity to 0."""
         from omnix_core.evidence.transparency_chain import compute_chain_completeness_score
-        entries = self._make_chain_entries(6)
+        entries = self._make_chain_entries(9)
 
         tampered = [dict(e) for e in entries]
-        # Corrupt merkle_root of 5 entries → 5 breaks × -8 = -40 → integrity=0
-        for i in range(1, 6):
+        # Corrupt merkle_root of 7 entries → 7 breaks × -8 = -56 → max(0, 50-56) = 0
+        for i in range(1, 8):
             tampered[i]["merkle_root"] = f"TAMPERED-{i}" + "0" * 55
 
         result = compute_chain_completeness_score(tampered, pending_table_count=0)

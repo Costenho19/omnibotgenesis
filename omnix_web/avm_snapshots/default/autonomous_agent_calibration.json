@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-AADC66BA8F",
   "parameter_version": "1.aadc66ba8f",
   "domain": "autonomous_agent",
-  "calibrated_at": "2026-05-10T10:34:33.055708+00:00",
-  "calibrated_at_epoch": 1778409273.055708,
   "baseline_signals": {
-    "probability_score": 41.46,
     "risk_exposure": 24.24,
     "signal_coherence": 73.2,
-    "trend_persistence": 70.68,
+    "logic_consistency": 54.6,
+    "probability_score": 41.46,
     "stress_resilience": 62.32,
-    "logic_consistency": 54.6
+    "trend_persistence": 70.68
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_8.3"
-  ]
+  ],
+  "calibrated_at": "2026-05-10T10:34:33.055708+00:00",
+  "calibrated_at_epoch": 1778409273.055708
 }
