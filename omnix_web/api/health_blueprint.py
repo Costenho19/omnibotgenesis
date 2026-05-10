@@ -211,11 +211,11 @@ def _probe_wal() -> SubsystemHealth:
         import psycopg2
         conn = psycopg2.connect(db_url, connect_timeout=5)
         cur  = conn.cursor()
-        # Verify write-path schema: check receipt columns exist
+        # Verify write-path: table exists and has the 3 core columns
         cur.execute("""
             SELECT column_name FROM information_schema.columns
             WHERE table_name = 'decision_receipts'
-              AND column_name IN ('receipt_id','governance_hash','created_at')
+              AND column_name IN ('receipt_id', 'content_hash', 'created_at')
         """)
         found = {row[0] for row in cur.fetchall()}
         cur.close()
@@ -328,10 +328,10 @@ def _probe_governance_engine() -> SubsystemHealth:
         import psycopg2
         conn = psycopg2.connect(db_url, connect_timeout=5)
         cur  = conn.cursor()
-        # Governance pipeline columns that must exist for the 11-checkpoint engine to work
+        # Core governance columns that must exist (actual schema from decision_receipt.py)
         governance_cols = {
-            'receipt_id', 'governance_hash', 'decision_id',
-            'pqc_signature', 'created_at'
+            'receipt_id', 'content_hash', 'signature',
+            'signature_algorithm', 'domain'
         }
         cur.execute("""
             SELECT column_name FROM information_schema.columns
