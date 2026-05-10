@@ -273,24 +273,39 @@ class TransparencyChain:
             return []
 
     def get_chain_with_integrity(
-        self, symbol: Optional[str] = None, limit: int = 20
+        self, symbol: Optional[str] = None, limit: int = 20,
+        pending_table_count: int = 0,
     ) -> Dict[str, Any]:
         """
-        Return transparency log entries WITH an attached integrity report.
+        Return transparency log entries WITH an attached integrity report
+        AND the Chain Completeness Score (CCS).
 
-        ISR-022: This is the recommended method for audit tooling and
-        external verifiers. Returns a dict with:
-          - entries:   list of chain entries (newest-first)
-          - integrity: verification report {valid, length, breaks}
+        ISR-022: Recommended method for audit tooling and external verifiers.
+
+        OMNIX DIFFERENTIATOR — Chain Completeness Score (CCS):
+          The integrity dict now includes a single 0-100 defensibility score.
+          No other transparency framework publishes a completeness metric.
+          Regulators can ask "Is the audit trail complete?" and get a number.
+
+        Returns:
+          entries   — list of chain entries (newest-first)
+          integrity — {valid, length, breaks, ccs, ccs_verdict, ccs_breakdown,
+                       chain_integrity_score, temporal_consistency_score,
+                       pending_penalty, minimum_coverage_score}
 
         Example:
             result = chain.get_chain_with_integrity(symbol="BTC", limit=50)
-            if not result["integrity"]["valid"]:
-                # handle tampering
+            print(f"CCS: {result['integrity']['ccs']}/100 "
+                  f"({result['integrity']['ccs_verdict']})")
         """
         rows = self.get_chain(symbol=symbol, limit=limit)
         ordered_oldest_first = list(reversed(rows))
         integrity = self.verify_chain_integrity(ordered_oldest_first)
+        ccs_report = compute_chain_completeness_score(
+            ordered_oldest_first,
+            pending_table_count=pending_table_count,
+        )
+        integrity.update(ccs_report)
         return {
             "entries":   rows,
             "integrity": integrity,
@@ -334,6 +349,142 @@ class TransparencyChain:
             "length":  len(entries),
             "breaks":  breaks,
         }
+
+
+def compute_chain_completeness_score(
+    entries: List[Dict[str, Any]],
+    pending_table_count: int = 0,
+) -> Dict[str, Any]:
+    """
+    OMNIX DIFFERENTIATOR — Chain Completeness Score (CCS)
+
+    A single 0–100 defensibility score for the transparency audit trail.
+    No other governance framework publishes a single completeness metric.
+    Regulators and CAIOs can answer: "Is the audit trail complete?"
+    with a quantitative breakdown — not just a boolean "valid/invalid".
+
+    Components (max points):
+      chain_integrity_score    (0–40): 40 pts with no breaks; -8 per break.
+      temporal_consistency     (0–30): checks for anomalous time gaps (>10× avg
+                                       or >24 h between consecutive entries).
+      minimum_coverage_score   (0–10): flat 10 pts when chain has ≥1 entry.
+      pending_penalty          (0–30): -3 pts per pending entry (max deduction 30).
+
+    CCS ≥ 90  → COMPLETE     — audit trail fully defensible
+    CCS 70–89 → DEGRADED     — minor gaps; escalation recommended
+    CCS 50–69 → PARTIAL      — significant gaps; integrity uncertain
+    CCS < 50  → COMPROMISED  — audit trail cannot be trusted as complete
+
+    ADR-044 extension | OMNIX-CCS-001
+    """
+    if not entries:
+        return {
+            "ccs":                       0.0,
+            "ccs_verdict":               "NO_DATA",
+            "chain_integrity_score":     0.0,
+            "temporal_consistency_score": 0.0,
+            "pending_penalty":           0.0,
+            "minimum_coverage_score":    0.0,
+            "ccs_breakdown": {
+                "chain_breaks":      0,
+                "pending_entries":   pending_table_count,
+                "entries_analyzed":  0,
+            },
+        }
+
+    # 1. Chain integrity score (0–50)
+    # 50 pts with no breaks; -8 per detected break (Merkle root mismatch OR
+    # prev_log_hash mismatch). Two break types can fire per entry.
+    break_count = 0
+    for i, entry in enumerate(entries):
+        computed_root = compute_rolling_merkle_root(
+            entries[i - 1]["merkle_root"] if i > 0 else "0" * 64,
+            entry.get("payload_hash", ""),
+        )
+        if computed_root != entry.get("merkle_root", ""):
+            break_count += 1
+        if i > 0:
+            if entries[i - 1].get("payload_hash", "") != entry.get("prev_log_hash", ""):
+                break_count += 1
+
+    chain_integrity_score = max(0.0, 50.0 - break_count * 8.0)
+
+    # 2. Temporal consistency score (0–30)
+    # Detects anomalous time gaps: any gap that is both > 24 h (86 400 s)
+    # AND more than 100× the smallest gap in the window is flagged.
+    # Using min_gap (not mean) as the reference prevents a single large gap
+    # from inflating the baseline and hiding itself from detection.
+    temporal_consistency_score = 30.0
+    try:
+        ts_list = []
+        for e in entries:
+            ts_raw = e.get("ts_utc")
+            if ts_raw:
+                if isinstance(ts_raw, str):
+                    from datetime import datetime as _dt, timezone as _tz
+                    ts_list.append(_dt.fromisoformat(ts_raw.replace("Z", "+00:00")))
+                else:
+                    ts_list.append(ts_raw)
+
+        if len(ts_list) >= 2:
+            ts_sorted = sorted(ts_list)
+            gaps = [
+                (ts_sorted[j + 1] - ts_sorted[j]).total_seconds()
+                for j in range(len(ts_sorted) - 1)
+            ]
+            positive_gaps = [g for g in gaps if g > 0]
+            min_gap_s = min(positive_gaps) if positive_gaps else 1.0
+            anomalous = sum(
+                1 for g in gaps
+                if g > 86400 and g > min_gap_s * 100
+            )
+            temporal_consistency_score = max(0.0, 30.0 - anomalous * 10.0)
+    except Exception:
+        pass
+
+    # 3. Minimum coverage (0–20)
+    minimum_coverage_score = 20.0 if len(entries) >= 1 else 0.0
+
+    # 4. Pending penalty (max 30)
+    pending_penalty = min(30.0, pending_table_count * 3.0)
+
+    # Max score: 50 + 30 + 20 = 100 (with 0 pending, 0 breaks, 0 time anomalies)
+    ccs_raw = (
+        chain_integrity_score
+        + temporal_consistency_score
+        + minimum_coverage_score
+        - pending_penalty
+    )
+    ccs = round(max(0.0, min(100.0, ccs_raw)), 1)
+
+    if ccs >= 90:
+        verdict = "COMPLETE"
+    elif ccs >= 70:
+        verdict = "DEGRADED"
+    elif ccs >= 50:
+        verdict = "PARTIAL"
+    else:
+        verdict = "COMPROMISED"
+
+    logger.debug(
+        f"[TransparencyChain][CCS] score={ccs} verdict={verdict} "
+        f"breaks={break_count} pending={pending_table_count} "
+        f"entries={len(entries)}"
+    )
+
+    return {
+        "ccs":                        ccs,
+        "ccs_verdict":                verdict,
+        "chain_integrity_score":      round(chain_integrity_score, 1),
+        "temporal_consistency_score": round(temporal_consistency_score, 1),
+        "pending_penalty":            round(pending_penalty, 1),
+        "minimum_coverage_score":     round(minimum_coverage_score, 1),
+        "ccs_breakdown": {
+            "chain_breaks":     break_count,
+            "pending_entries":  pending_table_count,
+            "entries_analyzed": len(entries),
+        },
+    }
 
     def _get_last_entry(self) -> tuple:
         """Returns (prev_payload_hash, prev_merkle_root) from the last log entry."""

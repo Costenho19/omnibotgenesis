@@ -26,10 +26,10 @@ These modules implement governance invariants. They **may not be modified** with
 | Module | Responsibility | Governing ADR(s) | Invariant |
 |---|---|---|---|
 | `omnix_core/governance/external_evaluator.py` | 11-checkpoint governance pipeline | ADR-028, ADR-040 | Every evaluation produces a deterministic decision |
-| `omnix_core/evidence/decision_receipt.py` | PQC-signed receipt generation | ADR-078, ADR-085, ADR-097 | Every decision has exactly one receipt; every receipt is tamper-evident |
-| `omnix_core/evidence/transparency_chain.py` | Append-only audit log | ADR-044 | Every receipt entry is chained; chain tampering is detectable on read |
+| `omnix_core/evidence/decision_receipt.py` | PQC-signed receipt generation + Genealogy Chain | ADR-078, ADR-085, ADR-097, **ADR-154** | Every decision has exactly one receipt; every receipt is tamper-evident; sequential decisions for the same asset are cryptographically linked |
+| `omnix_core/evidence/transparency_chain.py` | Append-only audit log + Chain Completeness Score | ADR-044, **ADR-155** | Every receipt entry is chained; chain tampering is detectable on read; every integrity report carries a 0–100 completeness score |
 | `omnix_core/security/pqc_security.py` | Post-quantum cryptography | ADR-060 | Dilithium-3 (ML-DSA-65) is the signing algorithm; never downgraded silently |
-| `omnix_core/governance/assumption_validity_monitor.py` | AVM per-tenant baselines | ADR-074, ADR-120, ISR-001 | Tenant calibrations are isolated; no cross-tenant contamination |
+| `omnix_core/governance/assumption_validity_monitor.py` | AVM per-tenant baselines + Threshold Probe Detection | ADR-074, ADR-120, ISR-001, **ADR-152** | Tenant calibrations are isolated; no cross-tenant contamination; systematic threshold probing is detected and recorded |
 | `omnix_core/governance/semantic_version_registry.py` | Engine version semantics | ISR-008 | Every engine version maps to an explicit checkpoint contract |
 | `omnix_core/governance/auto_modification_guard.py` | AMG — threshold change control | ADR-144 | AVM thresholds cannot change by more than 10%/event or 30% cumulative without approval |
 | `omnix_core/governance/scope_authorization_engine.py` | Scope authorization records | ADR-147 | Every governance scope is PQC-signed at issuance |
@@ -44,7 +44,7 @@ These modules implement governance-adjacent logic. Changes require a pull reques
 |---|---|
 | `omnix_core/governance/avm_db_bridge.py` | AVM DB persistence |
 | `omnix_core/governance/context_admission_gate.py` | Market condition admission |
-| `omnix_core/governance/llm_isolation_boundary.py` | LLM↔governance structural separation |
+| `omnix_core/governance/llm_isolation_boundary.py` | LLM↔governance structural separation + **Numeric Uniformity Anomaly detection (ADR-153)** |
 | `omnix_core/evidence/payload_key_manager.py` | Payload encryption key versioning |
 | `omnix_core/evidence/anti_replay.py` | Receipt replay prevention |
 | `omnix_services/ai_service/input_sanitizer.py` | LLM input sanitization |

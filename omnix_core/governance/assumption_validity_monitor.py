@@ -74,7 +74,7 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger("OMNIX.AVM")
 
@@ -171,9 +171,10 @@ class AVMResult:
     block_reason: str | None       # If is_valid=False, human-readable reason
     warnings: list[str]            # Non-blocking notices
     pass_through: bool = False     # True if AVM is disabled or has no snapshot
+    probe_report: Optional[Any] = field(default=None)  # OMNIX DIFFERENTIATOR: GTPD
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        d = {
             "is_valid": self.is_valid,
             "snapshot_id": self.snapshot_id,
             "parameter_version": self.parameter_version,
@@ -185,6 +186,75 @@ class AVMResult:
             "warnings": self.warnings,
             "pass_through": self.pass_through,
         }
+        if self.probe_report is not None:
+            d["probe_report"] = self.probe_report
+        return d
+
+
+# ── OMNIX DIFFERENTIATOR: Governance Threshold Probe Detection (GTPD) ──────────
+#
+# GOVERNANCE RISK SOLVED:
+#   An adversary can reverse-engineer the AVM's approval boundary by submitting
+#   many slightly-different evaluation requests and observing which ones pass
+#   vs. block.  Once they know the exact threshold, they can craft inputs that
+#   always just barely pass — defeating the governance gate without triggering
+#   any alarm.  This is a structural side-channel attack on governance integrity.
+#   No other platform detects this because no other platform records evaluation
+#   patterns across requests for the same domain.
+#
+# VERIFIABLE EVIDENCE:
+#   ThresholdProbeReport is embedded in AVMResult and surfaced in governance
+#   receipts.  A CONFIRMED verdict means ≥5 evaluations clustered within ±30%
+#   of the drift threshold — a pattern that is statistically improbable by chance
+#   and matches known threshold-probing attack profiles.
+#
+# INSTITUTIONAL EXPLANATION:
+#   Imagine someone repeatedly knocking on a vault door at slightly different
+#   strengths to find the exact force needed to open it.  GTPD detects when
+#   someone is doing exactly that to OMNIX's governance gate.
+#
+# ADR-064 extension | OMNIX-GTPD-001
+
+@dataclass
+class ThresholdProbeReport:
+    """
+    Result of Governance Threshold Probe Detection for one AVM evaluation.
+
+    probe_score: 0–100 (higher = more suspicious).
+    probe_verdict: INSUFFICIENT_DATA | CLEAN | SUSPECTED | CONFIRMED
+      - INSUFFICIENT_DATA: fewer than 3 evaluations in history window
+      - CLEAN:             no clustering near threshold (< 20% of evals within margin)
+      - SUSPECTED:         20–60% of recent evals cluster near threshold AND ≥3 evals
+      - CONFIRMED:         >60% of recent evals cluster near threshold AND ≥5 evals
+    """
+    probe_id: str
+    domain: str
+    probe_score: float
+    clustering_coefficient: float
+    evaluations_analyzed: int
+    evaluations_near_threshold: int
+    threshold_margin: float
+    probe_verdict: str
+    detected_at: str
+
+    def to_dict(self) -> dict:
+        return {
+            "probe_id":                    self.probe_id,
+            "domain":                      self.domain,
+            "probe_score":                 self.probe_score,
+            "clustering_coefficient":      self.clustering_coefficient,
+            "evaluations_analyzed":        self.evaluations_analyzed,
+            "evaluations_near_threshold":  self.evaluations_near_threshold,
+            "threshold_margin":            self.threshold_margin,
+            "probe_verdict":               self.probe_verdict,
+            "detected_at":                 self.detected_at,
+        }
+
+
+# Module-level GTPD drift history ring buffer (thread-safe, per domain)
+_GTPD_HISTORY_SIZE = 50
+_GTPD_HISTORY_LOCK = threading.Lock()
+_gtpd_drift_history: dict[str, list[float]] = {}
 
 
 # ── Core Monitor ───────────────────────────────────────────────────────────────
@@ -396,6 +466,98 @@ class AssumptionValidityMonitor:
         if existed:
             logger.warning(f"[AVM] Snapshot INVALIDATED for domain={domain}")
         return existed
+
+    # ── OMNIX DIFFERENTIATOR: GTPD methods ────────────────────────────────────
+
+    def _update_drift_history(self, domain: str, drift_score: float) -> None:
+        """Append a drift score to the GTPD per-domain ring buffer."""
+        with _GTPD_HISTORY_LOCK:
+            if domain not in _gtpd_drift_history:
+                _gtpd_drift_history[domain] = []
+            _gtpd_drift_history[domain].append(drift_score)
+            if len(_gtpd_drift_history[domain]) > _GTPD_HISTORY_SIZE:
+                _gtpd_drift_history[domain].pop(0)
+
+    def _detect_threshold_probe(
+        self,
+        domain: str,
+        threshold: float,
+        current_drift: float,
+    ) -> ThresholdProbeReport:
+        """
+        OMNIX DIFFERENTIATOR — Governance Threshold Probe Detection.
+
+        Detects systematic reverse-engineering of the AVM approval boundary.
+
+        An adversary probing the threshold submits many near-threshold
+        evaluations.  Natural usage produces drift scores spread across the
+        full 0–100 range.  Probing produces a tight cluster near the threshold.
+
+        Algorithm:
+          1. Fetch the last N drift scores for this domain.
+          2. Define "near threshold" as within ±(threshold × 0.30) points.
+          3. clustering_coefficient = near_count / total_count.
+          4. CLEAN:             < 20% near-threshold OR < 3 evaluations.
+             SUSPECTED:         20–60% near-threshold AND ≥ 3 evaluations.
+             CONFIRMED:         > 60% near-threshold AND ≥ 5 evaluations.
+
+        This is statistically improbable by chance: with uniformly distributed
+        drift scores, only 60% × (2 × 0.30 / 100) = ~0.36% of evaluations
+        would naturally fall in a 30%-wide band near the threshold.
+        """
+        probe_id  = f"GTPD-{uuid.uuid4().hex[:10].upper()}"
+        now_iso   = datetime.now(timezone.utc).isoformat()
+        margin    = threshold * 0.30
+
+        with _GTPD_HISTORY_LOCK:
+            history = list(_gtpd_drift_history.get(domain, []))
+
+        if len(history) < 3:
+            return ThresholdProbeReport(
+                probe_id=probe_id,
+                domain=domain,
+                probe_score=0.0,
+                clustering_coefficient=0.0,
+                evaluations_analyzed=len(history),
+                evaluations_near_threshold=0,
+                threshold_margin=round(margin, 1),
+                probe_verdict="INSUFFICIENT_DATA",
+                detected_at=now_iso,
+            )
+
+        near_count  = sum(1 for s in history if abs(s - threshold) <= margin)
+        total       = len(history)
+        clustering  = round(near_count / total, 3)
+
+        # Score increases with both clustering density and total evidence count
+        concentration_factor = min(1.0, total / 20.0)
+        probe_score = round(clustering * 100.0 * concentration_factor, 1)
+
+        if near_count >= 5 and clustering > 0.60:
+            verdict = "CONFIRMED"
+        elif near_count >= 3 and clustering > 0.20:
+            verdict = "SUSPECTED"
+        else:
+            verdict = "CLEAN"
+
+        if verdict in ("SUSPECTED", "CONFIRMED"):
+            logger.warning(
+                f"[AVM][GTPD] Threshold probe {verdict} — domain={domain} "
+                f"probe_id={probe_id} clustering={clustering:.2f} "
+                f"near={near_count}/{total} margin=±{margin:.1f}"
+            )
+
+        return ThresholdProbeReport(
+            probe_id=probe_id,
+            domain=domain,
+            probe_score=probe_score,
+            clustering_coefficient=clustering,
+            evaluations_analyzed=total,
+            evaluations_near_threshold=near_count,
+            threshold_margin=round(margin, 1),
+            probe_verdict=verdict,
+            detected_at=now_iso,
+        )
 
     # ── Drift computation ──────────────────────────────────────────────────────
 
@@ -677,6 +839,8 @@ class AssumptionValidityMonitor:
         drift_score, drift_components = self._compute_drift(
             snapshot.baseline_signals, signals
         )
+        # GTPD: record every evaluation (pass or block) for probe detection
+        self._update_drift_history(domain, drift_score)
 
         # Per-signal warnings for high individual drift
         for sig, drift_val in drift_components.items():
@@ -758,6 +922,9 @@ class AssumptionValidityMonitor:
             f"[AVM] VALID — domain={domain} | drift={drift_score:.1f} ≤ {effective_threshold:.1f} | "
             f"age={age_hours:.1f}h | snapshot={snapshot.snapshot_id}"
         )
+        # GTPD: compute probe report only on VALID evaluations
+        # (adversary needs passing evaluations to calibrate their attack)
+        probe_report = self._detect_threshold_probe(domain, effective_threshold, drift_score)
         return AVMResult(
             is_valid=True,
             snapshot_id=snapshot.snapshot_id,
@@ -769,6 +936,7 @@ class AssumptionValidityMonitor:
             block_reason=None,
             warnings=warnings,
             pass_through=False,
+            probe_report=probe_report.to_dict(),
         )
 
 

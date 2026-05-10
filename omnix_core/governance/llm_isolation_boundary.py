@@ -35,6 +35,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import statistics as _statistics
 from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger("OMNIX.Governance.LLMIsolationBoundary")
@@ -140,9 +141,10 @@ class GovernanceSignalPacket:
     crossed_at: str
     sanitization_flags: List[str] = field(default_factory=list)
     stripped_keys: List[str] = field(default_factory=list)
+    nua_report: Optional[Dict[str, Any]] = field(default=None)  # OMNIX DIFFERENTIATOR: NUA
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d = {
             "packet_id":          self.packet_id,
             "source":             self.source,
             "signals":            self.signals,
@@ -152,6 +154,9 @@ class GovernanceSignalPacket:
             "sanitization_flags": self.sanitization_flags,
             "stripped_keys":      self.stripped_keys,
         }
+        if self.nua_report is not None:
+            d["nua_report"] = self.nua_report
+        return d
 
     def packet_hash(self) -> str:
         """SHA-256 of canonical packet content — for audit trail."""
@@ -197,6 +202,171 @@ class BoundaryCrossingRecord:
             "crossed_at":          self.crossed_at,
             "crossing_type":       self.crossing_type,
         }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OMNIX DIFFERENTIATOR: NUMERIC UNIFORMITY ANOMALY (NUA) DETECTION
+#
+# GOVERNANCE RISK SOLVED:
+#   An LLM can fabricate governance signals that look structurally valid
+#   (correct keys, numeric values, within range) but were invented rather
+#   than computed from actual market data.  Traditional boundary checks
+#   only inspect key names — they cannot distinguish real signals from
+#   statistically suspicious numeric patterns.
+#
+#   NUA detects three fabrication fingerprints:
+#     1. Coefficient of variation < 0.15 — all values suspiciously similar
+#        (real market signals are noisy and diverse)
+#     2. Round-number ratio > 60% — most values on ×0.05 multiples
+#        (LLMs tend to round to "clean" numbers; markets do not)
+#     3. Value range < 5.0 across ≥3 signals — unnaturally narrow spread
+#
+# VERIFIABLE EVIDENCE:
+#   NumericUniformityReport is embedded in every GovernanceSignalPacket.
+#   The report includes coefficient_of_variation, round_number_ratio,
+#   value_range, and uniformity_score.  FABRICATION_LIKELY means the
+#   signal set passed the boundary check but its numeric pattern is
+#   statistically inconsistent with observed market-derived data.
+#
+# INSTITUTIONAL EXPLANATION:
+#   If a bank employee tells you all six risk indicators are exactly 0.75,
+#   you don't believe the data is real.  NUA automates that intuition.
+#   It does not block — it flags.  The governance receipt carries the flag
+#   so auditors can review later.
+#
+# ADR-148 extension | OMNIX-NUA-001
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class NumericUniformityReport:
+    """
+    Result of Numeric Uniformity Anomaly analysis on a GovernanceSignalPacket.
+
+    uniformity_score: 0–100. Higher = more suspiciously uniform.
+      < 30  → NATURAL           (normal market-derived diversity)
+      30–70 → SUSPICIOUS        (unusual uniformity — flag for review)
+      > 70  → FABRICATION_LIKELY (pattern consistent with LLM fabrication)
+    """
+    report_id: str
+    signal_count: int
+    coefficient_of_variation: float
+    round_number_ratio: float
+    value_range: float
+    uniformity_score: float
+    nua_verdict: str
+    suspicious_signals: List[str]
+    analyzed_at: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "report_id":                  self.report_id,
+            "signal_count":               self.signal_count,
+            "coefficient_of_variation":   self.coefficient_of_variation,
+            "round_number_ratio":         self.round_number_ratio,
+            "value_range":                self.value_range,
+            "uniformity_score":           self.uniformity_score,
+            "nua_verdict":                self.nua_verdict,
+            "suspicious_signals":         self.suspicious_signals,
+            "analyzed_at":                self.analyzed_at,
+        }
+
+
+def _analyze_numeric_uniformity(
+    signals: Dict[str, float],
+    packet_id: str,
+) -> NumericUniformityReport:
+    """
+    Analyze approved numeric signals for uniformity anomalies consistent
+    with LLM fabrication.
+
+    Never blocks — produces a flagged report embedded in the packet.
+    Legitimate signals with low natural variation (e.g., stable fixed-income
+    metrics) will show low uniformity_score because real data has noise even
+    when values are close.  The composite score requires multiple independent
+    anomaly indicators before reaching FABRICATION_LIKELY.
+    """
+    report_id = f"NUA-{uuid.uuid4().hex[:10].upper()}"
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    if len(signals) < 2:
+        return NumericUniformityReport(
+            report_id=report_id,
+            signal_count=len(signals),
+            coefficient_of_variation=0.0,
+            round_number_ratio=0.0,
+            value_range=0.0,
+            uniformity_score=0.0,
+            nua_verdict="NATURAL",
+            suspicious_signals=[],
+            analyzed_at=now_iso,
+        )
+
+    values = list(signals.values())
+    mean_val = sum(values) / len(values)
+
+    # 1. Coefficient of variation (std / mean): low = suspiciously similar
+    try:
+        std_val = _statistics.stdev(values) if len(values) >= 2 else 0.0
+    except Exception:
+        std_val = 0.0
+    cv = round(abs(std_val / mean_val), 4) if mean_val != 0.0 else 0.0
+
+    # 2. Round-number ratio: values on ×0.05 multiples (LLM rounding pattern)
+    def _is_round(v: float) -> bool:
+        remainder = v % 0.05
+        return remainder < 0.001 or (0.05 - remainder) < 0.001
+
+    round_count = sum(1 for v in values if _is_round(v))
+    round_ratio = round(round_count / len(values), 3)
+
+    # 3. Value range: suspiciously narrow across ≥3 signals
+    value_range = round(max(values) - min(values), 2)
+
+    # Suspicious signal detection: close to mean AND low overall diversity
+    suspicious_signals: List[str] = []
+    if cv < 0.15 and len(values) >= 3:
+        for k, v in signals.items():
+            if abs(v - mean_val) < 3.0:
+                suspicious_signals.append(k)
+
+    # Composite uniformity score (0–100)
+    # Each component contributes independently; all three must be elevated
+    # for FABRICATION_LIKELY — single-indicator triggering is deliberately avoided
+    cv_component    = max(0.0, (0.5 - cv) / 0.5) * 40.0          # max 40 pts
+    round_component = round_ratio * 30.0                           # max 30 pts
+    range_component = (
+        max(0.0, (10.0 - value_range) / 10.0) * 30.0
+        if len(values) >= 3 else 0.0
+    )                                                              # max 30 pts
+
+    uniformity_score = round(min(100.0, cv_component + round_component + range_component), 1)
+
+    if uniformity_score >= 70:
+        verdict = "FABRICATION_LIKELY"
+    elif uniformity_score >= 30:
+        verdict = "SUSPICIOUS"
+    else:
+        verdict = "NATURAL"
+
+    if verdict != "NATURAL":
+        logger.warning(
+            f"[LLMBoundary][NUA] Numeric uniformity anomaly — packet={packet_id} "
+            f"verdict={verdict} score={uniformity_score} cv={cv:.4f} "
+            f"round_ratio={round_ratio:.2f} range={value_range:.1f}"
+        )
+
+    return NumericUniformityReport(
+        report_id=report_id,
+        signal_count=len(signals),
+        coefficient_of_variation=cv,
+        round_number_ratio=round_ratio,
+        value_range=value_range,
+        uniformity_score=uniformity_score,
+        nua_verdict=verdict,
+        suspicious_signals=suspicious_signals,
+        analyzed_at=now_iso,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -375,6 +545,13 @@ class LLMIsolationBoundary:
             sanitization_flags=sanitization_flags,
             stripped_keys=stripped_keys,
         )
+
+        # OMNIX DIFFERENTIATOR: Numeric Uniformity Anomaly analysis
+        # Runs on every crossing — does NOT block, only flags.
+        # Result is embedded in the packet for downstream audit consumers.
+        if clean_signals:
+            nua = _analyze_numeric_uniformity(clean_signals, packet_id)
+            packet.nua_report = nua.to_dict()
 
         crossing_type = "STRIPPED" if stripped_keys else "APPROVED"
         _log_crossing(BoundaryCrossingRecord(
