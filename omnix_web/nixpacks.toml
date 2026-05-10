@@ -13,4 +13,4 @@ cmds = [
 cmds = ["rm -rf dist node_modules/.vite .vite && npm run build"]
 
 [start]
-cmd = "/opt/venv/bin/gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --worker-connections 1000 --keep-alive 5"
+cmd = "bash start_server.sh"
