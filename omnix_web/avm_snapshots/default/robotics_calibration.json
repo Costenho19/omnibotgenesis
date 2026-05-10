@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-DA963015B3",
   "parameter_version": "1.da963015b3",
   "domain": "robotics",
-  "calibrated_at": "2026-05-10T21:28:47.326748+00:00",
-  "calibrated_at_epoch": 1778448527.326748,
   "baseline_signals": {
-    "probability_score": 60.98,
     "risk_exposure": 34.32,
     "signal_coherence": 64.97,
-    "trend_persistence": 81.28,
+    "logic_consistency": 67.07,
+    "probability_score": 60.98,
     "stress_resilience": 66.0,
-    "logic_consistency": 67.07
+    "trend_persistence": 81.28
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_16.9"
-  ]
+  ],
+  "calibrated_at": "2026-05-10T21:28:47.326748+00:00",
+  "calibrated_at_epoch": 1778448527.326748
 }

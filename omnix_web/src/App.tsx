@@ -49,6 +49,10 @@ import CrisisReplay from './pages/CrisisReplay'
 import ArchitecturePage from './pages/ArchitecturePage'
 import InstitutionalDemo from './pages/InstitutionalDemo'
 import WhyOMNIX from './pages/WhyOMNIX'
+import AboutPage from './pages/AboutPage'
+import SecurityPage from './pages/SecurityPage'
+import PartnersPage from './pages/PartnersPage'
+import CustomersPage from './pages/CustomersPage'
 import './index.css'
 
 function App() {
@@ -104,6 +108,10 @@ function App() {
           <Route path="/architecture" element={<ArchitecturePage />} />
           <Route path="/show" element={<InstitutionalDemo />} />
           <Route path="/why-omnix" element={<WhyOMNIX />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/security" element={<SecurityPage />} />
+          <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/customers" element={<CustomersPage />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />

@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-F262A2105F",
   "parameter_version": "1.f262a2105f",
   "domain": "energy_governance",
-  "calibrated_at": "2026-05-10T21:28:37.800694+00:00",
-  "calibrated_at_epoch": 1778448517.800694,
   "baseline_signals": {
-    "probability_score": 48.84,
     "risk_exposure": 29.78,
     "signal_coherence": 77.64,
-    "trend_persistence": 73.49,
+    "logic_consistency": 79.62,
+    "probability_score": 48.84,
     "stress_resilience": 79.65,
-    "logic_consistency": 79.62
+    "trend_persistence": 73.49
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_10.7"
-  ]
+  ],
+  "calibrated_at": "2026-05-10T21:28:37.800694+00:00",
+  "calibrated_at_epoch": 1778448517.800694
 }
