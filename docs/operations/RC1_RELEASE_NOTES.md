@@ -130,16 +130,18 @@ Six interactive diagrams:
 
 ---
 
-## Production Checklist (Before Institutional Demo)
+## Production Checklist — Status May 10, 2026
 
-- [ ] `OMNIX_SIGNING_SECRET_KEY_B64` set in Railway (PQC keys persistent)
-- [ ] `OMNIX_SIGNING_PUBLIC_KEY_B64` set in Railway
-- [ ] `OMNIX_ANTI_REPLAY_MODE=strict` set in Railway
-- [ ] `TELEGRAM_ADMIN_USER_ID` set in Railway (operational alerts active)
-- [ ] Railway health checks configured: `/api/health/live` + `/api/health/ready`
-- [ ] UptimeRobot / Better Stack monitoring `/api/health/live` every 60s
-- [ ] Manual `GET /api/health` run — all subsystems UP
-- [ ] `pg_dump` baseline backup taken before first institutional demo
+- [x] `OMNIX_SIGNING_SECRET_KEY_B64` set in Railway — **CONFIRMED** (`pqc_mode: dilithium3-persistent`)
+- [x] `OMNIX_SIGNING_PUBLIC_KEY_B64` set in Railway — **CONFIRMED** (verification endpoint operational)
+- [x] `OMNIX_ANTI_REPLAY_MODE=strict` set in Railway — **CONFIRMED** (bot startup logs)
+- [x] Manual `GET /api/health` run — all subsystems UP — **CONFIRMED** (OMNIX-PVR-2026-001)
+- [ ] `TELEGRAM_ADMIN_USER_ID` set in Railway — pending (admin commands disabled in Railway bot)
+- [ ] Railway health checks configured: `/api/health/live` + `/api/health/ready` — pending
+- [ ] UptimeRobot / Better Stack monitoring `/api/health/live` every 60s — pending
+- [ ] `pg_dump` baseline backup taken before first institutional demo — pending (see `docs/operations/BACKUP_RUNBOOK.md`)
+
+**Production Verification Report:** `docs/operations/RC1_PRODUCTION_VERIFICATION.md` (OMNIX-PVR-2026-001)
 
 ---
 

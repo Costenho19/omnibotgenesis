@@ -198,15 +198,16 @@ Required sections: **Context · Decision · Consequences · Implementation Notes
 
 ## 5. What Requires External Validation Before Production
 
-These items have been identified but require external confirmation before being marked resolved:
+Status updated: May 10, 2026 — following Production Verification Report OMNIX-PVR-2026-001.
 
-| Item | Risk | Action Required |
+| Item | Risk | Status |
 |---|---|---|
-| `pypqc 0.0.6.2` library maintenance (ISR-009) | Deprecation breaks historical receipt verification | Monitor maintainer activity; build pure-Python fallback verifier |
-| `OMNIX_ANTI_REPLAY_MODE=strict` in Railway | Cross-dyno replay in multi-instance deployments | Set env var in Railway immediately |
-| `OMNIX_SIGNING_SECRET_KEY_B64` in Railway | Ephemeral keys invalidate all receipts on restart | Add to Railway environment variables |
-| FRED_API_KEY hardcode (ISR-014) | API key in source code | Move to environment variable |
-| Rate limit per-client in Redis (ISR-002) | Multi-dyno per-dyno limits bypass global quota | Migrate `_client_rate_limit_store` to Redis |
+| `OMNIX_SIGNING_SECRET_KEY_B64` in Railway | Ephemeral keys invalidate all receipts on restart | ✅ **RESOLVED** — `pqc_mode: dilithium3-persistent` confirmed in production |
+| `OMNIX_SIGNING_PUBLIC_KEY_B64` in Railway | Verification endpoint non-functional without it | ✅ **RESOLVED** — verification endpoint operational |
+| `OMNIX_ANTI_REPLAY_MODE=strict` in Railway | Cross-dyno replay in multi-instance deployments | ✅ **RESOLVED** — confirmed in bot startup logs May 10, 2026 |
+| `pypqc 0.0.6.2` library maintenance (ISR-009) | Deprecation breaks historical receipt verification | ⚠️ Monitor — pure-Python fallback verifier planned (RC-2) |
+| FRED_API_KEY hardcode (ISR-014) | API key in source code | ⚠️ Planned RC-2 |
+| Rate limit per-client in Redis (ISR-002) | Multi-dyno per-dyno limits bypass global quota | ⚠️ Planned RC-2 — migrate `_client_rate_limit_store` to Redis |
 
 ---
 
