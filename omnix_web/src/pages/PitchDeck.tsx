@@ -363,7 +363,7 @@ export default function PitchDeck() {
                   '10 live governance engines running 24/7',
                   'AED 77.4B+ Islamic financing evaluated',
                   '$1.46B+ insurance loss prevented',
-                  '116 Architecture Decision Records',
+                  '150 Architecture Decision Records',
                 ],
                 color: '#10B981',
               },
@@ -436,7 +436,7 @@ export default function PitchDeck() {
             {[
               { icon: '🔐', title: 'Post-Quantum Cryptography', desc: 'NIST-standardized CRYSTALS-Dilithium & CRYSTALS-Kyber. Every governance receipt is quantum-resistant and independently verifiable.', badge: 'NIST Standard' },
               { icon: '⚡', title: 'Real-Time Pipeline', desc: 'All 11 checkpoints complete in <50ms. Monte Carlo simulations, regime detection, coherence scoring — before any execution.', badge: '<50ms' },
-              { icon: '🧱', title: '116+ ADRs Published', desc: 'Architecture Decision Records document every design choice, algorithm, and governance rule. Full auditability for regulators.', badge: 'Auditable' },
+              { icon: '🧱', title: '150 ADRs Published', desc: 'Architecture Decision Records document every design choice, algorithm, and governance rule. Full auditability for regulators.', badge: 'Auditable' },
               { icon: '🌐', title: 'Domain-Agnostic Core', desc: 'Same 11-checkpoint pipeline instantiated for any decision domain. Adding a new vertical requires no changes to the core engine.', badge: 'Extensible' },
               { icon: '📊', title: 'Published Research', desc: 'Peer-validated methodology with DOI. Terra/LUNA forensic reconstruction demonstrates retrospective accuracy with real historical data.', badge: 'DOI Published' },
               { icon: '🔗', title: 'REST API + Webhooks', desc: 'Integrate into any existing decision infrastructure in hours. No need to replace current systems — OMNIX operates as a governance proxy.', badge: 'API-First' },
@@ -514,7 +514,7 @@ export default function PitchDeck() {
               { tier: 'Shadow Mode',  price: 'Free',  sub: '4-week pilot',         color: '#10B981', highlight: false },
               { tier: 'Advisory',     price: '$8K',   sub: '/ month · 1 vertical', color: '#06b6d4', highlight: false },
               { tier: 'Professional', price: '$25K',  sub: '/ month · 4 verticals',color: '#a78bfa', highlight: false },
-              { tier: 'Enterprise',   price: '$35K',  sub: '/ month · 9 verticals',color: '#C9A227', highlight: true  },
+              { tier: 'Enterprise',   price: '$35K',  sub: '/ month · 10 verticals',color: '#C9A227', highlight: true  },
             ].map(t => (
               <div key={t.tier} style={{
                 background: t.highlight ? 'rgba(201,162,39,0.08)' : 'rgba(15,33,64,0.6)',

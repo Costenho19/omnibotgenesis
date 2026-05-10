@@ -286,7 +286,7 @@ export default function IntegrationGuide() {
                 { label: 'Rate limit',           value: '120 req / minute per key' },
                 { label: 'Advisory quota',        value: '5,000 evaluations / month' },
                 { label: 'Professional quota',    value: '50,000 evaluations / month' },
-                { label: 'Enterprise',            value: 'Unlimited · all 9 verticals' },
+                { label: 'Enterprise',            value: 'Unlimited · all 10 verticals' },
               ].map(q => (
                 <div key={q.label} style={{ background: '#ffffff04', border: '1px solid #ffffff08', borderRadius: 8, padding: '10px 14px' }}>
                   <div style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>{q.label}</div>

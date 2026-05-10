@@ -463,7 +463,7 @@ export default function ProofLayer() {
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: 48, paddingTop: 24, borderTop: '1px solid #1E293B' }}>
           <p style={{ fontSize: 12, color: '#334155', lineHeight: 1.8 }}>
-            OMNIX QUANTUM LTD · did:web:omnixquantum.net · Schema v6.5.4e<br />
+            OMNIX QUANTUM LTD · did:web:omnixquantum.net · Schema v6.6.0<br />
             15 provisional patents USPTO · OMNIX-PAT-2026-001 to 015<br />
             Inventor: Harold Alberto Nunes Rodelo
           </p>

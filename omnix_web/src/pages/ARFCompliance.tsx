@@ -9,7 +9,7 @@ const ENDPOINTS = [
   { method: 'GET',  path: '/.well-known/openid-credential-issuer',    label: 'OpenID4VCI Metadata',      desc: 'EUDI Wallet discovery endpoint (ARF required)' },
   { method: 'GET',  path: '/.well-known/omnix-arf-profile.json',      label: 'ARF Credential Profile',   desc: 'OmnixGovernanceCredential schema + trust chain' },
   { method: 'GET',  path: '/schemas/omnix-receipt-v1.jsonld',         label: 'JSON-LD Context',          desc: 'W3C VC JSON-LD context (JSON-LD 1.1)' },
-  { method: 'GET',  path: '/schemas/omnix-receipt-schema-v6.5.4e.json', label: 'JSON Schema',            desc: 'Receipt validation schema' },
+  { method: 'GET',  path: '/schemas/omnix-receipt-schema-v6.6.0.json', label: 'JSON Schema',            desc: 'Receipt validation schema' },
   { method: 'POST', path: '/api/governance/receipt/vc',               label: 'VC Issuer Endpoint',       desc: 'Convert receipt → W3C VC (OpenID4VCI)' },
   { method: 'POST', path: '/api/trust/verify',                        label: 'Independent Verifier',     desc: 'Verify receipt or VC — no DB, purely cryptographic' },
   { method: 'GET',  path: '/api/trust/registry',                      label: 'Trust Registry',           desc: 'Live issuer record + active public key' },
@@ -57,7 +57,7 @@ const VC_EXAMPLE = `{
     "domain":         "trading",
     "asset":          "BTC/USD",
     "content_hash":   "sha256:3a7f1b2c4d8e9f0a...",
-    "policy_version": "6.5.4e",
+    "policy_version": "6.6.0",
     "veto_chain":     []
   },
   "proof": {

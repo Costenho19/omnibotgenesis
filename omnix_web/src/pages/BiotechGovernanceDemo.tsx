@@ -445,7 +445,7 @@ export default function BiotechGovernanceDemo() {
                 <div className="flex items-center gap-2 p-2 rounded bg-[#0A1628]/60 border border-[#C9A227]/10">
                   <Shield className="w-3 h-3 text-[#C9A227] flex-shrink-0" />
                   <span className="text-[10px] font-mono text-[#C9A227]/80">{sc.receiptId}</span>
-                  <a href={`https://omnibotgenesis-production.up.railway.app/verify/${sc.receiptId}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="ml-auto text-[#64748B] hover:text-[#C9A227]">
+                  <a href={`/verify/${sc.receiptId}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="ml-auto text-[#64748B] hover:text-[#C9A227]">
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
@@ -687,7 +687,7 @@ export default function BiotechGovernanceDemo() {
                             <p className="text-sm font-mono text-[#C9A227]">{REAL_VALIDATED_SCENARIOS[selectedScenario].receiptId}</p>
                           </div>
                           <a
-                            href={`https://omnibotgenesis-production.up.railway.app/verify/${REAL_VALIDATED_SCENARIOS[selectedScenario].receiptId}`}
+                            href={`/verify/${REAL_VALIDATED_SCENARIOS[selectedScenario].receiptId}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 text-xs text-[#C9A227] hover:text-white transition-colors"
@@ -777,7 +777,7 @@ export default function BiotechGovernanceDemo() {
             {REAL_VALIDATED_SCENARIOS.map(sc => (
               <a
                 key={sc.receiptId}
-                href={`https://omnibotgenesis-production.up.railway.app/verify/${sc.receiptId}`}
+                href={`/verify/${sc.receiptId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-between p-3 rounded-lg bg-[#0A1628]/60 border border-[#C9A227]/10 hover:border-[#C9A227]/40 transition-all group"

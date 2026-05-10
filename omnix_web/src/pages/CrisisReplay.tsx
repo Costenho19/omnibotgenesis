@@ -292,7 +292,7 @@ function downloadJson(receipt: Receipt, scenario: Scenario) {
     rationale: receipt.rationale,
     canonical_hash: receipt.hash,
     replay_mode: true,
-    engine_version: '1.0.0',
+    engine_version: '1.1.0',
     adr_reference: 'ADR-145',
     pqc_note: 'Verify independently: python omnix_verify.py <this_file>.json --mode replay',
   }

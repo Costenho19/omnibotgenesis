@@ -692,8 +692,8 @@ export default function CommercialLanding() {
 
         <section className="mb-24">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-white mb-3">Nine Verticals. Running Now.</h2>
-            <p className="text-muted max-w-2xl mx-auto">Same 11-checkpoint governance pipeline. Nine live domains. All operating 24/7.</p>
+            <h2 className="text-3xl font-bold text-white mb-3">Ten Verticals. Running Now.</h2>
+            <p className="text-muted max-w-2xl mx-auto">Same 11-checkpoint governance pipeline. Ten live domains. All operating 24/7.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="glass-card p-8 border border-emerald-400/20">
@@ -839,7 +839,25 @@ export default function CommercialLanding() {
               </Link>
             </div>
 
-            <div className="glass-card p-8 border border-violet-400/20 md:col-span-2">
+            <div className="glass-card p-8 border border-red-400/20">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-red-400 bg-red-400/10 border border-red-400/20 px-2.5 py-1 rounded-full">
+                  <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#f87171',display:'inline-block',marginRight:0}} />
+                  LIVE
+                </span>
+                <span className="text-white font-bold text-lg">⚔️ Autonomous Defense Governance</span>
+              </div>
+              <p className="text-muted text-sm mb-5">Governance layer for autonomous weapons and defense AI. IHL compliance gate + 11 checkpoints enforcing Rules of Engagement, proportionality, distinction, and human oversight requirements before any lethal autonomous action.</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div><div className="text-xl font-bold text-red-400">IHL</div><div className="text-xs text-muted">International law compliant</div></div>
+                <div><div className="text-xl font-bold text-red-400">ADR-DEF-001</div><div className="text-xs text-muted">Architecture Decision Record</div></div>
+              </div>
+              <Link to="/defense" className="text-red-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                View live governance dashboard <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="glass-card p-8 border border-violet-400/20">
               <div className="flex items-center gap-3 mb-4">
                 <span className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-2.5 py-1 rounded-full">
                   <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#8B5CF6',display:'inline-block',marginRight:0}} />
@@ -1133,9 +1151,9 @@ export default function CommercialLanding() {
             </p>
             <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'wrap'}}>
               <div>
-                <p style={{fontSize:'0.85rem', color:'#94A3B8', marginBottom:2}}>OMNIX Enterprise — all 9 domains</p>
+                <p style={{fontSize:'0.85rem', color:'#94A3B8', marginBottom:2}}>OMNIX Enterprise — all 10 domains</p>
                 <p style={{fontSize:'1.8rem', fontWeight:900, color:'#10B981', letterSpacing:'-0.02em'}}>$420,000 / year</p>
-                <p style={{fontSize:'0.72rem', color:'#64748B', marginTop:2}}>Full veto authority · 9 verticals · PQC receipts · SLA 99.9%</p>
+                <p style={{fontSize:'0.72rem', color:'#64748B', marginTop:2}}>Full veto authority · 10 verticals · PQC receipts · SLA 99.9%</p>
               </div>
               <div style={{fontSize:'1.8rem', color:'#475569', fontWeight:300}}>vs</div>
               <div>

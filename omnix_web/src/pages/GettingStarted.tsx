@@ -16,7 +16,7 @@ const sampleResponse = {
   timestamp: '2026-04-26T10:31:00.000Z',
   checkpoints_passed: 11,
   checkpoints_blocked: 0,
-  policy_version: '6.5.4e',
+  policy_version: '6.6.0',
   jurisdiction: 'UAE',
   content_hash: 'sha256:3a7f1b2c4d8e9f0a…',
   signature_algorithm: 'Dilithium-3 (NIST FIPS 204)',

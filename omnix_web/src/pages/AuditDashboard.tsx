@@ -799,7 +799,7 @@ export default function AuditDashboard() {
           flexWrap: 'wrap', gap: 8,
         }}>
           <span style={{ fontSize: 11, color: '#1e293b' }}>
-            Live data · NIST post-quantum cryptography · 9 verticals · ADR-059
+            Live data · NIST post-quantum cryptography · 10 verticals · ADR-059
           </span>
           <div style={{ display: 'flex', gap: 12 }}>
             <Link to="/try" style={{ fontSize: 11, color: '#334155', textDecoration: 'none' }}>Try Sandbox</Link>
