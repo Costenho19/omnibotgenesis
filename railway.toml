@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "python3 -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip -q && /opt/venv/bin/pip install -r omnix_web/requirements.txt && /opt/venv/bin/pip install ./omnix_core --no-deps -q && echo '[build] omnix_core installed' && /opt/venv/bin/python3 -c 'import omnix_core; print(\"[build] omnix_core import OK\")' && cd omnix_web && npm install && npm run build"
+
+[deploy]
+startCommand = "bash -c 'cd omnix_web && PYTHONPATH=$(dirname $(pwd)) /opt/venv/bin/gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --worker-connections 1000 --keep-alive 5'"
+healthcheckPath = "/api/health/live"
+healthcheckTimeout = 60
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

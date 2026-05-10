@@ -5,14 +5,13 @@ nixPkgs = ["python311", "nodejs_20"]
 cmds = [
   "python3 -m venv /opt/venv",
   "/opt/venv/bin/pip install -r requirements.txt",
+  "/opt/venv/bin/pip install ./omnix_core --no-deps -q && echo '[install] omnix_core OK' || echo '[install] omnix_core FAILED'",
   "npm install"
 ]
 
 [phases.build]
 cmds = [
-  "echo '[build] Installing omnix_core...'",
-  "if [ -d ../omnix_core ]; then /opt/venv/bin/pip install ../omnix_core --no-deps -q && echo '[build] omnix_core installed from ../omnix_core'; elif [ -d ./omnix_core ]; then /opt/venv/bin/pip install ./omnix_core --no-deps -q && echo '[build] omnix_core installed from ./omnix_core'; else echo '[build] WARNING: omnix_core directory not found — will rely on sys.path bootstrap'; fi",
-  "/opt/venv/bin/python3 -c \"import omnix_core; print('[build] omnix_core import OK')\" || echo '[build] omnix_core NOT importable after install'",
+  "/opt/venv/bin/python3 -c \"import omnix_core; print('[build] omnix_core importable OK')\" || echo '[build] omnix_core NOT importable'",
   "rm -rf dist node_modules/.vite .vite && npm run build"
 ]
 
