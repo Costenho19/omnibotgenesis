@@ -48,6 +48,7 @@ import RiskDashboard from './pages/RiskDashboard'
 import CrisisReplay from './pages/CrisisReplay'
 import ArchitecturePage from './pages/ArchitecturePage'
 import InstitutionalDemo from './pages/InstitutionalDemo'
+import WhyOMNIX from './pages/WhyOMNIX'
 import './index.css'
 
 function App() {
@@ -102,6 +103,7 @@ function App() {
           <Route path="/crisis-replay" element={<CrisisReplay />} />
           <Route path="/architecture" element={<ArchitecturePage />} />
           <Route path="/show" element={<InstitutionalDemo />} />
+          <Route path="/why-omnix" element={<WhyOMNIX />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />
