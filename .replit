@@ -120,6 +120,10 @@ externalPort = 5000
 localPort = 8080
 externalPort = 8080
 
+[[ports]]
+localPort = 23636
+externalPort = 3000
+
 [deployment]
 deploymentTarget = "autoscale"
 build = ["bash", "-c", "cd omnix_web && npm run build"]
