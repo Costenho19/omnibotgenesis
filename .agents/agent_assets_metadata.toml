@@ -521,3 +521,27 @@ id = "8FoL0ly8A9gdXjTMMyzcs"
 uri = "file://docs/briefing/OMNIX_Production_Review_Brief.md"
 type = "text"
 title = "OMNIX Production Review Brief"
+
+[[outputs]]
+id = "OKy03PU24HP01vuNiehwM"
+uri = "file://backups/omnix_backup_manifest_20260510.json"
+type = "unspecified"
+title = "OMNIX-BACKUP-2026-001 — Manifiesto institucional"
+
+[[outputs]]
+id = "oSreAg7a2eQwnDyRvEY5y"
+uri = "file://backups/omnix_schema_20260510.json.gz"
+type = "unspecified"
+title = "Schema completo — 113 tablas, 1592 columnas, 283 índices"
+
+[[outputs]]
+id = "CfNPe-bGYbHc8CTVqMYGm"
+uri = "file://backups/omnix_critical_tables_20260510.json.gz"
+type = "unspecified"
+title = "Tablas críticas — 31 tablas, 3,329 filas (b2b_clients, AVM, receipts, Kraken trades...)"
+
+[[outputs]]
+id = "MKYIAXoRUkXraTdEF5zff"
+uri = "file://backups/omnix_decision_receipts_20260510.jsonl.gz"
+type = "unspecified"
+title = "decision_receipts COMPLETO — 142,466 recibos PQC-firmados (476 MB)"

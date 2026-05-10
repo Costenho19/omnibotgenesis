@@ -108,3 +108,5 @@ ESTRUCTURA_*.md
 
 # Output completo — archivos generados, no código
 output/
+backups/
+*.dump
