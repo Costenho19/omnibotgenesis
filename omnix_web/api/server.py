@@ -1699,11 +1699,6 @@ def get_news():
         return jsonify([])
 
 
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
-
-
 @app.route('/schemas/omnix-receipt-v1.jsonld', methods=['GET'])
 def serve_jsonld_context():
     """ADR-084: Serve the public OMNIX JSON-LD context file."""
