@@ -170,6 +170,7 @@ Variables are read with these **exact names** in the source code. Use the same n
 *   **RC-1 Release Notes:** `docs/operations/RC1_RELEASE_NOTES.md` — v6.6.0 · 150 ADRs · 233 tests · 10 invariants
 *   **RC-1 Verification Script:** `scripts/verify_rc1.py` — `python scripts/verify_rc1.py`
 *   **Architecture Page:** `/architecture` — 6 interactive diagrams · pipeline · receipt lifecycle · LLM boundary · tenant isolation · trust anchor · authority matrix
+*   **Institutional Demo:** `/show` — Demo narrativa de 6 pasos · evaluación en vivo con API real · receipt verificable · crisis replay FTX · DR stats · CTA book demo
 *   **Health Monitoring Runbook:** `docs/operations/HEALTH_MONITORING.md` — OMNIX-OPS-001 · incident runbooks INC-001–004
 *   **Full Architecture:** `docs/current/ARCHITECTURE.md`
 *   **Deployment Operations:** `docs/operations/DEPLOYMENT.md`
