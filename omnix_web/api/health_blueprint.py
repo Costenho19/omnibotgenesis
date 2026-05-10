@@ -132,64 +132,38 @@ def _probe_redis(redis_url: Optional[str]) -> SubsystemHealth:
 
 def _probe_pqc() -> SubsystemHealth:
     """
-    Test Dilithium-3 sign/verify using pypqc directly — no omnix_core needed.
-    Falls back to key-presence check if pypqc API differs.
+    Test Dilithium-3 sign/verify using pqc directly (pip install pypqc → import pqc).
+    Falls back to key-presence check on failure.
     """
     t0 = time.monotonic()
+    test_msg = b"omnix-health-probe"
     try:
-        import pypqc
-        test_msg = b"omnix-health-probe"
-
-        # pypqc >= 0.0.6: pypqc.sign.mldsa65 (ML-DSA-65 = Dilithium-3)
-        try:
-            mod = pypqc.sign.mldsa65
-            pk, sk = mod.keygen()
-            sig    = mod.sign(test_msg, sk)
-            ok     = mod.verify(sig, test_msg, pk)
-            latency = (time.monotonic() - t0) * 1000
-            if ok:
-                return SubsystemHealth("pqc_dilithium3", STATUS_UP, latency,
-                                       "Dilithium-3 sign/verify cycle passed",
-                                       critical=False)
-            return SubsystemHealth("pqc_dilithium3", STATUS_DEGRADED, latency,
-                                   "sign/verify returned False", critical=False)
-        except AttributeError:
-            pass
-
-        # Older pypqc API — dilithium3 namespace
-        try:
-            from pypqc import dilithium3  # type: ignore
-            pk, sk  = dilithium3.generate_keypair()
-            sig     = dilithium3.sign(test_msg, sk)
-            ok      = dilithium3.verify(test_msg, sig, pk)
-            latency = (time.monotonic() - t0) * 1000
-            status  = STATUS_UP if ok else STATUS_DEGRADED
-            return SubsystemHealth("pqc_dilithium3", status, latency,
-                                   "Dilithium-3 sign/verify cycle passed" if ok else "verify failed",
-                                   critical=False)
-        except (ImportError, AttributeError):
-            pass
-
-        # Last resort — key presence only
-        key_b64 = os.getenv("OMNIX_SIGNING_SECRET_KEY_B64", "")
-        latency  = (time.monotonic() - t0) * 1000
-        if key_b64:
-            return SubsystemHealth("pqc_dilithium3", STATUS_UP, latency,
-                                   "pypqc loaded — persistent key present (sign cycle skipped)",
-                                   critical=False)
-        return SubsystemHealth("pqc_dilithium3", STATUS_DEGRADED, latency,
-                               "pypqc loaded — no persistent key (SHA-256 mode)",
-                               critical=False)
-
-    except ImportError:
+        # pip install pypqc installs the 'pqc' module (not 'pypqc')
+        from pqc.sign import dilithium3
+        pk, sk = dilithium3.keypair()
+        sig    = dilithium3.sign(test_msg, sk)
+        dilithium3.verify(sig, test_msg, pk)   # raises ValueError on failure
         latency = (time.monotonic() - t0) * 1000
-        return SubsystemHealth("pqc_dilithium3", STATUS_DEGRADED, latency,
-                               "pypqc not installed — receipts SHA-256 only",
+        return SubsystemHealth("pqc_dilithium3", STATUS_UP, latency,
+                               "Dilithium-3 sign/verify cycle passed",
                                critical=False)
+    except ImportError:
+        pass
     except Exception as e:
         latency = (time.monotonic() - t0) * 1000
         return SubsystemHealth("pqc_dilithium3", STATUS_DEGRADED, latency,
                                f"PQC probe error: {str(e)[:80]}", critical=False)
+
+    # pqc library unavailable — fall back to key-presence check
+    key_b64 = os.getenv("OMNIX_SIGNING_SECRET_KEY_B64", "")
+    latency  = (time.monotonic() - t0) * 1000
+    if key_b64:
+        return SubsystemHealth("pqc_dilithium3", STATUS_UP, latency,
+                               "pqc library unavailable — persistent key present (SHA-256 fallback active)",
+                               critical=False)
+    return SubsystemHealth("pqc_dilithium3", STATUS_DEGRADED, latency,
+                           "pqc library unavailable — no persistent key (SHA-256 mode)",
+                           critical=False)
 
 
 def _probe_wal() -> SubsystemHealth:
