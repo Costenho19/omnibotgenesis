@@ -545,3 +545,45 @@ id = "MKYIAXoRUkXraTdEF5zff"
 uri = "file://backups/omnix_decision_receipts_20260510.jsonl.gz"
 type = "unspecified"
 title = "decision_receipts COMPLETO — 142,466 recibos PQC-firmados (476 MB)"
+
+[[outputs]]
+id = "RLLWN3YcqlPYMBmHe5pUT"
+uri = "file://backups/omnix_backup_small_20260510.zip"
+type = "unspecified"
+title = "ZIP — Manifiesto + Schema + Tablas críticas (290 KB)"
+
+[[outputs]]
+id = "CvTOZ5RJEvhCR5PjseHpC"
+uri = "file://backups/omnix_receipts_part1of6_20260510.zip"
+type = "unspecified"
+title = "Recibos 1/6 (95 MB)"
+
+[[outputs]]
+id = "8uStufwINs7qvk0S62wvG"
+uri = "file://backups/omnix_receipts_part2of6_20260510.zip"
+type = "unspecified"
+title = "Recibos 2/6 (95 MB)"
+
+[[outputs]]
+id = "QbmhZBZWV-EE4pHjASfRy"
+uri = "file://backups/omnix_receipts_part3of6_20260510.zip"
+type = "unspecified"
+title = "Recibos 3/6 (95 MB)"
+
+[[outputs]]
+id = "rUz_tgArIsc5Szj1Q6j17"
+uri = "file://backups/omnix_receipts_part4of6_20260510.zip"
+type = "unspecified"
+title = "Recibos 4/6 (95 MB)"
+
+[[outputs]]
+id = "xkNXLX4q3faM8EURM629O"
+uri = "file://backups/omnix_receipts_part5of6_20260510.zip"
+type = "unspecified"
+title = "Recibos 5/6 (95 MB)"
+
+[[outputs]]
+id = "a01BFPEUC8ydkOWG207qt"
+uri = "file://backups/omnix_receipts_part6of6_20260510.zip"
+type = "unspecified"
+title = "Recibos 6/6 (final — 0.3 MB)"
