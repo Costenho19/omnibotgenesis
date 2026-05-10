@@ -5,12 +5,16 @@ nixPkgs = ["python311", "nodejs_20"]
 cmds = [
   "python3 -m venv /opt/venv",
   "/opt/venv/bin/pip install -r requirements.txt",
-  "/opt/venv/bin/pip install ../omnix_core --no-deps --quiet || /opt/venv/bin/pip install ./omnix_core --no-deps --quiet || true",
   "npm install"
 ]
 
 [phases.build]
-cmds = ["rm -rf dist node_modules/.vite .vite && npm run build"]
+cmds = [
+  "echo '[build] Installing omnix_core...'",
+  "if [ -d ../omnix_core ]; then /opt/venv/bin/pip install ../omnix_core --no-deps -q && echo '[build] omnix_core installed from ../omnix_core'; elif [ -d ./omnix_core ]; then /opt/venv/bin/pip install ./omnix_core --no-deps -q && echo '[build] omnix_core installed from ./omnix_core'; else echo '[build] WARNING: omnix_core directory not found — will rely on sys.path bootstrap'; fi",
+  "/opt/venv/bin/python3 -c \"import omnix_core; print('[build] omnix_core import OK')\" || echo '[build] omnix_core NOT importable after install'",
+  "rm -rf dist node_modules/.vite .vite && npm run build"
+]
 
 [start]
-cmd = "bash start_server.sh"
+cmd = "/opt/venv/bin/gunicorn api.server:app --bind 0.0.0.0:${PORT:-8080} --workers 4 --timeout 120 --worker-connections 1000 --keep-alive 5"

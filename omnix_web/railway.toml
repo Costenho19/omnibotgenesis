@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "bash start_server.sh"
+startCommand = "/opt/venv/bin/gunicorn api.server:app --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --worker-connections 1000 --keep-alive 5"
 healthcheckPath = "/api/health/live"
 healthcheckTimeout = 60
 restartPolicyType = "on_failure"
