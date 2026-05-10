@@ -161,10 +161,11 @@ Variables are read with these **exact names** in the source code. Use the same n
 
 ## Pointers
 
-*   **ADRs:** `docs/adr/` — 149 total. Last: ADR-147 (Scope Auth) · ADR-148 (LLM Isolation Boundary) · ADR-149 (Replay Fidelity Classification)
-*   **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 10 invariants · 149 ADRs · Architecture Freeze
+*   **ADRs:** `docs/adr/` — 151 total. Last: ADR-149 (Replay Fidelity) · ADR-150 (Health Monitoring) · ADR-151 (Memory Context Governance)
+*   **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants · 151 ADRs · Architecture Freeze
 *   **ISR Remediation modules:** `omnix_core/governance/assumption_validity_monitor.py` (ISR-001 registry) · `omnix_core/governance/avm_db_bridge.py` (ISR-001 tenant DDL) · `omnix_core/governance/semantic_version_registry.py` (ISR-008) · `omnix_core/evidence/decision_receipt.py` (ISR-008+ISR-010 hash_version) · `omnix_core/evidence/receipt_wal.py` (ISR-012 WAL) · `omnix_core/evidence/transparency_chain.py` (ISR-013 retry+pending · ISR-022 read-path verify) · `omnix_services/ai_service/input_sanitizer.py` (ISR-017) · `omnix_core/evidence/payload_key_manager.py` (ISR-021) · `omnix_web/api/gov_blueprint.py` (ISR-017+ISR-021 wired)
 *   **LLM Isolation Boundary:** `omnix_core/governance/llm_isolation_boundary.py` — ADR-148 · 22 approved signal keys · crossing log · strict mode
+*   **Memory Context Governance:** `omnix_core/governance/memory_context_auditor.py` — ADR-151 · INV-011 · ContextSnapshot · MemoryAttestationRecord (MAR) · PQC-signed · 5 contamination layers · context drift detection · audit_context() convenience API · bidirectional receipt↔MAR chain · 91 tests
 *   **Replay Fidelity:** `omnix_core/simulation/governance_replay.py` — ADR-149 · ReplayFidelityClass · verify_replay_chain() · v1.1.0
 *   **Operational Readiness:** `omnix_core/ops/health_check.py` + `omnix_core/ops/operational_alerts.py` + `omnix_web/api/health_blueprint.py` — ADR-150 · /api/health · /api/health/live · /api/health/ready · Telegram ops alerts
 *   **RC-1 Release Notes:** `docs/operations/RC1_RELEASE_NOTES.md` — v6.6.0 · 150 ADRs · 233 tests · 10 invariants

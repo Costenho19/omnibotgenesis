@@ -33,6 +33,7 @@ These modules implement governance invariants. They **may not be modified** with
 | `omnix_core/governance/semantic_version_registry.py` | Engine version semantics | ISR-008 | Every engine version maps to an explicit checkpoint contract |
 | `omnix_core/governance/auto_modification_guard.py` | AMG — threshold change control | ADR-144 | AVM thresholds cannot change by more than 10%/event or 30% cumulative without approval |
 | `omnix_core/governance/scope_authorization_engine.py` | Scope authorization records | ADR-147 | Every governance scope is PQC-signed at issuance |
+| `omnix_core/governance/memory_context_auditor.py` | Decision-time context governance & Memory Attestation Records | ADR-151 | Every governance evaluation has a PQC-signed attestation of its full context window |
 | `omnix_core/evidence/receipt_wal.py` | Write-Ahead Log for receipts | ISR-012 | Every governance decision has at least one durable copy before DB write |
 
 ### 1.2 GOVERNANCE-CRITICAL Modules
@@ -97,6 +98,14 @@ AVM calibration state is partitioned by `tenant_id`. No client's calibration sig
 **Enforced by:** `get_avm_instance(tenant_id)` — per-tenant registry  
 **Governing:** ISR-001  
 **Test:** `tests/test_isr_remediation.py` — ISR-001 tests
+
+### INV-011 — Context Window Attested at Every Evaluation
+
+Every governance evaluation must produce a `MemoryAttestationRecord` (MAR) attesting the complete AI context window — signals, data sources, history depth, signal freshness, and scope — at the exact moment of evaluation. Critical context contamination blocks the evaluation (fail-closed). The MAR ID is embedded in the Decision Receipt as `memory_attestation_id`.
+
+**Enforced by:** `memory_context_auditor.py::generate_mar()` — fail_closed_on_critical=True by default  
+**Governing:** ADR-151  
+**Test:** `tests/test_memory_context_governance.py` — 60+ tests
 
 ### INV-005 — LLM Content Never Enters Governance Directly
 
@@ -192,6 +201,7 @@ Required sections: **Context · Decision · Consequences · Implementation Notes
 | `scope_authorization_engine.py` | ADR-147 | — |
 | `receipt_wal.py` | ISR-012 | INV-002 |
 | `llm_isolation_boundary.py` | ADR-148, ISR-017 | INV-005 |
+| `memory_context_auditor.py` | ADR-151 | INV-011 |
 | `governance_replay.py` | ADR-145, ADR-149 | INV-007 |
 
 ---
@@ -213,15 +223,16 @@ Status updated: May 10, 2026 — following Production Verification Report OMNIX-
 
 ## 6. Approved ADR Index (as of May 2026)
 
-149 total ADRs. Last 5:
+151 total ADRs. Last 6:
 
 | ADR | Title | Status |
 |---|---|---|
-| ADR-145 | Governance Replay Engine | Accepted |
 | ADR-146 | Runtime Authority Matrix | Accepted |
 | ADR-147 | Scope Authorization Record | Accepted |
 | ADR-148 | LLM Isolation Boundary | Accepted |
 | ADR-149 | Replay Fidelity Classification | Accepted |
+| ADR-150 | Health Monitoring & Operational Readiness | Accepted |
+| ADR-151 | Memory Context Governance | Accepted |
 
 ---
 
@@ -239,6 +250,7 @@ Status updated: May 10, 2026 — following Production Verification Report OMNIX-
 | ISR-022 — Read-path chain verification | `transparency_chain.py` | ✅ Complete |
 | ADR-148 — LLM isolation boundary | `llm_isolation_boundary.py` | ✅ Complete |
 | ADR-149 — Replay fidelity classification | `governance_replay.py` | ✅ Complete |
+| ADR-151 — Memory Context Governance | `memory_context_auditor.py` | ✅ Complete |
 
 ---
 
