@@ -189,3 +189,5 @@ Variables are read with these **exact names** in the source code. Use the same n
 *   **ISR Remediation — Stage 5 Implementation:** `tests/test_isr_remediation.py` — 54 tests · 54 passing · ISR-001 ✓ ISR-008 ✓ ISR-013 ✓ ISR-017 ✓ ISR-021 ✓
 *   **RC-1 Production Verification Report:** `docs/operations/RC1_PRODUCTION_VERIFICATION.md` — OMNIX-PVR-2026-001 · May 10, 2026 · 6/6 subsystems UP · pqc_mode=dilithium3-persistent · wal_pending=0 · Evidence baseline for institutional demos and audits
 *   **Backup & Disaster Recovery Runbook:** `docs/operations/BACKUP_RUNBOOK.md` — OMNIX-OPS-002 · Procedure completa: pg_dump, env vars, PQC key backup, git bundle, recovery scenarios
+*   **Disaster Recovery Test Report:** `docs/operations/DISASTER_RECOVERY_TEST.md` — OMNIX-DRT-2026-001 · May 10, 2026 · 7/7 fases PASSED · 500/500 firmas PQC válidas · AVM 11/11 · Replay Engine operativo · RTO ~4h confirmado · Hallazgo clave: receipts son auto-verificables (clave embebida)
+*   **Cost & Sustainability Report:** `docs/operations/COST_SUSTAINABILITY_REPORT.md` — OMNIX-CSR-2026-001 · Mayo 2026 · DB=4.77GB · ~$50/month · análisis de reducción · postura por etapa de crecimiento

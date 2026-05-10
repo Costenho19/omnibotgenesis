@@ -268,7 +268,50 @@ Recovery: None — the key cannot be recovered or regenerated if lost.
 
 ---
 
-## 8. Verification After Any Restore
+## 8. Self-Verifying Receipts — Key Finding from OMNIX-DRT-2026-001
+
+Discovered during the May 10, 2026 DR test:
+
+**OMNIX receipts are self-verifying.** Each receipt in `decision_receipts` embeds the
+public key that signed it in the `public_key` field. This means:
+
+1. Verification does not require external key registry access
+2. Receipts remain verifiable even if the signing key is rotated in the future
+3. The backup is cryptographically self-sufficient — no external dependency
+
+**Correct verification approach:**
+
+```python
+from pqc.sign import dilithium3
+import base64
+
+# Use the public key EMBEDDED IN THE RECEIPT, not an external key
+pk_bytes  = base64.b64decode(receipt['public_key'])
+sig_bytes = base64.b64decode(receipt['signature'])
+message   = receipt['content_hash'].encode('utf-8')
+
+# dilithium3.verify raises ValueError on failure, returns None on success
+dilithium3.verify(sig_bytes, message, pk_bytes)
+```
+
+**Key epochs found in production (as of May 10, 2026):**
+
+| Key fingerprint | Receipts | Period |
+|---|---|---|
+| `85d5b178afeb01ce` | 174 (of first 500) | Primary persistent epoch |
+| `754f3e2d4ac4ba13` | 167 | Second persistent epoch |
+| `6b01c588f5cefdb5` | 132 | Third persistent epoch |
+| *(8 others)* | 27 | Earlier epochs (pre-persistence) |
+
+All 11 epochs verified correctly during OMNIX-DRT-2026-001.
+
+**Critical action:** Back up `OMNIX_SIGNING_SECRET_KEY_B64` from Railway to a password
+manager. Without it, new receipts cannot be signed with the established key.
+Old receipts remain verifiable via their embedded public key regardless.
+
+---
+
+## 9. Verification After Any Restore
 
 After any backup restore, run the full verification suite:
 
