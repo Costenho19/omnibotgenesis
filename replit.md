@@ -161,7 +161,7 @@ Variables are read with these **exact names** in the source code. Use the same n
 
 ## Pointers
 
-*   **ADRs:** `docs/adr/` — 151 total. Last: ADR-149 (Replay Fidelity) · ADR-150 (Health Monitoring) · ADR-151 (Memory Context Governance)
+*   **ADRs:** `docs/adr/` — 155 total. Last: ADR-152 (GTPD) · ADR-153 (NUA) · ADR-154 (Receipt Genealogy) · ADR-155 (Chain Completeness Score)
 *   **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants · 151 ADRs · Architecture Freeze
 *   **ISR Remediation modules:** `omnix_core/governance/assumption_validity_monitor.py` (ISR-001 registry) · `omnix_core/governance/avm_db_bridge.py` (ISR-001 tenant DDL) · `omnix_core/governance/semantic_version_registry.py` (ISR-008) · `omnix_core/evidence/decision_receipt.py` (ISR-008+ISR-010 hash_version) · `omnix_core/evidence/receipt_wal.py` (ISR-012 WAL) · `omnix_core/evidence/transparency_chain.py` (ISR-013 retry+pending · ISR-022 read-path verify) · `omnix_services/ai_service/input_sanitizer.py` (ISR-017) · `omnix_core/evidence/payload_key_manager.py` (ISR-021) · `omnix_web/api/gov_blueprint.py` (ISR-017+ISR-021 wired)
 *   **LLM Isolation Boundary:** `omnix_core/governance/llm_isolation_boundary.py` — ADR-148 · 22 approved signal keys · crossing log · strict mode
