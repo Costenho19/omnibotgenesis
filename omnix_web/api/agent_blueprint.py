@@ -1,8 +1,10 @@
 """
 OMNIX Agent Trust Fabric — Flask API Blueprint
 ADR-156: REST endpoints for agent identity, delegation, and verification.
+ADR-157: Temporal Authority Admissibility endpoints.
+ADR-158: Cross-Domain Trust Portability endpoints.
 
-Endpoints:
+Endpoints (ADR-156 — Core ATF):
     POST  /api/atf/agents/register          — Register a new agent
     GET   /api/atf/agents                   — List agents (by domain)
     GET   /api/atf/agents/<agent_id>        — Get agent identity
@@ -14,7 +16,19 @@ Endpoints:
     GET   /api/atf/ccs/<agent_id>           — ATF Chain Completeness Score
     POST  /api/atf/demo/simulate            — Demo: simulate multi-agent chain
 
-ADR-156 — Harold Nunes — OMNIX QUANTUM LTD — May 2026
+Endpoints (ADR-157 — Temporal Authority):
+    POST  /api/atf/temporal/admit           — Issue TAR for an execution event
+    GET   /api/atf/temporal/<tar_id>        — Get a TAR by ID
+    POST  /api/atf/temporal/verify          — Verify a TAR
+    GET   /api/atf/temporal/report/<agent_id> — Temporal admissibility report
+
+Endpoints (ADR-158 — Cross-Domain Trust Portability):
+    POST  /api/atf/translate                — Issue a Domain Translation Receipt
+    GET   /api/atf/translate/<dtr_id>       — Get a DTR by ID
+    POST  /api/atf/translate/verify         — Verify a DTR
+    GET   /api/atf/translate/policy         — Get discount for a domain pair
+
+ADR-156/157/158 — Harold Nunes — OMNIX QUANTUM LTD — May 2026
 """
 from __future__ import annotations
 
@@ -318,6 +332,327 @@ def get_chain_completeness_score(agent_id: str):
         return jsonify(ccs)
     except Exception as exc:
         logger.error(f"[ATF.API] ccs error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/temporal/admit", methods=["POST"])
+def temporal_admit():
+    """
+    ADR-157: Issue a Temporal Admissibility Record (TAR) for an execution event.
+
+    The TAR proves that a Delegation Receipt was ACTIVE at the exact nanosecond
+    of execution. TAR is issued synchronously at admission time (TAR-INV-001).
+
+    Body:
+        delegation_id     (required) — ATFDR-... to admit
+        agent_id          (required) — AID of the acting agent
+        task_action       (required) — action being performed
+        execution_ref     (optional) — ExecutionReceipt ID (ADR-131)
+        metadata          (optional)
+    """
+    data = request.get_json(silent=True) or {}
+
+    delegation_id = (data.get("delegation_id") or "").strip()
+    agent_id      = (data.get("agent_id") or "").strip()
+    task_action   = (data.get("task_action") or "").strip()
+
+    if not delegation_id:
+        return _err("delegation_id is required")
+    if not agent_id:
+        return _err("agent_id is required")
+    if not task_action:
+        return _err("task_action is required")
+
+    try:
+        from omnix_core.agents.atf.temporal_authority import TemporalAuthorityEngine
+        from omnix_core.agents.atf.delegation_receipt import DelegationReceipt
+
+        engine = TemporalAuthorityEngine()
+        engine.ensure_tables()
+
+        lattice = _get_lattice()
+        dr = lattice._delegation_engine.get_delegation(delegation_id)
+        if dr is None:
+            return _err(f"Delegation receipt not found: {delegation_id}", 404)
+
+        tar = engine.admit_execution(
+            delegation_receipt=dr,
+            agent_id=agent_id,
+            task_action=task_action,
+            execution_ref=data.get("execution_ref"),
+            metadata=data.get("metadata") or {},
+        )
+
+        code = 201 if tar.is_admitted() else 200
+        return jsonify({
+            "tar": tar.summary(),
+            "tar_id": tar.tar_id,
+            "admission_status": tar.admission_status,
+            "execution_ns": tar.execution_ns,
+            "execution_ts": tar.execution_ts,
+            "pqc_signed": tar.pqc_signature is not None,
+            "rejection_reason": tar.rejection_reason,
+            "status": "admitted" if tar.is_admitted() else "rejected",
+        }), code
+    except Exception as exc:
+        logger.error(f"[ATF.API] temporal_admit error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/temporal/<tar_id>", methods=["GET"])
+def get_tar(tar_id: str):
+    """ADR-157: Get a Temporal Admissibility Record by ID."""
+    try:
+        from omnix_core.agents.atf.temporal_authority import TemporalAuthorityEngine
+        engine = TemporalAuthorityEngine()
+        tar = engine.get_tar(tar_id)
+        if tar is None:
+            return _err(f"TAR not found: {tar_id}", 404)
+        return jsonify({
+            "tar": tar.to_dict(),
+            "admitted": tar.is_admitted(),
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] get_tar error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/temporal/verify", methods=["POST"])
+def verify_tar():
+    """
+    ADR-157: Verify a Temporal Admissibility Record.
+
+    Body:
+        tar_id  (optional) — look up by ID
+        tar     (optional) — embed the full TAR dict
+    """
+    data = request.get_json(silent=True) or {}
+    try:
+        from omnix_core.agents.atf.temporal_authority import (
+            TemporalAuthorityEngine, TemporalAdmissibilityRecord
+        )
+        engine = TemporalAuthorityEngine()
+
+        if data.get("tar_id"):
+            tar = engine.get_tar(data["tar_id"])
+            if tar is None:
+                return _err(f"TAR not found: {data['tar_id']}", 404)
+        elif data.get("tar"):
+            t = data["tar"]
+            tar = TemporalAdmissibilityRecord(
+                tar_id=t.get("tar_id", ""),
+                delegation_id=t.get("delegation_id", ""),
+                agent_id=t.get("agent_id", ""),
+                execution_ref=t.get("execution_ref"),
+                execution_ns=int(t.get("execution_ns", 0)),
+                execution_ts=t.get("execution_ts", ""),
+                dr_status_at_admission=t.get("dr_status_at_admission", ""),
+                dr_expires_at=t.get("dr_expires_at"),
+                authority_budget=float(t.get("authority_budget", 0)),
+                domain=t.get("domain", ""),
+                task_action=t.get("task_action", ""),
+                admission_status=t.get("admission_status", ""),
+                rejection_reason=t.get("rejection_reason"),
+                content_hash=t.get("content_hash", ""),
+                pqc_signature=t.get("pqc_signature"),
+                pqc_algorithm=t.get("pqc_algorithm"),
+                chain_root_id=t.get("chain_root_id", ""),
+                issued_at=t.get("issued_at", ""),
+                metadata=t.get("metadata", {}),
+            )
+        else:
+            return _err("Provide tar_id or tar dict")
+
+        result = engine.verify_tar(tar)
+        return jsonify({
+            "verification": result,
+            "status": "verified" if result["fully_verified"] else "invalid",
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] verify_tar error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/temporal/report/<agent_id>", methods=["GET"])
+def temporal_report(agent_id: str):
+    """ADR-157: Temporal admissibility summary report for an agent."""
+    try:
+        from omnix_core.agents.atf.temporal_authority import TemporalAuthorityEngine
+        engine = TemporalAuthorityEngine()
+        report = engine.temporal_admissibility_report(agent_id)
+        return jsonify(report)
+    except Exception as exc:
+        logger.error(f"[ATF.API] temporal_report error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/translate", methods=["POST"])
+def create_domain_translation():
+    """
+    ADR-158: Issue a Domain Translation Receipt (DTR) for cross-domain authority.
+
+    Body:
+        source_delegation_id  (required) — ATFDR-... in source domain
+        source_agent_id       (required) — AID in source domain
+        target_agent_id       (required) — AID in target domain
+        target_domain         (required) — target governance domain
+        target_task_scope     (required) — authorized scope in target domain
+        issued_by             (optional) — issuer identifier
+        expires_at            (optional) — ISO UTC expiry
+        metadata              (optional)
+    """
+    data = request.get_json(silent=True) or {}
+
+    for f in ["source_delegation_id", "source_agent_id", "target_agent_id",
+              "target_domain", "target_task_scope"]:
+        if not data.get(f):
+            return _err(f"{f} is required")
+
+    try:
+        from omnix_core.agents.atf.domain_bridge import CrossDomainBridge, CrossDomainAuthorityError
+
+        bridge = CrossDomainBridge()
+        bridge.ensure_tables()
+
+        lattice = _get_lattice()
+        dr = lattice._delegation_engine.get_delegation(data["source_delegation_id"])
+        if dr is None:
+            return _err(f"Source delegation not found: {data['source_delegation_id']}", 404)
+
+        dtr = bridge.translate(
+            source_delegation=dr,
+            source_agent_id=data["source_agent_id"],
+            target_agent_id=data["target_agent_id"],
+            target_domain=data["target_domain"],
+            target_task_scope=data["target_task_scope"],
+            issued_by=data.get("issued_by", "api"),
+            expires_at=data.get("expires_at"),
+            metadata=data.get("metadata") or {},
+        )
+
+        return jsonify({
+            "status": "translated",
+            "dtr": dtr.trust_summary(),
+            "dtr_id": dtr.dtr_id,
+            "source_domain": dtr.source_domain,
+            "target_domain": dtr.target_domain,
+            "source_budget": dtr.source_authority_budget,
+            "translated_budget": dtr.translated_budget,
+            "translation_discount": f"{dtr.translation_discount*100:.0f}%",
+            "translation_policy": dtr.translation_policy,
+            "pqc_signed": dtr.pqc_signature is not None,
+            "issued_at": dtr.issued_at,
+        }), 201
+    except CrossDomainAuthorityError as exc:
+        return _err(f"CDTP-INV-001: {exc}", 422)
+    except Exception as exc:
+        logger.error(f"[ATF.API] create_domain_translation error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/translate/<dtr_id>", methods=["GET"])
+def get_dtr(dtr_id: str):
+    """ADR-158: Get a Domain Translation Receipt by ID."""
+    try:
+        from omnix_core.agents.atf.domain_bridge import CrossDomainBridge
+        bridge = CrossDomainBridge()
+        dtr = bridge.get_dtr(dtr_id)
+        if dtr is None:
+            return _err(f"DTR not found: {dtr_id}", 404)
+        return jsonify({
+            "dtr": dtr.to_dict(),
+            "trust_summary": dtr.trust_summary(),
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] get_dtr error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/translate/verify", methods=["POST"])
+def verify_dtr():
+    """
+    ADR-158: Verify a Domain Translation Receipt.
+
+    Body:
+        dtr_id  (optional) — look up by ID
+        dtr     (optional) — embed the full DTR dict
+    """
+    data = request.get_json(silent=True) or {}
+    try:
+        from omnix_core.agents.atf.domain_bridge import CrossDomainBridge, DomainTranslationReceipt
+        bridge = CrossDomainBridge()
+
+        if data.get("dtr_id"):
+            dtr = bridge.get_dtr(data["dtr_id"])
+            if dtr is None:
+                return _err(f"DTR not found: {data['dtr_id']}", 404)
+        elif data.get("dtr"):
+            d = data["dtr"]
+            dtr = DomainTranslationReceipt(
+                dtr_id=d.get("dtr_id", ""),
+                source_delegation_id=d.get("source_delegation_id", ""),
+                source_domain=d.get("source_domain", ""),
+                target_domain=d.get("target_domain", ""),
+                source_agent_id=d.get("source_agent_id", ""),
+                target_agent_id=d.get("target_agent_id", ""),
+                source_authority_budget=float(d.get("source_authority_budget", 0)),
+                translated_budget=float(d.get("translated_budget", 0)),
+                translation_discount=float(d.get("translation_discount", 0.20)),
+                translation_policy=d.get("translation_policy", ""),
+                task_scope=d.get("task_scope", {}),
+                chain_root_id=d.get("chain_root_id", ""),
+                content_hash=d.get("content_hash", ""),
+                pqc_signature=d.get("pqc_signature"),
+                pqc_algorithm=d.get("pqc_algorithm"),
+                status=d.get("status", "ACTIVE"),
+                expires_at=d.get("expires_at"),
+                issued_at=d.get("issued_at", ""),
+                issued_by=d.get("issued_by", ""),
+                metadata=d.get("metadata", {}),
+            )
+        else:
+            return _err("Provide dtr_id or dtr dict")
+
+        result = bridge.verify_dtr(dtr)
+        return jsonify({
+            "verification": result,
+            "status": "verified" if result["fully_verified"] else "invalid",
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] verify_dtr error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/translate/policy", methods=["GET"])
+def get_translation_policy():
+    """
+    ADR-158: Get translation discount policy for a domain pair.
+
+    Query params:
+        source  (required) — source domain (e.g. FINANCE)
+        target  (required) — target domain (e.g. HEALTHCARE)
+    """
+    source = (request.args.get("source") or "").strip().upper()
+    target = (request.args.get("target") or "").strip().upper()
+
+    if not source or not target:
+        return _err("source and target domain parameters are required")
+
+    try:
+        from omnix_core.agents.atf.domain_bridge import CrossDomainBridge
+        bridge = CrossDomainBridge()
+        discount, policy_id = bridge.get_policy(source, target)
+        return jsonify({
+            "source_domain": source,
+            "target_domain": target,
+            "translation_discount": discount,
+            "translation_discount_pct": f"{discount*100:.0f}%",
+            "translation_policy": policy_id,
+            "max_translated_from_100": round(100.0 * (1.0 - discount), 2),
+            "note": "Authority is always reduced by at least this % at domain crossing",
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] get_translation_policy error: {exc}")
         return _err(str(exc), 500)
 
 
