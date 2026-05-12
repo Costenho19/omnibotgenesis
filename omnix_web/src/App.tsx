@@ -55,6 +55,7 @@ import PartnersPage from './pages/PartnersPage'
 import CustomersPage from './pages/CustomersPage'
 import AgentTrustFabricPage from './pages/AgentTrustFabricPage'
 import ATFVerifierPage from './pages/ATFVerifierPage'
+import ATFStandardPage from './pages/ATFStandardPage'
 import './index.css'
 
 function App() {
@@ -118,6 +119,7 @@ function App() {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/agent-trust-fabric" element={<AgentTrustFabricPage />} />
           <Route path="/atf-verify" element={<ATFVerifierPage />} />
+          <Route path="/atf-standard" element={<ATFStandardPage />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
