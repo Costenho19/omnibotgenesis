@@ -17,10 +17,10 @@ Abstract
    Authority Reduction invariant that together enable independently
    verifiable chains of AI-agent authority traceable to a human origin.
 
-   An ATF-compliant implementation provides formal guarantees that no
-   autonomous agent can possess or exercise authority beyond what was
-   explicitly delegated to it by a verified principal, and that every
-   delegation event produces a cryptographic artifact verifiable by any
+   An ATF-compliant implementation enforces formally specified, model-checked
+   invariants ensuring that no autonomous agent can possess or exercise authority
+   beyond what was explicitly delegated to it by a verified principal, and that
+   every delegation event produces a cryptographic artifact verifiable by any
    party without access to the issuing platform.
 
 Status of This Memo
@@ -793,7 +793,7 @@ Table of Contents
 10.2. Signing
 
    Primary algorithm: ML-DSA-65 (Dilithium-3), FIPS 204.
-   Security level: Category 3 (128-bit post-quantum security).
+   Security level: NIST PQC Level 3 (targeting 128-bit post-quantum security).
    Public key size: 1952 bytes.
    Private key size: 4000 bytes.
    Signature size: 3293 bytes.
@@ -849,10 +849,17 @@ Table of Contents
 
 11.5. Quantum Adversary
 
-   ATF uses ML-DSA-65 (Dilithium-3), standardized by NIST in
-   FIPS 204 (August 2024).  This provides 128-bit post-quantum
-   security — resistant to attacks by Shor's algorithm and known
-   quantum search algorithms.
+   ATF uses the ML-DSA-65 algorithm (Dilithium-3), as specified in NIST
+   FIPS 204 (August 2024), targeting NIST PQC Level 3 security — resistant
+   to attacks by Shor's algorithm and known quantum search algorithms.
+
+   Note on Implementation: The ATF reference implementation uses the `pqc`
+   Python library for ML-DSA-65 signatures.  Deployments in regulated or
+   critical-infrastructure environments SHOULD evaluate whether a FIPS 140-3
+   validated cryptographic module is required for their compliance context.
+   The ATF protocol specification is library-agnostic; any correct
+   implementation of ML-DSA-65 per FIPS 204 satisfies the signature
+   requirements.
 
    Implementations MUST NOT fall back to RSA, ECDSA, or other
    classical-only signature schemes for production deployments
@@ -1005,7 +1012,19 @@ Acknowledgements
 
    The ATF protocol was developed by the OMNIX QUANTUM engineering
    team in response to the accountability gap in enterprise AI agent
-   deployments.  The design was informed by the W3C Verifiable
-   Credentials specification, IETF RFC 7519 (JWT), NIST FIPS 204
-   (ML-DSA), and the OMNIX Governance Architecture (ADR-028).
+   deployments: the absence of a formally specified, independently
+   verifiable protocol answering who authorized an AI agent, under
+   what authority bound, and whether that authority was valid at the
+   exact moment of execution.
+
+   The design was informed by the W3C Verifiable Credentials
+   specification, IETF RFC 7519 (JWT), NIST FIPS 204 (ML-DSA),
+   NIST SP 800-207 (Zero Trust Architecture), and the OMNIX
+   Governance Architecture (ADR-028 through ADR-158).
+
+   Existing AI agent orchestration frameworks (LangChain, AutoGen,
+   CrewAI, Semantic Kernel, Google ADK) focus on agent execution
+   and tool use, not on cryptographic governance of the authority
+   chain before execution.  ATF addresses the governance layer that
+   precedes these frameworks' operation and is complementary to them.
 ```

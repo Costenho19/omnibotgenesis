@@ -97,21 +97,24 @@ And transitively across any chain:
 
     leaf.authority_budget ≤ root.authority_budget
 
-This is formally proven in TLA+ (see `docs/formal/ATF-TLA-SPEC.tla`).
-No prior AI agent delegation framework has a formally proven monotonic
-authority bound.
+This invariant is formally specified in TLA+ and verified by model checking
+(see `docs/formal/ATF-TLA-SPEC.tla`). To the best of our knowledge, no prior
+publicly available AI agent delegation framework formally specifies a monotonic
+authority bound as a system invariant.
 
 ### 2. Temporal Admissibility Record (TAR) — ADR-157
 
-A cryptographically signed record proving that a specific Delegation Receipt
-was ACTIVE at the exact nanosecond of an execution event. Format: ATFTAR-{16HEX}.
+A cryptographically signed record establishing that a specific Delegation Receipt
+was ACTIVE at the time of an execution event. Format: ATFTAR-{16HEX}.
 
-Key novelty: nanosecond-precision temporal binding using `time.time_ns()`,
+Key design: nanosecond-resolution timestamp capture using `time.time_ns()`,
 cryptographically committed via PQC signature over content_hash that includes
-the execution_ns field (TAR-INV-002).
+the execution_ns field (TAR-INV-002), producing a sub-millisecond temporal anchor.
 
-Prior art search: no prior system produces a cryptographic proof binding a
-delegation receipt to a nanosecond-precision execution timestamp.
+To the best of our knowledge, based on review of published AI agent frameworks
+and cryptographic protocol specifications, no prior published system produces
+a signed, independently verifiable record binding a delegation receipt to the
+delegation's status at an execution timestamp.
 
 ### 3. Cross-Domain Trust Portability with Authority Discount (ADR-158)
 
@@ -120,8 +123,9 @@ mandatory authority reduction (Domain Translation Receipt, ATFDTR-{16HEX}).
 Domain-pair-specific discount policies ensure authority always decreases
 at domain crossings.
 
-Prior art search: W3C Verifiable Credentials support cross-domain identity
-but not authority budgets or mandatory reduction policies.
+W3C Verifiable Credentials support cross-domain identity portability but do
+not define authority budget arithmetic or mandatory reduction at domain crossings.
+ATF's domain-pair discount policy table is, to our knowledge, a novel governance mechanism.
 
 ### 4. ATF Chain Completeness Score (CCS)
 
@@ -235,7 +239,7 @@ ATF-COMPLIANT-LEVEL-3 (Sovereign)
 **Title:** "RFC-ATF-1: A Post-Quantum Cryptographic Protocol for Autonomous AI Agent Authority Delegation with Formal Monotonic Authority Reduction Proof"
 
 **Abstract:**
-We present RFC-ATF-1, the Agent Trust Fabric (ATF) protocol — a novel cryptographic framework for formally verified, post-quantum-secured authority delegation in autonomous AI agent systems. ATF defines Agent Identity Records (AIR), Delegation Receipts (DR), and Temporal Admissibility Records (TAR) that together provide cryptographic proof of: (1) who authorized each agent (PQC-signed delegation chain), (2) what authority it held (Monotonic Authority Reduction invariant, proven in TLA+), (3) when that authority was valid (nanosecond-precise TAR, ADR-157), and (4) whether execution was admitted at that exact moment (ADMITTED/REJECTED TAR status). We also define Cross-Domain Trust Portability (ADR-158) for multi-domain agent governance. The protocol uses ML-DSA-65 (Dilithium-3, FIPS 204) for 128-bit post-quantum security. All invariants are formally specified and proven using TLA+ model checking. A reference implementation and public CLI verifier are provided.
+We present RFC-ATF-1, the Agent Trust Fabric (ATF) protocol — a formally specified, post-quantum-secured protocol for authority delegation in autonomous AI agent systems. ATF defines Agent Identity Records (AIR), Delegation Receipts (DR), and Temporal Admissibility Records (TAR) that together provide cryptographically verifiable evidence of: (1) who authorized each agent (PQC-signed delegation chain traceable to a human principal), (2) what authority it held (Monotonic Authority Reduction invariant, model-checked in TLA+), (3) the delegation's status at execution time (nanosecond-resolution TAR, ADR-157), and (4) whether execution was formally admitted at that moment (ADMITTED/REJECTED TAR status). We also define Cross-Domain Trust Portability (ADR-158) for multi-domain agent governance. The protocol uses the ML-DSA-65 algorithm (as specified in NIST FIPS 204) for digital signatures. All invariants are formally specified in TLA+ and verified by model checking. A reference implementation and public CLI verifier are provided. To the best of our knowledge, no prior publicly available system provides all four properties in a single formally specified, reference-implemented protocol.
 
 **Subject:** cs.CR (Cryptography and Security), cs.AI (Artificial Intelligence)
 
@@ -252,10 +256,13 @@ I, Harold Nunes, founder of OMNIX QUANTUM LTD, hereby assert that:
    reference implementation, and public CLI verifier were completed and first
    published on May 12, 2026.
 
-3. To the best of my knowledge, no prior published work provides all four
-   cryptographic proofs (authorization, authority bound, temporal validity,
-   execution admissibility) with TLA+-proven monotonic authority reduction and
-   post-quantum (ML-DSA-65) signatures.
+3. To the best of my knowledge, based on review of published AI agent frameworks,
+   relevant IETF/W3C specifications, and academic literature in cs.CR and cs.AI,
+   no prior publicly available system provides all four properties (authorization
+   chain traceability, formally specified monotonic authority bound, pre-execution
+   temporal admissibility record, and independent offline verifiability) in a single
+   formally specified, reference-implemented protocol using post-quantum signatures
+   (ML-DSA-65 as specified in NIST FIPS 204).
 
 4. This document, combined with the Git commit history of the OMNIX QUANTUM
    repository, establishes the publication date and content of the ATF protocol.
