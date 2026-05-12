@@ -776,6 +776,13 @@ try:
 except Exception as _ose_err:
     logger.warning("[server] oversight_bp not loaded: %s", _ose_err)
 
+try:
+    from api.agent_blueprint import atf_bp
+    app.register_blueprint(atf_bp)
+    logger.info("[server] atf_bp registered — /api/atf/* active (ADR-156)")
+except Exception as _atf_err:
+    logger.warning("[server] atf_bp not loaded: %s", _atf_err)
+
 # ── Startup: ensure b2b_clients has webhook columns (ADR-053) ────────────────
 try:
     from api.gov_auth_rbac import _ensure_webhook_columns, _ensure_key_expiry_column

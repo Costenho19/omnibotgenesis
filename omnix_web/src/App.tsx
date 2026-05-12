@@ -53,6 +53,7 @@ import AboutPage from './pages/AboutPage'
 import SecurityPage from './pages/SecurityPage'
 import PartnersPage from './pages/PartnersPage'
 import CustomersPage from './pages/CustomersPage'
+import AgentTrustFabricPage from './pages/AgentTrustFabricPage'
 import './index.css'
 
 function App() {
@@ -114,6 +115,7 @@ function App() {
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/agent-trust-fabric" element={<AgentTrustFabricPage />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
