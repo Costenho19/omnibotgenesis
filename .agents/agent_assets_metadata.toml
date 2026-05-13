@@ -605,3 +605,15 @@ id = "OUnRGsKdTuhYHRj1YDA4J"
 uri = "file://docs/atf/LINKEDIN-POSTS.md"
 type = "text"
 title = "Posts LinkedIn — RFC-ATF-1 (3 opciones)"
+
+[[outputs]]
+id = "Fiq-aiZ4e5sa0bIWK0aLY"
+uri = "file://docs/zenodo/submission_package/RFC-ATF-1.md"
+type = "text"
+title = "RFC-ATF-1.md — Especificación formal"
+
+[[outputs]]
+id = "Ara39S3yRmkPcEKYS_vOx"
+uri = "file://docs/zenodo/submission_package/ATF-zenodo-files.zip"
+type = "unspecified"
+title = "ATF-zenodo-files.zip — RFC-ATF-1.md + ATF-TLA-SPEC.tla"
