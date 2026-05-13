@@ -593,3 +593,9 @@ id = "lT1kVCpIL-CZPHgMXzcbJ"
 uri = "file://docs/zenodo/submission_package/OMNIX-ATF-ZENODO-UPLOAD.zip"
 type = "unspecified"
 title = "OMNIX ATF — Zenodo Upload Package (9 archivos)"
+
+[[outputs]]
+id = "AjnaZqXVLx9tbGk5vOzTX"
+uri = "file://docs/zenodo/submission_package/OMNIX-ATF-WHITEPAPER.pdf"
+type = "pdf"
+title = "OMNIX ATF Whitepaper — RFC-ATF-1 (PDF para Zenodo)"
