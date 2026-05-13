@@ -803,18 +803,36 @@ translated_budget = 60.0 × (1 - 0.30) = 42.0  (HEALTHCARE domain)"""
     # ── SECTION 11 ────────────────────────────────────────────────────────────
     story.append(Paragraph('11.  Implementation Reference', S['h1']))
     story.append(rule(S))
+    story.append(Paragraph(
+        'The OMNIX ATF reference implementation consists of the following functional components. '
+        'Internal module structure is proprietary; public interfaces are exposed via the REST API '
+        'and the offline CLI verifier.', S['body']))
+    story.append(sp(6))
     story.append(make_table(
-        ['Module', 'Purpose'],
+        ['Component', 'Role', 'Public Interface'],
         [
-            ['trust_lattice.py', 'TrustLattice, AgentIdentity, DelegationEngine — DAG management and MAR enforcement'],
-            ['temporal_authority.py', 'TemporalAuthorityEngine, TemporalAdmissibilityRecord — TAR issuance and verification'],
-            ['domain_bridge.py', 'CrossDomainBridge, DomainTranslationReceipt — cross-domain authority translation'],
-            ['atf_connector.py', 'ATFConnector, ATFContext — integration bridge for governance pipeline'],
-            ['agent_blueprint.py', 'REST API endpoints: /api/atf/register, /api/atf/delegate, /api/atf/admit, /api/atf/verify'],
-            ['omnix_atf_verify.py', 'Standalone offline CLI verifier — zero dependencies beyond Python 3.8+'],
-            ['ATF-TLA-SPEC.tla', 'TLA+ formal specification — 5 invariants model-checked'],
-            ['test_agent_trust_fabric.py', '50+ protocol tests covering all invariants and error conditions'],
-        ], S, col_widths=[4.8*cm, 12*cm]
+            ['Trust Lattice Engine',
+             'DAG management, AgentIdentity registration, DelegationReceipt issuance, MAR enforcement',
+             '/api/atf/register · /api/atf/delegate'],
+            ['Temporal Authority Engine',
+             'TAR issuance and verification, nanosecond-resolution admission capture, ADMITTED/REJECTED status',
+             '/api/atf/admit · /api/atf/temporal/verify'],
+            ['Cross-Domain Bridge',
+             'DTR issuance, domain-pair discount policy enforcement, CDTP invariant verification',
+             '/api/atf/translate'],
+            ['Governance Connector',
+             'Integration layer binding ATF context to GovernanceReceipt — non-blocking, backward compatible',
+             'Embedded in governance pipeline (internal)'],
+            ['REST API Layer',
+             'Full ATF lifecycle endpoints — register, delegate, admit, verify, chain traversal',
+             '/api/atf/* (documented in RFC-ATF-1)'],
+            ['Offline CLI Verifier',
+             'Standalone verifier — DR, TAR, chain, receipt modes. Zero platform dependency (ATF-INV-006)',
+             'omnix_atf_verify.py (public, open source)'],
+            ['Formal Specification',
+             'TLA+ model — 5 invariants, bounded state space verification, MAR + Acyclicity + ChainRoot + Immutability',
+             'ATF-TLA-SPEC.tla (public repository)'],
+        ], S, col_widths=[4.2*cm, 7.8*cm, 4.8*cm]
     ))
 
     # ── SECTION 12 ────────────────────────────────────────────────────────────
