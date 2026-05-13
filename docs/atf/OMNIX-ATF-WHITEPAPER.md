@@ -4,7 +4,7 @@
 **Document:** OMNIX-WP-ATF-2026-001  
 **Version:** 1.0.0  
 **Date:** May 2026  
-**Author:** Harold Nunes, OMNIX QUANTUM LTD, Dubai UAE  
+**Author:** Harold Nunes, OMNIX QUANTUM LTD  
 **Contact:** harold@omnixquantum.com  
 **Protocol:** RFC-ATF-1 · ADR-156/157/158  
 **Classification:** Public — Institutional Distribution

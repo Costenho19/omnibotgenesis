@@ -1003,7 +1003,7 @@ Author's Address
 
    Harold Nunes
    OMNIX QUANTUM LTD
-   Dubai, UAE
+   United Kingdom
    Email: harold@omnixquantum.com
    URI:   https://omnixquantum.com/atf
 
