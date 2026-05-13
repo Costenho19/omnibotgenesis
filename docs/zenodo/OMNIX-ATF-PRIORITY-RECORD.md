@@ -3,8 +3,7 @@
 
 **Submission Date:** May 12, 2026  
 **Author:** Harold Nunes  
-**Organization:** OMNIX QUANTUM LTD  
-**Location:** Dubai, United Arab Emirates  
+**Organization:** OMNIX QUANTUM LTD (United Kingdom)  
 **Contact:** harold@omnixquantum.com  
 
 ---
@@ -42,6 +41,16 @@ Translation:
 > OMNIX cryptographically proves who authorized each agent,
 > what authority it held, when that authority was valid,
 > and whether it was admissible to execute at that exact moment.
+
+---
+
+## Public Submissions — May 2026
+
+| Platform | ID / URL | Status | Date |
+|---|---|---|---|
+| SSRN | [Abstract ID 6757339](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6757339) | ✅ Submitted — Under Review | 2026-05-13 |
+| Zenodo | Pending | 🔄 In Progress | — |
+| GitHub | https://github.com/Costenho19/rfc-atf-1 | ✅ Public | 2026-05-13 |
 
 ---
 
