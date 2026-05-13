@@ -233,18 +233,34 @@ async def run_telegram_bot_legacy(services: dict):
     Usa Application.run_polling() nativo de python-telegram-bot v20+
     para máxima concurrencia y escalabilidad.
     """
-    from omnix_services.telegram_service import EnterpriseTelegramBot
-    from omnix_config import env_config
-    
-    token = env_config.get_required('TELEGRAM_BOT_TOKEN')
-    
-    verification_runner = await start_verification_server_task()
-    
-    logger.info("Starting Telegram bot (async native mode)...")
-    
-    bot = EnterpriseTelegramBot()
-    
-    await bot.start_polling()
+    try:
+        from omnix_services.telegram_service import EnterpriseTelegramBot
+        from omnix_config import env_config
+
+        print("[BOT] Step 1/5 — Validating TELEGRAM_BOT_TOKEN...", flush=True)
+        token = env_config.get_required('TELEGRAM_BOT_TOKEN')
+        print(f"[BOT] Step 1/5 — Token OK ({len(token)} chars)", flush=True)
+
+        print("[BOT] Step 2/5 — Starting verification server...", flush=True)
+        verification_runner = await asyncio.wait_for(
+            start_verification_server_task(), timeout=15.0
+        )
+        print("[BOT] Step 2/5 — Verification server done", flush=True)
+
+        print("[BOT] Step 3/5 — Instantiating EnterpriseTelegramBot...", flush=True)
+        bot = EnterpriseTelegramBot()
+        print("[BOT] Step 3/5 — Bot instance created", flush=True)
+
+        print("[BOT] Step 4/5 — Calling start_polling()...", flush=True)
+        logger.info("Starting Telegram bot (async native mode)...")
+        await bot.start_polling()
+        print("[BOT] Step 4/5 — start_polling() returned", flush=True)
+
+    except Exception as exc:
+        import traceback
+        print(f"[BOT] FATAL ERROR in run_telegram_bot_legacy: {exc}", flush=True)
+        traceback.print_exc()
+        raise
 
 
 async def run_telegram_bot_v7(services: dict):

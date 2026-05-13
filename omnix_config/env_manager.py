@@ -60,7 +60,7 @@ class EnvConfig:
         'TELEGRAM_BOT_TOKEN': {
             'category': EnvCategory.TELEGRAM,
             'required': True,
-            'validator': lambda x: bool(re.match(r'^\d+:[A-Za-z0-9_-]{35}$', x)),
+            'validator': lambda x: bool(re.match(r'^\d+:[A-Za-z0-9_-]{35,}$', x)),
             'description': 'Token del bot de Telegram',
             'example': '123456789:ABCdefGHIjklMNOpqrsTUVwxyz1234567890'
         },
