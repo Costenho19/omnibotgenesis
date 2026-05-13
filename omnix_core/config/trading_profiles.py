@@ -202,32 +202,32 @@ class PairCalibration:
 
 PAIR_CALIBRATIONS: Dict[str, PairCalibration] = {
     # TIER: PROVEN - Historial probado con win rate positivo
-    # V6.5.4b: min_confidence reducido para generar trades
+    # FIX 2026-05-13: min_confidence restaurado a 0.28 (era 0.18 → generaba trades con HMM 23% → 12 pérdidas seguidas)
     "BTC/USD": PairCalibration(
         symbol="BTC/USD",
         tier=CalibrationTier.PROVEN,
         stop_loss_pct=0.012,        # 1.2%
         take_profit_pct=0.035,      # 3.5%
-        min_confidence=0.18,        # V6.5.4b: 0.25 -> 0.18
+        min_confidence=0.28,        # FIX: 0.18 → 0.28 (bloquea HMM confidence < 28%)
         risk_reward_ratio=2.92,     # 3.5/1.2 = 2.92
         max_position_pct=0.10,
         max_position_usd=50000.0,   # $50K max position
         portfolio_weight=0.40,      # 40% del portafolio
         max_daily_drawdown_pct=0.02, # 2% circuit breaker
-        notes="Win rate 55% histórico. Base sólida del portafolio."
+        notes="Win rate 55% histórico. Base sólida del portafolio. FIX: min_confidence subido para evitar trades con régimen incierto."
     ),
     "XRP/USD": PairCalibration(
         symbol="XRP/USD",
         tier=CalibrationTier.PROVEN,
         stop_loss_pct=0.012,        # 1.2%
         take_profit_pct=0.035,      # 3.5%
-        min_confidence=0.18,        # V6.5.4b: 0.25 -> 0.18
+        min_confidence=0.28,        # FIX: 0.18 → 0.28 (bloquea HMM confidence < 28%)
         risk_reward_ratio=2.92,
         max_position_pct=0.10,
         max_position_usd=40000.0,   # $40K max position
         portfolio_weight=0.30,      # 30% del portafolio
         max_daily_drawdown_pct=0.02, # 2% circuit breaker
-        notes="Win rate 66% histórico. Mejor rendimiento del set."
+        notes="Win rate 66% histórico. Mejor rendimiento del set. FIX: min_confidence subido."
     ),
     
     # TIER: CALIBRATING - Pocos datos, SL estricto como protección
@@ -601,23 +601,24 @@ INSTITUTIONAL_PROFILE = TradingProfile(
     description="Perfil conservador original - Prioriza preservar capital. "
                 "Diseñado para trading real con fondos reales. "
                 "Múltiples capas de protección y vetos estrictos. "
-                "ADR-004: Kelly max 2%, hard cap $20K.",
+                "ADR-004: Kelly max 2%, hard cap $20K. "
+                "FIX 2026-05-13: min_confidence 0.14→0.28, coherence_veto_normal 45→57, stop_loss 0.02→0.015.",
     
     min_trade_usd=75.0,
     max_position_pct=KELLY_MAX_POSITION,  # ADR-004: 0.12 → 0.02 (12% → 2%)
-    stop_loss_pct=0.02,
-    stop_loss_pct_high_vol=0.03,
+    stop_loss_pct=0.015,             # FIX: 0.02 → 0.015 (cierra antes de acumular pérdidas)
+    stop_loss_pct_high_vol=0.025,    # FIX: 0.03 → 0.025
     take_profit_pct=0.03,
     take_profit_pct_high_vol=0.04,
     max_daily_loss_pct=0.08,
-    min_confidence=0.14,
+    min_confidence=0.28,             # FIX: 0.14 → 0.28 (bloquea HMM confidence < 28%)
     check_interval_seconds=90,
     trades_per_day_target=25,
     
-    coherence_veto_critical=30.0,
-    coherence_veto_normal=45.0,
-    coherence_warning=60.0,
-    coherence_good=80.0,
+    coherence_veto_critical=35.0,    # FIX: 30.0 → 35.0
+    coherence_veto_normal=57.0,      # FIX: 45.0 → 57.0 (bloquea coherence < 57, como el 47 de las 12 pérdidas)
+    coherence_warning=68.0,          # FIX: 60.0 → 68.0
+    coherence_good=82.0,
     
     ramp_up_phase1_factor=0.30,
     ramp_up_phase2_factor=0.50,
@@ -643,23 +644,24 @@ PAPER_AGGRESSIVE_PROFILE = TradingProfile(
     name="PAPER_AGGRESSIVE",
     description="Perfil agresivo para paper trading - Más trades para construir track record. "
                 "Umbrales más bajos para permitir más oportunidades. "
-                "Ramp-up más rápido. Ideal para demostrar capacidades a inversores.",
+                "Ramp-up más rápido. Ideal para demostrar capacidades a inversores. "
+                "FIX 2026-05-13: min_confidence 0.10→0.22, coherence_veto_normal 30→45.",
     
     min_trade_usd=50.0,
     max_position_pct=0.15,
-    stop_loss_pct=0.025,
-    stop_loss_pct_high_vol=0.035,
+    stop_loss_pct=0.020,             # FIX: 0.025 → 0.020
+    stop_loss_pct_high_vol=0.030,    # FIX: 0.035 → 0.030
     take_profit_pct=0.04,
     take_profit_pct_high_vol=0.05,
     max_daily_loss_pct=0.12,
-    min_confidence=0.10,
+    min_confidence=0.22,             # FIX: 0.10 → 0.22
     check_interval_seconds=90,
     trades_per_day_target=40,
     
-    coherence_veto_critical=20.0,
-    coherence_veto_normal=30.0,
-    coherence_warning=45.0,
-    coherence_good=65.0,
+    coherence_veto_critical=25.0,    # FIX: 20.0 → 25.0
+    coherence_veto_normal=45.0,      # FIX: 30.0 → 45.0
+    coherence_warning=58.0,          # FIX: 45.0 → 58.0
+    coherence_good=72.0,
     
     ramp_up_phase1_factor=0.50,
     ramp_up_phase2_factor=0.70,
@@ -691,22 +693,23 @@ PAPER_AGGRESSIVE_PROFILE = TradingProfile(
 BALANCED_PROFILE = TradingProfile(
     name="BALANCED",
     description="Perfil equilibrado - Término medio entre conservador y agresivo. "
-                "Bueno para transición o cuando quieres más trades sin arriesgar demasiado.",
+                "Bueno para transición o cuando quieres más trades sin arriesgar demasiado. "
+                "FIX 2026-05-13: min_confidence 0.12→0.25, coherence_veto_normal 38→52.",
     
     min_trade_usd=60.0,
     max_position_pct=0.13,
-    stop_loss_pct=0.022,
-    stop_loss_pct_high_vol=0.032,
+    stop_loss_pct=0.018,             # FIX: 0.022 → 0.018
+    stop_loss_pct_high_vol=0.028,    # FIX: 0.032 → 0.028
     take_profit_pct=0.035,
     take_profit_pct_high_vol=0.045,
     max_daily_loss_pct=0.10,
-    min_confidence=0.12,
+    min_confidence=0.25,             # FIX: 0.12 → 0.25
     check_interval_seconds=90,
     trades_per_day_target=32,
     
-    coherence_veto_critical=25.0,
-    coherence_veto_normal=38.0,
-    coherence_warning=55.0,
+    coherence_veto_critical=30.0,    # FIX: 25.0 → 30.0
+    coherence_veto_normal=52.0,      # FIX: 38.0 → 52.0
+    coherence_warning=62.0,          # FIX: 55.0 → 62.0
     coherence_good=72.0,
     
     ramp_up_phase1_factor=0.40,
@@ -852,7 +855,8 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     description="Perfil PRODUCTION STABLE - Estrategias institucionales probadas. "
                 "Activas: QuantumMomentum, Monte Carlo, Kelly Criterion, Black Swan, HMM, Kalman, "
                 "Coherence Engine, Risk Guardian, Non-Markovian Kernel, SentimentAnalysis. "
-                "Coherence Pre-Gate, umbrales SUBIDOS (Dec 24, 2025).",
+                "Coherence Pre-Gate, umbrales SUBIDOS (Dec 24, 2025). "
+                "FIX 2026-05-13: min_confidence 0.15→0.28.",
     
     min_trade_usd=150.0,
     max_position_pct=0.10,
@@ -861,7 +865,7 @@ PRODUCTION_STABLE_PROFILE = TradingProfile(
     take_profit_pct=0.035,
     take_profit_pct_high_vol=0.050,
     max_daily_loss_pct=0.03,
-    min_confidence=0.15,
+    min_confidence=0.28,             # FIX: 0.15 → 0.28 (bloquea HMM confidence < 28%)
     check_interval_seconds=90,
     trades_per_day_target=15,
     
