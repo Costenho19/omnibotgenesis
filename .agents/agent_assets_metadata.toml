@@ -587,3 +587,9 @@ id = "a01BFPEUC8ydkOWG207qt"
 uri = "file://backups/omnix_receipts_part6of6_20260510.zip"
 type = "unspecified"
 title = "Recibos 6/6 (final — 0.3 MB)"
+
+[[outputs]]
+id = "lT1kVCpIL-CZPHgMXzcbJ"
+uri = "file://docs/zenodo/submission_package/OMNIX-ATF-ZENODO-UPLOAD.zip"
+type = "unspecified"
+title = "OMNIX ATF — Zenodo Upload Package (9 archivos)"
