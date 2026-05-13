@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RFC-ATF-1 Whitepaper — OMNIX QUANTUM</title>
+  <title>RFC-ATF-1 — OMNIX QUANTUM</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -20,7 +20,7 @@
       border: 1px solid #222;
       border-radius: 16px;
       padding: 48px;
-      max-width: 480px;
+      max-width: 520px;
       width: 90%;
       text-align: center;
     }
@@ -54,9 +54,7 @@
       gap: 24px;
       margin-bottom: 32px;
     }
-    .meta-item {
-      text-align: center;
-    }
+    .meta-item { text-align: center; }
     .meta-item .value {
       font-size: 18px;
       font-weight: 700;
@@ -68,33 +66,71 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #555;
+      margin-bottom: 12px;
+      margin-top: 8px;
+      text-align: left;
+    }
     .btn {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       background: #5b5bd6;
       color: #fff;
       text-decoration: none;
-      padding: 16px 32px;
+      padding: 14px 20px;
       border-radius: 10px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       transition: background 0.2s;
     }
     .btn:hover { background: #4a4ac4; }
-    .btn-outline {
-      display: block;
-      background: transparent;
-      color: #888;
-      text-decoration: none;
-      padding: 12px 32px;
-      border-radius: 10px;
+    .btn.secondary {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
       font-size: 14px;
-      border: 1px solid #222;
-      transition: border-color 0.2s;
+      font-weight: 500;
+    }
+    .btn.secondary:hover { background: #22223a; border-color: #4a4aaa; }
+    .btn-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .btn-text { text-align: left; }
+    .btn-text .name { display: block; }
+    .btn-text .desc {
+      font-size: 11px;
+      opacity: 0.65;
+      font-weight: 400;
+      margin-top: 1px;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid #1e1e1e;
+      margin: 20px 0;
+    }
+    .btn-outline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: transparent;
+      color: #666;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      border: 1px solid #1e1e1e;
+      transition: border-color 0.2s, color 0.2s;
     }
     .btn-outline:hover { border-color: #444; color: #fff; }
     .footer {
-      margin-top: 32px;
+      margin-top: 28px;
       font-size: 12px;
       color: #444;
     }
@@ -103,12 +139,13 @@
 <body>
   <div class="card">
     <div class="badge">RFC-ATF-1 · v1.0.0 · May 2026</div>
-    <h1>Agent Trust Fabric<br>Whitepaper</h1>
-    <p class="subtitle">Post-quantum cryptographic protocol for AI agent authority governance. Formally specified, TLA+ verified.</p>
+    <h1>Agent Trust Fabric</h1>
+    <p class="subtitle">Post-quantum cryptographic protocol for AI agent authority governance.<br>Formally specified · TLA+ verified · ML-DSA-65</p>
+
     <div class="meta">
       <div class="meta-item">
         <div class="value">~22pp</div>
-        <div class="label">Pages</div>
+        <div class="label">Whitepaper</div>
       </div>
       <div class="meta-item">
         <div class="value">ML-DSA-65</div>
@@ -119,13 +156,40 @@
         <div class="label">Verified</div>
       </div>
     </div>
+
+    <p class="section-label">Documentos para Zenodo</p>
+
     <a class="btn" href="/OMNIX-ATF-WHITEPAPER.pdf" download="OMNIX-ATF-WHITEPAPER.pdf">
-      ⬇ Descargar PDF
+      <span class="btn-icon">📄</span>
+      <span class="btn-text">
+        <span class="name">OMNIX-ATF-WHITEPAPER.pdf</span>
+        <span class="desc">Whitepaper institucional completo · 225 KB</span>
+      </span>
     </a>
+
+    <a class="btn secondary" href="/RFC-ATF-1.md" download="RFC-ATF-1.md">
+      <span class="btn-icon">📋</span>
+      <span class="btn-text">
+        <span class="name">RFC-ATF-1.md</span>
+        <span class="desc">Especificación formal del protocolo · 16 secciones · ABNF</span>
+      </span>
+    </a>
+
+    <a class="btn secondary" href="/ATF-TLA-SPEC.tla" download="ATF-TLA-SPEC.tla">
+      <span class="btn-icon">🔬</span>
+      <span class="btn-text">
+        <span class="name">ATF-TLA-SPEC.tla</span>
+        <span class="desc">Especificación TLA+ · 5 invariantes verificados formalmente</span>
+      </span>
+    </a>
+
+    <hr class="divider">
+
     <a class="btn-outline" href="https://github.com/Costenho19/rfc-atf-1" target="_blank">
-      Ver en GitHub →
+      Ver repositorio público en GitHub →
     </a>
-    <div class="footer">OMNIX QUANTUM LTD · Harold Nunes</div>
+
+    <div class="footer">OMNIX QUANTUM LTD · Harold Nunes · OMNIX-WP-ATF-2026-001</div>
   </div>
 </body>
 </html>
