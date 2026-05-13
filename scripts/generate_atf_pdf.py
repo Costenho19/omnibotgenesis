@@ -11,7 +11,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY, TA_RIGHT
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, HRFlowable, KeepTogether, Preformatted
+    PageBreak, HRFlowable, KeepTogether, Preformatted, Image
 )
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.pdfgen import canvas as pdfcanvas
@@ -230,12 +230,34 @@ def build_pdf(output_path):
     story = []
 
     # ── COVER PAGE ────────────────────────────────────────────────────────────
-    # Top spacing for accent bar
-    story.append(sp(40))
-    story.append(Paragraph('RFC-ATF-1', S['cover_badge']))
-    story.append(sp(8))
-    story.append(Paragraph('Agent Trust Fabric', S['cover_title']))
-    story.append(Paragraph('Cryptographic Authority Governance<br/>for Autonomous AI Agents', S['cover_subtitle']))
+    story.append(sp(30))
+
+    # Logo + title side by side: logo right, text left
+    LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                             'omnix_web', 'public', 'logo_nobg.png')
+    logo_w = 4.5 * cm
+    logo_h = logo_w * (380 / 522)   # maintain aspect ratio
+
+    title_col = [
+        Paragraph('RFC-ATF-1', S['cover_badge']),
+        sp(6),
+        Paragraph('Agent Trust Fabric', S['cover_title']),
+        Paragraph('Cryptographic Authority Governance<br/>for Autonomous AI Agents', S['cover_subtitle']),
+    ]
+    logo_cell = Image(LOGO_PATH, width=logo_w, height=logo_h)
+
+    cover_top = Table(
+        [[title_col, logo_cell]],
+        colWidths=[PAGE_W - 2*MARGIN - logo_w - 8*mm, logo_w + 4*mm],
+        style=TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('LEFTPADDING', (0,0), (-1,-1), 0),
+            ('RIGHTPADDING', (0,0), (-1,-1), 0),
+            ('TOPPADDING', (0,0), (-1,-1), 0),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ])
+    )
+    story.append(cover_top)
     story.append(sp(20))
     story.append(HRFlowable(width='40%', thickness=1.5, color=ACCENT_BLUE, spaceAfter=20))
 
