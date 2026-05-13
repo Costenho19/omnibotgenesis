@@ -49,7 +49,7 @@ Translation:
 | Platform | ID / URL | Status | Date |
 |---|---|---|---|
 | SSRN | [Abstract ID 6757339](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6757339) | ✅ Submitted — Under Review | 2026-05-13 |
-| Zenodo | Pending | 🔄 In Progress | — |
+| Zenodo | [DOI: 10.5281/zenodo.20155016](https://doi.org/10.5281/zenodo.20155016) | ✅ Published | 2026-05-13 |
 | GitHub | https://github.com/Costenho19/rfc-atf-1 | ✅ Public | 2026-05-13 |
 
 ---
