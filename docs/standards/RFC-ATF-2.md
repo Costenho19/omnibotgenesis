@@ -77,7 +77,7 @@ Status of This Memo
    Committee.
 
    DOI: pending (Zenodo submission in progress)
-   SSRN: pending
+   SSRN: 6763978
 
 
 Copyright Notice

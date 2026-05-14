@@ -111,7 +111,7 @@ Una vez Zenodo asigne el DOI:
 2. Actualizar `docs/ARCHITECTURE_INDEX.md` — cambiar "Pendiente Zenodo" por el DOI
 3. Actualizar `replit.md` — añadir el DOI al pointer de RFC-ATF-2
 4. Crear GitHub Release v1.1.0 (ver `docs/submissions/GITHUB_RELEASE_v1.1.0.md`)
-5. Actualizar SSRN para referenciar RFC-ATF-2 como extensión
+5. Actualizar SSRN: 6763978 para referenciar RFC-ATF-2 como extensión
 
 ---
 
