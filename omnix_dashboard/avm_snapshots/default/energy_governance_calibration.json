@@ -1,24 +1,24 @@
 {
-  "snapshot_id": "AVM-F262A2105F",
-  "parameter_version": "1.f262a2105f",
+  "snapshot_id": "AVM-BCFA703FAE",
+  "parameter_version": "1.bcfa703fae",
   "domain": "energy_governance",
   "baseline_signals": {
-    "risk_exposure": 29.78,
-    "signal_coherence": 77.64,
-    "logic_consistency": 79.62,
-    "probability_score": 48.84,
-    "stress_resilience": 79.65,
-    "trend_persistence": 73.49
+    "risk_exposure": 11.11,
+    "signal_coherence": 78.2,
+    "logic_consistency": 87.42,
+    "probability_score": 80.0,
+    "stress_resilience": 39.8,
+    "trend_persistence": 59.77
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=72h>=72h",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=79h>=72h",
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_10.7"
+    "prev_drift_19.4"
   ],
-  "calibrated_at": "2026-05-10T21:28:37.800694+00:00",
-  "calibrated_at_epoch": 1778448517.800694
+  "calibrated_at": "2026-05-14T04:12:19.886273+00:00",
+  "calibrated_at_epoch": 1778731939.886273
 }
