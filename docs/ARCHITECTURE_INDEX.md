@@ -7,7 +7,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — 161 total. Últimos: ADR-158 (DTR) · ADR-159 (RGC) · ADR-160 (RPOL) · ADR-161 (GPIL)
+- **ADRs:** `docs/adr/` — 162 total. Últimos: ADR-159 (RGC) · ADR-160 (RPOL) · ADR-161 (GPIL) · ADR-162 (ELR)
 - **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants · 151 ADRs · Architecture Freeze
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
@@ -47,6 +47,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Runtime Continuity | `omnix_core/agents/atf/runtime_continuity.py` | ATFRCR-{16HEX} · CES · AFG · RC · ADR-159 |
 | RCR Performance Optimization | `omnix_core/agents/atf/rcr_performance.py` | RCRWriteQueue · EventDrivenSampler · RCRScheduler · GovernanceRiskTier · ADR-160 |
 | Governance Policy Interop Layer | `docs/adr/ADR-161-governance-policy-interoperability-layer.md` | Taxonomía CI/PI/GPI · Policy Parameter Registry · CRGC · ADR-161 |
+| Evidence Lifecycle & Immutable Retention | `docs/adr/ADR-162-evidence-lifecycle-immutable-retention.md` | 8 clases de evidencia · HOT/WARM/COLD · ELR-INV-001–004 · ADR-162 |
 | ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · non-blocking |
 | ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | Offline · modos: receipt/chain/agent/replay |
 
