@@ -558,6 +558,15 @@ def generate():
     with open("docs/standards/RFC-ATF-2.md", "r") as f:
         md = f.read()
 
+    # Strip outer ``` wrapper — the entire RFC is wrapped in a code block
+    lines_raw = md.split("\n")
+    # Remove first and last ``` lines
+    if lines_raw[0].strip() == "```":
+        lines_raw = lines_raw[1:]
+    if lines_raw and lines_raw[-1].strip() == "```":
+        lines_raw = lines_raw[:-1]
+    md = "\n".join(lines_raw)
+
     story.extend(parse_and_build(md, styles))
 
     # Build PDF
