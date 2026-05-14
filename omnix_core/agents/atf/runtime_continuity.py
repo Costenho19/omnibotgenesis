@@ -67,6 +67,42 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("OMNIX.ATF.RuntimeContinuity")
 
+# RPOL — lazy import to avoid circular deps; resolved on first use
+_rpol_write_queue   = None
+_rpol_sampler       = None
+_rpol_scheduler     = None
+_rpol_import_lock   = threading.Lock()
+
+
+def _get_write_queue():
+    global _rpol_write_queue
+    if _rpol_write_queue is None:
+        with _rpol_import_lock:
+            if _rpol_write_queue is None:
+                from omnix_core.agents.atf.rcr_performance import get_write_queue
+                _rpol_write_queue = get_write_queue()
+    return _rpol_write_queue
+
+
+def _get_sampler(engine):
+    global _rpol_sampler
+    if _rpol_sampler is None:
+        with _rpol_import_lock:
+            if _rpol_sampler is None:
+                from omnix_core.agents.atf.rcr_performance import get_event_sampler
+                _rpol_sampler = get_event_sampler(engine)
+    return _rpol_sampler
+
+
+def _get_scheduler(engine):
+    global _rpol_scheduler
+    if _rpol_scheduler is None:
+        with _rpol_import_lock:
+            if _rpol_scheduler is None:
+                from omnix_core.agents.atf.rcr_performance import get_scheduler
+                _rpol_scheduler = get_scheduler(engine)
+    return _rpol_scheduler
+
 # ─────────────────────────────────────────────────────────────────────────────
 # DDL
 # ─────────────────────────────────────────────────────────────────────────────
@@ -409,6 +445,7 @@ class ContinuitySession:
     open_rc:             Optional[ReauthorizationChallenge] = None
     halt_callback:       Optional[Callable[[str], None]] = None
     metadata:            Dict[str, Any] = field(default_factory=dict)
+    governance_risk_tier: str         = "STANDARD"  # ADR-160: LOW/STANDARD/HIGH/CRITICAL
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -464,6 +501,7 @@ class RuntimeContinuityEngine:
         dr_issued_at:        Optional[str] = None,
         halt_callback:       Optional[Callable[[str], None]] = None,
         metadata:            Optional[Dict[str, Any]] = None,
+        governance_risk_tier: str = "STANDARD",
     ) -> ContinuitySession:
         """
         Start a continuity monitoring session anchored to a TAR.
@@ -503,6 +541,15 @@ class RuntimeContinuityEngine:
             except Exception:
                 pass
 
+        # Validate and normalise risk tier (ADR-160)
+        valid_tiers = ("LOW", "STANDARD", "HIGH", "CRITICAL")
+        tier = governance_risk_tier.upper() if governance_risk_tier else "STANDARD"
+        if tier not in valid_tiers:
+            logger.warning(
+                f"[RGC] Unknown governance_risk_tier '{tier}' — defaulting to STANDARD"
+            )
+            tier = "STANDARD"
+
         session = ContinuitySession(
             session_id=tar_id,
             tar_id=tar_id,
@@ -516,14 +563,24 @@ class RuntimeContinuityEngine:
             dr_issued_ns=dr_issued_ns,
             halt_callback=halt_callback,
             metadata=metadata or {},
+            governance_risk_tier=tier,
         )
 
         with self._lock:
             self._sessions[tar_id] = session
 
+        # Register with RPOL event sampler (ADR-160)
+        try:
+            _get_sampler(self).register_session(
+                tar_id=tar_id,
+                budget_at_admission=budget_at_admission,
+            )
+        except Exception:
+            pass
+
         logger.info(
             f"[RGC] Session started — tar={tar_id} agent={agent_id} "
-            f"budget={budget_at_admission:.1f} domain={domain}"
+            f"budget={budget_at_admission:.1f} domain={domain} tier={tier}"
         )
         return session
 
@@ -558,6 +615,12 @@ class RuntimeContinuityEngine:
 
         with self._lock:
             self._sessions.pop(tar_id, None)
+
+        # Deregister from RPOL event sampler (ADR-160)
+        try:
+            _get_sampler(self).deregister_session(tar_id)
+        except Exception:
+            pass
 
         logger.info(
             f"[RGC] Session stopped — tar={tar_id} final_ces={rcr.ces_score:.1f} "
@@ -685,10 +748,10 @@ class RuntimeContinuityEngine:
             session.last_rcr_ns = now_ns
             session.rcr_count += 1
 
-        # ── Store ────────────────────────────────────────────────────────────
+        # ── Store (ADR-160: tier-aware persistence) ──────────────────────────
         with self._lock:
             self._rcr_store[rcr_id] = rcr
-        self._persist_rcr(rcr)
+        self._persist_rcr(rcr, tier=session.governance_risk_tier)
 
         # ── Escalation ───────────────────────────────────────────────────────
         cee, rc = self._evaluate_escalation(rcr, session, ces)
@@ -767,6 +830,81 @@ class RuntimeContinuityEngine:
             f"[RGC] RC resolved — {rc_id} new_dr={new_dr_id} agent={rc.agent_id}"
         )
         return rc
+
+    # ──────────────────────────────────────────────────────────
+    # ADR-160: Event-driven sampling interface
+    # ──────────────────────────────────────────────────────────
+
+    def notify_event(
+        self,
+        tar_id:            str,
+        event_type:        str,
+        budget_consumed:   float = 0.0,
+        context_drift_pct: float = 0.0,
+        active_anomalies:  int   = 0,
+        metadata:          Optional[Dict[str, Any]] = None,
+    ) -> Optional["RuntimeContinuityRecord"]:
+        """
+        Notify the engine of a governance-relevant event that may trigger
+        an out-of-schedule RCR sample (ADR-160 — EventDrivenSampler).
+
+        The sample is triggered only when the event delta meets or exceeds
+        the configured thresholds (RPOL_BUDGET_TRIGGER_PCT, RPOL_DRIFT_TRIGGER_PCT,
+        RPOL_ANOMALY_TRIGGER_N). This avoids handshake on micro-operations that
+        do not materially change authority health.
+
+        event_type values: BUDGET_CHANGE | ANOMALY_DETECTED | CONTEXT_DRIFT |
+                           SCOPE_CHANGE | SUB_AGENT_SPAWN | EXTERNAL_TRIGGER
+
+        Returns the RuntimeContinuityRecord if a sample was triggered, None otherwise.
+        """
+        try:
+            from omnix_core.agents.atf.rcr_performance import GovernanceEventType
+            evt = GovernanceEventType(event_type)
+            return _get_sampler(self).notify(
+                tar_id=tar_id,
+                event_type=evt,
+                budget_consumed=budget_consumed,
+                context_drift_pct=context_drift_pct,
+                active_anomalies=active_anomalies,
+                metadata=metadata,
+            )
+        except Exception as exc:
+            logger.warning(f"[RGC] notify_event failed — tar={tar_id} event={event_type}: {exc}")
+            return None
+
+    def register_scheduler(
+        self,
+        tar_id:     str,
+        profile:    str = "MEDIUM",
+        get_inputs: Optional[Callable[[], Dict[str, Any]]] = None,
+    ) -> None:
+        """
+        Register a session with the adaptive interval scheduler (ADR-160).
+
+        The scheduler fires sample() automatically at intervals derived from
+        ADR-159 §5 (Sampling Strategy) based on execution profile and live CES.
+
+        profile: SHORT | MEDIUM | LONG | STREAMING
+        get_inputs: optional callable returning dict with budget_consumed,
+                    context_drift_pct, active_anomalies, metadata keys.
+        """
+        try:
+            from omnix_core.agents.atf.rcr_performance import (
+                ExecutionProfile,
+                get_scheduler,
+            )
+            ep = ExecutionProfile(profile)
+            _get_scheduler(self).register(tar_id, ep, get_inputs)
+        except Exception as exc:
+            logger.warning(f"[RGC] register_scheduler failed — tar={tar_id}: {exc}")
+
+    def deregister_scheduler(self, tar_id: str) -> None:
+        """Remove a session from the adaptive interval scheduler (ADR-160)."""
+        try:
+            _get_scheduler(self).deregister(tar_id)
+        except Exception:
+            pass
 
     def check_rc_ttl(self, tar_id: str) -> bool:
         """
@@ -1035,7 +1173,7 @@ class RuntimeContinuityEngine:
 
         with self._lock:
             self._cee_store[cee_id] = cee
-        self._persist_cee(cee)
+        self._persist_cee(cee, tier=session.governance_risk_tier)
 
         logger.warning(
             f"[RGC] Escalation — {cee_id} status={status} "
@@ -1215,94 +1353,91 @@ class RuntimeContinuityEngine:
             logger.warning(f"[RGC] DB connection failed: {exc}")
             return None
 
-    def _persist_rcr(self, rcr: RuntimeContinuityRecord) -> None:
+    def _persist_rcr(
+        self, rcr: RuntimeContinuityRecord, tier: str = "STANDARD"
+    ) -> None:
+        """
+        Persist an RCR to the database.
+
+        ADR-160 tier behaviour:
+          LOW      — skip persistence (no audit trail required for this tier).
+          STANDARD — enqueue to RCRWriteQueue (async, pooled thread).
+          HIGH     — enqueue synchronously (blocks until written).
+          CRITICAL — enqueue synchronously (blocks until written).
+        """
         if not self._db_url:
             return
 
-        def _write():
-            conn = self._get_conn()
-            if not conn:
-                return
-            try:
-                import json as _json
-                with conn.cursor() as cur:
-                    cur.execute("""
-                        INSERT INTO atf_runtime_continuity (
-                            rcr_id, tar_id, delegation_id, agent_id, chain_root_id,
-                            execution_ns, execution_ts, ces_score, ces_temporal,
-                            ces_budget, ces_context, ces_integrity,
-                            continuity_status, predecessor_rcr_id,
-                            budget_at_admission, budget_remaining,
-                            context_drift_pct, active_anomalies,
-                            dr_expires_at, time_remaining_ns, fragmentation_score,
-                            escalation_event_id, reauth_challenge_id,
-                            sample_reason, content_hash, pqc_signature,
-                            pqc_algorithm, issued_at, metadata
-                        ) VALUES (
-                            %s,%s,%s,%s,%s, %s,%s,%s,%s,%s,
-                            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                            %s,%s,%s,%s,%s,%s,%s,%s,%s
-                        ) ON CONFLICT (rcr_id) DO NOTHING
-                    """, (
-                        rcr.rcr_id, rcr.tar_id, rcr.delegation_id, rcr.agent_id,
-                        rcr.chain_root_id, rcr.execution_ns, rcr.execution_ts,
-                        rcr.ces_score, rcr.ces_temporal, rcr.ces_budget,
-                        rcr.ces_context, rcr.ces_integrity, rcr.continuity_status,
-                        rcr.predecessor_rcr_id, rcr.budget_at_admission,
-                        rcr.budget_remaining, rcr.context_drift_pct,
-                        rcr.active_anomalies, rcr.dr_expires_at,
-                        rcr.time_remaining_ns, rcr.fragmentation_score,
-                        rcr.escalation_event_id, rcr.reauth_challenge_id,
-                        rcr.sample_reason, rcr.content_hash, rcr.pqc_signature,
-                        rcr.pqc_algorithm, rcr.issued_at,
-                        _json.dumps(rcr.metadata),
-                    ))
-                conn.commit()
-            except Exception as exc:
-                logger.warning(f"[RGC] _persist_rcr failed: {exc}")
-                conn.rollback()
-            finally:
-                conn.close()
+        if tier == "LOW":
+            return
 
-        threading.Thread(target=_write, daemon=True).start()
+        synchronous = tier in ("HIGH", "CRITICAL")
+        try:
+            evt = _get_write_queue().enqueue_rcr(rcr, synchronous=synchronous)
+            if synchronous and evt:
+                evt.wait(timeout=5.0)
+        except Exception as exc:
+            logger.warning(f"[RGC] _persist_rcr (RPOL) failed: {exc} — fallback to thread")
+            def _write():
+                conn = self._get_conn()
+                if not conn:
+                    return
+                try:
+                    import json as _json
+                    with conn.cursor() as cur:
+                        from omnix_core.agents.atf.rcr_performance import RCRWriteQueue
+                        RCRWriteQueue._insert_rcr(cur, rcr, _json)
+                    conn.commit()
+                except Exception as exc2:
+                    logger.warning(f"[RGC] _persist_rcr fallback failed: {exc2}")
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                finally:
+                    conn.close()
+            threading.Thread(target=_write, daemon=True).start()
 
-    def _persist_cee(self, cee: ContinuityEscalationEvent) -> None:
+    def _persist_cee(
+        self, cee: ContinuityEscalationEvent, tier: str = "STANDARD"
+    ) -> None:
+        """
+        Persist a CEE to the database.
+
+        ADR-160: CEEs are always persisted regardless of tier because they
+        represent governance escalation events that must be auditable.
+        HIGH/CRITICAL tiers use synchronous writes to ensure the CEE is
+        committed before the calling thread continues.
+        """
         if not self._db_url:
             return
 
-        def _write():
-            conn = self._get_conn()
-            if not conn:
-                return
-            try:
-                import json as _json
-                with conn.cursor() as cur:
-                    cur.execute("""
-                        INSERT INTO atf_continuity_escalations (
-                            cee_id, rcr_id, tar_id, delegation_id, agent_id,
-                            chain_root_id, threshold_crossed, recommended_action,
-                            ces_at_escalation, escalation_ns, response_ttl_seconds,
-                            resolved, content_hash, pqc_signature, pqc_algorithm,
-                            issued_at, metadata
-                        ) VALUES (
-                            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
-                        ) ON CONFLICT (cee_id) DO NOTHING
-                    """, (
-                        cee.cee_id, cee.rcr_id, cee.tar_id, cee.delegation_id,
-                        cee.agent_id, cee.chain_root_id, cee.threshold_crossed,
-                        cee.recommended_action, cee.ces_at_escalation,
-                        cee.escalation_ns, cee.response_ttl_seconds,
-                        cee.resolved, cee.content_hash, cee.pqc_signature,
-                        cee.pqc_algorithm, cee.issued_at, _json.dumps(cee.metadata),
-                    ))
-                conn.commit()
-            except Exception as exc:
-                logger.warning(f"[RGC] _persist_cee failed: {exc}")
-                conn.rollback()
-            finally:
-                conn.close()
-
-        threading.Thread(target=_write, daemon=True).start()
+        synchronous = tier in ("HIGH", "CRITICAL")
+        try:
+            evt = _get_write_queue().enqueue_cee(cee, synchronous=synchronous)
+            if synchronous and evt:
+                evt.wait(timeout=5.0)
+        except Exception as exc:
+            logger.warning(f"[RGC] _persist_cee (RPOL) failed: {exc} — fallback to thread")
+            def _write():
+                conn = self._get_conn()
+                if not conn:
+                    return
+                try:
+                    import json as _json
+                    with conn.cursor() as cur:
+                        from omnix_core.agents.atf.rcr_performance import RCRWriteQueue
+                        RCRWriteQueue._insert_cee(cur, cee, _json)
+                    conn.commit()
+                except Exception as exc2:
+                    logger.warning(f"[RGC] _persist_cee fallback failed: {exc2}")
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                finally:
+                    conn.close()
+            threading.Thread(target=_write, daemon=True).start()
 
     def _fetch_rcr_from_db(self, rcr_id: str) -> Optional[RuntimeContinuityRecord]:
         if not self._db_url:

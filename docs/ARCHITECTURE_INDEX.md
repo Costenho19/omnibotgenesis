@@ -7,7 +7,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — 159 total. Últimos: ADR-156 (ATF) · ADR-157 (TAR) · ADR-158 (DTR) · ADR-159 (RGC)
+- **ADRs:** `docs/adr/` — 160 total. Últimos: ADR-157 (TAR) · ADR-158 (DTR) · ADR-159 (RGC) · ADR-160 (RPOL)
 - **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants · 151 ADRs · Architecture Freeze
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
@@ -45,6 +45,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Temporal Authority | `omnix_core/agents/atf/temporal_authority.py` | ATFTAR-{16HEX} · TAR-INV-001/005 · ADR-157 |
 | Cross-Domain Bridge | `omnix_core/agents/atf/domain_bridge.py` | ATFDTR-{16HEX} · descuentos por dominio · ADR-158 |
 | Runtime Continuity | `omnix_core/agents/atf/runtime_continuity.py` | ATFRCR-{16HEX} · CES · AFG · RC · ADR-159 |
+| RCR Performance Optimization | `omnix_core/agents/atf/rcr_performance.py` | RCRWriteQueue · EventDrivenSampler · RCRScheduler · GovernanceRiskTier · ADR-160 |
 | ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · non-blocking |
 | ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | Offline · modos: receipt/chain/agent/replay |
 

@@ -4,6 +4,7 @@ ADR-156 — Cryptographic agent delegation infrastructure.
 ADR-157 — Temporal Authority Admissibility.
 ADR-158 — Cross-Domain Trust Portability.
 ADR-159 — Runtime Governance Continuity.
+ADR-160 — RCR Performance Optimization Layer (RPOL).
 
 Exports:
     AgentIdentityEngine       — register and manage agent identities
@@ -30,6 +31,13 @@ Exports:
     AuthorityFragmentationViolation — raised when AFG aggregate limit exceeded
     ContinuityHaltError           — raised when HALT is triggered (RGC-INV-003)
     get_rgc_engine                — process-level singleton accessor
+
+    GovernanceRiskTier            — LOW/STANDARD/HIGH/CRITICAL tier enum (ADR-160)
+    RCRWriteQueue                 — pooled async DB writer (ADR-160)
+    EventDrivenSampler            — event-threshold sampler (ADR-160)
+    GovernanceEventType           — governance event enum (ADR-160)
+    RCRScheduler                  — adaptive interval scheduler (ADR-160)
+    ExecutionProfile              — SHORT/MEDIUM/LONG/STREAMING enum (ADR-160)
 """
 
 from omnix_core.agents.atf.agent_identity import (
@@ -65,6 +73,14 @@ from omnix_core.agents.atf.runtime_continuity import (
     ContinuityHaltError,
     get_rgc_engine,
 )
+from omnix_core.agents.atf.rcr_performance import (
+    GovernanceRiskTier,
+    RCRWriteQueue,
+    EventDrivenSampler,
+    GovernanceEventType,
+    RCRScheduler,
+    ExecutionProfile,
+)
 
 __all__ = [
     "AgentIdentity",
@@ -88,4 +104,10 @@ __all__ = [
     "AuthorityFragmentationViolation",
     "ContinuityHaltError",
     "get_rgc_engine",
+    "GovernanceRiskTier",
+    "RCRWriteQueue",
+    "EventDrivenSampler",
+    "GovernanceEventType",
+    "RCRScheduler",
+    "ExecutionProfile",
 ]
