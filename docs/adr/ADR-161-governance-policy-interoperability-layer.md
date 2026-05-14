@@ -196,8 +196,8 @@ all ATF-RGC-Compliant implementations MUST use exactly as specified:
 | CES formula | T×0.30 + B×0.30 + D×0.20 + I×0.20 | RGC-INV-002 |
 | NOMINAL threshold | CES ≥ 75.0 | RFC-ATF-2 §6.3 |
 | MONITORING threshold | 50.0 ≤ CES < 75.0 | RFC-ATF-2 §6.3 |
-| WARNING threshold | 30.0 ≤ CES < 50.0 | RFC-ATF-2 §6.3 |
-| CRITICAL threshold | 10.0 ≤ CES < 30.0 | RFC-ATF-2 §6.3 |
+| WARNING threshold | 25.0 ≤ CES < 50.0 | RFC-ATF-2 §6.3 |
+| CRITICAL threshold | 10.0 ≤ CES < 25.0 | RFC-ATF-2 §6.3 |
 | HALT threshold | CES < 10.0 | RFC-ATF-2 §6.3 |
 | RC issuance range | CRITICAL (10 ≤ CES < 25) | RFC-ATF-2 §10 |
 | B-component formula | budget_remaining / budget_admission × 100 | RFC-ATF-2 §6.2 |
@@ -225,23 +225,23 @@ decisions (not just cryptographically valid ones), they MUST establish a
   "parties": ["runtime-A-identity", "runtime-B-identity"],
   "effective_from": "ISO-8601",
   "expires_at": "ISO-8601",
+  "invariant_version": "RFC-ATF-2-v1.0.0",
   "policy_parameters": {
     "afg_fragmentation_limit": 0.85,
     "rc_ttl_seconds": 300,
-    "context_drift_methodology": "task-scope-euclidean-v1",
+    "context_drift_methodology_ref": "task-scope-euclidean-v1",
     "anomaly_criteria_ref": "OMNIX-ANOMALY-SPEC-v1",
     "sampling_profile": "STREAMING",
     "governance_risk_tier_policy": "HIGH"
   },
-  "invariant_compliance": "RFC-ATF-2-v1.0.0",
   "content_hash": "...",
-  "pqc_signature": "..."
+  "pqc_signatures": ["<party-A-dilithium3-signature>", "<party-B-dilithium3-signature>"]
 }
 ```
 
 A CRGC is itself a PQC-signed artifact — it is a governance contract, not
 merely a configuration agreement. Both parties sign it with their respective
-Dilithium-3 keys.
+Dilithium-3 keys. `pqc_signatures` is an ordered array aligned to `parties`.
 
 **A CRGC does not modify protocol invariants.** It only aligns the policy
 parameters from §2 between the parties. Invariants from §3 remain
