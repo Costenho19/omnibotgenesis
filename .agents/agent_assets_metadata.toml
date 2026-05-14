@@ -617,3 +617,9 @@ id = "Ara39S3yRmkPcEKYS_vOx"
 uri = "file://docs/zenodo/submission_package/ATF-zenodo-files.zip"
 type = "unspecified"
 title = "ATF-zenodo-files.zip — RFC-ATF-1.md + ATF-TLA-SPEC.tla"
+
+[[outputs]]
+id = "-LNq57QUfvS42AQQ9HVDs"
+uri = "file://docs/submissions/RFC-ATF-2.pdf"
+type = "pdf"
+title = "RFC-ATF-2 — Runtime Governance Continuity (PDF oficial)"
