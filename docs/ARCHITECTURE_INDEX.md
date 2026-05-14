@@ -7,7 +7,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — 160 total. Últimos: ADR-157 (TAR) · ADR-158 (DTR) · ADR-159 (RGC) · ADR-160 (RPOL)
+- **ADRs:** `docs/adr/` — 161 total. Últimos: ADR-158 (DTR) · ADR-159 (RGC) · ADR-160 (RPOL) · ADR-161 (GPIL)
 - **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants · 151 ADRs · Architecture Freeze
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
@@ -37,7 +37,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ---
 
-## Agent Trust Fabric (ATF) — ADR-156/157/158/159
+## Agent Trust Fabric (ATF) — ADR-156/157/158/159/160/161
 
 | Componente | Archivo | Notas |
 |---|---|---|
@@ -46,6 +46,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Cross-Domain Bridge | `omnix_core/agents/atf/domain_bridge.py` | ATFDTR-{16HEX} · descuentos por dominio · ADR-158 |
 | Runtime Continuity | `omnix_core/agents/atf/runtime_continuity.py` | ATFRCR-{16HEX} · CES · AFG · RC · ADR-159 |
 | RCR Performance Optimization | `omnix_core/agents/atf/rcr_performance.py` | RCRWriteQueue · EventDrivenSampler · RCRScheduler · GovernanceRiskTier · ADR-160 |
+| Governance Policy Interop Layer | `docs/adr/ADR-161-governance-policy-interoperability-layer.md` | Taxonomía CI/PI/GPI · Policy Parameter Registry · CRGC · ADR-161 |
 | ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · non-blocking |
 | ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | Offline · modos: receipt/chain/agent/replay |
 
@@ -53,7 +54,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 **Tests:**
 - `tests/test_agent_trust_fabric.py`
-- `tests/test_runtime_governance_continuity.py` — 82/82 PASS
+- `tests/test_runtime_governance_continuity.py` — 82/82 PASS (ADR-159/RGC)
+- `tests/test_rpol_audit.py` — 93/93 PASS (ADR-160/RPOL) · total 175/175
 
 ---
 

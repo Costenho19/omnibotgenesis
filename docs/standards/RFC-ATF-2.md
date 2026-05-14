@@ -94,6 +94,12 @@ Acknowledgements
    boundary attestation and continuous governability supervision directly
    motivated the formalization of ADR-159 and this extension document.
 
+   The formal distinction between Cryptographic Interoperability and
+   Governance Interoperability (§21) was identified by Antonio Socorro
+   (May 2026), whose public commentary on the policy divergence surface
+   between sovereign ATF runtimes directly motivated the specification of
+   §21 and ADR-161 (Governance Policy Interoperability Layer).
+
 
 Table of Contents
 
@@ -166,10 +172,17 @@ Table of Contents
    18.  Compliance Mapping
    19.  Extension Points
    20.  Relationship to RFC-ATF-1
-   21.  References
-   22.  Appendix A — CES Computation Examples
-   23.  Appendix B — RGC Compliance Checklist
-   24.  Appendix C — Implementation Notes
+   21.  Interoperability Boundaries
+        21.1. Cryptographic Interoperability
+        21.2. Governance Interoperability
+        21.3. The Policy Divergence Surface
+        21.4. Governance Policy Parameter Registry
+        21.5. Cross-Runtime Governance Contracts
+        21.6. Compliance Designations
+   22.  References
+   23.  Appendix A — CES Computation Examples
+   24.  Appendix B — RGC Compliance Checklist
+   25.  Appendix C — Implementation Notes
 
 
 1.  Introduction
@@ -1372,7 +1385,239 @@ Table of Contents
    coverage from agent registration through execution completion.
 
 
-21.  References
+21.  Interoperability Boundaries
+
+21.1.  Cryptographic Interoperability
+
+   Cryptographic interoperability is the property whereby any party in
+   possession of the issuing runtime's Dilithium-3 public key can verify
+   the ML-DSA-65 signature on any ATF artifact — including RCRs, CEEs,
+   RCs, DRs, and TARs.
+
+   This property is unconditional and binary:
+
+   (a) The artifact either passes signature verification or it does not.
+
+   (b) The result is independent of the verifier's governance policy.
+
+   (c) No platform access, API connectivity, or governance context is
+       required for verification.
+
+   (d) Two runtimes with the same public key reach identical conclusions
+       about cryptographic validity.
+
+   Cryptographic interoperability is fully defined by RFC-ATF-1 §7.6
+   (ATF-INV-006) and RFC-ATF-2 §5.4.  It is the foundation upon which
+   all higher interoperability layers rest.
+
+   A receipt that passes cryptographic verification is authentic and
+   untampered.  It is NOT necessarily acceptable under any particular
+   governance policy — that determination belongs to Layer 3 (§21.2).
+
+
+21.2.  Governance Interoperability
+
+   Governance interoperability is the property whereby two runtimes reach
+   identical governance conclusions when evaluating the same cryptographically
+   valid artifact.
+
+   Unlike cryptographic interoperability, governance interoperability is NOT
+   unconditional.  Two ATF-RGC-Compliant runtimes MAY legitimately reach
+   different governance conclusions from the same RCR.
+
+   This divergence is not a protocol violation.  It arises from the
+   deliberate design decision to separate protocol invariants (which are
+   fixed and non-negotiable — see §21.4) from governance policy parameters
+   (which are sovereign to each runtime — see §21.3).
+
+   Example:
+
+      Runtime A and Runtime B both verify the ML-DSA-65 signature on
+      RCR-X.  Both confirm cryptographic validity.  RCR-X carries:
+
+         context_drift_pct = 14.5
+         active_anomalies  = 1
+         ces_budget        = 72.0
+         ces_temporal      = 88.0
+
+      Runtime A uses a context drift threshold of 10% for MONITORING
+      escalation triggers.  Runtime A concludes: drift is above threshold;
+      escalation SHOULD be considered.
+
+      Runtime B uses a context drift threshold of 20%.  Runtime B concludes:
+      drift is within acceptable range; no escalation warranted.
+
+      Both runtimes apply the identical CES formula
+      (T×0.30 + B×0.30 + D×0.20 + I×0.20) and reach the same CES value.
+      But they draw different operational conclusions from it.
+
+   This is not a flaw.  It is the intended behavior of a sovereign runtime
+   model where governance policy is local to each deployment.
+
+
+21.3.  The Policy Divergence Surface
+
+   The Policy Divergence Surface is the set of governance conclusions that
+   may legitimately differ between two ATF-RGC-Compliant runtimes without
+   either runtime being non-compliant.
+
+   The following sources of divergence are formally recognized:
+
+   (1) Context Drift Measurement
+       RFC-ATF-2 defines context_drift_pct as an input to the D-component
+       formula (D = 100 − context_drift_pct) but does not specify how
+       context_drift_pct is measured.  Runtimes that measure drift using
+       different methodologies (semantic distance, structural diff,
+       task-scope vector, etc.) will produce different D-component values
+       for the same execution.
+
+   (2) Anomaly Detection Criteria
+       RFC-ATF-2 defines the I-component formula (I = max(0, 100 −
+       active_anomalies × 10)) but does not specify what constitutes an
+       anomaly.  Runtimes with different anomaly detection criteria will
+       produce different active_anomalies counts for the same execution.
+
+   (3) AFG Fragmentation Limit
+       RFC-ATF-2 §8.2 specifies a default of 0.90 and a hard maximum of
+       0.95.  A runtime may configure any value in [0.01, 0.95].  Two
+       runtimes with different configured limits may reach opposite
+       decisions (permit / block) for the same proposed sub-delegation.
+
+   (4) Reauthorization Challenge TTL
+       RFC-ATF-2 §10 specifies a default of 300 seconds.  A runtime may
+       configure any value in [30, 3600].  A challenge TTL that has expired
+       on Runtime A may not have expired on Runtime B for the same execution
+       timestamp.
+
+   (5) Sampling Density
+       RFC-ATF-2 §11 specifies sampling interval ranges but leaves the
+       precise intervals to each implementation.  A runtime sampling at
+       higher frequency will detect CES degradation earlier, potentially
+       triggering escalation events that a lower-frequency runtime misses
+       within the same time window.
+
+   (6) Governance Risk Tier Assignment (ADR-160)
+       The assignment of LOW / STANDARD / HIGH / CRITICAL governance
+       intensity to specific operations is implementation-defined.  A
+       runtime classifying an operation as HIGH (synchronous persistence,
+       strict halt enforcement) provides different governance guarantees
+       than one classifying the same operation as STANDARD.
+
+   The following are NOT part of the Policy Divergence Surface.  They are
+   invariant across all compliant runtimes:
+
+      CES formula weights (T:0.30, B:0.30, D:0.20, I:0.20)
+      CES threshold values (NOMINAL ≥75, MONITORING ≥50, WARNING ≥30,
+                            CRITICAL ≥10, HALT <10)
+      B-component formula (budget_remaining / budget_admission × 100)
+      I-component formula (max(0, 100 − active_anomalies × 10))
+      T-component for expired DR (0.0)
+      content_hash algorithm (SHA-256, canonical JSON, sort_keys=True)
+      PQC algorithm (ML-DSA-65, FIPS 204)
+      RC issuance range (CRITICAL: 10 ≤ CES < 25)
+      AFG hard maximum (0.95)
+      HALT → sibling revocation (unconditional)
+      RC expiry → auto-HALT (unconditional)
+
+
+21.4.  Governance Policy Parameter Registry
+
+   The following parameters are formally designated as governance policy
+   parameters.  Each runtime MAY configure them within the stated bounds.
+   Implementations that exceed the stated bounds are NOT ATF-RGC-Compliant.
+
+   ┌─────────────────────────────┬─────────┬───────┬───────┬──────────────────┐
+   │ Parameter                   │ Default │  Min  │  Max  │ Reference        │
+   ├─────────────────────────────┼─────────┼───────┼───────┼──────────────────┤
+   │ AFG_FRAGMENTATION_LIMIT     │  0.90   │ 0.01  │ 0.95  │ §8.2, ADR-161    │
+   ├─────────────────────────────┼─────────┼───────┼───────┼──────────────────┤
+   │ RGC_RC_TTL_SECONDS          │  300    │  30   │ 3600  │ §10, ADR-161     │
+   ├─────────────────────────────┼─────────┼───────┼───────┼──────────────────┤
+   │ context_drift_methodology   │  impl.  │  —    │  —    │ §6.2, ADR-161    │
+   │                             │ defined │       │       │ (monotonic fn)   │
+   ├─────────────────────────────┼─────────┼───────┼───────┼──────────────────┤
+   │ anomaly_detection_criteria  │  impl.  │  —    │  —    │ §6.2, ADR-161    │
+   │                             │ defined │       │       │ (integer ≥ 0)    │
+   ├─────────────────────────────┼─────────┼───────┼───────┼──────────────────┤
+   │ STREAMING/NOMINAL interval  │  30s    │  5s   │ 300s  │ §11, ADR-161     │
+   ├─────────────────────────────┼─────────┼───────┼───────┼──────────────────┤
+   │ LONG/NOMINAL interval       │ 3600s   │ 300s  │ 86400s│ §11, ADR-161     │
+   ├─────────────────────────────┼─────────┼───────┼───────┼──────────────────┤
+   │ governance_risk_tier_policy │  impl.  │  —    │  —    │ ADR-160, ADR-161 │
+   │                             │ defined │       │       │ (LOW/STD/HI/CRIT)│
+   └─────────────────────────────┴─────────┴───────┴───────┴──────────────────┘
+
+
+21.5.  Cross-Runtime Governance Contracts
+
+   When two or more ATF-RGC-Compliant runtimes require governance-aligned
+   decisions — not merely cryptographically valid ones — they MUST establish
+   a Cross-Runtime Governance Contract (CRGC).
+
+   A CRGC is a PQC-signed artifact declaring the mutually agreed policy
+   parameters for a specific governance relationship.  It does NOT modify
+   any protocol invariant.
+
+   Minimum CRGC structure:
+
+      {
+        "crgc_id":            "CRGC-{16HEX}",
+        "parties":            [<identity-A>, <identity-B>],
+        "effective_from":     <ISO-8601>,
+        "expires_at":         <ISO-8601>,
+        "invariant_version":  "RFC-ATF-2-v1.0.0",
+        "policy_parameters":  {
+          "afg_fragmentation_limit":       <float>,
+          "rc_ttl_seconds":                <int>,
+          "context_drift_methodology_ref": <URI>,
+          "anomaly_criteria_ref":          <URI>,
+          "sampling_profile":              <SHORT|MEDIUM|LONG|STREAMING>
+        },
+        "content_hash":   <SHA-256>,
+        "pqc_signatures": [<party-A-signature>, <party-B-signature>]
+      }
+
+   A CRGC MUST be mutually signed by all parties using their respective
+   Dilithium-3 keys.  Either party may present the CRGC to a third-party
+   verifier as evidence of governance alignment.
+
+   A runtime that operates without a CRGC in a cross-runtime context is
+   operating under Layer 1 + Layer 2 interoperability only.  Governance
+   conclusions reached by that runtime are valid for its own policy but
+   are not binding on other runtimes.
+
+
+21.6.  Compliance Designations
+
+   ADR-161 introduces a governance interoperability compliance layer on top
+   of the existing ATF compliance stack:
+
+   ATF-RGC-Compliant (existing):
+      Implements RFC-ATF-2 in full.  All eight RGC invariants satisfied.
+      Policy parameters within defined bounds.  Provides Layer 1 +
+      Layer 2 interoperability.
+
+   ATF-GPI-Aligned (new, ADR-161):
+      ATF-RGC-Compliant AND has established a valid, mutually signed CRGC
+      with each counterpart runtime.  Provides Layer 1 + Layer 2 +
+      Layer 3 interoperability — full governance agreement, not merely
+      cryptographic validity.
+
+   The distinction matters for:
+
+   (a) Multi-cloud deployments: Runtimes across cloud providers need
+       Layer 3 alignment to make consistent enforcement decisions.
+
+   (b) Regulatory audits: Auditors cannot assume two compliant runtimes
+       reached identical governance conclusions.  They MUST verify CRGC
+       existence for governance-aligned deployments.
+
+   (c) Cross-organizational delegation chains: A DR issued by
+       Organization A and evaluated by Organization B's runtime will be
+       interpreted under B's policy unless a CRGC has been established.
+
+
+22.  References
 
    [RFC-ATF-1]
       Nunes, H., "RFC-ATF-1: Agent Trust Fabric Delegation Protocol,
@@ -1412,13 +1657,23 @@ Table of Contents
       Nunes, H., "Runtime Governance Continuity", OMNIX ADR-159, 2026.
       omnixquantum.net/docs/adr/ADR-159
 
+   [ADR-160]
+      Nunes, H., "RCR Performance Optimization Layer (RPOL)",
+      OMNIX ADR-160, 2026.
+      omnixquantum.net/docs/adr/ADR-160
+
+   [ADR-161]
+      Nunes, H., "Governance Policy Interoperability Layer (GPIL)",
+      OMNIX ADR-161, 2026.
+      omnixquantum.net/docs/adr/ADR-161
+
    [TLA-ATF]
       Nunes, H., "ATF-TLA-SPEC: Formal TLA+ Specification of ATF
       Invariants", OMNIX QUANTUM, May 2026.
       DOI: 10.5281/zenodo.20155016 (included in v1.0.0 archive)
 
 
-22.  Appendix A — CES Computation Examples
+23.  Appendix A — CES Computation Examples
 
 A.1.  NOMINAL Session — No Expiry, Full Budget
 
@@ -1467,7 +1722,7 @@ A.3.  HALT — Complete Budget Exhaustion and Context Collapse
    CES = 0.0 — HALT
 
 
-23.  Appendix B — RGC Compliance Checklist
+24.  Appendix B — RGC Compliance Checklist
 
    Implementations MUST satisfy all items:
 
@@ -1492,24 +1747,56 @@ A.3.  HALT — Complete Budget Exhaustion and Context Collapse
    □ All nine API endpoints implemented (§16)
 
 
-24.  Appendix C — Implementation Notes
+25.  Appendix C — Implementation Notes
 
    Reference implementation: omnix_core/agents/atf/runtime_continuity.py
-   Test suite: tests/test_runtime_governance_continuity.py (82 tests)
-   Verification status: 82/82 passing as of May 13, 2026
+   Performance layer: omnix_core/agents/atf/rcr_performance.py (ADR-160)
+
+   Test suites:
+      tests/test_runtime_governance_continuity.py  (82 tests — ADR-159/RGC)
+      tests/test_rpol_audit.py                     (93 tests — ADR-160/RPOL)
+
+   Verification status: 175/175 passing as of May 14, 2026
 
    The reference implementation is structured as a process-level singleton
    (get_rgc_engine()) to ensure a single, consistent fragmentation guard
    state within a process.  Deployments with multiple processes MUST
    implement a distributed fragmentation guard (see §19, Extension Points).
 
-   The reference implementation writes to the database via daemon threads
-   (non-blocking on the execution path).  The execution path is never
+   ADR-160 (RPOL) extends the reference implementation with:
+   (a) A process-level async write queue (RCRWriteQueue) that batches DB
+       writes and eliminates O(n) thread spawning.
+   (b) An event-driven sampler (EventDrivenSampler) that reacts to
+       governance events (budget drop, anomaly detection, context drift)
+       without requiring callers to manage timer logic.
+   (c) An adaptive scheduler (RCRScheduler) that implements the §11
+       sampling strategy table — profile × CES-status multipliers.
+   (d) A risk-tier system (GovernanceRiskTier) that routes LOW-risk
+       operations to lightweight paths and CRITICAL operations to
+       synchronous, guaranteed-persistence paths.
+
+   Production benchmark (ADR-160 audit, May 14, 2026):
+      Average sampling latency: 0.186ms
+      Throughput: 3,626 RCR/s (single process)
+      Thread overhead: 0 additional threads vs baseline
+
+   The sampler and scheduler are per-engine instances (not global
+   singletons), instantiated lazily in RuntimeContinuityEngine.__init__().
+   The write queue is the only process-level singleton.
+
+   The reference implementation writes to the database via the async write
+   queue (non-blocking on the execution path).  The execution path is never
    blocked by DB write failures.  DB failures are logged as WARNING.
 
    Persistence failures do NOT affect in-memory session state.  RCRs are
    stored in both the in-memory store and the database.  The in-memory
    store is the authoritative source for active sessions.
+
+   Governance Policy Parameters (§21.4) that are configurable via
+   environment variables in the reference implementation:
+      AFG_FRAGMENTATION_LIMIT  — default 0.90, range [0.01, 0.95]
+      RGC_RC_TTL_SECONDS       — default 300,  range [30, 3600]
+   See ADR-161 §2 for the full Governance Policy Parameter Registry.
 
 
 Author's Address
