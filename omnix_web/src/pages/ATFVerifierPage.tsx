@@ -1029,7 +1029,8 @@ export default function ATFVerifierPage() {
           }}>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, color: '#334155' }}>RFC-ATF-1 DOI: 10.5281/zenodo.20155016</span>
-              <span style={{ fontSize: 11, color: '#334155' }}>SSRN: 6757339</span>
+              <span style={{ fontSize: 11, color: '#334155' }}>RFC-ATF-1 SSRN: 6757339</span>
+              <span style={{ fontSize: 11, color: '#334155' }}>RFC-ATF-2 SSRN: 6763978</span>
               <span style={{ fontSize: 11, color: '#334155' }}>Algorithm: ML-DSA-65 (FIPS 204)</span>
               <span style={{ fontSize: 11, color: '#334155' }}>OMNIX QUANTUM LTD</span>
             </div>

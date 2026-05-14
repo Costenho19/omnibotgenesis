@@ -61,7 +61,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Documento | Archivo | Estado |
 |---|---|---|
 | RFC-ATF-1 | `docs/standards/RFC-ATF-1.md` | Publicado · DOI: 10.5281/zenodo.20155016 · SSRN: 6757339 |
-| RFC-ATF-2 | `docs/standards/RFC-ATF-2.md` | Draft · Pendiente Zenodo |
+| RFC-ATF-2 | `docs/standards/RFC-ATF-2.md` | Publicado · SSRN: 6763978 · Pendiente Zenodo DOI |
 | TLA+ Spec | `docs/formal/ATF-TLA-SPEC.tla` | Incluido en Zenodo v1.0.0 |
 | TLA+ Verification | `docs/formal/ATF-FORMAL-VERIFICATION.md` | 5 propiedades formales |
 | RFC-ATF-1 ABNF | RFC-ATF-1 §15 | Incluido en spec |

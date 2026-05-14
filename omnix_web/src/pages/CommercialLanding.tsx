@@ -1472,6 +1472,21 @@ export default function CommercialLanding() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a
+              href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6763978"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-5 rounded-2xl border border-blue-500/30 bg-[#0A1628]/60 hover:border-blue-400/60 hover:bg-[#0A1628]/80 transition-all group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">SSRN · NEW</span>
+                <ArrowRight className="w-4 h-4 text-muted group-hover:text-blue-400 transition-colors" />
+              </div>
+              <h3 className="text-white font-semibold text-sm mb-2 leading-snug">RFC-ATF-2: Agent Trust Fabric — Runtime Governance Continuity</h3>
+              <p className="text-muted text-xs">Harold Nunes · OMNIX QUANTUM LTD · May 2026</p>
+              <p className="text-blue-400/60 text-xs mt-2">Abstract ID: 6763978 · Extends RFC-ATF-1</p>
+            </a>
+
+            <a
               href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6507559"
               target="_blank"
               rel="noopener noreferrer"

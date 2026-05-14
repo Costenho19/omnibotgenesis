@@ -239,6 +239,16 @@ export default function AboutPage() {
               </div>
               {[
                 {
+                  label: 'RFC-ATF-2: Runtime Governance Continuity',
+                  sub: 'SSRN 6763978 · May 14, 2026',
+                  link: 'https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6763978',
+                },
+                {
+                  label: 'RFC-ATF-1: Agent Trust Fabric',
+                  sub: 'Zenodo DOI: 10.5281/zenodo.20155016 · SSRN 6757339',
+                  link: 'https://doi.org/10.5281/zenodo.20155016',
+                },
+                {
                   label: 'Production Study',
                   sub: 'SSRN 6321298 · Feb 27, 2026',
                   link: 'https://ssrn.com/abstract=6321298',
