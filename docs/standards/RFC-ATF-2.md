@@ -17,12 +17,23 @@ Abstract
    RFC-ATF-2 extends that foundation to cover the full execution
    lifecycle of long-running autonomous agent workflows.
 
-   The central contribution of this extension is the Runtime Continuity
-   Record (RCR) — a PQC-signed, TAR-anchored authority health artifact
-   emitted at governed intervals throughout agent execution.  A sequence
-   of RCRs forms a Continuity Chain: a cryptographic timeline connecting
-   the admission event (TAR) to the execution termination event, with
-   authority health verifiable at every sampled nanosecond in between.
+   The foundational problem this extension addresses is structural: in
+   multi-agent systems, authority can become invalid mid-execution —
+   through temporal expiry, budget exhaustion, context drift, or
+   integrity degradation — while admission-time governance remains
+   blind to each of these failure modes.  Many systems prove identity
+   at admission.  Fewer prove the continuous validity of authority,
+   detect mid-flight degradation, enforce budget fragmentation across
+   concurrent sub-agents, or support reauthorization without halting
+   execution.  This extension formalizes all four.
+
+   The central contribution is the Runtime Continuity Record (RCR) — a
+   PQC-signed, TAR-anchored authority health artifact emitted at governed
+   intervals throughout agent execution.  A sequence of RCRs forms a
+   Continuity Chain: a cryptographic timeline connecting the admission
+   event (TAR) to the execution termination event, with authority health
+   verifiable at nanosecond-precision execution boundaries throughout
+   runtime.
 
    RFC-ATF-2 introduces:
 
@@ -253,8 +264,8 @@ Table of Contents
 
    Runtime Continuity Record (RCR):
       A PQC-signed, immutable authority health snapshot for a specific
-      agent execution at a specific nanosecond.  Identified by
-      ATFRCR-{16HEX}.
+      agent execution, captured at a governed sampling boundary.
+      Identified by ATFRCR-{16HEX}.
 
    Continuity Eligibility Score (CES):
       A composite real number in [0.0, 100.0] representing the runtime
@@ -272,12 +283,12 @@ Table of Contents
       keyed by the admission TAR identifier.
 
    Continuity Escalation Event (CEE):
-      A PQC-signed artifact emitted when CES crosses a threshold
+      A signed, immutable artifact emitted when CES crosses a threshold
       boundary, carrying the threshold crossed, the recommended action,
       and a response TTL.  Identified by ATFCEE-{16HEX}.
 
    Reauthorization Challenge (RC):
-      A PQC-signed formal request for mid-execution authority renewal,
+      A signed formal request for mid-execution authority renewal,
       issued to the Tier-1 authority when CES drops to CRITICAL.
       Identified by ATFRC-{16HEX}.
 
@@ -738,8 +749,8 @@ Table of Contents
 9.1.  Continuity Escalation Event (CEE)
 
    A Continuity Escalation Event (CEE) MUST be issued whenever CES
-   transitions to a status other than NOMINAL.  The CEE is PQC-signed
-   and persisted to atf_continuity_escalations.
+   transitions to a status other than NOMINAL.  The CEE is signed
+   (ML-DSA-65) and persisted to atf_continuity_escalations.
 
 9.2.  Threshold-to-Action Mapping
 
