@@ -2,286 +2,179 @@
 
 **Tag:** `v1.1.0`
 **Target:** `main` → commit `59c740db`
-**Title:** `v1.1.0 — Runtime Governance Continuity: The ATF Protocol Stack is Complete`
+**Title:** `v1.1.0 — The ATF Protocol Stack is Complete`
 
 ---
 
-## BODY (pegar exactamente en GitHub)
+## BODY (pegar exactamente en GitHub — dentro del bloque markdown)
 
 ---
 
 ```markdown
-# v1.1.0 — Runtime Governance Continuity
+## The problem no AI framework has solved
 
-## The problem nobody has solved yet
+Every major agent orchestration framework answers one governance question:
+*"does this agent have permission?"*
 
-Every major AI agent framework — LangChain, AutoGen, CrewAI, Semantic Kernel —
-answers the same governance question: *"does this agent have permission?"*
+That question is answered once — at the moment of admission.
+Then execution begins, and governance ends.
 
-That question is answered at the moment of admission. Then execution begins.
+A 90-minute multi-agent workflow admitted with valid authority at T₀
+may have fundamentally different authority characteristics at T₀+47min:
+a delegating principal's DR may be approaching expiry, a sub-agent pool
+may be collectively exhausting a budget that each individual grant
+satisfied, scope may have drifted beyond the original authorization.
 
-A 90-minute multi-agent workflow admitted at T₀ with valid authority
-can have completely different authority characteristics at T₀+47min
-due to: temporal expiry, budget exhaustion across concurrent sub-agents,
-scope drift beyond original authorization, and anomaly accumulation
-on the delegation chain.
+No framework detects this. No framework acts on it.
+Governance is a gate, not a continuous property.
 
-No framework detects this. No framework acts on it. The audit record
-— if one exists — is retrospective.
-
-**This release ships the runtime governance layer that closes that gap.**
+**This release closes that gap with a complete, formally specified,
+post-quantum cryptographic protocol stack.**
 
 ---
 
-## What shipped
-
-### The complete ATF protocol stack (L1–L4)
+## The Agent Trust Fabric — complete as of v1.1.0
 
 ```
-L1  Agent Identity Record (AIR)
-L2  Delegation Receipt (DR)            ← RFC-ATF-1 (published, DOI: 10.5281/zenodo.20155016)
-L3  Temporal Admissibility Record (TAR)
-L3  Domain Translation Receipt (DTR)
-L4  Runtime Continuity Record (RCR)   ← RFC-ATF-2 (this release)
+L1  Agent Identity Record (AIR)          — who the agent is
+L2  Delegation Receipt (DR)              — what authority was granted, by whom
+L3  Temporal Admissibility Record (TAR)  — proof of validity at execution boundary
+L3  Domain Translation Receipt (DTR)     — cross-domain authority portability
+L4  Runtime Continuity Record (RCR)      — continuous authority health through execution
 ```
 
+Every artifact is PQC-signed (ML-DSA-65, Dilithium-3, FIPS 204).
 Every layer is cryptographically anchored to the one below it.
 The chain from a Tier-1 human decision to a runtime sub-agent execution
-is unbroken, PQC-signed, and independently verifiable.
+is unbroken and independently verifiable by any third party.
 
 ---
 
-### RFC-ATF-2: Runtime Governance Continuity
+## RFC-ATF-2: Runtime Governance Continuity
 
-`docs/standards/RFC-ATF-2.md`
+`docs/standards/RFC-ATF-2.md` — IETF-style extension to RFC-ATF-1.
 
-24-section IETF-style extension to RFC-ATF-1. 8 new formally
-model-checkable invariants. 9 new API endpoints.
+Formalizes the **Runtime Governance Gap**: the structural absence
+of continuous governability supervision between execution admission
+and execution completion.
 
-The core problem it formalizes: **the Runtime Governance Gap** —
-the structural distance between boundary attestation (what TAR does)
-and continuous governability supervision (what nothing did before).
+Three constructs close the gap:
 
----
-
-### Runtime Continuity Record (RCR) — `omnix_core/agents/atf/runtime_continuity.py`
-
-**1,385 lines.** The engine that makes continuous governance operational.
-
-Every long-running execution produces a chain of RCRs:
-
-```
-ATFRCR-A3F1D7E2B9C04521  →  ATFRCR-8B2E90F1C3D74A16  →  ATFRCR-...
-     T₀+0s                       T₀+30s                      T₀+60s
-```
+**1. Runtime Continuity Record (RCR)**
+A PQC-signed authority health snapshot, emitted at governed intervals
+throughout execution and anchored to the admission TAR. RCRs form
+a cryptographic continuity chain: each record links to its predecessor,
+producing an auditable timeline from T₀ to completion.
 
 Each RCR carries a **Continuity Eligibility Score**:
 
-```python
+```
 CES = (T × 0.30) + (B × 0.30) + (D × 0.20) + (I × 0.20)
 
-# T — Temporal health:    fraction of DR lifetime remaining
-# B — Budget health:      authority budget unconsumed across chain
-# D — Context fidelity:   drift from original scope authorization
-# I — Integrity signal:   anomaly-adjusted chain health
+T — Temporal health     B — Budget health
+D — Context fidelity    I — Integrity signal
 ```
 
-Five CES thresholds drive automatic state transitions:
+Five threshold levels drive automatic state transitions:
 
-```python
-CES_NOMINAL     = 75.0   # continue, standard sampling
-CES_MONITORING  = 50.0   # continue, increased sampling, flag outputs
-CES_WARNING     = 25.0   # restrict sub-task spawning, Tier-1 alert
-CES_CRITICAL    = 10.0   # suspend spawning, issue Reauthorization Challenge
-CES_HALT        = 0.0    # terminate execution, revoke in-flight sub-tasks
 ```
+NOMINAL    ≥ 75   Continue. Standard sampling.
+MONITORING ≥ 50   Continue. Increased sampling. Flag outputs.
+WARNING    ≥ 25   Restrict sub-task spawning. Tier-1 alert.
+CRITICAL   ≥ 10   Suspend spawning. Issue Reauthorization Challenge.
+HALT       < 10   Terminate execution. Revoke in-flight sub-tasks.
+```
+
+**2. Authority Fragmentation Guard (AFG)**
+Enforces aggregate budget constraints across concurrent sub-agents
+sharing a delegation chain root.
+
+An agent can spawn many sub-agents, each with an individually valid
+sub-delegation that satisfies MAR. The aggregate budget consumption
+can exceed the chain root grant by an unbounded multiple.
+AFG closes this at chain-root level — the only level where it can
+be detected. This is enforced as a first-class protocol invariant
+(RGC-INV-004).
+
+**3. Reauthorization Challenge (RC)**
+At CRITICAL, execution does not halt immediately. The engine issues
+a signed Reauthorization Challenge to the Tier-1 authority that opened
+the chain. If the authority responds with a new short-lifetime DR
+within the defined TTL, execution continues under renewed governance.
+If the TTL expires without response, HALT is automatic and irrevocable.
+No human intervention required. No silent continuation possible.
 
 ---
 
-### Authority Fragmentation Guard (AFG) — `RGC-INV-004`
+## 14 invariants. Two formal standards.
 
-This is the attack vector nobody talks about.
-
-An agent with `authority_budget_granted = 90` can spawn 15 concurrent
-sub-agents, each receiving a valid sub-delegation of 60. Every individual
-grant satisfies the Monotonic Authority Reduction invariant. Aggregate
-consumed: **900**. The chain root budget was 90.
-
-Individual-level MAR cannot catch this. **AFG operates at chain root level:**
-
-```python
-AuthorityFragmentationViolation  # raised when:
-# Σ budget_at_admission (all ACTIVE sessions on chain_root_id)
-# exceeds chain_root_budget × AFG_FRAGMENTATION_LIMIT
-```
-
-Default `AFG_FRAGMENTATION_LIMIT = 0.90`. Values above 1.0 rejected.
-10% of chain root budget is permanently reserved — it cannot be delegated.
-
----
-
-### Reauthorization Challenge (RC) — `ATFRC-{16HEX}`
-
-At CRITICAL threshold, execution does not halt immediately.
-The engine issues a formal **Reauthorization Challenge**:
-
-- Signed with ML-DSA-65 (Dilithium-3, FIPS 204)
-- Delivered to the Tier-1 authority that opened the chain
-- TTL: 300 seconds to respond with a new short-lifetime DR
-- On TTL expiry without response: **automatic HALT**
-
-```python
-RC_TTL_CRITICAL_DEFAULT = 300  # seconds
-RC_TTL_HALT_DEFAULT     = 0    # immediate — no TTL at HALT
-```
-
-This closes the gap between "authority is degrading" and "execution stops."
-
----
-
-### Temporal Authority — `omnix_core/agents/atf/temporal_authority.py`
-
-**580 lines.** Nanosecond-precise proof that a DR was valid at the exact
-moment of execution admission — not just "recently valid."
-
-```
-ATFTAR-{16HEX}  anchored to  ATFDR-{16HEX}  signed at  T₀ (nanosecond)
-```
-
-Every RCR in the continuity chain is anchored to its admission TAR.
-The cryptographic evidence chain from human decision to runtime moment
-is complete.
-
----
-
-### Cross-Domain Trust Portability — `omnix_core/agents/atf/domain_bridge.py`
-
-**571 lines.** Domain Translation Receipts for cross-boundary authority transfer.
-
-```
-ATFDTR-{16HEX}  —  signed proof that authority was legitimately
-                    translated across a domain boundary with the
-                    applicable discount schedule applied
-```
-
----
-
-### 82 tests. Real ones.
-
-`tests/test_runtime_governance_continuity.py`
-
-```
-TestContinuityEligibilityScore   — CES formula, weights, thresholds
-TestSessionLifecycle             — start, sample, stop, independence
-TestRCRIssuance                  — ID format, hash, PQC signature, fields
-TestContinuityChain              — linked list, acyclicity, ordering
-TestCESTemporalComponent         — expiry math, edge cases
-TestCESContextIntegrity          — drift scoring, anomaly weighting
-```
-
-Selected test that proves acyclicity holds:
-
-```python
-def test_chain_is_acyclic(self):
-    # Samples are emitted in chronological order.
-    # A chain with a backward execution_ns reference
-    # raises on insertion — RGC-INV-006 enforced.
-```
-
-82 tests. 82 passing.
-
----
-
-### Multi-Protocol ATF Verifier — `/atf-verify`
-
-Rebuilt from single-artifact to full-stack.
-
-Verifies **DR** (RFC-ATF-1 · L2), **TAR** (ADR-157 · L3),
-and **RCR** (RFC-ATF-2 · L4) with:
-
-- ATF stack layer indicator (L1→L4) showing where the artifact lives
-- Animated CES gauge with threshold color transitions
-- Four CES component bars (T / B / D / I) with real-time scores
-- Continuity chain visualization with status-colored nodes
-- Escalation alert panel showing active CEEs
-
-No account required. Independent verification is a protocol invariant
-(ATF-INV-006): any party with the receipt and the root public key
-can verify without platform access.
-
----
-
-### 14 invariants. Two formal standards.
-
-| Invariant | Standard | Description |
+| Invariant | Standard | Property |
 |---|---|---|
 | ATF-INV-001 | RFC-ATF-1 | Monotonic Authority Reduction (MAR) |
 | ATF-INV-002 | RFC-ATF-1 | All DRs signed by delegating principal |
 | ATF-INV-003 | RFC-ATF-1 | Chain root traceability to Tier-1 |
-| ATF-INV-004 | RFC-ATF-1 | Budget ceiling: no grant exceeds 100.0 |
+| ATF-INV-004 | RFC-ATF-1 | No grant exceeds maximum authority budget |
 | ATF-INV-005 | RFC-ATF-1 | Receipt immutability |
-| ATF-INV-006 | RFC-ATF-1 | Independent verifiability without platform |
+| ATF-INV-006 | RFC-ATF-1 | Independent verifiability without platform access |
 | RGC-INV-001 | RFC-ATF-2 | Every RCR anchored to a valid TAR |
 | RGC-INV-002 | RFC-ATF-2 | CES computed from real-time values only |
-| RGC-INV-003 | RFC-ATF-2 | HALT terminates and revokes sub-tasks |
-| RGC-INV-004 | RFC-ATF-2 | Aggregate budget never exceeds AFG limit |
+| RGC-INV-003 | RFC-ATF-2 | HALT terminates execution and revokes sub-tasks |
+| RGC-INV-004 | RFC-ATF-2 | Aggregate budget never exceeds fragmentation limit |
 | RGC-INV-005 | RFC-ATF-2 | All RCRs PQC-signed and immutable |
 | RGC-INV-006 | RFC-ATF-2 | Continuity chain is acyclic and monotonic |
-| RGC-INV-007 | RFC-ATF-2 | CES inputs must be fresh (staleness enforced) |
-| RGC-INV-008 | RFC-ATF-2 | RC TTL enforced — auto-HALT on expiry |
+| RGC-INV-007 | RFC-ATF-2 | CES inputs must meet freshness requirements |
+| RGC-INV-008 | RFC-ATF-2 | Reauthorization TTL enforced — auto-HALT on expiry |
 
-MAR, acyclicity, immutability, and chain root consistency are proven
-in TLA+ using the same formal methods methodology as AWS DynamoDB.
-
----
-
-### Published standards
-
-| Document | Status | Where |
-|---|---|---|
-| RFC-ATF-1 | **Published** | DOI: 10.5281/zenodo.20155016 · SSRN: 6757339 |
-| RFC-ATF-2 | Draft | `docs/standards/RFC-ATF-2.md` |
+MAR, acyclicity, receipt immutability, and chain root consistency
+are proven in TLA+ using the same formal methods methodology as
+AWS DynamoDB and Azure Cosmos DB.
 
 ---
 
-### 30 API endpoints across the ATF stack
+## Implementation status
 
-**L2 — Delegation & Identity**
+The reference implementation is currently running in production.
+
+The runtime continuity layer alone covers:
+- Session lifecycle management (start, sample, stop)
+- Real-time CES computation across all four dimensions
+- Fragmentation enforcement at chain-root level
+- Continuity chain formation with predecessor linkage
+- Escalation event issuance at each threshold crossing
+- Reauthorization Challenge lifecycle with TTL enforcement
+- Full PQC signing of every artifact
+
+82 tests. 82 passing. All invariants covered.
+
+---
+
+## Public API — 30 endpoints across the full stack
+
+**L2 — Identity & Delegation**
 ```
-POST  /api/atf/agents/register
-GET   /api/atf/agents
-GET   /api/atf/agents/<agent_id>
-POST  /api/atf/delegate
-GET   /api/atf/delegations/<agent_id>
-POST  /api/atf/verify
-GET   /api/atf/verify/<agent_id>
-GET   /api/atf/lattice
-GET   /api/atf/ccs/<agent_id>
-POST  /api/atf/demo/simulate
+POST  /api/atf/agents/register       GET   /api/atf/agents
+GET   /api/atf/agents/<agent_id>     POST  /api/atf/delegate
+GET   /api/atf/delegations/<id>      POST  /api/atf/verify
+GET   /api/atf/verify/<agent_id>     GET   /api/atf/lattice
+GET   /api/atf/ccs/<agent_id>        POST  /api/atf/demo/simulate
 ```
 
 **L3 — Temporal Admissibility**
 ```
-POST  /api/atf/temporal/admit
-GET   /api/atf/temporal/<tar_id>
-POST  /api/atf/temporal/verify
-GET   /api/atf/temporal/report/<agent_id>
+POST  /api/atf/temporal/admit        GET   /api/atf/temporal/<tar_id>
+POST  /api/atf/temporal/verify       GET   /api/atf/temporal/report/<id>
 ```
 
 **L3 — Cross-Domain Trust**
 ```
-POST  /api/atf/translate
-GET   /api/atf/translate/<dtr_id>
-POST  /api/atf/translate/verify
-GET   /api/atf/translate/policy
+POST  /api/atf/translate             GET   /api/atf/translate/<dtr_id>
+POST  /api/atf/translate/verify      GET   /api/atf/translate/policy
 ```
 
 **L4 — Runtime Continuity** *(new in this release)*
 ```
-POST  /api/atf/continuity/start
-POST  /api/atf/continuity/sample
-POST  /api/atf/continuity/stop
-GET   /api/atf/continuity/<rcr_id>
+POST  /api/atf/continuity/start      POST  /api/atf/continuity/sample
+POST  /api/atf/continuity/stop       GET   /api/atf/continuity/<rcr_id>
 GET   /api/atf/continuity/session/<tar_id>
 GET   /api/atf/continuity/chain/<rcr_id>
 POST  /api/atf/continuity/reauth
@@ -291,47 +184,48 @@ GET   /api/atf/escalations/session/<tar_id>
 
 ---
 
-### Upgrade notes
+## Independent verification — no platform access required
 
-**No breaking changes** to RFC-ATF-1 artifacts (DR, AIR, Trust Lattice).
+ATF-INV-006 is a first-class protocol requirement, not a feature.
 
-New DB tables (auto-created on first request):
-```sql
-atf_runtime_continuity      -- RCRs
-atf_continuity_escalations  -- CEEs
-atf_temporal_records        -- TARs
-atf_domain_bridges          -- DTRs
-```
+Any party — regulator, auditor, counterparty, competitor —
+possessing only the artifact receipts and the root public key
+can verify the complete chain independently, offline,
+without any access to OMNIX infrastructure.
 
-New optional environment variables:
-```
-RGC_SAMPLE_INTERVAL_SECONDS   — continuity sampling frequency
-AFG_FRAGMENTATION_LIMIT       — default 0.90, max 0.95
-RC_TTL_CRITICAL_SECONDS       — default 300
-```
+This is verifiable at `/atf-verify`: a multi-protocol verifier
+for DR (L2), TAR (L3), and RCR (L4) that requires no account.
 
 ---
 
-### Compliance surface
+## Compliance surface
 
 EU AI Act Art. 9, 13 · DORA Art. 9 · MiCA Recital 65 ·
-SOC 2 CC6.1 · ISO 27001 A.9.4 · NIST AI RMF Govern 1.4/Manage 2.2
+SOC 2 CC6.1 · ISO 27001 A.9.4 · NIST AI RMF Govern 1.4 / Manage 2.2
 
 ---
 
-**OMNIX QUANTUM LTD** · Harold Nunes (Founder)
-`docs/standards/` · `omnix_core/agents/atf/`
+## Published standards
+
+| Document | Status | Reference |
+|---|---|---|
+| RFC-ATF-1 | **Published** | DOI: 10.5281/zenodo.20155016 · SSRN: 6757339 |
+| RFC-ATF-2 | Draft | `docs/standards/RFC-ATF-2.md` |
+| TLA+ Specification | Published | Included in Zenodo archive |
+
+---
+
+*OMNIX QUANTUM LTD — Harold Nunes (Founder)*
+*Protocol standards: `docs/standards/` — Reference implementation: `omnix_core/agents/atf/`*
 ```
 
 ---
 
 ## Pasos en GitHub
 
-1. Ir a `https://github.com/Costenho19/omnibotgenesis/releases/new`
-2. **Choose a tag:** escribir `v1.1.0` → Create new tag
-3. **Target:** `main`
-4. **Release title:** `v1.1.0 — Runtime Governance Continuity: The ATF Protocol Stack is Complete`
-5. Pegar el body de arriba (todo lo que está dentro del bloque de código markdown)
-6. Adjuntar opcionalmente: PDF de RFC-ATF-2
-7. ✅ Set as the latest release
-8. **Publish release**
+1. `https://github.com/Costenho19/omnibotgenesis/releases/new`
+2. **Tag:** `v1.1.0` → Create new tag sobre `main`
+3. **Title:** `v1.1.0 — The ATF Protocol Stack is Complete`
+4. Pegar el body de arriba (todo lo que está dentro del bloque markdown)
+5. Adjuntar PDF de RFC-ATF-2 cuando esté listo como asset del release
+6. ✅ Set as the latest release → **Publish release**
