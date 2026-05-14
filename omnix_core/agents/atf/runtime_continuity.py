@@ -67,41 +67,21 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("OMNIX.ATF.RuntimeContinuity")
 
-# RPOL — lazy import to avoid circular deps; resolved on first use
-_rpol_write_queue   = None
-_rpol_sampler       = None
-_rpol_scheduler     = None
-_rpol_import_lock   = threading.Lock()
+# RPOL — RCRWriteQueue is a process-level singleton (independent of engine).
+# Sampler and Scheduler are per-engine instances (created lazily on first use).
+_rpol_write_queue  = None
+_rpol_wq_lock      = threading.Lock()
 
 
 def _get_write_queue():
+    """Process-level singleton write queue (shared across all engines)."""
     global _rpol_write_queue
     if _rpol_write_queue is None:
-        with _rpol_import_lock:
+        with _rpol_wq_lock:
             if _rpol_write_queue is None:
-                from omnix_core.agents.atf.rcr_performance import get_write_queue
-                _rpol_write_queue = get_write_queue()
+                from omnix_core.agents.atf.rcr_performance import RCRWriteQueue
+                _rpol_write_queue = RCRWriteQueue()
     return _rpol_write_queue
-
-
-def _get_sampler(engine):
-    global _rpol_sampler
-    if _rpol_sampler is None:
-        with _rpol_import_lock:
-            if _rpol_sampler is None:
-                from omnix_core.agents.atf.rcr_performance import get_event_sampler
-                _rpol_sampler = get_event_sampler(engine)
-    return _rpol_sampler
-
-
-def _get_scheduler(engine):
-    global _rpol_scheduler
-    if _rpol_scheduler is None:
-        with _rpol_import_lock:
-            if _rpol_scheduler is None:
-                from omnix_core.agents.atf.rcr_performance import get_scheduler
-                _rpol_scheduler = get_scheduler(engine)
-    return _rpol_scheduler
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DDL
@@ -484,6 +464,28 @@ class RuntimeContinuityEngine:
         self._rc_ttl = int(
             os.environ.get("RGC_RC_TTL_SECONDS", RC_TTL_CRITICAL_DEFAULT)
         )
+        # ADR-160: Per-engine RPOL instances (lazy-initialized on first use)
+        self._rpol_sampler   = None
+        self._rpol_scheduler = None
+        self._rpol_init_lock = threading.Lock()
+
+    def _get_sampler(self):
+        """Per-engine EventDrivenSampler — lazily initialized."""
+        if self._rpol_sampler is None:
+            with self._rpol_init_lock:
+                if self._rpol_sampler is None:
+                    from omnix_core.agents.atf.rcr_performance import EventDrivenSampler
+                    self._rpol_sampler = EventDrivenSampler(self)
+        return self._rpol_sampler
+
+    def _get_scheduler(self):
+        """Per-engine RCRScheduler — lazily initialized."""
+        if self._rpol_scheduler is None:
+            with self._rpol_init_lock:
+                if self._rpol_scheduler is None:
+                    from omnix_core.agents.atf.rcr_performance import RCRScheduler
+                    self._rpol_scheduler = RCRScheduler(self)
+        return self._rpol_scheduler
 
     # ──────────────────────────────────────────────────────────
     # Lifecycle
@@ -571,7 +573,7 @@ class RuntimeContinuityEngine:
 
         # Register with RPOL event sampler (ADR-160)
         try:
-            _get_sampler(self).register_session(
+            self._get_sampler().register_session(
                 tar_id=tar_id,
                 budget_at_admission=budget_at_admission,
             )
@@ -618,7 +620,7 @@ class RuntimeContinuityEngine:
 
         # Deregister from RPOL event sampler (ADR-160)
         try:
-            _get_sampler(self).deregister_session(tar_id)
+            self._get_sampler().deregister_session(tar_id)
         except Exception:
             pass
 
@@ -861,7 +863,7 @@ class RuntimeContinuityEngine:
         try:
             from omnix_core.agents.atf.rcr_performance import GovernanceEventType
             evt = GovernanceEventType(event_type)
-            return _get_sampler(self).notify(
+            return self._get_sampler().notify(
                 tar_id=tar_id,
                 event_type=evt,
                 budget_consumed=budget_consumed,
@@ -890,19 +892,16 @@ class RuntimeContinuityEngine:
                     context_drift_pct, active_anomalies, metadata keys.
         """
         try:
-            from omnix_core.agents.atf.rcr_performance import (
-                ExecutionProfile,
-                get_scheduler,
-            )
+            from omnix_core.agents.atf.rcr_performance import ExecutionProfile
             ep = ExecutionProfile(profile)
-            _get_scheduler(self).register(tar_id, ep, get_inputs)
+            self._get_scheduler().register(tar_id, ep, get_inputs)
         except Exception as exc:
             logger.warning(f"[RGC] register_scheduler failed — tar={tar_id}: {exc}")
 
     def deregister_scheduler(self, tar_id: str) -> None:
         """Remove a session from the adaptive interval scheduler (ADR-160)."""
         try:
-            _get_scheduler(self).deregister(tar_id)
+            self._get_scheduler().deregister(tar_id)
         except Exception:
             pass
 
