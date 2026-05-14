@@ -786,3 +786,304 @@ def simulate_chain():
     except Exception as exc:
         logger.error(f"[ATF.API] simulate_chain error: {exc}")
         return _err(str(exc), 500)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ADR-159 — Runtime Governance Continuity (RGC)
+#
+#   POST  /api/atf/continuity/start          — Start a continuity session
+#   POST  /api/atf/continuity/sample         — Emit a manual RCR
+#   GET   /api/atf/continuity/<rcr_id>       — Get a specific RCR
+#   GET   /api/atf/continuity/session/<tar_id> — Full continuity chain
+#   GET   /api/atf/continuity/health/<delegation_id> — Current CES
+#   POST  /api/atf/continuity/reauthorize    — Respond to a RC
+#   GET   /api/atf/continuity/sessions       — Active sessions
+#   GET   /api/atf/escalations/<chain_root_id> — Escalation events
+# ─────────────────────────────────────────────────────────────────────────────
+
+@atf_bp.route("/api/atf/continuity/start", methods=["POST"])
+def continuity_start():
+    """
+    Start a Runtime Governance Continuity session anchored to a TAR.
+    ADR-159 — RGC-INV-001.
+    """
+    try:
+        from omnix_core.agents.atf.runtime_continuity import get_rgc_engine
+        data = request.get_json(force=True) or {}
+
+        required = ["tar_id", "delegation_id", "agent_id",
+                    "chain_root_id", "domain", "budget_at_admission"]
+        for f in required:
+            if not data.get(f):
+                return _err(f"Missing required field: {f}", 400)
+
+        engine = get_rgc_engine()
+        session = engine.start_session(
+            tar_id=data["tar_id"],
+            delegation_id=data["delegation_id"],
+            agent_id=data["agent_id"],
+            chain_root_id=data["chain_root_id"],
+            domain=data["domain"],
+            budget_at_admission=float(data["budget_at_admission"]),
+            dr_expires_at=data.get("dr_expires_at"),
+            dr_issued_at=data.get("dr_issued_at"),
+            metadata=data.get("metadata", {}),
+        )
+        return jsonify({
+            "status": "started",
+            "tar_id": session.tar_id,
+            "agent_id": session.agent_id,
+            "chain_root_id": session.chain_root_id,
+            "domain": session.domain,
+            "budget_at_admission": session.budget_at_admission,
+            "session_status": session.status,
+            "started_at_ns": session.started_at_ns,
+        }), 201
+    except Exception as exc:
+        logger.error(f"[ATF.API] continuity_start error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/continuity/sample", methods=["POST"])
+def continuity_sample():
+    """
+    Emit a manual Runtime Continuity Record (RCR) for an active session.
+    ADR-159.
+    """
+    try:
+        from omnix_core.agents.atf.runtime_continuity import get_rgc_engine, RGCError
+        data = request.get_json(force=True) or {}
+
+        tar_id = data.get("tar_id", "").strip()
+        if not tar_id:
+            return _err("tar_id is required", 400)
+
+        engine = get_rgc_engine()
+        rcr = engine.sample(
+            tar_id=tar_id,
+            budget_consumed=float(data.get("budget_consumed", 0.0)),
+            context_drift_pct=float(data.get("context_drift_pct", 0.0)),
+            active_anomalies=int(data.get("active_anomalies", 0)),
+            sample_reason=data.get("sample_reason", "EXTERNAL"),
+            metadata=data.get("metadata", {}),
+        )
+        return jsonify({
+            "rcr": rcr.to_dict(),
+            "ces": {
+                "score": rcr.ces_score,
+                "status": rcr.continuity_status,
+                "temporal": rcr.ces_temporal,
+                "budget": rcr.ces_budget,
+                "context": rcr.ces_context,
+                "integrity": rcr.ces_integrity,
+            },
+            "escalation_event_id": rcr.escalation_event_id,
+            "reauth_challenge_id": rcr.reauth_challenge_id,
+        })
+    except RGCError as exc:
+        return _err(str(exc), 404)
+    except Exception as exc:
+        logger.error(f"[ATF.API] continuity_sample error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/continuity/<rcr_id>", methods=["GET"])
+def continuity_get_rcr(rcr_id):
+    """Get a specific Runtime Continuity Record by ID. ADR-159."""
+    try:
+        from omnix_core.agents.atf.runtime_continuity import get_rgc_engine
+        engine = get_rgc_engine()
+        rcr = engine.get_rcr(rcr_id)
+        if not rcr:
+            return _err(f"RCR not found: {rcr_id}", 404)
+        return jsonify(rcr.to_dict())
+    except Exception as exc:
+        logger.error(f"[ATF.API] continuity_get_rcr error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/continuity/session/<tar_id>", methods=["GET"])
+def continuity_session_chain(tar_id):
+    """
+    Return the full continuity chain for an execution session.
+    ADR-159 — ordered by execution_ns ascending.
+    """
+    try:
+        from omnix_core.agents.atf.runtime_continuity import get_rgc_engine
+        engine = get_rgc_engine()
+        chain = engine.session_chain(tar_id)
+        return jsonify({
+            "tar_id": tar_id,
+            "chain_length": len(chain),
+            "chain": [r.to_dict() for r in chain],
+            "current_status": chain[-1].continuity_status if chain else "UNKNOWN",
+            "current_ces": chain[-1].ces_score if chain else None,
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] continuity_session_chain error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/continuity/health/<delegation_id>", methods=["GET"])
+def continuity_health(delegation_id):
+    """
+    Return the current CES for all active sessions on a delegation.
+    ADR-159 — non-destructive (does not emit an RCR).
+    """
+    try:
+        from omnix_core.agents.atf.runtime_continuity import get_rgc_engine
+        engine = get_rgc_engine()
+        with engine._lock:
+            sessions = [
+                s for s in engine._sessions.values()
+                if s.delegation_id == delegation_id
+            ]
+
+        if not sessions:
+            return _err(f"No active session for delegation_id={delegation_id}", 404)
+
+        results = []
+        for s in sessions:
+            ces = engine.current_ces(s.tar_id)
+            results.append({
+                "tar_id": s.tar_id,
+                "agent_id": s.agent_id,
+                "budget_remaining": s.budget_remaining,
+                "budget_at_admission": s.budget_at_admission,
+                "ces": ces.to_dict() if ces else None,
+                "has_open_rc": s.open_rc is not None,
+                "rcr_count": s.rcr_count,
+            })
+
+        return jsonify({
+            "delegation_id": delegation_id,
+            "active_sessions": len(results),
+            "health": results,
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] continuity_health error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/continuity/reauthorize", methods=["POST"])
+def continuity_reauthorize():
+    """
+    Submit a Tier-1 reauthorization response to a pending RC.
+    Resolves the challenge and resets the temporal CES component.
+    ADR-159 — RGC-INV-008.
+    """
+    try:
+        from omnix_core.agents.atf.runtime_continuity import get_rgc_engine, RGCError
+        data = request.get_json(force=True) or {}
+
+        rc_id = data.get("rc_id", "").strip()
+        new_dr_id = data.get("new_dr_id", "").strip()
+        if not rc_id or not new_dr_id:
+            return _err("rc_id and new_dr_id are required", 400)
+
+        engine = get_rgc_engine()
+        rc = engine.respond_to_rc(
+            rc_id=rc_id,
+            new_dr_id=new_dr_id,
+            new_dr_expires_at=data.get("new_dr_expires_at"),
+        )
+        return jsonify({
+            "status": "reauthorized",
+            "rc_id": rc.rc_id,
+            "new_dr_id": rc.response_dr_id,
+            "resolved": rc.resolved,
+            "resolution": rc.resolution,
+        })
+    except RGCError as exc:
+        return _err(str(exc), 400)
+    except Exception as exc:
+        logger.error(f"[ATF.API] continuity_reauthorize error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/continuity/sessions", methods=["GET"])
+def continuity_active_sessions():
+    """List all active Runtime Governance Continuity sessions. ADR-159."""
+    try:
+        from omnix_core.agents.atf.runtime_continuity import get_rgc_engine
+        engine = get_rgc_engine()
+        sessions = engine.active_sessions()
+        return jsonify({
+            "active_count": len(sessions),
+            "sessions": sessions,
+            "queried_at": datetime.now(timezone.utc).isoformat(),
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] continuity_active_sessions error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/escalations/<chain_root_id>", methods=["GET"])
+def continuity_escalations(chain_root_id):
+    """
+    Return all Continuity Escalation Events for a chain root.
+    ADR-159.
+    """
+    try:
+        from omnix_core.agents.atf.runtime_continuity import get_rgc_engine
+        engine = get_rgc_engine()
+        with engine._lock:
+            cees = [
+                c for c in engine._cee_store.values()
+                if c.chain_root_id == chain_root_id
+            ]
+        cees.sort(key=lambda c: c.escalation_ns)
+        return jsonify({
+            "chain_root_id": chain_root_id,
+            "escalation_count": len(cees),
+            "escalations": [c.to_dict() for c in cees],
+        })
+    except Exception as exc:
+        logger.error(f"[ATF.API] continuity_escalations error: {exc}")
+        return _err(str(exc), 500)
+
+
+@atf_bp.route("/api/atf/continuity/fragmentation/check", methods=["POST"])
+def continuity_fragmentation_check():
+    """
+    Check if a proposed sub-delegation would violate the Authority
+    Fragmentation Guard. ADR-159 — RGC-INV-004.
+    """
+    try:
+        from omnix_core.agents.atf.runtime_continuity import (
+            get_rgc_engine, AuthorityFragmentationViolation
+        )
+        data = request.get_json(force=True) or {}
+
+        required = ["chain_root_id", "chain_root_budget", "new_grant_budget"]
+        for f in required:
+            if data.get(f) is None:
+                return _err(f"Missing required field: {f}", 400)
+
+        engine = get_rgc_engine()
+        try:
+            engine.check_fragmentation(
+                chain_root_id=data["chain_root_id"],
+                chain_root_budget=float(data["chain_root_budget"]),
+                new_grant_budget=float(data["new_grant_budget"]),
+            )
+            frag_score = engine._fragmentation_score(data["chain_root_id"])
+            return jsonify({
+                "allowed": True,
+                "chain_root_id": data["chain_root_id"],
+                "current_fragmentation_pct": frag_score,
+                "afg_limit_pct": engine._afg_limit * 100.0,
+                "violation": None,
+            })
+        except AuthorityFragmentationViolation as exc:
+            frag_score = engine._fragmentation_score(data["chain_root_id"])
+            return jsonify({
+                "allowed": False,
+                "chain_root_id": data["chain_root_id"],
+                "current_fragmentation_pct": frag_score,
+                "afg_limit_pct": engine._afg_limit * 100.0,
+                "violation": str(exc),
+            }), 409
+    except Exception as exc:
+        logger.error(f"[ATF.API] fragmentation_check error: {exc}")
+        return _err(str(exc), 500)

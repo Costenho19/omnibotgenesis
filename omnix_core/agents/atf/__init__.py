@@ -3,6 +3,7 @@ OMNIX Agent Trust Fabric (ATF)
 ADR-156 — Cryptographic agent delegation infrastructure.
 ADR-157 — Temporal Authority Admissibility.
 ADR-158 — Cross-Domain Trust Portability.
+ADR-159 — Runtime Governance Continuity.
 
 Exports:
     AgentIdentityEngine       — register and manage agent identities
@@ -20,6 +21,15 @@ Exports:
     CrossDomainBridge         — issue and verify DTRs (ADR-158)
     DomainTranslationReceipt  — Domain Translation Receipt (ADR-158)
     CrossDomainAuthorityError — raised when CDTP-INV-001 is violated
+
+    RuntimeContinuityEngine       — continuous authority health engine (ADR-159)
+    RuntimeContinuityRecord       — ATFRCR-{16HEX} authority health snapshot
+    ContinuityEligibilityScore    — composite CES metric (T+B+D+I weighted)
+    ContinuityEscalationEvent     — ATFCEE-{16HEX} threshold escalation artifact
+    ReauthorizationChallenge      — ATFRC-{16HEX} mid-execution authority renewal
+    AuthorityFragmentationViolation — raised when AFG aggregate limit exceeded
+    ContinuityHaltError           — raised when HALT is triggered (RGC-INV-003)
+    get_rgc_engine                — process-level singleton accessor
 """
 
 from omnix_core.agents.atf.agent_identity import (
@@ -45,6 +55,16 @@ from omnix_core.agents.atf.domain_bridge import (
     CrossDomainBridge,
     CrossDomainAuthorityError,
 )
+from omnix_core.agents.atf.runtime_continuity import (
+    RuntimeContinuityEngine,
+    RuntimeContinuityRecord,
+    ContinuityEligibilityScore,
+    ContinuityEscalationEvent,
+    ReauthorizationChallenge,
+    AuthorityFragmentationViolation,
+    ContinuityHaltError,
+    get_rgc_engine,
+)
 
 __all__ = [
     "AgentIdentity",
@@ -60,4 +80,12 @@ __all__ = [
     "DomainTranslationReceipt",
     "CrossDomainBridge",
     "CrossDomainAuthorityError",
+    "RuntimeContinuityEngine",
+    "RuntimeContinuityRecord",
+    "ContinuityEligibilityScore",
+    "ContinuityEscalationEvent",
+    "ReauthorizationChallenge",
+    "AuthorityFragmentationViolation",
+    "ContinuityHaltError",
+    "get_rgc_engine",
 ]
