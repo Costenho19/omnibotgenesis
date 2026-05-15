@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import ProtocolVisualizationPage from './pages/ProtocolVisualizationPage'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import ClientReportDownload from './pages/ClientReportDownload'
 import CommercialLanding from './pages/CommercialLanding'
@@ -118,6 +119,7 @@ function App() {
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/protocol" element={<ProtocolVisualizationPage />} />
           <Route path="/agent-trust-fabric" element={<AgentTrustFabricPage />} />
           <Route path="/atf-verify" element={<ATFVerifierPage />} />
           <Route path="/atf-standard" element={<ATFStandardPage />} />
