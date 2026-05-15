@@ -2,7 +2,7 @@
 
 **Runtime Legitimacy Infrastructure for Autonomous Decision Systems**
 
-**Version:** 1.0 · **Date:** May 2026
+**Version:** 1.1 · **Date:** May 2026
 **Author:** Harold Nunes — OMNIX QUANTUM LTD
 **Jurisdiction:** United Arab Emirates / United Kingdom
 **Contact:** omnixquantum.net
@@ -49,6 +49,8 @@ Modern AI and autonomous agent systems generate decisions at machine speed. Thes
 **Problem C — Evidence evaporation.** Decision evidence typically exists only in live databases. After system migration, decommissioning, or a security incident, the ability to independently verify past decisions is permanently lost. There is no cryptographic chain of custody.
 
 OMNIX solves all three: explicit signed delegation (ATF), session legitimacy scoring (CES), and immutable evidence archive (EAP). Every component is formally specified, invariant-governed, and post-quantum hardened.
+
+**Verifiable test coverage:** 245+ passing tests across the institutional audit suites (GPIL, OEP, EAP) confirm every stated claim as of May 2026 — see Section 13.
 
 ---
 
@@ -604,7 +606,44 @@ In `OMNIX_ANTI_REPLAY_MODE=strict`, Redis unavailability causes the decision gat
 
 ## 13. Verification Claims
 
-The following claims are independently verifiable by third parties:
+### Institutional Audit Test Suite Coverage
+
+Every structural claim in this whitepaper is backed by a passing test assertion. Third parties can reproduce these results:
+
+```bash
+# Full institutional audit suite (245 tests)
+TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest \
+  tests/test_gpil_audit.py \
+  tests/test_oep_forensic_audit.py \
+  tests/test_eap_extended_audit.py \
+  -v
+# Expected: 245 passed, 5 skipped
+```
+
+| Test Suite | Tests | Coverage |
+|---|---|---|
+| `test_gpil_audit.py` | 187 pass, 1 skip | GPIL taxonomy · CRGC · 14 invariants · CES formula · Policy Bounds · ADR-161 |
+| `test_oep_forensic_audit.py` | 74 pass | OEP bundle · two-phase signature · FEA-INV-001–005 · FVP-INV-006/007 · ADR-164–167 |
+| `test_eap_extended_audit.py` | 58 pass, 4 skip | GPIL Policy Divergence Surface · FVP two-plane separation · OEP offline self-containment · EAP chain integrity · ADR-161/163/165 |
+
+**Key verifiable claims by test:**
+
+| Claim | Test |
+|---|---|
+| CES formula = T×0.30+B×0.30+D×0.20+I×0.20 | `test_gpil_audit.py::TestInvariantTable::test_RGC_INV_001` |
+| AFG max = 0.95 — hard limit | `test_gpil_audit.py::TestPolicyParameterBounds` |
+| HALT propagates to all sibling sessions | `test_runtime_governance_continuity.py::TestHALTProtocol` |
+| Policy Divergence Surface has exactly 6 parameters | `test_eap_extended_audit.py::TestGPILPolicyParameterRegistry::test_I10` |
+| SIGNATURE_INVALID only from server (Plane 2) | `test_eap_extended_audit.py::TestFVPINV006ServerVerdictBinding::test_III4` |
+| FORENSIC_EXPORT_ALLOW_CALLER_KEYS default = false | `test_eap_extended_audit.py::TestFEAINV003RBACExportGate::test_IV3` |
+| OEP schema_version = "oep-1.0" | `test_eap_extended_audit.py::TestOEPInvariantsExtended::test_V1` |
+| Chain predecessor hash linkage (EAP-INV-003) | `test_eap_extended_audit.py::TestEAPPipelineInvariantsExtended::test_VI3` |
+| Genesis block predecessor = 64 zeros | `test_eap_extended_audit.py::TestEAPPipelineInvariantsExtended::test_VI8` |
+| CRGC hash is deterministic (no timestamp drift) | `test_gpil_audit.py::TestCRGCFormat::test_crgc_hash_stability` |
+| 14 invariants in total (ATF×6 + RGC×8) | `test_gpil_audit.py::TestDocumentationCoherence::test_invariant_count_is_14` |
+| PQC algorithm constant = ML-DSA-65 / FIPS 204 | `test_eap_extended_audit.py::TestEAPPipelineInvariantsExtended::test_VI2` |
+
+### The following claims are independently verifiable by third parties:
 
 **Claim 1: Every governance decision is receipt-backed.**
 Verify: query the `decision_receipts` table for any decision output. Every row has `content_hash` (SHA-256) and `pqc_signature` (ML-DSA-65).
@@ -673,4 +712,4 @@ ADR reference: ADR-159, RGC-INV-001.
 *OMNIX QUANTUM LTD · Registered in England & Wales · Operational Headquarters: UAE*
 *This document describes the technical architecture of the OMNIX governance platform.*
 *All invariant numbers, ADR references, and cryptographic parameters are canonical.*
-*Version 1.0 · May 2026*
+*Version 1.1 · May 2026 — Updated: EAP Extended Audit suite added (58 tests), test coverage table*

@@ -194,13 +194,31 @@ class AIModelsManager:
         else:
             model_priority = [self.primary_model] + self.fallback_models
         
+        def _model_label(name: str) -> str:
+            n = name.lower()
+            if 'gpt-4o-mini' in n: return 'GPT-4o-mini'
+            if 'gpt-4o' in n:      return 'GPT-4o'
+            if 'gemini' in n:      return 'GEMINI'
+            if 'claude' in n:      return 'CLAUDE'
+            return name.upper()
+
         total_attempts = 0
         last_error: Optional[AIError] = None
         errors_summary: list = []
-        
-        for model_name in model_priority:
+
+        for model_idx, model_name in enumerate(model_priority):
             model_failed_permanently = False
-            
+            label = _model_label(model_name)
+
+            if model_idx == 0:
+                logger.info(f"[AI] PRIMARY → {label}")
+            else:
+                prev_label = _model_label(model_priority[model_idx - 1])
+                reason = last_error.category.value if last_error else "unknown"
+                logger.warning(
+                    f"[AI] PRIMARY_FAILED ({prev_label}) → FALLBACK_{label} | reason={reason} | attempts_so_far={total_attempts}"
+                )
+
             for attempt in range(max_retries):
                 total_attempts += 1
                 response = None
@@ -208,10 +226,9 @@ class AIModelsManager:
                 
                 is_simple = False
                 if 'gpt' in model_name.lower():
-                    # Smart model selection: GPT-4o-mini for simple, GPT-4o for complex
                     is_simple = self._is_simple_query(prompt)
                     if is_simple:
-                        logger.info(f"⚡ Using GPT-4o-mini for simple query")
+                        logger.info(f"[AI] {label} → fast-path (simple query)")
                         response, ai_error = await self._generate_openai_fast_async(prompt, system_prompt)
                     else:
                         response, ai_error = await self._generate_openai_async(prompt, system_prompt)
@@ -225,40 +242,46 @@ class AIModelsManager:
                     errors_summary.append(f"{ai_error.provider}:{ai_error.category.value}")
                     
                     if should_skip_to_next_model(ai_error):
-                        logger.warning(f"[SKIP] {model_name} → Error no-retryable: {ai_error.message}")
+                        logger.warning(
+                            f"[AI] {label} SKIP (non-retryable) | error={ai_error.category.value} | msg={ai_error.message[:80]}"
+                        )
                         model_failed_permanently = True
-                        break  # Exit inner loop, continue to next model
+                        break
                     
                     if ai_error.is_retryable and attempt < max_retries - 1:
                         delay = self._calculate_backoff_delay(attempt)
-                        logger.info(f"[RETRY] {model_name} intento {attempt + 1}/{max_retries} - esperando {delay:.2f}s")
+                        logger.info(f"[AI] {label} RETRY {attempt + 1}/{max_retries} | backoff={delay:.2f}s")
                         await asyncio.sleep(delay)
                         continue
                     else:
                         continue
                 
-                # Use relaxed validation for simple queries
                 is_valid, reason = self._validate_response(response, is_simple=is_simple)
                 
                 if is_valid:
-                    logger.info(f"✅ [SUCCESS] {model_name} generó respuesta válida (intento {attempt + 1}, total: {total_attempts})")
+                    logger.info(
+                        f"[AI] {label} SUCCESS | attempt={attempt + 1} | total_attempts={total_attempts} | chars={len(response)}"
+                    )
                     return response
                 else:
-                    logger.warning(f"[VALIDATION] {model_name} respuesta inválida: {reason}")
+                    logger.warning(f"[AI] {label} VALIDATION_FAIL | reason={reason}")
                     if attempt < max_retries - 1:
                         delay = self._calculate_backoff_delay(attempt)
                         await asyncio.sleep(delay)
                     continue
             
             if model_failed_permanently:
-                logger.info(f"[NEXT] Saltando a siguiente modelo después de error no-retryable en {model_name}")
+                logger.info(f"[AI] {label} SKIPPED (non-retryable error) — advancing to next model")
             else:
-                logger.warning(f"[FALLBACK] {model_name} agotó {max_retries} reintentos, probando siguiente modelo...")
+                logger.warning(f"[AI] {label} EXHAUSTED ({max_retries} attempts) — advancing to next model")
         
         error_msg = last_error.log_message() if last_error else "Unknown"
         suggestion = last_error.suggested_action if last_error else "Revisar configuración de API keys"
-        logger.error(f"[CRITICAL] Todos los modelos AI fallaron después de {total_attempts} intentos | Errores: {errors_summary} | Último: {error_msg}")
-        logger.error(f"[DIAGNOSTIC] Acción sugerida: {suggestion}")
+        logger.error(
+            f"[AI] CHAIN_EXHAUSTED | all_models_failed | total_attempts={total_attempts}"
+            f" | errors={errors_summary} | last_error={error_msg}"
+        )
+        logger.error(f"[AI] DIAGNOSTIC | action={suggestion}")
         return None
     
     async def _generate_openai_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:

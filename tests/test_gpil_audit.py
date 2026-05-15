@@ -43,6 +43,8 @@ from omnix_core.agents.atf.runtime_continuity import (
     CES_HALT,
     AFG_FRAGMENTATION_LIMIT_DEFAULT,
     RC_TTL_CRITICAL_DEFAULT,
+    CRGCPolicyParameters,
+    CRGC,
 )
 
 
@@ -171,89 +173,9 @@ def _start_session(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CRGC reference implementation (pure Python — no persistence)
-# Used across tests as authoritative reference
+# CRGCPolicyParameters and CRGC are production types — imported from
+# omnix_core.agents.atf.runtime_continuity above (ADR-161 §7 / §21.3)
 # ─────────────────────────────────────────────────────────────────────────────
-
-@dataclass
-class CRGCPolicyParameters:
-    afg_fragmentation_limit: float = 0.90
-    rc_ttl_seconds: int = 300
-    context_drift_methodology_ref: str = "OMNIX-DRIFT-DEFAULT-v1"
-    anomaly_criteria_ref: str = "OMNIX-ANOMALY-DEFAULT-v1"
-    sampling_profile: str = "STREAMING"
-    governance_risk_tier_policy: str = "STANDARD"
-
-
-@dataclass
-class CRGC:
-    crgc_id: str
-    parties: List[str]
-    effective_from: str
-    expires_at: str
-    invariant_version: str
-    policy_parameters: CRGCPolicyParameters
-    content_hash: str = ""
-    pqc_signatures: List[str] = field(default_factory=list)
-
-    @staticmethod
-    def _canonical(obj: Any) -> str:
-        if isinstance(obj, CRGCPolicyParameters):
-            return json.dumps(asdict(obj), sort_keys=True)
-        return json.dumps(obj, sort_keys=True)
-
-    def compute_hash(self) -> str:
-        """SHA-256 over canonical JSON of hashable fields."""
-        payload = {
-            "crgc_id": self.crgc_id,
-            "parties": sorted(self.parties),
-            "effective_from": self.effective_from,
-            "expires_at": self.expires_at,
-            "invariant_version": self.invariant_version,
-            "policy_parameters": asdict(self.policy_parameters),
-        }
-        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-
-    def sign(self, party_index: int, key: str) -> str:
-        """Simulate PQC signature (HMAC-SHA256 for test purposes)."""
-        import hmac
-        payload = self.content_hash.encode("utf-8")
-        return hmac.new(key.encode("utf-8"), payload, hashlib.sha256).hexdigest()
-
-    def is_expired(self, now: Optional[datetime] = None) -> bool:
-        now = now or datetime.now(timezone.utc)
-        expires = datetime.fromisoformat(self.expires_at.replace("Z", "+00:00"))
-        return now > expires
-
-    def is_active(self, now: Optional[datetime] = None) -> bool:
-        now = now or datetime.now(timezone.utc)
-        eff = datetime.fromisoformat(self.effective_from.replace("Z", "+00:00"))
-        return eff <= now and not self.is_expired(now)
-
-    @staticmethod
-    def create(
-        party_a: str,
-        party_b: str,
-        policy: CRGCPolicyParameters,
-        ttl_hours: int = 24,
-        key_a: str = "key-a",
-        key_b: str = "key-b",
-    ) -> "CRGC":
-        now = datetime.now(timezone.utc)
-        crgc = CRGC(
-            crgc_id=f"CRGC-{uuid.uuid4().hex[:16].upper()}",
-            parties=[party_a, party_b],
-            effective_from=now.isoformat(),
-            expires_at=(now + timedelta(hours=ttl_hours)).isoformat(),
-            invariant_version=SPEC_INVARIANT_VERSION,
-            policy_parameters=policy,
-        )
-        crgc.content_hash = crgc.compute_hash()
-        sig_a = crgc.sign(0, key_a)
-        sig_b = crgc.sign(1, key_b)
-        crgc.pqc_signatures = [sig_a, sig_b]
-        return crgc
 
 
 def _validate_crgc_policy(params: CRGCPolicyParameters) -> List[str]:

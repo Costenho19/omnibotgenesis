@@ -185,6 +185,102 @@ RC_TTL_HALT_DEFAULT     = 0   # immediate
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# GPIL — Cross-Runtime Governance Contract types (ADR-161 / RFC-ATF-2 §21)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class CRGCPolicyParameters:
+    """
+    Policy Divergence Surface — 6 parameters that two runtimes may configure
+    independently without violating CI or PI (ADR-161 §21.3).
+
+    Within a CRGC these parameters are fixed for the contract lifetime;
+    divergence beyond protocol bounds is a compliance violation.
+    """
+    afg_fragmentation_limit: float = AFG_FRAGMENTATION_LIMIT_DEFAULT   # [0.01, 0.95]
+    rc_ttl_seconds: int = RC_TTL_CRITICAL_DEFAULT                       # [30, 3600]
+    context_drift_methodology_ref: str = "OMNIX-DRIFT-DEFAULT-v1"
+    anomaly_criteria_ref: str = "OMNIX-ANOMALY-DEFAULT-v1"
+    sampling_profile: str = "STREAMING"            # SHORT|MEDIUM|LONG|STREAMING
+    governance_risk_tier_policy: str = "STANDARD"  # LOW|STANDARD|HIGH|CRITICAL
+
+
+@dataclass
+class CRGC:
+    """
+    Cross-Runtime Governance Contract (ADR-161 §7).
+
+    A bilaterally PQC-signed contract between two sovereign OMNIX runtimes
+    that aligns their Policy Divergence Surface, enabling ATF-GPI-Aligned status.
+    """
+    crgc_id: str
+    parties: List[str]
+    effective_from: str
+    expires_at: str
+    invariant_version: str
+    policy_parameters: CRGCPolicyParameters
+    content_hash: str = ""
+    pqc_signatures: List[str] = field(default_factory=list)
+
+    def compute_hash(self) -> str:
+        """SHA-256 over canonical JSON of hashable fields (deterministic)."""
+        payload = {
+            "crgc_id": self.crgc_id,
+            "parties": sorted(self.parties),
+            "effective_from": self.effective_from,
+            "expires_at": self.expires_at,
+            "invariant_version": self.invariant_version,
+            "policy_parameters": asdict(self.policy_parameters),
+        }
+        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    def sign(self, party_index: int, key: str) -> str:
+        """HMAC-SHA256 stand-in signature (replace with ML-DSA-65 in production)."""
+        import hmac as _hmac
+        return _hmac.new(
+            key.encode("utf-8"),
+            self.content_hash.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+    def is_expired(self, now: Optional[datetime] = None) -> bool:
+        now = now or datetime.now(timezone.utc)
+        expires = datetime.fromisoformat(self.expires_at.replace("Z", "+00:00"))
+        return now > expires
+
+    def is_active(self, now: Optional[datetime] = None) -> bool:
+        now = now or datetime.now(timezone.utc)
+        eff = datetime.fromisoformat(self.effective_from.replace("Z", "+00:00"))
+        return eff <= now and not self.is_expired(now)
+
+    @staticmethod
+    def create(
+        party_a: str,
+        party_b: str,
+        policy: "CRGCPolicyParameters",
+        ttl_hours: int = 24,
+        key_a: str = "key-a",
+        key_b: str = "key-b",
+        invariant_version: str = "RFC-ATF-2-v1.0.0",
+    ) -> "CRGC":
+        """Factory: create and bilaterally sign a new CRGC."""
+        from datetime import timedelta
+        now = datetime.now(timezone.utc)
+        crgc = CRGC(
+            crgc_id=f"CRGC-{uuid.uuid4().hex[:16].upper()}",
+            parties=[party_a, party_b],
+            effective_from=now.isoformat(),
+            expires_at=(now + timedelta(hours=ttl_hours)).isoformat(),
+            invariant_version=invariant_version,
+            policy_parameters=policy,
+        )
+        crgc.content_hash = crgc.compute_hash()
+        crgc.pqc_signatures = [crgc.sign(0, key_a), crgc.sign(1, key_b)]
+        return crgc
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Exceptions
 # ─────────────────────────────────────────────────────────────────────────────
 
