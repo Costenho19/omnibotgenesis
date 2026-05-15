@@ -853,7 +853,6 @@ class EnterpriseTelegramBot:
             self.application.add_handler(CommandHandler("performance", self.performance_command))
             self.application.add_handler(CommandHandler("analisis", self.analisis_command))
             self.application.add_handler(CommandHandler("status", self.status_command))
-            self.application.add_handler(CommandHandler("testai", self.testai_command))
             
             # Comandos Advanced Features Enterprise
             self.application.add_handler(CommandHandler("montecarlo", self.montecarlo_command))
@@ -2246,89 +2245,6 @@ Sistema OMNIX - Harold Nunes
             
         except Exception as e:
             logger.error(f"❌ Error comando status: {e}")
-
-    async def testai_command(self, update, context):
-        """Comando /testai — Diagnóstico real de APIs de IA (solo admin)"""
-        user_id = str(update.effective_user.id)
-        if not is_admin(user_id):
-            await update.message.reply_text("⛔ Solo disponible para administrador.")
-            return
-        await update.message.reply_text("🔬 Testeando APIs de IA...")
-        results = []
-
-        # Test 1: Verificar variables de entorno
-        import os
-        has_gemini = bool(os.environ.get('GEMINI_API_KEY'))
-        has_openai = bool(os.environ.get('OPENAI_API_KEY'))
-        has_anthropic = bool(os.environ.get('ANTHROPIC_API_KEY'))
-        results.append(f"🔑 **Claves configuradas:**")
-        results.append(f"  GEMINI_API_KEY: {'✅' if has_gemini else '❌ NO ENCONTRADA'}")
-        results.append(f"  OPENAI_API_KEY: {'✅' if has_openai else '❌ NO ENCONTRADA'}")
-        results.append(f"  ANTHROPIC_API_KEY: {'✅' if has_anthropic else '❌ NO ENCONTRADA'}")
-
-        # Test 2: Estado de AI adapter
-        ai_ok = self.ai is not None
-        enterprise = getattr(self.ai, 'using_enterprise', False) if ai_ok else False
-        mgr = getattr(self.ai, '_ai_models_manager', None) if ai_ok else None
-        results.append(f"\n🤖 **AI Adapter:** {'✅ OK' if ai_ok else '❌ None'}")
-        results.append(f"  Mode: {'Enterprise' if enterprise else 'Legacy'}")
-        results.append(f"  AIModelsManager: {'✅ OK' if mgr else '❌ No inicializado'}")
-        if mgr:
-            hc = mgr.health_check()
-            results.append(f"  OpenAI client: {'✅' if hc.get('openai') else '❌'}")
-            results.append(f"  Gemini client: {'✅' if hc.get('gemini') else '❌'}")
-            results.append(f"  Anthropic client: {'✅' if hc.get('anthropic') else '❌'}")
-
-        # Test 3: Llamada real a Gemini
-        if has_gemini:
-            try:
-                import asyncio
-                from google import genai as _genai
-                _client = _genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
-                loop = asyncio.get_event_loop()
-                def _call():
-                    r = _client.models.generate_content(
-                        model='gemini-2.0-flash',
-                        contents='Responde solo: OK'
-                    )
-                    try:
-                        return r.text
-                    except Exception:
-                        if r.candidates:
-                            return r.candidates[0].content.parts[0].text
-                        return None
-                resp = await asyncio.wait_for(loop.run_in_executor(None, _call), timeout=20.0)
-                if resp:
-                    results.append(f"\n🟢 **Gemini directo:** ✅ Respondió '{resp[:50]}'")
-                else:
-                    results.append(f"\n🔴 **Gemini directo:** ❌ Respuesta vacía/bloqueada")
-            except Exception as e:
-                results.append(f"\n🔴 **Gemini directo:** ❌ {type(e).__name__}: {str(e)[:150]}")
-        else:
-            results.append(f"\n⚫ **Gemini directo:** SKIP (no hay clave)")
-
-        # Test 4: Llamada real a OpenAI
-        if has_openai:
-            try:
-                from openai import AsyncOpenAI as _AsyncOpenAI
-                _oa = _AsyncOpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
-                _r = await asyncio.wait_for(
-                    _oa.chat.completions.create(
-                        model='gpt-4o-mini',
-                        messages=[{'role': 'user', 'content': 'Responde solo: OK'}],
-                        max_tokens=5
-                    ),
-                    timeout=20.0
-                )
-                resp_oa = _r.choices[0].message.content
-                results.append(f"🟢 **OpenAI directo:** ✅ Respondió '{resp_oa}'")
-            except Exception as e:
-                results.append(f"🔴 **OpenAI directo:** ❌ {type(e).__name__}: {str(e)[:150]}")
-        else:
-            results.append(f"⚫ **OpenAI directo:** SKIP (no hay clave)")
-
-        msg = "\n".join(results)
-        await update.message.reply_text(f"📊 **Diagnóstico IA**\n\n{msg}", parse_mode='Markdown')
 
     async def montecarlo_command(self, update, context):
         """Comando /montecarlo - Simulación Monte Carlo"""

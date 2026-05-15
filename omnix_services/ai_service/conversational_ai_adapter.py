@@ -1035,13 +1035,6 @@ class ConversationalAI:
             self.intelligence_level = "ULTRA_COMPETITIVE_ENTERPRISE"
             # Initialize legacy AI clients for fallback
             self._init_legacy_clients()
-        # AIModelsManager — async fallback chain con retry/backoff (siempre disponible)
-        try:
-            from omnix_services.ai_service.ai_models import AIModelsManager
-            self._ai_models_manager = AIModelsManager()
-        except Exception as _ame:
-            logger.warning(f"⚠️ AIModelsManager no disponible: {_ame}")
-            self._ai_models_manager = None
     
     def _init_legacy_clients(self):
         """Initialize legacy AI clients if enterprise not available"""
@@ -1173,12 +1166,8 @@ class ConversationalAI:
                         logger.warning("⚠️ Enterprise service returned no response — falling through to legacy AI path")
                         break
                 
-                # Enterprise falló completamente — intentar AIModelsManager async chain
-                logger.warning("⚠️ [ASYNC] Enterprise path exhausted — trying AIModelsManager async chain")
-                _amgr_resp = await self._async_generate_with_models_manager(user_message, user_name, chat_id)
-                if _amgr_resp:
-                    return post_process_response(_amgr_resp)
-                # Último recurso: legacy síncrono
+                # Enterprise falló completamente — intentar legacy (Gemini/GPT-4)
+                logger.warning("⚠️ [ASYNC] Enterprise path exhausted — trying legacy AI generation")
                 try:
                     legacy_response = self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
                     if legacy_response and legacy_response != self._fallback_response():
@@ -1187,11 +1176,7 @@ class ConversationalAI:
                     logger.error(f"❌ Legacy path also failed: {_leg_exc}")
                 return self._fallback_response()
             else:
-                logger.warning("⚠️ [ASYNC] Non-enterprise: using AIModelsManager async chain")
-                _amgr_resp = await self._async_generate_with_models_manager(user_message, user_name, chat_id)
-                if _amgr_resp:
-                    return post_process_response(_amgr_resp)
-                # Último recurso: legacy síncrono
+                logger.warning("⚠️ Using legacy AI generation")
                 return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system))
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
@@ -1982,56 +1967,6 @@ class ConversationalAI:
                 'formatted_for_prompt': f'[Error loading investor data: {str(e)}]'
             }
     
-    async def _async_generate_with_models_manager(self, user_message: str, user_name: str, chat_id: str) -> Optional[str]:
-        """
-        Async AI generation usando AIModelsManager con retry/backoff completo.
-        Fallback chain: GPT-4o-mini → GPT-4o → Gemini → Claude.
-        Usado cuando enterprise no está disponible o falla.
-        """
-        if not getattr(self, '_ai_models_manager', None):
-            logger.warning("⚠️ AIModelsManager no inicializado — skip")
-            return None
-        try:
-            from omnix_services.ai_service.prompt_templates import prompt_builder
-            context = ""
-            if hasattr(self, 'conversation_history') and chat_id in self.conversation_history:
-                context = "\n".join(self.conversation_history[chat_id][-6:])
-            systemic_type = classify_systemic_question(user_message)
-            effective_msg = user_message
-            if systemic_type:
-                override = get_systemic_override_prompt(systemic_type)
-                effective_msg = override + "\n\nUSER QUESTION: " + user_message
-            system_prompt = prompt_builder.build_system_prompt(
-                user_message=effective_msg,
-                user_name=user_name,
-                context=context,
-                kraken_status=None,
-                intent='general'
-            )
-            response = await asyncio.wait_for(
-                self._ai_models_manager.generate(
-                    prompt=effective_msg,
-                    system_prompt=system_prompt
-                ),
-                timeout=45.0
-            )
-            if response:
-                if hasattr(self, 'conversation_history'):
-                    if chat_id not in self.conversation_history:
-                        self.conversation_history[chat_id] = []
-                    self.conversation_history[chat_id].append(f"Usuario: {user_message}")
-                    self.conversation_history[chat_id].append(f"OMNIX: {response}")
-                    if len(self.conversation_history[chat_id]) > 20:
-                        self.conversation_history[chat_id] = self.conversation_history[chat_id][-20:]
-                logger.info(f"✅ [AIModelsManager] Respuesta exitosa: {len(response)} chars")
-            return response
-        except asyncio.TimeoutError:
-            logger.error("❌ [AIModelsManager] Timeout 45s")
-            return None
-        except Exception as e:
-            logger.error(f"❌ [AIModelsManager] generate() falló: {e}")
-            return None
-
     def _legacy_generate_response(self, user_message, user_name, chat_id, user_id, trading_system=None):
         """Legacy AI generation - GEMINI PRIMERO con CONSULTA KRAKEN REAL
         FIX Nov 29, 2025: Usar trading_system parámetro en lugar de global
@@ -2189,50 +2124,18 @@ class ConversationalAI:
             try:
                 logger.info("✅ Usando GEMINI en modo legacy")
                 
-                enhanced_prompt = f"{system_prompt}\n\nUser Query: {effective_user_message}"
-                
                 # Detectar SDK (nuevo vs clásico)
                 if hasattr(self.gemini_client, 'models'):
-                    # Nuevo SDK (google.genai.Client) — usar config completo igual que AIModelsManager
-                    try:
-                        from google.genai import types as _gtypes
-                        _cfg = _gtypes.GenerateContentConfig(
-                            temperature=0.85,
-                            max_output_tokens=4000,
-                            top_p=0.95,
-                            top_k=40
-                        )
-                    except Exception:
-                        _cfg = None
-                    _kwargs = {'model': 'gemini-2.0-flash', 'contents': enhanced_prompt}
-                    if _cfg is not None:
-                        _kwargs['config'] = _cfg
-                    response = self.gemini_client.models.generate_content(**_kwargs)
-                    # Extracción segura — response.text lanza excepción en safety blocks
-                    response_text = None
-                    try:
-                        if hasattr(response, 'text') and response.text:
-                            response_text = response.text
-                    except Exception:
-                        pass
-                    if not response_text and hasattr(response, 'candidates') and response.candidates:
-                        try:
-                            response_text = response.candidates[0].content.parts[0].text
-                        except Exception:
-                            pass
+                    # Nuevo SDK (google.genai.Client)
+                    response = self.gemini_client.models.generate_content(
+                        model='gemini-2.0-flash',
+                        contents=system_prompt
+                    )
+                    response_text = response.text
                 else:
                     # SDK clásico (google.generativeai)
-                    _model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=system_prompt)
-                    response = _model.generate_content(effective_user_message)
-                    response_text = None
-                    try:
-                        if hasattr(response, 'text') and response.text:
-                            response_text = response.text
-                    except Exception:
-                        pass
-                
-                if not response_text:
-                    raise ValueError("Gemini devolvió respuesta vacía o bloqueada por safety")
+                    response = self.gemini_client.generate_content(system_prompt)
+                    response_text = response.text
                 
                 # Guardar en historial
                 if chat_id not in self.conversation_history:
@@ -2246,7 +2149,7 @@ class ConversationalAI:
                 return response_text
                 
             except Exception as e:
-                logger.error(f"❌ Gemini falló en legacy path: {type(e).__name__}: {e} — intentando GPT-4 fallback")
+                logger.warning(f"⚠️ Gemini falló: {e}, intentando GPT-4 fallback")
         
         # PRIORIDAD 2: GPT-4 fallback (solo si Gemini falla)
         if hasattr(self, 'openai_client') and self.openai_client:
