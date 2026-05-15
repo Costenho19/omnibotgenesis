@@ -8,7 +8,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 ## ADRs y Baseline
 
 - **ADRs:** `docs/adr/` — 163 total. Últimos: ADR-160 (RPOL) · ADR-161 (GPIL) · ADR-162 (ELR) · ADR-163 (EAP)
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants · 151 ADRs · Architecture Freeze
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **24 invariants totales activos** (ATF×6 + RGC×8 + ELR×4 + EAP×6)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 

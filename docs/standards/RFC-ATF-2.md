@@ -1667,6 +1667,16 @@ Table of Contents
       OMNIX ADR-161, 2026.
       omnixquantum.net/docs/adr/ADR-161
 
+   [ADR-162]
+      Nunes, H., "Evidence Lifecycle & Immutable Retention",
+      OMNIX ADR-162, 2026.
+      omnixquantum.net/docs/adr/ADR-162
+
+   [ADR-163]
+      Nunes, H., "Immutable Evidence Archive Pipeline",
+      OMNIX ADR-163, 2026.
+      omnixquantum.net/docs/adr/ADR-163
+
    [TLA-ATF]
       Nunes, H., "ATF-TLA-SPEC: Formal TLA+ Specification of ATF
       Invariants", OMNIX QUANTUM, May 2026.
@@ -1797,6 +1807,40 @@ A.3.  HALT — Complete Budget Exhaustion and Context Collapse
       AFG_FRAGMENTATION_LIMIT  — default 0.90, range [0.01, 0.95]
       RGC_RC_TTL_SECONDS       — default 300,  range [30, 3600]
    See ADR-161 §2 for the full Governance Policy Parameter Registry.
+
+   Evidence Lifecycle (ADR-162 / ADR-163):
+   ADR-162 defines the evidence classification and retention policy for all
+   artifacts produced by the RGC stack: eight evidence classes (LEGAL, PQC,
+   CONTRACT, EXCEPTION, TELEMETRY, SAMPLE, SHADOW_NOMINAL, OPS) mapped to
+   HOT/WARM/COLD storage tiers with four invariants (ELR-INV-001–004).
+   ADR-163 defines the mechanical archive pipeline implementing ADR-162:
+   HOT→WARM→COLD transitions, Parquet block structure with SHA-256 block
+   chain, ML-DSA-65 archive signatures, and six pipeline invariants
+   (EAP-INV-001–006).  ATF-INV-006 (Independent Verifiability) is explicitly
+   preserved through all lifecycle transitions.
+   HALT events (RGC-INV-003) trigger an EMERGENCY_COLD archival of all
+   artifacts from the halted chain root, closing the evidentiary window.
+
+   Protocol Architecture Visualization:
+   The five-diagram interactive reference at /protocol provides institutional
+   visualization of: Runtime Legitimacy Stack (L0–L5), Execution Legitimacy
+   Chain (DR→TAR→RCR→GovernanceReceipt→Archive), Sovereign Runtime Divergence
+   (ADR-161 GPIL), Runtime Authority Degradation (CES T₀→T₄), and Evidence
+   Custody Lifecycle (ADR-162/163).
+
+   Total formal invariants (as of ADR-163):
+      ATF-INV-001–006  (RFC-ATF-1)       — 6 invariants
+      RGC-INV-001–008  (RFC-ATF-2)       — 8 invariants
+      ELR-INV-001–004  (ADR-162)         — 4 invariants
+      EAP-INV-001–006  (ADR-163)         — 6 invariants
+      TOTAL                              — 24 invariants
+
+   Test coverage (as of May 14, 2026):
+      tests/test_gpil_audit.py           (113 tests — ADR-161/GPIL)
+      tests/test_code_verification.py
+      tests/test_version_consistency.py
+      tests/test_critical_audit.py
+      tests/test_governance_integrity.py
 
 
 Author's Address

@@ -499,7 +499,7 @@ export default function ATFVerifierPage() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               {(['DR', 'TAR', 'RCR'] as ArtifactType[]).map(a => {
                 const m = ARTIFACT_META[a]
                 const active = artifact === a
@@ -516,6 +516,16 @@ export default function ATFVerifierPage() {
                   </button>
                 )
               })}
+              <div style={{
+                padding: '8px 14px', borderRadius: 10,
+                border: '1px solid rgba(255,255,255,0.06)',
+                background: 'rgba(255,255,255,0.01)',
+                fontSize: 11, color: 'rgba(148,163,184,0.5)',
+                fontStyle: 'italic', lineHeight: 1.3,
+              }}>
+                <span style={{ display: 'block', fontSize: 9, marginBottom: 2, letterSpacing: '0.06em' }}>PLANNED — ADR-163</span>
+                Archive Block (COLD)
+              </div>
             </div>
           </div>
         </div>

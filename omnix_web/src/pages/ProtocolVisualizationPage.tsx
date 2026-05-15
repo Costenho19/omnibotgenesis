@@ -167,7 +167,7 @@ function DiagramStack() {
           Every execution path traverses L0 → L5. Authority budget propagates downward.
           Evidence flows upward to immutable custody.
         </span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.cyan, marginLeft: 'auto' }}>14 invariants enforced</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.cyan, marginLeft: 'auto' }}>24 invariants enforced</span>
       </div>
     </div>
   )
@@ -794,7 +794,7 @@ export default function ProtocolVisualizationPage() {
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
             {[
               { label: '163 ADRs', color: C.gold },
-              { label: '14 invariants', color: C.cyan },
+              { label: '24 invariants', color: C.cyan },
               { label: 'ML-DSA-65 (FIPS 204)', color: C.purple },
               { label: 'Offline verifiable', color: C.green },
             ].map(({ label, color }) => <Pill key={label} label={label} color={color} />)}

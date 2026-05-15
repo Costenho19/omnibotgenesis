@@ -246,6 +246,13 @@ export default function ATFStandardPage() {
               textDecoration: 'none', display: 'inline-block',
               background: 'rgba(201,162,39,0.06)',
             }}>📊 ATF Dashboard</a>
+            <a href="/protocol" style={{
+              padding: '13px 28px', borderRadius: 10,
+              border: `1.5px solid rgba(0,229,255,0.30)`,
+              color: '#00E5FF', fontSize: 14, fontWeight: 600,
+              textDecoration: 'none', display: 'inline-block',
+              background: 'rgba(0,229,255,0.04)',
+            }}>Protocol Architecture →</a>
             <a href="https://github.com/omnixquantum" target="_blank" rel="noopener noreferrer" style={{
               padding: '13px 28px', borderRadius: 10,
               border: `1.5px solid ${BORDER2}`,
