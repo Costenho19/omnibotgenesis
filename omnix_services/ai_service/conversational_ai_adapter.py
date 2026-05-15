@@ -2189,18 +2189,50 @@ class ConversationalAI:
             try:
                 logger.info("✅ Usando GEMINI en modo legacy")
                 
+                enhanced_prompt = f"{system_prompt}\n\nUser Query: {effective_user_message}"
+                
                 # Detectar SDK (nuevo vs clásico)
                 if hasattr(self.gemini_client, 'models'):
-                    # Nuevo SDK (google.genai.Client)
-                    response = self.gemini_client.models.generate_content(
-                        model='gemini-2.0-flash',
-                        contents=system_prompt
-                    )
-                    response_text = response.text
+                    # Nuevo SDK (google.genai.Client) — usar config completo igual que AIModelsManager
+                    try:
+                        from google.genai import types as _gtypes
+                        _cfg = _gtypes.GenerateContentConfig(
+                            temperature=0.85,
+                            max_output_tokens=4000,
+                            top_p=0.95,
+                            top_k=40
+                        )
+                    except Exception:
+                        _cfg = None
+                    _kwargs = {'model': 'gemini-2.0-flash', 'contents': enhanced_prompt}
+                    if _cfg is not None:
+                        _kwargs['config'] = _cfg
+                    response = self.gemini_client.models.generate_content(**_kwargs)
+                    # Extracción segura — response.text lanza excepción en safety blocks
+                    response_text = None
+                    try:
+                        if hasattr(response, 'text') and response.text:
+                            response_text = response.text
+                    except Exception:
+                        pass
+                    if not response_text and hasattr(response, 'candidates') and response.candidates:
+                        try:
+                            response_text = response.candidates[0].content.parts[0].text
+                        except Exception:
+                            pass
                 else:
                     # SDK clásico (google.generativeai)
-                    response = self.gemini_client.generate_content(system_prompt)
-                    response_text = response.text
+                    _model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=system_prompt)
+                    response = _model.generate_content(effective_user_message)
+                    response_text = None
+                    try:
+                        if hasattr(response, 'text') and response.text:
+                            response_text = response.text
+                    except Exception:
+                        pass
+                
+                if not response_text:
+                    raise ValueError("Gemini devolvió respuesta vacía o bloqueada por safety")
                 
                 # Guardar en historial
                 if chat_id not in self.conversation_history:
@@ -2214,7 +2246,7 @@ class ConversationalAI:
                 return response_text
                 
             except Exception as e:
-                logger.warning(f"⚠️ Gemini falló: {e}, intentando GPT-4 fallback")
+                logger.error(f"❌ Gemini falló en legacy path: {type(e).__name__}: {e} — intentando GPT-4 fallback")
         
         # PRIORIDAD 2: GPT-4 fallback (solo si Gemini falla)
         if hasattr(self, 'openai_client') and self.openai_client:
