@@ -167,15 +167,59 @@ OMNIX-PACKAGE-{DATE}-{ID}.oep
 }
 ```
 
-**Signing procedure:**
-1. Serialize `manifest.json` with `json.dumps(manifest, sort_keys=True, separators=(',', ':'))`
-2. Compute `sha256:` + SHA-256 of serialized bytes → `canonical_manifest_hash`
-3. Sign `canonical_manifest_hash.encode('utf-8')` with ML-DSA-65 private key
-4. Store in `SIGNATURE/package_signature.json`
+**Two-Phase Signing Procedure (OEP-INV-003):**
 
-Note: The `files[]` array in `manifest.json` includes a SHA-256 for `SIGNATURE/package_signature.json`
-itself (the signature JSON, not the signature bytes). This creates a complete integrity lattice:
-the signature signs the manifest, the manifest hashes every file including the signature file.
+The OEP uses a two-phase signing protocol to avoid circular self-reference:
+
+**Phase 1 — Content manifest (signed object):**
+The signed object is the "content manifest" — `manifest.json` with the
+`SIGNATURE/package_signature.json` entry **removed** from `files[]`.
+This entry cannot exist at signing time (the signature file does not yet exist).
+
+```
+content_manifest = manifest WITHOUT files[].path == "SIGNATURE/package_signature.json"
+canonical_bytes  = json.dumps(content_manifest, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+canonical_manifest_hash = "sha256:" + sha256(canonical_bytes).hexdigest()
+```
+
+**Phase 2 — Finalize:**
+1. Sign `canonical_manifest_hash.encode('utf-8')` with ML-DSA-65 private key → `pqc_signature`
+2. Build `SIGNATURE/package_signature.json` containing `canonical_manifest_hash` + `pqc_signature`
+3. Compute SHA-256 of `package_signature.json` bytes → add entry to `manifest.files[]`
+4. Write final `manifest.json` (now with signature entry in `files[]`) and `package_signature.json` to ZIP
+
+**Independent Verification Procedure:**
+```python
+import json, hashlib, base64
+from pqc.sign import dilithium3
+
+manifest  = json.load(open('META/manifest.json'))
+sig_data  = json.load(open('SIGNATURE/package_signature.json'))
+
+# Reconstruct content_manifest (strip SIGNATURE entry — that was added after signing)
+content_manifest = dict(manifest)
+content_manifest['files'] = [
+    f for f in manifest['files']
+    if f['path'] != 'SIGNATURE/package_signature.json'
+]
+
+# Verify canonical hash
+canonical_bytes = json.dumps(
+    content_manifest, sort_keys=True, separators=(',', ':'), ensure_ascii=False
+).encode('utf-8')
+computed = 'sha256:' + hashlib.sha256(canonical_bytes).hexdigest()
+assert computed == sig_data['canonical_manifest_hash'], 'MANIFEST TAMPERED'
+
+# Verify ML-DSA-65 signature: verify(sig, msg, pk)
+pk  = base64.b64decode(open('KEYS/public_key.b64').read().strip())
+sig = base64.b64decode(sig_data['pqc_signature'])
+dilithium3.verify(sig, computed.encode('utf-8'), pk)  # raises ValueError if invalid
+print("VALID")
+```
+
+Note: `manifest.json` in the ZIP has `SIGNATURE/package_signature.json` in `files[]`
+(added after signing). This entry allows verifying the signature file's own integrity.
+The signed object (content_manifest) does NOT include this entry — no circular reference.
 
 ### 5. Forensic Reconstruction Report
 

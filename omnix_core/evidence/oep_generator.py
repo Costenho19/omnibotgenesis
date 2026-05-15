@@ -266,25 +266,57 @@ Option C — Chain verification:
 PACKAGE INTEGRITY
 -----------------
 The integrity of this package is guaranteed by:
-1. SHA-256 hash of every content file (listed in META/manifest.json).
-2. ML-DSA-65 (FIPS 204) signature over the canonical manifest hash
+1. SHA-256 hash of every content file (listed in META/manifest.json files[]).
+2. ML-DSA-65 (FIPS 204) signature over the canonical content manifest hash
    (stored in SIGNATURE/package_signature.json).
 
-To verify the package manifest signature:
+IMPORTANT — TWO-PHASE SIGNING PROTOCOL:
+The package signature covers the "content manifest" — which is META/manifest.json
+with the SIGNATURE/package_signature.json entry REMOVED from files[]. This is by
+design: the signature is computed before the signature file itself exists, so the
+signed object cannot include a self-reference to the signature file.
+
+To verify the package manifest signature independently (step by step):
+
   python3 -c "
 import json, hashlib, base64
 from pqc.sign import dilithium3
+
+# 1. Load manifest and signature data
 manifest = json.load(open('META/manifest.json'))
-sig_data = json.load(open('SIGNATURE/package_signature.json'))
-canonical = json.dumps(manifest, sort_keys=True, separators=(',',':')).encode()
-computed = 'sha256:' + hashlib.sha256(canonical).hexdigest()
-assert computed == sig_data['canonical_manifest_hash'], 'Hash mismatch'
-pk_b64 = open('KEYS/public_key.b64').read().strip()
-pk = base64.b64decode(pk_b64)
+sig_data  = json.load(open('SIGNATURE/package_signature.json'))
+
+# 2. Reconstruct the content_manifest (what was actually signed).
+#    Strip the SIGNATURE/package_signature.json entry from files[] —
+#    that entry was added AFTER signing (two-phase protocol).
+content_manifest = dict(manifest)
+content_manifest['files'] = [
+    f for f in manifest['files']
+    if f['path'] != 'SIGNATURE/package_signature.json'
+]
+
+# 3. Compute canonical hash of content_manifest
+canonical_bytes = json.dumps(
+    content_manifest, sort_keys=True, separators=(',', ':'), ensure_ascii=False
+).encode('utf-8')
+computed_hash = 'sha256:' + hashlib.sha256(canonical_bytes).hexdigest()
+
+# 4. Compare with stored hash
+assert computed_hash == sig_data['canonical_manifest_hash'], (
+    'HASH MISMATCH — manifest has been tampered: '
+    + computed_hash + ' != ' + sig_data['canonical_manifest_hash']
+)
+print('Manifest hash: OK')
+
+# 5. Verify ML-DSA-65 signature: verify(sig, msg, pk)
+pk  = base64.b64decode(open('KEYS/public_key.b64').read().strip())
 sig = base64.b64decode(sig_data['pqc_signature'])
-msg = sig_data['canonical_manifest_hash'].encode()
-result = dilithium3.verify(msg, sig, pk)
-print('Package signature:', 'VALID' if result else 'INVALID')
+msg = computed_hash.encode('utf-8')
+try:
+    dilithium3.verify(sig, msg, pk)
+    print('Package signature: VALID')
+except Exception as e:
+    print('Package signature: INVALID —', e)
 "
 
 FORENSIC REPORT
@@ -393,8 +425,20 @@ OMNIX QUANTUM LTD — https://omnixquantum.net
   pip install pypqc<br><br>
   # Step 2: Run full chain verification<br>
   bash VERIFY/verify_all.sh<br><br>
-  # Step 3: Verify package signature<br>
-  python3 -c "import json,hashlib,base64; from pqc.sign import dilithium3; m=json.load(open('META/manifest.json')); s=json.load(open('SIGNATURE/package_signature.json')); ch='sha256:'+hashlib.sha256(json.dumps(m,sort_keys=True,separators=(',',':')).encode()).hexdigest(); assert ch==s['canonical_manifest_hash']; pk=base64.b64decode(open('KEYS/public_key.b64').read()); sig=base64.b64decode(s['pqc_signature']); print(dilithium3.verify(ch.encode(),sig,pk))"
+  # Step 3: Verify package signature (two-phase protocol — see META/README.txt)<br>
+  python3 -c "
+import json,hashlib,base64
+from pqc.sign import dilithium3
+m=json.load(open('META/manifest.json'))
+s=json.load(open('SIGNATURE/package_signature.json'))
+cm=dict(m); cm['files']=[f for f in m['files'] if f['path']!='SIGNATURE/package_signature.json']
+ch='sha256:'+hashlib.sha256(json.dumps(cm,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+assert ch==s['canonical_manifest_hash'],'HASH MISMATCH'
+pk=base64.b64decode(open('KEYS/public_key.b64').read().strip())
+sig=base64.b64decode(s['pqc_signature'])
+try: dilithium3.verify(sig,ch.encode(),pk); print('VALID')
+except: print('INVALID')
+"
   </code>
 </div>
 

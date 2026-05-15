@@ -231,8 +231,11 @@ export default function ArchiveVerifierPage() {
     )
     const sortedBlocks: BlockData[] = []
     const visited = new Set<string>()
+    const safeTs = (b: BlockData): bigint => {
+      try { return BigInt(b._rawCreationTimestampNs ?? '0') } catch { return 0n }
+    }
     const queue: BlockData[] = [...roots].sort(
-      (a, b) => Number(BigInt(a._rawCreationTimestampNs ?? '0') - BigInt(b._rawCreationTimestampNs ?? '0'))
+      (a, b) => Number(safeTs(a) - safeTs(b))
     )
     while (queue.length > 0) {
       const current = queue.shift()!
@@ -242,7 +245,7 @@ export default function ArchiveVerifierPage() {
       const children = blocks.filter(
         b => b.predecessor_block_hash === current.canonical_hash && !visited.has(b.canonical_hash)
       )
-      children.sort((a, b) => Number(BigInt(a._rawCreationTimestampNs ?? '0') - BigInt(b._rawCreationTimestampNs ?? '0')))
+      children.sort((a, b) => Number(safeTs(a) - safeTs(b)))
       queue.push(...children)
     }
     // Append any disconnected blocks
@@ -323,16 +326,33 @@ export default function ArchiveVerifierPage() {
 
         newVerifications[block.block_id].serverVerdict = sv
 
-        // FVP-INV-006: Server verdict is binding. When server disagrees with browser,
-        // update localVerdict to reflect the server's authoritative decision.
+        // FVP-INV-006: Server verdict is binding — BUT ONLY for PQC-layer decisions.
+        //
+        // CRITICAL TRUST BOUNDARY (FVP-INV-006 scope restriction):
+        // Hash/merkle/canonical checks are mathematical operations on the uploaded file bytes.
+        // No server response can override a browser-detected INTEGRITY_VIOLATION — the browser
+        // computed the hash from the file the user uploaded; if it doesn't match, the block is
+        // tampered regardless of what any server says. Accepting a server PASS over a local
+        // INTEGRITY_VIOLATION would be a trust inversion attack vector.
+        //
+        // Server override applies ONLY when localVerdict is INCOMPLETE (PQC not verified browser-side)
+        // or PASS (server may downgrade to SIGNATURE_INVALID after definitive PQC check).
+        const hashVerdicts: VerdictState[] = ['INTEGRITY_VIOLATION']
+        const localIsHashReality = hashVerdicts.includes(localVerdict)
+
         if (sv && sv !== 'INCOMPLETE') {
-          // Server returned a definitive verdict — it wins (FVP-INV-006)
-          if (sv !== localVerdict) {
+          if (localIsHashReality) {
+            // Hash mismatch detected by browser — server cannot override mathematical reality.
+            // Record server verdict for transparency but do NOT change localVerdict.
+            newVerifications[block.block_id].reasons.push(
+              `SERVER returned ${sv} but browser hash check detected INTEGRITY_VIOLATION — browser result prevails (FVP-INV-006 hash exception)`
+            )
+          } else if (sv !== localVerdict) {
+            // Server verdict differs from browser on PQC/chain/completeness — server wins.
             newVerifications[block.block_id].reasons.push(
               `SERVER (Plane 2 — authoritative): ${sv}` +
-              (localVerdict !== sv ? ` [browser had: ${localVerdict}]` : '')
+              ` [browser had: ${localVerdict}]`
             )
-            // Override local verdict with server verdict (FVP-INV-006)
             newVerifications[block.block_id].localVerdict = sv
           }
         } else if (sv === 'INCOMPLETE' && serverResult.error) {

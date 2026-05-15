@@ -10,8 +10,18 @@ Endpoints:
   POST /api/forensic/verify   — authoritative Plane 2 verification (FVP-INV-005)
   POST /api/forensic/export   — generate + stream OEP bundle (ADR-165)
 
-ADR-164: FVP-INV-006 — server verdict is binding in all trust conflicts.
+Rate limits (ADR-164 §4):
+  /verify: 60 per minute (PQC verification is CPU-intensive)
+  /export: 10 per minute (OEP generation is I/O + CPU intensive)
+
+ADR-164: FVP-INV-006 — server verdict binding ONLY for PQC layer (not hash reality).
 ADR-164: FVP-INV-004 — SIGNATURE_INVALID emitted ONLY by this server path.
+
+SECURITY NOTE on /export key handling:
+  /export accepts caller-provided secret_key_b64. The generated OEP will bear the
+  fingerprint of the caller's key — not the OMNIX platform key. This is intentional
+  for self-service forensic packaging. Production deployments requiring platform-keyed
+  OEPs should authenticate the endpoint (RBAC/API key) and pin to the platform key.
 """
 import sys
 import os
@@ -19,10 +29,17 @@ import importlib.util
 import json
 import logging
 from datetime import datetime, timezone
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, jsonify, request, send_file, current_app
 from pathlib import Path
 import tempfile
 import io
+
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    _HAS_LIMITER = True
+except ImportError:
+    _HAS_LIMITER = False
 
 # ── Bootstrap omnix_core ──────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

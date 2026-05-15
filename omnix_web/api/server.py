@@ -125,6 +125,10 @@ register_sandbox_routes(app)
 try:
     from api.forensic_blueprint import forensic_bp
     app.register_blueprint(forensic_bp, url_prefix='/api/forensic')
+    # ADR-164 §4: Apply per-endpoint rate limits after blueprint registration
+    # (avoids circular import — limiter is defined in server.py, not the blueprint)
+    limiter.limit("60 per minute")(forensic_bp.view_functions["forensic_bp.verify_block"])
+    limiter.limit("10 per minute")(forensic_bp.view_functions["forensic_bp.export_oep"])
     print("[startup] Forensic blueprint registered — /api/forensic/status, /api/forensic/verify, /api/forensic/export")
 except Exception as _fbp_err:
     import traceback
