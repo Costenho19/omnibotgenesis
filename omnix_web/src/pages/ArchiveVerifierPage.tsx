@@ -27,7 +27,7 @@ const GENESIS_SENTINEL = '0'.repeat(64)
 // ── Types & Interfaces ──
 interface BlockData {
   block_id: string
-  creation_timestamp_ns: number
+  creation_timestamp_ns: number   // WARNING: may lose precision >2^53 after JSON.parse
   artifact_count: number
   evidence_classes: string[]
   canonical_hash: string
@@ -44,6 +44,9 @@ interface BlockData {
   sealed_by?: string
   seal_trigger?: string
   artifact_ids?: string[]
+  // Precision-safe raw strings extracted from JSON text (FVP-INV-001)
+  _rawCreationTimestampNs?: string
+  _rawArtifactCount?: string
 }
 
 type VerdictState = 'PASS' | 'INTEGRITY_VIOLATION' | 'CHAIN_BREAK' | 'SIGNATURE_INVALID' | 'ORPHANED' | 'INCOMPLETE' | 'PENDING'
@@ -103,21 +106,41 @@ function CheckIcon({ ok, incomplete }: { ok: boolean | null; incomplete?: boolea
 
 // ── Browser Verification Engine ──
 
+/**
+ * Recompute canonical hash with precision-safe integer handling (FVP-INV-001).
+ *
+ * PROBLEM: creation_timestamp_ns is ~1.78e18, which exceeds JS Number.MAX_SAFE_INTEGER
+ * (2^53 - 1 = 9.007e15). JSON.parse() loses precision, causing JSON.stringify() to
+ * produce a different integer than Python's json.dumps() — breaking canonical hash bit-identity.
+ *
+ * SOLUTION: Use _rawCreationTimestampNs and _rawArtifactCount (exact strings extracted
+ * from the original JSON text by regex before JSON.parse) to reconstruct the canonical
+ * JSON string manually — matching Python's json.dumps(sort_keys=True, separators=(',',':')).
+ */
 async function recomputeCanonicalHash(block: BlockData): Promise<string> {
-  const canonical = {
-    artifact_count: block.artifact_count,
-    block_id: block.block_id,
-    creation_timestamp_ns: block.creation_timestamp_ns,
-    evidence_classes: [...block.evidence_classes].sort(),
-    hash_algorithm: block.integrity_manifest.hash_algorithm,
-    merkle_root: block.integrity_manifest.merkle_root,
-    omnix_version: block.omnix_version,
-    predecessor_block_hash: block.predecessor_block_hash,
-  }
-  const keys = Object.keys(canonical).sort()
-  const sorted: Record<string, any> = {}
-  for (const k of keys) sorted[k] = canonical[k as keyof typeof canonical]
-  const jsonStr = JSON.stringify(sorted)
+  // Use raw integer strings if available (precision-safe path)
+  const rawTs    = block._rawCreationTimestampNs ?? String(block.creation_timestamp_ns)
+  const rawCount = block._rawArtifactCount       ?? String(block.artifact_count)
+
+  // Build canonical JSON string manually to match Python's json.dumps(sort_keys=True, separators=(',',':'))
+  // Field order must be alphabetical (sort_keys=True)
+  // evidence_classes is a JSON array of sorted strings
+  const ecJson = JSON.stringify([...block.evidence_classes].sort())
+
+  // Escape block_id, hash_algorithm, merkle_root, omnix_version, predecessor_block_hash
+  // (all should be ASCII alphanumeric/safe — but use JSON.stringify for correctness)
+  const canonicalStr = [
+    `"artifact_count":${rawCount}`,
+    `"block_id":${JSON.stringify(block.block_id)}`,
+    `"creation_timestamp_ns":${rawTs}`,
+    `"evidence_classes":${ecJson}`,
+    `"hash_algorithm":${JSON.stringify(block.integrity_manifest.hash_algorithm)}`,
+    `"merkle_root":${JSON.stringify(block.integrity_manifest.merkle_root)}`,
+    `"omnix_version":${JSON.stringify(block.omnix_version)}`,
+    `"predecessor_block_hash":${JSON.stringify(block.predecessor_block_hash)}`,
+  ].join(',')
+  const jsonStr = `{${canonicalStr}}`
+
   const bytes = new TextEncoder().encode(jsonStr)
   const hashBuf = await crypto.subtle.digest('SHA-256', bytes)
   return 'sha256:' + Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
@@ -163,7 +186,17 @@ export default function ArchiveVerifierPage() {
       const reader = new FileReader()
       reader.onload = (event) => {
         try {
-          const content = JSON.parse(event.target?.result as string)
+          const rawText = event.target?.result as string
+          const content = JSON.parse(rawText) as BlockData
+
+          // Extract exact integer strings BEFORE precision loss from JSON.parse.
+          // creation_timestamp_ns (~1.78e18) exceeds Number.MAX_SAFE_INTEGER (2^53-1).
+          // Regex captures the raw digit string directly from the source text (FVP-INV-001).
+          const tsMatch    = rawText.match(/"creation_timestamp_ns"\s*:\s*(\d+)/)
+          const countMatch = rawText.match(/"artifact_count"\s*:\s*(\d+)/)
+          content._rawCreationTimestampNs = tsMatch?.[1]    ?? String(content.creation_timestamp_ns)
+          content._rawArtifactCount       = countMatch?.[1] ?? String(content.artifact_count)
+
           setBlocks(prev => {
             if (prev.find(b => b.block_id === content.block_id)) return prev
             return [...prev, content]
@@ -190,80 +223,122 @@ export default function ArchiveVerifierPage() {
     setLoading(true)
     const newVerifications: Record<string, BlockVerification> = {}
 
-    // 1. Sort blocks by timestamp to handle chain
-    const sortedBlocks = [...blocks].sort((a, b) => a.creation_timestamp_ns - b.creation_timestamp_ns)
-    const blockMap = new Map<string, BlockData>()
-    sortedBlocks.forEach(b => blockMap.set(b.canonical_hash, b))
+    // 1. Sort blocks by predecessor graph (not timestamp — FVP-INV-001 / chain integrity)
+    // Build a predecessor-aware topological order to correctly validate chain links.
+    const knownHashes = new Set(blocks.map(b => b.canonical_hash))
+    const roots = blocks.filter(
+      b => b.predecessor_block_hash === GENESIS_SENTINEL || !knownHashes.has(b.predecessor_block_hash)
+    )
+    const sortedBlocks: BlockData[] = []
+    const visited = new Set<string>()
+    const queue: BlockData[] = [...roots].sort(
+      (a, b) => Number(BigInt(a._rawCreationTimestampNs ?? '0') - BigInt(b._rawCreationTimestampNs ?? '0'))
+    )
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      if (visited.has(current.canonical_hash)) continue
+      visited.add(current.canonical_hash)
+      sortedBlocks.push(current)
+      const children = blocks.filter(
+        b => b.predecessor_block_hash === current.canonical_hash && !visited.has(b.canonical_hash)
+      )
+      children.sort((a, b) => Number(BigInt(a._rawCreationTimestampNs ?? '0') - BigInt(b._rawCreationTimestampNs ?? '0')))
+      queue.push(...children)
+    }
+    // Append any disconnected blocks
+    for (const b of blocks) {
+      if (!visited.has(b.canonical_hash)) sortedBlocks.push(b)
+    }
 
     for (const block of sortedBlocks) {
       const reasons: string[] = []
-      const computedMerkle = await recomputeMerkleRoot(block.integrity_manifest.artifact_hashes)
+
+      // ── Plane 1: Browser hash + chain checks ───────────────────────────────
+      const computedMerkle    = await recomputeMerkleRoot(block.integrity_manifest.artifact_hashes)
       const computedCanonical = await recomputeCanonicalHash(block)
 
-      const merkleValid = computedMerkle === block.integrity_manifest.merkle_root
+      const merkleValid    = computedMerkle    === block.integrity_manifest.merkle_root
       const canonicalValid = computedCanonical === block.canonical_hash
 
       let chainValid: boolean | null = null
       if (block.predecessor_block_hash === GENESIS_SENTINEL) {
         chainValid = true
       } else {
-        const predecessor = sortedBlocks.find(b => b.canonical_hash === block.predecessor_block_hash)
-        if (predecessor) {
-          chainValid = true
-        } else {
-          chainValid = null // Orphaned
-        }
+        const predecessorPresent = sortedBlocks.some(b => b.canonical_hash === block.predecessor_block_hash)
+        chainValid = predecessorPresent ? true : null  // null = orphaned (predecessor not in upload set)
       }
 
+      // ── FVP-INV-004: Browser MUST NOT emit SIGNATURE_INVALID ───────────────
+      // Browser PQC is best-effort. A negative browser result is INCOMPLETE,
+      // not SIGNATURE_INVALID — only the server (Plane 2) may emit that verdict.
       let pqcValid: boolean | null | 'incomplete' = null
       if (publicKey && block.pqc_signature) {
         try {
           const sig = Uint8Array.from(atob(block.pqc_signature), c => c.charCodeAt(0))
           const pub = Uint8Array.from(atob(publicKey), c => c.charCodeAt(0))
           const msg = new TextEncoder().encode(block.canonical_hash)
-          const ok = await ml_dsa65.verify(sig, msg, pub)
-          pqcValid = ok
-        } catch (err) {
+          const ok  = await ml_dsa65.verify(sig, msg, pub)
+          // FVP-INV-004: ok===false → INCOMPLETE (not SIGNATURE_INVALID) from browser.
+          // Browser wire format may differ from pypqc. Server is authoritative.
+          pqcValid = ok ? true : 'incomplete'
+          if (!ok) reasons.push("PQC browser check inconclusive (wire-format may differ — escalating to server)")
+        } catch {
           pqcValid = 'incomplete'
-          reasons.push("PQC: Wire-format mismatch or invalid key. Escalating to server.")
+          reasons.push("PQC: browser library error — escalating to server (FVP-INV-004)")
         }
       }
 
+      // ── Browser-plane verdict (Plane 1) ────────────────────────────────────
       let localVerdict: VerdictState = 'PASS'
       if (!merkleValid || !canonicalValid) {
         localVerdict = 'INTEGRITY_VIOLATION'
-        reasons.push(merkleValid ? "Canonical hash mismatch" : "Merkle root mismatch")
+        if (!merkleValid)    reasons.push("Merkle root mismatch")
+        if (!canonicalValid) reasons.push("Canonical hash mismatch")
       } else if (chainValid === null) {
         localVerdict = 'ORPHANED'
-        reasons.push("Predecessor block not found in upload set")
-      } else if (pqcValid === false) {
-        localVerdict = 'SIGNATURE_INVALID'
-        reasons.push("ML-DSA-65 signature verification failed")
-      } else if (pqcValid === 'incomplete' && !publicKey) {
+        reasons.push("Predecessor block not found in uploaded set")
+      } else if (!publicKey) {
+        localVerdict = 'INCOMPLETE'
+        reasons.push("No public key provided — PQC signature not verified")
+      } else if (pqcValid === 'incomplete') {
         localVerdict = 'INCOMPLETE'
       }
+      // Note: pqcValid===true means browser tentatively verified PQC — server confirms.
 
       newVerifications[block.block_id] = {
         block,
         localVerdict,
-        checks: {
-          merkle: merkleValid,
-          canonical: canonicalValid,
-          chain: chainValid,
-          pqc: pqcValid
-        },
+        checks: { merkle: merkleValid, canonical: canonicalValid, chain: chainValid, pqc: pqcValid },
         reasons,
         computedMerkle,
-        computedCanonical
+        computedCanonical,
       }
 
-      // 2. Server verification if available
+      // ── Plane 2: Server authoritative verification (FVP-INV-005/006) ───────
+      // Always escalate to server when public key is available — server verdict is binding.
       if (publicKey) {
         const pred = sortedBlocks.find(b => b.canonical_hash === block.predecessor_block_hash)
         const serverResult = await verifyWithServer(block, publicKey, pred)
-        newVerifications[block.block_id].serverVerdict = serverResult.verdict
-        if (serverResult.verdict !== localVerdict && serverResult.verdict !== 'PASS' && localVerdict === 'PASS') {
-          newVerifications[block.block_id].reasons.push(`SERVER CONFLICT: Server returned ${serverResult.verdict}`)
+        const sv = serverResult.verdict as VerdictState | undefined
+
+        newVerifications[block.block_id].serverVerdict = sv
+
+        // FVP-INV-006: Server verdict is binding. When server disagrees with browser,
+        // update localVerdict to reflect the server's authoritative decision.
+        if (sv && sv !== 'INCOMPLETE') {
+          // Server returned a definitive verdict — it wins (FVP-INV-006)
+          if (sv !== localVerdict) {
+            newVerifications[block.block_id].reasons.push(
+              `SERVER (Plane 2 — authoritative): ${sv}` +
+              (localVerdict !== sv ? ` [browser had: ${localVerdict}]` : '')
+            )
+            // Override local verdict with server verdict (FVP-INV-006)
+            newVerifications[block.block_id].localVerdict = sv
+          }
+        } else if (sv === 'INCOMPLETE' && serverResult.error) {
+          newVerifications[block.block_id].reasons.push(
+            `Server verification unavailable: ${serverResult.error}`
+          )
         }
       }
     }

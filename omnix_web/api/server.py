@@ -46,8 +46,12 @@ _ADR_FILE_COUNT = _count_adrs_from_files()
 
 app = Flask(__name__)
 
-# ── ADR-123: Reject request bodies larger than 1 MB ──────────────────────────
-app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # 1 MB
+# ── ADR-123: Default body size limit — raised to 50 MB for forensic OEP export ──
+# ADR-164 §4: /api/forensic/export may receive multi-block payloads up to 50 MB.
+# ADR-123 originally specified 1 MB for governance endpoints; forensic export
+# is a separate data class requiring a higher ceiling. Production rate-limiting
+# and authentication guard against abuse of the larger limit.
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB (ADR-164/ADR-123)
 
 CORS(app, origins=[
     "https://omnixquantum.net",
