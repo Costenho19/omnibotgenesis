@@ -542,28 +542,67 @@ export default function ArchiveVerifierPage() {
   return (
     <div style={{ minHeight: '100vh', background: NAVY, color: TEXT, fontFamily: 'Inter, sans-serif' }}>
       {/* ── Header ── */}
-      <div style={{ borderBottom: `1px solid ${GOLD_BORDER}`, background: `linear-gradient(180deg, ${NAVY2} 0%, ${NAVY} 100%)` }}>
+      <div style={{ borderBottom: `1px solid ${GOLD_BORDER}`, background: NAVY2 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 28px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <h1 style={{ fontSize: 28, fontWeight: 800, color: GOLD, margin: 0 }}>Forensic Archive Verifier</h1>
-              <div style={{ color: SLATE, fontSize: 13, marginTop: 8, display: 'flex', gap: 12 }}>
-                <span>EAP-INV-005</span><span>·</span><span>Offline Reconstructability</span><span>·</span><span>ML-DSA-65</span><span>·</span><span>ADR-163/164</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: GOLD }}>OMNIX QUANTUM LTD</span>
+                <span style={{ color: 'rgba(255,255,255,0.12)' }}>|</span>
+                <span style={{ fontSize: 10, letterSpacing: '0.08em', color: SLATE }}>FORENSIC VERIFICATION PORTAL</span>
+                <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(201,162,39,0.1)', border: `1px solid ${GOLD_BORDER}`, color: GOLD }}>ADR-164</span>
+              </div>
+              <h1 style={{ fontSize: 30, fontWeight: 800, color: TEXT, margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>Forensic Archive Verifier</h1>
+              <div style={{ color: SLATE, fontSize: 12, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'monospace' }}>EAP-INV-005</span><span>·</span>
+                <span>Offline Reconstructability</span><span>·</span>
+                <span style={{ fontFamily: 'monospace' }}>ML-DSA-65 (FIPS 204)</span><span>·</span>
+                <span style={{ fontFamily: 'monospace' }}>ADR-163/164/165</span>
               </div>
             </div>
-            {blocks.length > 0 && (
-              <button
-                onClick={runVerification}
-                disabled={loading}
-                style={{
-                  background: GOLD, color: NAVY, border: 'none', padding: '12px 24px', borderRadius: 8,
-                  fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
-                  boxShadow: '0 4px 14px rgba(201,162,39,0.3)'
-                }}
-              >
-                {loading ? 'Verifying...' : 'Verify Archive Integrity'}
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <a href="/trust-infrastructure"
+                style={{ fontSize: 12, color: SLATE, textDecoration: 'none', padding: '8px 14px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
+                Trust Registry ↗
+              </a>
+              {blocks.length > 0 && (
+                <button
+                  onClick={runVerification}
+                  disabled={loading}
+                  style={{
+                    background: GOLD, color: NAVY, border: 'none', padding: '10px 22px', borderRadius: 8,
+                    fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', fontSize: 13,
+                    boxShadow: '0 4px 14px rgba(201,162,39,0.3)'
+                  }}
+                >
+                  {loading ? 'Verifying…' : 'Verify Archive Integrity'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Verification plane status strip */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Plane 1 · Browser', sub: 'Merkle + Canonical hash', color: GOLD, active: true },
+              { label: 'Plane 2 · Server', sub: 'ML-DSA-65 PQC authoritative', color: BLUE, active: blocks.length > 0 && Object.values(verifications).some(v => v.serverVerdict) },
+              { label: 'Plane 3 · Offline OEP', sub: 'EAP-INV-005 · CLI verifiable', color: '#a855f7', active: false },
+            ].map(p => (
+              <div key={p.label} style={{
+                display: 'flex', gap: 8, alignItems: 'center', padding: '6px 12px', borderRadius: 7,
+                background: p.active ? `${p.color}12` : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${p.active ? `${p.color}30` : 'rgba(255,255,255,0.05)'}`,
+              }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: p.active ? p.color : SLATE, flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: p.active ? p.color : SLATE }}>{p.label}</div>
+                  <div style={{ fontSize: 10, color: SLATE }}>{p.sub}</div>
+                </div>
+              </div>
+            ))}
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: SLATE }}>
+              <span style={{ fontFamily: 'monospace' }}>FVP-INV-001–007</span>
+            </div>
           </div>
         </div>
       </div>
@@ -884,15 +923,26 @@ export default function ArchiveVerifierPage() {
               <div key={b.block_id} style={{ borderRadius: 12, background: NAVY2, border: `1px solid ${isOpen ? GOLD_BORDER : NAVY3}`, overflow: 'hidden' }}>
                 <div 
                   onClick={() => setActiveBlockId(isOpen ? null : b.block_id)}
-                  style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                  style={{ padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
                 >
-                  <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                    <div style={{ fontSize: 16, fontWeight: 700 }}>{b.block_id}</div>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <code style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: 'monospace' }}>{b.block_id}</code>
                     <Badge label={v?.localVerdict || 'PENDING'} state={v?.localVerdict || 'PENDING'} />
+                    {v?.serverVerdict && v.serverVerdict !== v.localVerdict && (
+                      <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', color: BLUE }}>SRV: {v.serverVerdict}</span>
+                    )}
+                    {/* Trust level badge — set after server verification */}
+                    {keyMatchStatus === 'match' && v?.serverVerdict && (
+                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.09)', border: `1px solid ${GREEN_BORDER}`, color: GREEN, fontWeight: 700 }}>OMNIX_PLATFORM</span>
+                    )}
+                    {keyMatchStatus === 'mismatch' && v?.serverVerdict && (
+                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(245,158,11,0.09)', border: 'rgba(245,158,11,0.28)', color: AMBER, fontWeight: 700 }}>EXTERNAL</span>
+                    )}
                   </div>
-                  <div style={{ display: 'flex', gap: 24, fontSize: 13, color: SLATE }}>
-                    <span>{b.artifact_count} items</span>
-                    <span>{new Date(b.creation_timestamp_ns/1000000).toLocaleString()}</span>
+                  <div style={{ display: 'flex', gap: 20, fontSize: 12, color: SLATE, flexShrink: 0 }}>
+                    <span>{b.artifact_count} artifacts</span>
+                    <span style={{ fontFamily: 'monospace' }}>{new Date(b.creation_timestamp_ns/1000000).toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
+                    <span style={{ color: isOpen ? GOLD : SLATE }}>{isOpen ? '▲' : '▼'}</span>
                   </div>
                 </div>
                 
@@ -926,18 +976,36 @@ export default function ArchiveVerifierPage() {
                       
                       <div>
                         <h5 style={{ fontSize: 11, color: GOLD, letterSpacing: '0.1em', margin: '0 0 12px 0' }}>AUTHORITY MATRIX</h5>
-                        <div style={{ fontSize: 13, marginBottom: 8 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        {/* PQC Signature */}
+                        <div style={{ fontSize: 13, marginBottom: 10 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, alignItems: 'center' }}>
                             <span style={{ color: SLATE }}>PQC Signature (ML-DSA-65)</span>
                             <CheckIcon ok={v?.checks.pqc === true} incomplete={v?.checks.pqc === 'incomplete'} />
                           </div>
-                          <code style={{ fontSize: 11, color: SLATE, wordBreak: 'break-all' }}>{b.pqc_signature?.slice(0, 64)}...</code>
+                          <code style={{ fontSize: 10, color: SLATE, wordBreak: 'break-all', display: 'block', fontFamily: 'monospace' }}>{b.pqc_signature?.slice(0, 48)}…</code>
                         </div>
-                        <div style={{ marginTop: 12 }}>
-                          <span style={{ fontSize: 11, color: SLATE }}>EVIDENCE CLASSES</span>
-                          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        {/* Signature metadata */}
+                        <div style={{ padding: '10px 12px', borderRadius: 7, background: 'rgba(0,0,0,0.25)', marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
+                          {[
+                            { label: 'Algorithm', value: 'ML-DSA-65' },
+                            { label: 'Standard', value: 'FIPS 204 · NIST Level 3' },
+                            { label: 'Key type', value: 'Dilithium-3' },
+                            { label: 'Sig size', value: b.pqc_signature ? `${Math.round(b.pqc_signature.length * 3 / 4)} bytes` : 'N/A' },
+                            { label: 'Trust level', value: keyMatchStatus === 'match' ? 'OMNIX_PLATFORM' : keyMatchStatus === 'mismatch' ? 'EXTERNAL' : 'UNVERIFIED' },
+                            { label: 'Verification', value: v?.checks.pqc === true ? 'Server-authoritative' : v?.checks.pqc === 'incomplete' ? 'Browser best-effort' : 'Pending' },
+                          ].map(row => (
+                            <div key={row.label}>
+                              <div style={{ fontSize: 9, color: SLATE, letterSpacing: '0.06em', marginBottom: 2 }}>{row.label.toUpperCase()}</div>
+                              <div style={{ fontSize: 11, color: row.label === 'Trust level' ? (keyMatchStatus === 'match' ? GREEN : keyMatchStatus === 'mismatch' ? AMBER : SLATE) : TEXT, fontFamily: 'monospace' }}>{row.value}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Evidence classes */}
+                        <div>
+                          <span style={{ fontSize: 10, color: SLATE, letterSpacing: '0.06em' }}>EVIDENCE CLASSES</span>
+                          <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                             {b.evidence_classes.map(cls => (
-                              <span key={cls} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: CLASS_COLORS[cls] || SLATE, color: NAVY, fontWeight: 700 }}>{cls}</span>
+                              <span key={cls} style={{ fontSize: 10, padding: '3px 9px', borderRadius: 4, background: CLASS_COLORS[cls] ? `${CLASS_COLORS[cls]}22` : 'rgba(100,116,139,0.12)', color: CLASS_COLORS[cls] || SLATE, border: `1px solid ${CLASS_COLORS[cls] ? `${CLASS_COLORS[cls]}40` : 'rgba(100,116,139,0.2)'}`, fontWeight: 700 }}>{cls}</span>
                             ))}
                           </div>
                         </div>
@@ -957,6 +1025,35 @@ export default function ArchiveVerifierPage() {
               </div>
             )
           })}
+        </div>
+
+        {/* ── Evidence Lifecycle Status ── */}
+        <div style={{ marginTop: 32, marginBottom: 32, padding: '20px 24px', borderRadius: 12, background: NAVY2, border: `1px solid rgba(255,255,255,0.05)` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h4 style={{ margin: 0, fontSize: 12, color: SLATE, letterSpacing: '0.08em' }}>EVIDENCE LIFECYCLE — EAP-INV-001–007 · ADR-163</h4>
+            <a href="/trust-infrastructure" style={{ fontSize: 11, color: SLATE, textDecoration: 'none' }}>Full reference ↗</a>
+          </div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+            {[
+              { tier: 'HOT', desc: 'Live receipts · PostgreSQL WAL', color: RED, active: true },
+              { tier: '→', desc: '', color: SLATE, active: false, arrow: true },
+              { tier: 'WARM', desc: 'Archive manifest · Hash preserved', color: AMBER, active: true },
+              { tier: '→', desc: '', color: SLATE, active: false, arrow: true },
+              { tier: 'COLD', desc: 'Sealed blocks · PQC-signed · Exportable', color: GOLD, active: true },
+              { tier: '→', desc: '', color: SLATE, active: false, arrow: true },
+              { tier: 'OEP', desc: 'Offline verifiable package · .oep bundle', color: '#06b6d4', active: blocks.length > 0 },
+            ].map((t, i) => (
+              t.arrow
+                ? <div key={i} style={{ display: 'flex', alignItems: 'center', color: SLATE, fontSize: 16, flexShrink: 0 }}>→</div>
+                : <div key={t.tier} style={{ flex: 1, padding: '10px 14px', borderRadius: 8, background: t.active ? `${t.color}10` : 'rgba(255,255,255,0.02)', border: `1px solid ${t.active ? `${t.color}30` : 'rgba(255,255,255,0.05)'}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: t.active ? t.color : SLATE, fontFamily: 'monospace', marginBottom: 4 }}>{t.tier}</div>
+                    <div style={{ fontSize: 10, color: SLATE, lineHeight: 1.4 }}>{t.desc}</div>
+                  </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, fontSize: 11, color: SLATE }}>
+            Parquet archive segments for scale — <span style={{ color: AMBER, fontWeight: 600 }}>PLANNED · ADR-163 §7</span>. Current production uses PostgreSQL COLD block storage.
+          </div>
         </div>
 
         {/* ── Export Controls ── */}
@@ -1081,9 +1178,18 @@ export default function ArchiveVerifierPage() {
             </button>
           </div>
 
-          {/* ADR reference footer */}
-          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: SLATE }}>
-            ADR-164 · ADR-165 · ADR-166 · ML-DSA-65 (FIPS 204) · Two-plane verification (FVP-INV-001–006)
+          {/* Footer */}
+          <div style={{ textAlign: 'center', marginTop: 28, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.04)', fontSize: 11, color: SLATE }}>
+            <div style={{ marginBottom: 8 }}>ADR-163 · ADR-164 · ADR-165 · ADR-166 · ADR-167 · ML-DSA-65 (FIPS 204) · 3-plane verification (FVP-INV-001–007)</div>
+            <div>
+              <a href="/trust-infrastructure" style={{ color: GOLD, textDecoration: 'none' }}>Platform Trust Registry ↗</a>
+              <span style={{ margin: '0 12px', color: 'rgba(255,255,255,0.08)' }}>|</span>
+              <a href="/protocol" style={{ color: SLATE, textDecoration: 'none' }}>Protocol Architecture</a>
+              <span style={{ margin: '0 12px', color: 'rgba(255,255,255,0.08)' }}>|</span>
+              <a href="/atf-verify" style={{ color: SLATE, textDecoration: 'none' }}>ATF Verifier</a>
+              <span style={{ margin: '0 12px', color: 'rgba(255,255,255,0.08)' }}>|</span>
+              <a href="/verify-independently" style={{ color: SLATE, textDecoration: 'none' }}>Independent Verification</a>
+            </div>
           </div>
         </div>
       </div>

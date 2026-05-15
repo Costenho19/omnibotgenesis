@@ -1574,6 +1574,9 @@ export default function CommercialLanding() {
             <Link to="/governance-demo-biotech" className="text-muted hover:text-white text-sm transition-colors">
               Biotech Demo
             </Link>
+            <Link to="/trust-infrastructure" className="text-sm transition-colors font-semibold" style={{color:'#C9A227'}}>
+              Trust Registry
+            </Link>
             <Link to="/protocol" className="text-muted hover:text-white text-sm transition-colors">
               Protocol Architecture
             </Link>

@@ -93,7 +93,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | `/atf-standard` | Página pública RFC-ATF-1 · claims · diagrama · verifier widget · regulatory alignment |
 | `/atf-explained` | Explicación plain language de ATF |
 | `/agent-trust-fabric` | ATF Dashboard |
-| `/archive-verify` | **Forensic Archive Verification Portal** — browser-side SHA-256/merkle/chain verify · SVG chain map · evidence timeline · OEP bundle export · ADR-164 |
+| `/archive-verify` | **Forensic Archive Verification Portal** — 3-plane verification (browser/server/offline) · chain lineage graph · trust-level badges (OMNIX_PLATFORM/EXTERNAL) · signature metadata · HOT/WARM/COLD lifecycle · OEP bundle export · ADR-163/164/165/166/167 |
+| `/trust-infrastructure` | **Platform Trust Registry** — live fingerprint · 3 verification channels (HTTP/DNS/Zenodo) · trust level classification · evidence lifecycle HOT→WARM→COLD→OEP · key rotation lifecycle · 38-invariant reference table · ADR-156–167 |
 
 ---
 
@@ -126,7 +127,9 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 - DNS TXT: `_omnix-key.omnixquantum.net` — verificación independiente de HTTP
 - Zenodo DOI: https://doi.org/10.5281/zenodo.20155016 — registro permanente
 
-**UI:** `/archive-verify` → panel "Platform Trust Anchor" — compara key cargada vs plataforma en tiempo real.
+**UI:**
+- `/archive-verify` → header institucional con 3-plane strip · Trust Anchor panel · trust badges por bloque · HOT/WARM/COLD lifecycle
+- `/trust-infrastructure` → registro completo: live fingerprint · 3 canales · distinción trust levels · key rotation states · 38 invariants collapsibles
 
 ---
 
