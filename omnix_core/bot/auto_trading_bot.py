@@ -1404,13 +1404,13 @@ class AutoTradingBot:
         
         # Configuración de trading - PROFESIONAL INSTITUCIONAL
         # Optimizado para generar track record de calidad como si tuvieras clientes Enterprise
-        # Lee PAPER_MODE desde variable de entorno (Railway) o default a False
+        # SAFETY DEFAULT: PAPER_MODE=true — requiere PAPER_MODE=false explícito en Railway para operar real
         import os as os_module
-        paper_mode_raw = os_module.getenv('PAPER_MODE', 'false')
-        paper_mode_env = paper_mode_raw.lower() == 'true'
+        paper_mode_raw = os_module.getenv('PAPER_MODE', 'true')
+        paper_mode_env = paper_mode_raw.lower() != 'false'
         
         # DEBUG: Logging para verificar PAPER_MODE en Railway
-        logger.info(f"🔍 PAPER_MODE env var: '{paper_mode_raw}' → paper_mode={paper_mode_env}")
+        logger.info(f"🔍 PAPER_MODE env var: '{paper_mode_raw}' → paper_mode={paper_mode_env} ({'PAPER/virtual' if paper_mode_env else '🚨 REAL/Kraken'})")
         
         # Cargar Trading Profile desde variable de entorno
         self.trading_profile = None
@@ -1466,7 +1466,7 @@ class AutoTradingBot:
             'stop_loss_pct': safe_float(p.stop_loss_pct if p else 0.02, 0.02),
             'take_profit_pct': safe_float(p.take_profit_pct if p else 0.03, 0.03),
             'max_daily_loss_pct': safe_float(p.max_daily_loss_pct if p else 0.08, 0.08),
-            'min_confidence': safe_float(p.min_confidence if p else 0.14, 0.14),
+            'min_confidence': safe_float(p.min_confidence if p else 0.55, 0.55),
             'use_v52_strategies': True,  # Activar estrategias V5.2 Quantum
             'use_adaptive_weights': True,  # Sistema de pesos adaptativos ω(t)
             'use_multi_crypto': True,  # V6.4: Activar escaneo multi-crypto
