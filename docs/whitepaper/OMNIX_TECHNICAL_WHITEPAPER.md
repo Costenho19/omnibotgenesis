@@ -77,6 +77,7 @@ L0 ─ Human Authority Root        Agent Identity Receipt (AIR) · Root Issuance
 | L1 | Delegation Receipt (DR) | ADR-156 | RFC-ATF-1 §3 |
 | L2 | Temporal Admissibility Record (TAR) | ADR-157 | RFC-ATF-1 §4 |
 | L3 | Runtime Continuity Record (RCR) | ADR-159 | RFC-ATF-2 §6 |
+| L3 | RCR Performance Optimization (RPOL) | ADR-160 | RFC-ATF-2 §7 |
 | L3 | Cross-Domain Trust Bridge | ADR-158 | RFC-ATF-1 §5 |
 | L4 | Governance Receipt (RC) | ADR-028 | — |
 | L4 | Adaptive Veto Machine (AVM) | ADR-074 | — |
@@ -263,6 +264,14 @@ The overlap period ensures all in-flight verification operations against the old
 ## 7. Immutable Evidence Archive Pipeline
 
 The Evidence Archive Pipeline (ADR-163) moves governance artifacts through a three-tier lifecycle, ensuring offline reconstructability at every stage.
+
+### 7.0 Evidence Lifecycle & Retention (ADR-160, ADR-162)
+
+The Evidence Lifecycle & Retention specification (ADR-162) defines the formal retention policy governing all governance artifacts. It works in conjunction with the RCR Performance Optimization layer (ADR-160), which provides write-queue batching and event-driven sampling to reduce database pressure without compromising the integrity of the evidence record.
+
+ADR-160 introduces the `RCRWriteQueue`, `EventDrivenSampler`, and `RCRScheduler` — components that ensure CES snapshots are written efficiently under high decision throughput, while the `GovernanceRiskTier` system ensures that high-risk decisions always produce a full synchronous evidence write regardless of batching configuration.
+
+ADR-162 establishes four Evidence Lifecycle & Retention invariants (ELR-INV-001–004): retention schedules may not be shortened post-issuance; immutable classes bypass all compression; WARM-tier compression preserves the original `content_hash`; and the COLD-tier seal is irreversible.
 
 ### 7.1 Evidence Classes
 
