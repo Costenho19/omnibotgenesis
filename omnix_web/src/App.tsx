@@ -58,6 +58,7 @@ import AgentTrustFabricPage from './pages/AgentTrustFabricPage'
 import ATFVerifierPage from './pages/ATFVerifierPage'
 import ATFStandardPage from './pages/ATFStandardPage'
 import ATFExplainedPage from './pages/ATFExplainedPage'
+import ArchiveVerifierPage from './pages/ArchiveVerifierPage'
 import './index.css'
 
 function App() {
@@ -124,6 +125,7 @@ function App() {
           <Route path="/atf-verify" element={<ATFVerifierPage />} />
           <Route path="/atf-standard" element={<ATFStandardPage />} />
           <Route path="/atf-explained" element={<ATFExplainedPage />} />
+          <Route path="/archive-verify" element={<ArchiveVerifierPage />} />
           <Route path="/terminal" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

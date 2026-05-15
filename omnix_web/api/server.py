@@ -117,6 +117,16 @@ def _api_error(exc: Exception, ctx: str = "") -> tuple:
 from api.sandbox import register_sandbox_routes
 register_sandbox_routes(app)
 
+# ── ADR-164/165: Forensic Archive Verification Portal + OEP ──────────────────
+try:
+    from api.forensic_blueprint import forensic_bp
+    app.register_blueprint(forensic_bp, url_prefix='/api/forensic')
+    print("[startup] Forensic blueprint registered — /api/forensic/status, /api/forensic/verify, /api/forensic/export")
+except Exception as _fbp_err:
+    import traceback
+    print(f"[startup] WARNING: Forensic blueprint failed to register: {_fbp_err}")
+    print(traceback.format_exc())
+
 # ── ADR-150: Health & Operational Readiness Blueprint ─────────────────────────
 _health_blueprint_loaded = False
 try:
