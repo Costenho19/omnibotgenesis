@@ -228,6 +228,22 @@ def _verify_pqc_signature(
     Returns:
         (valid: bool, algorithm_label: str, error: Optional[str])
     """
+    # ── P1-005 / EAP-INV-005: Single deterministic library — no multi-library fallback ──
+    # This verifier is a STANDALONE TOOL (see module docstring). The old fallback chain
+    # (pypqc → dilithium → omnix_core) created two critical problems:
+    #
+    #   1. Wire-format inconsistency: different Dilithium libraries may use different
+    #      internal byte layouts. A signature produced by pypqc is not guaranteed to
+    #      verify correctly with the 'dilithium' package and vice versa. A fallback that
+    #      silently switches libraries can produce false-positive PASS verdicts.
+    #
+    #   2. Platform dependency: the omnix_core fallback imported from the OMNIX platform
+    #      codebase, violating the independence guarantee of EAP-INV-005. A verifier that
+    #      requires omnix_core is NOT a standalone tool.
+    #
+    # Resolution: pypqc (the `pqc` package, implementing ML-DSA-65 / FIPS 204) is the
+    # sole authoritative library. If it is not installed, the function returns UNAVAILABLE
+    # with a clear installation instruction. No silent fallback. No platform dependency.
     try:
         from pqc.sign import dilithium3 as dil
         sig = base64.b64decode(pqc_signature_b64)
@@ -235,36 +251,14 @@ def _verify_pqc_signature(
         dil.verify(sig, message.encode("utf-8"), pk)
         return True, "ML-DSA-65 (Dilithium-3, FIPS 204)", None
     except ImportError:
-        pass
+        return (
+            False,
+            "UNAVAILABLE",
+            "pypqc not installed. Install with: pip install pypqc\n"
+            "pypqc is the only supported library for ML-DSA-65 verification in this tool.",
+        )
     except Exception as exc:
         return False, "ML-DSA-65 (Dilithium-3, FIPS 204)", str(exc)
-
-    try:
-        import dilithium
-        sig = base64.b64decode(pqc_signature_b64)
-        pk  = base64.b64decode(public_key_b64)
-        result = dilithium.verify(sig, message.encode("utf-8"), pk)
-        return bool(result), "ML-DSA-65 (Dilithium-3)", None
-    except ImportError:
-        pass
-    except Exception as exc:
-        return False, "ML-DSA-65 (Dilithium-3)", str(exc)
-
-    try:
-        from omnix_core.security.crypto_providers import get_active_provider
-        provider = get_active_provider()
-        sig = base64.b64decode(pqc_signature_b64)
-        pk  = base64.b64decode(public_key_b64)
-        result = provider.verify(sig, message.encode("utf-8"), pk)
-        return bool(result), provider.algorithm_name(), None
-    except Exception:
-        pass
-
-    return (
-        False,
-        "UNAVAILABLE",
-        "pypqc not installed. Run: pip install pypqc",
-    )
 
 
 def _load_public_key_b64(path_or_b64: str) -> Optional[str]:

@@ -210,15 +210,18 @@ FAIL=0
 
 while IFS= read -r BLOCK_ID; do
   BLOCK="$PKG_DIR/BLOCKS/${BLOCK_ID}.json"
-  [[ -f "$BLOCK" ]] || { echo "  MISSING  $BLOCK_ID"; ((FAIL++)); continue; }
+  if [[ ! -f "$BLOCK" ]]; then
+    echo "  MISSING  $BLOCK_ID"
+    FAIL=$((FAIL+1)); continue
+  fi
   ARGS=(--archive-block "$BLOCK" --public-key "$PUBKEY" --mode block)
   [[ -n "$PREV" ]] && ARGS+=(--verify-chain --predecessor-block "$PREV")
   if python3 "$VERIFIER" "${ARGS[@]}" 2>/dev/null | grep -q '"verdict".*"PASS"'; then
     echo "  PASS  $BLOCK_ID"
-    ((PASS++)); PREV="$BLOCK"
+    PASS=$((PASS+1)); PREV="$BLOCK"
   else
     echo "  FAIL  $BLOCK_ID"
-    ((FAIL++))
+    FAIL=$((FAIL+1))
   fi
 done < <(python3 -c "
 import json, sys
@@ -342,6 +345,8 @@ OMNIX QUANTUM LTD — https://omnixquantum.net
                 f"<td>{b.get('artifact_count',0)}</td><td>{classes}</td>"
                 f"<td style='font-size:10px;font-family:monospace'>{ch}</td></tr>\n"
             )
+        total_custody = len(custody_log)
+        custody_truncated = total_custody > 200
         custody_rows = ""
         for e in custody_log[:200]:
             ts = e.get("timestamp") or e.get("transition_ns", "")
@@ -349,6 +354,13 @@ OMNIX QUANTUM LTD — https://omnixquantum.net
                 f"<tr><td>{e.get('artifact_id','')}</td><td>{e.get('block_id','')}</td>"
                 f"<td>{e.get('evidence_class','')}</td><td>{ts}</td>"
                 f"<td>{e.get('action','')}</td></tr>\n"
+            )
+        if custody_truncated:
+            custody_rows += (
+                f"<tr><td colspan='5' style='color:#f59e0b;font-style:italic;padding:12px'>"
+                f"⚠ Report shows first 200 of {total_custody} custody entries. "
+                f"Full custody log available in CUSTODY/custody_log.json within this package."
+                f"</td></tr>\n"
             )
         if not custody_rows:
             custody_rows = "<tr><td colspan='5' style='color:#64748b'>No custody entries</td></tr>"

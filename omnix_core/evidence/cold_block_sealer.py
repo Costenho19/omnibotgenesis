@@ -243,19 +243,84 @@ class SealResult:
 # Block ID registry (in-process sequence counter)
 # ─────────────────────────────────────────────────────────────────────────────
 
-_block_sequence_cache: Dict[str, int] = {}
+# ── P0-003 / ADR-167: Distributed block ID sequence ─────────────────────────
+# In-process counters reset on restart and are not shared across processes or
+# Railway dynos. Two concurrent processes sealing on the same date would both
+# generate OMNIX-BLOCK-YYYYMMDD-000001, creating a block ID collision that makes
+# the chain irrecoverably ambiguous for forensic reconstruction.
+#
+# Resolution: Use Redis INCR on a per-date key (atomic, cross-process, cross-dyno).
+# Redis INCR is guaranteed to be atomic even under concurrent writers — this is
+# exactly the use case Redis was designed for.
+#
+# Fallback strategy: if Redis is unavailable (local dev, testing), fall back to
+# a process-local counter with a WARNING. The fallback is ONLY acceptable in
+# non-production environments. Production MUST have REDIS_URL set.
+#
+# Key schema: omnix:block_seq:{date_str}  (e.g. omnix:block_seq:20260515)
+# TTL: 30 days (blocks are daily — the key is no longer needed after the day)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_block_sequence_cache: Dict[str, int] = {}  # fallback: local dev / test only
+_redis_client: Optional[Any] = None         # lazy-initialized
+
+
+def _get_redis_client() -> Optional[Any]:
+    """Lazy-initialize a Redis client from REDIS_URL. Returns None if unavailable."""
+    global _redis_client
+    if _redis_client is not None:
+        return _redis_client
+    redis_url = os.environ.get("REDIS_URL")
+    if not redis_url:
+        return None
+    try:
+        import redis as _redis_lib
+        _redis_client = _redis_lib.from_url(redis_url, decode_responses=True, socket_timeout=2.0)
+        _redis_client.ping()
+        return _redis_client
+    except Exception as _e:
+        logger.warning("Redis unavailable for block ID sequencing: %s", _e)
+        return None
 
 
 def _next_block_id(date_str: Optional[str] = None) -> str:
     """
     Generate the next deterministic block ID for today's date.
-    Sequence is per-date and starts at 1.
 
-    In production, this should be backed by a DB sequence or atomic counter.
-    This in-process counter is suitable for single-process deployments and tests.
+    Sequence source (in priority order):
+      1. Redis INCR on key 'omnix:block_seq:{date_str}' — atomic, distributed,
+         collision-free across all processes and Railway dynos.
+      2. In-process counter — fallback for local dev and testing ONLY.
+         WARNING: Not safe for multi-process/multi-dyno deployments.
+         Production MUST have REDIS_URL set (P0-003 / ADR-167).
     """
     if date_str is None:
         date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
+
+    redis = _get_redis_client()
+    if redis is not None:
+        try:
+            redis_key = f"omnix:block_seq:{date_str}"
+            seq = redis.incr(redis_key)
+            # 30-day TTL — keeps Redis tidy; key persists well past the sealing date
+            redis.expire(redis_key, 30 * 24 * 3600, nx=True)
+            return BLOCK_ID_TEMPLATE.format(date=date_str, seq=seq)
+        except Exception as _redis_err:
+            logger.error(
+                "Redis INCR failed for block_seq:%s — falling back to in-process counter. "
+                "This may produce duplicate block IDs in multi-process deployments. "
+                "Error: %s",
+                date_str, _redis_err,
+            )
+
+    # ── In-process fallback (dev / test only) ────────────────────────────────
+    testing = os.environ.get("TESTING", "").lower() in ("1", "true")
+    if not testing and not os.environ.get("REDIS_URL"):
+        logger.warning(
+            "[BlockID] REDIS_URL not set — using in-process sequence counter. "
+            "Block ID uniqueness is NOT guaranteed across multiple processes or dynos. "
+            "Set REDIS_URL in production to prevent block ID collisions (P0-003)."
+        )
     _block_sequence_cache.setdefault(date_str, 0)
     _block_sequence_cache[date_str] += 1
     seq = _block_sequence_cache[date_str]

@@ -175,7 +175,11 @@ export default function ArchiveVerifierPage() {
   const [publicKey, setPublicKey] = useState<string | null>(null)
   const [verifications, setVerifications] = useState<Record<string, BlockVerification>>({})
   const [loading, setLoading] = useState(false)
-  const [activeBlockId, setActiveBlockId] = useState<string | null>(null)
+  const [activeBlockId, setActiveBlockId]   = useState<string | null>(null)
+  const [exportApiKey, setExportApiKey]     = useState<string>('')
+  const [exportError, setExportError]       = useState<string | null>(null)
+  const [exportSuccess, setExportSuccess]   = useState<string | null>(null)
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false)
 
   const blockInputRef = useRef<HTMLInputElement>(null)
   const keyInputRef = useRef<HTMLInputElement>(null)
@@ -360,6 +364,19 @@ export default function ArchiveVerifierPage() {
             `Server verification unavailable: ${serverResult.error}`
           )
         }
+
+        // ── ADR-167: Key identity warning — non-platform key detected ─────────
+        const ki = serverResult.key_identity
+        if (ki?.warning) {
+          newVerifications[block.block_id].reasons.push(
+            `KEY IDENTITY: ${ki.warning}`
+          )
+        }
+        if (ki?.matches_platform === true) {
+          newVerifications[block.block_id].reasons.push(
+            `KEY VERIFIED: matches OMNIX platform key (${ki.provided_fingerprint?.slice(0, 20)}…)`
+          )
+        }
       }
     }
 
@@ -367,40 +384,76 @@ export default function ArchiveVerifierPage() {
     setLoading(false)
   }, [blocks, publicKey])
 
+  // BigInt-safe timestamp comparator (P2-001: creation_timestamp_ns > MAX_SAFE_INTEGER)
+  const safeBlockCmp = (a: BlockData, b: BlockData): number => {
+    try {
+      const ta = BigInt(a._rawCreationTimestampNs ?? '0')
+      const tb = BigInt(b._rawCreationTimestampNs ?? '0')
+      return ta < tb ? -1 : ta > tb ? 1 : 0
+    } catch { return 0 }
+  }
+
   const chartData = useMemo(() => {
     return blocks.map(b => {
       const data: any = {
         name: b.block_id,
-        timestamp: b.creation_timestamp_ns,
+        rawTs: b._rawCreationTimestampNs ?? String(b.creation_timestamp_ns),
         date: new Date(b.creation_timestamp_ns / 1000000).toLocaleDateString()
       }
       b.evidence_classes.forEach(cls => {
-        data[cls] = (data[cls] || 0) + 1 // Simplified: just count occurrences
+        data[cls] = (data[cls] || 0) + 1
       })
       return data
-    }).sort((a, b) => a.timestamp - b.timestamp)
+    }).sort((a, b) => {
+      try {
+        const ta = BigInt(a.rawTs), tb = BigInt(b.rawTs)
+        return ta < tb ? -1 : ta > tb ? 1 : 0
+      } catch { return 0 }
+    })
   }, [blocks])
 
   const generateOEP = async () => {
     setLoading(true)
+    setExportError(null)
+    setExportSuccess(null)
     try {
       const API = import.meta.env.VITE_RAILWAY_API_URL || ''
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (exportApiKey.trim()) headers['X-API-Key'] = exportApiKey.trim()
+
       const res = await fetch(`${API}/api/forensic/export`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          blocks: blocks,
-          public_key_b64: publicKey,
-          custody_entries: [] // Optional
-        })
+        headers,
+        body: JSON.stringify({ blocks, public_key_b64: publicKey, custody_entries: [] })
       })
+
       if (res.ok) {
         const blob = await res.blob()
-        const filename = res.headers.get('Content-Disposition')?.split('filename=')[1] || `OMNIX-PACKAGE-${new Date().getTime()}.oep`
+        const cdHeader = res.headers.get('Content-Disposition') || ''
+        const filename = cdHeader.split('filename=')[1]?.replace(/"/g, '') || `OMNIX-PACKAGE-${Date.now()}.oep`
+        const packageId  = res.headers.get('X-OEP-Package-Id')  || 'unknown'
+        const keySource  = res.headers.get('X-OEP-Key-Source')  || 'unknown'
+        const blockCount = res.headers.get('X-OEP-Block-Count') || String(blocks.length)
         saveAs(blob, filename)
+        setExportSuccess(`${packageId} · ${blockCount} blocks · key: ${keySource} · ${filename}`)
+      } else {
+        const body = await res.json().catch(() => ({} as Record<string, string>))
+        const code = body.code || ''
+        if (res.status === 401) {
+          setExportError(`Authentication required — provide an operator admin API key below. (${code})`)
+          setShowApiKeyInput(true)
+        } else if (res.status === 403) {
+          setExportError(`Admin role required. Your key has insufficient privileges. (${code})`)
+        } else if (res.status === 503) {
+          setExportError(`Platform unavailable: ${body.error || 'Signing key not configured on server.'}`)
+        } else if (res.status === 400) {
+          setExportError(`Request error: ${body.error || 'Invalid request.'}`)
+        } else {
+          setExportError(`Export failed [${res.status}]: ${body.error || res.statusText}`)
+        }
       }
     } catch (err) {
-      console.error("Export failed", err)
+      setExportError(`Network error: ${String(err)}`)
     } finally {
       setLoading(false)
     }
@@ -559,7 +612,7 @@ export default function ArchiveVerifierPage() {
                 <div style={{ width: 80, height: 80, borderRadius: '50%', border: `2px solid ${SLATE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: SLATE, background: NAVY }}>GENESIS</div>
               </div>
               
-              {[...blocks].sort((a,b) => a.creation_timestamp_ns - b.creation_timestamp_ns).map((b) => {
+              {[...blocks].sort(safeBlockCmp).map((b) => {
                 const v = verifications[b.block_id]
                 const colors = {
                   PASS: GREEN,
@@ -700,25 +753,131 @@ export default function ArchiveVerifierPage() {
         </div>
 
         {/* ── Export Controls ── */}
-        <div style={{ marginTop: 40, borderTop: `1px solid rgba(255,255,255,0.05)`, paddingTop: 32, display: 'flex', justifyContent: 'center', gap: 16 }}>
-          <button
-            onClick={generateReport}
-            style={{
-              background: 'transparent', color: TEXT, border: `1px solid ${SLATE}`, padding: '12px 24px', borderRadius: 8,
-              fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
-            }}
-          >
-            Download Verification Report (HTML)
-          </button>
-          <button
-            onClick={generateOEP}
-            style={{
-              background: GOLD, color: NAVY, border: 'none', padding: '12px 24px', borderRadius: 8,
-              fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
-            }}
-          >
-            Generate OEP Bundle (.oep)
-          </button>
+        <div style={{ marginTop: 40, borderTop: `1px solid rgba(255,255,255,0.05)`, paddingTop: 32 }}>
+
+          {/* Error banner */}
+          {exportError && (
+            <div style={{
+              marginBottom: 20, padding: '14px 20px', borderRadius: 10,
+              background: 'rgba(239,68,68,0.08)', border: `1px solid ${RED_BORDER}`,
+              display: 'flex', alignItems: 'flex-start', gap: 12
+            }}>
+              <span style={{ color: RED, fontSize: 16, flexShrink: 0 }}>✗</span>
+              <div>
+                <div style={{ color: RED, fontWeight: 700, fontSize: 13, marginBottom: 2 }}>Export Failed</div>
+                <div style={{ color: TEXT, fontSize: 12 }}>{exportError}</div>
+              </div>
+              <button
+                onClick={() => setExportError(null)}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', color: SLATE, cursor: 'pointer', fontSize: 16 }}
+              >×</button>
+            </div>
+          )}
+
+          {/* Success banner */}
+          {exportSuccess && (
+            <div style={{
+              marginBottom: 20, padding: '14px 20px', borderRadius: 10,
+              background: GREEN_DIM, border: `1px solid ${GREEN_BORDER}`,
+              display: 'flex', alignItems: 'center', gap: 12
+            }}>
+              <span style={{ color: GREEN, fontSize: 16 }}>✓</span>
+              <div>
+                <div style={{ color: GREEN, fontWeight: 700, fontSize: 13, marginBottom: 2 }}>OEP Package Generated</div>
+                <div style={{ color: TEXT, fontSize: 11, fontFamily: 'monospace' }}>{exportSuccess}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Operator API Key input — shown on demand or after 401 */}
+          {showApiKeyInput && (
+            <div style={{
+              marginBottom: 20, padding: '20px 24px', borderRadius: 10,
+              background: NAVY2, border: `1px solid ${GOLD_BORDER}`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <span style={{ color: GOLD, fontSize: 13, fontWeight: 700 }}>Operator API Key</span>
+                <span style={{
+                  fontSize: 10, padding: '2px 8px', borderRadius: 4,
+                  background: 'rgba(201,162,39,0.12)', color: GOLD, border: `1px solid ${GOLD_BORDER}`
+                }}>Admin Role Required</span>
+              </div>
+              <div style={{ fontSize: 12, color: SLATE, marginBottom: 14 }}>
+                OEP packages are signed with the OMNIX platform key and require an authorized operator credential.
+                Provision keys with <code style={{ color: GOLD }}>provision_b2b_client.py --role admin</code>.
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <input
+                  type="password"
+                  value={exportApiKey}
+                  onChange={e => setExportApiKey(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && generateOEP()}
+                  placeholder="omnix-admin-xxxxxxxxxxxx"
+                  style={{
+                    flex: 1, background: NAVY, border: `1px solid ${exportApiKey ? GOLD_BORDER : 'rgba(255,255,255,0.1)'}`,
+                    borderRadius: 8, padding: '10px 14px', color: TEXT, fontSize: 13,
+                    fontFamily: 'monospace', outline: 'none', transition: 'border-color 0.2s'
+                  }}
+                />
+                <button
+                  onClick={() => setShowApiKeyInput(false)}
+                  style={{
+                    background: 'none', border: `1px solid rgba(255,255,255,0.1)`, borderRadius: 8,
+                    color: SLATE, padding: '10px 16px', cursor: 'pointer', fontSize: 12
+                  }}
+                >Hide</button>
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <button
+              onClick={generateReport}
+              style={{
+                background: 'transparent', color: TEXT, border: `1px solid ${SLATE}`,
+                padding: '12px 24px', borderRadius: 8, fontWeight: 600, cursor: 'pointer'
+              }}
+            >
+              Download Verification Report (HTML)
+            </button>
+
+            <button
+              onClick={() => { setShowApiKeyInput(v => !v); setExportError(null) }}
+              style={{
+                background: 'transparent', color: GOLD,
+                border: `1px solid ${GOLD_BORDER}`, padding: '12px 20px', borderRadius: 8,
+                fontWeight: 600, cursor: 'pointer', fontSize: 13,
+                display: 'flex', alignItems: 'center', gap: 8
+              }}
+            >
+              <span style={{ fontSize: 12 }}>🔑</span>
+              {showApiKeyInput ? 'Hide Key' : 'Set Operator Key'}
+            </button>
+
+            <button
+              onClick={generateOEP}
+              disabled={loading || blocks.length === 0}
+              style={{
+                background: blocks.length > 0 ? GOLD : 'rgba(201,162,39,0.3)',
+                color: NAVY, border: 'none', padding: '12px 28px', borderRadius: 8,
+                fontWeight: 700, cursor: blocks.length > 0 ? 'pointer' : 'not-allowed',
+                boxShadow: blocks.length > 0 ? '0 4px 14px rgba(201,162,39,0.25)' : 'none',
+                transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 8
+              }}
+            >
+              {loading ? (
+                <>Generating…</>
+              ) : (
+                <>Generate OEP Bundle <span style={{ fontSize: 11, opacity: 0.7 }}>.oep</span></>
+              )}
+            </button>
+          </div>
+
+          {/* ADR reference footer */}
+          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: SLATE }}>
+            ADR-164 · ADR-165 · ADR-166 · ML-DSA-65 (FIPS 204) · Two-plane verification (FVP-INV-001–006)
+          </div>
         </div>
       </div>
     </div>

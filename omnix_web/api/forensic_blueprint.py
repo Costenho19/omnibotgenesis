@@ -219,11 +219,60 @@ def verify_block():
             "chain_valid":     getattr(result, "chain_valid", None),
             "signature_valid": getattr(result, "pqc_signature_valid", None),
         }
+
+        # ── P0-002 / ADR-167: Key identity verification ───────────────────────
+        # Compute SHA-256 fingerprint of both the provided key and the platform key.
+        # This allows callers to know if the verified key is the genuine OMNIX platform
+        # key or an unrelated key — critical for distinguishing legitimate OEPs from
+        # fabricated ones. A PASS verdict against a non-platform key is NOT a platform
+        # endorsement of the block.
+        import hashlib as _hl, base64 as _b64
+        key_identity: dict = {
+            "provided_fingerprint":  None,
+            "platform_fingerprint":  None,
+            "matches_platform":      None,
+            "warning":               None,
+        }
+        try:
+            if public_key_b64:
+                pk_bytes = _b64.b64decode(public_key_b64.strip())
+                key_identity["provided_fingerprint"] = "sha256:" + _hl.sha256(pk_bytes).hexdigest()
+
+            platform_pk_b64 = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")
+            if platform_pk_b64:
+                plat_bytes = _b64.b64decode(platform_pk_b64.strip())
+                key_identity["platform_fingerprint"] = "sha256:" + _hl.sha256(plat_bytes).hexdigest()
+
+            if key_identity["provided_fingerprint"] and key_identity["platform_fingerprint"]:
+                key_identity["matches_platform"] = (
+                    key_identity["provided_fingerprint"] == key_identity["platform_fingerprint"]
+                )
+                if not key_identity["matches_platform"]:
+                    key_identity["warning"] = (
+                        "PROVIDED KEY DOES NOT MATCH OMNIX PLATFORM KEY — "
+                        "this block was not signed by OMNIX QUANTUM LTD. "
+                        "A PASS verdict here is NOT a platform endorsement."
+                    )
+                    logger.warning(
+                        "[ForensicAPI/verify] Non-platform key used: provided=%s platform=%s ip=%s",
+                        key_identity["provided_fingerprint"],
+                        key_identity["platform_fingerprint"],
+                        request.remote_addr,
+                    )
+            elif key_identity["provided_fingerprint"] and not key_identity["platform_fingerprint"]:
+                key_identity["warning"] = (
+                    "Platform key not configured server-side — "
+                    "cannot confirm whether provided key is the OMNIX platform key."
+                )
+        except Exception as _ki_exc:
+            key_identity["warning"] = f"Key identity check error: {_ki_exc}"
+
         return jsonify({
             "verdict":          result.verdict,
             "reasons":          getattr(result, "failure_reasons", []),
             "warnings":         getattr(result, "warnings", []),
             "checks":           checks,
+            "key_identity":     key_identity,
             "verified_at":      datetime.now(timezone.utc).isoformat(),
             "verifier_version": "1.1.0",
             "plane":            2,

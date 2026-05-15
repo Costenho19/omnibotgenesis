@@ -60,13 +60,29 @@ CORS(app, origins=[
     "http://localhost:3000",
 ])
 
+# ── P1-002 / ADR-167: Distributed rate limiting via Redis ──────────────────
+# In-memory storage creates per-process counters. With N Railway dynos, the
+# effective limit is N × configured_limit, rendering rate caps meaningless at
+# scale and during auto-scaling events. When REDIS_URL is present, all dynos
+# share a single counter (atomically incremented via Redis INCR with TTL).
+# Falls back to memory:// only in local dev / testing environments where Redis
+# is not configured — never in production (production must have REDIS_URL set).
+_REDIS_URL = os.environ.get("REDIS_URL")
+_LIMITER_STORAGE = _REDIS_URL if _REDIS_URL else "memory://"
+if not _REDIS_URL:
+    logger.warning(
+        "[RateLimit] REDIS_URL not set — using in-memory storage. "
+        "Rate limits are NOT distributed across dynos. "
+        "Set REDIS_URL in Railway to enforce true per-IP limits."
+    )
+
 limiter = Limiter(
     get_remote_address,
     app=app,
     # ADR-123: Default rate limit — all endpoints without explicit decorator
     # are capped at 200 req/min to prevent abuse of unlisted routes.
     default_limits=["200 per minute"],
-    storage_uri="memory://",
+    storage_uri=_LIMITER_STORAGE,
 )
 
 
@@ -125,10 +141,11 @@ register_sandbox_routes(app)
 try:
     from api.forensic_blueprint import forensic_bp
     app.register_blueprint(forensic_bp, url_prefix='/api/forensic')
-    # ADR-164 §4: Apply per-endpoint rate limits after blueprint registration
-    # (avoids circular import — limiter is defined in server.py, not the blueprint)
-    limiter.limit("60 per minute")(forensic_bp.view_functions["forensic_bp.verify_block"])
-    limiter.limit("10 per minute")(forensic_bp.view_functions["forensic_bp.export_oep"])
+    # ADR-164 §4: Apply per-endpoint rate limits after blueprint registration.
+    # Must use app.view_functions (qualified name) AFTER registration — the blueprint's
+    # own view_functions dict uses unqualified names, but the app uses "blueprint.func".
+    limiter.limit("60 per minute")(app.view_functions["forensic_bp.verify_block"])
+    limiter.limit("10 per minute")(app.view_functions["forensic_bp.export_oep"])
     print("[startup] Forensic blueprint registered — /api/forensic/status, /api/forensic/verify, /api/forensic/export")
 except Exception as _fbp_err:
     import traceback
