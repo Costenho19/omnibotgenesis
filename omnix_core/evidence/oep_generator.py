@@ -322,6 +322,31 @@ except Exception as e:
     print('Package signature: INVALID —', e)
 "
 
+PLATFORM KEY VERIFICATION
+--------------------------
+Every OEP is signed with the OMNIX platform ML-DSA-65 key. To confirm this
+package was signed by OMNIX QUANTUM LTD (not an external/test key), compare
+the fingerprint of KEYS/public_key.b64 against the platform registry:
+
+  Step 1 — Compute package key fingerprint:
+    python3 -c "
+import hashlib, base64
+pk = base64.b64decode(open('KEYS/public_key.b64').read().strip())
+print('sha256:' + hashlib.sha256(pk).hexdigest())
+"
+
+  Step 2 — Retrieve the OMNIX platform fingerprint (pick any channel):
+    HTTP:  curl -s https://omnixquantum.net/api/forensic/platform-key
+    DNS:   dig TXT _omnix-key.omnixquantum.net +short
+    Docs:  docs/security/PLATFORM_KEY_REGISTRY.md
+
+  Step 3 — Compare. If fingerprints match: OMNIX_PLATFORM trust level.
+           If they differ: EXTERNAL trust level (signature is still
+           mathematically valid but is not a platform endorsement).
+
+Platform key registry: https://omnixquantum.net/api/forensic/platform-key
+ADR reference: ADR-167
+
 FORENSIC REPORT
 ---------------
 Open REPORT/forensic_report.html in any browser for a self-contained
@@ -576,12 +601,28 @@ except: print('INVALID')
             span_latest   = blocks[-1].get("creation_timestamp_ns", 0) if blocks else 0
             head_block    = blocks[-1] if blocks else {}
 
-            # Public key fingerprint
+            # Public key fingerprint (full SHA-256 — never truncate, ADR-167)
             try:
-                pk_bytes     = base64.b64decode(self.config.public_key_b64)
-                pk_fingerprint = "sha256:" + self._sha256(pk_bytes)[:32]
+                pk_bytes       = base64.b64decode(self.config.public_key_b64)
+                pk_fingerprint = "sha256:" + self._sha256(pk_bytes)
             except Exception:
                 pk_fingerprint = "sha256:unknown"
+                pk_bytes       = b""
+
+            # Determine key trust level — compare against platform key env var
+            import os as _os
+            _platform_pk_b64 = _os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "").strip()
+            try:
+                _platform_fp = (
+                    "sha256:" + self._sha256(base64.b64decode(_platform_pk_b64))
+                    if _platform_pk_b64 else ""
+                )
+            except Exception:
+                _platform_fp = ""
+            key_trust_level = (
+                "OMNIX_PLATFORM" if (_platform_fp and pk_fingerprint == _platform_fp)
+                else "EXTERNAL"
+            )
 
             # Custody log hash
             custody_bytes = json.dumps(custody_log, indent=2, ensure_ascii=False).encode("utf-8")
@@ -620,9 +661,13 @@ except: print('INVALID')
                     "log_sha256":  self._sha256(custody_bytes),
                 },
                 "public_key": {
-                    "algorithm":   "ML-DSA-65 (FIPS 204)",
-                    "fingerprint": pk_fingerprint,
-                    "file":        "KEYS/public_key.b64",
+                    "algorithm":        "ML-DSA-65 (FIPS 204)",
+                    "fingerprint":      pk_fingerprint,
+                    "file":             "KEYS/public_key.b64",
+                    "key_trust_level":  key_trust_level,
+                    "platform_key_registry_url": (
+                        "https://omnixquantum.net/api/forensic/platform-key"
+                    ),
                 },
                 # files[] lists ONLY content files (no manifest.json, no signature.json)
                 # This is the object that is signed — no self-reference possible.

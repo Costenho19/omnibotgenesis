@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js'
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { saveAs } from 'file-saver'
@@ -181,8 +181,33 @@ export default function ArchiveVerifierPage() {
   const [exportSuccess, setExportSuccess]   = useState<string | null>(null)
   const [showApiKeyInput, setShowApiKeyInput] = useState(false)
 
+  // ── Platform Trust Anchor (ADR-167 / OMNIX-SEC-2026-001) ──────────────────
+  const [platformKeyInfo, setPlatformKeyInfo] = useState<{
+    status: string
+    fingerprint: string | null
+    fingerprint_short: string | null
+    algorithm: string
+    configured: boolean
+    canonical_verification_url: string
+    published_at: string | null
+    dns_txt_record?: { record_name: string; record_format: string }
+  } | null>(null)
+  const [keyMatchStatus, setKeyMatchStatus] = useState<
+    'unknown' | 'match' | 'mismatch' | 'unchecked'
+  >('unchecked')
+  const [fpCopied, setFpCopied] = useState(false)
+  const [showTrustAnchor, setShowTrustAnchor] = useState(true)
+
   const blockInputRef = useRef<HTMLInputElement>(null)
   const keyInputRef = useRef<HTMLInputElement>(null)
+
+  // ── Fetch platform key fingerprint on mount (ADR-167 / OMNIX-SEC-2026-001) ─
+  useEffect(() => {
+    fetch('/api/forensic/platform-key')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setPlatformKeyInfo(data) })
+      .catch(() => {})
+  }, [])
 
   const handleBlockUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -225,6 +250,7 @@ export default function ArchiveVerifierPage() {
 
   const runVerification = useCallback(async () => {
     setLoading(true)
+    setKeyMatchStatus('unknown')
     const newVerifications: Record<string, BlockVerification> = {}
 
     // 1. Sort blocks by predecessor graph (not timestamp — FVP-INV-001 / chain integrity)
@@ -376,6 +402,9 @@ export default function ArchiveVerifierPage() {
           newVerifications[block.block_id].reasons.push(
             `KEY VERIFIED: matches OMNIX platform key (${ki.provided_fingerprint?.slice(0, 20)}…)`
           )
+          setKeyMatchStatus('match')
+        } else if (ki?.matches_platform === false) {
+          setKeyMatchStatus('mismatch')
         }
       }
     }
@@ -540,6 +569,184 @@ export default function ArchiveVerifierPage() {
       </div>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 28px' }}>
+
+        {/* ── Platform Trust Anchor (ADR-167 / OMNIX-SEC-2026-001) ── */}
+        <div style={{
+          border: `1px solid ${
+            keyMatchStatus === 'match' ? GREEN_BORDER :
+            keyMatchStatus === 'mismatch' ? RED_BORDER :
+            GOLD_BORDER
+          }`,
+          borderRadius: 12, marginBottom: 28,
+          background: keyMatchStatus === 'match' ? GREEN_DIM :
+                      keyMatchStatus === 'mismatch' ? RED_DIM : GOLD_DIM,
+          overflow: 'hidden',
+          transition: 'border-color 0.3s, background 0.3s',
+        }}>
+          {/* Header row */}
+          <div
+            onClick={() => setShowTrustAnchor(v => !v)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '14px 20px', cursor: 'pointer', userSelect: 'none',
+            }}
+          >
+            <span style={{ fontSize: 18 }}>🔐</span>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '0.05em', color: GOLD }}>
+                PLATFORM TRUST ANCHOR
+              </span>
+              <span style={{ marginLeft: 12, fontSize: 12, color: SLATE }}>
+                OMNIX QUANTUM LTD · ML-DSA-65 (FIPS 204)
+              </span>
+            </div>
+            {/* Match badge */}
+            {keyMatchStatus === 'match' && (
+              <span style={{
+                background: GREEN, color: '#fff', fontSize: 11, fontWeight: 700,
+                padding: '3px 10px', borderRadius: 20, letterSpacing: '0.06em',
+              }}>✓ PLATFORM KEY MATCH</span>
+            )}
+            {keyMatchStatus === 'mismatch' && (
+              <span style={{
+                background: RED, color: '#fff', fontSize: 11, fontWeight: 700,
+                padding: '3px 10px', borderRadius: 20, letterSpacing: '0.06em',
+              }}>⚠ EXTERNAL KEY DETECTED</span>
+            )}
+            {(keyMatchStatus === 'unchecked' || keyMatchStatus === 'unknown') && (
+              <span style={{
+                background: 'rgba(100,116,139,0.18)', color: SLATE, fontSize: 11, fontWeight: 600,
+                padding: '3px 10px', borderRadius: 20, letterSpacing: '0.04em',
+              }}>Pending verification</span>
+            )}
+            <span style={{ color: SLATE, fontSize: 12, marginLeft: 4 }}>
+              {showTrustAnchor ? '▲' : '▼'}
+            </span>
+          </div>
+
+          {/* Expanded content */}
+          {showTrustAnchor && (
+            <div style={{ padding: '0 20px 18px', borderTop: `1px solid ${GOLD_BORDER}` }}>
+              {platformKeyInfo === null ? (
+                <div style={{ color: SLATE, fontSize: 13, marginTop: 14 }}>
+                  Loading platform key registry…
+                </div>
+              ) : platformKeyInfo.status === 'not_configured' ? (
+                <div style={{ color: AMBER, fontSize: 13, marginTop: 14 }}>
+                  ⚠ Platform key not configured on this server instance.
+                  Contact OMNIX QUANTUM LTD for the authoritative fingerprint.
+                </div>
+              ) : (
+                <>
+                  <div style={{ marginTop: 14 }}>
+                    <div style={{ fontSize: 11, color: SLATE, marginBottom: 6, letterSpacing: '0.06em' }}>
+                      OFFICIAL PLATFORM FINGERPRINT
+                    </div>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      background: 'rgba(0,0,0,0.25)', borderRadius: 8, padding: '10px 14px',
+                      border: '1px solid rgba(201,162,39,0.15)',
+                    }}>
+                      <code style={{
+                        flex: 1, fontSize: 12, color: GOLD, fontFamily: 'monospace',
+                        wordBreak: 'break-all', letterSpacing: '0.03em',
+                      }}>
+                        {platformKeyInfo.fingerprint ?? 'unavailable'}
+                      </code>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation()
+                          if (platformKeyInfo.fingerprint) {
+                            navigator.clipboard.writeText(platformKeyInfo.fingerprint)
+                            setFpCopied(true)
+                            setTimeout(() => setFpCopied(false), 2000)
+                          }
+                        }}
+                        style={{
+                          background: fpCopied ? GREEN : 'rgba(201,162,39,0.12)',
+                          border: `1px solid ${fpCopied ? GREEN_BORDER : GOLD_BORDER}`,
+                          color: fpCopied ? GREEN : GOLD, borderRadius: 6,
+                          padding: '4px 10px', fontSize: 11, cursor: 'pointer',
+                          transition: 'all 0.2s', whiteSpace: 'nowrap', fontWeight: 600,
+                        }}
+                      >
+                        {fpCopied ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 14 }}>
+                    <div style={{ fontSize: 12 }}>
+                      <span style={{ color: SLATE, fontSize: 11 }}>Algorithm</span>
+                      <div style={{ color: TEXT, marginTop: 2 }}>{platformKeyInfo.algorithm}</div>
+                    </div>
+                    <div style={{ fontSize: 12 }}>
+                      <span style={{ color: SLATE, fontSize: 11 }}>DNS TXT</span>
+                      <div style={{ color: TEXT, marginTop: 2, fontFamily: 'monospace', fontSize: 11 }}>
+                        {platformKeyInfo.dns_txt_record?.record_name ?? '_omnix-key.omnixquantum.net'}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12 }}>
+                      <span style={{ color: SLATE, fontSize: 11 }}>Live registry</span>
+                      <div style={{ marginTop: 2 }}>
+                        <a
+                          href={platformKeyInfo.canonical_verification_url}
+                          target="_blank" rel="noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          style={{ color: GOLD, fontSize: 11, textDecoration: 'underline' }}
+                        >
+                          /api/forensic/platform-key ↗
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Key match explanation */}
+                  {keyMatchStatus === 'match' && (
+                    <div style={{
+                      marginTop: 14, padding: '10px 14px', borderRadius: 8,
+                      background: GREEN_DIM, border: `1px solid ${GREEN_BORDER}`,
+                      fontSize: 13, color: GREEN,
+                    }}>
+                      ✓ The loaded public key matches the OMNIX platform key.
+                      Trust level: <strong>OMNIX_PLATFORM</strong> — blocks are signed by OMNIX QUANTUM LTD.
+                    </div>
+                  )}
+                  {keyMatchStatus === 'mismatch' && (
+                    <div style={{
+                      marginTop: 14, padding: '10px 14px', borderRadius: 8,
+                      background: RED_DIM, border: `1px solid ${RED_BORDER}`,
+                      fontSize: 13, color: '#fca5a5',
+                    }}>
+                      ⚠ The loaded key does <strong>not</strong> match the OMNIX platform key.
+                      Trust level: <strong>EXTERNAL</strong> — a PASS verdict confirms cryptographic validity
+                      but is <em>not</em> an endorsement by OMNIX QUANTUM LTD.
+                      This is expected for demo, test, or externally-generated OEPs.
+                    </div>
+                  )}
+                  {(keyMatchStatus === 'unchecked' || keyMatchStatus === 'unknown') && publicKey && (
+                    <div style={{
+                      marginTop: 14, padding: '10px 14px', borderRadius: 8,
+                      background: 'rgba(100,116,139,0.08)', border: '1px solid rgba(100,116,139,0.2)',
+                      fontSize: 13, color: SLATE,
+                    }}>
+                      Public key loaded. Run verification to determine if this is the OMNIX platform key.
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: 12, fontSize: 11, color: SLATE }}>
+                    ADR-167 · OMNIX-SEC-2026-001 ·{' '}
+                    <a href="/docs/security/PLATFORM_KEY_REGISTRY.md" style={{ color: SLATE }}
+                       target="_blank" rel="noreferrer">
+                      PLATFORM_KEY_REGISTRY.md
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* ── Upload Zone ── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
           <div

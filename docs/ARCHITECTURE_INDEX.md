@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — 165 total. Últimos: ADR-163 (EAP) · ADR-164 (FVP — Forensic Verification Portal) · ADR-165 (OEP — Evidence Package Format)
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **36 invariantes totales activos** (ATF×6 + RGC×8 + ELR×4 + EAP×6 + FVP×6 + OEP×6)
+- **ADRs:** `docs/adr/` — 167 total. Últimos: ADR-165 (OEP — Evidence Package Format) · ADR-166 (FEA — Forensic Export Auth) · ADR-167 (Forensic Hardening: Key Identity, Distributed Sequencing, Verifier Determinism)
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **38 invariantes totales activos** (ATF×6 + RGC×8 + ELR×4 + EAP×7 + FVP×7 + OEP×6)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 
@@ -51,7 +51,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Immutable Evidence Archive Pipeline | `docs/adr/ADR-163-immutable-evidence-archive-pipeline.md` | HOT→WARM→COLD pipeline · Parquet blocks · EAP-INV-001–006 · HALT trigger · ADR-163 |
 | COLD Block Sealer | `omnix_core/evidence/cold_block_sealer.py` | ColdBlockSealer · compute_merkle_root · compute_canonical_hash · seal_emergency · CustodyLogEntry · ADR-163 |
 | OEP Generator | `omnix_core/evidence/oep_generator.py` | OEPGenerator · OEPConfig · OEPResult · ZIP bundle · ML-DSA-65 package signature · forensic HTML report · ADR-165 |
-| Forensic Verification Portal | `omnix_web/api/forensic_blueprint.py` | forensic_bp · /api/forensic/verify · /api/forensic/export · /api/forensic/status · Two-Plane verification · ADR-164 |
+| Forensic Verification Portal | `omnix_web/api/forensic_blueprint.py` | forensic_bp · /api/forensic/verify · /api/forensic/export · /api/forensic/status · **/api/forensic/platform-key** (public trust anchor) · Two-Plane verification · ADR-164/ADR-167 |
 | Demo Block Generator | `tools/generate_demo_block.py` | Genera bloques COLD con keypair ML-DSA-65 efímero · verifica offline · escribe verify_block.sh |
 | Protocol Architecture Visualization | `omnix_web/src/pages/ProtocolVisualizationPage.tsx` | 5 diagramas premium · /protocol · Runtime Legitimacy Stack · Chain · GPIL · Degradation · Evidence |
 | ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · non-blocking |
@@ -111,6 +111,22 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | RC-1 Production Verification | OMNIX-PVR-2026-001 | Mayo 10, 2026 |
 | Disaster Recovery Test | OMNIX-DRT-2026-001 | Mayo 10, 2026 · 7/7 PASS |
 | Cost & Sustainability | OMNIX-CSR-2026-001 | Mayo 2026 · ~$50/month |
+
+---
+
+## Seguridad — Trust Infrastructure (OMNIX-SEC-2026-001)
+
+| Documento | Archivo | Clasificación |
+|---|---|---|
+| Platform Public Key Registry | `docs/security/PLATFORM_KEY_REGISTRY.md` | PUBLIC — distribuir libremente |
+| Key Rotation & Compromise Response Runbook | `docs/security/KEY_ROTATION_RUNBOOK.md` | CONFIDENTIAL — solo operadores |
+
+**Endpoints de confianza pública:**
+- `GET /api/forensic/platform-key` — fingerprint ML-DSA-65 en vivo, sin auth requerida
+- DNS TXT: `_omnix-key.omnixquantum.net` — verificación independiente de HTTP
+- Zenodo DOI: https://doi.org/10.5281/zenodo.20155016 — registro permanente
+
+**UI:** `/archive-verify` → panel "Platform Trust Anchor" — compara key cargada vs plataforma en tiempo real.
 
 ---
 

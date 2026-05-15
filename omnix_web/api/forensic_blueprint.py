@@ -115,6 +115,98 @@ def _load_verifier():
 _load_verifier()
 
 
+# ── GET /platform-key ─────────────────────────────────────────────────────────
+
+@forensic_bp.route("/platform-key", methods=["GET"])
+def get_platform_key():
+    """
+    Public trust anchor endpoint — returns the OMNIX platform public key fingerprint.
+
+    No authentication required. The platform public key fingerprint is PUBLIC information
+    by design — it is embedded in every OEP package and must be independently verifiable
+    without any OMNIX account or API key (EAP-INV-005).
+
+    This endpoint is the canonical machine-readable source of truth for the platform key
+    fingerprint. External parties verifying OEPs should poll this URL and compare the
+    returned fingerprint against the key embedded in KEYS/public_key.b64 of their package.
+
+    ADR-167 §2.1 — FVP-INV-007 — OMNIX-SEC-2026-001
+    """
+    import hashlib as _hl, base64 as _b64
+
+    pk_b64 = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")
+    if not pk_b64:
+        return jsonify({
+            "status": "not_configured",
+            "platform_name": "OMNIX QUANTUM LTD",
+            "fingerprint": None,
+            "configured": False,
+            "warning": (
+                "Platform signing key not configured on this server instance. "
+                "Contact OMNIX QUANTUM LTD for the authoritative fingerprint."
+            ),
+            "canonical_verification_url": "https://omnixquantum.net/api/forensic/platform-key",
+            "adr_reference": "ADR-167",
+        }), 200
+
+    try:
+        pk_bytes = _b64.b64decode(pk_b64.strip())
+        fingerprint = "sha256:" + _hl.sha256(pk_bytes).hexdigest()
+        fp_hex = fingerprint[7:]  # strip 'sha256:'
+        fp_short = "sha256:" + fp_hex[:8] + "…" + fp_hex[-8:]
+
+        published_at = os.environ.get("OMNIX_SIGNING_KEY_PUBLISHED_AT", "")
+
+        return jsonify({
+            "status": "active",
+            "platform_name": "OMNIX QUANTUM LTD",
+            "algorithm": "ML-DSA-65 (FIPS 204)",
+            "standard": "FIPS 204 (Module-Lattice-Based Digital Signature Standard)",
+            "key_size_bytes": len(pk_bytes),
+            "fingerprint": fingerprint,
+            "fingerprint_short": fp_short,
+            "fingerprint_format": "SHA-256 of raw public key bytes (base64-decoded)",
+            "published_at": published_at or None,
+            "configured": True,
+            "canonical_verification_url": "https://omnixquantum.net/api/forensic/platform-key",
+            "dns_txt_record": {
+                "record_name": "_omnix-key.omnixquantum.net",
+                "record_format": f"omnix-key-fingerprint={fingerprint}",
+                "purpose": (
+                    "DNS TXT record allows fingerprint verification without HTTP. "
+                    "Query with: dig TXT _omnix-key.omnixquantum.net"
+                ),
+            },
+            "zenodo_reference": {
+                "doi": "https://doi.org/10.5281/zenodo.20155016",
+                "note": (
+                    "The Zenodo ATF Research Package contains the platform public key "
+                    "and its fingerprint as a permanent independent reference."
+                ),
+            },
+            "oep_distinction": {
+                "platform_signed": (
+                    "OEPs where KEYS/public_key.b64 fingerprint matches this value "
+                    "are signed by the OMNIX platform key — highest trust level."
+                ),
+                "externally_signed": (
+                    "OEPs where fingerprints differ were signed by a non-platform key. "
+                    "The PASS verdict covers only cryptographic validity, not platform endorsement."
+                ),
+            },
+            "adr_reference": "ADR-167",
+            "runbook": "docs/security/KEY_ROTATION_RUNBOOK.md",
+            "registry_doc": "docs/security/PLATFORM_KEY_REGISTRY.md",
+        })
+    except Exception as exc:
+        logger.exception("[ForensicAPI/platform-key] Fingerprint computation failed: %s", exc)
+        return jsonify({
+            "status": "error",
+            "error": "Key fingerprint computation failed.",
+            "configured": True,
+        }), 500
+
+
 # ── GET /status ───────────────────────────────────────────────────────────────
 
 @forensic_bp.route("/status", methods=["GET"])

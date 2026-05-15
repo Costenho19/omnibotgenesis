@@ -146,7 +146,8 @@ try:
     # own view_functions dict uses unqualified names, but the app uses "blueprint.func".
     limiter.limit("60 per minute")(app.view_functions["forensic_bp.verify_block"])
     limiter.limit("10 per minute")(app.view_functions["forensic_bp.export_oep"])
-    print("[startup] Forensic blueprint registered — /api/forensic/status, /api/forensic/verify, /api/forensic/export")
+    limiter.limit("120 per minute")(app.view_functions["forensic_bp.get_platform_key"])
+    print("[startup] Forensic blueprint registered — /api/forensic/status, /api/forensic/verify, /api/forensic/export, /api/forensic/platform-key")
 except Exception as _fbp_err:
     import traceback
     print(f"[startup] WARNING: Forensic blueprint failed to register: {_fbp_err}")
