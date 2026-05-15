@@ -1028,7 +1028,7 @@ class ConversationalAI:
             logger.info("✅ Sistema IA Directo Activado - Gemini 2.0 Flash + GPT-4o")
             self.using_enterprise = False
             # Modo directo con APIs
-            self.model_name = "gemini-2.5-flash"
+            self.model_name = "gemini-2.0-flash"
             self.conversation_history = {}
             self.user_preferences = {}
             self.market_context = {}
@@ -1050,7 +1050,7 @@ class ConversationalAI:
                         logger.info("✅ Gemini 2.0 Flash inicializado con NUEVO SDK (google-genai)")
                     else:
                         genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-                        self.gemini_client = genai.GenerativeModel('gemini-2.5-flash')
+                        self.gemini_client = genai.GenerativeModel('gemini-2.0-flash')
                         logger.info("✅ Gemini 2.0 Flash inicializado con LEGACY SDK")
             except Exception as e:
                 logger.error(f"Error initializing legacy AI clients: {e}")
@@ -2119,7 +2119,7 @@ class ConversationalAI:
                 if hasattr(self.gemini_client, 'models'):
                     # Nuevo SDK (google.genai.Client)
                     response = self.gemini_client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-2.0-flash',
                         contents=system_prompt
                     )
                     response_text = response.text
