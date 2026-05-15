@@ -1460,17 +1460,26 @@ class AutoTradingBot:
             'trading_profile': profile_name,  # Nombre del perfil activo
             'trading_pairs': trading_pairs_list,  # V6.5.4: Pares según perfil activo
             'trading_pair': 'BTC/USD',  # Default pair (legacy compatibility)
-            'check_interval_seconds': int(safe_float(p.check_interval_seconds if p else 25, 25)),
+            # INSTITUTIONAL CONSERVATIVE — cooldown 30 min entre ciclos de análisis
+            'check_interval_seconds': int(safe_float(p.check_interval_seconds if p else 1800, 1800)),
             'min_trade_usd': safe_float(p.min_trade_usd if p else 75.0, 75.0),
-            'max_position_pct': safe_float(p.max_position_pct if p else 0.12, 0.12),
-            'stop_loss_pct': safe_float(p.stop_loss_pct if p else 0.02, 0.02),
+            # Posición máxima reducida — disciplina de capital
+            'max_position_pct': safe_float(p.max_position_pct if p else 0.08, 0.08),
+            # Stop-loss ajustado: 1.5% — menos ruido, más selectivo
+            'stop_loss_pct': safe_float(p.stop_loss_pct if p else 0.015, 0.015),
+            # Take-profit 3% — ratio R/R 2:1 mínimo
             'take_profit_pct': safe_float(p.take_profit_pct if p else 0.03, 0.03),
-            'max_daily_loss_pct': safe_float(p.max_daily_loss_pct if p else 0.08, 0.08),
-            'min_confidence': safe_float(p.min_confidence if p else 0.55, 0.55),
+            # Daily loss máximo 3% — freno automático agresivo
+            'max_daily_loss_pct': safe_float(p.max_daily_loss_pct if p else 0.03, 0.03),
+            # Confianza mínima 65% — solo señales limpias
+            'min_confidence': safe_float(p.min_confidence if p else 0.65, 0.65),
             'use_v52_strategies': True,  # Activar estrategias V5.2 Quantum
             'use_adaptive_weights': True,  # Sistema de pesos adaptativos ω(t)
             'use_multi_crypto': True,  # V6.4: Activar escaneo multi-crypto
-            'trades_per_day_target': int(safe_float(p.trades_per_day_target if p else 25, 25)),
+            # Máximo 3 trades/día — selectividad institucional
+            'trades_per_day_target': int(safe_float(p.trades_per_day_target if p else 3, 3)),
+            # Max 1 posición abierta simultánea
+            'max_open_positions': int(safe_float(p.max_open_positions if p else 1, 1)) if hasattr(p, 'max_open_positions') else 1,
         }
         
         # Estado del bot - V6.4: Cargado de la base de datos para persistencia
