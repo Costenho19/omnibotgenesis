@@ -56,6 +56,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Protocol Architecture Visualization | `omnix_web/src/pages/ProtocolVisualizationPage.tsx` | 5 diagramas premium · /protocol · Runtime Legitimacy Stack · Chain · GPIL · Degradation · Evidence |
 | ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · non-blocking |
 | ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | **v1.1.0** · Offline · modos: receipt/chain/agent/replay/**block** · --archive-block · --verify-chain · --predecessor-block |
+| Forensic Operations Demo | `omnix_web/src/pages/ForensicOperationsDemoPage.tsx` | `/forensic-operations` · 5 demos interactivos: Runtime Degradation · Cross-Runtime Divergence · Archive Verification · Trust Anchor · Full DR→TAR→RCR→Receipt→Archive Replay · Mayo 2026 |
+| Technical Whitepaper | `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` | 14 secciones · 38 invariantes · CES formula · GPIL · OEP protocol · alineamiento regulatorio EU AI Act / NIST / UAE-DFSA · OMNIX-WP-TECH-2026-001 |
 
 **APIs ATF:** `/api/atf/*` · `/api/atf/temporal/*` · `/api/atf/translate/*` · `/api/atf/continuity/*` · `/api/atf/escalations/*`
 
@@ -64,6 +66,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 - `tests/test_runtime_governance_continuity.py` — 82/82 PASS (ADR-159/RGC)
 - `tests/test_rpol_audit.py` — 93/93 PASS (ADR-160/RPOL) · total 175/175
 - `tests/test_cold_block_archive.py` — 109/109 PASS (ADR-163/EAP) · verifier v1.1.0 · ColdBlockSealer · EAP-INV-001–006
+- `tests/test_oep_forensic_audit.py` — **74/74 PASS** · OEP bundle · two-phase signature · OEP-INV-001–006 · FEA-INV-001–005 · FVP-INV-006/007 · custody log · PQC keypair fixture · ADR-164/165/166/167 · Mayo 2026
 
 ---
 
@@ -95,6 +98,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | `/agent-trust-fabric` | ATF Dashboard |
 | `/archive-verify` | **Forensic Archive Verification Portal** — 3-plane verification (browser/server/offline) · chain lineage graph · trust-level badges (OMNIX_PLATFORM/EXTERNAL) · signature metadata · HOT/WARM/COLD lifecycle · OEP bundle export · ADR-163/164/165/166/167 |
 | `/trust-infrastructure` | **Platform Trust Registry** — live fingerprint · 3 verification channels (HTTP/DNS/Zenodo) · trust level classification · evidence lifecycle HOT→WARM→COLD→OEP · key rotation lifecycle · 38-invariant reference table · ADR-156–167 |
+| `/forensic-operations` | **Forensic Operations Demo** — 5 demos institucionales: Runtime Degradation · Cross-Runtime Divergence · Archive Chain Verification · Trust Anchor · Full DR→TAR→RCR→Receipt→Archive Replay · Mayo 2026 |
 
 ---
 
@@ -143,6 +147,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Backup & DR Runbook | `docs/operations/BACKUP_RUNBOOK.md` — OMNIX-OPS-002 |
 | Deployment Operations | `docs/operations/DEPLOYMENT.md` |
 | ATF Whitepaper (Institucional) | `docs/atf/OMNIX-ATF-WHITEPAPER.md` — OMNIX-WP-ATF-2026-001 |
+| Technical Whitepaper (Full Stack) | `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` — OMNIX-WP-TECH-2026-001 · 14 secciones · 38 invariantes · CES · GPIL · OEP · EU AI Act / NIST / UAE-DFSA · Mayo 2026 |
 | ATF Threat Model | `docs/atf/ATF-THREAT-MODEL.md` — OMNIX-TM-ATF-2026-001 · 9 threat classes |
 | ATF Priority Record | `docs/zenodo/OMNIX-ATF-PRIORITY-RECORD.md` — OMNIX-PAR-2026-ATF-001 |
 | ATF Submission Guide | `docs/zenodo/OMNIX-ATF-SUBMISSION-GUIDE.md` — OMNIX-SUB-ATF-2026-001 |
