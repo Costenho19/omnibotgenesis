@@ -2127,15 +2127,46 @@ class ConversationalAI:
                 # Detectar SDK (nuevo vs clásico)
                 if hasattr(self.gemini_client, 'models'):
                     # Nuevo SDK (google.genai.Client)
-                    response = self.gemini_client.models.generate_content(
-                        model='gemini-2.0-flash',
-                        contents=system_prompt
-                    )
-                    response_text = response.text
+                    try:
+                        from google.genai import types as _genai_types
+                        _cfg = _genai_types.GenerateContentConfig(
+                            temperature=0.7,
+                            max_output_tokens=2000,
+                            top_p=0.95,
+                        )
+                        response = self.gemini_client.models.generate_content(
+                            model='gemini-2.0-flash',
+                            contents=system_prompt,
+                            config=_cfg
+                        )
+                    except Exception:
+                        response = self.gemini_client.models.generate_content(
+                            model='gemini-2.0-flash',
+                            contents=system_prompt
+                        )
+                    # Extracción segura — response.text lanza ValueError si bloqueado
+                    try:
+                        response_text = response.text
+                    except Exception:
+                        if response.candidates and response.candidates[0].content.parts:
+                            response_text = response.candidates[0].content.parts[0].text
+                        else:
+                            fr = response.candidates[0].finish_reason if response.candidates else 'NO_CANDIDATES'
+                            raise ValueError(f"Gemini respuesta bloqueada/vacía — finish_reason: {fr}")
                 else:
                     # SDK clásico (google.generativeai)
                     response = self.gemini_client.generate_content(system_prompt)
-                    response_text = response.text
+                    try:
+                        response_text = response.text
+                    except Exception:
+                        if response.candidates and response.candidates[0].content.parts:
+                            response_text = response.candidates[0].content.parts[0].text
+                        else:
+                            fr = response.candidates[0].finish_reason if response.candidates else 'NO_CANDIDATES'
+                            raise ValueError(f"Gemini respuesta bloqueada/vacía — finish_reason: {fr}")
+                
+                if not response_text or not response_text.strip():
+                    raise ValueError("Gemini devolvió texto vacío")
                 
                 # Guardar en historial
                 if chat_id not in self.conversation_history:
@@ -2149,7 +2180,7 @@ class ConversationalAI:
                 return response_text
                 
             except Exception as e:
-                logger.warning(f"⚠️ Gemini falló: {e}, intentando GPT-4 fallback")
+                logger.error(f"❌ Gemini falló [{type(e).__name__}]: {e} — intentando GPT-4 fallback")
         
         # PRIORIDAD 2: GPT-4 fallback (solo si Gemini falla)
         if hasattr(self, 'openai_client') and self.openai_client:
