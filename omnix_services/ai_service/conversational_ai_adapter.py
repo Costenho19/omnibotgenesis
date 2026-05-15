@@ -1035,6 +1035,13 @@ class ConversationalAI:
             self.intelligence_level = "ULTRA_COMPETITIVE_ENTERPRISE"
             # Initialize legacy AI clients for fallback
             self._init_legacy_clients()
+        # AIModelsManager — async fallback chain con retry/backoff (siempre disponible)
+        try:
+            from omnix_services.ai_service.ai_models import AIModelsManager
+            self._ai_models_manager = AIModelsManager()
+        except Exception as _ame:
+            logger.warning(f"⚠️ AIModelsManager no disponible: {_ame}")
+            self._ai_models_manager = None
     
     def _init_legacy_clients(self):
         """Initialize legacy AI clients if enterprise not available"""
@@ -1166,8 +1173,12 @@ class ConversationalAI:
                         logger.warning("⚠️ Enterprise service returned no response — falling through to legacy AI path")
                         break
                 
-                # Enterprise falló completamente — intentar legacy (Gemini/GPT-4)
-                logger.warning("⚠️ [ASYNC] Enterprise path exhausted — trying legacy AI generation")
+                # Enterprise falló completamente — intentar AIModelsManager async chain
+                logger.warning("⚠️ [ASYNC] Enterprise path exhausted — trying AIModelsManager async chain")
+                _amgr_resp = await self._async_generate_with_models_manager(user_message, user_name, chat_id)
+                if _amgr_resp:
+                    return post_process_response(_amgr_resp)
+                # Último recurso: legacy síncrono
                 try:
                     legacy_response = self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
                     if legacy_response and legacy_response != self._fallback_response():
@@ -1176,7 +1187,11 @@ class ConversationalAI:
                     logger.error(f"❌ Legacy path also failed: {_leg_exc}")
                 return self._fallback_response()
             else:
-                logger.warning("⚠️ Using legacy AI generation")
+                logger.warning("⚠️ [ASYNC] Non-enterprise: using AIModelsManager async chain")
+                _amgr_resp = await self._async_generate_with_models_manager(user_message, user_name, chat_id)
+                if _amgr_resp:
+                    return post_process_response(_amgr_resp)
+                # Último recurso: legacy síncrono
                 return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system))
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
@@ -1967,6 +1982,56 @@ class ConversationalAI:
                 'formatted_for_prompt': f'[Error loading investor data: {str(e)}]'
             }
     
+    async def _async_generate_with_models_manager(self, user_message: str, user_name: str, chat_id: str) -> Optional[str]:
+        """
+        Async AI generation usando AIModelsManager con retry/backoff completo.
+        Fallback chain: GPT-4o-mini → GPT-4o → Gemini → Claude.
+        Usado cuando enterprise no está disponible o falla.
+        """
+        if not getattr(self, '_ai_models_manager', None):
+            logger.warning("⚠️ AIModelsManager no inicializado — skip")
+            return None
+        try:
+            from omnix_services.ai_service.prompt_templates import prompt_builder
+            context = ""
+            if hasattr(self, 'conversation_history') and chat_id in self.conversation_history:
+                context = "\n".join(self.conversation_history[chat_id][-6:])
+            systemic_type = classify_systemic_question(user_message)
+            effective_msg = user_message
+            if systemic_type:
+                override = get_systemic_override_prompt(systemic_type)
+                effective_msg = override + "\n\nUSER QUESTION: " + user_message
+            system_prompt = prompt_builder.build_system_prompt(
+                user_message=effective_msg,
+                user_name=user_name,
+                context=context,
+                kraken_status=None,
+                intent='general'
+            )
+            response = await asyncio.wait_for(
+                self._ai_models_manager.generate(
+                    prompt=effective_msg,
+                    system_prompt=system_prompt
+                ),
+                timeout=45.0
+            )
+            if response:
+                if hasattr(self, 'conversation_history'):
+                    if chat_id not in self.conversation_history:
+                        self.conversation_history[chat_id] = []
+                    self.conversation_history[chat_id].append(f"Usuario: {user_message}")
+                    self.conversation_history[chat_id].append(f"OMNIX: {response}")
+                    if len(self.conversation_history[chat_id]) > 20:
+                        self.conversation_history[chat_id] = self.conversation_history[chat_id][-20:]
+                logger.info(f"✅ [AIModelsManager] Respuesta exitosa: {len(response)} chars")
+            return response
+        except asyncio.TimeoutError:
+            logger.error("❌ [AIModelsManager] Timeout 45s")
+            return None
+        except Exception as e:
+            logger.error(f"❌ [AIModelsManager] generate() falló: {e}")
+            return None
+
     def _legacy_generate_response(self, user_message, user_name, chat_id, user_id, trading_system=None):
         """Legacy AI generation - GEMINI PRIMERO con CONSULTA KRAKEN REAL
         FIX Nov 29, 2025: Usar trading_system parámetro en lugar de global
