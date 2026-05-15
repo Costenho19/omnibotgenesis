@@ -49,9 +49,11 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Governance Policy Interop Layer | `docs/adr/ADR-161-governance-policy-interoperability-layer.md` | Taxonomía CI/PI/GPI · Policy Parameter Registry · CRGC · ADR-161 |
 | Evidence Lifecycle & Immutable Retention | `docs/adr/ADR-162-evidence-lifecycle-immutable-retention.md` | 8 clases de evidencia · HOT/WARM/COLD · ELR-INV-001–004 · ADR-162 |
 | Immutable Evidence Archive Pipeline | `docs/adr/ADR-163-immutable-evidence-archive-pipeline.md` | HOT→WARM→COLD pipeline · Parquet blocks · EAP-INV-001–006 · HALT trigger · ADR-163 |
+| COLD Block Sealer | `omnix_core/evidence/cold_block_sealer.py` | ColdBlockSealer · compute_merkle_root · compute_canonical_hash · seal_emergency · CustodyLogEntry · ADR-163 |
+| Demo Block Generator | `tools/generate_demo_block.py` | Genera bloques COLD con keypair ML-DSA-65 efímero · verifica offline · escribe verify_block.sh |
 | Protocol Architecture Visualization | `omnix_web/src/pages/ProtocolVisualizationPage.tsx` | 5 diagramas premium · /protocol · Runtime Legitimacy Stack · Chain · GPIL · Degradation · Evidence |
 | ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · non-blocking |
-| ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | Offline · modos: receipt/chain/agent/replay |
+| ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | **v1.1.0** · Offline · modos: receipt/chain/agent/replay/**block** · --archive-block · --verify-chain · --predecessor-block |
 
 **APIs ATF:** `/api/atf/*` · `/api/atf/temporal/*` · `/api/atf/translate/*` · `/api/atf/continuity/*` · `/api/atf/escalations/*`
 
@@ -59,6 +61,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 - `tests/test_agent_trust_fabric.py`
 - `tests/test_runtime_governance_continuity.py` — 82/82 PASS (ADR-159/RGC)
 - `tests/test_rpol_audit.py` — 93/93 PASS (ADR-160/RPOL) · total 175/175
+- `tests/test_cold_block_archive.py` — 109/109 PASS (ADR-163/EAP) · verifier v1.1.0 · ColdBlockSealer · EAP-INV-001–006
 
 ---
 

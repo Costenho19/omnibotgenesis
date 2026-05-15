@@ -211,9 +211,21 @@ This table is itself classified as `LEGAL` evidence — it can never be deleted 
 |---|---|
 | `RuntimeContinuityEngine` (ADR-159) | HALT trigger fires `EMERGENCY_COLD` pipeline event |
 | `RCRWriteQueue` (ADR-160) | Provides batch artifacts to HOT stage |
-| `omnix_atf_verify.py` (ADR-156) | Extended with `--archive-block` verification mode |
+| `omnix_atf_verify.py` v1.1.0 (ADR-156) | Extended with `--archive-block`, `--verify-chain`, `--predecessor-block` modes. New `ArchiveBlockResult` dataclass. Verdicts: PASS / INTEGRITY_VIOLATION / CHAIN_BREAK / SIGNATURE_INVALID |
+| `ColdBlockSealer` (ADR-163 impl.) | `omnix_core/evidence/cold_block_sealer.py` — seals artifacts into JSON blocks, writes custody log, supports `seal_emergency()` for HALT trigger |
+| `generate_demo_block.py` | `tools/generate_demo_block.py` — generates auditor-ready demo blocks with fresh ML-DSA-65 keypair, in-process verification, `verify_block.sh` |
 | `decision_receipts_warm` | Formalized as the HOT→WARM stage artifact for `LEGAL` class |
 | ADR-162 retention policy | ADR-163 is the mechanical implementation of ADR-162 policy |
+
+### 7. Implementation Status (May 2026)
+
+| Deliverable | File | Status |
+|---|---|---|
+| ATF Public Verifier v1.1.0 | `docs/zenodo/submission_package/omnix_atf_verify.py` | ✓ COMPLETE |
+| ATF Public Verifier (public copy) | `omnix_web/public/omnix_atf_verify.py` | ✓ SYNCED |
+| COLD Block Sealer | `omnix_core/evidence/cold_block_sealer.py` | ✓ COMPLETE |
+| Demo Block Generator | `tools/generate_demo_block.py` | ✓ COMPLETE |
+| Archive Block Test Suite | `tests/test_cold_block_archive.py` | ✓ 109/109 PASS (TestMerkleRoot · TestCanonicalHash · TestColdBlockSealer · TestChainSealing · TestEmergencySeal · TestVerifyArchiveBlockPass · TestVerifyArchiveBlockTamper · TestVerifyArchiveBlockVerdicts · TestVerifyBlockJsonOutput · TestPublicKeyLoading · TestWarmManifestEntry · TestShadowEventClassification · TestEAPInvariants · TestSealedBlockDataclass · TestGenesisBlock · TestVerifierConstants) |
 
 ---
 
