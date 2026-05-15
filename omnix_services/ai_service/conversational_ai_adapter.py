@@ -1162,9 +1162,18 @@ class ConversationalAI:
                         
                         return post_process_response(response_text)
                     else:
-                        logger.error("❌ No response from enterprise service")
-                        return self._fallback_response()
+                        # FIX: Enterprise falló → caer al legacy path en lugar de fallback estático
+                        logger.warning("⚠️ Enterprise service returned no response — falling through to legacy AI path")
+                        break
                 
+                # Enterprise falló completamente — intentar legacy (Gemini/GPT-4)
+                logger.warning("⚠️ [ASYNC] Enterprise path exhausted — trying legacy AI generation")
+                try:
+                    legacy_response = self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
+                    if legacy_response and legacy_response != self._fallback_response():
+                        return post_process_response(legacy_response)
+                except Exception as _leg_exc:
+                    logger.error(f"❌ Legacy path also failed: {_leg_exc}")
                 return self._fallback_response()
             else:
                 logger.warning("⚠️ Using legacy AI generation")

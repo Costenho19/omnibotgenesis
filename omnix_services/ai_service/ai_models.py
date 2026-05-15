@@ -525,7 +525,7 @@ Generate a substantial response of 2000+ characters. Follow the language policy 
         """Generate with Anthropic Claude (Sync) - Returns (response, error)"""
         try:
             response = self.anthropic_client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-3-5-sonnet-20241022",
                 max_tokens=4000,
                 temperature=0.8,
                 system=system_prompt,
