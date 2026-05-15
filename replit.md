@@ -61,6 +61,7 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 | `ADMIN_ALLOWED_IPS` | IPs para endpoints admin | Optional — default: solo 127.0.0.1 |
 | `OMNIX_ANTI_REPLAY_MODE` | `strict` o `best_effort` | Optional — producción: usar `strict` |
 | `AVM_FAIL_CLOSED` | `true` = halt on DB failure | Optional |
+| `FORENSIC_EXPORT_ALLOW_CALLER_KEYS` | `true` = acepta claves del caller en `/export` | **NUNCA en producción** — solo dev/test (ADR-166 FEA-INV-005) |
 
 ### Flask Dashboard (`omnix_dashboard/app.py`)
 

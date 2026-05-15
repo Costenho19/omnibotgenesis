@@ -1,0 +1,20 @@
+{
+  "snapshot_id": "AVM-BB6B250A3A",
+  "parameter_version": "1.bb6b250a3a",
+  "domain": "gtpd-present-5c8ddd02",
+  "calibrated_at": "2026-05-15T03:26:52.576028+00:00",
+  "calibrated_at_epoch": 1778815612.576028,
+  "baseline_signals": {
+    "probability_score": 65.0,
+    "signal_coherence": 70.0,
+    "risk_exposure": 35.0,
+    "stress_resilience": 60.0,
+    "trend_persistence": 55.0,
+    "logic_consistency": 72.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 40.0,
+  "max_age_hours": 168.0,
+  "description": "Calibration snapshot",
+  "tags": []
+}
