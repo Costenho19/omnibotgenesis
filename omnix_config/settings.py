@@ -55,7 +55,7 @@ class AIConfig:
     
     def __post_init__(self):
         if self.fallback_models is None:
-            self.fallback_models = ['gpt-4o', 'gemini-2.5-flash', 'claude-sonnet-4-20250514']
+            self.fallback_models = ['gpt-4o', 'gemini-2.0-flash', 'claude-sonnet-4-20250514']
 
 
 @dataclass
