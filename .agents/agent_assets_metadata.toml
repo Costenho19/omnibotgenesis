@@ -628,4 +628,16 @@ title = "RFC-ATF-2 — Revisado (306 KB)"
 id = "9uDFGufyX_OFvNwJxD3Gt"
 uri = "file://RFC-ATF-3.pdf"
 type = "pdf"
-title = "RFC-ATF-3 v3 — Dark mode completo · Cover corregida · Unicode limpio"
+title = "RFC-ATF-3 — Forensic Evidence Standard (ATF-FEI-Compliant)"
+
+[[outputs]]
+id = "kR4oXQW-pb3Yllnbmq-Gn"
+uri = "file://RFC-ATF-1.pdf"
+type = "pdf"
+title = "RFC-ATF-1 — Foundation Standard (ATF-Compliant)"
+
+[[outputs]]
+id = "PYtr_VRn0rxqL4IyrG_fD"
+uri = "file://RFC-ATF-2.pdf"
+type = "pdf"
+title = "RFC-ATF-2 — Runtime Governance Standard (ATF-RGC-Compliant)"
