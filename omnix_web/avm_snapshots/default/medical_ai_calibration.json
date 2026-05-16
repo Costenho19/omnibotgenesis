@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-37550809E1",
   "parameter_version": "1.37550809e1",
   "domain": "medical_ai",
-  "calibrated_at": "2026-05-16T09:47:12.110916+00:00",
-  "calibrated_at_epoch": 1778924832.110916,
   "baseline_signals": {
-    "probability_score": 84.87,
     "risk_exposure": 69.34,
     "signal_coherence": 82.36,
-    "trend_persistence": 27.43,
+    "logic_consistency": 58.64,
+    "probability_score": 84.87,
     "stress_resilience": 44.88,
-    "logic_consistency": 58.64
+    "trend_persistence": 27.43
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_35.6"
-  ]
+  ],
+  "calibrated_at": "2026-05-16T09:47:12.110916+00:00",
+  "calibrated_at_epoch": 1778924832.110916
 }
