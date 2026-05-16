@@ -105,12 +105,20 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | RFC Index | `/rfc/` | RFC-ATF-1/2/3 navegable · TOC · invariantes completos · CES formula · GPIL levels · EAP tiers · Abstract + links |
 | Public Verifier | `/verify/` | Verificador interactivo JS · checks: MAR (ATF-INV-001) · CES (RGC-INV-001) · content hash · identifier formats · PQC presence · 0 datos salen del browser |
 | Conformance Program | `/conformance/` | 3 tiers (ATF/RGC/FEI) · badges Markdown · tabla 66 vectores · proceso de claim · IMPLEMENTATIONS.md |
+| Technical Whitepaper | `/whitepaper/` | Whitepaper premium HTML/CSS v1.1 · print-to-PDF · 40 invariants table · 6-layer architecture · CES visual · EAP pipeline · PQC · Regulatory grid · Verification claims |
+| Example Integrations | `/integrations/` | Python / TypeScript / Go tabs · 4 scenarios (DR, RCR, OEP export, offline verify) · syntax highlighting · copy buttons · interop note (GPIL) |
+| Interactive Diagrams | `/diagrams/` | L0→L5 stack clickable (detail panel) · RCR state machine (NOMINAL→HALT) · EAP tier flow · MAR chain visualization |
+| Quickstart | `/quickstart/` | 60 segundos · 4 pasos · CLI · MAR violation demo · next-step cards |
 
 **Archivos fuente:**
 - `docs/index.html` — Landing page premium
 - `docs/rfc/index.html` — RFC index navegable con tabs
 - `docs/verify/index.html` — Verifier client-side (JS SHA-256 + MAR + CES)
-- `docs/conformance/index.html` — Conformance program
+- `docs/conformance/index.html` — Conformance program (3 tiers, 66 vectores)
+- `docs/whitepaper/index.html` — Technical whitepaper v1.1 (print-to-PDF)
+- `docs/integrations/index.html` — Example integrations (Python/TypeScript/Go)
+- `docs/diagrams/index.html` — Interactive diagrams (stack, state machine, EAP, MAR)
+- `docs/quickstart/index.html` — Quickstart 60s (4 steps, CLI, MAR demo)
 - `docs/.nojekyll` — Disable Jekyll processing
 
 ---
