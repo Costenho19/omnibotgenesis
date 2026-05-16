@@ -1180,10 +1180,10 @@ export default function ForensicOperationsDemoPage() {
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
             <Badge>OPERATIONAL DEMOS</Badge>
             <Badge color={CYAN}>RFC-ATF-1 · RFC-ATF-2</Badge>
-            <Badge color={GREEN}>38 INVARIANTS</Badge>
+            <Badge color={GREEN}>40 INVARIANTS</Badge>
           </div>
           <h1 style={{ margin: '0 0 12px', fontSize: 32, fontWeight: 800, color: TEXT, lineHeight: 1.2 }}>
-            Forensic Operations — Live Demos
+            Forensic Operations — Simulation Demos
           </h1>
           <p style={{ margin: 0, color: MUTED, fontSize: 16, maxWidth: 700, lineHeight: 1.6 }}>
             Five interactive demonstrations of OMNIX operational capabilities: runtime authority

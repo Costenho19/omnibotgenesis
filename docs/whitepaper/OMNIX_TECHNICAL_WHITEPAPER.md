@@ -29,7 +29,7 @@ This whitepaper describes the technical architecture, the formal invariant syste
 6. [Post-Quantum Cryptography](#6-post-quantum-cryptography)
 7. [Immutable Evidence Archive Pipeline](#7-immutable-evidence-archive-pipeline)
 8. [OMNIX Evidence Package (OEP)](#8-omnix-evidence-package-oep)
-9. [Formal Invariant System (38 Invariants)](#9-formal-invariant-system-38-invariants)
+9. [Formal Invariant System (40 Invariants)](#9-formal-invariant-system-40-invariants)
 10. [Verification Architecture](#10-verification-architecture)
 11. [Regulatory Alignment](#11-regulatory-alignment)
 12. [Deployment Model](#12-deployment-model)
@@ -50,7 +50,7 @@ Modern AI and autonomous agent systems generate decisions at machine speed. Thes
 
 OMNIX solves all three: explicit signed delegation (ATF), session legitimacy scoring (CES), and immutable evidence archive (EAP). Every component is formally specified, invariant-governed, and post-quantum hardened.
 
-**Verifiable test coverage:** 245+ passing tests across the institutional audit suites (GPIL, OEP, EAP) confirm every stated claim as of May 2026 — see Section 13.
+**Verifiable test coverage:** 319+ passing tests across the institutional audit suites (GPIL, OEP, EAP) confirm every stated claim as of May 2026 — see Section 13.
 
 ---
 
@@ -414,9 +414,9 @@ EXTERNAL is not a failure — it means the evidence was signed by a key other th
 
 ---
 
-## 9. Formal Invariant System (38 Invariants)
+## 9. Formal Invariant System (40 Invariants)
 
-OMNIX governs its behaviour through 38 formally specified invariants across 6 categories. These invariants are not configuration parameters — they are structural properties that every OMNIX-compliant implementation must satisfy. Breaking any invariant constitutes a protocol violation, not a policy choice.
+OMNIX governs its behaviour through 40 formally specified invariants across 8 categories. These invariants are not configuration parameters — they are structural properties that every OMNIX-compliant implementation must satisfy. Breaking any invariant constitutes a protocol violation, not a policy choice.
 
 ### ATF Invariants — RFC-ATF-1 (6 invariants)
 
@@ -454,17 +454,30 @@ OMNIX governs its behaviour through 38 formally specified invariants across 6 ca
 | EAP-INV-006 | Every sealed artifact generates a custody log entry before the sealing operation completes |
 | EAP-INV-007 | Blocks are append-only; no block may be modified after sealing |
 
-### FVP Invariants — Forensic Verification Portal (7 invariants)
+### FVP Invariants — RFC-ATF-3 (1 invariant)
 
 | ID | Statement |
 |---|---|
-| FVP-INV-001 | Plane 1 (browser) may only emit PASS or INTEGRITY_VIOLATION — never SIGNATURE_INVALID |
-| FVP-INV-002 | Plane 2 (server) is the authoritative verification path for PQC operations |
-| FVP-INV-003 | Hash verification (Merkle root, canonical hash) is deterministic and platform-independent |
-| FVP-INV-004 | SIGNATURE_INVALID may only be emitted by Plane 2 (server-side PQC path) |
-| FVP-INV-005 | Plane 2 verification uses the same cryptographic library that signed the blocks |
-| FVP-INV-006 | Plane 2 verdict is authoritative; it overrides any conflicting Plane 1 result |
 | FVP-INV-007 | The platform public key fingerprint is publicly accessible without authentication |
+
+**FVP architectural separation principles** (FVP-INV-001–006 — not counted in formal total): Plane 1 emits only PASS/INTEGRITY_VIOLATION; Plane 2 is the authoritative PQC path; hash verification is deterministic; SIGNATURE_INVALID is Plane 2 exclusive; same cryptographic library used for signing and verification; Plane 2 verdict is always authoritative.
+
+### GPIL Invariants — Governance Policy Interoperability Layer (3 invariants)
+
+| ID | Statement |
+|---|---|
+| GPIL-INV-001 | All CRGC policy parameters must remain within validated bounds; out-of-range values are rejected before enforcement, never silently clamped |
+| GPIL-INV-002 | Every policy-affecting governance event produces a CRGC receipt before the policy change takes effect |
+| GPIL-INV-003 | The GPIL taxonomy must cover all governance event types defined in the ATF and RGC protocol stacks |
+
+### ELR Invariants — Evidence Lifecycle & Retention (4 invariants)
+
+| ID | Statement |
+|---|---|
+| ELR-INV-001 | Retention schedules may not be shortened post-issuance |
+| ELR-INV-002 | Immutable evidence classes (LEGAL, PQC, CONTRACT, EXCEPTION) bypass all compression |
+| ELR-INV-003 | WARM-tier compression preserves the original `content_hash` |
+| ELR-INV-004 | The COLD-tier seal is irreversible |
 
 ### OEP Invariants — Evidence Package (6 invariants)
 
@@ -611,13 +624,13 @@ In `OMNIX_ANTI_REPLAY_MODE=strict`, Redis unavailability causes the decision gat
 Every structural claim in this whitepaper is backed by a passing test assertion. Third parties can reproduce these results:
 
 ```bash
-# Full institutional audit suite (245 tests)
+# Full institutional audit suite (319 tests)
 TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest \
   tests/test_gpil_audit.py \
   tests/test_oep_forensic_audit.py \
   tests/test_eap_extended_audit.py \
   -v
-# Expected: 245 passed, 5 skipped
+# Expected: 319 passed, 5 skipped
 ```
 
 | Test Suite | Tests | Coverage |
@@ -712,4 +725,4 @@ ADR reference: ADR-159, RGC-INV-001.
 *OMNIX QUANTUM LTD · Registered in England & Wales · Operational Headquarters: UAE*
 *This document describes the technical architecture of the OMNIX governance platform.*
 *All invariant numbers, ADR references, and cryptographic parameters are canonical.*
-*Version 1.1 · May 2026 — Updated: EAP Extended Audit suite added (58 tests), test coverage table*
+*Version 1.2 · May 2026 — Updated: invariant count corrected to 40 (GPIL-INV-001–003, ELR-INV-001–004 added), test count updated to 319, EAP Extended Audit suite (58 tests)*
