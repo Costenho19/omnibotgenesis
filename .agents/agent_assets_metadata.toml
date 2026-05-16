@@ -623,3 +623,9 @@ id = "-LNq57QUfvS42AQQ9HVDs"
 uri = "file://docs/submissions/RFC-ATF-2.pdf"
 type = "pdf"
 title = "RFC-ATF-2 — Revisado (306 KB)"
+
+[[outputs]]
+id = "9uDFGufyX_OFvNwJxD3Gt"
+uri = "file://RFC-ATF-3.pdf"
+type = "pdf"
+title = "RFC-ATF-3 — Agent Trust Fabric · Forensic Verification Protocol"
