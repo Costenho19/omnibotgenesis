@@ -1176,18 +1176,44 @@ export default function ForensicOperationsDemoPage() {
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 32px' }}>
         {/* Page title */}
+        {/* Simulation disclaimer */}
+        <div style={{
+          background: '#1a1a0a',
+          border: `1px solid ${YELLOW}40`,
+          borderRadius: 8,
+          padding: '12px 20px',
+          marginBottom: 32,
+          display: 'flex',
+          gap: 12,
+          alignItems: 'flex-start',
+        }}>
+          <span style={{ color: YELLOW, fontFamily: 'monospace', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', paddingTop: 1 }}>
+            ⚠ SIMULATION
+          </span>
+          <span style={{ color: MUTED, fontSize: 12, lineHeight: 1.6 }}>
+            These demos run locally in the browser using deterministic, protocol-compliant data.
+            They illustrate the formal invariant system (RFC-ATF-1, RFC-ATF-2) and governance
+            lifecycle — they are <strong style={{ color: TEXT }}>not connected to a live OMNIX runtime</strong>.
+            The underlying Python engine ({' '}
+            <code style={{ background: '#ffffff10', padding: '1px 5px', borderRadius: 3, fontSize: 11 }}>
+              omnix_core.simulation.governance_replay
+            </code>
+            ) is fully operational and produces real PQC-signed artifacts.
+          </span>
+        </div>
+
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-            <Badge>OPERATIONAL DEMOS</Badge>
+            <Badge>PROTOCOL DEMOS</Badge>
             <Badge color={CYAN}>RFC-ATF-1 · RFC-ATF-2</Badge>
             <Badge color={GREEN}>40 INVARIANTS</Badge>
           </div>
           <h1 style={{ margin: '0 0 12px', fontSize: 32, fontWeight: 800, color: TEXT, lineHeight: 1.2 }}>
-            Forensic Operations — Simulation Demos
+            Forensic Operations — Protocol Simulation
           </h1>
           <p style={{ margin: 0, color: MUTED, fontSize: 16, maxWidth: 700, lineHeight: 1.6 }}>
-            Five interactive demonstrations of OMNIX operational capabilities: runtime authority
-            governance, sovereign policy divergence, immutable evidence chains, post-quantum
+            Five interactive demonstrations of OMNIX protocol mechanics: runtime authority
+            degradation, sovereign policy divergence, immutable evidence chains, post-quantum
             trust anchoring, and complete governance replay from human root to COLD archive.
           </p>
         </div>

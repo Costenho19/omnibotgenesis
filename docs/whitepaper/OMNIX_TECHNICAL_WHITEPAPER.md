@@ -50,7 +50,7 @@ Modern AI and autonomous agent systems generate decisions at machine speed. Thes
 
 OMNIX solves all three: explicit signed delegation (ATF), session legitimacy scoring (CES), and immutable evidence archive (EAP). Every component is formally specified, invariant-governed, and post-quantum hardened.
 
-**Verifiable test coverage:** 319+ passing tests across the institutional audit suites (GPIL, OEP, EAP) confirm every stated claim as of May 2026 — see Section 13.
+**Verifiable test coverage:** 334+ passing tests across the institutional audit suites (GPIL, OEP, EAP, AI Fallback) confirm every stated claim as of May 2026 — see Section 13.
 
 ---
 
@@ -198,14 +198,18 @@ Sovereign runtimes may configure policy parameters within protocol-defined bound
 
 ### 5.2 Policy Parameter Registry
 
-The following parameters are configurable by sovereign runtimes within the stated bounds:
+ADR-161 §21.3 defines exactly **6 Policy Divergence Surface parameters** — the complete set of dimensions along which two PI-compliant runtimes may legitimately reach different governance verdicts. Every `CRGCPolicyParameters` instance carries all 6 fields; values outside protocol bounds are rejected at construction time (GPIL-INV-001).
 
-| Parameter | Min | Max | Default | Effect |
-|---|---|---|---|---|
-| `AFG_FRAGMENTATION_LIMIT` | 0.50 | 0.95 | 0.90 | Authority fragmentation ceiling |
-| `RGC_RC_TTL_SECONDS` | 300 | 3600 | 3600 | Session temporal bound |
-| `AVM_APPROVAL_THRESHOLD_PCT` | 0.0 | 50.0 | 25.0 | AVM drift approval ceiling |
-| `AVM_MAX_CUMULATIVE_DRIFT_PCT` | 0.0 | 50.0 | 25.0 | Maximum cumulative drift |
+| Parameter | Type | Min | Max | Default | Effect |
+|---|---|---|---|---|---|
+| `afg_fragmentation_limit` | float | 0.01 | 0.95 | 0.90 | Authority fragmentation ceiling (ATF-INV-005) |
+| `rc_ttl_seconds` | int | 30 | 3600 | 300 | Session temporal bound (RGC-INV-001) |
+| `sampling_profile` | enum | — | — | `MEDIUM` | CES sampling cadence: SHORT / MEDIUM / LONG / STREAMING |
+| `governance_risk_tier_policy` | enum | — | — | `STANDARD` | Risk tier governing approval thresholds: LOW / STANDARD / HIGH / CRITICAL |
+| `context_drift_methodology_ref` | string URI | — | — | protocol default | Reference to the context drift detection specification in use |
+| `anomaly_criteria_ref` | string | — | — | protocol default | Reference to the anomaly detection criteria specification |
+
+The first two parameters are numeric with validated bounds. The remaining four are categorical or reference types. All 6 are included in the CRGC hash computation for bilateral agreement integrity.
 
 ### 5.3 Cross-Runtime Governance Contracts (CRGC)
 
@@ -624,20 +628,22 @@ In `OMNIX_ANTI_REPLAY_MODE=strict`, Redis unavailability causes the decision gat
 Every structural claim in this whitepaper is backed by a passing test assertion. Third parties can reproduce these results:
 
 ```bash
-# Full institutional audit suite (319 tests)
+# Full institutional audit suite (334 tests)
 TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest \
   tests/test_gpil_audit.py \
   tests/test_oep_forensic_audit.py \
   tests/test_eap_extended_audit.py \
+  tests/test_ai_fallback_observability.py \
   -v
-# Expected: 319 passed, 5 skipped
+# Expected: 329 passed, 5 skipped
 ```
 
 | Test Suite | Tests | Coverage |
 |---|---|---|
 | `test_gpil_audit.py` | 187 pass, 1 skip | GPIL taxonomy · CRGC · 14 invariants · CES formula · Policy Bounds · ADR-161 |
 | `test_oep_forensic_audit.py` | 74 pass | OEP bundle · two-phase signature · FEA-INV-001–005 · FVP-INV-006/007 · ADR-164–167 |
-| `test_eap_extended_audit.py` | 58 pass, 4 skip | GPIL Policy Divergence Surface · FVP two-plane separation · OEP offline self-containment · EAP chain integrity · ADR-161/163/165 |
+| `test_eap_extended_audit.py` | 45 pass, 4 skip | GPIL Policy Divergence Surface (6 params) · FVP two-plane separation · OEP offline self-containment · EAP chain integrity · ADR-161/163/165 |
+| `test_ai_fallback_observability.py` | 15 pass | AI fallback chain log format (VII1–VII10) · Claude model name regression (VIII1–VIII5) · T000 spec |
 
 **Key verifiable claims by test:**
 
