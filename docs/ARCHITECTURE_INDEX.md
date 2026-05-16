@@ -95,6 +95,26 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ---
 
+## GitHub Pages — Sitio Institucional del Estándar
+
+**URL pública:** https://costenho19.github.io/atf-protocol-standard/ · **Estado: 🟢 LIVE** · Mayo 2026
+
+| Página | URL | Contenido |
+|---|---|---|
+| Landing Page | `/` | Hero · Stack L0–L5 · 3 RFCs · CES formula · 40 invariantes · Conformance tiers · Regulatory alignment · Who should implement |
+| RFC Index | `/rfc/` | RFC-ATF-1/2/3 navegable · TOC · invariantes completos · CES formula · GPIL levels · EAP tiers · Abstract + links |
+| Public Verifier | `/verify/` | Verificador interactivo JS · checks: MAR (ATF-INV-001) · CES (RGC-INV-001) · content hash · identifier formats · PQC presence · 0 datos salen del browser |
+| Conformance Program | `/conformance/` | 3 tiers (ATF/RGC/FEI) · badges Markdown · tabla 66 vectores · proceso de claim · IMPLEMENTATIONS.md |
+
+**Archivos fuente:**
+- `docs/index.html` — Landing page premium
+- `docs/rfc/index.html` — RFC index navegable con tabs
+- `docs/verify/index.html` — Verifier client-side (JS SHA-256 + MAR + CES)
+- `docs/conformance/index.html` — Conformance program
+- `docs/.nojekyll` — Disable Jekyll processing
+
+---
+
 ## Páginas Públicas (React SPA)
 
 | URL | Descripción |
