@@ -7,7 +7,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — 167 total. Últimos: ADR-165 (OEP — Evidence Package Format) · ADR-166 (FEA — Forensic Export Auth) · ADR-167 (Forensic Hardening: Key Identity, Distributed Sequencing, Verifier Determinism)
+- **ADRs:** `docs/adr/` — 169 total. Últimos: ADR-167 (Forensic Hardening) · ADR-168 (Dual-Path Module Sync Policy) · ADR-169 (ATF Connector Fail-Open Admission Semantic)
 - **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **38 invariantes totales activos** (ATF×6 + RGC×8 + ELR×4 + EAP×7 + FVP×7 + OEP×6)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
@@ -54,7 +54,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Forensic Verification Portal | `omnix_web/api/forensic_blueprint.py` | forensic_bp · /api/forensic/verify · /api/forensic/export · /api/forensic/status · **/api/forensic/platform-key** (public trust anchor) · Two-Plane verification · ADR-164/ADR-167 |
 | Demo Block Generator | `tools/generate_demo_block.py` | Genera bloques COLD con keypair ML-DSA-65 efímero · verifica offline · escribe verify_block.sh |
 | Protocol Architecture Visualization | `omnix_web/src/pages/ProtocolVisualizationPage.tsx` | 5 diagramas premium · /protocol · Runtime Legitimacy Stack · Chain · GPIL · Degradation · Evidence |
-| ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · non-blocking |
+| ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · fail-open (ADR-169) · FAO-INV-001–003 |
 | ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | **v1.1.0** · Offline · modos: receipt/chain/agent/replay/**block** · --archive-block · --verify-chain · --predecessor-block |
 | Forensic Operations Demo | `omnix_web/src/pages/ForensicOperationsDemoPage.tsx` | `/forensic-operations` · 5 demos interactivos: Runtime Degradation · Cross-Runtime Divergence · Archive Verification · Trust Anchor · Full DR→TAR→RCR→Receipt→Archive Replay · Mayo 2026 |
 | Technical Whitepaper | `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` | 14 secciones · 38 invariantes · CES formula · GPIL · OEP protocol · alineamiento regulatorio EU AI Act / NIST / UAE-DFSA · OMNIX-WP-TECH-2026-001 |
@@ -68,6 +68,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 - `tests/test_cold_block_archive.py` — 109/109 PASS (ADR-163/EAP) · verifier v1.1.0 · ColdBlockSealer · EAP-INV-001–006
 - `tests/test_oep_forensic_audit.py` — **74/74 PASS** · OEP bundle · two-phase signature · OEP-INV-001–006 · FEA-INV-001–005 · FVP-INV-006/007 · custody log · PQC keypair fixture · ADR-164/165/166/167 · Mayo 2026
 - `tests/test_eap_extended_audit.py` — **58/62 PASS · 4 skip** · GPIL Policy Parameter Registry (I1–I12) · FVP two-plane verdict separation (III1–III6) · FEA RBAC export gate (IV1–IV5) · OEP offline self-containment (V1–V7) · EAP chain invariants (VI1–VI8) · ADR-161/163/165/166 · Mayo 2026
+- `tests/test_atf_domain_bridge.py` — **35/35 PASS** · CDTP-INV-001–005 · ADR-158 · CrossDomainBridge translate/verify_dtr/get_policy · domain-specific policies (HEAL→INSU 15%, HEAL→FIN 30%) · DTR immutability · authority reduction enforcement · content_hash + PQC fields · chain traceability · Mayo 2026
 
 ---
 
