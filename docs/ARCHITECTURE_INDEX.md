@@ -70,6 +70,14 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 - `tests/test_eap_extended_audit.py` — **58/62 PASS · 4 skip** · GPIL Policy Parameter Registry (I1–I12) · FVP two-plane verdict separation (III1–III6) · FEA RBAC export gate (IV1–IV5) · OEP offline self-containment (V1–V7) · EAP chain invariants (VI1–VI8) · ADR-161/163/165/166 · Mayo 2026
 - `tests/test_atf_domain_bridge.py` — **35/35 PASS** · CDTP-INV-001–005 · ADR-158 · CrossDomainBridge translate/verify_dtr/get_policy · domain-specific policies (HEAL→INSU 15%, HEAL→FIN 30%) · DTR immutability · authority reduction enforcement · content_hash + PQC fields · chain traceability · Mayo 2026
 
+**GitHub CI — `Costenho19/atf-protocol-standard` — 🟢 FULLY GREEN (Mayo 2026):**
+- `tests/test_atf_receipts.py` — **23/23 PASS** · ContentHash · MAR invariant · CES formula (94.39 correcto) · receipt type detection · identifier formats · ADR-156/RFC-ATF-1/RFC-ATF-2
+- `tests/test_conformance_vectors.py` — **43/43 PASS** · ATF-Compliant (15 vectores) · RGC-Compliant (11 vectores) · FEI-Compliant (11 vectores) · cobertura (6 vectores) · todos positivos y negativos
+- Full suite `pytest tests/` — **66/66 PASS**
+- Offline verifier en 3 ejemplos (DR/TAR/RCR) — **PASS** · hashes corregidos
+- `reference-implementation` smoke tests — **PASS** · DR create/verify · ATF-INV-001 enforcement · RCR NOMINAL
+- Rust skeleton `cargo check` — **PASS**
+
 ---
 
 ## Estándares Publicados
