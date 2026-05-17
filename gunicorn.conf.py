@@ -6,7 +6,7 @@ Applies a runtime nuclear guard in each worker process to ensure
 import os
 
 bind = f"0.0.0.0:{os.environ.get('PORT', '8080')}"
-workers = 2
+workers = 1
 threads = 4
 timeout = 120
 worker_class = "sync"
