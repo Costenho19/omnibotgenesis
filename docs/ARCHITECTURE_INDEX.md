@@ -14,6 +14,30 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ---
 
+## Auditorías y Compliance
+
+| Documento | Archivo | Alcance |
+|---|---|---|
+| **Institutional Architecture Review — ATF/EAP/OEP** | `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` | ADR-156–169 · 40 invariantes · Gap analysis A–F · Risk prioritization · ADR-169 fail-open tension · Institutional buyer flags · Top-5 strategic recommendations · OMNIX-AUDIT-ATF-EAP-OEP-2026-05 |
+| **40-Invariant Test Coverage Matrix** | `docs/compliance/INVARIANT_TEST_MATRIX.md` | Trazabilidad completa: 40 invariantes × implementación × test · 34/40 cobertura directa (85%) · 6/40 structural-only · Plan de remediación priorizado · OMNIX-COMPLIANCE-INV-MATRIX-2026-05 |
+| ADR-160 Production Audit | `docs/audits/ADR-160-PRODUCTION-AUDIT.md` | RCR Performance / RPOL |
+| ADR-161 GPIL Production Audit | `docs/audits/ADR-161-GPIL-PRODUCTION-AUDIT.md` | Governance Policy Interop Layer |
+| ADR-163 Protocol Page Audit | `docs/audits/ADR-163-PROTOCOL-PAGE-AUDIT.md` | Immutable Evidence Archive |
+| ATF Differentiator Validation | `docs/audits/ATF-DIFFERENTIATOR-VALIDATION.md` | ATF stack institutional positioning |
+| OMNIX End-to-End Institutional Audit | `docs/audits/OMNIX-END-TO-END-INSTITUTIONAL-AUDIT.md` | Full platform audit |
+| Postgres Storage Audit | `docs/audits/POSTGRES-STORAGE-AUDIT.md` | DB schema + storage patterns |
+| Protocol Visualization Report | `docs/audits/PROTOCOL-VISUALIZATION-IMPLEMENTATION-REPORT.md` | ProtocolVisualizationPage |
+| Sprint Ecosystem Final Audit | `docs/audits/SPRINT-ECOSYSTEM-FINAL-AUDIT.md` | Sprint ecosystem review |
+| Sprint Forensic Infra Audit | `docs/audits/SPRINT-FORENSIC-INFRA-AUDIT.md` | Forensic infrastructure |
+
+**Open items tracked in OMNIX-AUDIT-ATF-EAP-OEP-2026-05:**
+- 🔴 CRITICAL: `test_adr168_module_parity.py` — no existe aún (ADR-168 §2 lo exige)
+- 🔴 CRITICAL: Redis startup probe en `api/server.py` para EAP-INV-007 producción
+- 🟡 HIGH: `ATF_REJECTED_ENFORCEMENT` env var en `gov_blueprint.py` (ADR-169 regulated mode)
+- 🟡 HIGH: `omnix_core/governance/gpil.py` runtime module para CRGC operacional (ADR-161)
+
+---
+
 ## Módulos Core
 
 | Módulo | Archivo | ADR |

@@ -623,6 +623,20 @@ In `OMNIX_ANTI_REPLAY_MODE=strict`, Redis unavailability causes the decision gat
 
 ## 13. Verification Claims
 
+### Invariant Traceability
+
+All 40 formal invariants published in RFC-ATF-1, RFC-ATF-2, and RFC-ATF-3 are mapped to their implementation source files, enforcement mechanisms, and test coverage in the **Invariant Test Coverage Matrix** (`docs/compliance/INVARIANT_TEST_MATRIX.md`). The matrix is the authoritative traceability document for third-party compliance audits.
+
+| Coverage Class | Count | Percentage |
+|---|---|---|
+| Direct independent test | 34 | 85.0% |
+| Structural enforcement only | 6 | 15.0% |
+| Zero coverage | 0 | 0.0% |
+
+The six structural-only invariants (ATF-INV-002, RGC-INV-007, ELR-INV-003, ELR-INV-004, EAP-INV-007, FEA-INV-001) are identified and tracked with a remediation plan in `docs/compliance/INVARIANT_TEST_MATRIX.md §Priority Remediation Plan`.
+
+An independent institutional code review covering all 14 sprint ADRs (ADR-156 through ADR-169), the full 40-invariant coverage, and risk prioritization for regulated buyers is published at `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` (Document ID: OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
+
 ### Institutional Audit Test Suite Coverage
 
 Every structural claim in this whitepaper is backed by a passing test assertion. Third parties can reproduce these results:
