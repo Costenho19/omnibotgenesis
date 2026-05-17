@@ -183,6 +183,26 @@ AFG_FRAGMENTATION_LIMIT_DEFAULT = 0.90
 RC_TTL_CRITICAL_DEFAULT = 300
 RC_TTL_HALT_DEFAULT     = 0   # immediate
 
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPILED CES STALENESS BOUND — RGC-INV-007
+#
+# MODULE-LEVEL CONSTANT. NOT read from environment variables.
+# NOT operator-configurable. This is intentional.
+#
+# RCR_CES_STALENESS_BOUND_SECONDS: Maximum age of the CES component inputs
+#     (temporal health, budget health, context fidelity, integrity score)
+#     at the moment an RCR is issued. If any CES input was last updated
+#     more than this many seconds ago, the RCR is flagged STALE and
+#     continuity_status is forced to WARNING regardless of the computed
+#     CES score. This prevents a slow-drift attack where stale inputs
+#     produce artificially high CES scores that mask real authority decay.
+#
+# Making this configurable would allow an operator to extend the staleness
+# window until inputs are effectively frozen — defeating the liveness
+# guarantee that RGC-INV-007 is designed to enforce. The bound is compiled.
+# ─────────────────────────────────────────────────────────────────────────────
+RCR_CES_STALENESS_BOUND_SECONDS: int = 300   # 5 minutes — compiled, not configurable
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # GPIL — Cross-Runtime Governance Contract types (ADR-161 / RFC-ATF-2 §21)

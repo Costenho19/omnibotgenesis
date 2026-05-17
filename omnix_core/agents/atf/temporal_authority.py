@@ -22,8 +22,17 @@ Key invariants:
     TAR-INV-003: Expired DRs produce TAR with status=REJECTED
     TAR-INV-004: TAR is immutable once issued (content_hash)
     TAR-INV-005: TAR chains to its originating DR and execution event
+    TAR-INV-006: DR lifetime accepted by TAR engine cannot exceed
+                 TAR_MAX_DR_LIFETIME_SECONDS — a COMPILED CONSTANT,
+                 not an operator-configurable parameter. A DR whose
+                 remaining validity window at admission time exceeds
+                 this bound is REJECTED regardless of its stated
+                 expires_at value. This closes the DORA issuance-time
+                 attack surface: no operator can extend authority scope
+                 by issuing a DR with an excessively permissive epoch.
+                 The bound is structural, not policy-enforced.
 
-ADR-157 — Harold Nunes — OMNIX QUANTUM LTD — May 2026
+ADR-157 rev.2 — Harold Nunes — OMNIX QUANTUM LTD — May 2026
 """
 from __future__ import annotations
 
@@ -40,6 +49,27 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("OMNIX.ATF.Temporal")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPILED STALENESS BOUNDS — TAR-INV-006
+#
+# These are MODULE-LEVEL CONSTANTS. They are NOT read from environment
+# variables and CANNOT be overridden by operator configuration. This is
+# intentional: making these bounds configurable would constitute a DORA
+# issuance-time attack surface (an operator under coercion could extend
+# the authority epoch indefinitely). The bound is structural.
+#
+# TAR_MAX_DR_LIFETIME_SECONDS : Maximum remaining validity window a DR may
+#     carry at the moment TAR admission is evaluated. A DR whose expiry is
+#     more than this many seconds in the future is REJECTED. Default: 24h.
+#     To issue authority beyond 24 h, a fresh DR must be issued — creating
+#     a new auditable issuance event rather than a single long-lived token.
+#
+# TAR_CLOCK_SKEW_TOLERANCE_NS : Nanosecond tolerance for minor clock skew
+#     between issuing and admitting runtimes. Does not affect lifetime bound.
+# ─────────────────────────────────────────────────────────────────────────────
+TAR_MAX_DR_LIFETIME_SECONDS: int  = 86_400     # 24 hours — compiled, not configurable
+TAR_CLOCK_SKEW_TOLERANCE_NS: int  = 5_000_000_000  # 5 seconds clock skew tolerance
 
 DDL_TEMPORAL_RECORDS = """
 CREATE TABLE IF NOT EXISTS atf_temporal_records (
@@ -300,6 +330,7 @@ class TemporalAuthorityEngine:
                     dr_expires_at.replace("Z", "+00:00")
                 )
                 exp_ns = int(exp.timestamp() * 1_000_000_000)
+
                 if execution_ns > exp_ns:
                     admission_status = "REJECTED"
                     rejection_reason = (
@@ -307,6 +338,37 @@ class TemporalAuthorityEngine:
                         f"execution at nanosecond {execution_ns} "
                         f"({execution_ns - exp_ns} ns after expiry)"
                     )
+
+                # TAR-INV-006: compiled staleness bound enforcement.
+                # If the DR's remaining validity window exceeds the compiled
+                # ceiling, reject — regardless of operator configuration.
+                # This is a structural guarantee, not a policy check.
+                # Clock skew tolerance is added to the ceiling (not to the
+                # remaining window) so that DRs near the boundary are not
+                # spuriously rejected by minor clock drift.
+                if admission_status == "ADMITTED":
+                    remaining_ns = exp_ns - execution_ns
+                    max_ns = (
+                        TAR_MAX_DR_LIFETIME_SECONDS * 1_000_000_000
+                        + TAR_CLOCK_SKEW_TOLERANCE_NS
+                    )
+                    if remaining_ns > max_ns:
+                        admission_status = "REJECTED"
+                        remaining_h = remaining_ns / 3_600_000_000_000
+                        rejection_reason = (
+                            f"TAR-INV-006: DR remaining lifetime "
+                            f"({remaining_h:.2f}h) exceeds compiled "
+                            f"staleness bound ({TAR_MAX_DR_LIFETIME_SECONDS}s). "
+                            f"Reissue DR with a shorter lifetime epoch. "
+                            f"This bound is structural and cannot be overridden "
+                            f"by operator configuration."
+                        )
+                        logger.warning(
+                            f"[ATF.Temporal] TAR-INV-006 VIOLATION — "
+                            f"DR {delegation_id} remaining={remaining_h:.2f}h "
+                            f"exceeds compiled bound={TAR_MAX_DR_LIFETIME_SECONDS}s"
+                        )
+
             except Exception as exc:
                 logger.warning(f"[ATF.Temporal] Expiry parse error: {exc}")
 
