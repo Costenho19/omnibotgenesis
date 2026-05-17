@@ -29,7 +29,7 @@ This whitepaper describes the technical architecture, the formal invariant syste
 6. [Post-Quantum Cryptography](#6-post-quantum-cryptography)
 7. [Immutable Evidence Archive Pipeline](#7-immutable-evidence-archive-pipeline)
 8. [OMNIX Evidence Package (OEP)](#8-omnix-evidence-package-oep)
-9. [Formal Invariant System (40 Invariants)](#9-formal-invariant-system-40-invariants)
+9. [Formal Invariant System (41 Invariants)](#9-formal-invariant-system-41-invariants)
 10. [Verification Architecture](#10-verification-architecture)
 11. [Regulatory Alignment](#11-regulatory-alignment)
 12. [Deployment Model](#12-deployment-model)
