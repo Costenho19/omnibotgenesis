@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-77AB4B1466",
   "parameter_version": "1.77ab4b1466",
   "domain": "defense_governance",
-  "calibrated_at": "2026-05-16T21:48:57.154511+00:00",
-  "calibrated_at_epoch": 1778968137.154511,
   "baseline_signals": {
-    "probability_score": 58.6,
     "risk_exposure": 33.54,
     "signal_coherence": 58.96,
-    "trend_persistence": 67.71,
+    "logic_consistency": 93.28,
+    "probability_score": 58.6,
     "stress_resilience": 62.7,
-    "logic_consistency": 93.28
+    "trend_persistence": 67.71
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_5.2"
-  ]
+  ],
+  "calibrated_at": "2026-05-16T21:48:57.154511+00:00",
+  "calibrated_at_epoch": 1778968137.154511
 }
