@@ -156,7 +156,7 @@ Zero coverage:         0/41 = 0.0%
 
 ---
 
-**Cross-language conformance infrastructure (May 17 2026):** `sdk/conformance_vectors.json` — 12 canonical vectors (7 KFP + 5 CJ) machine-generated from the Python reference implementation. `tests/test_conformance_vectors.py` — 37 Python tests. `sdk/node/conformance_check.ts` — 17 Node.js checks. Any future SDK (Go, Rust, Java) must pass against the same vector file. Closes FVP-INV-007 cross-language parity gap identified in VeriSigil AI technical review (May 2026).
+**Cross-language conformance infrastructure (May 17 2026):** `sdk/conformance_vectors.json` — 12 canonical vectors (7 KFP + 5 CJ) machine-generated from the Python reference implementation. `tests/test_conformance_vectors.py` — 37 Python tests. `sdk/node/conformance_check.ts` — 17 Node.js checks. Any future SDK (Go, Rust, Java) must pass against the same vector file.
 
 *This matrix supersedes all previous invariant coverage references. Update this document whenever a new invariant is added or a new test closes a structural-only gap.*  
 *Cross-referenced by: `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` §13 · `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` §B*
