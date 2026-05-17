@@ -20,7 +20,7 @@
 | ATF-INV-003 | All DRs in a chain share the same `chain_root_id` (Chain Root Consistency) | `trust_lattice.py` — `verify_chain()` checks root | `test_atf_receipts.py` | `test_chain_root_consistency` | ✅ Direct |
 | ATF-INV-004 | DR fields are immutable post-issuance (Content Hash Immutability) | `delegation_receipt.py` — SHA-256 over sorted canonical JSON | `test_atf_receipts.py` | `test_content_hash_immutability` | ✅ Direct |
 | ATF-INV-005 | `TAR.execution_ns ≤ current_time` at verification (Temporal Non-Future-Dating) | `temporal_authority.py` — `execution_ns = time.time_ns()` captured first | `test_atf_receipts.py` | `test_tar_temporal_validity` | ✅ Direct |
-| ATF-INV-006 | Full chain verifiable offline using only receipts and root public key | All ATF modules — embedded `delegator_public_key` in every receipt | `test_conformance_vectors.py` | 43/43 conformance vectors | ✅ Direct |
+| ATF-INV-006 | Full chain verifiable offline using only receipts and root public key; canonical JSON serialization reproducible cross-language | All ATF modules — embedded `delegator_public_key` in every receipt; `canonical_json()` spec in `sdk/conformance_vectors.json` | `test_conformance_vectors.py` | 10/10 canonical JSON vectors (Python) + 10/10 Node.js (conformance_check.ts) | ✅ Direct cross-language |
 | TAR-INV-006 | DR remaining validity window at admission must not exceed 86400s (24h) — compiled constant, non-overridable by operator or env var (ADR-157 rev.2) | `temporal_authority.py` — `TAR_MAX_DR_LIFETIME_SECONDS=86400` + `TAR_CLOCK_SKEW_TOLERANCE_NS=5_000_000_000` compiled in module body; `runtime_continuity.py` — `RCR_CES_STALENESS_BOUND_SECONDS=300` | `test_tar_inv006_staleness_bound.py` | 23/23 — includes env-monkeypatch immutability verification | ✅ Direct |
 
 ---
@@ -114,7 +114,7 @@
 
 | ID | Formal Statement | Implementation | Test File | Test ID / Count | Status |
 |---|---|---|---|---|---|
-| FVP-INV-007 | Every `/verify` response includes `key_identity` object; `platform_fingerprint` populated if platform key configured | `forensic_blueprint.py` — `key_identity` computed in every response | `test_eap_extended_audit.py` | III6, III7 (FVP-INV-006/007 documented in blueprint source) | ✅ Direct |
+| FVP-INV-007 | Every `/verify` response includes `key_identity` object; `platform_fingerprint` populated if platform key configured; fingerprint algorithm deterministic cross-language (May 17 2026) | `forensic_blueprint.py` — `key_identity` computed in every response; `sdk/conformance_vectors.json` — 7 KFP vectors + algorithm spec; `sdk/node/src/fingerprint.ts` — Node.js reference implementation | `test_eap_extended_audit.py` (III6, III7) + `test_conformance_vectors.py` (7 KFP vectors) + `sdk/node/conformance_check.ts` (7 KFP vectors, Node.js) | 17 cross-language checks pass (Python + Node.js) | ✅ Direct cross-language |
 
 ---
 
@@ -155,6 +155,8 @@ Zero coverage:         0/41 = 0.0%
 > **Closed items:** RGC-INV-007 — removed from backlog May 17 2026 (ADR-157 rev.2). Structural gap closed via compiled constant `RCR_CES_STALENESS_BOUND_SECONDS=300` in `runtime_continuity.py`.
 
 ---
+
+**Cross-language conformance infrastructure (May 17 2026):** `sdk/conformance_vectors.json` — 12 canonical vectors (7 KFP + 5 CJ) machine-generated from the Python reference implementation. `tests/test_conformance_vectors.py` — 37 Python tests. `sdk/node/conformance_check.ts` — 17 Node.js checks. Any future SDK (Go, Rust, Java) must pass against the same vector file. Closes FVP-INV-007 cross-language parity gap identified in VeriSigil AI technical review (May 2026).
 
 *This matrix supersedes all previous invariant coverage references. Update this document whenever a new invariant is added or a new test closes a structural-only gap.*  
 *Cross-referenced by: `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` §13 · `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` §B*

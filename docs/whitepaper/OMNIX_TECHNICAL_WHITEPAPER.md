@@ -653,6 +653,17 @@ TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest \
   tests/test_ai_fallback_observability.py \
   -v
 # Expected: 329 passed, 5 skipped
+
+# Cross-language conformance suite (60 Python + 17 Node.js)
+TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest \
+  tests/test_conformance_vectors.py \
+  tests/test_tar_inv006_staleness_bound.py \
+  -v
+# Expected: 60 passed
+
+# Node.js cross-language conformance check
+npx tsx sdk/node/conformance_check.ts
+# Expected: 17 passed / 0 failed
 ```
 
 | Test Suite | Tests | Coverage |
@@ -661,6 +672,9 @@ TESTING=true TELEGRAM_BOT_TOKEN=test-token python -m pytest \
 | `test_oep_forensic_audit.py` | 74 pass | OEP bundle · two-phase signature · FEA-INV-001–005 · FVP-INV-006/007 · ADR-164–167 |
 | `test_eap_extended_audit.py` | 45 pass, 4 skip | GPIL Policy Divergence Surface (6 params) · FVP two-plane separation · OEP offline self-containment · EAP chain integrity · ADR-161/163/165 |
 | `test_ai_fallback_observability.py` | 15 pass | AI fallback chain log format (VII1–VII10) · Claude model name regression (VIII1–VIII5) · T000 spec |
+| `test_conformance_vectors.py` | 37 pass | FVP-INV-007 cross-language key fingerprint · ATF-INV-006 canonical JSON · schema integrity · 12 vectors |
+| `test_tar_inv006_staleness_bound.py` | 23 pass | TAR-INV-006 compiled staleness bound · env-monkeypatch immutability · ADR-157 rev.2 |
+| `sdk/node/conformance_check.ts` | 17 pass (Node.js) | FVP-INV-007 + ATF-INV-006 cross-language parity — TypeScript/Node.js vs. Python canonical vectors |
 
 **Key verifiable claims by test:**
 
@@ -750,3 +764,4 @@ ADR reference: ADR-159, RGC-INV-001.
 *All invariant numbers, ADR references, and cryptographic parameters are canonical.*
 *Version 1.2 · May 2026 — Updated: invariant count corrected to 40 (GPIL-INV-001–003, ELR-INV-001–004 added), test count updated to 319, EAP Extended Audit suite (58 tests)*
 *Version 1.3 · May 17 2026 — ADR-157 rev.2: TAR-INV-006 (Compiled Staleness Bound) added, total invariants raised to 41; RGC-INV-007 gap closed via compiled constant; direct coverage raised to 36/41 = 87.8%*
+*Version 1.4 · May 17 2026 — Cross-language conformance infrastructure: sdk/conformance_vectors.json (12 canonical vectors), test_conformance_vectors.py (37 tests), sdk/node/conformance_check.ts (17 checks). FVP-INV-007 and ATF-INV-006 cross-language parity now enforced by conformance suite, not specification only. Closes gap identified in VeriSigil AI technical review.*

@@ -1,0 +1,147 @@
+{
+  "schema": "omnix-conformance-vectors-1.0",
+  "version": "1.0",
+  "issued_by": "OMNIX QUANTUM LTD",
+  "issued_date": "2026-05-17",
+  "purpose": "Cross-language parity conformance vectors. Any compliant OMNIX SDK must produce identical output for every vector regardless of implementation language. Closes FVP-INV-007 cross-language gap (identified in VeriSigil AI technical review, May 2026).",
+  "invariants_covered": [
+    "FVP-INV-007 platform_fingerprint determinism across languages",
+    "ATF-INV-006 canonical JSON serialization reproducibility"
+  ],
+  "adr_references": [
+    "ADR-167 (platform key fingerprint)",
+    "RFC-ATF-3 (FVP)",
+    "ADR-157 rev.2"
+  ],
+  "algorithm_specs": {
+    "key_fingerprint": "fingerprint = \"sha256:\" + sha256(base64decode(key_b64)).hexdigest(). Input: base64-encoded raw public key bytes. Output: \"sha256:\" prefix + lowercase hex digest. No padding, no intermediate encoding.",
+    "canonical_json": "Rules: (1) sort object keys A-Z at every nesting level; (2) no whitespace around : or comma; (3) Unicode chars preserved as-is, not \\uXXXX escaped; (4) encode result as UTF-8 bytes before hashing."
+  },
+  "vectors": {
+    "key_fingerprint": [
+      {
+        "id": "KFP-001",
+        "description": "Dilithium-3-sized key (ML-DSA-65) primary vector",
+        "key_size_bytes": 1952,
+        "input_key_b64": "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",
+        "expected_fingerprint": "sha256:66f8cec4c8e9282bb2e275822eacd0ef3b6ad7579f6da80d7bc935226dffbe8b",
+        "algorithm": "sha256-hex-of-raw-bytes",
+        "spec": "fingerprint = sha256_prefix + hashlib.sha256(base64.b64decode(key_b64)).hexdigest()"
+      },
+      {
+        "id": "KFP-002",
+        "description": "Dilithium-3-sized key (ML-DSA-65) secondary vector",
+        "key_size_bytes": 1952,
+        "input_key_b64": "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",
+        "expected_fingerprint": "sha256:590f9d29dba9ad9e87896c99166b370158ef467130e6b2bc485848de7358f3ee",
+        "algorithm": "sha256-hex-of-raw-bytes",
+        "spec": "fingerprint = sha256_prefix + hashlib.sha256(base64.b64decode(key_b64)).hexdigest()"
+      },
+      {
+        "id": "KFP-003",
+        "description": "Dilithium-3-sized key (ML-DSA-65) tertiary vector",
+        "key_size_bytes": 1952,
+        "input_key_b64": "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",
+        "expected_fingerprint": "sha256:86db9c009cf9ce93a84a7b03610e9b758c54a3d828eaaa26b4491fba1f766c94",
+        "algorithm": "sha256-hex-of-raw-bytes",
+        "spec": "fingerprint = sha256_prefix + hashlib.sha256(base64.b64decode(key_b64)).hexdigest()"
+      },
+      {
+        "id": "KFP-004",
+        "description": "Ed25519-sized key boundary case",
+        "key_size_bytes": 32,
+        "input_key_b64": "foQkzubHMiDd54EeIWeRtk8QQVY0w3RoNKoQx1CxHXY=",
+        "expected_fingerprint": "sha256:cd7af7386a09c14110fff123c3d876634774d16aea24614e7b3f4b835ed660b7",
+        "algorithm": "sha256-hex-of-raw-bytes",
+        "spec": "fingerprint = sha256_prefix + hashlib.sha256(base64.b64decode(key_b64)).hexdigest()"
+      },
+      {
+        "id": "KFP-005",
+        "description": "64-byte key boundary case",
+        "key_size_bytes": 64,
+        "input_key_b64": "VZyrogVj1Vg0ZIXKIYZB7zq9TizEXRisbMNvtCt9DrLSLsSC8pHtHXDRJVNku4rKomEULPqptBUGARk+uqOVHQ==",
+        "expected_fingerprint": "sha256:a8131eba76fc493ec2c770dfd3b8e26d3e7b3c00297ea4c5745e687c5146814e",
+        "algorithm": "sha256-hex-of-raw-bytes",
+        "spec": "fingerprint = sha256_prefix + hashlib.sha256(base64.b64decode(key_b64)).hexdigest()"
+      },
+      {
+        "id": "KFP-006",
+        "description": "1-byte key minimal boundary",
+        "key_size_bytes": 1,
+        "input_key_b64": "YQ==",
+        "expected_fingerprint": "sha256:ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+        "algorithm": "sha256-hex-of-raw-bytes",
+        "spec": "fingerprint = sha256_prefix + hashlib.sha256(base64.b64decode(key_b64)).hexdigest()"
+      },
+      {
+        "id": "KFP-007",
+        "description": "256-byte key intermediate boundary",
+        "key_size_bytes": 256,
+        "input_key_b64": "xv3HCESEVlFNbMrfp1Az8iy8gDOCgNn1NGPCJIUkTucShwXmI3l1vd9/kWFmkbzpQhpPp3lFnTMqF1bSZt8dP7qR0fepRR/FTlnDR2FdyxUZnq1zxekBXiaOKbPC3c0GRKiPFT2PgFm2+B504QejrVfOm7/TMecM1lI697bwXv6xfA/J34HmzCFnv/B2ykQdmNpALLj+3KB/+Fpt5jAD5unEZTP/9gKUiEQNsLT0fiW5uBZ5wbz9I9TqptHsd1FJYoPnZ6Drk1/ZZuNEE5T5KvEt1HtRsXQ+MFfcqK8XRrLO/Q0Bi4oZ6t0pbwKldNKLdbk/IC7Gmer9kIdj/k/wmg==",
+        "expected_fingerprint": "sha256:e91f75b4955543075e628fc87955ff6d463949e28994a8623e1832889930b0f2",
+        "algorithm": "sha256-hex-of-raw-bytes",
+        "spec": "fingerprint = sha256_prefix + hashlib.sha256(base64.b64decode(key_b64)).hexdigest()"
+      }
+    ],
+    "canonical_json": [
+      {
+        "id": "CJ-001",
+        "description": "Single field base case",
+        "input": {
+          "a": 1
+        },
+        "expected_canonical_json": "{\"a\":1}",
+        "expected_sha256_hex": "015abd7f5cc57a2dd94b7590f04ad8084273905ee33ec5cebeae62276a97f862",
+        "algorithm": "json.dumps(sort_keys=True, separators=(\",\",\":\"), ensure_ascii=False).encode(\"utf-8\") then sha256-hex"
+      },
+      {
+        "id": "CJ-002",
+        "description": "Keys must be sorted alphabetically",
+        "input": {
+          "z": 26,
+          "a": 1,
+          "m": 13
+        },
+        "expected_canonical_json": "{\"a\":1,\"m\":13,\"z\":26}",
+        "expected_sha256_hex": "17bfea17548a48c5b9f4ce8d4cba280870ba63a686a4d98dceae82c3f3d0c2cd",
+        "algorithm": "json.dumps(sort_keys=True, separators=(\",\",\":\"), ensure_ascii=False).encode(\"utf-8\") then sha256-hex"
+      },
+      {
+        "id": "CJ-003",
+        "description": "Nested object keys sorted recursively at each level",
+        "input": {
+          "manifest_version": "oep-1.0",
+          "files": {
+            "b.json": "hash2",
+            "a.json": "hash1"
+          }
+        },
+        "expected_canonical_json": "{\"files\":{\"a.json\":\"hash1\",\"b.json\":\"hash2\"},\"manifest_version\":\"oep-1.0\"}",
+        "expected_sha256_hex": "2b6a23b5696d92370c1de303559a502102157411cf9de34aec6d1c97b73ff556",
+        "algorithm": "json.dumps(sort_keys=True, separators=(\",\",\":\"), ensure_ascii=False).encode(\"utf-8\") then sha256-hex"
+      },
+      {
+        "id": "CJ-004",
+        "description": "Unicode ensure_ascii=False em-dash preserved not escaped",
+        "input": {
+          "description": "OMNIX QUANTUM LTD — UAE"
+        },
+        "expected_canonical_json": "{\"description\":\"OMNIX QUANTUM LTD — UAE\"}",
+        "expected_sha256_hex": "4ef8faff700eed42be5a940611b2367b2f3951aabd489fcc833422482ec9888e",
+        "algorithm": "json.dumps(sort_keys=True, separators=(\",\",\":\"), ensure_ascii=False).encode(\"utf-8\") then sha256-hex"
+      },
+      {
+        "id": "CJ-005",
+        "description": "Compact separators no whitespace",
+        "input": {
+          "key": "value",
+          "n": 42
+        },
+        "expected_canonical_json": "{\"key\":\"value\",\"n\":42}",
+        "expected_sha256_hex": "3d3d5d505d907525c538a4131d465a62c9c86beadb85b50a2f1fee62a3b6e07f",
+        "algorithm": "json.dumps(sort_keys=True, separators=(\",\",\":\"), ensure_ascii=False).encode(\"utf-8\") then sha256-hex"
+      }
+    ]
+  },
+  "total_vectors": 12
+}

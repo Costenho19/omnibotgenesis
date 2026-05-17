@@ -29,6 +29,14 @@
 export { OmnixClient }          from './client.js'
 export type { OmnixClientOptions, EvaluateOptions } from './client.js'
 
+export {
+  computeKeyFingerprint,
+  canonicalJson,
+  canonicalJsonSha256,
+  verifyKeyFingerprint,
+  parseFingerprint,
+} from './fingerprint.js'
+
 export { GovernanceReceipt, CheckpointResult } from './models.js'
 export type { GovernanceReceiptData, CheckpointResultData } from './models.js'
 
