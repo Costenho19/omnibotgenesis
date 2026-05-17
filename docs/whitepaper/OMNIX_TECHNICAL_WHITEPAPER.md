@@ -469,6 +469,21 @@ OMNIX governs its behaviour through 41 formally specified invariants across 8 ca
 
 **FVP architectural separation principles** (FVP-INV-001–006 — not counted in formal total): Plane 1 emits only PASS/INTEGRITY_VIOLATION; Plane 2 is the authoritative PQC path; hash verification is deterministic; SIGNATURE_INVALID is Plane 2 exclusive; same cryptographic library used for signing and verification; Plane 2 verdict is always authoritative.
 
+### GECR Invariants — Governance Execution Context Router — ADR-170 (6 invariants)
+
+ADR-170 formalizes the OMNIX orchestration tier: the **Governance Execution Context Router (GECR)**. The GECR comprises six components (CPR, CREG, CAAC, CABE, WIS, CRPR) that together define how OMNIX governs agent execution context throughout the full lifecycle — not only at the admission boundary.
+
+| ID | Statement |
+|---|---|
+| GECR-INV-001 | Every GECR orchestration decision is atomic with its governance receipt — no controlled action proceeds without a receipt being issued first (Control-Receipt Atomicity) |
+| GECR-INV-002 | Context drift between approval and commit is bounded: drift_delta < −0.05 → DRIFTED receipt; drift_delta < −0.15 → REVOKED, commit refused |
+| GECR-INV-003 | Cross-agent authority aggregate at `chain_root_id` level never exceeds AFG fragmentation limit (default 0.90, hard cap 0.95, values > 1.0 rejected) |
+| GECR-INV-004 | HALT propagates atomically to ALL sibling sessions sharing the same `chain_root_id` — partial HALT is not a valid GECR state |
+| GECR-INV-005 | Cross-runtime agent operations require a bilaterally Dilithium-3 signed CRGC prior to first cross-runtime admission; undeclared parameters default to the more restrictive runtime's value |
+| GECR-INV-006 | Reauthorization Challenges auto-HALT on TTL expiry — TTL is bounded and non-extensible |
+
+**The defining GECR property (GECR-INV-001):** In most governance systems, control and proof are separate operations — the system enforces a decision and then records it. In OMNIX, they are a single atomic operation. The Dilithium-3 signed receipt is not a record of the enforcement that occurred. It is the authorization that makes the enforcement admissible. A controlled action without a receipt cannot occur. This is the invariant that distinguishes protocol-grade governance infrastructure from runtime governance policy enforcement.
+
 ### GPIL Invariants — Governance Policy Interoperability Layer (3 invariants)
 
 | ID | Statement |
@@ -628,17 +643,17 @@ In `OMNIX_ANTI_REPLAY_MODE=strict`, Redis unavailability causes the decision gat
 
 ### Invariant Traceability
 
-All 41 formal invariants published in RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, and ADR-157 rev.2 are mapped to their implementation source files, enforcement mechanisms, and test coverage in the **Invariant Test Coverage Matrix** (`docs/compliance/INVARIANT_TEST_MATRIX.md`). The matrix is the authoritative traceability document for third-party compliance audits.
+All 47 formal invariants published in RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, ADR-157 rev.2, and ADR-170 are mapped to their implementation source files, enforcement mechanisms, and test coverage in the **Invariant Test Coverage Matrix** (`docs/compliance/INVARIANT_TEST_MATRIX.md`). The matrix is the authoritative traceability document for third-party compliance audits.
 
 | Coverage Class | Count | Percentage |
 |---|---|---|
-| Direct independent test | 36 | 87.8% |
-| Structural enforcement only | 5 | 12.2% |
+| Direct independent test | 41 | 87.2% |
+| Structural enforcement only | 6 | 12.8% |
 | Zero coverage | 0 | 0.0% |
 
-The five structural-only invariants (ATF-INV-002, ELR-INV-003, ELR-INV-004, EAP-INV-007, FEA-INV-001) are identified and tracked with a remediation plan in `docs/compliance/INVARIANT_TEST_MATRIX.md §Priority Remediation Plan`. RGC-INV-007 was promoted to ✅ Direct in ADR-157 rev.2 via compiled constant `RCR_CES_STALENESS_BOUND_SECONDS=300` in `runtime_continuity.py`.
+The six structural-only invariants (ATF-INV-002, ELR-INV-003, ELR-INV-004, EAP-INV-007, FEA-INV-001, GECR-INV-001) are identified and tracked with a remediation plan in `docs/compliance/INVARIANT_TEST_MATRIX.md §Priority Remediation Plan`. RGC-INV-007 was promoted to ✅ Direct in ADR-157 rev.2 via compiled constant `RCR_CES_STALENESS_BOUND_SECONDS=300`.
 
-An independent institutional code review covering all 14 sprint ADRs (ADR-156 through ADR-169), the full 41-invariant coverage, and risk prioritization for regulated buyers is published at `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` (Document ID: OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
+An independent institutional code review covering all 14 sprint ADRs (ADR-156 through ADR-169), the full 41-invariant coverage baseline, and risk prioritization for regulated buyers is published at `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` (Document ID: OMNIX-AUDIT-ATF-EAP-OEP-2026-05). ADR-170 (GECR) was added post-audit.
 
 ### Institutional Audit Test Suite Coverage
 
@@ -765,3 +780,4 @@ ADR reference: ADR-159, RGC-INV-001.
 *Version 1.2 · May 2026 — Updated: invariant count corrected to 40 (GPIL-INV-001–003, ELR-INV-001–004 added), test count updated to 319, EAP Extended Audit suite (58 tests)*
 *Version 1.3 · May 17 2026 — ADR-157 rev.2: TAR-INV-006 (Compiled Staleness Bound) added, total invariants raised to 41; RGC-INV-007 gap closed via compiled constant; direct coverage raised to 36/41 = 87.8%*
 *Version 1.4 · May 17 2026 — Cross-language conformance infrastructure: sdk/conformance_vectors.json (12 canonical vectors), test_conformance_vectors.py (37 tests), sdk/node/conformance_check.ts (17 checks). FVP-INV-007 and ATF-INV-006 cross-language parity now enforced by conformance suite, not specification only.*
+*Version 1.5 · May 17 2026 — ADR-170: Governance Execution Context Router (GECR) formalized. 6 new invariants (GECR-INV-001–006). Total raised to 47. GECR-INV-001 (Control-Receipt Atomicity) defines the invariant distinguishing protocol-grade governance from runtime policy enforcement.*

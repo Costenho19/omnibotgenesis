@@ -1,13 +1,14 @@
-# OMNIX QUANTUM — 41-Invariant Test Coverage Matrix
+# OMNIX QUANTUM — 47-Invariant Test Coverage Matrix
 **Document ID:** OMNIX-COMPLIANCE-INV-MATRIX-2026-05  
-**Date:** May 2026 (rev.2 — May 17, 2026)  
-**Standard:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-157 rev.2 · ADR-161 through ADR-167  
-**Total Invariants:** 41 across 8 families (TAR-INV-006 added in ADR-157 rev.2)  
-**Coverage:** 36/41 direct test (87.8%) · 5/41 structural only (12.2%) · 0/41 untested  
+**Date:** May 2026 (rev.3 — May 17, 2026)  
+**Standard:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-157 rev.2 · ADR-161 through ADR-167 · ADR-170  
+**Total Invariants:** 47 across 9 families (GECR-INV-001–006 added in ADR-170)  
+**Coverage:** 36/47 direct test (76.6%) · 11/47 structural only (23.4%) · 0/47 untested  
 
-> This matrix is the authoritative traceability document between the 41 formal invariants published in RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, ADR-157 rev.2, and the test suite. It is referenced by the Technical Whitepaper (Section 13) and the Institutional Audit Report (OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
+> This matrix is the authoritative traceability document between the 47 formal invariants published in RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, ADR-157 rev.2, ADR-170, and the test suite. It is referenced by the Technical Whitepaper (Section 13) and the Institutional Audit Report (OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
 >
-> **rev.2 changes:** TAR-INV-006 (Compiled Staleness Bound) added to Family 1. RGC-INV-007 gap closed — `RCR_CES_STALENESS_BOUND_SECONDS=300` compiled constant now enforces freshness bound structurally.
+> **rev.2 changes:** TAR-INV-006 (Compiled Staleness Bound) added to Family 1. RGC-INV-007 gap closed — `RCR_CES_STALENESS_BOUND_SECONDS=300` compiled constant.
+> **rev.3 changes:** GECR-INV-001–006 (Governance Execution Context Router) added in ADR-170. Total raised to 47.
 
 ---
 
@@ -118,25 +119,39 @@
 
 ---
 
+## Family 9 — GECR Invariants (ADR-170)
+
+| ID | Formal Statement | Implementation | Test File | Test ID / Count | Status |
+|---|---|---|---|---|---|
+| GECR-INV-001 | Every GECR orchestration decision is atomic with its governance receipt — no controlled action proceeds without a receipt being issued first (Control-Receipt Atomicity) | UDCL Layer 3 PQC receipt mandatory; CTAG verdict embedded in ControlReceipt before commit; RCR issued before CES-driven HALT/RC | Structural — enforced by UDCL mandatory pillar architecture | Layer 3 is non-optional in UDCL; no code path permits commit without ControlReceipt | ⚠️ Structural |
+| GECR-INV-002 | Context drift between approval and commit is bounded: drift_delta < −0.05 → DRIFTED receipt; drift_delta < −0.15 → REVOKED, commit refused (Bounded Context Drift) | `commit_time_gate.py` — `REVOCATION_DRIFT_THRESHOLD=0.15`, `CAUTION_DRIFT_THRESHOLD=0.05` | `test_governance_integrity.py` | CTAG drift threshold tests | ✅ Direct |
+| GECR-INV-003 | Cross-agent authority aggregate at `chain_root_id` level never exceeds AFG fragmentation limit (default 0.90, hard cap 0.95, values > 1.0 rejected) | `runtime_continuity.py` AFG enforcement — aggregate MAR at chain root level | `test_governance_integrity.py` | AFG fragmentation limit tests | ✅ Direct |
+| GECR-INV-004 | HALT propagates atomically to ALL sibling sessions sharing the same `chain_root_id` — partial HALT is not a valid GECR state | `runtime_continuity.py` HALT propagation via chain_root_id | `test_governance_integrity.py` | HALT propagation tests | ✅ Direct |
+| GECR-INV-005 | Cross-runtime agent operations require a bilaterally Dilithium-3 signed CRGC between runtimes prior to first cross-runtime admission; undeclared parameters default to the more restrictive runtime's value | ADR-161 CRGC issuance and validation; ATF-GPI-Aligned status required | `test_gpil_audit.py` | CRGC bilateral signing tests | ✅ Direct |
+| GECR-INV-006 | Reauthorization Challenges auto-HALT on TTL expiry — TTL is bounded and non-extensible; no mechanism permits TTL extension | `runtime_continuity.py` RC TTL enforcement (restates RGC-INV-008 at GECR tier with explicit non-extension property) | `test_governance_integrity.py` | RC TTL enforcement tests | ✅ Direct |
+
+---
+
 ## Coverage Summary
 
 ```
 Family          Invariants    Direct ✅    Structural ⚠️    None ❌
 ATF-INV         6             5            1               0
-TAR-INV         1             1            0               0   ← NEW (ADR-157 rev.2)
-RGC-INV         8             8            0               0   ← RGC-INV-007 gap closed
+TAR-INV         1             1            0               0   ← ADR-157 rev.2
+RGC-INV         8             8            0               0   ← RGC-INV-007 closed
 GPIL-INV        3             3            0               0
 ELR-INV         4             2            2               0
 EAP-INV         7             6            1               0
 OEP-INV         6             6            0               0
 FEA-INV         5             4            1               0
 FVP-INV         1             1            0               0
+GECR-INV        6             5            1               0   ← NEW (ADR-170)
 ─────────────────────────────────────────────────────────
-TOTAL           41            36           5               0
+TOTAL           47            41           6               0
 
-Direct coverage:      36/41 = 87.8%  (was 34/40 = 85.0%)
-Structural only:       5/41 = 12.2%  ← target for next sprint
-Zero coverage:         0/41 = 0.0%
+Direct coverage:      41/47 = 87.2%  (was 36/41 = 87.8%)
+Structural only:       6/47 = 12.8%
+Zero coverage:         0/47 = 0.0%
 ```
 
 ---

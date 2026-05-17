@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — 169 total. Últimos: ADR-167 (Forensic Hardening) · ADR-168 (Dual-Path Module Sync Policy) · ADR-169 (ATF Connector Fail-Open Admission Semantic)
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **40 invariantes totales activos** (ATF×6 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP-INV-007×1)
+- **ADRs:** `docs/adr/` — 170 total. Últimos: ADR-168 (Dual-Path Module Sync Policy) · ADR-169 (ATF Connector Fail-Open) · **ADR-170 (Governance Execution Context Router — GECR)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **47 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + **GECR×6**)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 
@@ -65,6 +65,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 | Componente | Archivo | Notas |
 |---|---|---|
+| **Governance Execution Context Router (GECR)** | `context_admission_gate.py` + `commit_time_gate.py` + `runtime_continuity.py` AFG/HALT/RC + ADR-161 CRGC | **ADR-170** — 6-component orchestration tier: CPR · CREG · CAAC · CABE · WIS · CRPR. 6 invariants GECR-INV-001–006. Defines Control-Receipt Atomicity (GECR-INV-001). |
 | ATF Core | `omnix_core/agents/atf/` | AgentIdentity · DelegationReceipt · TrustLattice |
 | Temporal Authority | `omnix_core/agents/atf/temporal_authority.py` | ATFTAR-{16HEX} · TAR-INV-001/005 · ADR-157 |
 | Cross-Domain Bridge | `omnix_core/agents/atf/domain_bridge.py` | ATFDTR-{16HEX} · descuentos por dominio · ADR-158 |
