@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-740CDACAD2",
   "parameter_version": "1.740cdacad2",
   "domain": "stablecoin",
-  "calibrated_at": "2026-05-17T08:03:48.809394+00:00",
-  "calibrated_at_epoch": 1779005028.809394,
   "baseline_signals": {
-    "probability_score": 81.27,
     "risk_exposure": 14.61,
     "signal_coherence": 77.29,
-    "trend_persistence": 61.02,
+    "logic_consistency": 78.68,
+    "probability_score": 81.27,
     "stress_resilience": 59.39,
-    "logic_consistency": 78.68
+    "trend_persistence": 61.02
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_11.4"
-  ]
+  ],
+  "calibrated_at": "2026-05-17T08:03:48.809394+00:00",
+  "calibrated_at_epoch": 1779005028.809394
 }

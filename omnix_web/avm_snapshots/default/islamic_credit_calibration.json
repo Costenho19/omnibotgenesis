@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-62B510CDAC",
   "parameter_version": "1.62b510cdac",
   "domain": "islamic_credit",
-  "calibrated_at": "2026-05-17T08:03:43.065072+00:00",
-  "calibrated_at_epoch": 1779005023.065072,
   "baseline_signals": {
-    "probability_score": 44.47,
     "risk_exposure": 44.92,
     "signal_coherence": 80.61,
-    "trend_persistence": 59.36,
+    "logic_consistency": 100.0,
+    "probability_score": 44.47,
     "stress_resilience": 95.2,
-    "logic_consistency": 100.0
+    "trend_persistence": 59.36
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_3.8"
-  ]
+  ],
+  "calibrated_at": "2026-05-17T08:03:43.065072+00:00",
+  "calibrated_at_epoch": 1779005023.065072
 }

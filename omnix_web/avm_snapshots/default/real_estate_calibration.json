@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-656A9F1838",
   "parameter_version": "1.656a9f1838",
   "domain": "real_estate",
-  "calibrated_at": "2026-05-17T08:03:45.019639+00:00",
-  "calibrated_at_epoch": 1779005025.019639,
   "baseline_signals": {
-    "probability_score": 78.58,
     "risk_exposure": 5.51,
     "signal_coherence": 63.54,
-    "trend_persistence": 67.7,
+    "logic_consistency": 96.86,
+    "probability_score": 78.58,
     "stress_resilience": 58.13,
-    "logic_consistency": 96.86
+    "trend_persistence": 67.7
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_14.1"
-  ]
+  ],
+  "calibrated_at": "2026-05-17T08:03:45.019639+00:00",
+  "calibrated_at_epoch": 1779005025.019639
 }

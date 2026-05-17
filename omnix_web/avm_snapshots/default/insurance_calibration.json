@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-205E1C215B",
   "parameter_version": "1.205e1c215b",
   "domain": "insurance",
-  "calibrated_at": "2026-05-17T08:03:41.224056+00:00",
-  "calibrated_at_epoch": 1779005021.224056,
   "baseline_signals": {
-    "probability_score": 56.76,
     "risk_exposure": 38.07,
     "signal_coherence": 63.95,
-    "trend_persistence": 46.04,
+    "logic_consistency": 56.07,
+    "probability_score": 56.76,
     "stress_resilience": 55.85,
-    "logic_consistency": 56.07
+    "trend_persistence": 46.04
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_12.2"
-  ]
+  ],
+  "calibrated_at": "2026-05-17T08:03:41.224056+00:00",
+  "calibrated_at_epoch": 1779005021.224056
 }
