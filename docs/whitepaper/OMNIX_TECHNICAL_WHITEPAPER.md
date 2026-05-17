@@ -418,11 +418,13 @@ EXTERNAL is not a failure — it means the evidence was signed by a key other th
 
 ---
 
-## 9. Formal Invariant System (40 Invariants)
+## 9. Formal Invariant System (41 Invariants)
 
-OMNIX governs its behaviour through 40 formally specified invariants across 8 categories. These invariants are not configuration parameters — they are structural properties that every OMNIX-compliant implementation must satisfy. Breaking any invariant constitutes a protocol violation, not a policy choice.
+OMNIX governs its behaviour through 41 formally specified invariants across 8 categories. These invariants are not configuration parameters — they are structural properties that every OMNIX-compliant implementation must satisfy. Breaking any invariant constitutes a protocol violation, not a policy choice.
 
-### ATF Invariants — RFC-ATF-1 (6 invariants)
+> **ADR-157 rev.2 (May 17 2026):** TAR-INV-006 (Compiled Staleness Bound) added. Total invariant count raised from 40 to 41.
+
+### ATF Invariants — RFC-ATF-1 (6 invariants) + TAR Extension (1 invariant)
 
 | ID | Statement |
 |---|---|
@@ -432,6 +434,7 @@ OMNIX governs its behaviour through 40 formally specified invariants across 8 ca
 | ATF-INV-004 | Delegation depth is finite and bounded by the ATF stack configuration |
 | ATF-INV-005 | Temporal bounds of a delegation cannot exceed the delegator's temporal bounds |
 | ATF-INV-006 | All ATF artifacts are independently verifiable offline without platform access |
+| TAR-INV-006 | DR remaining validity window at admission must not exceed 86400s (24h) — compiled constant `TAR_MAX_DR_LIFETIME_SECONDS`, non-overridable by operator or environment variable (ADR-157 rev.2) |
 
 ### RGC Invariants — RFC-ATF-2 (8 invariants)
 
@@ -625,17 +628,17 @@ In `OMNIX_ANTI_REPLAY_MODE=strict`, Redis unavailability causes the decision gat
 
 ### Invariant Traceability
 
-All 40 formal invariants published in RFC-ATF-1, RFC-ATF-2, and RFC-ATF-3 are mapped to their implementation source files, enforcement mechanisms, and test coverage in the **Invariant Test Coverage Matrix** (`docs/compliance/INVARIANT_TEST_MATRIX.md`). The matrix is the authoritative traceability document for third-party compliance audits.
+All 41 formal invariants published in RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, and ADR-157 rev.2 are mapped to their implementation source files, enforcement mechanisms, and test coverage in the **Invariant Test Coverage Matrix** (`docs/compliance/INVARIANT_TEST_MATRIX.md`). The matrix is the authoritative traceability document for third-party compliance audits.
 
 | Coverage Class | Count | Percentage |
 |---|---|---|
-| Direct independent test | 34 | 85.0% |
-| Structural enforcement only | 6 | 15.0% |
+| Direct independent test | 36 | 87.8% |
+| Structural enforcement only | 5 | 12.2% |
 | Zero coverage | 0 | 0.0% |
 
-The six structural-only invariants (ATF-INV-002, RGC-INV-007, ELR-INV-003, ELR-INV-004, EAP-INV-007, FEA-INV-001) are identified and tracked with a remediation plan in `docs/compliance/INVARIANT_TEST_MATRIX.md §Priority Remediation Plan`.
+The five structural-only invariants (ATF-INV-002, ELR-INV-003, ELR-INV-004, EAP-INV-007, FEA-INV-001) are identified and tracked with a remediation plan in `docs/compliance/INVARIANT_TEST_MATRIX.md §Priority Remediation Plan`. RGC-INV-007 was promoted to ✅ Direct in ADR-157 rev.2 via compiled constant `RCR_CES_STALENESS_BOUND_SECONDS=300` in `runtime_continuity.py`.
 
-An independent institutional code review covering all 14 sprint ADRs (ADR-156 through ADR-169), the full 40-invariant coverage, and risk prioritization for regulated buyers is published at `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` (Document ID: OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
+An independent institutional code review covering all 14 sprint ADRs (ADR-156 through ADR-169), the full 41-invariant coverage, and risk prioritization for regulated buyers is published at `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` (Document ID: OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
 
 ### Institutional Audit Test Suite Coverage
 
@@ -746,3 +749,4 @@ ADR reference: ADR-159, RGC-INV-001.
 *This document describes the technical architecture of the OMNIX governance platform.*
 *All invariant numbers, ADR references, and cryptographic parameters are canonical.*
 *Version 1.2 · May 2026 — Updated: invariant count corrected to 40 (GPIL-INV-001–003, ELR-INV-001–004 added), test count updated to 319, EAP Extended Audit suite (58 tests)*
+*Version 1.3 · May 17 2026 — ADR-157 rev.2: TAR-INV-006 (Compiled Staleness Bound) added, total invariants raised to 41; RGC-INV-007 gap closed via compiled constant; direct coverage raised to 36/41 = 87.8%*

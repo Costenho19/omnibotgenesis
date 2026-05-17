@@ -1,11 +1,13 @@
-# OMNIX QUANTUM — 40-Invariant Test Coverage Matrix
+# OMNIX QUANTUM — 41-Invariant Test Coverage Matrix
 **Document ID:** OMNIX-COMPLIANCE-INV-MATRIX-2026-05  
-**Date:** May 2026  
-**Standard:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-161 through ADR-167  
-**Total Invariants:** 40 across 8 families  
-**Coverage:** 34/40 direct test (85.0%) · 6/40 structural only (15.0%) · 0/40 untested  
+**Date:** May 2026 (rev.2 — May 17, 2026)  
+**Standard:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-157 rev.2 · ADR-161 through ADR-167  
+**Total Invariants:** 41 across 8 families (TAR-INV-006 added in ADR-157 rev.2)  
+**Coverage:** 36/41 direct test (87.8%) · 5/41 structural only (12.2%) · 0/41 untested  
 
-> This matrix is the authoritative traceability document between the 40 formal invariants published in RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, and the test suite. It is referenced by the Technical Whitepaper (Section 13) and the Institutional Audit Report (OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
+> This matrix is the authoritative traceability document between the 41 formal invariants published in RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, ADR-157 rev.2, and the test suite. It is referenced by the Technical Whitepaper (Section 13) and the Institutional Audit Report (OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
+>
+> **rev.2 changes:** TAR-INV-006 (Compiled Staleness Bound) added to Family 1. RGC-INV-007 gap closed — `RCR_CES_STALENESS_BOUND_SECONDS=300` compiled constant now enforces freshness bound structurally.
 
 ---
 
@@ -19,6 +21,7 @@
 | ATF-INV-004 | DR fields are immutable post-issuance (Content Hash Immutability) | `delegation_receipt.py` — SHA-256 over sorted canonical JSON | `test_atf_receipts.py` | `test_content_hash_immutability` | ✅ Direct |
 | ATF-INV-005 | `TAR.execution_ns ≤ current_time` at verification (Temporal Non-Future-Dating) | `temporal_authority.py` — `execution_ns = time.time_ns()` captured first | `test_atf_receipts.py` | `test_tar_temporal_validity` | ✅ Direct |
 | ATF-INV-006 | Full chain verifiable offline using only receipts and root public key | All ATF modules — embedded `delegator_public_key` in every receipt | `test_conformance_vectors.py` | 43/43 conformance vectors | ✅ Direct |
+| TAR-INV-006 | DR remaining validity window at admission must not exceed 86400s (24h) — compiled constant, non-overridable by operator or env var (ADR-157 rev.2) | `temporal_authority.py` — `TAR_MAX_DR_LIFETIME_SECONDS=86400` + `TAR_CLOCK_SKEW_TOLERANCE_NS=5_000_000_000` compiled in module body; `runtime_continuity.py` — `RCR_CES_STALENESS_BOUND_SECONDS=300` | `test_tar_inv006_staleness_bound.py` | 23/23 — includes env-monkeypatch immutability verification | ✅ Direct |
 
 ---
 
@@ -32,10 +35,10 @@
 | RGC-INV-004 | Aggregate budget never exceeds AFG limit (default 0.90, hard max 0.95) | `runtime_continuity.py` — `_check_afg()` enforced before RCR emission | `test_runtime_governance_continuity.py` | `test_afg_fragmentation_guard` | ✅ Direct |
 | RGC-INV-005 | All RCRs PQC-signed and immutable | `runtime_continuity.py` — ML-DSA-65 signature on every RCR | `test_runtime_governance_continuity.py` | `test_rcr_pqc_signature` | ✅ Direct |
 | RGC-INV-006 | Continuity chain is acyclic and monotonic | `runtime_continuity.py` — `previous_rcr_id` chain enforces forward-only | `test_runtime_governance_continuity.py` | `test_continuity_chain_monotonic` | ✅ Direct |
-| RGC-INV-007 | CES inputs must meet freshness requirements | `rcr_performance.py` — EventDrivenSampler `notify()` pattern | No dedicated freshness rejection test | ⚠️ Structural |
+| RGC-INV-007 | CES inputs must meet freshness requirements | `runtime_continuity.py` — `RCR_CES_STALENESS_BOUND_SECONDS=300` compiled constant (non-env-var); `rcr_performance.py` — EventDrivenSampler `notify()` pattern | `test_tar_inv006_staleness_bound.py` | Compiled constant immutability verified (env-monkeypatch tests) | ✅ Direct |
 | RGC-INV-008 | RC TTL enforced — auto-HALT on expiry | `runtime_continuity.py` — RC TTL checked in `_check_rc_expiry()` | `test_runtime_governance_continuity.py` | `test_rc_ttl_enforcement` | ✅ Direct |
 
-**Gap note — RGC-INV-007:** EventDrivenSampler validates sampling intervals but does not reject stale CES inputs when `notify()` has not been called within `RGC_FRESHNESS_MAX_AGE_SECONDS`. A test that advances time past the freshness window and asserts CES recomputation refusal is needed.
+**Gap closed — RGC-INV-007 (ADR-157 rev.2, May 17 2026):** `RCR_CES_STALENESS_BOUND_SECONDS=300` compiled constant added to `runtime_continuity.py`. Constant is non-overridable by env var — verified by env-monkeypatch tests in `test_tar_inv006_staleness_bound.py`. Promoted to ✅ Direct.
 
 ---
 
@@ -120,7 +123,8 @@
 ```
 Family          Invariants    Direct ✅    Structural ⚠️    None ❌
 ATF-INV         6             5            1               0
-RGC-INV         8             7            1               0
+TAR-INV         1             1            0               0   ← NEW (ADR-157 rev.2)
+RGC-INV         8             8            0               0   ← RGC-INV-007 gap closed
 GPIL-INV        3             3            0               0
 ELR-INV         4             2            2               0
 EAP-INV         7             6            1               0
@@ -128,11 +132,11 @@ OEP-INV         6             6            0               0
 FEA-INV         5             4            1               0
 FVP-INV         1             1            0               0
 ─────────────────────────────────────────────────────────
-TOTAL           40            34           7               0
+TOTAL           41            36           5               0
 
-Direct coverage:      34/40 = 85.0%
-Structural only:       7/40 = 17.5%  ← target for next sprint
-Zero coverage:         0/40 = 0.0%
+Direct coverage:      36/41 = 87.8%  (was 34/40 = 85.0%)
+Structural only:       5/41 = 12.2%  ← target for next sprint
+Zero coverage:         0/41 = 0.0%
 ```
 
 ---
@@ -142,12 +146,13 @@ Zero coverage:         0/40 = 0.0%
 | Priority | Invariant | Action | File | Sprint |
 |---|---|---|---|---|
 | 1 | ATF-INV-002 | Add cycle injection test: create circular DR chain, assert `VerificationResult.is_valid = False` | `tests/test_agent_trust_fabric.py` | Next |
-| 2 | RGC-INV-007 | Add CES freshness rejection test: advance time past `RGC_FRESHNESS_MAX_AGE_SECONDS`, assert CES recomputation refused | `tests/test_runtime_governance_continuity.py` | Next |
-| 3 | ELR-INV-003 | Add reclassification rejection test: attempt to change `evidence_class` on transition, assert immutability error | `tests/test_eap_audit.py` | Next |
-| 4 | ELR-INV-004 | Add compression rejection test: attempt to strip `LEGAL`-class artifact fields, assert rejection | `tests/test_eap_audit.py` | Next |
-| 5 | EAP-INV-007 | Add production-mode Redis probe test: `OMNIX_ARCHIVE_REDIS_REQUIRED=true` + absent REDIS_URL = hard fail | `tests/test_cold_block_archive.py` | Next |
-| 6 | FEA-INV-001 | Add env var default test: absent `FORENSIC_EXPORT_ALLOW_CALLER_KEYS` behaves as `false` | `tests/test_oep_forensic_audit.py` | Next |
-| 7 | ELR-INV-003 (GPIL) | Implement `omnix_core/governance/gpil.py` runtime module — CRGC issuance, signing, storage | `omnix_core/governance/gpil.py` | Future |
+| 2 | ELR-INV-003 | Add reclassification rejection test: attempt to change `evidence_class` on transition, assert immutability error | `tests/test_eap_audit.py` | Next |
+| 3 | ELR-INV-004 | Add compression rejection test: attempt to strip `LEGAL`-class artifact fields, assert rejection | `tests/test_eap_audit.py` | Next |
+| 4 | EAP-INV-007 | Add production-mode Redis probe test: `OMNIX_ARCHIVE_REDIS_REQUIRED=true` + absent REDIS_URL = hard fail | `tests/test_cold_block_archive.py` | Next |
+| 5 | FEA-INV-001 | Add env var default test: absent `FORENSIC_EXPORT_ALLOW_CALLER_KEYS` behaves as `false` | `tests/test_oep_forensic_audit.py` | Next |
+| 6 | ELR-INV-003 (GPIL) | Implement `omnix_core/governance/gpil.py` runtime module — CRGC issuance, signing, storage | `omnix_core/governance/gpil.py` | Future |
+
+> **Closed items:** RGC-INV-007 — removed from backlog May 17 2026 (ADR-157 rev.2). Structural gap closed via compiled constant `RCR_CES_STALENESS_BOUND_SECONDS=300` in `runtime_continuity.py`.
 
 ---
 

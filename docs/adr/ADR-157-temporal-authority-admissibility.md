@@ -1,10 +1,19 @@
 # ADR-157: Temporal Authority Admissibility
 
-**Status:** Accepted  
+**Status:** Accepted (rev.2 — May 17, 2026)  
 **Date:** May 12, 2026  
 **Author:** Harold Nunes — OMNIX QUANTUM LTD  
 **Supersedes:** None  
 **Related:** ADR-131 (Execution Integrity Layer), ADR-156 (Agent Trust Fabric)
+
+---
+
+### Revision History
+
+| Rev | Date | Change |
+|---|---|---|
+| 1 | May 12, 2026 | Initial acceptance — TAR-INV-001–005 |
+| 2 | May 17, 2026 | Added TAR-INV-006 (Compiled Staleness Bound) — structural response to DORA operational-risk threat model; compiled constants `TAR_MAX_DR_LIFETIME_SECONDS=86400` and `TAR_CLOCK_SKEW_TOLERANCE_NS=5_000_000_000` added to `temporal_authority.py`; `RCR_CES_STALENESS_BOUND_SECONDS=300` added to `runtime_continuity.py`; 23 new tests in `test_tar_inv006_staleness_bound.py` |
 
 ---
 
@@ -91,9 +100,16 @@ TAR.admission_status = ADMITTED  if:
     DR.status == ACTIVE
     AND time.time_ns() <= DR.expires_at_ns (if expires_at set)
     AND DR has not been revoked
+    AND (expires_at_ns - execution_ns) <= TAR_MAX_DR_LIFETIME_SECONDS * 1e9
+                                          + TAR_CLOCK_SKEW_TOLERANCE_NS
 
 TAR.admission_status = REJECTED  if any condition above fails
 ```
+
+**Check precedence (rev.2):**
+1. DR status check (must be ACTIVE)
+2. Expiry check (must not be expired)
+3. TAR-INV-006 staleness bound (remaining window must not exceed 24h + 5s skew tolerance)
 
 Rejected TARs are still issued and persisted — they serve as an audit record
 of unauthorized execution attempts.
@@ -123,13 +139,33 @@ This chain answers the complete governance question:
 
 ## Invariants
 
-| ID | Invariant | Enforcement |
-|---|---|---|
-| TAR-INV-001 | TAR is issued BEFORE execution is logged | `admit_execution()` must be called synchronously |
-| TAR-INV-002 | execution_ns is bound by PQC signature | content_hash includes execution_ns |
-| TAR-INV-003 | Expired DRs produce REJECTED TARs | nanosecond comparison against DR expiry |
-| TAR-INV-004 | TARs are immutable once issued | content_hash + no UPDATE path in DDL |
-| TAR-INV-005 | TAR traces to DR and execution event | delegation_id + execution_ref fields |
+| ID | Invariant | Enforcement | Added |
+|---|---|---|---|
+| TAR-INV-001 | TAR is issued BEFORE execution is logged | `admit_execution()` must be called synchronously | rev.1 |
+| TAR-INV-002 | execution_ns is bound by PQC signature | content_hash includes execution_ns | rev.1 |
+| TAR-INV-003 | Expired DRs produce REJECTED TARs | nanosecond comparison against DR expiry | rev.1 |
+| TAR-INV-004 | TARs are immutable once issued | content_hash + no UPDATE path in DDL | rev.1 |
+| TAR-INV-005 | TAR traces to DR and execution event | delegation_id + execution_ref fields | rev.1 |
+| TAR-INV-006 | DR remaining validity window at admission must not exceed `TAR_MAX_DR_LIFETIME_SECONDS` (86400s / 24h) — compiled constant, non-overridable by operator | `temporal_authority.py` — compiled constant enforced in `admit_execution()`; `runtime_continuity.py` — `RCR_CES_STALENESS_BOUND_SECONDS=300` for RGC-INV-007 freshness bound | rev.2 |
+
+### TAR-INV-006 Rationale
+
+TAR-INV-001–005 bound individual admissions to valid DRs, but left the **lifetime** of a DR as operator-configurable. An adversary under pressure (or a misconfigured deployment) could issue a DR valid for 30 days, granting effective permanent authority — directly contradicting DORA Art. 9 operational-risk controls.
+
+TAR-INV-006 closes this gap by making the ceiling a **compiled structural constraint**, not a policy check:
+
+```python
+# temporal_authority.py — non-configurable, non-env-var
+TAR_MAX_DR_LIFETIME_SECONDS   = 86400          # 24 h hard ceiling
+TAR_CLOCK_SKEW_TOLERANCE_NS   = 5_000_000_000  # 5 s — boundary tolerance only
+```
+
+This means:
+- A DR valid for 25h → REJECTED at admission regardless of operator config
+- A DR valid for 23h 59m 59s → ADMITTED (within ceiling + skew tolerance)
+- The bound survives any environment variable override — monkeypatching env has no effect
+
+**Test coverage:** `tests/test_tar_inv006_staleness_bound.py` — 23 tests including explicit verification that `os.environ` manipulation cannot change the constants.
 
 ---
 
