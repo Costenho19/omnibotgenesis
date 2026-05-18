@@ -137,3 +137,4 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 ## User Preferences
 
 - Siempre responder a Harold en español.
+- **DOI verification rule:** Antes de incluir cualquier link DOI (Zenodo, Figshare) en un comentario de LinkedIn u otro canal público, recordar a Harold que verifique que el link resuelve y el registro está en estado Published (no Draft). Si no está verificado, omitir el link del mensaje hasta confirmarlo.
