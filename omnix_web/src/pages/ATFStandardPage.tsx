@@ -609,14 +609,15 @@ export default function ATFStandardPage() {
             <div style={{ fontSize: 14, fontWeight: 700, color: GOLD, marginBottom: 6 }}>
               OMNIX ATF — Priority Record
             </div>
-            <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
-              Published May 2026 · OMNIX QUANTUM LTD · Harold Nunes, Dubai UAE<br />
-              RFC-ATF-1: Zenodo DOI · SSRN 6757339 · GitHub release · SHA-256 timestamped<br />
-              RFC-ATF-2: SSRN 6763978 · Runtime Governance Continuity · May 2026
+            <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.7 }}>
+              Published May 2026 · OMNIX QUANTUM LTD · Harold Nunes, Abu Dhabi UAE<br />
+              RFC-ATF-1: Zenodo 10.5281/zenodo.20155016 · Figshare 10.6084/m9.figshare.32308077 · SSRN 6757339<br />
+              RFC-ATF-2: Zenodo 10.5281/zenodo.20241344 · Figshare 10.6084/m9.figshare.32308095 · SSRN 6763978<br />
+              RFC-ATF-3: Zenodo 10.5281/zenodo.20247342 · Figshare 10.6084/m9.figshare.32308119 · 40 formal invariants
             </div>
           </div>
           <div style={{ fontSize: 12, color: '#475569', fontFamily: 'monospace' }}>
-            RFC-ATF-1 · RFC-ATF-2 · ADR-156/157/158/159 · ATF-FV-1.0
+            RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-156/157/158/159/161/170 · ATF-FV-1.0
           </div>
         </div>
 

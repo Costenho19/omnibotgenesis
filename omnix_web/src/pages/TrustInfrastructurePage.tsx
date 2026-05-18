@@ -83,10 +83,29 @@ const INVARIANTS = [
   { id: 'FEA-INV-003', category: 'FEA', adr: 'ADR-166', title: 'Auth Enforcement', desc: '/export returns 401 for missing, invalid, or expired API keys', status: 'ACTIVE' },
   { id: 'FEA-INV-004', category: 'FEA', adr: 'ADR-166', title: 'Fail-Closed Signing', desc: '/export returns 503 if no signing key is available', status: 'ACTIVE' },
   { id: 'FEA-INV-005', category: 'FEA', adr: 'ADR-166', title: 'Production Safety', desc: 'FORENSIC_EXPORT_ALLOW_CALLER_KEYS=true is forbidden in production', status: 'ACTIVE' },
+  // TAR
+  { id: 'TAR-INV-006', category: 'TAR', adr: 'ADR-157 rev.2', title: 'Compiled Staleness Bound', desc: 'RCR_CES_STALENESS_BOUND_SECONDS=300 compiled constant — CES inputs older than 5 min structurally rejected', status: 'ACTIVE' },
+  // GPIL
+  { id: 'GPIL-INV-001', category: 'GPIL', adr: 'ADR-161', title: 'Bilateral CRGC Signing', desc: 'Cross-runtime governance contracts require ML-DSA-65 signatures from both runtimes before admission', status: 'ACTIVE' },
+  { id: 'GPIL-INV-002', category: 'GPIL', adr: 'ADR-161', title: 'ATF-GPI-Aligned Status', desc: 'Cross-runtime agent operations require ATF-GPI-Aligned status before first cross-runtime admission', status: 'ACTIVE' },
+  { id: 'GPIL-INV-003', category: 'GPIL', adr: 'ADR-161', title: 'Restrictive Parameter Default', desc: 'Undeclared CRGC parameters default to the more restrictive runtime value — no silent permissiveness', status: 'ACTIVE' },
+  // ELR
+  { id: 'ELR-INV-001', category: 'ELR', adr: 'ADR-163', title: 'Evidence Class Immutability', desc: 'Evidence class is immutable protocol state — reclassification after write produces cryptographic hash mismatch', status: 'ACTIVE' },
+  { id: 'ELR-INV-002', category: 'ELR', adr: 'ADR-163', title: 'Classification Hash Binding', desc: 'classification_hash binds evidence_class + payload + timestamp + evidentiary_meaning at write time', status: 'ACTIVE' },
+  { id: 'ELR-INV-003', category: 'ELR', adr: 'ADR-163', title: 'Reclassification Detection', desc: 'POST /verify performs classification integrity verification and reclassification attack detection', status: 'ACTIVE' },
+  { id: 'ELR-INV-004', category: 'ELR', adr: 'ADR-163', title: 'Legal Class Preservation', desc: 'LEGAL, PQC, CONTRACT, EXCEPTION class artifacts stored in complete canonical form — no field compression', status: 'ACTIVE' },
+  // GECR
+  { id: 'GECR-INV-001', category: 'GECR', adr: 'ADR-170', title: 'Control-Receipt Atomicity', desc: 'No controlled action proceeds without a receipt being issued first — the receipt IS the authorization, not a record of it', status: 'ACTIVE' },
+  { id: 'GECR-INV-002', category: 'GECR', adr: 'ADR-170', title: 'Bounded Context Drift', desc: 'drift_delta < −0.05 → DRIFTED receipt; drift_delta < −0.15 → REVOKED, commit refused', status: 'ACTIVE' },
+  { id: 'GECR-INV-003', category: 'GECR', adr: 'ADR-170', title: 'Authority Aggregate Ceiling', desc: 'Cross-agent authority at chain_root_id level never exceeds AFG limit (default 0.90, hard cap 0.95)', status: 'ACTIVE' },
+  { id: 'GECR-INV-004', category: 'GECR', adr: 'ADR-170', title: 'Atomic HALT Propagation', desc: 'HALT propagates atomically to ALL sibling sessions on same chain_root_id — partial HALT is invalid state', status: 'ACTIVE' },
+  { id: 'GECR-INV-005', category: 'GECR', adr: 'ADR-170', title: 'Cross-Runtime Pre-Authorization', desc: 'Cross-runtime operations require bilaterally signed CRGC before first admission', status: 'ACTIVE' },
+  { id: 'GECR-INV-006', category: 'GECR', adr: 'ADR-170', title: 'RC TTL Non-Extensibility', desc: 'Reauthorization Challenge TTL is bounded and non-extensible — auto-HALT on expiry', status: 'ACTIVE' },
 ]
 
 const CAT_COLOR: Record<string, string> = {
   ATF: '#a855f7', RGC: '#3b82f6', EAP: GOLD, FVP: GREEN, OEP: '#06b6d4', FEA: RED,
+  TAR: '#8b5cf6', GPIL: '#0ea5e9', ELR: '#f97316', GECR: '#ec4899',
 }
 
 // ── Small components ───────────────────────────────────────────────────────────
@@ -181,7 +200,7 @@ export default function TrustInfrastructurePage() {
               </h1>
               <p style={{ margin: 0, fontSize: 15, color: MUTED, maxWidth: 600, lineHeight: 1.6 }}>
                 Cryptographic evidence custody backed by ML-DSA-65 post-quantum signatures.
-                38 enforced invariants. Full offline verifiability. Independent of any OMNIX runtime.
+                47 enforced invariants across 9 families. Full offline verifiability. Independent of any OMNIX runtime.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -199,7 +218,7 @@ export default function TrustInfrastructurePage() {
           {/* Metric strip */}
           <div style={{ display: 'flex', gap: 40, marginTop: 32, paddingTop: 28, borderTop: `1px solid rgba(255,255,255,0.05)`, flexWrap: 'wrap' }}>
             {[
-              { label: 'Invariants enforced', value: '38', sub: '6 categories' },
+              { label: 'Invariants enforced', value: '47', sub: '9 families · 3 RFCs' },
               { label: 'PQC Algorithm', value: 'ML-DSA-65', sub: 'FIPS 204 · NIST Level 3' },
               { label: 'Verification planes', value: '3', sub: 'Browser · Server · Offline' },
               { label: 'Offline verifiable', value: 'Yes', sub: 'OEP + CLI verifier' },
@@ -533,11 +552,11 @@ export default function TrustInfrastructurePage() {
 
         {/* ── Section 6: Invariant Reference ── */}
         <div style={{ marginBottom: 56 }}>
-          <SectionHeader label="Invariant Reference" adr="38 invariants · 6 categories" />
+          <SectionHeader label="Invariant Reference" adr="47 invariants · 9 families · RFC-ATF-1/2/3" />
 
           {/* Category filter */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-            {['ALL', 'ATF', 'RGC', 'EAP', 'FVP', 'OEP', 'FEA'].map(cat => (
+            {['ALL', 'ATF', 'RGC', 'EAP', 'FVP', 'OEP', 'FEA', 'TAR', 'GPIL', 'ELR', 'GECR'].map(cat => (
               <button key={cat} onClick={() => setActiveInvCat(cat)}
                 style={{
                   padding: '5px 14px', borderRadius: 6, border: `1px solid ${activeInvCat === cat ? (CAT_COLOR[cat] || GOLD) : 'rgba(255,255,255,0.08)'}`,
@@ -609,10 +628,10 @@ export default function TrustInfrastructurePage() {
             OMNIX QUANTUM LTD · Trust Infrastructure · OMNIX-SEC-2026-001
           </div>
           <div style={{ display: 'flex', gap: 20, fontSize: 11, color: SLATE }}>
-            <span>ADR-156–167</span>
-            <span>RFC-ATF-1 · RFC-ATF-2</span>
+            <span>ADR-156–170</span>
+            <span>RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3</span>
             <span>FIPS 204 · ML-DSA-65</span>
-            <span>38 invariants</span>
+            <span>47 invariants · 9 families</span>
           </div>
         </div>
 

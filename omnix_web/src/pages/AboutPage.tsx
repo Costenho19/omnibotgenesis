@@ -28,15 +28,21 @@ const timeline = [
   },
   {
     year: 'Abr 2026',
-    event: 'Whitepaper técnico + 151 ADRs',
+    event: 'Whitepaper técnico + 170 ADRs',
     detail: 'Arquitectura completa documentada: 11-checkpoint pipeline, AVM, LLM isolation, Execution Integrity Layer.',
     color: '#f59e0b',
   },
   {
     year: 'May 2026',
     event: 'Baseline de gobernanza',
-    detail: 'GOVERNANCE_BASELINE-2026-Q2-001: 11 invariantes, 151 ADRs, 233 tests. Architecture Freeze.',
+    detail: 'GOVERNANCE_BASELINE-2026-Q2-001: 47 invariantes formales, 170 ADRs, 184+ tests. Architecture Freeze.',
     color: '#06b6d4',
+  },
+  {
+    year: 'May 2026',
+    event: 'RFC-ATF-3 + GECR formalizado',
+    detail: 'RFC-ATF-3: 40 invariantes, PQC forensic verification. ADR-170: Governance Execution Context Router — 6 invariantes GECR. Total: 47 invariantes en 9 familias. Publicado en Zenodo + Figshare.',
+    color: '#a855f7',
   },
 ]
 
@@ -61,7 +67,7 @@ const principles = [
   },
   {
     title: 'Arquitectura primero, producto después',
-    body: '151 ADRs documentan cada decisión de diseño con contexto, alternativas, y consecuencias. No existe una función en OMNIX sin su justificación arquitectónica registrada.',
+    body: '170 ADRs documentan cada decisión de diseño con contexto, alternativas, y consecuencias. No existe una función en OMNIX sin su justificación arquitectónica registrada.',
     icon: '△',
     color: '#6366f1',
   },
@@ -239,13 +245,18 @@ export default function AboutPage() {
               </div>
               {[
                 {
+                  label: 'RFC-ATF-3: Forensic Verification Protocol · 40 Invariants',
+                  sub: 'Zenodo: 10.5281/zenodo.20247342 · Figshare: 10.6084/m9.figshare.32308119 · May 2026',
+                  link: 'https://doi.org/10.5281/zenodo.20247342',
+                },
+                {
                   label: 'RFC-ATF-2: Runtime Governance Continuity',
-                  sub: 'SSRN 6763978 · May 14, 2026',
+                  sub: 'SSRN 6763978 · Zenodo: 10.5281/zenodo.20241344 · Figshare: 10.6084/m9.figshare.32308095 · May 2026',
                   link: 'https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6763978',
                 },
                 {
-                  label: 'RFC-ATF-1: Agent Trust Fabric',
-                  sub: 'Zenodo DOI: 10.5281/zenodo.20155016 · SSRN 6757339',
+                  label: 'RFC-ATF-1: Agent Trust Fabric Delegation Protocol',
+                  sub: 'Zenodo: 10.5281/zenodo.20155016 · SSRN 6757339 · Figshare: 10.6084/m9.figshare.32308077',
                   link: 'https://doi.org/10.5281/zenodo.20155016',
                 },
                 {
@@ -255,18 +266,13 @@ export default function AboutPage() {
                 },
                 {
                   label: 'Technical Whitepaper',
-                  sub: 'SSRN 6507559 · Apr 1, 2026',
+                  sub: 'SSRN 6507559 · Zenodo: 10.5281/zenodo.19375792 · Apr 2026',
                   link: 'https://ssrn.com/abstract=6507559',
                 },
                 {
-                  label: 'Zenodo Dataset (82,569 decisions)',
-                  sub: 'DOI: 10.5281/zenodo.19056919',
+                  label: 'Production Dataset (82,569 decisions)',
+                  sub: 'Zenodo DOI: 10.5281/zenodo.19056919 · Mar 2026',
                   link: 'https://doi.org/10.5281/zenodo.19056919',
-                },
-                {
-                  label: 'Zenodo Whitepaper',
-                  sub: 'DOI: 10.5281/zenodo.19375792',
-                  link: 'https://doi.org/10.5281/zenodo.19375792',
                 },
               ].map((p) => (
                 <a
@@ -500,7 +506,7 @@ export default function AboutPage() {
             OMNIX QUANTUM · Abu Dhabi, UAE · Founded 2025
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
-            151 ADRs · 233 tests · GOVERNANCE_BASELINE-2026-Q2-001
+            170 ADRs · 184+ tests · GOVERNANCE_BASELINE-2026-Q2-001
           </div>
         </div>
       </div>
