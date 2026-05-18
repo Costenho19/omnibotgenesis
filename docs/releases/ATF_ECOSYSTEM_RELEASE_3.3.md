@@ -253,10 +253,16 @@ The formal invariant system (47 invariants, 9 families) is the subject of RFC-AT
 
 **GOVERNANCE_BASELINE-2026-Q2-001** — Frozen architecture state as of May 2026:
 - 47 formal invariants
-- 170 ADRs
+- 171 ADRs
 - 495+ passing tests
 - 3 published RFCs (6 permanent DOIs)
 - Production since November 2025
+
+**Institutional Baseline Snapshot — May 18, 2026:**  
+`docs/releases/ATF_ECOSYSTEM_BASELINE_2026-05.md` (OMNIX-ATF-BASELINE-2026-05) — frozen point-in-time snapshot for institutional review, regulatory reference, and academic citation.
+
+**End-to-End Verification Walkthrough:**  
+`docs/walkthroughs/OFFLINE_GOVERNANCE_VERIFICATION_WALKTHROUGH.md` (OMNIX-WALK-001) — 7-act forensic walkthrough from human delegation through offline verification. Based entirely on production module source code.
 
 ---
 

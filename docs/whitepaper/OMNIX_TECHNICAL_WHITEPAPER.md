@@ -695,6 +695,24 @@ The six structural-only invariants (ATF-INV-002, ELR-INV-003, ELR-INV-004, EAP-I
 
 An independent institutional code review covering all 14 sprint ADRs (ADR-156 through ADR-169), the full 41-invariant coverage baseline, and risk prioritization for regulated buyers is published at `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` (Document ID: OMNIX-AUDIT-ATF-EAP-OEP-2026-05). ADR-170 (GECR) was added post-audit.
 
+### End-to-End Verification Walkthrough
+
+The full governance lifecycle — from human delegation through runtime authority monitoring, protocol-enforced HALT, evidence archival, and offline forensic verification — is traced end-to-end in the **Offline Governance Evidence Verification — Institutional Walkthrough** (`docs/walkthroughs/OFFLINE_GOVERNANCE_VERIFICATION_WALKTHROUGH.md`, Document ID: OMNIX-WALK-001).
+
+The walkthrough is structured as seven acts covering a real algorithmic trading governance event:
+
+| Act | Coverage |
+|---|---|
+| 1 — Initial Delegation | DR issuance · MAR enforcement (ATF-INV-001) · PQC signing · content_hash commitment |
+| 2 — Runtime Activity | CES formula (T×0.30+B×0.30+D×0.20+I×0.20) · RCR-1 NOMINAL (95.16) · RCR-2 MONITORING (83.16) |
+| 3 — Governance Event | Context drift 51.2% · CES degradation trace · Reauthorization Challenge issued |
+| 4 — Protocol Enforcement | RC TTL expired · HALT enforced (RGC-INV-008) · CTAG REVOKED (drift_delta −0.16) |
+| 5 — Evidence Lifecycle | HOT→WARM→COLD 9-step migration · Merkle root construction · COLD block canonical hash |
+| 6 — OEP Export | Package structure · two-phase signature design · package_signature.json |
+| 7 — Offline Verification | 5 terminal commands · manifest integrity · chain continuity · platform key identity |
+
+Every field name, formula, threshold, ID format, and terminal command in the walkthrough derives directly from production module source code. No platform access is required to reproduce the verification steps.
+
 ### Institutional Audit Test Suite Coverage
 
 Every structural claim in this whitepaper is backed by a passing test assertion. Third parties can reproduce these results:
