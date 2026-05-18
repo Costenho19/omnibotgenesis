@@ -167,7 +167,7 @@ function DiagramStack() {
           Every execution path traverses L0 → L5. Authority budget propagates downward.
           Evidence flows upward to immutable custody.
         </span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.cyan, marginLeft: 'auto' }}>24 invariants enforced</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.cyan, marginLeft: 'auto' }}>47 active invariants · 9 governance families</span>
       </div>
     </div>
   )
@@ -701,7 +701,7 @@ function DiagramEvidenceLifecycle() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const DIAGRAMS = [
   {
-    id: 'stack',     label: 'Runtime Legitimacy Stack',       adrs: ['ADR-156–163', 'RFC-ATF-1', 'RFC-ATF-2'],
+    id: 'stack',     label: 'Runtime Legitimacy Stack',       adrs: ['ADR-156–163', 'RFC-ATF-1', 'RFC-ATF-2', 'RFC-ATF-3'],
     desc: 'Six-layer governance architecture. Every autonomous execution path traverses all layers.',
   },
   {
@@ -861,40 +861,73 @@ export default function ProtocolVisualizationPage() {
           </div>
         </div>
 
-        {/* ADR reference grid */}
-        <div style={{ marginTop: 48 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.10em', marginBottom: 16 }}>
-            ARCHITECTURAL REFERENCES
+        {/* Architectural References — RFC + ADR stacks separated */}
+        <div style={{ marginTop: 48, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+
+          {/* Foundational RFC Stack */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.gold, letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ display: 'inline-block', width: 16, height: 1, background: C.gold, verticalAlign: 'middle' }} />
+              FOUNDATIONAL RFC STACK
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { adr: 'RFC-ATF-1', title: 'Agent Trust Fabric · ATF-INV-001–006', sub: 'Identity, delegation, MAR, PQC signing', color: C.gold },
+                { adr: 'RFC-ATF-2', title: 'Runtime Governance Continuity · RGC-INV-001–008', sub: 'CES, temporal admissibility, RCR lifecycle', color: C.cyan },
+                { adr: 'RFC-ATF-3', title: 'Forensic Evidence & Interoperability', sub: 'EAP, OEP, FEA, FVP · cross-runtime verification', color: C.purple },
+              ].map(ref => (
+                <div key={ref.adr} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 12,
+                  padding: '12px 14px', borderRadius: 8,
+                  border: `1px solid ${ref.color}28`, background: ref.color + '07',
+                }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 800, color: ref.color, fontFamily: 'monospace',
+                    background: ref.color + '18', padding: '3px 8px', borderRadius: 6,
+                    border: `1px solid ${ref.color}44`, flexShrink: 0, marginTop: 1,
+                  }}>{ref.adr}</span>
+                  <div>
+                    <div style={{ fontSize: 12, color: C.text, fontWeight: 600, marginBottom: 2 }}>{ref.title}</div>
+                    <div style={{ fontSize: 10, color: C.muted }}>{ref.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10,
-          }}>
-            {[
-              { adr: 'ADR-156', title: 'Agent Trust Fabric', color: C.cyan },
-              { adr: 'ADR-157', title: 'Temporal Authority Admissibility', color: C.purple },
-              { adr: 'ADR-158', title: 'Cross-Domain Trust Portability', color: C.blue },
-              { adr: 'ADR-159', title: 'Runtime Governance Continuity (RGC)', color: C.green },
-              { adr: 'ADR-160', title: 'RCR Performance & Observability (RPOL)', color: C.cyan },
-              { adr: 'ADR-161', title: 'Governance Policy Interoperability (GPIL)', color: C.purple },
-              { adr: 'ADR-162', title: 'Evidence Lifecycle & Immutable Retention', color: C.gold },
-              { adr: 'ADR-163', title: 'Immutable Evidence Archive Pipeline', color: C.blue },
-              { adr: 'RFC-ATF-1', title: 'ATF-INV-001–006 · Agent Trust Fabric', color: C.gold },
-              { adr: 'RFC-ATF-2', title: 'RGC-INV-001–008 · Runtime Governance', color: C.cyan },
-            ].map(ref => (
-              <div key={ref.adr} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 14px', borderRadius: 8,
-                border: `1px solid ${ref.color}1A`, background: ref.color + '06',
-              }}>
-                <span style={{
-                  fontSize: 10, fontWeight: 800, color: ref.color, fontFamily: 'monospace',
-                  background: ref.color + '18', padding: '2px 8px', borderRadius: 6,
-                  border: `1px solid ${ref.color}33`, flexShrink: 0,
-                }}>{ref.adr}</span>
-                <span style={{ fontSize: 12, color: C.muted }}>{ref.title}</span>
-              </div>
-            ))}
+
+          {/* Governance ADR Stack */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.cyan, letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ display: 'inline-block', width: 16, height: 1, background: C.cyan, verticalAlign: 'middle' }} />
+              GOVERNANCE ADR STACK
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { adr: 'ADR-156', title: 'Agent Trust Fabric', color: C.cyan },
+                { adr: 'ADR-157', title: 'Temporal Authority Admissibility', color: C.purple },
+                { adr: 'ADR-158', title: 'Cross-Domain Trust Portability', color: C.blue },
+                { adr: 'ADR-159', title: 'Runtime Governance Continuity', color: C.green },
+                { adr: 'ADR-160', title: 'RCR Performance & Observability', color: C.cyan },
+                { adr: 'ADR-161', title: 'Governance Policy Interoperability', color: C.purple },
+                { adr: 'ADR-162', title: 'Evidence Lifecycle & Immutable Retention', color: C.gold },
+                { adr: 'ADR-163', title: 'Immutable Evidence Archive Pipeline', color: C.blue },
+              ].map(ref => (
+                <div key={ref.adr} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '9px 14px', borderRadius: 8,
+                  border: `1px solid ${ref.color}18`, background: ref.color + '05',
+                }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 800, color: ref.color, fontFamily: 'monospace',
+                    background: ref.color + '14', padding: '2px 8px', borderRadius: 6,
+                    border: `1px solid ${ref.color}30`, flexShrink: 0,
+                  }}>{ref.adr}</span>
+                  <span style={{ fontSize: 12, color: C.muted }}>{ref.title}</span>
+                </div>
+              ))}
+            </div>
           </div>
+
         </div>
 
         {/* Positioning footer */}
