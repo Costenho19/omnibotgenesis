@@ -63,12 +63,6 @@ const INVARIANTS = [
   { id: 'EAP-INV-006', category: 'EAP', adr: 'ADR-163', title: 'Manifest Completeness', desc: 'Every HOT→WARM and WARM→COLD transition creates a manifest entry or rolls back', status: 'ACTIVE' },
   { id: 'EAP-INV-007', category: 'EAP', adr: 'ADR-163/167', title: 'Global Block Uniqueness', desc: 'Block IDs globally unique via Redis INCR in production — no collision across dynos', status: 'ACTIVE' },
   // FVP
-  { id: 'FVP-INV-001', category: 'FVP', adr: 'ADR-164', title: 'Canonical Determinism', desc: 'Browser canonical hash computation is bit-identical to Python CLI verifier', status: 'ACTIVE' },
-  { id: 'FVP-INV-002', category: 'FVP', adr: 'ADR-164', title: 'Merkle Recomputability', desc: 'Browser recomputes Merkle roots using sha256-v1; unknown algorithm → INCOMPLETE', status: 'ACTIVE' },
-  { id: 'FVP-INV-003', category: 'FVP', adr: 'ADR-164', title: 'Chain Continuity', desc: 'Portal verifies full predecessor chain; missing blocks (except GENESIS) → ORPHANED', status: 'ACTIVE' },
-  { id: 'FVP-INV-004', category: 'FVP', adr: 'ADR-164', title: 'PQC Authoritative Boundary', desc: 'Browser PQC failure → INCOMPLETE only. SIGNATURE_INVALID only from server path', status: 'ACTIVE' },
-  { id: 'FVP-INV-005', category: 'FVP', adr: 'ADR-164', title: 'Server Availability', desc: 'Non-PQC checks (hash/chain) run browser-side unconditionally even if server unreachable', status: 'ACTIVE' },
-  { id: 'FVP-INV-006', category: 'FVP', adr: 'ADR-164', title: 'Trust Conflict Resolution', desc: 'When Plane 1 and Plane 2 disagree, server verdict is binding — conflict notice shown', status: 'ACTIVE' },
   { id: 'FVP-INV-007', category: 'FVP', adr: 'ADR-164/167', title: 'Key Identity Disclosure', desc: 'Every /verify response includes key_identity with platform_fingerprint when configured', status: 'ACTIVE' },
   // OEP
   { id: 'OEP-INV-001', category: 'OEP', adr: 'ADR-165', title: 'Offline Self-Containment', desc: 'OEPs verifiable with only the package and standard Python/pypqc — no network required', status: 'ACTIVE' },

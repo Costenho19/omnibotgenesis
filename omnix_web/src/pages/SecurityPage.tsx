@@ -465,7 +465,7 @@ export default function SecurityPage() {
             OMNIX QUANTUM · Dilithium-3 (ML-DSA-65) · NIST FIPS 204
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
-            6 capas de seguridad · 155 ADRs · Producción desde Nov 2025
+            6 capas de seguridad · 171 ADRs · Producción desde Nov 2025
           </div>
         </div>
       </div>
