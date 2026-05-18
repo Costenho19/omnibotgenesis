@@ -254,5 +254,23 @@ Status updated: May 10, 2026 — following Production Verification Report OMNIX-
 
 ---
 
+---
+
+## Addendum — ADR-171: Semantic Governance Interoperability Protocol (SGIP)
+
+**Filed:** May 2026 · **Status:** Accepted · **Extends:** ADR-161 (GPIL)
+
+ADR-171 introduces Layer 4 — Semantic Interoperability — to the ATF compliance stack. It formalizes the **Semantic Term Registry (STR)**, **Semantic Policy Vector (SPV)**, and **Semantic Alignment Certificate (SAC)** as first-class protocol artifacts covering the eight concepts of the ATF Core Term Set: AUTHORITY, ADMISSIBILITY, TRUST, SOVEREIGNTY, RISK, ESCALATION, REVOCATION, LEGITIMACY.
+
+This ADR does not modify any active invariant. It adds **4 PROPOSED invariants** (SGIP-INV-001–004) pending activation in the next baseline revision. The **ATF-SGIP-Aligned** compliance designation is the highest in the ATF stack — it is the first mechanism in any governance infrastructure to provide cryptographically committed, independently verifiable semantic declarations for cross-runtime governance operations.
+
+**Impact on counts:**
+- ADRs: 170 → **171**
+- Active invariants: 47 (unchanged — SGIP family is PROPOSED)
+- Proposed invariants: 0 → **4** (SGIP-INV-001–004)
+- Implementation module pending: `omnix_core/agents/atf/semantic_governance.py`
+- Test suite pending: `tests/test_sgip_audit.py`
+- Future RFC: RFC-ATF-4
+
 *OMNIX QUANTUM — Decision Governance Infrastructure*  
 *Governance Baseline OMNIX-BASELINE-2026-Q2-001 · May 2026 · omnixquantum.net*

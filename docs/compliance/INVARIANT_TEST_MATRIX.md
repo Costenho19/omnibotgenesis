@@ -132,26 +132,49 @@
 
 ---
 
+## Family 10 — SGIP Invariants (ADR-171) — PROPOSED
+
+> **Status: PROPOSED** — Formally defined in ADR-171. Pending activation in next baseline revision. These invariants govern the Semantic Governance Interoperability Protocol (Layer 4). Implementation module: `omnix_core/agents/atf/semantic_governance.py` (pending).
+
+| ID | Formal Statement | Implementation | Test File | Test ID / Count | Status |
+|---|---|---|---|---|---|
+| SGIP-INV-001 | An STR entry, once published with a valid ML-DSA-65 signature, has an immutable `content_hash` — no UPDATE path exists on `str_entry_id`; any modification attempt MUST raise `STR_IMMUTABILITY_VIOLATION` | `atf_semantic_term_registry` table — append-only; no UPDATE permitted on content-bearing columns | `tests/test_sgip_audit.py` (pending) | STR immutability tests | ❌ Pending implementation |
+| SGIP-INV-002 | A Semantic Alignment Certificate MUST NOT be issued unless both parties have valid, signed STR entries for all 8 ATF Core Term Set terms — incomplete SPV raises `SAC_INCOMPLETE_SPV` at construction time | SAC constructor validates both SPVs for completeness before computing `sac_content_hash` | `tests/test_sgip_audit.py` (pending) | SAC completeness tests | ❌ Pending implementation |
+| SGIP-INV-003 | For any cross-runtime operation touching a concept with `UNRESOLVED` status in the governing SAC: apply the more restrictive available definition; if neither runtime has defined the term, the operation is BLOCKED unconditionally | GECR CRPR-SGIP gate — checks SAC `semantic_alignment_map` before evaluating cross-runtime admission | `tests/test_sgip_audit.py` (pending) | Unresolved term BLOCK tests | ❌ Pending implementation |
+| SGIP-INV-004 | The `sac_content_hash` MUST cover both parties' `spv_hash` values at issuance time — post-issuance SPV updates do not retroactively modify the SAC; a verifier recomputing from embedded values produces the identical hash | SAC construction embeds `spv_hash` values at issuance; no mutable reference to live SPV | `tests/test_sgip_audit.py` (pending) | SAC hash integrity tests | ❌ Pending implementation |
+
+**Gap note — SGIP Family:** All four invariants are pending implementation of `omnix_core/agents/atf/semantic_governance.py`. Priority: RFC-ATF-4 sprint. The invariants are formally specified and their enforcement architecture is defined in ADR-171. Test file `tests/test_sgip_audit.py` to be created alongside the module.
+
+---
+
 ## Coverage Summary
 
 ```
-Family          Invariants    Direct ✅    Structural ⚠️    None ❌
-ATF-INV         6             5            1               0
-TAR-INV         1             1            0               0   ← ADR-157 rev.2
-RGC-INV         8             8            0               0   ← RGC-INV-007 closed
-GPIL-INV        3             3            0               0
-ELR-INV         4             2            2               0
-EAP-INV         7             6            1               0
-OEP-INV         6             6            0               0
-FEA-INV         5             4            1               0
-FVP-INV         1             1            0               0
-GECR-INV        6             5            1               0   ← NEW (ADR-170)
-─────────────────────────────────────────────────────────
-TOTAL           47            41           6               0
+Family          Invariants    Direct ✅    Structural ⚠️    None ❌    Status
+ATF-INV         6             5            1               0          Active
+TAR-INV         1             1            0               0          Active ← ADR-157 rev.2
+RGC-INV         8             8            0               0          Active ← RGC-INV-007 closed
+GPIL-INV        3             3            0               0          Active
+ELR-INV         4             2            2               0          Active
+EAP-INV         7             6            1               0          Active
+OEP-INV         6             6            0               0          Active
+FEA-INV         5             4            1               0          Active
+FVP-INV         1             1            0               0          Active
+GECR-INV        6             5            1               0          Active ← ADR-170
+─────────────────────────────────────────────────────────────────────────────
+ACTIVE TOTAL    47            41           6               0
+─────────────────────────────────────────────────────────────────────────────
+SGIP-INV        4             0            0               4          PROPOSED ← ADR-171
+─────────────────────────────────────────────────────────────────────────────
+GRAND TOTAL     51            41           6               4
 
-Direct coverage:      41/47 = 87.2%  (was 36/41 = 87.8%)
-Structural only:       6/47 = 12.8%
-Zero coverage:         0/47 = 0.0%
+Active coverage (47 invariants):
+  Direct:      41/47 = 87.2%
+  Structural:   6/47 = 12.8%
+  None:         0/47 =  0.0%
+
+Proposed (SGIP, 4 invariants):
+  All 4 pending implementation — RFC-ATF-4 sprint
 ```
 
 ---
@@ -166,6 +189,7 @@ Zero coverage:         0/47 = 0.0%
 | 4 | EAP-INV-007 | Add production-mode Redis probe test: `OMNIX_ARCHIVE_REDIS_REQUIRED=true` + absent REDIS_URL = hard fail | `tests/test_cold_block_archive.py` | Next |
 | 5 | FEA-INV-001 | Add env var default test: absent `FORENSIC_EXPORT_ALLOW_CALLER_KEYS` behaves as `false` | `tests/test_oep_forensic_audit.py` | Next |
 | 6 | ELR-INV-003 (GPIL) | Implement `omnix_core/governance/gpil.py` runtime module — CRGC issuance, signing, storage | `omnix_core/governance/gpil.py` | Future |
+| 7 | SGIP-INV-001–004 | Implement `omnix_core/agents/atf/semantic_governance.py` — STR, SPV, SAC classes; create `tests/test_sgip_audit.py` | `semantic_governance.py` + test file | RFC-ATF-4 sprint |
 
 > **Closed items:** RGC-INV-007 — removed from backlog May 17 2026 (ADR-157 rev.2). Structural gap closed via compiled constant `RCR_CES_STALENESS_BOUND_SECONDS=300` in `runtime_continuity.py`.
 
@@ -174,4 +198,4 @@ Zero coverage:         0/47 = 0.0%
 **Cross-language conformance infrastructure (May 17 2026):** `sdk/conformance_vectors.json` — 12 canonical vectors (7 KFP + 5 CJ) machine-generated from the Python reference implementation. `tests/test_conformance_vectors.py` — 37 Python tests. `sdk/node/conformance_check.ts` — 17 Node.js checks. Any future SDK (Go, Rust, Java) must pass against the same vector file.
 
 *This matrix supersedes all previous invariant coverage references. Update this document whenever a new invariant is added or a new test closes a structural-only gap.*  
-*Cross-referenced by: `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` §13 · `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` §B*
+*Cross-referenced by: `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` §13 · `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` §B · ADR-171*

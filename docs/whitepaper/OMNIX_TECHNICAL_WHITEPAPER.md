@@ -215,6 +215,46 @@ The first two parameters are numeric with validated bounds. The remaining four a
 
 Two runtimes that need to make consistent multi-party decisions can establish a CRGC — a PQC-signed agreement on their shared Layer 3 policy parameters. The CRGC is bilaterally signed and time-bounded. It enables deterministic cross-runtime verdicts without requiring runtimes to abandon their sovereign policy configurations.
 
+### 5.4 Layer 4 — Semantic Governance Interoperability Protocol (SGIP, ADR-171)
+
+Layers 1–3 govern *how* the ATF protocol operates. SGIP addresses a deeper problem: two runtimes that are CI-compliant, PI-compliant, and GPI-aligned may still interpret *what* the protocol means differently — because they hold different operational definitions of the concepts the protocol is built upon.
+
+**The ATF Core Term Set** identifies eight governance concepts whose operational definitions are sovereign to each runtime but must be declared before cross-runtime governance can be semantically auditable:
+
+| Term | Governance Significance |
+|---|---|
+| `AUTHORITY` | What constitutes delegated authority in this runtime's regulatory context |
+| `ADMISSIBILITY` | Necessary and sufficient conditions for an action to be admitted |
+| `TRUST` | The trust model between agents and principals |
+| `SOVEREIGNTY` | The boundaries of this runtime's governance sovereignty |
+| `RISK` | Operational definition of risk in this runtime's governance context |
+| `ESCALATION` | Conditions that constitute an escalation event requiring elevated governance |
+| `REVOCATION` | Events that invalidate an active delegation or admission |
+| `LEGITIMACY` | What makes a governance decision legitimate in this runtime |
+
+SGIP introduces three new protocol artifacts:
+
+**Semantic Term Registry (STR):** An append-only, PQC-signed per-runtime store of formal definitions for each Core Term. Once published, an STR entry is immutable — its `content_hash` is permanent (SGIP-INV-001). A runtime may publish superseding versions, but the original definition remains independently verifiable indefinitely.
+
+**Semantic Policy Vector (SPV):** A signed snapshot of a runtime's current STR entries for all eight Core Terms. The `spv_hash` is the single-value semantic fingerprint of a runtime's governance posture at a specific moment.
+
+**Semantic Alignment Certificate (SAC):** The Layer 4 extension of the CRGC. A bilaterally PQC-signed artifact that maps the semantic alignment between two runtimes term by term — declaring each term as `ALIGNED`, `ACKNOWLEDGED_DIVERGENCE`, or `UNRESOLVED`, and specifying the divergence resolution policy for each non-aligned term. The SAC's `sac_content_hash` covers both parties' SPV hashes (SGIP-INV-004).
+
+**ATF-SGIP-Aligned** is the highest compliance designation in the ATF stack. A governance decision made between two ATF-SGIP-Aligned runtimes is verifiable at four independent layers:
+
+```
+L1: Receipt signature valid?         → ML-DSA-65 verification
+L2: CES formula applied correctly?   → Invariant audit
+L3: Policy parameters within bounds? → CRGC audit
+L4: Semantic definitions aligned?    → SAC audit
+```
+
+No other governance infrastructure provides all four verification layers simultaneously in a production system. **Layer 4 is unique to OMNIX.**
+
+The SGIP also enables **semantic counterfactual auditing** — the ability to determine, after the fact, whether a different semantic posture would have produced a different governance decision. This is a novel forensic capability with direct applications in regulatory examinations and legal proceedings.
+
+**Reference:** ADR-171 · Proposed RFC-ATF-4
+
 ---
 
 ## 6. Post-Quantum Cryptography

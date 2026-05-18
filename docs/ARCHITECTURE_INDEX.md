@@ -7,7 +7,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — 170 total. Últimos: ADR-168 (Dual-Path Module Sync Policy) · ADR-169 (ATF Connector Fail-Open) · **ADR-170 (Governance Execution Context Router — GECR)**
+- **ADRs:** `docs/adr/` — **171 total**. Últimos: ADR-169 (ATF Connector Fail-Open) · ADR-170 (Governance Execution Context Router — GECR) · **ADR-171 (Semantic Governance Interoperability Protocol — SGIP · Layer 4)**
 - **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **47 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + **GECR×6**)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146

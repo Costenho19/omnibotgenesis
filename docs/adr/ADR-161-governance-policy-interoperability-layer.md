@@ -17,23 +17,17 @@ formal invariants (RGC-INV-001–008) that every ATF-RGC-Compliant implementatio
 MUST satisfy. Those invariants are non-negotiable structural properties — they
 cannot be relaxed by any sovereign runtime.
 
-However, an observation raised by Antonio Socorro (May 2026) identifies a
-structural distinction that RFC-ATF-2 touches implicitly but does not formalize:
+RFC-ATF-2 touches implicitly but does not formalize a structural distinction
+that becomes critical in multi-runtime deployments:
 
-> "Two sovereign runtimes could validate the same ML-DSA-65 signed ATF receipt
-> successfully and still reach different governance conclusions."
->
-> "The same divergence can occur with: CES scoring, fragmentation tolerances,
-> escalation semantics, or continuity degradation thresholds."
->
-> "That is why RFC-ATF-2 already demonstrates the difference between
-> cryptographic interoperability and governance interoperability."
+> Two sovereign runtimes could validate the same ML-DSA-65 signed ATF receipt
+> successfully and still reach different governance conclusions.
 
-This observation is architecturally precise. It identifies a **Policy Divergence
-Surface** — the space where two fully compliant runtimes make different governance
-decisions using identical cryptographic artifacts. This surface is not a defect;
-it is an intended property of the sovereign runtime model. But it requires
-formal specification to be operable.
+This identifies a **Policy Divergence Surface** — the space where two fully
+compliant runtimes make different governance decisions using identical
+cryptographic artifacts. This surface is not a defect; it is an intended
+property of the sovereign runtime model. But it requires formal specification
+to be operable.
 
 ### The Core Distinction
 
@@ -271,9 +265,9 @@ The distinction matters for:
   and used by Organization B's runtime may be evaluated differently unless
   a CRGC exists.
 
-### 6. The Observation's Formal Resolution
+### 6. The Formal Resolution
 
-Antonio Socorro's observation translates formally to:
+The policy divergence problem translates formally to:
 
 > "Cryptographic interoperability is a property of Layer 1.
 >  Governance interoperability is a property of Layer 3.
@@ -337,4 +331,4 @@ The receipt remaining cryptographically valid across divergent runtimes is
 - RFC-ATF-2 §6 (CES), §8 (AFG), §10 (RC TTL), §12 (Invariants)
 - ADR-159 — Runtime Governance Continuity (RGC)
 - ADR-160 — RCR Performance Optimization Layer (Governance Risk Tier)
-- Antonio Socorro, commentary on RFC-ATF-2, LinkedIn, May 2026
+- ADR-171 — Semantic Governance Interoperability Protocol (SGIP) — Layer 4 extension
