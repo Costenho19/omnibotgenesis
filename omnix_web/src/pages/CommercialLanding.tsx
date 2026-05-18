@@ -1480,7 +1480,7 @@ export default function CommercialLanding() {
                   <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Zenodo</span>
                   <span className="text-xs font-semibold px-2 py-1 rounded-full bg-pink-500/10 text-pink-400 border border-pink-500/20">Figshare</span>
                 </div>
-                <span className="text-xs text-purple-400/60 font-mono">40 formal invariants · ADR-170 GECR</span>
+                <span className="text-xs text-purple-400/60 font-mono">47 formal invariants · ADR-170 GECR</span>
               </div>
               <h3 className="text-white font-semibold text-sm mb-2 leading-snug">RFC-ATF-3: Agent Trust Fabric — Governance Policy Interoperability, Evidence Lifecycle & Forensic Verification Protocol</h3>
               <p className="text-muted text-xs mb-2">Harold Nunes · OMNIX QUANTUM LTD · May 2026</p>
@@ -1531,7 +1531,7 @@ export default function CommercialLanding() {
               </div>
               <h3 className="text-white font-semibold text-sm mb-2 leading-snug">OMNIX Quantum: Decision Governance Infrastructure — Technical Whitepaper v1.5</h3>
               <p className="text-muted text-xs">Harold Nunes · OMNIX QUANTUM LTD · 2026</p>
-              <p className="text-[#C9A227]/60 text-xs mt-2">SSRN 6507559 · Zenodo 10.5281/zenodo.19375792 · 47 invariants · 170 ADRs</p>
+              <p className="text-[#C9A227]/60 text-xs mt-2">SSRN 6507559 · Zenodo 10.5281/zenodo.19375792 · 47 invariants · 171 ADRs</p>
             </a>
 
             {/* Production Dataset */}

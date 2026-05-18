@@ -613,7 +613,7 @@ export default function ATFStandardPage() {
               Published May 2026 · OMNIX QUANTUM LTD · Harold Nunes, Abu Dhabi UAE<br />
               RFC-ATF-1: Zenodo 10.5281/zenodo.20155016 · Figshare 10.6084/m9.figshare.32308077 · SSRN 6757339<br />
               RFC-ATF-2: Zenodo 10.5281/zenodo.20241344 · Figshare 10.6084/m9.figshare.32308095 · SSRN 6763978<br />
-              RFC-ATF-3: Zenodo 10.5281/zenodo.20247342 · Figshare 10.6084/m9.figshare.32308119 · 40 formal invariants
+              RFC-ATF-3: Zenodo 10.5281/zenodo.20247342 · Figshare 10.6084/m9.figshare.32308119 · 47 formal invariants
             </div>
           </div>
           <div style={{ fontSize: 12, color: '#475569', fontFamily: 'monospace' }}>

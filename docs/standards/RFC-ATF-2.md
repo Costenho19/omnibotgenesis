@@ -95,10 +95,9 @@ Acknowledgements
    motivated the formalization of ADR-159 and this extension document.
 
    The formal distinction between Cryptographic Interoperability and
-   Governance Interoperability (§21) was identified by Antonio Socorro
-   (May 2026), whose public commentary on the policy divergence surface
-   between sovereign ATF runtimes directly motivated the specification of
-   §21 and ADR-161 (Governance Policy Interoperability Layer).
+   Governance Interoperability (§21) arises from structural analysis of
+   the policy divergence surface between sovereign ATF runtimes, formalized
+   in §21 and ADR-161 (Governance Policy Interoperability Layer).
 
 
 Table of Contents

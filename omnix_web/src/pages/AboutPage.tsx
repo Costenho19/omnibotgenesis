@@ -28,14 +28,14 @@ const timeline = [
   },
   {
     year: 'Abr 2026',
-    event: 'Whitepaper técnico + 170 ADRs',
+    event: 'Whitepaper técnico + 171 ADRs',
     detail: 'Arquitectura completa documentada: 11-checkpoint pipeline, AVM, LLM isolation, Execution Integrity Layer.',
     color: '#f59e0b',
   },
   {
     year: 'May 2026',
     event: 'Baseline de gobernanza',
-    detail: 'GOVERNANCE_BASELINE-2026-Q2-001: 47 invariantes formales, 170 ADRs, 184+ tests. Architecture Freeze.',
+    detail: 'GOVERNANCE_BASELINE-2026-Q2-001: 47 invariantes formales, 171 ADRs, 184+ tests. Architecture Freeze.',
     color: '#06b6d4',
   },
   {
@@ -67,7 +67,7 @@ const principles = [
   },
   {
     title: 'Arquitectura primero, producto después',
-    body: '170 ADRs documentan cada decisión de diseño con contexto, alternativas, y consecuencias. No existe una función en OMNIX sin su justificación arquitectónica registrada.',
+    body: '171 ADRs documentan cada decisión de diseño con contexto, alternativas, y consecuencias. No existe una función en OMNIX sin su justificación arquitectónica registrada.',
     icon: '△',
     color: '#6366f1',
   },
@@ -506,7 +506,7 @@ export default function AboutPage() {
             OMNIX QUANTUM · Abu Dhabi, UAE · Founded 2025
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
-            170 ADRs · 184+ tests · GOVERNANCE_BASELINE-2026-Q2-001
+            171 ADRs · 184+ tests · GOVERNANCE_BASELINE-2026-Q2-001
           </div>
         </div>
       </div>

@@ -9,7 +9,7 @@
 
 ## Context
 
-### The problem Antonio Socorro identified
+### The Cross-Jurisdiction Semantic Governance Problem
 
 OMNIX receipts are cryptographically sound. The hash is independently verifiable. The
 Dilithium-3 signature is independently verifiable. The W3C VC envelope is structurally
