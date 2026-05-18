@@ -68,6 +68,7 @@ const ATFExplainedPage            = lazy(() => import('./pages/ATFExplainedPage'
 const ArchiveVerifierPage         = lazy(() => import('./pages/ArchiveVerifierPage'))
 const TrustInfrastructurePage     = lazy(() => import('./pages/TrustInfrastructurePage'))
 const ForensicOperationsDemoPage  = lazy(() => import('./pages/ForensicOperationsDemoPage'))
+const GovernanceFlowPage          = lazy(() => import('./pages/GovernanceFlowPage'))
 
 // ─── Loading fallback ─────────────────────────────────────────────────────────
 function PageLoader() {
@@ -174,6 +175,7 @@ function App() {
             <Route path="/archive-verify"                 element={<ArchiveVerifierPage />} />
             <Route path="/trust-infrastructure"           element={<TrustInfrastructurePage />} />
             <Route path="/forensic-operations"            element={<ForensicOperationsDemoPage />} />
+            <Route path="/governance-flow"               element={<GovernanceFlowPage />} />
             <Route path="/terminal"                       element={<Navigate to="/" replace />} />
             <Route path="*"                               element={<Navigate to="/" replace />} />
           </Routes>

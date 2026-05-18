@@ -153,7 +153,20 @@ ATF-RGC-Compliant                    RFC-ATF-2 · 8 invariants satisfied
 
 ---
 
-## 9. Audit Trail
+## 9. Live Web References
+
+| Resource | URL | Description |
+|---|---|---|
+| **Governance Lifecycle — Institutional Flow Diagram** | `/governance-flow` | 7-node end-to-end visual with real OMNIX-WALK-001 data: CES trajectory (95.16→83.16→49.47→HALT), CTAG verdict, COLD block, OEP export, 5 interactive terminal commands. RFC DOI links. `GovernanceFlowPage.tsx` |
+| Forensic Archive Verifier | `/archive-verify` | 3-plane verification portal (Browser · Server · Offline OEP) — ADR-164 |
+| Platform Trust Registry | `/trust-infrastructure` | 47 invariants · live fingerprint · 3 verification channels |
+| Forensic Operations Demo | `/forensic-operations` | 5 interactive demos (A–E) covering runtime degradation → governance replay |
+| Protocol Architecture | `/protocol` | Layer-by-layer interactive diagram |
+| ATF Standard | `/atf-standard` | Public RFC-ATF-1 claims · verifier widget · regulatory alignment |
+
+---
+
+## 10. Audit Trail
 
 | Document | Date | Scope | Verdict |
 |---|---|---|---|
