@@ -1187,25 +1187,35 @@ export default function ForensicOperationsDemoPage() {
           gap: 12,
           alignItems: 'flex-start',
         }}>
-          <span style={{ color: YELLOW, fontFamily: 'monospace', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', paddingTop: 1 }}>
-            ⚠ SIMULATION
-          </span>
-          <span style={{ color: MUTED, fontSize: 12, lineHeight: 1.6 }}>
-            These demos run locally in the browser using deterministic, protocol-compliant data.
-            They illustrate the formal invariant system (RFC-ATF-1, RFC-ATF-2) and governance
-            lifecycle — they are <strong style={{ color: TEXT }}>not connected to a live OMNIX runtime</strong>.
-            The underlying Python engine ({' '}
-            <code style={{ background: '#ffffff10', padding: '1px 5px', borderRadius: 3, fontSize: 11 }}>
-              omnix_core.simulation.governance_replay
-            </code>
-            ) is fully operational and produces real PQC-signed artifacts.
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: YELLOW, fontFamily: 'monospace', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap' }}>
+                ⚠ SIMULATION BOUNDARY
+              </span>
+              <span style={{ color: MUTED, fontSize: 12 }}>
+                These demos run locally in the browser — they are <strong style={{ color: TEXT }}>not connected to a live OMNIX runtime</strong>.
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: YELLOW, fontFamily: 'monospace', background: `${YELLOW}15`, border: `1px solid ${YELLOW}30`, padding: '2px 8px', borderRadius: 4 }}>SIMULATION LAYER</span>
+                <span style={{ fontSize: 11, color: MUTED, alignSelf: 'center' }}>UI deterministic replay · protocol-compliant data · RFC-ATF-1/2/3 invariants</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', fontFamily: 'monospace', background: '#22c55e15', border: '1px solid #22c55e30', padding: '2px 8px', borderRadius: 4 }}>PRODUCTION ENGINE</span>
+                <span style={{ fontSize: 11, color: MUTED, alignSelf: 'center' }}>
+                  <code style={{ background: '#ffffff10', padding: '1px 5px', borderRadius: 3, fontSize: 10 }}>omnix_core.simulation.governance_replay</code>
+                  {' '}— real PQC-signed artifacts
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
             <Badge>PROTOCOL DEMOS</Badge>
-            <Badge color={CYAN}>RFC-ATF-1 · RFC-ATF-2</Badge>
+            <Badge color={CYAN}>RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3</Badge>
             <Badge color={GREEN}>47 INVARIANTS</Badge>
           </div>
           <h1 style={{ margin: '0 0 12px', fontSize: 32, fontWeight: 800, color: TEXT, lineHeight: 1.2 }}>
@@ -1251,6 +1261,68 @@ export default function ForensicOperationsDemoPage() {
         <DemoC />
         <DemoD />
         <DemoE />
+
+        {/* Export verification report */}
+        <div style={{
+          background: `linear-gradient(135deg, ${GOLD}08 0%, transparent 60%)`,
+          border: `1px solid ${GOLD}22`,
+          borderRadius: 10, padding: '20px 24px', marginBottom: 16,
+          display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
+        }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
+              Export Demo Verification Report
+            </div>
+            <div style={{ fontSize: 11, color: MUTED }}>
+              JSON artifact · OMNIX-WALK-001 reference data · simulation boundary declared · RFC-ATF-1/2/3 invariant index
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const report = {
+                report_id: `OMNIX-DEMO-RPT-${Date.now()}`,
+                generated_at: new Date().toISOString(),
+                simulation_boundary: {
+                  layer: 'UI_DETERMINISTIC_REPLAY',
+                  production_engine: 'omnix_core.simulation.governance_replay',
+                  note: 'Not connected to a live OMNIX runtime. Production engine produces real PQC-signed artifacts.',
+                },
+                reference_walkthrough: 'OMNIX-WALK-001',
+                rfc_stack: ['RFC-ATF-1 (zenodo.20155016)', 'RFC-ATF-2 (zenodo.20241344)', 'RFC-ATF-3 (zenodo.20247342)'],
+                invariant_coverage: { total: 47, families: 9, direct_tested: 34, structural: 6 },
+                demos: [
+                  { id: 'DEMO-A', title: 'Runtime Authority Degradation', adr: 'ADR-159', rfc: 'RFC-ATF-2', invariant: 'RGC-INV-003' },
+                  { id: 'DEMO-B', title: 'Cross-Runtime Governance Divergence', adr: 'ADR-161', rfc: 'RFC-ATF-2', invariant: 'RGC-INV-003' },
+                  { id: 'DEMO-C', title: 'Immutable Archive Chain Verification', adr: 'ADR-163', rfc: 'RFC-ATF-3', invariant: 'EAP-INV-005' },
+                  { id: 'DEMO-D', title: 'Trust Anchor Verification', adr: 'ADR-167', rfc: 'RFC-ATF-1', invariant: 'ATF-INV-006' },
+                  { id: 'DEMO-E', title: 'Full Governance Replay DR→TAR→RCR→Receipt→Archive', adr: 'ADR-165', rfc: 'RFC-ATF-1/2/3', invariant: 'ATF-INV-001–006 + RGC-INV-001–008' },
+                ],
+                key_artifacts: {
+                  delegation_id: 'ATFDR-7F3A9B2C1E4D8F6A',
+                  block_id: 'OMNIX-BLOCK-20260518-000147',
+                  oep_export: 'OEP-20260518-A3F8C241',
+                  algorithm: 'ML-DSA-65 (FIPS 204)',
+                },
+                issuer: 'OMNIX QUANTUM LTD · Abu Dhabi, UAE',
+              }
+              const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = `OMNIX-DEMO-VERIFICATION-REPORT-${new Date().toISOString().slice(0,10)}.json`
+              a.click()
+              URL.revokeObjectURL(url)
+            }}
+            style={{
+              padding: '10px 22px', borderRadius: 8,
+              border: `1px solid ${GOLD}55`, background: `${GOLD}15`,
+              color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              fontFamily: 'monospace', letterSpacing: '0.04em', whiteSpace: 'nowrap',
+            }}
+          >
+            ↓ Export Report (.json)
+          </button>
+        </div>
 
         {/* Footer */}
         <Divider />

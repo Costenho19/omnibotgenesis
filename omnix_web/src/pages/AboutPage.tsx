@@ -10,64 +10,64 @@ const BORDER = 'rgba(201,162,39,0.18)'
 const timeline = [
   {
     year: 'Nov 2025',
-    event: 'Dilithium-3 en producción',
-    detail: 'Primera implementación operativa de ML-DSA-65 para governance receipts. No roadmap — producción real.',
+    event: 'Dilithium-3 in production',
+    detail: 'First operational deployment of ML-DSA-65 for governance receipts. Not a roadmap item — live production.',
     color: '#C9A227',
   },
   {
     year: 'Feb 2026',
-    event: 'Primer paper publicado',
-    detail: 'Estudio de producción publicado en SSRN: 693,890 ciclos, 27,449 receipts firmados, hash chain verificable.',
+    event: 'First paper published',
+    detail: 'Production study published on SSRN: 693,890 cycles, 27,449 signed receipts, verifiable hash chain.',
     color: '#10b981',
   },
   {
     year: 'Mar 2026',
     event: 'Zenodo deposit',
-    detail: 'Dataset completo de 82,569 decisiones reales depositado en Zenodo con DOI permanente.',
+    detail: 'Complete dataset of 82,569 real decisions deposited on Zenodo with permanent DOI.',
     color: '#6366f1',
   },
   {
-    year: 'Abr 2026',
-    event: 'Whitepaper técnico + 171 ADRs',
-    detail: 'Arquitectura completa documentada: 11-checkpoint pipeline, AVM, LLM isolation, Execution Integrity Layer.',
+    year: 'Apr 2026',
+    event: 'Technical whitepaper + 171 ADRs',
+    detail: 'Full architecture documented: 11-checkpoint pipeline, AVM, LLM isolation, Execution Integrity Layer.',
     color: '#f59e0b',
   },
   {
     year: 'May 2026',
-    event: 'Baseline de gobernanza',
-    detail: 'GOVERNANCE_BASELINE-2026-Q2-001: 47 invariantes formales, 171 ADRs, 184+ tests. Architecture Freeze.',
+    event: 'Governance baseline',
+    detail: 'GOVERNANCE_BASELINE-2026-Q2-001: 47 formal invariants, 171 ADRs, 184+ tests. Architecture freeze.',
     color: '#06b6d4',
   },
   {
     year: 'May 2026',
-    event: 'RFC-ATF-3 + GECR formalizado',
-    detail: 'RFC-ATF-3: 40 invariantes, PQC forensic verification. ADR-170: Governance Execution Context Router — 6 invariantes GECR. Total: 47 invariantes en 9 familias. Publicado en Zenodo + Figshare.',
+    event: 'RFC-ATF-3 + GECR formalized',
+    detail: 'RFC-ATF-3: 40 invariants, PQC forensic verification. ADR-170: Governance Execution Context Router — 6 GECR invariants. Total: 47 invariants across 9 families. Published on Zenodo + Figshare.',
     color: '#a855f7',
   },
 ]
 
 const principles = [
   {
-    title: 'Evidencia antes que afirmación',
-    body: 'Cualquier sistema puede declarar que tiene gobernanza. OMNIX produce un registro firmado criptográficamente antes de que la acción ocurra. La diferencia no es filosófica — es técnica y legalmente defendible.',
+    title: 'Evidence before assertion',
+    body: 'Any system can declare it has governance. OMNIX produces a cryptographically signed record before the action occurs. The difference is not philosophical — it is technical and legally defensible.',
     icon: '◈',
     color: '#C9A227',
   },
   {
-    title: 'Fail-closed como postura default',
-    body: 'Cuando un sistema no puede verificar que una decisión es segura, la respuesta correcta es detener la acción — no degradar gracefully. OMNIX bloquea. Siempre. Sin override path.',
+    title: 'Fail-closed as default posture',
+    body: 'When a system cannot verify that a decision is safe, the correct response is to halt — not to degrade gracefully. OMNIX blocks. Always. No override path.',
     icon: '⬡',
     color: '#ef4444',
   },
   {
-    title: 'Verificable sin acceso interno',
-    body: 'Un receipt de OMNIX contiene todo lo necesario para verificar su integridad sin acceder al sistema que lo produjo. El regulador, el auditor, y el cliente pueden verificar sin depender del proveedor.',
+    title: 'Verifiable without internal access',
+    body: 'An OMNIX receipt contains everything needed to verify its integrity without accessing the system that produced it. Regulators, auditors, and clients can verify independently — no vendor dependency.',
     icon: '◇',
     color: '#10b981',
   },
   {
-    title: 'Arquitectura primero, producto después',
-    body: '171 ADRs documentan cada decisión de diseño con contexto, alternativas, y consecuencias. No existe una función en OMNIX sin su justificación arquitectónica registrada.',
+    title: 'Architecture first, product second',
+    body: '171 ADRs document every design decision with context, alternatives, and consequences. No function in OMNIX exists without its architectural justification on record.',
     icon: '△',
     color: '#6366f1',
   },
@@ -112,7 +112,7 @@ export default function AboutPage() {
               borderRadius: 4,
             }}
           >
-            OMNIX QUANTUM · FUNDACIÓN
+            OMNIX QUANTUM · FOUNDATION
           </span>
         </div>
 
@@ -125,9 +125,9 @@ export default function AboutPage() {
             letterSpacing: '-0.02em',
           }}
         >
-          Construido desde cero
+          Built from first principles
           <br />
-          <span style={{ color: GOLD }}>para un problema que nadie resolvió.</span>
+          <span style={{ color: GOLD }}>for a problem no one had solved.</span>
         </h1>
 
         <p
@@ -139,10 +139,10 @@ export default function AboutPage() {
             margin: '0 0 72px 0',
           }}
         >
-          Las plataformas de gobernanza existentes producen informes. Producen dashboards. 
-          Producen documentación. Ninguna producía evidencia criptográfica de que una decisión 
-          fue tomada bajo condiciones válidas — antes de que la acción ocurriera. 
-          OMNIX existe para cerrar esa brecha.
+          Existing governance platforms produce reports. They produce dashboards.
+          They produce documentation. None produced cryptographic evidence that a decision
+          was made under valid conditions — before the action occurred.
+          OMNIX exists to close that gap.
         </p>
 
         <div
@@ -208,9 +208,9 @@ export default function AboutPage() {
                 margin: '0 0 20px 0',
               }}
             >
-              Fundé OMNIX desde Abu Dhabi después de observar un patrón consistente en sistemas 
-              de decisión automatizada: la gobernanza siempre llegaba después — como auditoría retrospectiva, 
-              como informe post-incidente, como explicación a un regulador.
+              I founded OMNIX from Abu Dhabi after observing a consistent pattern in automated
+              decision systems: governance always arrived after the fact — as a retrospective audit,
+              as a post-incident report, as an explanation to a regulator.
             </p>
             <p
               style={{
@@ -220,8 +220,8 @@ export default function AboutPage() {
                 margin: 0,
               }}
             >
-              La pregunta que OMNIX responde es distinta: ¿puedes probar que la gobernanza 
-              estaba activa en el momento exacto en que la decisión se vinculó a consecuencias?
+              The question OMNIX answers is different: can you prove that governance
+              was active at the exact moment the decision was bound to consequences?
             </p>
           </div>
 
@@ -241,7 +241,7 @@ export default function AboutPage() {
                   marginBottom: 20,
                 }}
               >
-                PUBLICACIONES ACADÉMICAS
+                ACADEMIC PUBLICATIONS
               </div>
               {[
                 {
@@ -311,7 +311,7 @@ export default function AboutPage() {
               marginBottom: 40,
             }}
           >
-            PRINCIPIOS DE DISEÑO
+            DESIGN PRINCIPLES
           </div>
           <div
             style={{
@@ -375,7 +375,7 @@ export default function AboutPage() {
               marginBottom: 40,
             }}
           >
-            CRONOLOGÍA
+            TIMELINE
           </div>
           <div style={{ position: 'relative', paddingLeft: 32 }}>
             <div
@@ -452,10 +452,10 @@ export default function AboutPage() {
         >
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 10px 0' }}>
-              ¿Tienes una pregunta técnica?
+              Have a technical question?
             </h2>
             <p style={{ fontSize: 14, color: '#64748b', margin: 0, maxWidth: 440 }}>
-              OMNIX es una infraestructura seria. Las preguntas serias merecen respuestas directas.
+              OMNIX is serious infrastructure. Serious questions deserve direct answers.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
@@ -472,7 +472,7 @@ export default function AboutPage() {
                 cursor: 'pointer',
               }}
             >
-              Contactar →
+              Contact →
             </button>
             <button
               onClick={() => navigate('/stack')}
@@ -487,7 +487,7 @@ export default function AboutPage() {
                 cursor: 'pointer',
               }}
             >
-              Ver Stack Técnico
+              Technical Stack
             </button>
           </div>
         </div>

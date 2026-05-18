@@ -14,25 +14,25 @@ const layers = [
     subtitle: 'Dilithium-3 (ML-DSA-65) + Kyber-768 (ML-KEM-768)',
     color: '#C9A227',
     detail: [
-      'Cada governance receipt está firmado con Dilithium-3 — el estándar NIST post-cuántico de nivel 3.',
-      'La clave pública de verificación viaja embebida en el receipt. No hay dependencia del servidor para verificar.',
-      'Kyber-768 para key encapsulation. Atacar el sistema requiere romper simultáneamente la criptografía clásica Y la post-cuántica.',
-      'Operativo en producción desde noviembre 2025 — no es roadmap.',
+      'Every governance receipt is signed with Dilithium-3 — the NIST post-quantum standard at security level 3.',
+      'The verification public key is embedded in the receipt. No server dependency required to verify.',
+      'Kyber-768 for key encapsulation. Attacking the system requires breaking classical AND post-quantum cryptography simultaneously.',
+      'Operational in production since November 2025 — not a roadmap item.',
     ],
-    spec: 'NIST FIPS 204 (ML-DSA) · NIST FIPS 203 (ML-KEM) · Nivel 3 (~192-bit seguridad clásica equivalente)',
+    spec: 'NIST FIPS 204 (ML-DSA) · NIST FIPS 203 (ML-KEM) · Level 3 (~192-bit classical security equivalent)',
   },
   {
     id: 'L2',
     title: 'Fail-Closed Architecture',
-    subtitle: 'ADR-116 · Sin override path',
+    subtitle: 'ADR-116 · No override path',
     color: '#ef4444',
     detail: [
-      'Si cualquier gate del pipeline de gobernanza falla, la decisión se bloquea. No hay degradación graceful.',
-      'No existe un camino de override administrativo en producción. El AVM_AUTO_APPROVE=true está prohibido.',
-      'Fail-closed se aplica también a fallos de base de datos (AVM_FAIL_CLOSED=true opcional).',
-      'El resultado BLOCKED produce un receipt firmado — incluso los rechazos son auditables.',
+      'If any gate in the governance pipeline fails, the decision is blocked. No graceful degradation.',
+      'No administrative override path exists in production. AVM_AUTO_APPROVE=true is prohibited.',
+      'Fail-closed also applies to database failures (AVM_FAIL_CLOSED=true option).',
+      'A BLOCKED outcome produces a signed receipt — even rejections are auditable.',
     ],
-    spec: 'ADR-116 · 11 checkpoints · BLOCKED receipt con firma Dilithium-3',
+    spec: 'ADR-116 · 11 checkpoints · BLOCKED receipt with Dilithium-3 signature',
   },
   {
     id: 'L3',
@@ -40,10 +40,10 @@ const layers = [
     subtitle: 'Redis-backed · Mode: strict',
     color: '#6366f1',
     detail: [
-      'Cada receipt tiene un ID único. Presentar el mismo receipt dos veces a la API de verificación es detectado y rechazado.',
-      'Modo strict: Redis requerido. Sin Redis, la API rechaza todas las solicitudes.',
-      'Modo best_effort: fallback graceful — documentado explícitamente como gap de seguridad (FMR-004).',
-      'En producción: OMNIX_ANTI_REPLAY_MODE=strict.',
+      'Every receipt has a unique ID. Presenting the same receipt twice to the verification API is detected and rejected.',
+      'Strict mode: Redis required. Without Redis, the API rejects all requests.',
+      'Best-effort mode: graceful fallback — explicitly documented as a security gap (FMR-004).',
+      'In production: OMNIX_ANTI_REPLAY_MODE=strict.',
     ],
     spec: 'RFC 3161-style timestamps · Redis anti-replay · Cross-dyno protection',
   },
@@ -53,23 +53,23 @@ const layers = [
     subtitle: 'ADR-044 · ISR-013',
     color: '#10b981',
     detail: [
-      'Cada receipt se vincula al anterior mediante SHA-256 hash chain — modificar un receipt invalida toda la cadena posterior.',
-      'Write-Ahead Log (WAL) garantiza que ningun receipt se pierda en caso de fallo de red o base de datos.',
-      'Chain Completeness Score (CCS) calcula en tiempo real qué tan completo está el audit trail: COMPLETE / DEGRADED / PARTIAL / COMPROMISED.',
-      'La cadena puede verificarse públicamente sin acceso a la base de datos interna.',
+      'Every receipt is linked to the previous one via SHA-256 hash chain — modifying a receipt invalidates the entire subsequent chain.',
+      'Write-Ahead Log (WAL) guarantees no receipt is lost in the event of network or database failure.',
+      'Chain Completeness Score (CCS) computes in real time how complete the audit trail is: COMPLETE / DEGRADED / PARTIAL / COMPROMISED.',
+      'The chain is publicly verifiable without access to the internal database.',
     ],
     spec: 'SHA-256 Merkle chain · WAL persistent · CCS score 0–100',
   },
   {
     id: 'L5',
     title: 'LLM Isolation Boundary',
-    subtitle: 'ADR-148 · 22 signal keys aprobadas',
+    subtitle: 'ADR-148 · 22 approved signal keys',
     color: '#f59e0b',
     detail: [
-      'Los modelos de IA solo pueden pasar señales a través de 22 keys de señal aprobadas explícitamente.',
-      'Cualquier intento de paso de datos fuera del boundary se registra en el crossing log.',
-      'Input sanitizer (ISR-017) previene prompt injection antes de que llegue al LLM.',
-      'Modo strict disponible: rechaza cualquier señal no aprobada en lugar de ignorarla.',
+      'AI models may only pass signals through 22 explicitly approved signal keys.',
+      'Any attempt to pass data outside the boundary is recorded in the crossing log.',
+      'Input sanitizer (ISR-017) prevents prompt injection before it reaches the LLM.',
+      'Strict mode available: rejects any unapproved signal rather than silently ignoring it.',
     ],
     spec: 'ADR-148 · 22 approved signal keys · Crossing log · Strict mode',
   },
@@ -79,10 +79,10 @@ const layers = [
     subtitle: 'ADR-074 / ADR-120 · Per-vertical baselines',
     color: '#06b6d4',
     detail: [
-      'El AVM calibra baselines por dominio (trading, crédito, seguros, etc.) de forma independiente.',
-      'Drift detection: si el contexto operacional cambia más del threshold configurado, se activa reaprobación formal.',
-      'Tamper detection: modificar la base de datos de calibración es detectado en el siguiente ciclo.',
-      'AVM_MAX_CUMULATIVE_DRIFT_PCT nunca supera 50% en producción — tratado como parámetro de seguridad.',
+      'The AVM calibrates baselines per domain (trading, credit, insurance, etc.) independently.',
+      'Drift detection: if the operational context changes beyond the configured threshold, formal re-approval is triggered.',
+      'Tamper detection: modifying the calibration database is detected on the next cycle.',
+      'AVM_MAX_CUMULATIVE_DRIFT_PCT never exceeds 50% in production — treated as a security parameter.',
     ],
     spec: 'ADR-074 · ADR-120 · Per-vertical · 72h calibration cycle · Tamper detection',
   },
@@ -91,16 +91,16 @@ const layers = [
 const verifiableLinks = [
   {
     label: 'Production Study — SSRN',
-    sub: '693,890 ciclos · 27,449 receipts Dilithium-3',
+    sub: '693,890 cycles · 27,449 Dilithium-3 receipts',
     href: 'https://ssrn.com/abstract=6321298',
   },
   {
     label: 'Technical Whitepaper — SSRN',
-    sub: 'Arquitectura completa · EU AI Act · NIST AI RMF',
+    sub: 'Full architecture · EU AI Act · NIST AI RMF',
     href: 'https://ssrn.com/abstract=6507559',
   },
   {
-    label: 'Dataset de producción — Zenodo',
+    label: 'Production Dataset — Zenodo',
     sub: '82,569 decisions · DOI: 10.5281/zenodo.19056919',
     href: 'https://doi.org/10.5281/zenodo.19056919',
   },
@@ -150,7 +150,7 @@ export default function SecurityPage() {
               borderRadius: 4,
             }}
           >
-            OMNIX QUANTUM · ARQUITECTURA DE SEGURIDAD
+            OMNIX QUANTUM · SECURITY ARCHITECTURE
           </span>
         </div>
 
@@ -163,9 +163,9 @@ export default function SecurityPage() {
             letterSpacing: '-0.02em',
           }}
         >
-          Seguridad que puedes verificar
+          Security you can verify
           <br />
-          <span style={{ color: GOLD }}>sin confiar en nosotros.</span>
+          <span style={{ color: GOLD }}>without trusting us.</span>
         </h1>
 
         <p
@@ -177,9 +177,9 @@ export default function SecurityPage() {
             margin: '0 0 16px 0',
           }}
         >
-          OMNIX no pide que confíes en su postura de seguridad. Cada receipt contiene 
-          su propia prueba criptográfica. Cada paper en SSRN y Zenodo tiene fecha verificable. 
-          La arquitectura es pública. Los ADRs son públicos. Verifica tú mismo.
+          OMNIX does not ask you to trust its security posture. Every receipt contains
+          its own cryptographic proof. Every paper on SSRN and Zenodo carries a verifiable timestamp.
+          The architecture is public. The ADRs are public. Verify it yourself.
         </p>
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 64 }}>
@@ -298,7 +298,7 @@ export default function SecurityPage() {
               marginBottom: 24,
             }}
           >
-            EVIDENCIA PÚBLICA VERIFICABLE
+            VERIFIABLE PUBLIC EVIDENCE
           </div>
           <div
             style={{
@@ -354,11 +354,11 @@ export default function SecurityPage() {
             }}
           >
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: '#475569', marginBottom: 16 }}>
-              VERIFICACIÓN INDEPENDIENTE
+              INDEPENDENT VERIFICATION
             </div>
             <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.75, margin: '0 0 20px 0' }}>
-              Cualquier receipt de OMNIX puede verificarse sin acceder a ningún sistema interno. 
-              El receipt contiene la firma, el payload, y la clave pública — todo lo necesario.
+              Any OMNIX receipt can be verified without accessing any internal system.
+              The receipt contains the signature, payload, and public key — everything required.
             </p>
             <button
               onClick={() => navigate('/verify-independently')}
@@ -373,7 +373,7 @@ export default function SecurityPage() {
                 cursor: 'pointer',
               }}
             >
-              Verificar un receipt →
+              Verify a receipt →
             </button>
           </div>
           <div
@@ -385,11 +385,11 @@ export default function SecurityPage() {
             }}
           >
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: '#475569', marginBottom: 16 }}>
-              ADRs DE SEGURIDAD
+              SECURITY ARCHITECTURE DECISIONS
             </div>
             <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.75, margin: '0 0 20px 0' }}>
-              ADR-022 (PQC), ADR-042 (Hybrid KEM), ADR-044 (Transparency Chain), ADR-116 (Fail-Closed), 
-              ADR-148 (LLM Boundary) — disponibles en los depósitos Zenodo.
+              ADR-022 (PQC), ADR-042 (Hybrid KEM), ADR-044 (Transparency Chain), ADR-116 (Fail-Closed),
+              ADR-148 (LLM Boundary) — available in Zenodo deposits.
             </p>
             <a
               href="https://doi.org/10.5281/zenodo.19056919"
@@ -408,7 +408,7 @@ export default function SecurityPage() {
                 textDecoration: 'none',
               }}
             >
-              Ver ADRs en Zenodo →
+              View ADRs on Zenodo →
             </a>
           </div>
         </div>
@@ -427,10 +427,10 @@ export default function SecurityPage() {
         >
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 10px 0' }}>
-              ¿Tienes una pregunta de seguridad específica?
+              Have a specific security question?
             </h2>
             <p style={{ fontSize: 14, color: '#64748b', margin: 0, maxWidth: 440 }}>
-              CISOs, auditores, y reguladores — las preguntas técnicas tienen respuestas directas y documentadas.
+              CISOs, auditors, and regulators — technical questions have direct, documented answers.
             </p>
           </div>
           <button
@@ -447,7 +447,7 @@ export default function SecurityPage() {
               flexShrink: 0,
             }}
           >
-            Contactar →
+            Contact →
           </button>
         </div>
 
@@ -465,7 +465,7 @@ export default function SecurityPage() {
             OMNIX QUANTUM · Dilithium-3 (ML-DSA-65) · NIST FIPS 204
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
-            6 capas de seguridad · 171 ADRs · Producción desde Nov 2025
+            6 security layers · 171 ADRs · In production since Nov 2025
           </div>
         </div>
       </div>
