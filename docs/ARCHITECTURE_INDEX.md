@@ -14,12 +14,36 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ---
 
+## Releases
+
+| Documento | Archivo | Alcance |
+|---|---|---|
+| **ATF Ecosystem Release 3.3** | `docs/releases/ATF_ECOSYSTEM_RELEASE_3.3.md` | Documento anchor del ecosistema ATF completo. RFC-ATF-1/2/3 (6 DOIs permanentes), 47 invariantes, 170 ADRs, 495+ tests, changelog ADR-161→170, artifacts, regulatory alignment, Priority Record. OMNIX-ATF-RELEASE-3.3-2026-05 |
+
+---
+
+## Guías Institucionales
+
+| Documento | Archivo | Audiencia |
+|---|---|---|
+| **Auditor Offline Verification Guide** | `docs/guides/AUDITOR_OFFLINE_VERIFICATION_GUIDE.md` | External auditors · Regulators · Legal counsel — How to verify ATF evidence offline without platform access. Step-by-step: OEP package anatomy, platform key cross-reference (HTTP/DNS/Zenodo), CLI verifier execution, receipt interpretation, regulatory checklist (14 points), common auditor Q&A. OMNIX-GUIDE-AUDITOR-OFV-2026-05 |
+
+---
+
+## Casos Prácticos
+
+| Documento | Archivo | Alcance |
+|---|---|---|
+| **E2E ATF Forensic Case Study** | `docs/examples/E2E_ATF_FORENSIC_CASE_STUDY.md` | Escenario end-to-end completo: Human→Agent delegation→TAR→ControlReceipt→RCR chain (NOMINAL→MONITORING→WARNING→CRITICAL→HALT)→RC expiry→emergency COLD seal→OEP export→offline verification. Campo a campo con valores reales. Verifier output literal. 14 invariantes verificados. OMNIX-EXAMPLE-E2E-FORENSIC-2026-05 |
+
+---
+
 ## Auditorías y Compliance
 
 | Documento | Archivo | Alcance |
 |---|---|---|
 | **Institutional Architecture Review — ATF/EAP/OEP** | `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` | ADR-156–169 · 40 invariantes · Gap analysis A–F · Risk prioritization · ADR-169 fail-open tension · Institutional buyer flags · Top-5 strategic recommendations · OMNIX-AUDIT-ATF-EAP-OEP-2026-05 |
-| **40-Invariant Test Coverage Matrix** | `docs/compliance/INVARIANT_TEST_MATRIX.md` | Trazabilidad completa: 40 invariantes × implementación × test · 34/40 cobertura directa (85%) · 6/40 structural-only · Plan de remediación priorizado · OMNIX-COMPLIANCE-INV-MATRIX-2026-05 |
+| **47-Invariant Test Coverage Matrix** | `docs/compliance/INVARIANT_TEST_MATRIX.md` | Trazabilidad completa: 47 invariantes × implementación × test (rev.3) · 41/47 cobertura directa (87.2%) · 6/47 structural-only · 0 sin cobertura · Plan de remediación priorizado · OMNIX-COMPLIANCE-INV-MATRIX-2026-05 |
 | ADR-160 Production Audit | `docs/audits/ADR-160-PRODUCTION-AUDIT.md` | RCR Performance / RPOL |
 | ADR-161 GPIL Production Audit | `docs/audits/ADR-161-GPIL-PRODUCTION-AUDIT.md` | Governance Policy Interop Layer |
 | ADR-163 Protocol Page Audit | `docs/audits/ADR-163-PROTOCOL-PAGE-AUDIT.md` | Immutable Evidence Archive |
