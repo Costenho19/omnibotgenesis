@@ -5,12 +5,16 @@
   --gold-light: #D4AF37;
   --gold-dark: #A68B1F;
   --platinum: #E5E4E2;
-  --navy: #0A1628;
-  --navy-light: #0F2140;
+  --navy: #060F1E;
+  --navy-light: #0A1628;
   --navy-dark: #050D18;
   --slate: #1E293B;
-  --success: #10B981;
-  --danger: #EF4444;
+  --muted: #94a3b8;
+  --cyan: #22d3ee;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 * {
