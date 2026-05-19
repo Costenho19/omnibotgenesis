@@ -6364,6 +6364,21 @@ Trades: {balance['total_trades']}"""
             
             await self.application.initialize()
             await self.application.start()
+
+            # Eliminar webhook activo antes de polling — si hay un webhook
+            # configurado en Railway, Telegram envía updates ahí y el bot
+            # nunca los recibe via polling. Esto lo limpia siempre.
+            try:
+                deleted = await self.application.bot.delete_webhook(drop_pending_updates=drop_pending_updates)
+                if deleted:
+                    logger.info("🧹 Webhook eliminado correctamente — polling habilitado")
+                else:
+                    logger.info("ℹ️ No había webhook activo")
+                webhook_info = await self.application.bot.get_webhook_info()
+                logger.info(f"📋 Webhook info post-delete: url='{webhook_info.url}' pending={webhook_info.pending_update_count}")
+            except Exception as wh_err:
+                logger.warning(f"⚠️ No se pudo eliminar webhook (no crítico): {wh_err}")
+
             await self.application.updater.start_polling(
                 drop_pending_updates=drop_pending_updates,
                 allowed_updates=Update.ALL_TYPES
