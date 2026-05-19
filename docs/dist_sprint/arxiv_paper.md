@@ -262,17 +262,17 @@ The Python reference implementation (`reference-implementation/`) provides:
 - `RuntimeContinuityRecord` — CES computation and HALT
 - `verify_receipt()` — offline verification (zero external deps)
 
-Install: `pip install atf-protocol`
+Install: `python sdk/omnix_atf_verify.py receipt.json` (standalone, zero external deps except `pypqc`)
 
 ### 8.2 Language Ports
 
-| Language | Package | Install |
+| Language | Status | Reference |
 |---|---|---|
-| Python | `atf-protocol` (PyPI) | `pip install atf-protocol` |
-| TypeScript | `@atf-protocol/verifier` (npm) | `npm install @atf-protocol/verifier` |
-| Rust | `atf-verifier` (crates.io) | `cargo add atf-verifier` |
+| Python | ✅ Available | `sdk/omnix_atf_verify.py` — standalone offline verifier |
+| TypeScript | ⏳ Roadmap | npm port planned post-v1.1.0 |
+| Rust | ⏳ Roadmap | crates.io port planned post-v1.1.0 |
 
-All three ports produce byte-identical SHA-256 hashes for the same receipt (FVP-INV-007), verified by the conformance test suite.
+The Python verifier produces canonical SHA-256 hashes independently of OMNIX infrastructure, satisfying ATF-INV-006 (FVP-INV-007). Cross-language hash parity is part of the roadmap conformance suite.
 
 ### 8.3 Framework Integrations
 
@@ -355,12 +355,11 @@ Implementations can self-attest conformance using the 66-vector conformance test
 
 ATF provides a cryptographically grounded, institutionally presentable foundation for AI agent governance. It answers the question: *"Was this AI agent authorized to take this action at this exact moment?"* with a chain of post-quantum signed receipts that any third party can verify offline.
 
-The 40 named invariants, three RFCs, and multi-language implementation make ATF suitable for regulatory submissions, enterprise deployment, and academic citation. The protocol is designed to be adopted independently of any specific AI platform.
+The 47 named invariants across 9 families, three published RFCs, and production reference implementation make ATF suitable for regulatory submissions, enterprise deployment, and academic citation. The protocol is designed to be adopted independently of any specific AI platform.
 
-**Repository:** https://github.com/Costenho19/atf-protocol-standard  
-**Online Verifier:** https://costenho19.github.io/atf-protocol-standard/verify/  
-**PyPI:** `pip install atf-protocol`  
-**npm:** `npm install @atf-protocol/verifier`
+**Repository:** https://github.com/Costenho19/omnibotgenesis  
+**Online Verifier:** `https://<domain>/atf-verify` — public, no account required  
+**Offline Verifier:** `sdk/omnix_atf_verify.py` — standalone, zero infrastructure dependencies
 
 ---
 
@@ -380,5 +379,5 @@ The 40 named invariants, three RFCs, and multi-language implementation make ATF 
 ---
 
 *Submitted for arXiv preprint. Target: cs.CR + cs.AI.*  
-*Protocol standard: https://github.com/Costenho19/atf-protocol-standard*  
-*Version: ATF v3.2.0 — RFC-ATF-1/2/3 — 47 invariants — Python/Rust/TypeScript*
+*Repository: https://github.com/Costenho19/omnibotgenesis*  
+*Version: ATF v3.3.0 — RFC-ATF-1/2/3 — 47 invariants — 171 ADRs — 245+ tests passing*

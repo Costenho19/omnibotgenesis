@@ -3,8 +3,8 @@
 
 **Fecha:** 2026-05-16  
 **Auditor:** OMNIX Audit Engine — Harold Nunes / OMNIX QUANTUM LTD  
-**Alcance:** OMNIX codebase completo + Repo `Costenho19/atf-protocol-standard`  
-**Estándar de referencia:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-001→169  
+**Alcance:** OMNIX codebase completo + Repo `Costenho19/omnibotgenesis`  
+**Estándar de referencia:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-001→171  
 
 ---
 
@@ -410,7 +410,7 @@ Cada capa extiende sin reemplazar la anterior. ATF-INV-006 (Independent Verifiab
 | `npx atf-verify receipt.json` | ✅ |
 | Output claro en fallo | ✅ |
 | Parity hash con Python | ✅ |
-| `@atf-protocol/verifier@1.0.0` | ✅ |
+| `sdk/omnix_atf_verify.py` (standalone offline verifier) | ✅ |
 
 ### Rust Verifier
 
@@ -555,7 +555,7 @@ Data fallback chain: alpha_vantage → fred → calibrated_defaults (ADR-documen
 | Check | Estado |
 |---|---|
 | Quickstart < 5 min | ✅ |
-| `pip install atf-protocol` + `atf-verify receipt.json` | ✅ |
+| `python sdk/omnix_atf_verify.py receipt.json` (offline, zero deps) | ✅ |
 | Documentación institucional clara | ✅ |
 | No overclaims en páginas públicas | ✅ |
 | Accesibilidad (viewport meta, contraste) | ✅ |
@@ -714,7 +714,7 @@ Data fallback chain: alpha_vantage → fred → calibrated_defaults (ADR-documen
 | ¿Puede exportar OEP? | ✅ `verify_oep_package.py` + ADR-165/166 |
 | ¿Puede declarar conformidad? | ✅ Conformance Program en `/docs/conformance/` |
 | ¿Puede entender el protocolo en minutos? | ✅ Quickstart en 9ª página GitHub Pages |
-| ¿Puede instalar fácilmente? | ✅ `pip install atf-protocol` · `npm install @atf-protocol/verifier` · `cargo add atf-verifier` |
+| ¿Puede verificar offline? | ✅ `python sdk/omnix_atf_verify.py receipt.json` — standalone, sin infraestructura OMNIX |
 | Onboarding friction | Baja ✅ |
 | CONTRIBUTING.md | ⚠️ **HALLAZGO M6:** Existe el archivo pero sin proceso de PR review estructurado |
 
@@ -850,4 +850,4 @@ Data fallback chain: alpha_vantage → fred → calibrated_defaults (ADR-documen
 
 *Generado por OMNIX Audit Engine — 2026-05-16*  
 *OMNIX QUANTUM LTD · Harold Alberto Nunes Rodelo · UAE / UK*  
-*Repo: `Costenho19/atf-protocol-standard` · Stack: RFC-ATF-1/2/3 · ADR-001→169*
+*Repo: `Costenho19/omnibotgenesis` · Stack: RFC-ATF-1/2/3 · ADR-001→171*

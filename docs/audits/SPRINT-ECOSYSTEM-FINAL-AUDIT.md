@@ -3,9 +3,9 @@
 
 **Fecha:** 2026-05-16  
 **Auditor:** Agente Arquitecto — OMNIX QUANTUM  
-**Repo auditado:** `Costenho19/atf-protocol-standard`  
+**Repo auditado:** `Costenho19/omnibotgenesis`  
 **Codebase local:** `/home/runner/workspace` (OMNIX QUANTUM)  
-**Alcance:** Sprint Ecosistema ATF completo — 39 artefactos, 9 GitHub Pages, CI/CD, verifiers, ports, integrations  
+**Alcance:** Sprint Ecosistema ATF completo — 39 artefactos, CI/CD, verifiers, implementación de referencia  
 
 ---
 
@@ -229,7 +229,7 @@ ci.yml: 3 jobs
 | Output determinista | ✅ |
 | Fallo con razón clara | ✅ |
 | Same hash as Python | ✅ |
-| Package: `@atf-protocol/verifier@1.0.0` | ✅ |
+| Standalone verifier: `sdk/omnix_atf_verify.py` | ✅ |
 
 ---
 
@@ -318,13 +318,13 @@ ci.yml: 3 jobs
 | ¿Puede un tercero implementar ATF sin OMNIX? | ✅ Sí — RFC-ATF-1/2/3 son autocontenidos |
 | ¿Puede verificar offline? | ✅ Sí — browser verifier + CLI offline |
 | ¿Puede entender el protocolo rápido? | ✅ Sí — Quickstart en < 5 min |
-| ¿Puede correr ejemplos en minutos? | ✅ `pip install atf-protocol` + `atf-verify example.json` |
+| ¿Puede correr ejemplos en minutos? | ✅ `python sdk/omnix_atf_verify.py receipt.json` |
 | ¿Puede declarar conformidad? | ✅ Sí — Conformance Program en `/docs/conformance/` |
-| ¿Puede integrar FastAPI? | ✅ `pip install atf-fastapi` |
-| ¿Puede integrar LangChain? | ✅ `pip install atf-langchain` (con caveat async) |
-| ¿Puede integrar OpenAI Agents? | ✅ `pip install atf-openai-agents` |
-| ¿Puede verificar en Rust? | ✅ `cargo add atf-verifier` |
-| ¿Puede verificar en TypeScript/Node? | ✅ `npm install @atf-protocol/verifier` |
+| ¿Puede integrar FastAPI? | ⏳ SDK integrations — roadmap post-v1.1.0 |
+| ¿Puede integrar LangChain? | ⏳ SDK integrations — roadmap post-v1.1.0 |
+| ¿Puede integrar OpenAI Agents? | ⏳ SDK integrations — roadmap post-v1.1.0 |
+| ¿Puede verificar offline? | ✅ `sdk/omnix_atf_verify.py` — zero external deps excepto pypqc |
+| ¿Puede verificar en TypeScript/Node? | ⏳ npm port — roadmap post-v1.1.0 |
 
 **Readiness score: 9/10.** Único gap: async LangChain support.
 
@@ -414,4 +414,4 @@ ci.yml: 3 jobs
 ---
 
 *Generado automáticamente por OMNIX Audit Engine — 2026-05-16*  
-*Repo: `Costenho19/atf-protocol-standard` · OMNIX QUANTUM LTD · Harold Nunes*
+*Repo: `Costenho19/omnibotgenesis` · OMNIX QUANTUM LTD · Harold Nunes*

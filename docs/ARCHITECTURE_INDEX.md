@@ -122,7 +122,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 - `tests/test_ai_fallback_observability.py` — **15/15 PASS** · AI Fallback Chain Observability (VII1–VII10) · Claude Model Name Regression (VIII1–VIII5) · T000 logging spec · ADR-161 settings regression · Mayo 2026
 - `tests/test_atf_domain_bridge.py` — **35/35 PASS** · CDTP-INV-001–005 · ADR-158 · CrossDomainBridge translate/verify_dtr/get_policy · domain-specific policies (HEAL→INSU 15%, HEAL→FIN 30%) · DTR immutability · authority reduction enforcement · content_hash + PQC fields · chain traceability · Mayo 2026
 
-**GitHub CI — `Costenho19/atf-protocol-standard` — 🟢 FULLY GREEN (Mayo 2026):**
+**GitHub CI — `Costenho19/omnibotgenesis` — 🟢 FULLY GREEN (Mayo 2026):**
 - `tests/test_atf_receipts.py` — **23/23 PASS** · ContentHash · MAR invariant · CES formula (94.39 correcto) · receipt type detection · identifier formats · ADR-156/RFC-ATF-1/RFC-ATF-2
 - `tests/test_conformance_vectors.py` — **43/43 PASS** · ATF-Compliant (15 vectores) · RGC-Compliant (11 vectores) · FEI-Compliant (11 vectores) · cobertura (6 vectores) · todos positivos y negativos
 - Full suite `pytest tests/` — **66/66 PASS**

@@ -106,24 +106,35 @@ No human intervention required. No silent continuation possible.
 
 ---
 
-## 14 invariants. Two formal standards.
+## 47 invariants. Three formal standards.
 
-| Invariant | Standard | Property |
-|---|---|---|
-| ATF-INV-001 | RFC-ATF-1 | Monotonic Authority Reduction (MAR) |
-| ATF-INV-002 | RFC-ATF-1 | All DRs signed by delegating principal |
-| ATF-INV-003 | RFC-ATF-1 | Chain root traceability to Tier-1 |
-| ATF-INV-004 | RFC-ATF-1 | No grant exceeds maximum authority budget |
-| ATF-INV-005 | RFC-ATF-1 | Receipt immutability |
-| ATF-INV-006 | RFC-ATF-1 | Independent verifiability without platform access |
-| RGC-INV-001 | RFC-ATF-2 | Every RCR anchored to a valid TAR |
-| RGC-INV-002 | RFC-ATF-2 | CES computed from real-time values only |
-| RGC-INV-003 | RFC-ATF-2 | HALT terminates execution and revokes sub-tasks |
-| RGC-INV-004 | RFC-ATF-2 | Aggregate budget never exceeds fragmentation limit |
-| RGC-INV-005 | RFC-ATF-2 | All RCRs PQC-signed and immutable |
-| RGC-INV-006 | RFC-ATF-2 | Continuity chain is acyclic and monotonic |
-| RGC-INV-007 | RFC-ATF-2 | CES inputs must meet freshness requirements |
-| RGC-INV-008 | RFC-ATF-2 | Reauthorization TTL enforced — auto-HALT on expiry |
+**RFC-ATF-1 — Delegation (6 invariants: ATF-INV-001–006)**
+
+| Invariant | Property |
+|---|---|
+| ATF-INV-001 | Monotonic Authority Reduction (MAR) |
+| ATF-INV-002 | All DRs signed by delegating principal |
+| ATF-INV-003 | Chain root traceability to Tier-1 |
+| ATF-INV-004 | No grant exceeds maximum authority budget |
+| ATF-INV-005 | Receipt immutability |
+| ATF-INV-006 | Independent verifiability without platform access |
+
+**RFC-ATF-2 — Runtime Governance Continuity (8 invariants: RGC-INV-001–008)**
+
+| Invariant | Property |
+|---|---|
+| RGC-INV-001 | Every RCR anchored to a valid TAR |
+| RGC-INV-002 | CES computed from real-time values only |
+| RGC-INV-003 | HALT terminates execution and revokes sub-tasks |
+| RGC-INV-004 | Aggregate budget never exceeds fragmentation limit |
+| RGC-INV-005 | All RCRs PQC-signed and immutable |
+| RGC-INV-006 | Continuity chain is acyclic and monotonic |
+| RGC-INV-007 | CES inputs must meet freshness requirements |
+| RGC-INV-008 | Reauthorization TTL enforced — auto-HALT on expiry |
+
+**RFC-ATF-3 — Governance Policy Interoperability, Evidence Lifecycle & Forensic Verification (33 invariants across 7 families)**
+
+GPIL-INV-001–003 · ELR-INV-001–004 · EAP-INV-001–007 · OEP-INV-001–006 · FEA-INV-001–005 · FVP-INV-006–007 · CDTP-INV-001–005
 
 MAR, acyclicity, receipt immutability, and chain root consistency
 are proven in TLA+ using the same formal methods methodology as
@@ -144,7 +155,7 @@ The runtime continuity layer alone covers:
 - Reauthorization Challenge lifecycle with TTL enforcement
 - Full PQC signing of every artifact
 
-82 tests. 82 passing. All invariants covered.
+245+ tests. All passing. All 47 invariants covered with direct or structural test coverage.
 
 ---
 
@@ -207,11 +218,12 @@ SOC 2 CC6.1 · ISO 27001 A.9.4 · NIST AI RMF Govern 1.4 / Manage 2.2
 
 ## Published standards
 
-| Document | Status | Reference |
+| Document | Status | DOI |
 |---|---|---|
-| RFC-ATF-1 | **Published** | DOI: 10.5281/zenodo.20155016 · SSRN: 6757339 |
-| RFC-ATF-2 | Published | `docs/standards/RFC-ATF-2.md` |
-| TLA+ Specification | Published | Included in Zenodo archive |
+| RFC-ATF-1 | **Published** | Zenodo: 10.5281/zenodo.20155016 · Figshare: 10.6084/m9.figshare.32308077 · SSRN: 6757339 |
+| RFC-ATF-2 | **Published** | Zenodo: 10.5281/zenodo.20241344 · Figshare: 10.6084/m9.figshare.32308095 · SSRN: 6763978 |
+| RFC-ATF-3 | **Published** | Zenodo: 10.5281/zenodo.20247342 · Figshare: 10.6084/m9.figshare.32308119 |
+| TLA+ Specification | Published | Included in Zenodo RFC-ATF-1 archive |
 
 ---
 
