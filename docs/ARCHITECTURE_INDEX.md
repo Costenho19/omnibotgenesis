@@ -136,14 +136,18 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 | Documento | Archivo | Estado |
 |---|---|---|
-| RFC-ATF-1 | `docs/standards/RFC-ATF-1.md` | Publicado · DOI: 10.5281/zenodo.20155016 · SSRN: 6757339 |
-| RFC-ATF-2 | `docs/standards/RFC-ATF-2.md` | Publicado · SSRN: 6763978 · Pendiente Zenodo DOI |
+| RFC-ATF-1 | `docs/standards/RFC-ATF-1.md` | Publicado · DOI: 10.5281/zenodo.20155016 · SSRN: 6757339 · Tag: `v1.0.0-rfc-atf-1` |
+| RFC-ATF-2 | `docs/standards/RFC-ATF-2.md` | Publicado · DOI: 10.5281/zenodo.20241344 · Tag: `v1.0.0-rfc-atf-2` |
+| RFC-ATF-3 | `docs/standards/RFC-ATF-3.md` | Publicado · DOI: 10.5281/zenodo.20247342 · Tag: `v1.0.0-rfc-atf-3` |
 | TLA+ Spec | `docs/formal/ATF-TLA-SPEC.tla` | Incluido en Zenodo v1.0.0 |
 | TLA+ Verification | `docs/formal/ATF-FORMAL-VERIFICATION.md` | 5 propiedades formales |
 | RFC-ATF-1 ABNF | RFC-ATF-1 §15 | Incluido en spec |
+| **Release Manifest** | `docs/RELEASE_MANIFEST.md` | Ancla DOI ↔ commit git ↔ SHA-256 para los 3 RFCs. Verificación independiente sin acceso a la plataforma. |
 
 **SSRN:** https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6757339
-**Zenodo:** https://doi.org/10.5281/zenodo.20155016
+**Zenodo RFC-ATF-1:** https://doi.org/10.5281/zenodo.20155016
+**Zenodo RFC-ATF-2:** https://doi.org/10.5281/zenodo.20241344
+**Zenodo RFC-ATF-3:** https://doi.org/10.5281/zenodo.20247342
 
 ---
 
