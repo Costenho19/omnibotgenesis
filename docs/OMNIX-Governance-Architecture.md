@@ -154,7 +154,7 @@ On load:
 
 ## 5. Receipt ID Canonical Format
 
-All 8 domains produce receipts via `DecisionReceiptEngine.build_receipt_id(domain)`:
+All 10 domains produce receipts via `DecisionReceiptEngine.build_receipt_id(domain)`:
 
 | Domain | Code | Format |
 |--------|------|--------|

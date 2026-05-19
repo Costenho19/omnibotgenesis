@@ -1,7 +1,7 @@
 ```
-Internet-Draft                                         OMNIX QUANTUM LTD
+OMNIX QUANTUM Open Standard                            OMNIX QUANTUM LTD
 Category: Standards Track                                    H. Nunes, Ed.
-ISSN: pending                                                    May 2026
+DOI: 10.5281/zenodo.20155016 · 10.6084/m9.figshare.32308077     May 2026
 
 
            RFC-ATF-1: Agent Trust Fabric Delegation Protocol

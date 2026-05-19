@@ -89,7 +89,7 @@ OMNIX QUANTUM y el ecosistema ATF Protocol Standard superan esta auditoría de 1
 | GitHub Pages (9 páginas) | ✅ Live |
 | React SPA (OMNIX Web) | ✅ Running |
 | Flask Dashboard | ✅ Running |
-| 58+ React pages | ✅ Lazy-loaded |
+| 64 React pages | ✅ Lazy-loaded |
 
 ### Infraestructura
 
@@ -797,7 +797,7 @@ Data fallback chain: alpha_vantage → fred → calibrated_defaults (ADR-documen
 | OpenAI Agents | ✅ | ⚠️ | ⚠️ | ✅ | ✅ |
 | Browser verifier | ✅ | Manual | ⚠️ | ✅ | ✅ |
 | GitHub Pages (9) | ✅ | — | — | ✅ | ✅ |
-| React SPA (58+ pages) | ✅ | — | — | ✅ | ✅ |
+| React SPA (64 pages) | ✅ | — | — | ✅ | ✅ |
 | DB Schema (95 tables) | ✅ | ✅ | — | ✅ | ✅ |
 
 ---

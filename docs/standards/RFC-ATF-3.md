@@ -1,7 +1,7 @@
 ```
-Internet-Draft                                         OMNIX QUANTUM LTD
+OMNIX QUANTUM Open Standard                            OMNIX QUANTUM LTD
 Category: Standards Track                                    H. Nunes, Ed.
-ISSN: pending                                                    May 2026
+DOI: 10.6084/m9.figshare.32308119 · 10.5281/zenodo.20247342     May 2026
 
 
   RFC-ATF-3: Agent Trust Fabric — Governance Policy Interoperability,
@@ -81,8 +81,8 @@ Status of This Memo
    Group.  It has been approved for publication by the OMNIX Technical
    Committee.
 
-   DOI: pending (Zenodo submission in progress)
-   SSRN: pending
+   DOI: 10.6084/m9.figshare.32308119 (Figshare) · 10.5281/zenodo.20247342 (Zenodo)
+   SSRN: —
 
 
 Copyright Notice

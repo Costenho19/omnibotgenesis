@@ -529,9 +529,9 @@ $13M ---- *** *** COSTS
 | Prepared for | , Pre-Seed Investors |
 | Aligned with | OMNIX Pitch Final, Business Model Canvas, financial_projections.md |
 | Founder | Harold Nunes — harold@omnix.ai |
-| Last Updated | March 6, 2026 |
-| ADR Count | 36 |
-| Architecture | 8 entry checkpoints + 3-gate EGL |
+| Last Updated | May 2026 |
+| ADR Count | 171 |
+| Architecture | 11 entry checkpoints + CAG + TIE (13 governance layers) |
 
 ---
 

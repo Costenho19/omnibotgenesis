@@ -149,7 +149,7 @@ OMNIX integrates into the client's execution flow as infrastructure. Once embedd
 |--------|----------|
 | Working product in production | 3+ months running 24/7 |
 | Real validation data | 670,000+ decision cycles analyzed |
-| Defensible IP | 8-checkpoint entry + EGL + Shadow Portfolio engine (171 ADRs) |
+| Defensible IP | 11-checkpoint pipeline + CAG + TIE + Shadow Portfolio engine (171 ADRs) |
 | Strategic timing | MiCA + ADGM convergence creating urgent demand |
 | Comparable | Chainalysis raised at $4M pre-money at similar stage |
 

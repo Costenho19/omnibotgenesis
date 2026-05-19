@@ -17,7 +17,7 @@ I'm Harold Nunes, founder of OMNIX Quantum — a decision governance infrastruct
 
 One problem we keep seeing: most governance controls in automated pipelines happen *after* execution — audits, reviews, and compliance checks that arrive after the decision has already been made. When an automated system fails, it fails at machine speed.
 
-OMNIX moves governance to the execution boundary. Every decision is validated through an 8-checkpoint pipeline before it executes, and generates a cryptographically signed receipt — independently verifiable by any party.
+OMNIX moves governance to the execution boundary. Every decision is validated through an 11-checkpoint pipeline (8 entry + 3 exit EGL) before it executes, and generates a cryptographically signed receipt — independently verifiable by any party.
 
 We've processed 72,443 real governance decisions in production, each one post-quantum signed and hash-chained. The full dataset is public on Zenodo (DOI: 10.5281/zenodo.19056919).
 
@@ -45,7 +45,7 @@ Hi [Name],
 
 Good to connect. I wanted to share something we just opened up.
 
-OMNIX Quantum is now accepting pilot partners for our decision governance infrastructure — 30 days, no cost. You submit your automated decision signals, we validate them through our 8-checkpoint governance pipeline before execution, and you get a signed audit trail for every outcome.
+OMNIX Quantum is now accepting pilot partners for our decision governance infrastructure — 30 days, no cost. You submit your automated decision signals, we validate them through our 11-checkpoint governance pipeline before execution, and you get a signed audit trail for every outcome.
 
 Given what [Company] is building in [sector], I thought this might be a fit — especially with EU AI Act / MiCA timelines accelerating the need for pre-execution auditability.
 

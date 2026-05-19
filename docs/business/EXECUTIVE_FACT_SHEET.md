@@ -1,12 +1,12 @@
 # OMNIX – EXECUTIVE FACT SHEET
 
 **Phase 1 — Institutional Validation**  
-**Version**: 2.0  
-**Issue Date**: 29 March 2026  
+**Version**: 2.1  
+**Issue Date**: 29 March 2026 · **Last Updated**: May 2026  
 **Platform Identity**: Decision Governance Infrastructure for Automated Systems  
-**ADR Count**: 57 ADRs  
+**ADR Count**: 171 ADRs (57 as of March 2026 — see evolution table §3)  
 **Pipeline**: 11 Checkpoints + CAG + TIE (13 governance layers total)  
-**Active Verticals**: 3 (Trading · Islamic Credit · Insurance · Robotics)  
+**Active Verticals**: 10 domains live (Trading · Islamic Credit · Insurance · Robotics · Medical AI · Energy · Real Estate · Agents · Stablecoin · Defense)  
 
 ---
 

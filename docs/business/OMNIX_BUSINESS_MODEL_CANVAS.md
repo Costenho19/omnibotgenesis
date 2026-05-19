@@ -133,7 +133,7 @@ The governance logic is designed as domain-agnostic. First validated in digital 
 
 ### FUTURE VERTICALS — B2B Decision Governance (Year 2-3+)
 
-Supply Chain, Lending/Credit (Year 2-3) → Insurance, Energy Trading (Year 3+). Same 8-checkpoint entry engine + EGL, domain-specific inputs. Architecture designed; expansion follows trading validation.
+Supply Chain, Lending/Credit (Year 2-3) → Insurance, Energy Trading (Year 3+). Same 11-checkpoint engine + CAG + TIE, domain-specific inputs. Architecture designed; expansion follows trading validation.
 
 ### SECONDARY — B2C (20% Focus, Post-Enterprise Validation)
 
@@ -360,7 +360,7 @@ Primary value driver: Avoided tail-risk exposure
 
 | Category | Limitation | OMNIX Advantage |
 |----------|-----------|-----------------|
-| Retail Bots | Too simple, no decision governance | 8-checkpoint entry + EGL governance architecture |
+| Retail Bots | Too simple, no decision governance | 11-checkpoint + CAG + TIE institutional governance architecture |
 | Quant Funds | Too expensive ($10M+ minimum) | Accessible infrastructure |
 | Manual Oversight | Too slow for real-time | <120ms automated validation |
 | Single-Domain Tools | Built for one industry only | Domain-agnostic governance engine |
@@ -398,7 +398,7 @@ Primary value driver: Avoided tail-risk exposure
 |--------|----------|
 | Working product in production | 3+ months running 24/7 |
 | Real validation data | 670,000+ decision cycles analyzed |
-| Defensible IP | 8-checkpoint entry + EGL + Shadow Portfolio engine (171 ADRs) |
+| Defensible IP | 11-checkpoint pipeline + CAG + TIE + Shadow Portfolio engine (171 ADRs) |
 | Strategic timing | MiCA + ADGM convergence creating urgent demand |
 | Market reference | Comparable infrastructure startups raised $3M-$5M at similar stage |
 

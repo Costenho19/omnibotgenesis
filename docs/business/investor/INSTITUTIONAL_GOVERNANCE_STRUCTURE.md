@@ -53,8 +53,8 @@ The governance engine operates autonomously within the parameters set by Layer 1
 
 ### Architecture Characteristics
 
-- **8-checkpoint sequential entry evaluation** — no checkpoint can be bypassed
-- **3-gate exit governance pipeline (EGL)** — automated exit discipline
+- **11-checkpoint sequential evaluation** (8 entry + 3 exit EGL) — no checkpoint can be bypassed
+- **CAG + TIE overlay** — 13 governance layers total, each independently veto-capable
 - **Fail-closed behavior** — if any evaluation fails or times out, execution is blocked
 - **Full auditability** — every governance evaluation produces a complete decision trace
 - **Domain-agnostic core** — governance logic separable from vertical-specific signals via Domain Adapter pattern (ADR-026)

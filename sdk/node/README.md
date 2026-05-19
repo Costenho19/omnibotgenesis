@@ -36,7 +36,7 @@ Before a decision executes, OMNIX validates it through 11 independent governance
 - **Cryptographic proof**: SHA-256 hash + Dilithium-3 signature (NIST FIPS 204)
 - **Independently verifiable**: anyone can verify the receipt offline, without OMNIX
 - **5-year retention**: MiFID II compliant
-- **9 domains live**: trading, Islamic credit, insurance, robotics, medical AI, energy, real estate, agents, stablecoin
+- **10 domains live**: trading, Islamic credit, insurance, robotics, medical AI, energy, real estate, agents, stablecoin, defense
 
 ---
 

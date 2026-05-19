@@ -35,7 +35,7 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 
 | Feature | OMNIX | 3Commas | Cryptohopper | Riskalyze | Internal Quant Tools | Chainalysis |
 |---------|:-----:|:-------:|:------------:|:---------:|:--------------------:|:-----------:|
-| Pre-execution governance | 8 checkpoints + EGL | 0 | 0 | 0 | 1-2 | 0 |
+| Pre-execution governance | 11 checkpoints + CAG + TIE | 0 | 0 | 0 | 1-2 | 0 |
 | Fail-closed architecture | Yes | No | No | N/A | Varies | N/A |
 | Decision audit trail | Full | Partial | None | Post-trade | Limited | Transaction |
 | Explainability (XAI) | Checkpoint-level | None | None | Summary | Varies | Transaction |
@@ -107,7 +107,7 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 | Moat Type | Description | Time to Replicate |
 |-----------|-------------|:------------------:|
 | **Data moat** | 670,000+ evaluation cycle events with outcome tracking | 6-12 months minimum |
-| **Architecture moat** | 8-checkpoint entry + 3-gate exit (EGL) with fail-closed behavior | 12-18 months to build |
+| **Architecture moat** | 11-checkpoint pipeline + CAG + TIE (13 governance layers) with fail-closed behavior | 12-18 months to build |
 | **Shadow Portfolio learning** | Counterfactual analysis learning from decisions NOT taken | Unique globally |
 | **Post-quantum security** | NIST-standardized PQC operational since Nov 2025 | 3-6 months |
 | **Domain-agnostic design** | Same engine validated across trading, credit, insurance | 6-12 months per vertical |

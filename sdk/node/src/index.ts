@@ -3,7 +3,7 @@
  * =============================================
  *
  * Decision governance infrastructure for automated systems.
- * Cryptographic proof on every decision. 9 domains. Live.
+ * Cryptographic proof on every decision. 10 domains. Live.
  *
  * Quick start:
  *   npm install omnix-quantum

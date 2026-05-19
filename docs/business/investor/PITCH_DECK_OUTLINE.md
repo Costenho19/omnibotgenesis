@@ -257,7 +257,7 @@ The Same Engine. Different Domains. Same Discipline.
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 
-The 8-checkpoint architecture is domain-agnostic.
+The 11-checkpoint architecture is domain-agnostic.
 The inputs change. The governance logic is identical.
 
 "We validated in the hardest domain first — 
@@ -358,7 +358,7 @@ Capital preservation focus extends to your capital too.
 3. **Auditability** — Every decision logged and reviewable
 4. **Discipline** — Delayed deployment is intentional validation
 5. **Infrastructure** — Not a trading bot, not a token
-6. **Domain-agnostic** — Same 8-checkpoint engine + EGL, multiple verticals
+6. **Domain-agnostic** — Same 11-checkpoint engine + EGL, multiple verticals
 7. **Multi-vertical governance** — Trading validated, supply chain/lending/insurance on roadmap
 
 ### What NOT to Say

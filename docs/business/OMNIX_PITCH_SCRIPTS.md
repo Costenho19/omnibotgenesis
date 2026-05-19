@@ -122,7 +122,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > OMNIX is building the category of Decision Governance Infrastructure — a governance control architecture for automated decision systems.
 >
-> Our architecture uses a sequential 8-checkpoint system with veto authority and a 3-gate Exit Governance Layer (EGL): if a decision can't be properly validated, it's blocked. Fail-closed by design.
+> Our architecture uses a sequential 11-checkpoint pipeline (8 entry + 3 exit EGL) with veto authority — plus CAG and TIE overlay for 13 governance layers total: if a decision can't be properly validated, it's blocked. Fail-closed by design.
 >
 > First validated in digital asset trading — 670,000+ evaluation cycles (through Feb 2026), 98.5% of capital preserved, running 24/7 since November 2025.
 >
@@ -142,7 +142,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > OMNIX está construyendo la categoría de Infraestructura de Gobernanza de Decisiones — una arquitectura de control de gobernanza para sistemas de decisión automatizados.
 >
-> Nuestra arquitectura usa un sistema secuencial de 8 checkpoints con autoridad de veto y una Capa de Gobernanza de Salida (EGL) de 3 gates: si una decisión no se puede validar correctamente, se bloquea. Fail-closed por diseño.
+> Nuestra arquitectura usa un pipeline secuencial de 11 checkpoints (8 de entrada + 3 de salida EGL) con autoridad de veto — más capas CAG y TIE que suman 13 niveles de gobernanza en total: si una decisión no puede validarse correctamente, se bloquea. Fail-closed por diseño.
 >
 > Primera validación en trading de activos digitales — más de 670,000 ciclos de evaluación (hasta feb 2026), 98.5% del capital preservado, operando 24/7 desde noviembre 2025.
 >

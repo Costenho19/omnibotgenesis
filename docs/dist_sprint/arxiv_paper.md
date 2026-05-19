@@ -5,7 +5,7 @@
 **Contact:** contact@omnixquantum.com  
 **arXiv Category:** cs.CR (Cryptography and Security); cs.AI (Artificial Intelligence)  
 **Draft Date:** 2026-05-16  
-**Protocol Version:** ATF v3.2.0
+**Protocol Version:** ATF v3.3.0
 
 ---
 
