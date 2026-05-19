@@ -83,6 +83,10 @@ limiter = Limiter(
     # are capped at 200 req/min to prevent abuse of unlisted routes.
     default_limits=["200 per minute"],
     storage_uri=_LIMITER_STORAGE,
+    # Fail open when Redis is unreachable (e.g. local dev without Railway Redis).
+    # In production (Railway) Redis is always available — this only affects
+    # environments where REDIS_URL points to an unreachable host.
+    swallow_errors=True,
 )
 
 
@@ -616,7 +620,7 @@ def _ensure_vertical_tables():
     ]
 
     try:
-        conn = psycopg2.connect(db_url)
+        conn = psycopg2.connect(db_url, connect_timeout=5)
         conn.autocommit = False
         cur = conn.cursor()
         for sql in VERTICAL_TABLES_SQL:
@@ -646,7 +650,8 @@ def _ensure_vertical_tables():
         print(f"[startup] Could not create vertical tables: {e}")
 
 
-_ensure_vertical_tables()
+import threading as _startup_threading
+_startup_threading.Thread(target=_ensure_vertical_tables, daemon=True).start()
 
 
 # ── Startup: restore AVM calibration baselines from PostgreSQL ────────────────
@@ -682,7 +687,7 @@ def _initialize_avm_from_db():
         print(f"[startup] AVM baseline restore failed: {e} — evaluations will use pass-through")
 
 
-_initialize_avm_from_db()
+_startup_threading.Thread(target=_initialize_avm_from_db, daemon=True).start()
 
 
 # ── Startup: activate all 9 vertical governance simulators in background ───────
@@ -947,7 +952,7 @@ def _data_retention_loop(
                 _time.sleep(run_interval_hours * 3600)
                 continue
 
-            _conn = _psycopg2.connect(_db_url)
+            _conn = _psycopg2.connect(_db_url, connect_timeout=5)
             try:
                 with _conn:
                     with _conn.cursor() as _cur:
@@ -1111,7 +1116,7 @@ def get_db_connection():
     )
     if not database_url:
         return None
-    return psycopg2.connect(database_url)
+    return psycopg2.connect(database_url, connect_timeout=5)
 
 
 @app.route('/api/live-metrics', methods=['GET'])
