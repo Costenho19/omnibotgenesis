@@ -41,7 +41,7 @@ const timeline = [
   {
     year: 'May 2026',
     event: 'RFC-ATF-3 + GECR formalized',
-    detail: 'RFC-ATF-3: 40 invariants, PQC forensic verification. ADR-170: Governance Execution Context Router — 6 GECR invariants. Total: 47 invariants across 9 families. Published on Zenodo + Figshare.',
+    detail: 'RFC-ATF-3: 26 invariants across 6 families (GPIL, ELR, EAP, OEP, FEA, FVP) — PQC forensic verification. ADR-157 rev.2 + ADR-170 add 7 further invariants. Cumulative total: 47 invariants across 9 families. Published on Zenodo + Figshare.',
     color: '#a855f7',
   },
 ]

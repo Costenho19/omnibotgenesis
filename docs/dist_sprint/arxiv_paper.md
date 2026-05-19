@@ -381,4 +381,4 @@ The 40 named invariants, three RFCs, and multi-language implementation make ATF 
 
 *Submitted for arXiv preprint. Target: cs.CR + cs.AI.*  
 *Protocol standard: https://github.com/Costenho19/atf-protocol-standard*  
-*Version: ATF v3.2.0 — RFC-ATF-1/2/3 — 40 invariants — Python/Rust/TypeScript*
+*Version: ATF v3.2.0 — RFC-ATF-1/2/3 — 47 invariants — Python/Rust/TypeScript*

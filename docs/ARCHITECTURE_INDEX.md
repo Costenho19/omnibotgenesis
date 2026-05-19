@@ -44,7 +44,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 | Documento | Archivo | Alcance |
 |---|---|---|
-| **Institutional Architecture Review — ATF/EAP/OEP** | `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` | ADR-156–169 · 40 invariantes · Gap analysis A–F · Risk prioritization · ADR-169 fail-open tension · Institutional buyer flags · Top-5 strategic recommendations · OMNIX-AUDIT-ATF-EAP-OEP-2026-05 |
+| **Institutional Architecture Review — ATF/EAP/OEP** | `docs/audits/ATF_EAP_OEP_INSTITUTIONAL_AUDIT_2026-05.md` | ADR-156–169 · 40 invariantes (snapshot al momento del audit, antes de ADR-157 rev.2 + ADR-170) · Gap analysis A–F · Risk prioritization · ADR-169 fail-open tension · Institutional buyer flags · Top-5 strategic recommendations · OMNIX-AUDIT-ATF-EAP-OEP-2026-05 |
 | **47-Invariant Test Coverage Matrix** | `docs/compliance/INVARIANT_TEST_MATRIX.md` | Trazabilidad completa: 47 invariantes × implementación × test (rev.3) · 41/47 cobertura directa (87.2%) · 6/47 structural-only · 0 sin cobertura · Plan de remediación priorizado · OMNIX-COMPLIANCE-INV-MATRIX-2026-05 |
 | ADR-160 Production Audit | `docs/audits/ADR-160-PRODUCTION-AUDIT.md` | RCR Performance / RPOL |
 | ADR-161 GPIL Production Audit | `docs/audits/ADR-161-GPIL-PRODUCTION-AUDIT.md` | Governance Policy Interop Layer |
@@ -108,7 +108,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | ATF Governance Connector | `omnix_core/agents/atf/atf_connector.py` | admit() + embed_in_receipt() · fail-open (ADR-169) · FAO-INV-001–003 |
 | ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | **v1.1.0** · Offline · modos: receipt/chain/agent/replay/**block** · --archive-block · --verify-chain · --predecessor-block |
 | Forensic Operations Demo | `omnix_web/src/pages/ForensicOperationsDemoPage.tsx` | `/forensic-operations` · 5 demos interactivos: Runtime Degradation · Cross-Runtime Divergence · Archive Verification · Trust Anchor · Full DR→TAR→RCR→Receipt→Archive Replay · Mayo 2026 |
-| Technical Whitepaper | `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` | 14 secciones · 40 invariantes · CES formula · GPIL · OEP protocol · alineamiento regulatorio EU AI Act / NIST / UAE-DFSA · OMNIX-WP-TECH-2026-001 |
+| Technical Whitepaper | `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` | 14 secciones · 47 invariantes · CES formula · GPIL · OEP protocol · alineamiento regulatorio EU AI Act / NIST / UAE-DFSA · OMNIX-WP-TECH-2026-001 |
 
 **APIs ATF:** `/api/atf/*` · `/api/atf/temporal/*` · `/api/atf/translate/*` · `/api/atf/continuity/*` · `/api/atf/escalations/*`
 
@@ -157,11 +157,11 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 | Página | URL | Contenido |
 |---|---|---|
-| Landing Page | `/` | Hero · Stack L0–L5 · 3 RFCs · CES formula · 40 invariantes · Conformance tiers · Regulatory alignment · Who should implement |
+| Landing Page | `/` | Hero · Stack L0–L5 · 3 RFCs · CES formula · 47 invariantes · Conformance tiers · Regulatory alignment · Who should implement |
 | RFC Index | `/rfc/` | RFC-ATF-1/2/3 navegable · TOC · invariantes completos · CES formula · GPIL levels · EAP tiers · Abstract + links |
 | Public Verifier | `/verify/` | Verificador interactivo JS · checks: MAR (ATF-INV-001) · CES (RGC-INV-001) · content hash · identifier formats · PQC presence · 0 datos salen del browser |
 | Conformance Program | `/conformance/` | 3 tiers (ATF/RGC/FEI) · badges Markdown · tabla 66 vectores · proceso de claim · IMPLEMENTATIONS.md |
-| Technical Whitepaper | `/whitepaper/` | Whitepaper premium HTML/CSS v1.1 · print-to-PDF · 40 invariants table · 6-layer architecture · CES visual · EAP pipeline · PQC · Regulatory grid · Verification claims |
+| Technical Whitepaper | `/whitepaper/` | Whitepaper premium HTML/CSS v1.1 · print-to-PDF · 47 invariants table · 6-layer architecture · CES visual · EAP pipeline · PQC · Regulatory grid · Verification claims |
 | Example Integrations | `/integrations/` | Python / TypeScript / Go tabs · 4 scenarios (DR, RCR, OEP export, offline verify) · syntax highlighting · copy buttons · interop note (GPIL) |
 | Interactive Diagrams | `/diagrams/` | L0→L5 stack clickable (detail panel) · RCR state machine (NOMINAL→HALT) · EAP tier flow · MAR chain visualization |
 | Quickstart | `/quickstart/` | 60 segundos · 4 pasos · CLI · MAR violation demo · next-step cards |
@@ -228,7 +228,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 **UI:**
 - `/archive-verify` → header institucional con 3-plane strip · Trust Anchor panel · trust badges por bloque · HOT/WARM/COLD lifecycle
-- `/trust-infrastructure` → registro completo: live fingerprint · 3 canales · distinción trust levels · key rotation states · 40 invariants collapsibles
+- `/trust-infrastructure` → registro completo: live fingerprint · 3 canales · distinción trust levels · key rotation states · 47 invariants collapsibles
 
 ---
 
@@ -242,7 +242,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Backup & DR Runbook | `docs/operations/BACKUP_RUNBOOK.md` — OMNIX-OPS-002 |
 | Deployment Operations | `docs/operations/DEPLOYMENT.md` |
 | ATF Whitepaper (Institucional) | `docs/atf/OMNIX-ATF-WHITEPAPER.md` — OMNIX-WP-ATF-2026-001 |
-| Technical Whitepaper (Full Stack) | `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` — OMNIX-WP-TECH-2026-001 · 14 secciones · 40 invariantes · CES · GPIL · OEP · EU AI Act / NIST / UAE-DFSA · Mayo 2026 |
+| Technical Whitepaper (Full Stack) | `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` — OMNIX-WP-TECH-2026-001 · 14 secciones · 47 invariantes · CES · GPIL · OEP · EU AI Act / NIST / UAE-DFSA · Mayo 2026 |
 | ATF Threat Model | `docs/atf/ATF-THREAT-MODEL.md` — OMNIX-TM-ATF-2026-001 · 9 threat classes |
 | ATF Priority Record | `docs/zenodo/OMNIX-ATF-PRIORITY-RECORD.md` — OMNIX-PAR-2026-ATF-001 |
 | ATF Submission Guide | `docs/zenodo/OMNIX-ATF-SUBMISSION-GUIDE.md` — OMNIX-SUB-ATF-2026-001 |
