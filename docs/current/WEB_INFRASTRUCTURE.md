@@ -154,7 +154,7 @@ Los tres servicios corren simultáneamente en Replit (desarrollo/demos):
 ### Producción (Railway)
 - **Bot Telegram**: Railway (24/7)
 - **Website (omnixquantum.net)**: Railway — `omnix_web/api/server.py` (gunicorn) sirve React compilado + API endpoints
-- **Public Governance Sandbox (`/try`)**: Endpoint público sin autenticación, Gemini AI + 8-checkpoint pipeline, receipts almacenados en `decision_receipts` (`client_id='PUBLIC'`, `domain='public_sandbox'`), verificables en el servidor de verificación Railway
+- **Public Governance Sandbox (`/try`)**: Endpoint público sin autenticación, Gemini AI + 11-checkpoint pipeline, receipts almacenados en `decision_receipts` (`client_id='PUBLIC'`, `domain='public_sandbox'`), verificables en el servidor de verificación Railway
 - **Variables requeridas en Railway**: `DATABASE_URL`, `FINNHUB_API_KEY`, `GOOGLE_AI_API_KEY`
 
 ## Troubleshooting
