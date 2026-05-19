@@ -1,6 +1,6 @@
 # OMNIX QUANTUM — RFC Publication Release Manifest
 
-**Author:** Harold Nunes · OMNIX QUANTUM LTD · Dubai, UAE  
+**Author:** Harold Nunes · OMNIX QUANTUM LTD  
 **Document ID:** OMNIX-RELEASE-MANIFEST-2026-05  
 **Purpose:** Cryptographically anchors each RFC-ATF publication to its exact git commit and document SHA-256, enabling independent verification of the canonical release artifact.
 
@@ -62,8 +62,8 @@ Any reviewer can independently verify a release artifact:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/omnixquantum/omnix-quantum.git
-cd omnix-quantum
+git clone https://github.com/Costenho19/omnibotgenesis.git
+cd omnibotgenesis
 
 # 2. Checkout the exact release commit
 git checkout v1.0.0-rfc-atf-3
