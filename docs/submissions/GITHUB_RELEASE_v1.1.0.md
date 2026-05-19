@@ -132,9 +132,9 @@ No human intervention required. No silent continuation possible.
 | RGC-INV-007 | CES inputs must meet freshness requirements |
 | RGC-INV-008 | Reauthorization TTL enforced — auto-HALT on expiry |
 
-**RFC-ATF-3 — Governance Policy Interoperability, Evidence Lifecycle & Forensic Verification (33 invariants across 7 families)**
+**RFC-ATF-3 — Governance Policy Interoperability, Evidence Lifecycle & Forensic Verification (26 invariants across 6 families)**
 
-GPIL-INV-001–003 · ELR-INV-001–004 · EAP-INV-001–007 · OEP-INV-001–006 · FEA-INV-001–005 · FVP-INV-006–007 · CDTP-INV-001–005
+GPIL-INV-001–003 · ELR-INV-001–004 · EAP-INV-001–007 · OEP-INV-001–006 · FEA-INV-001–005 · FVP-INV-007
 
 MAR, acyclicity, receipt immutability, and chain root consistency
 are proven in TLA+ using the same formal methods methodology as

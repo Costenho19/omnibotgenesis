@@ -76,7 +76,7 @@ standards@omnixquantum.com
 ## Comments field (arXiv)
 
 ```
-24 pages. IETF Internet-Draft format. Companion TLA+ specification included
+24 pages. OMNIX QUANTUM Open Standard format. Companion TLA+ specification included
 in Zenodo archive (DOI: 10.5281/zenodo.20155016). Reference implementation
 available. Published as OMNIX QUANTUM Open Standard v1.0.0.
 SSRN preprint: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6757339
