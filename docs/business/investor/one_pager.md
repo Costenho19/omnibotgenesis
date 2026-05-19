@@ -23,7 +23,7 @@
 | **Non-Markovian Memory Kernel** | Temporal pattern recognition beyond recency — to our knowledge, no comparable solution globally |
 | **Multi-AI Orchestration** | Gemini 2.0 + GPT-4o + Claude 3.5 Sonnet — zero single-provider dependency |
 | **Post-Quantum Security** | NIST-standardized post-quantum decision signing — operational since Nov 2025 |
-| **Full Decision Audit Trail** | 100% telemetry coverage — 36 ADRs document every architectural decision |
+| **Full Decision Audit Trail** | 100% telemetry coverage — 171 ADRs document every architectural decision |
 | **Interactive Multi-Vertical Demos** | Trading (validated), Credit, Insurance — live on omnixquantum.net |
 
 ---

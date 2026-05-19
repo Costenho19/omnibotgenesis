@@ -18,7 +18,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 | Documento | Archivo | Alcance |
 |---|---|---|
-| **ATF Ecosystem Release 3.3** | `docs/releases/ATF_ECOSYSTEM_RELEASE_3.3.md` | Documento anchor del ecosistema ATF completo. RFC-ATF-1/2/3 (6 DOIs permanentes), 47 invariantes, 170 ADRs, 495+ tests, changelog ADR-161→170, artifacts, regulatory alignment, Priority Record. OMNIX-ATF-RELEASE-3.3-2026-05 |
+| **ATF Ecosystem Release 3.3** | `docs/releases/ATF_ECOSYSTEM_RELEASE_3.3.md` | Documento anchor del ecosistema ATF completo. RFC-ATF-1/2/3 (6 DOIs permanentes), 47 invariantes, 171 ADRs, 245+ tests, changelog ADR-161→171, artifacts, regulatory alignment, Priority Record. OMNIX-ATF-RELEASE-3.3-2026-05 |
 | **ATF Ecosystem Baseline 2026.05** | `docs/releases/ATF_ECOSYSTEM_BASELINE_2026-05.md` | **Snapshot institucional congelado — May 18, 2026.** RFC stack completo con DOIs, 47 invariantes activos por familia, 171 ADRs, designación de conformance L1–L4, infraestructura criptográfica ML-DSA-65, test suite 245+ tests, audit trail, sección de freeze explícita. Documento de referencia para due diligence institucional, revisores regulatorios y citación académica. OMNIX-ATF-BASELINE-2026-05 |
 
 ---

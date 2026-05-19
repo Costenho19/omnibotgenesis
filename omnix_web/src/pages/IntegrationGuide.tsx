@@ -164,7 +164,7 @@ const endpoints = [
   { method: 'GET',  path: '/api/governance/receipt/:id',             auth: true,  desc: 'Retrieve a specific signed receipt by ID.' },
   { method: 'GET',  path: '/api/governance/receipts',                auth: true,  desc: 'List receipts with filters: domain, date range, decision, asset.' },
   { method: 'GET',  path: '/api/governance/due-diligence-report',    auth: true,  desc: 'Generate governance report — JSON or PDF. Supports ?format=pdf&days=30.' },
-  { method: 'GET',  path: '/api/governance/regulatory/catalog',      auth: false, desc: 'All regulatory frameworks and their checkpoint mapping across 9 domains.' },
+  { method: 'GET',  path: '/api/governance/regulatory/catalog',      auth: false, desc: 'All regulatory frameworks and their checkpoint mapping across 10 domains.' },
   { method: 'GET',  path: '/api/receipts/public-key',                auth: false, desc: 'Active PQC public key — verify signatures independently.' },
   { method: 'POST', path: '/api/receipts/verify',                    auth: false, desc: 'Cryptographic signature verification (ADR-079).' },
   { method: 'GET',  path: '/verify/:receipt_id',                     auth: false, desc: 'Public human-readable receipt verification page.' },

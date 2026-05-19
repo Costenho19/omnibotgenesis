@@ -37,14 +37,14 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 ## Where Things Live
 
 - `/omnix_web/` — React SPA + Flask API (`api/server.py`, `api/gov_blueprint.py`, `api/sandbox.py`)
-  - `omnix_web/src/pages/` — 57 páginas React · `App.tsx` tiene todas las rutas
+  - `omnix_web/src/pages/` — 64 páginas React · `App.tsx` tiene todas las rutas
   - `omnix_web/dist/` — Build compilado. Flask lo sirve en producción
 - `/omnix_dashboard/` — Dashboard operacional Flask (Jinja2) · `/terminal` y `/classic` viven aquí
 - `/omnix_services/` — Telegram bot · AI service · coherence · trading
 - `/omnix_core/` — Governance engine · PQC security · receipts · AVM · ATF
   - `omnix_core/agents/atf/` — Agent Trust Fabric: DR · TAR · DTR · RCR · AFG · RC
-- `/docs/adr/` — 159 ADRs. Fuente de verdad de arquitectura
-- `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (draft)
+- `/docs/adr/` — 171 ADRs. Fuente de verdad de arquitectura
+- `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (publicado) · RFC-ATF-3 (publicado)
 - `/sdk/` — Python SDK · Node.js SDK
 
 ---
@@ -109,7 +109,7 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 ## Gotchas Críticos
 
 - **Variable names matter:** Dashboard usa `SESSION_SECRET` (no `SECRET_KEY`). Webhooks usan `PAYLOAD_ENCRYPTION_KEY`. Nombres incorrectos = fallos silenciosos.
-- **React Build:** Siempre hacer `npm run build` en `omnix_web/` y commitear `dist/`. Railway sirve desde ahí. Build usa `React.lazy()` + `Suspense` en todas las rutas (58 páginas) desde Mayo 2026.
+- **React Build:** Siempre hacer `npm run build` en `omnix_web/` y commitear `dist/`. Railway sirve desde ahí. Build usa `React.lazy()` + `Suspense` en todas las rutas (64 páginas) desde Mayo 2026.
 - **TESTING=true en producción:** NUNCA. Desactiva alertas AVM, scheduler de snapshots y simuladores.
 - **PQC Keys sin Railway:** Sin `OMNIX_SIGNING_SECRET_KEY_B64/PUBLIC`, cada restart genera claves efímeras y todos los receipts previos dejan de ser verificables permanentemente (FMR-001).
 - **Anti-replay en Railway:** Configurar `OMNIX_ANTI_REPLAY_MODE=strict`. El default `best_effort` permite replay cross-dyno cuando Redis no está disponible.

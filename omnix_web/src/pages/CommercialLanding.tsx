@@ -376,7 +376,7 @@ export default function CommercialLanding() {
                 {loaded && liveTotal > 0 ? `${liveTotal.toLocaleString()}+` : '—'}
               </span>
               <span style={{fontSize:'0.95rem',color:'#94A3B8',fontWeight:500}}>
-                decisions governed · 9 domains · right now
+                decisions governed · 10 domains · right now
               </span>
               <Activity style={{width:18,height:18,color:'#10B981'}} />
             </Link>
@@ -1142,7 +1142,7 @@ export default function CommercialLanding() {
             textAlign:'center',
           }}>
             <p style={{fontSize:'1rem', color:'#94A3B8', marginBottom:6}}>
-              The cost of <span style={{color:'#ef4444', fontWeight:700}}>one governance failure</span> in any of these 9 domains
+              The cost of <span style={{color:'#ef4444', fontWeight:700}}>one governance failure</span> in any of these 10 domains
             </p>
             <p style={{fontSize:'2.4rem', fontWeight:900, color:'#ef4444', marginBottom:4, letterSpacing:'-0.02em'}}>
               $440M – $130B

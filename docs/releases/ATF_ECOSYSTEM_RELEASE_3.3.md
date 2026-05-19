@@ -31,7 +31,7 @@ Every transition in this chain is governed by a formally specified invariant, im
 |---|---|---|---|---|---|
 | RFC-ATF-1 | Agent Trust Fabric — Delegation Protocol with Post-Quantum Signatures (ML-DSA-65 / NIST FIPS 204) | [10.5281/zenodo.20155016](https://doi.org/10.5281/zenodo.20155016) | [10.6084/m9.figshare.32308077](https://doi.org/10.6084/m9.figshare.32308077) | 6757339 | ✅ Published |
 | RFC-ATF-2 | Agent Trust Fabric — Runtime Governance Continuity | [10.5281/zenodo.20241344](https://doi.org/10.5281/zenodo.20241344) | [10.6084/m9.figshare.32308095](https://doi.org/10.6084/m9.figshare.32308095) | 6763978 | ✅ Published |
-| RFC-ATF-3 | Agent Trust Fabric — Governance Policy Interoperability, Evidence Lifecycle & Forensic Verification Protocol | [10.5281/zenodo.20247342](https://doi.org/10.5281/zenodo.20247342) | [10.6084/m9.figshare.32308119](https://doi.org/10.6084/m9.figshare.32308119) | Pending | ✅ Published |
+| RFC-ATF-3 | Agent Trust Fabric — Governance Policy Interoperability, Evidence Lifecycle & Forensic Verification Protocol | [10.5281/zenodo.20247342](https://doi.org/10.5281/zenodo.20247342) | [10.6084/m9.figshare.32308119](https://doi.org/10.6084/m9.figshare.32308119) | — | ✅ Published |
 
 **Supporting publications:**
 

@@ -102,7 +102,7 @@ Core Components
 │  AI Decision Engine        → Multi-model orchestration   │
 │  Risk Guardian™            → 8-tier entry veto system    │
 │  Exit Governance Layer     → 3-gate automated exits      │
-│  Audit Trail               → 36 ADRs, full traceability  │
+│  Audit Trail               → 171 ADRs, full traceability  │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
 
@@ -122,7 +122,7 @@ Defensible Advantages
 │  4 Architectural Gaps Closed SIV, FTI, RCK, EGL (Mar 2026) │
 │  Edge Confirmation Window    3-cycle validation required  │
 │  Post-Quantum Security       Production-integrated (NIST)  │
-│  Full Decision Auditability  36 ADRs document every step   │
+│  Full Decision Auditability  171 ADRs document every step   │
 │                                                           │
 └───────────────────────────────────────────────────────────┘
 

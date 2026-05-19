@@ -227,7 +227,7 @@ Flask-Limiter stores rate limit counters in Redis under its own key namespace (d
 - ADR-165 — OMNIX Evidence Package (OEP) Format
 - ADR-166 — Forensic Export Authentication (RBAC)
 - RFC-ATF-1 — Agent Trust Fabric Formal Specification
-- RFC-ATF-2 — Runtime Governance Continuity (draft)
+- RFC-ATF-2 — Runtime Governance Continuity (published)
 - EAP-INV-001–007 — Evidence Archive Pipeline Invariants
 - FVP-INV-001–007 — Forensic Verification Portal Invariants
 - FIPS 204 — Module-Lattice-Based Digital Signature Standard (ML-DSA-65)

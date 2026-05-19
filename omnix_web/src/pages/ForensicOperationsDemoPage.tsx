@@ -1289,7 +1289,7 @@ export default function ForensicOperationsDemoPage() {
                 },
                 reference_walkthrough: 'OMNIX-WALK-001',
                 rfc_stack: ['RFC-ATF-1 (zenodo.20155016)', 'RFC-ATF-2 (zenodo.20241344)', 'RFC-ATF-3 (zenodo.20247342)'],
-                invariant_coverage: { total: 47, families: 9, direct_tested: 34, structural: 6 },
+                invariant_coverage: { total: 47, families: 9, direct_tested: 41, structural: 6 },
                 demos: [
                   { id: 'DEMO-A', title: 'Runtime Authority Degradation', adr: 'ADR-159', rfc: 'RFC-ATF-2', invariant: 'RGC-INV-003' },
                   { id: 'DEMO-B', title: 'Cross-Runtime Governance Divergence', adr: 'ADR-161', rfc: 'RFC-ATF-2', invariant: 'RGC-INV-003' },

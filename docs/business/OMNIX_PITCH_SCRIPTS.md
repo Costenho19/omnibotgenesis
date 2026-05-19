@@ -44,7 +44,7 @@
 | Pre-Money Valuation | $2.5M–$3M | — |
 | Learning Baseline P&L | -$15,198.73 | Nov 2025 – Jan 14, 2026 (119 trades) |
 | System Uptime | 24/7 for 3+ months | Railway production deployment |
-| Architecture Docs | 36 ADRs | Complete architectural record |
+| Architecture Docs | 171 ADRs | Complete architectural record |
 | Verification | 171 New Tests | March 2026 Gap Closure (SIV, FTI, RCK, EGL) |
 
 ### Institutional Governance Statement (Ready-to-Use)
@@ -82,7 +82,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > And the timing is urgent. Regulatory frameworks like MiCA in Europe and ADGM in the Middle East are now requiring governance of automated decision systems. Institutional adoption is accelerating — but the governance layer doesn't exist yet. We're building it.
 >
-> We're raising $500,000 pre-seed to file three patent families protecting our core IP — backed by 36 ADRs and 171 passing architectural tests — expand into enterprise verticals, and establish our regulatory structure in ADGM Dubai.
+> We're raising $500,000 pre-seed to file three patent families protecting our core IP — backed by 171 ADRs and 245+ passing tests — expand into enterprise verticals, and establish our regulatory structure in ADGM Dubai.
 >
 > OMNIX — governing decisions under uncertainty.
 
@@ -106,7 +106,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > Y el timing es urgente. Marcos regulatorios como MiCA en Europa y ADGM en Medio Oriente ya están exigiendo gobernanza de sistemas de decisión automatizados. La adopción institucional se está acelerando — pero la capa de gobernanza aún no existe. La estamos construyendo.
 >
-> Estamos levantando $500,000 dólares pre-seed para registrar tres familias de patentes que protegen nuestro IP central — respaldado por 36 ADRs y 171 tests de arquitectura — expandir hacia verticales enterprise y establecer nuestra estructura regulatoria en ADGM Dubai.
+> Estamos levantando $500,000 dólares pre-seed para registrar tres familias de patentes que protegen nuestro IP central — respaldado por 171 ADRs y 245+ tests — expandir hacia verticales enterprise y establecer nuestra estructura regulatoria en ADGM Dubai.
 >
 > OMNIX — gobernando decisiones bajo incertidumbre.
 
@@ -128,7 +128,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > The architecture is domain-agnostic. Designed to extend into credit, insurance, and supply chain — anywhere automated decisions involve capital at risk.
 >
-> We're raising $500,000 pre-seed. The regulatory window is open — MiCA and ADGM are creating demand for exactly this governance layer, backed by 36 ADRs and 171 passing tests.
+> We're raising $500,000 pre-seed. The regulatory window is open — MiCA and ADGM are creating demand for exactly this governance layer, backed by 171 ADRs and 245+ passing tests.
 >
 > OMNIX — governing decisions under uncertainty.
 
@@ -148,7 +148,7 @@ Without this, "infrastructure" sounds theoretical. With it, it sounds proven.
 >
 > La arquitectura es independiente del dominio. Diseñada para extenderse a crédito, seguros y supply chain — cualquier entorno donde decisiones automatizadas impliquen capital en riesgo.
 >
-> Estamos levantando $500,000 dólares pre-seed. La ventana regulatoria está abierta — MiCA y ADGM están creando demanda exactamente para esta capa de gobernanza, respaldada por 36 ADRs y 171 tests.
+> Estamos levantando $500,000 dólares pre-seed. La ventana regulatoria está abierta — MiCA y ADGM están creando demanda exactamente para esta capa de gobernanza, respaldada por 171 ADRs y 245+ tests.
 >
 > OMNIX — gobernando decisiones bajo incertidumbre.
 
@@ -228,7 +228,7 @@ Every pitch version MUST pass this test. Check each line:
 |------|---------|---------|
 | Feb 17, 2026 | 1.0 | Initial creation. 90s and 60s versions (EN/ES). Based on Harold Nunes's draft with "why now" and strengthened ask. ADR-027 compliant. |
 | Mar 3, 2026 | 1.1 | Mentor review applied. Updated metadata status to MENTOR-REVIEWED. See `docs/business/MENTOR_FEEDBACK_EUREKA_2026.md` for full feedback audit trail. |
-| Mar 6, 2026 | 1.2 | Updated to reflect 8-checkpoint entry + 3-gate exit (EGL) architecture. Added gap closure metrics (171 tests, 36 ADRs). |
+| Mar 6, 2026 | 1.2 | Updated to reflect 8-checkpoint entry + 3-gate exit (EGL) architecture. Added gap closure metrics (245+ tests, 171 ADRs). |
 
 ---
 

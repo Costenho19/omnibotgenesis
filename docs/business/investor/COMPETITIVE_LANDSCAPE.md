@@ -111,7 +111,7 @@ OMNIX operates in a new category: **Decision Governance Infrastructure**. No sin
 | **Shadow Portfolio learning** | Counterfactual analysis learning from decisions NOT taken | Unique globally |
 | **Post-quantum security** | NIST-standardized PQC operational since Nov 2025 | 3-6 months |
 | **Domain-agnostic design** | Same engine validated across trading, credit, insurance | 6-12 months per vertical |
-| **Full explainability (XAI)** | Every decision traceable with checkpoint-level detail — 36 ADRs | Cultural/architectural rebuild |
+| **Full explainability (XAI)** | Every decision traceable with checkpoint-level detail — 171 ADRs | Cultural/architectural rebuild |
 | **Embedded infrastructure lock-in** | Once integrated, switching cost = re-integration + re-calibration | High switching cost |
 
 ### 4.2 Patent Strategy

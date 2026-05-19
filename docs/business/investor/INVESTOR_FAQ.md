@@ -2,7 +2,7 @@
 ## Decision Governance Infrastructure
 
 **Classification**: Investor Confidential
-**Last Updated**: March 29, 2026 — Multi-vertical expansion: Insurance + Robotics 24/7 live. 11 checkpoints + CAG + TIE. 57 ADRs. TAM $137B+.
+**Last Updated**: May 19, 2026 — ATF stack complete: RFC-ATF-1/2/3 published, 47 invariants, 171 ADRs, 245+ tests passing. TAM $137B+.
 
 ---
 
@@ -365,7 +365,7 @@ Our compliance posture is designed for institutional acceptance in regulated mar
 | **Technology Risk** | 99.9% uptime, redundant infrastructure |
 | **Regulatory Risk** | DIFC/ADGM preparation, no token exposure |
 | **Execution Risk** | Paper trading validation before live capital |
-| **Key Person Risk** | 3-layer mitigation: (1) Documented architecture with 36 ADRs — senior engineer can onboard in 2-3 weeks; (2) First 3 hires Month 1-4 reduce founder dependency from 100% to ~30%; (3) IP assignment to company, key-person insurance, operational runbooks by Month 6 |
+| **Key Person Risk** | 3-layer mitigation: (1) Documented architecture with 171 ADRs — senior engineer can onboard in 2-3 weeks; (2) First 3 hires Month 1-4 reduce founder dependency from 100% to ~30%; (3) IP assignment to company, key-person insurance, operational runbooks by Month 6 |
 
 ---
 

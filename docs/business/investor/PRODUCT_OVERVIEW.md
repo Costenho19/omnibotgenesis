@@ -4,7 +4,7 @@
 **Document Type**: Product Overview  
 **Classification**: Investor Confidential  
 **Audience**: Institutional Investors, Family Offices, Fund Managers  
-**Last Updated**: March 29, 2026 — Multi-vertical expansion: Insurance + Robotics 24/7 live. 11 checkpoints + CAG + TIE. 57 ADRs.
+**Last Updated**: May 19, 2026 — ATF stack complete: RFC-ATF-1/2/3 published, 47 invariants, 171 ADRs, 245+ tests passing.
 
 ---
 

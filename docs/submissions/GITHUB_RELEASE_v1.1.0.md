@@ -210,7 +210,7 @@ SOC 2 CC6.1 · ISO 27001 A.9.4 · NIST AI RMF Govern 1.4 / Manage 2.2
 | Document | Status | Reference |
 |---|---|---|
 | RFC-ATF-1 | **Published** | DOI: 10.5281/zenodo.20155016 · SSRN: 6757339 |
-| RFC-ATF-2 | Draft | `docs/standards/RFC-ATF-2.md` |
+| RFC-ATF-2 | Published | `docs/standards/RFC-ATF-2.md` |
 | TLA+ Specification | Published | Included in Zenodo archive |
 
 ---

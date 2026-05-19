@@ -270,7 +270,7 @@ Supply Chain, Lending/Credit (Year 2-3) → Insurance, Energy Trading (Year 3+).
 - Solo founder — product architecture, risk logic, and infrastructure (Harold Nunes)
 - Lean architecture designed for scalability; AI-assisted development reduces burn while maintaining velocity
 - 2-3 key hires planned (post-funding): Senior Backend (Month 1-2), DevOps (Month 2-3), Business Development (Month 3-4)
-- **Key-person risk mitigation:** Documented hexagonal architecture (36 ADRs, 2-3 week onboarding). First hires reduce founder dependency from 100% to ~30% by Month 4. IP assignment to company, key-person insurance, and operational runbooks by Month 6
+- **Key-person risk mitigation:** Documented hexagonal architecture (171 ADRs, 2-3 week onboarding). First hires reduce founder dependency from 100% to ~30% by Month 4. IP assignment to company, key-person insurance, and operational runbooks by Month 6
 
 ### Infrastructure
 
@@ -398,7 +398,7 @@ Primary value driver: Avoided tail-risk exposure
 |--------|----------|
 | Working product in production | 3+ months running 24/7 |
 | Real validation data | 670,000+ decision cycles analyzed |
-| Defensible IP | 8-checkpoint entry + EGL + Shadow Portfolio engine (36 ADRs) |
+| Defensible IP | 8-checkpoint entry + EGL + Shadow Portfolio engine (171 ADRs) |
 | Strategic timing | MiCA + ADGM convergence creating urgent demand |
 | Market reference | Comparable infrastructure startups raised $3M-$5M at similar stage |
 

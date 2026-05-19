@@ -468,7 +468,7 @@ $13M ---- *** *** COSTS
 | Series A delayed 6 months | Low | Reduce Y2 hiring | Conservative burn — 18+ month runway without Series A |
 | Regulatory changes (crypto/trading) | Medium | Pivot required | Domain-agnostic architecture — credit/insurance vertical as fallback |
 | Well-funded competitor enters | Low-Medium | Pricing pressure | 670K+ cycle dataset moat + PQC security + Shadow Portfolio — 2+ year head start |
-| Key-person risk (solo founder) | Medium | Operations disruption | 36 ADRs, runbooks, 3 hires Month 1–4, IP assigned to company |
+| Key-person risk (solo founder) | Medium | Operations disruption | 171 ADRs, runbooks, 3 hires Month 1–4, IP assigned to company |
 | B2C churn higher than model | Medium | -20% B2C revenue | Enterprise focus (80% of revenue) insulates total ARR |
 
 ---

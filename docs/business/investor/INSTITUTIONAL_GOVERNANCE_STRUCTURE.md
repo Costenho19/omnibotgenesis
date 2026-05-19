@@ -31,7 +31,7 @@ The Founder Governance Authority holds executive responsibility over all system 
 
 - **Separation of concerns**: Human authority governs parameters. The architecture governs execution.
 - **No manual trading**: The Founder does not place trades. The system does — only when the architecture permits.
-- **Audit-first culture**: Every parameter change is documented via ADR (Architectural Decision Record) before implementation — 36 ADRs active.
+- **Audit-first culture**: Every parameter change is documented via ADR (Architectural Decision Record) before implementation — 171 ADRs active.
 - **Fail-closed default**: When in doubt, the system blocks. Human authority reinforces this principle, never overrides it.
 
 ---
@@ -98,7 +98,7 @@ This is the difference between a product that *could* be governed and a product 
 
 | Evidence | Detail |
 |----------|--------|
-| Parameter changes documented | 36 ADRs recording every architectural decision |
+| Parameter changes documented | 171 ADRs recording every architectural decision |
 | Zero manual overrides | All 670,000+ evaluation cycles handled by architecture |
 | Fail-closed demonstrated | System blocking execution for 33+ consecutive days under structural contradiction |
 | Full audit trail | Decision Trace with complete reasoning chain for every evaluation cycle |
