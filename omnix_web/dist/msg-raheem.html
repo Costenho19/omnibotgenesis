@@ -20,15 +20,144 @@
 
 ATF receipts are delegation-complete at construction — they don't carry a runtime admissibility decision (ALLOW/REFUSED/DENY) because that decision belongs to the executing layer, not the delegation record. The consequence_class and GCS fields are outside ATF scope by the same principle — they're governance enrichment that lives on your side of the boundary.
 
-The bridge architecture you proposed is the right model: ATF receipt embeds as-is (immutable core), VGS wraps the governance layers around it, joint_hash = hash(atf_receipt_hash + vgs_connector_hash). That structure preserves independent verifiability for both sides, which is the critical property.
+The bridge architecture you proposed is the right model: ATF receipt embeds as-is (immutable core), VGS wraps the governance interpretation layer around it, and the resulting artifact becomes a dual-context receipt where provenance and admissibility remain separable but cryptographically linked.
 
-Here is the ATF Open Receipt Schema — ATORS v1.0.0 (ADR-172). Field names, hash contracts, canonical JSON algorithm, and signing convention are all inside:
+That separation matters.
 
-{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "https://omnixquantum.com/schemas/atf-open-receipt-schema/1.0.0", "title": "OMNIX ATF Open Receipt Schema", "version": "1.0.0", "issued_by": "OMNIX QUANTUM LTD", "issued_date": "2026-05-20", "adr_references": ["ADR-156","ADR-157","ADR-158","ADR-159","ADR-171","ADR-172"], "rfc_references": ["RFC-ATF-1","RFC-ATF-2","RFC-ATF-3"], "canonical_json_algorithm": { "steps": ["1. Exclude: content_hash, pqc_signature, pqc_algorithm, pqc_signature_a, pqc_signature_b, sac_content_hash, spv_hash", "2. json.dumps(fields, sort_keys=True, separators=(',',':'), ensure_ascii=False)", "3. Encode UTF-8", "4. SHA-256 hex digest"], "pqc_signature_message": "Signatures computed over content_hash.encode('utf-8') — the HEX STRING, not raw bytes.", "pqc_algorithm": "ML-DSA-65 (Dilithium-3, FIPS 204)" }, "receipt_types": { "DR": { "title": "Delegation Receipt", "key_fields": ["delegation_id","delegator_id","delegate_id","task_scope","authority_budget_delegator","authority_budget_granted","chain_root_id","delegation_depth","content_hash","pqc_signature","created_at","expires_at","status"], "invariant": "authority_budget_granted ≤ authority_budget_delegator" }, "TAR": { "title": "Temporal Admissibility Record", "key_fields": ["tar_id","delegation_id","agent_id","execution_ns","execution_ts","admission_status","dr_status_at_admission","authority_budget","domain","chain_root_id","content_hash","pqc_signature","issued_at"], "invariant": "issued_at MUST precede execution completion. execution_ts bound by pqc_signature." }, "DTR": { "title": "Domain Translation Receipt", "key_fields": ["dtr_id","source_delegation_id","source_domain","target_domain","source_agent_id","target_agent_id","source_authority_budget","translated_budget","translation_discount","chain_root_id","content_hash","pqc_signature","issued_at"], "invariant": "translated_budget ≤ source_authority_budget × (1 - translation_discount)" }, "RCR": { "title": "Runtime Continuity Record", "key_fields": ["rcr_id","tar_id","delegation_id","agent_id","chain_root_id","execution_ns","ces_score","ces_temporal","ces_budget","ces_context","ces_integrity","continuity_status","predecessor_rcr_id","budget_remaining","context_drift_pct","fragmentation_score","content_hash","pqc_signature","issued_at"], "ces_formula": "CES = T×0.30 + B×0.30 + D×0.20 + I×0.20", "continuity_status_thresholds": "NOMINAL(≥75) · MONITORING(50–75) · WARNING(25–50) · CRITICAL(10–25) · HALT(<10)" }, "SAC": { "title": "Semantic Alignment Certificate", "key_fields": ["sac_id","runtime_a","runtime_b","semantic_alignment_map","unresolved_terms","governing_posture","sac_content_hash","pqc_signature_a","pqc_signature_b","effective_from","expires_at"], "status_values": ["ALIGNED","ACKNOWLEDGED_DIVERGENCE","UNRESOLVED"], "atf_core_terms": ["AUTHORITY","ADMISSIBILITY","TRUST","SOVEREIGNTY","RISK","ESCALATION","REVOCATION","LEGITIMACY"], "invariant": "All 8 ATF Core Terms must be present. UNRESOLVED terms default to more restrictive interpretation." }, "STR": { "title": "Semantic Term Registry Entry", "key_fields": ["str_entry_id","runtime_id","term_id","term_version","definition","content_hash","pqc_signature","created_at","effective_from","supersedes_id"] }, "SPV": { "title": "Semantic Policy Vector", "key_fields": ["spv_id","runtime_id","generated_at","atf_core_term_set","spv_hash","pqc_signature"], "spv_hash_note": "SHA-256 of canonical JSON of atf_core_term_set. Two runtimes with identical spv_hash are semantically equivalent." } } }
+If admissibility is embedded directly into the delegation artifact itself, the originating runtime becomes the permanent semantic authority for every downstream environment. That breaks portability. The ATF model intentionally avoids that lock-in.
 
-That gives you the field names and hash contracts for all seven receipt types. The DR is your primary anchor for the bridge mapping — chain_root_id links delegation lineage across the full stack.
+What ATF guarantees is:
+delegation lineage
+authority preservation
+temporal admissibility state
+semantic equivalence anchors
+replayable forensic continuity
+cryptographic integrity of the governance chain
 
-Harold Nunes — OMNIX QUANTUM LTD</div>
+What your orchestration layer adds is:
+sovereign interpretation
+consequence classification
+contextual execution legitimacy
+jurisdiction-aware admissibility
+dynamic governance posture
+
+Those are complementary layers, not competing ones.
+
+Architecturally, the cleanest bridge is probably:
+
+ATF Core Receipt
+→ immutable governance provenance
+
+VGS Interpretation Envelope
+→ contextual sovereign admissibility
+
+Cross-Runtime Verification Layer
+→ mutual replay + semantic equivalence validation
+
+That keeps the trust boundary explicit while still allowing independent verification by third parties without requiring either runtime to stay online.
+
+The important part is that both systems remain independently replayable.
+
+A verifier should be able to validate:
+the ATF delegation chain
+the VGS admissibility interpretation
+the semantic equivalence mapping
+the continuity state at execution time
+
+without needing live access to OMNIX or the originating sovereign environment.
+
+That's where the architecture becomes durable instead of merely interoperable.
+
+Here is the ATF Open Receipt Schema — ATORS v1.0.0 (ADR-172):
+
+"Receipt Schema"
+
+"description":
+"Open, machine-readable JSON Schema for all ATF receipt types. Enables semantic portability of ATF governance artifacts — any system can verify and interpret ATF receipts without the OMNIX runtime."
+
+"canonical_json_algorithm":
+"Algorithm for computing content_hash."
+
+Steps:
+
+1. Exclude fields:
+   content_hash,
+   pqc_signature,
+   pqc_algorithm,
+   pqc_signature_a,
+   pqc_signature_b,
+   sac_content_hash,
+   spv_hash
+
+2. Serialize:
+   json.dumps(fields,
+   sort_keys=True,
+   separators=(',', ':'),
+   ensure_ascii=False)
+
+3. Encode as UTF-8 bytes
+
+4. SHA-256 HEX digest of the UTF-8 bytes
+
+"pqc_signature_message":
+"PQC signatures are computed over content_hash.encode('utf-8') — the HEX STRING of the SHA-256 digest, NOT the raw digest bytes."
+
+"pqc_algorithm":
+"ML-DSA-65 (Dilithium-3, FIPS 204)"
+
+Receipt Types:
+
+"DR" → Delegation Receipt
+
+Invariant:
+"authority_budget_granted ≤ authority_budget_delegator"
+
+"TAR" → Temporal Admissibility Record
+
+"RCR" → Runtime Continuity Record
+
+"SAC" → Semantic Alignment Certificate
+
+"semantic_alignment_map_per_term":
+[
+"status",
+"runtime_a_hash",
+"runtime_b_hash",
+"divergence_resolution",
+"divergence_note"
+]
+
+"status_values":
+[
+"ALIGNED",
+"ACKNOWLEDGED_DIVERGENCE",
+"UNRESOLVED"
+]
+
+"atf_core_terms":
+[
+"AUTHORITY",
+"ADMISSIBILITY",
+"TRUST",
+"SOVEREIGNTY",
+"RISK",
+"ESCALATION",
+"REVOCATION",
+"LEGITIMACY"
+]
+
+Invariant:
+"All 8 ATF Core Terms must be present. UNRESOLVED terms default to the more restrictive interpretation."
+
+"SPV" → Semantic Policy Vector
+
+"spv_hash_note":
+"SHA-256 of canonical JSON of atf_core_term_set. Two runtimes with identical spv_hash are semantically equivalent."
+
+That provides the field names and hash contracts for all seven receipt types. The DR is the primary bridge anchor — chain_root_id links delegation lineage across the full stack.
+
+— Harold Nunes
+OMNIX QUANTUM LTD</div>
 <button id="btn" onclick="copyMsg()">Copiar mensaje</button>
 <script>
 function copyMsg() {
