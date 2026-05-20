@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-883C02296C",
   "parameter_version": "1.883c02296c",
   "domain": "energy_governance",
-  "calibrated_at": "2026-05-20T08:36:21.325640+00:00",
-  "calibrated_at_epoch": 1779266181.32564,
   "baseline_signals": {
-    "probability_score": 66.76,
     "risk_exposure": 18.22,
     "signal_coherence": 88.81,
-    "trend_persistence": 67.26,
+    "logic_consistency": 87.98,
+    "probability_score": 66.76,
     "stress_resilience": 70.48,
-    "logic_consistency": 87.98
+    "trend_persistence": 67.26
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_5.5"
-  ]
+  ],
+  "calibrated_at": "2026-05-20T08:36:21.325640+00:00",
+  "calibrated_at_epoch": 1779266181.32564
 }
