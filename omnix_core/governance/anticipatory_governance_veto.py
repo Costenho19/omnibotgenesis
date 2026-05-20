@@ -75,7 +75,8 @@ CREATE TABLE IF NOT EXISTS avm_anticipatory_veto_receipts (
     content_hash              TEXT,
     pqc_signature             TEXT,
     pqc_algorithm             TEXT DEFAULT 'ML-DSA-65',
-    created_at                TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    structural_shift_class    TEXT
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_agvp_active_pvr_per_domain
@@ -172,6 +173,7 @@ class ProactiveVetoReceipt:
     pqc_signature: str
     pqc_algorithm: str
     created_at: str
+    structural_shift_class: Optional[str] = None  # SSD (ADR-175): STABLE | DRIFT_WITH_INSTABILITY | STRUCTURAL_SHIFT | INSUFFICIENT_DATA
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -252,13 +254,15 @@ def _persist_pvr(pvr: ProactiveVetoReceipt) -> bool:
                     drift_components, signals_at_assessment, signals_seen_at,
                     snapshot_id, assessment_timestamp, veto_effective_from,
                     block_reason, status, watchdog_interval_seconds,
-                    content_hash, pqc_signature, pqc_algorithm, created_at
+                    content_hash, pqc_signature, pqc_algorithm, created_at,
+                    structural_shift_class
                 ) VALUES (
                     %s, %s, %s, %s, %s,
                     %s, %s, %s,
                     %s, %s, %s,
                     %s, %s, %s,
-                    %s, %s, %s, %s
+                    %s, %s, %s, %s,
+                    %s
                 )
                 ON CONFLICT DO NOTHING
                 RETURNING pvr_id
@@ -274,6 +278,7 @@ def _persist_pvr(pvr: ProactiveVetoReceipt) -> bool:
                 pvr.watchdog_interval_seconds,
                 pvr.content_hash, pvr.pqc_signature, pvr.pqc_algorithm,
                 pvr.created_at,
+                pvr.structural_shift_class,
             ))
             row = cur.fetchone()
         conn.close()
@@ -415,6 +420,7 @@ def _create_pvr(
     snapshot_id: str,
     block_reason: str,
     watchdog_interval_seconds: int,
+    structural_shift_class: Optional[str] = None,
 ) -> ProactiveVetoReceipt:
     """
     Build and sign a ProactiveVetoReceipt. Does NOT persist — call _persist_pvr().
@@ -457,6 +463,7 @@ def _create_pvr(
         pqc_signature=pqc_sig,
         pqc_algorithm=pqc_alg,
         created_at=now_iso,
+        structural_shift_class=structural_shift_class,
     )
 
 
@@ -645,6 +652,14 @@ class AGVPWatchdog:
                 tz=timezone.utc
             ).isoformat()
 
+            # Extract SSD structural shift class (ADR-175) for PVR attestation
+            _ssd_report = avm_result.structural_shift_report
+            _ssd_class = (
+                _ssd_report.get("shift_class")
+                if isinstance(_ssd_report, dict)
+                else None
+            )
+
             pvr = _create_pvr(
                 domain=domain,
                 tenant_id=self.tenant_id,
@@ -660,6 +675,7 @@ class AGVPWatchdog:
                     f"signal_age={age_seconds:.0f}s] (ADR-174)"
                 ),
                 watchdog_interval_seconds=self.interval_seconds,
+                structural_shift_class=_ssd_class,
             )
 
             inserted = _persist_pvr(pvr)

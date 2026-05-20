@@ -171,7 +171,8 @@ class AVMResult:
     block_reason: str | None       # If is_valid=False, human-readable reason
     warnings: list[str]            # Non-blocking notices
     pass_through: bool = False     # True if AVM is disabled or has no snapshot
-    probe_report: Optional[Any] = field(default=None)  # OMNIX DIFFERENTIATOR: GTPD
+    probe_report: Optional[Any] = field(default=None)              # OMNIX DIFFERENTIATOR: GTPD
+    structural_shift_report: Optional[Any] = field(default=None)   # OMNIX DIFFERENTIATOR: SSD (ADR-175)
 
     def to_dict(self) -> dict[str, Any]:
         d = {
@@ -188,6 +189,8 @@ class AVMResult:
         }
         if self.probe_report is not None:
             d["probe_report"] = self.probe_report
+        if self.structural_shift_report is not None:
+            d["structural_shift_report"] = self.structural_shift_report
         return d
 
 
@@ -248,6 +251,112 @@ class ThresholdProbeReport:
             "threshold_margin":            self.threshold_margin,
             "probe_verdict":               self.probe_verdict,
             "detected_at":                 self.detected_at,
+        }
+
+
+# ── OMNIX DIFFERENTIATOR: Structural Shift Detector (SSD) ─────────────────────
+#
+# GOVERNANCE RISK SOLVED:
+#   The AVM detects THAT a domain has drifted — but not WHETHER the drift
+#   represents a temporary excursion (sustained but recoverable) or a permanent
+#   change in the domain's signal topology (structural, requiring human review).
+#   This distinction is operationally critical: auto-recalibrating under a
+#   structural shift embeds new, incoherent baselines that mask the root cause.
+#   No other governance platform distinguishes these two deterioration modes
+#   at the component-composition level.
+#
+# ALGORITHM — Component Rank Stability Index (CRSI):
+#   After each evaluate(), the top-K drift components (by magnitude) are recorded.
+#   CRSI is the position-weighted Jaccard overlap between the current cycle's
+#   top-K ranking and the historical top-K ranking averaged over the last M cycles.
+#   Position weights: rank-1 = K, rank-2 = K-1, ..., rank-K = 1 (linear decay).
+#   CRSI ∈ [0, 1]: 1.0 = identical rank topology; 0.0 = completely different.
+#
+#   Classification thresholds:
+#     CRSI >= SSD_INSTABILITY_THRESHOLD (0.70) → STABLE
+#     SSD_STRUCTURAL_THRESHOLD (0.50) <= CRSI < 0.70 → DRIFT_WITH_INSTABILITY
+#     CRSI < SSD_STRUCTURAL_THRESHOLD (0.50) AND >= SSD_MIN_CYCLES → STRUCTURAL_SHIFT
+#     < SSD_MIN_CYCLES history entries → INSUFFICIENT_DATA
+#
+# SSD INVARIANTS (ADR-175):
+#   SSD-INV-001: shift_class=STRUCTURAL_SHIFT blocks auto-recalibration
+#                independently of and in addition to AGV-INV-006
+#   SSD-INV-002: Component history ring buffer is append-only within its window;
+#                no cycle entry may be modified or deleted retroactively
+#   SSD-INV-003: STRUCTURAL_SHIFT verdict requires >= SSD_MIN_CYCLES cycles of
+#                component history for that domain (prevents noise on cold start)
+#
+# VERIFIABLE EVIDENCE:
+#   StructuralShiftReport is embedded in AVMResult and propagated into PVRs.
+#   STRUCTURAL_SHIFT carries ssd_id, crsi, emerged_components, receded_components —
+#   traceable forensic evidence of when the domain topology changed.
+#
+# OMNIX-SSD-001 | ADR-175
+
+_SSD_HISTORY_SIZE          = 20    # max component snapshots retained per domain
+_SSD_HISTORY_LOCK          = threading.Lock()
+_component_history: dict[str, list[dict[str, float]]] = {}
+
+SSD_TOP_K_COMPONENTS       = 3     # compare top-K components by drift magnitude
+SSD_MIN_CYCLES             = 5     # minimum history cycles before STRUCTURAL_SHIFT
+SSD_STRUCTURAL_THRESHOLD   = 0.50  # CRSI below this → STRUCTURAL_SHIFT
+SSD_INSTABILITY_THRESHOLD  = 0.70  # CRSI below this → DRIFT_WITH_INSTABILITY
+
+
+@dataclass
+class StructuralShiftReport:
+    """
+    OMNIX DIFFERENTIATOR — Structural Shift Detector (SSD) report.
+
+    Produced once per AVM evaluate() call. Classifies whether observed drift
+    represents a sustained excursion (stable topology, high score) or a
+    structural change in the domain's signal composition (topology itself
+    has shifted, making the current calibration frame potentially obsolete).
+
+    shift_class values:
+      INSUFFICIENT_DATA   — fewer than SSD_MIN_CYCLES history entries; no verdict
+      STABLE              — top-K component ranking is stable (CRSI >= 0.70)
+      DRIFT_WITH_INSTABILITY — topology shifting but not conclusively structural
+      STRUCTURAL_SHIFT    — component rank topology has changed significantly
+                            (CRSI < 0.50 with >= SSD_MIN_CYCLES evidence cycles)
+
+    crsi: Component Rank Stability Index (0–1). Weighted Jaccard overlap
+          between current top-K components and historical top-K. Position-
+          weighted: rank-1 contributes more than rank-K.
+
+    emerged_components: signals that entered the top-K this cycle but were NOT
+                        consistently in top-K historically. Signals a new
+                        driver of governance instability.
+
+    receded_components: signals that were consistently top-K historically but
+                        are no longer dominant this cycle. Signals a previously
+                        important driver has quieted.
+
+    ADR-175 | OMNIX-SSD-001
+    """
+    ssd_id: str
+    domain: str
+    shift_class: str           # INSUFFICIENT_DATA | STABLE | DRIFT_WITH_INSTABILITY | STRUCTURAL_SHIFT
+    crsi: float                # Component Rank Stability Index (0–1)
+    cycles_analyzed: int       # history entries used in CRSI computation
+    dominant_components_current: list   # top-K by drift magnitude this cycle
+    dominant_components_baseline: list  # consensus top-K across history
+    emerged_components: list           # new to top-K this cycle
+    receded_components: list           # dropped from top-K this cycle
+    detected_at: str
+
+    def to_dict(self) -> dict:
+        return {
+            "ssd_id":                       self.ssd_id,
+            "domain":                       self.domain,
+            "shift_class":                  self.shift_class,
+            "crsi":                         round(self.crsi, 4),
+            "cycles_analyzed":              self.cycles_analyzed,
+            "dominant_components_current":  self.dominant_components_current,
+            "dominant_components_baseline": self.dominant_components_baseline,
+            "emerged_components":           self.emerged_components,
+            "receded_components":           self.receded_components,
+            "detected_at":                  self.detected_at,
         }
 
 
@@ -466,6 +575,160 @@ class AssumptionValidityMonitor:
         if existed:
             logger.warning(f"[AVM] Snapshot INVALIDATED for domain={domain}")
         return existed
+
+    # ── OMNIX DIFFERENTIATOR: SSD methods (ADR-175) ────────────────────────────
+
+    def _update_component_history(self, domain: str, drift_components: dict[str, float]) -> None:
+        """
+        Append current drift component snapshot to the SSD ring buffer (SSD-INV-002).
+        The buffer is append-only within its window — no entry is modified retroactively.
+        """
+        if not drift_components:
+            return
+        with _SSD_HISTORY_LOCK:
+            if domain not in _component_history:
+                _component_history[domain] = []
+            _component_history[domain].append(dict(drift_components))
+            if len(_component_history[domain]) > _SSD_HISTORY_SIZE:
+                _component_history[domain].pop(0)
+
+    def _detect_structural_shift(
+        self,
+        domain: str,
+        drift_components: dict[str, float],
+    ) -> "StructuralShiftReport":
+        """
+        OMNIX DIFFERENTIATOR — Structural Shift Detector (SSD).
+
+        Computes the Component Rank Stability Index (CRSI) for the domain by
+        comparing the current cycle's top-K drift components against the
+        historical component rankings stored in the ring buffer.
+
+        CRSI Algorithm (position-weighted Jaccard):
+          1. Rank current drift_components descending by value → top-K list
+          2. For each history entry, rank components descending → historical top-K
+          3. Overlap = sum of position_weights[i] for each rank-i component in
+             current_top_K that also appears anywhere in the historical top-K
+          4. Position weights: rank-1 = K, rank-2 = K-1, ..., rank-K = 1
+          5. CRSI_entry = overlap / max_possible_overlap
+          6. CRSI = mean(CRSI_entry) across all history entries
+
+        Classification (SSD-INV-003):
+          INSUFFICIENT_DATA   — fewer than SSD_MIN_CYCLES history entries
+          STABLE              — CRSI >= SSD_INSTABILITY_THRESHOLD (0.70)
+          DRIFT_WITH_INSTABILITY — CRSI in [SSD_STRUCTURAL_THRESHOLD, 0.70)
+          STRUCTURAL_SHIFT    — CRSI < SSD_STRUCTURAL_THRESHOLD (0.50)
+
+        Returns StructuralShiftReport (always — never raises).
+        """
+        ssd_id  = f"SSD-{uuid.uuid4().hex[:10].upper()}"
+        now_iso = datetime.now(timezone.utc).isoformat()
+        k       = SSD_TOP_K_COMPONENTS
+
+        if not drift_components:
+            return StructuralShiftReport(
+                ssd_id=ssd_id, domain=domain,
+                shift_class="INSUFFICIENT_DATA", crsi=0.0,
+                cycles_analyzed=0,
+                dominant_components_current=[],
+                dominant_components_baseline=[],
+                emerged_components=[], receded_components=[],
+                detected_at=now_iso,
+            )
+
+        current_ranked: list[str] = [
+            sig for sig, _ in sorted(
+                drift_components.items(), key=lambda x: x[1], reverse=True
+            )
+        ][:k]
+
+        with _SSD_HISTORY_LOCK:
+            history = list(_component_history.get(domain, []))
+
+        if len(history) < SSD_MIN_CYCLES:
+            return StructuralShiftReport(
+                ssd_id=ssd_id, domain=domain,
+                shift_class="INSUFFICIENT_DATA", crsi=0.0,
+                cycles_analyzed=len(history),
+                dominant_components_current=current_ranked,
+                dominant_components_baseline=[],
+                emerged_components=[], receded_components=[],
+                detected_at=now_iso,
+            )
+
+        # Position weights: rank-1 = k, rank-2 = k-1, ..., rank-k = 1
+        position_weights = {i: float(k - i) for i in range(k)}
+        max_overlap = sum(position_weights.values())
+
+        overlap_scores: list[float] = []
+        component_freq: dict[str, int] = {}
+
+        for hist_entry in history:
+            hist_ranked: list[str] = [
+                sig for sig, _ in sorted(
+                    hist_entry.items(), key=lambda x: x[1], reverse=True
+                )
+            ][:k]
+
+            hist_set = set(hist_ranked)
+            overlap = sum(
+                position_weights[i]
+                for i, sig in enumerate(current_ranked)
+                if i < k and sig in hist_set
+            )
+            overlap_scores.append(overlap / max_overlap if max_overlap > 0 else 0.0)
+
+            for sig in hist_ranked:
+                component_freq[sig] = component_freq.get(sig, 0) + 1
+
+        crsi = round(
+            sum(overlap_scores) / len(overlap_scores), 4
+        ) if overlap_scores else 0.0
+
+        # Baseline dominant: components in top-K for ≥ 50% of history cycles
+        n_hist = len(history)
+        baseline_dominant: list[str] = sorted(
+            [s for s, cnt in component_freq.items() if cnt / n_hist >= 0.5],
+            key=lambda s: component_freq[s], reverse=True
+        )[:k]
+
+        baseline_set = set(baseline_dominant)
+        current_set  = set(current_ranked)
+        emerged  = [s for s in current_ranked  if s not in baseline_set]
+        receded  = [s for s in baseline_dominant if s not in current_set]
+
+        if crsi >= SSD_INSTABILITY_THRESHOLD:
+            shift_class = "STABLE"
+        elif crsi >= SSD_STRUCTURAL_THRESHOLD:
+            shift_class = "DRIFT_WITH_INSTABILITY"
+        else:
+            shift_class = "STRUCTURAL_SHIFT"
+
+        if shift_class == "STRUCTURAL_SHIFT":
+            logger.warning(
+                f"[AVM][SSD] STRUCTURAL_SHIFT — domain={domain} ssd_id={ssd_id} "
+                f"crsi={crsi:.4f} < threshold={SSD_STRUCTURAL_THRESHOLD} "
+                f"cycles={n_hist} emerged={emerged} receded={receded} "
+                f"current_top_k={current_ranked} baseline_top_k={baseline_dominant}"
+            )
+        elif shift_class == "DRIFT_WITH_INSTABILITY":
+            logger.info(
+                f"[AVM][SSD] DRIFT_WITH_INSTABILITY — domain={domain} ssd_id={ssd_id} "
+                f"crsi={crsi:.4f} in [{SSD_STRUCTURAL_THRESHOLD},{SSD_INSTABILITY_THRESHOLD})"
+            )
+
+        return StructuralShiftReport(
+            ssd_id=ssd_id,
+            domain=domain,
+            shift_class=shift_class,
+            crsi=crsi,
+            cycles_analyzed=n_hist,
+            dominant_components_current=current_ranked,
+            dominant_components_baseline=baseline_dominant,
+            emerged_components=emerged,
+            receded_components=receded,
+            detected_at=now_iso,
+        )
 
     # ── OMNIX DIFFERENTIATOR: GTPD methods ────────────────────────────────────
 
@@ -841,6 +1104,9 @@ class AssumptionValidityMonitor:
         )
         # GTPD: record every evaluation (pass or block) for probe detection
         self._update_drift_history(domain, drift_score)
+        # SSD (ADR-175): update component composition history and compute structural shift
+        self._update_component_history(domain, drift_components)
+        ssd_report = self._detect_structural_shift(domain, drift_components)
 
         # Per-signal warnings for high individual drift
         for sig, drift_val in drift_components.items():
@@ -898,6 +1164,7 @@ class AssumptionValidityMonitor:
                 block_reason=reason,
                 warnings=warnings,
                 pass_through=False,
+                structural_shift_report=ssd_report.to_dict(),
             )
 
         # ── ADR-144: AUTO_MODIFIED trust flag ──────────────────────────────────
@@ -937,6 +1204,7 @@ class AssumptionValidityMonitor:
             warnings=warnings,
             pass_through=False,
             probe_report=probe_report.to_dict(),
+            structural_shift_report=ssd_report.to_dict(),
         )
 
 
@@ -1059,6 +1327,28 @@ class AssumptionValidityMonitor:
                         f"Manual review required."
                     )
                     continue
+
+                # SSD-INV-001 (ADR-175): do NOT auto-recalibrate when STRUCTURAL_SHIFT detected.
+                # A structural shift means the domain's signal topology has changed — the
+                # current calibration frame may be entirely obsolete. Auto-recalibrating
+                # would anchor a new baseline to an incoherent signal topology, embedding
+                # unvalidated assumptions. Human review is required to determine whether
+                # the new topology is legitimate before any baseline is accepted.
+                # This guard is independent of and additive to AGV-INV-006 (AGVP).
+                try:
+                    _ssd_check = self._detect_structural_shift(domain, drift_components)
+                    if _ssd_check.shift_class == "STRUCTURAL_SHIFT":
+                        logger.warning(
+                            f"[AVM.AUTO] SSD-INV-001: {domain}: STRUCTURAL_SHIFT detected "
+                            f"(crsi={_ssd_check.crsi:.4f} < threshold={SSD_STRUCTURAL_THRESHOLD}) — "
+                            f"SKIPPING auto-recalibration. Human review required before "
+                            f"recalibration can proceed. ssd_id={_ssd_check.ssd_id} "
+                            f"emerged={_ssd_check.emerged_components} "
+                            f"receded={_ssd_check.receded_components}"
+                        )
+                        continue
+                except Exception as _ssd_exc:
+                    logger.debug(f"[AVM.AUTO] SSD check failed for {domain}: {_ssd_exc} — proceeding")
 
                 reason = []
                 if needs_recalib_by_age:

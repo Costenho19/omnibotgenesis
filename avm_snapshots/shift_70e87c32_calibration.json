@@ -1,0 +1,20 @@
+{
+  "snapshot_id": "AVM-2EB9E186BA",
+  "parameter_version": "1.2eb9e186ba",
+  "domain": "shift_70e87c32",
+  "calibrated_at": "2026-05-20T20:52:25.625565+00:00",
+  "calibrated_at_epoch": 1779310345.625565,
+  "baseline_signals": {
+    "logic_consistency": 65.0,
+    "probability_score": 68.0,
+    "risk_exposure": 60.0,
+    "signal_coherence": 70.0,
+    "stress_resilience": 62.0,
+    "trend_persistence": 66.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 20.0,
+  "max_age_hours": 168.0,
+  "description": "SSD test baseline",
+  "tags": []
+}

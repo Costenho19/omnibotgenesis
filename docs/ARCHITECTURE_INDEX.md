@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **174 total**. Últimos: ADR-172 (ATORS) · ADR-173 (DSPP · Layer 5) · **ADR-174 (AGVP — Anticipatory Governance Veto Protocol)**
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **64 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + **AGVP×6**)
+- **ADRs:** `docs/adr/` — **175 total**. Últimos: ADR-173 (DSPP · Layer 5) · ADR-174 (AGVP — Anticipatory Governance Veto Protocol) · **ADR-175 (SSD — Structural Shift Detector)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **67 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + **SSD×3**)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 

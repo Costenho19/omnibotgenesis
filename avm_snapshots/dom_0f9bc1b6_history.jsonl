@@ -1,0 +1,1 @@
+{"snapshot_id": "AVM-E5FCE55495", "parameter_version": "1.e5fce55495", "domain": "dom_0f9bc1b6", "calibrated_at": "2026-05-20T20:58:35.471484+00:00", "description": "SSD test baseline", "tags": [], "baseline_signals": {"logic_consistency": 65.0, "probability_score": 68.0, "risk_exposure": 60.0, "signal_coherence": 70.0, "stress_resilience": 62.0, "trend_persistence": 66.0}}
