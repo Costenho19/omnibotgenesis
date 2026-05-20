@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **172 total**. Últimos: ADR-170 (GECR) · ADR-171 (SGIP · Layer 4) · **ADR-172 (ATF Open Receipt Schema — ATORS + Standalone Verifier)**
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **51 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + **SGIP×4**)
+- **ADRs:** `docs/adr/` — **173 total**. Últimos: ADR-171 (SGIP · Layer 4) · ADR-172 (ATORS + Standalone Verifier) · **ADR-173 (DSPP — Dynamic Semantic Portability Protocol · Layer 5)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **58 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + **DSPP×7**)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 
@@ -275,6 +275,40 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Standalone Verifier | `sdk/python/omnix_atf_verify.py` | CLI v1.2.0 — zero OMNIX imports — L1 hash + L2 PQC + L3 invariantes + L4 SAC |
 | SGIP Engine | `omnix_core/agents/atf/semantic_governance.py` | STR + SPV + SAC — ADR-171 Layer 4 completo |
 | Conformance Vectors | `sdk/conformance_vectors.json` | Vectores FVP-INV-007 cross-language (KFP + canonical JSON) |
+
+### Dynamic Semantic Portability Protocol (DSPP) — ADR-173
+
+**Primera especificación del mundo de portabilidad semántica dinámica de receipts de gobernanza
+con firma PQC, SDU cuantificado, y evaluación offline sin negociación por pares.**
+
+| Artefacto | Archivo | Descripción |
+|---|---|---|
+| DSPP Engine | `omnix_core/agents/atf/dynamic_semantic_portability.py` | TSA · SDR · RSA · SDU · Chain assessment — ADR-173 Layer 5 completo |
+| ADR-173 Spec | `docs/adr/ADR-173-dynamic-semantic-portability-protocol.md` | Especificación normativa completa — 7 invariantes · SDU algorithm · Layer 5 stack |
+| DSPP Tests | `tests/test_dspp.py` | Suite completa — DSPP-INV-001–007 · SDU · RSA determinism · chain propagation |
+
+**Capa 5 del ATF Interoperability Stack:**
+```
+L1 — Cryptographic portability    [ADR-156 + ATORS]
+L2 — Schema portability           [ADR-172 / ATORS]
+L3 — Policy alignment             [ADR-161 / GPIL]
+L4 — Semantic alignment           [ADR-171 / SGIP / SAC]
+L5 — Dynamic semantic portability [ADR-173 / DSPP]  ← NEW
+```
+
+**Artefactos DSPP:**
+- **TSA (Temporal Semantic Anchor)** — `OMNIX-TSA-{16HEX}` — binds receipt to exact semantic posture at issuance
+- **SDR (Semantic Drift Record)** — `OMNIX-SDR-{runtime_id}-{16HEX}` — append-only drift log per SPV transition
+- **RSA (Retroactive Semantic Assessment)** — `OMNIX-RSA-{16HEX}` — deterministic offline portability verdict
+- **SDU (Semantic Distance Unit)** — normalized [0.0, 1.0] drift metric per ATF Core Term
+
+**DSPP-INV-001–007:** No retroactive anchoring · Append-only SDR · MORE_RESTRICTIVE default ·
+TSA hash covers spv_hash+version+generated_at · Deterministic RSA · INCOMPATIBLE propagation ·
+Structural SDU thresholds (0.10/0.40/0.70)
+
+**DB Tables:** `atf_temporal_semantic_anchors` · `atf_semantic_drift_records` · `atf_retroactive_semantic_assessments`
+
+**Priority Record:** OMNIX-PAR-2026-DSPP-001 · May 20, 2026 · **RFC-ATF-4 foundation**
 
 **Uso del verifier:**
 ```bash

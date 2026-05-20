@@ -130,7 +130,7 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 - **Excepción:** `/terminal` y `/classic` son dashboards operacionales internos en Jinja2. No aplica la regla React.
 - **PQC-first:** Todos los receipts de gobernanza se firman con Dilithium-3.
 - **ATF stack (L1–L4):** Identity (AIR) → Delegation (DR) → Temporal (TAR) → Runtime Continuity (RCR). Cada capa extiende sin reemplazar la anterior.
-- **40 invariantes totales:** ATF-INV-001–006 (RFC-ATF-1) + RGC-INV-001–008 (RFC-ATF-2) + GPIL-INV-001–003 + ELR-INV-001–004 + EAP-INV-001–007 + OEP-INV-001–006 + FEA-INV-001–005 + FVP-INV-007 (RFC-ATF-3).
+- **58 invariantes totales:** ATF-INV-001–006 (RFC-ATF-1) + RGC-INV-001–008 (RFC-ATF-2) + GPIL-INV-001–003 + ELR-INV-001–004 + EAP-INV-001–007 + OEP-INV-001–006 + FEA-INV-001–005 + FVP-INV-007 (RFC-ATF-3) + GECR-INV-001–006 + SGIP-INV-001–004 + **DSPP-INV-001–007** (ADR-173).
 
 ---
 
