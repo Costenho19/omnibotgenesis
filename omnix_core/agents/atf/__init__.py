@@ -5,6 +5,8 @@ ADR-157 — Temporal Authority Admissibility.
 ADR-158 — Cross-Domain Trust Portability.
 ADR-159 — Runtime Governance Continuity.
 ADR-160 — RCR Performance Optimization Layer (RPOL).
+ADR-171 — Semantic Governance Interoperability Protocol (SGIP · Layer 4).
+ADR-172 — ATF Open Receipt Schema (ATORS) + Standalone Verifier.
 
 Exports:
     AgentIdentityEngine       — register and manage agent identities
@@ -38,6 +40,15 @@ Exports:
     GovernanceEventType           — governance event enum (ADR-160)
     RCRScheduler                  — adaptive interval scheduler (ADR-160)
     ExecutionProfile              — SHORT/MEDIUM/LONG/STREAMING enum (ADR-160)
+
+    SemanticTermEntry             — STR entry dataclass (ADR-171)
+    SemanticPolicyVector          — SPV snapshot dataclass (ADR-171)
+    SemanticAlignmentCertificate  — SAC bilateral cert dataclass (ADR-171)
+    SemanticGovernanceEngine      — SGIP engine: publish_term/generate_spv/create_sac/verify_sac (ADR-171)
+    SGIPError                     — base SGIP exception
+    STRImmutabilityViolation      — SGIP-INV-001 violation
+    SAC_IncompleteSPV             — SGIP-INV-002 violation
+    ATF_CORE_TERM_SET             — tuple of 8 ATF Core Terms
 """
 
 from omnix_core.agents.atf.agent_identity import (
@@ -81,6 +92,17 @@ from omnix_core.agents.atf.rcr_performance import (
     RCRScheduler,
     ExecutionProfile,
 )
+from omnix_core.agents.atf.semantic_governance import (
+    ATF_CORE_TERM_SET,
+    SAC_IncompleteSPV,
+    SGIPError,
+    STRImmutabilityViolation,
+    SemanticAlignmentCertificate,
+    SemanticGovernanceEngine,
+    SemanticPolicyVector,
+    SemanticTermEntry,
+    UnknownTermError,
+)
 
 __all__ = [
     "AgentIdentity",
@@ -110,4 +132,13 @@ __all__ = [
     "GovernanceEventType",
     "RCRScheduler",
     "ExecutionProfile",
+    "ATF_CORE_TERM_SET",
+    "SemanticTermEntry",
+    "SemanticPolicyVector",
+    "SemanticAlignmentCertificate",
+    "SemanticGovernanceEngine",
+    "SGIPError",
+    "STRImmutabilityViolation",
+    "SAC_IncompleteSPV",
+    "UnknownTermError",
 ]

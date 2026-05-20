@@ -1,0 +1,720 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://omnixquantum.com/schemas/atf-open-receipt-schema/1.0.0",
+  "title": "OMNIX ATF Open Receipt Schema",
+  "description": "Open, machine-readable JSON Schema for all ATF receipt types. Enables semantic portability of ATF governance artifacts — any system can verify and interpret ATF receipts without the OMNIX runtime. Version 1.0.0 — ADR-172 — OMNIX QUANTUM LTD — May 2026.",
+  "version": "1.0.0",
+  "issued_by": "OMNIX QUANTUM LTD",
+  "issued_date": "2026-05-20",
+  "adr_references": ["ADR-156","ADR-157","ADR-158","ADR-159","ADR-171","ADR-172"],
+  "rfc_references": ["RFC-ATF-1","RFC-ATF-2","RFC-ATF-3"],
+  "canonical_json_algorithm": {
+    "description": "Algorithm for computing content_hash. ATF-INV-006 / conformance_vectors.json.",
+    "steps": [
+      "1. Exclude fields: content_hash, pqc_signature, pqc_algorithm, pqc_signature_a, pqc_signature_b, sac_content_hash, spv_hash",
+      "2. Serialize: json.dumps(fields, sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
+      "3. Encode as UTF-8 bytes",
+      "4. SHA-256 hex digest of the UTF-8 bytes"
+    ],
+    "pqc_signature_message": "PQC signatures are computed over content_hash.encode('utf-8') — the HEX STRING of the SHA-256 digest, NOT the raw digest bytes.",
+    "pqc_algorithm": "ML-DSA-65 (Dilithium-3, FIPS 204)"
+  },
+  "definitions": {
+    "hex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 hex digest (64 lowercase hex characters)"
+    },
+    "sha256_prefixed": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hex digest with 'sha256:' prefix"
+    },
+    "iso_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp"
+    },
+    "base64_string": {
+      "type": "string",
+      "description": "Base64-encoded binary data (standard encoding, may include padding)"
+    },
+    "authority_budget": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 100.0,
+      "description": "Authority budget value in range [0.0, 100.0]"
+    },
+    "pqc_algorithm_name": {
+      "type": "string",
+      "enum": ["ML-DSA-65", "dilithium3", "ML-DSA-87", "dilithium5", "Ed25519"],
+      "description": "Post-quantum or classical signing algorithm identifier"
+    },
+    "atf_core_term": {
+      "type": "string",
+      "enum": ["AUTHORITY","ADMISSIBILITY","TRUST","SOVEREIGNTY","RISK","ESCALATION","REVOCATION","LEGITIMACY"],
+      "description": "One of the 8 ATF Core Terms (ADR-171 §2.2)"
+    },
+    "task_scope": {
+      "type": "object",
+      "description": "Authorization scope dict — what the delegate is authorized to do. Semantics are runtime-defined; fields depend on domain and deployment.",
+      "additionalProperties": true
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/receipt_types/DR" },
+    { "$ref": "#/receipt_types/TAR" },
+    { "$ref": "#/receipt_types/DTR" },
+    { "$ref": "#/receipt_types/RCR" },
+    { "$ref": "#/receipt_types/SAC" },
+    { "$ref": "#/receipt_types/STR" },
+    { "$ref": "#/receipt_types/SPV" }
+  ],
+  "receipt_types": {
+    "DR": {
+      "$id": "#/receipt_types/DR",
+      "title": "Delegation Receipt (DR)",
+      "description": "Cryptographic proof of agent-to-agent authority delegation. ADR-156. Every DR is PQC-signed by the delegator's ML-DSA-65 key. ATF-INV-001 (authority never expands), ATF-INV-002 (every receipt is PQC-signed), ATF-INV-005 (immutable once issued).",
+      "type": "object",
+      "required": [
+        "delegation_id","delegator_id","delegate_id","task_scope",
+        "authority_budget_delegator","authority_budget_granted",
+        "chain_root_id","delegation_depth","content_hash","created_at"
+      ],
+      "properties": {
+        "delegation_id": {
+          "type": "string",
+          "pattern": "^ATFDR-[0-9A-F]{16}$",
+          "description": "Unique receipt identifier. Format: ATFDR-{16 uppercase hex}."
+        },
+        "delegator_id": {
+          "type": "string",
+          "description": "AID or human operator ID of the delegating party."
+        },
+        "delegate_id": {
+          "type": "string",
+          "description": "AID of the receiving agent."
+        },
+        "task_scope": {
+          "$ref": "#/definitions/task_scope",
+          "description": "Authorization scope granted to the delegate."
+        },
+        "authority_budget_delegator": {
+          "$ref": "#/definitions/authority_budget",
+          "description": "Authority budget held by the delegator at issuance time."
+        },
+        "authority_budget_granted": {
+          "$ref": "#/definitions/authority_budget",
+          "description": "Authority budget granted to the delegate. MUST be ≤ authority_budget_delegator (ATF-INV-001)."
+        },
+        "parent_delegation_id": {
+          "oneOf": [{"type": "string"}, {"type": "null"}],
+          "description": "ID of the DR that granted the delegator its authority. Null if issued from human root."
+        },
+        "chain_root_id": {
+          "type": "string",
+          "description": "ID of the originating DR in the delegation chain (human root). Enables full lineage reconstruction."
+        },
+        "delegation_depth": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Depth in the delegation chain. 0 = human root, 1 = first agent, N = Nth sub-agent."
+        },
+        "delegator_public_key": {
+          "$ref": "#/definitions/base64_string",
+          "description": "ML-DSA-65 public key of the delegator (base64). Embedded for self-contained verification — no platform access needed."
+        },
+        "content_hash": {
+          "$ref": "#/definitions/hex64",
+          "description": "SHA-256 of canonical JSON of all fields except signature fields. Detects tampering."
+        },
+        "pqc_signature": {
+          "oneOf": [{"$ref": "#/definitions/base64_string"}, {"type": "null"}],
+          "description": "ML-DSA-65 signature over content_hash.encode('utf-8') by delegator_public_key."
+        },
+        "pqc_algorithm": {
+          "oneOf": [{"$ref": "#/definitions/pqc_algorithm_name"}, {"type": "null"}]
+        },
+        "expires_at": {
+          "oneOf": [{"$ref": "#/definitions/iso_utc"}, {"type": "null"}],
+          "description": "DR expiry timestamp (UTC). Null = no expiry."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["ACTIVE","EXPIRED","REVOKED"],
+          "description": "Current DR status."
+        },
+        "created_at": {
+          "$ref": "#/definitions/iso_utc",
+          "description": "DR issuance timestamp (UTC)."
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Extension dict for domain-specific fields."
+        }
+      },
+      "invariants": {
+        "ATF-INV-001": "authority_budget_granted ≤ authority_budget_delegator",
+        "ATF-INV-002": "pqc_signature MUST be present and valid for ATF-RGC-Compliant runtimes",
+        "ATF-INV-005": "content_hash is immutable once issued; any field change invalidates it"
+      }
+    },
+    "TAR": {
+      "$id": "#/receipt_types/TAR",
+      "title": "Temporal Admissibility Record (TAR)",
+      "description": "Cryptographic proof that a DR was ACTIVE at the exact nanosecond of an agent execution event. ADR-157. Answers: 'Was this agent's authority still valid at the EXACT nanosecond it took the action?' TAR-INV-001: issued BEFORE execution completes.",
+      "type": "object",
+      "required": [
+        "tar_id","delegation_id","agent_id","execution_ns","execution_ts",
+        "admission_status","content_hash","chain_root_id","issued_at"
+      ],
+      "properties": {
+        "tar_id": {
+          "type": "string",
+          "pattern": "^ATFTAR-[0-9A-F]{16}$",
+          "description": "Unique TAR identifier. Format: ATFTAR-{16 uppercase hex}."
+        },
+        "delegation_id": {
+          "type": "string",
+          "description": "ID of the DR authorizing the agent action."
+        },
+        "agent_id": {
+          "type": "string",
+          "description": "AID of the acting agent."
+        },
+        "execution_ref": {
+          "oneOf": [{"type": "string"}, {"type": "null"}],
+          "description": "Optional reference to ExecutionReceipt (ADR-131)."
+        },
+        "execution_ns": {
+          "type": "integer",
+          "description": "Nanosecond Unix timestamp of the execution event."
+        },
+        "execution_ts": {
+          "$ref": "#/definitions/iso_utc",
+          "description": "ISO UTC timestamp of execution (TAR-INV-002: bound by PQC signature)."
+        },
+        "dr_status_at_admission": {
+          "type": "string",
+          "enum": ["ACTIVE","EXPIRED","REVOKED"],
+          "description": "Status of the DR at the moment of TAR admission evaluation."
+        },
+        "dr_expires_at": {
+          "oneOf": [{"$ref": "#/definitions/iso_utc"}, {"type": "null"}]
+        },
+        "authority_budget": {
+          "$ref": "#/definitions/authority_budget",
+          "description": "Authority budget of the DR at admission time."
+        },
+        "domain": {
+          "type": "string",
+          "description": "Governance domain (e.g. TRADING, MEDICAL_AI, DEFENSE)."
+        },
+        "task_action": {
+          "type": "string",
+          "description": "Description of the action being admitted."
+        },
+        "admission_status": {
+          "type": "string",
+          "enum": ["ADMITTED","REJECTED"],
+          "description": "Result of the temporal admissibility check."
+        },
+        "rejection_reason": {
+          "oneOf": [{"type": "string"}, {"type": "null"}],
+          "description": "Reason for rejection if admission_status = REJECTED."
+        },
+        "content_hash": {
+          "$ref": "#/definitions/hex64"
+        },
+        "pqc_signature": {
+          "oneOf": [{"$ref": "#/definitions/base64_string"}, {"type": "null"}],
+          "description": "ML-DSA-65 signature over content_hash.encode('utf-8'). TAR-INV-002: timestamp is bound by this signature."
+        },
+        "pqc_algorithm": {
+          "oneOf": [{"$ref": "#/definitions/pqc_algorithm_name"}, {"type": "null"}]
+        },
+        "chain_root_id": {
+          "type": "string",
+          "description": "chain_root_id from the authorizing DR."
+        },
+        "issued_at": {
+          "$ref": "#/definitions/iso_utc",
+          "description": "TAR issuance timestamp. MUST precede execution completion (TAR-INV-001)."
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "note_on_verification": "TAR does not embed the issuer public key. Use --public-key flag in omnix_atf_verify.py for PQC signature verification.",
+      "invariants": {
+        "TAR-INV-001": "TAR issued_at MUST precede execution completion",
+        "TAR-INV-002": "execution_ts is cryptographically bound by pqc_signature",
+        "TAR-INV-003": "Expired DRs produce TAR with admission_status=REJECTED",
+        "TAR-INV-004": "Immutable once issued (content_hash)",
+        "TAR-INV-006": "DR lifetime at admission cannot exceed TAR_MAX_DR_LIFETIME_SECONDS (compiled constant, 86400s)"
+      }
+    },
+    "DTR": {
+      "$id": "#/receipt_types/DTR",
+      "title": "Domain Translation Receipt (DTR)",
+      "description": "Authority translation between governance domains. ADR-158. Proves that a DR from domain A was validly translated to domain B with mandatory authority discount. CDTP-INV-001: translated_budget ≤ source_budget × (1 - discount).",
+      "type": "object",
+      "required": [
+        "dtr_id","source_delegation_id","source_domain","target_domain",
+        "source_agent_id","target_agent_id","translated_budget",
+        "translation_discount","chain_root_id","content_hash","issued_at"
+      ],
+      "properties": {
+        "dtr_id": {
+          "type": "string",
+          "pattern": "^ATFDTR-[0-9A-F]{16}$",
+          "description": "Unique DTR identifier. Format: ATFDTR-{16 uppercase hex}."
+        },
+        "source_delegation_id": {
+          "type": "string",
+          "description": "ID of the source DR being translated."
+        },
+        "source_domain": {
+          "type": "string",
+          "description": "Originating governance domain."
+        },
+        "target_domain": {
+          "type": "string",
+          "description": "Destination governance domain."
+        },
+        "source_agent_id": {
+          "type": "string"
+        },
+        "target_agent_id": {
+          "type": "string"
+        },
+        "source_authority_budget": {
+          "$ref": "#/definitions/authority_budget",
+          "description": "Authority budget in the source DR."
+        },
+        "translated_budget": {
+          "$ref": "#/definitions/authority_budget",
+          "description": "Translated authority budget. MUST be ≤ source_authority_budget × (1 - translation_discount) (CDTP-INV-001)."
+        },
+        "translation_discount": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Fractional discount applied (e.g. 0.20 = 20%). Always > 0 to enforce authority reduction."
+        },
+        "translation_policy": {
+          "type": "string",
+          "description": "Identifier of the translation policy applied."
+        },
+        "task_scope": {
+          "$ref": "#/definitions/task_scope"
+        },
+        "chain_root_id": {
+          "type": "string"
+        },
+        "content_hash": {
+          "$ref": "#/definitions/hex64"
+        },
+        "pqc_signature": {
+          "oneOf": [{"$ref": "#/definitions/base64_string"}, {"type": "null"}]
+        },
+        "pqc_algorithm": {
+          "oneOf": [{"$ref": "#/definitions/pqc_algorithm_name"}, {"type": "null"}]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["ACTIVE","EXPIRED","REVOKED"]
+        },
+        "expires_at": {
+          "oneOf": [{"$ref": "#/definitions/iso_utc"}, {"type": "null"}]
+        },
+        "issued_at": {
+          "$ref": "#/definitions/iso_utc"
+        },
+        "issued_by": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "invariants": {
+        "CDTP-INV-001": "translated_budget ≤ source_authority_budget × (1 - translation_discount)",
+        "CDTP-INV-002": "DTR is PQC-signed by the issuing system",
+        "CDTP-INV-003": "DTR embeds source_delegation_id for chain traceability",
+        "CDTP-INV-004": "DTR is domain-scoped — invalid outside target_domain",
+        "CDTP-INV-005": "Immutable once issued"
+      }
+    },
+    "RCR": {
+      "$id": "#/receipt_types/RCR",
+      "title": "Runtime Continuity Record (RCR)",
+      "description": "Continuous authority health snapshot for long-running agent executions. ADR-159. CES (Continuity Eligibility Score) drives automatic escalation. RGC-INV-005: all RCRs PQC-signed and immutable.",
+      "type": "object",
+      "required": [
+        "rcr_id","tar_id","delegation_id","agent_id","chain_root_id",
+        "execution_ns","execution_ts","ces_score","continuity_status","content_hash","issued_at"
+      ],
+      "properties": {
+        "rcr_id": {
+          "type": "string",
+          "pattern": "^ATFRCR-[0-9A-F]{16}$",
+          "description": "Unique RCR identifier."
+        },
+        "tar_id": {
+          "type": "string",
+          "description": "ID of the TAR that admitted this agent. RGC-INV-001: every RCR anchored to a valid TAR."
+        },
+        "delegation_id": {
+          "type": "string"
+        },
+        "agent_id": {
+          "type": "string"
+        },
+        "chain_root_id": {
+          "type": "string"
+        },
+        "execution_ns": {
+          "type": "integer",
+          "description": "Nanosecond Unix timestamp of this continuity snapshot."
+        },
+        "execution_ts": {
+          "$ref": "#/definitions/iso_utc"
+        },
+        "ces_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "Continuity Eligibility Score. Formula (RGC-INV-002): T×0.30 + B×0.30 + D×0.20 + I×0.20"
+        },
+        "ces_temporal": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "T-component: time remaining on DR / total DR lifetime × 100"
+        },
+        "ces_budget": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "B-component: budget_remaining / budget_at_admission × 100"
+        },
+        "ces_context": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "D-component: 100 - context_drift_pct"
+        },
+        "ces_integrity": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0,
+          "description": "I-component: max(0, 100 - active_anomalies × 10)"
+        },
+        "continuity_status": {
+          "type": "string",
+          "enum": ["NOMINAL","MONITORING","WARNING","CRITICAL","HALT"],
+          "description": "NOMINAL(≥75) · MONITORING(50–75) · WARNING(25–50) · CRITICAL(10–25) · HALT(<10)"
+        },
+        "predecessor_rcr_id": {
+          "oneOf": [{"type": "string"}, {"type": "null"}],
+          "description": "Previous RCR in the continuity chain. RGC-INV-006: chain is acyclic."
+        },
+        "budget_at_admission": {
+          "$ref": "#/definitions/authority_budget"
+        },
+        "budget_remaining": {
+          "$ref": "#/definitions/authority_budget"
+        },
+        "context_drift_pct": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0
+        },
+        "active_anomalies": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fragmentation_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.95,
+          "description": "AFG aggregate budget utilization at chain_root_id level. RGC-INV-004: never exceeds 0.95."
+        },
+        "content_hash": {
+          "$ref": "#/definitions/hex64"
+        },
+        "pqc_signature": {
+          "oneOf": [{"$ref": "#/definitions/base64_string"}, {"type": "null"}]
+        },
+        "pqc_algorithm": {
+          "oneOf": [{"$ref": "#/definitions/pqc_algorithm_name"}, {"type": "null"}]
+        },
+        "issued_at": {
+          "$ref": "#/definitions/iso_utc"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "invariants": {
+        "RGC-INV-001": "Every RCR anchored to a valid TAR",
+        "RGC-INV-002": "CES = T×0.30 + B×0.30 + D×0.20 + I×0.20 — non-negotiable formula",
+        "RGC-INV-003": "HALT terminates execution and revokes in-flight sub-tasks",
+        "RGC-INV-004": "Aggregate budget never exceeds AFG_FRAGMENTATION_LIMIT (max 0.95)",
+        "RGC-INV-005": "All RCRs PQC-signed and immutable",
+        "RGC-INV-006": "Continuity chain is acyclic (monotonically advancing execution_ns)"
+      }
+    },
+    "SAC": {
+      "$id": "#/receipt_types/SAC",
+      "title": "Semantic Alignment Certificate (SAC)",
+      "description": "Bilateral PQC-signed semantic alignment map between two runtimes. Layer 4 of the ATF interoperability stack. ADR-171. Enables ATF-SGIP-Aligned compliance designation. SGIP-INV-004: sac_content_hash covers both SPV hashes at issuance.",
+      "type": "object",
+      "required": [
+        "sac_id","runtime_a","runtime_b","semantic_alignment_map","sac_content_hash","effective_from"
+      ],
+      "properties": {
+        "sac_id": {
+          "type": "string",
+          "pattern": "^OMNIX-SAC-[0-9A-F]{16}$",
+          "description": "Unique SAC identifier."
+        },
+        "crgc_id": {
+          "oneOf": [{"type": "string"}, {"type": "null"}],
+          "description": "Linked Cross-Runtime Governance Contract ID (ADR-161)."
+        },
+        "runtime_a": {
+          "type": "object",
+          "required": ["runtime_id","spv_id","spv_hash"],
+          "properties": {
+            "runtime_id": {"type": "string"},
+            "spv_id": {"type": "string"},
+            "spv_hash": {"$ref": "#/definitions/hex64"}
+          },
+          "description": "Runtime A identity and SPV reference at SAC issuance (SGIP-INV-004)."
+        },
+        "runtime_b": {
+          "type": "object",
+          "required": ["runtime_id","spv_id","spv_hash"],
+          "properties": {
+            "runtime_id": {"type": "string"},
+            "spv_id": {"type": "string"},
+            "spv_hash": {"$ref": "#/definitions/hex64"}
+          },
+          "description": "Runtime B identity and SPV reference at SAC issuance (SGIP-INV-004)."
+        },
+        "effective_from": {
+          "$ref": "#/definitions/iso_utc"
+        },
+        "expires_at": {
+          "oneOf": [{"$ref": "#/definitions/iso_utc"}, {"type": "null"}]
+        },
+        "semantic_alignment_map": {
+          "type": "object",
+          "description": "Per-term alignment status for all 8 ATF Core Terms. SGIP-INV-002: all 8 terms MUST be present.",
+          "required": ["AUTHORITY","ADMISSIBILITY","TRUST","SOVEREIGNTY","RISK","ESCALATION","REVOCATION","LEGITIMACY"],
+          "additionalProperties": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["ALIGNED","ACKNOWLEDGED_DIVERGENCE","UNRESOLVED"],
+                "description": "ALIGNED: both runtimes hold same definition. ACKNOWLEDGED_DIVERGENCE: different but bilaterally reviewed. UNRESOLVED: undefined or not signed — SGIP-INV-003 applies."
+              },
+              "runtime_a_hash": {
+                "oneOf": [{"$ref": "#/definitions/sha256_prefixed"}, {"type": "null"}]
+              },
+              "runtime_b_hash": {
+                "oneOf": [{"$ref": "#/definitions/sha256_prefixed"}, {"type": "null"}]
+              },
+              "divergence_resolution": {
+                "type": "string",
+                "enum": ["MORE_RESTRICTIVE","RUNTIME_A","RUNTIME_B","BILATERAL_OVERRIDE"],
+                "description": "Required when status=ACKNOWLEDGED_DIVERGENCE. MORE_RESTRICTIVE is the safe default."
+              },
+              "divergence_note": {
+                "type": "string",
+                "description": "Human-readable description of the semantic difference."
+              }
+            }
+          }
+        },
+        "unresolved_terms": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/atf_core_term"},
+          "description": "Terms with UNRESOLVED status. SGIP-INV-003: these default to more restrictive interpretation."
+        },
+        "governing_posture": {
+          "type": "string",
+          "enum": ["MORE_RESTRICTIVE","RUNTIME_A","RUNTIME_B","BILATERAL_OVERRIDE"],
+          "default": "MORE_RESTRICTIVE"
+        },
+        "sac_content_hash": {
+          "$ref": "#/definitions/hex64",
+          "description": "SHA-256 of canonical JSON of {parties, semantic_alignment_map}. SGIP-INV-004."
+        },
+        "pqc_signature_a": {
+          "oneOf": [{"$ref": "#/definitions/base64_string"}, {"type": "null"}],
+          "description": "ML-DSA-65 signature by runtime_a over sac_content_hash."
+        },
+        "pqc_signature_b": {
+          "oneOf": [{"$ref": "#/definitions/base64_string"}, {"type": "null"}],
+          "description": "ML-DSA-65 signature by runtime_b over sac_content_hash."
+        },
+        "pqc_algorithm": {
+          "oneOf": [{"$ref": "#/definitions/pqc_algorithm_name"}, {"type": "null"}]
+        },
+        "created_at": {
+          "$ref": "#/definitions/iso_utc"
+        }
+      },
+      "invariants": {
+        "SGIP-INV-001": "STR entries referenced by SPVs are immutable",
+        "SGIP-INV-002": "Both SPVs must cover all 8 ATF Core Terms",
+        "SGIP-INV-003": "UNRESOLVED terms default to more restrictive interpretation; if neither has definition, operation is BLOCKED",
+        "SGIP-INV-004": "sac_content_hash covers both spv_hash values at issuance time — SPV updates do not retroactively modify the SAC"
+      }
+    },
+    "STR": {
+      "$id": "#/receipt_types/STR",
+      "title": "Semantic Term Registry Entry (STR)",
+      "description": "Formal operational definition of one ATF Core Term. Append-only — immutable once signed (SGIP-INV-001). ADR-171 §2.",
+      "type": "object",
+      "required": ["str_entry_id","runtime_id","term_id","definition","content_hash","created_at"],
+      "properties": {
+        "str_entry_id": {
+          "type": "string",
+          "description": "Unique entry ID. Format: STR-{runtime_id}-{term_id}-{16HEX}."
+        },
+        "runtime_id": {
+          "type": "string",
+          "description": "Format: RUNTIME-{jurisdiction}-{organization}-{date}."
+        },
+        "term_id": {
+          "$ref": "#/definitions/atf_core_term"
+        },
+        "term_version": {
+          "type": "string",
+          "description": "Semantic version (e.g. '1.0')."
+        },
+        "definition": {
+          "type": "object",
+          "required": ["formal_statement"],
+          "properties": {
+            "formal_statement": {
+              "type": "string",
+              "description": "Authoritative operational definition of the term."
+            },
+            "boundary_conditions": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "regulatory_anchors": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Regulatory frameworks this definition is anchored to (e.g. 'EU-AI-ACT-ART-14')."
+            },
+            "out_of_scope": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "case": {"type": "string"},
+                  "verdict": {"type": "string", "enum": ["IN_SCOPE","OUT_OF_SCOPE"]},
+                  "rationale": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "operational_scope": {
+          "type": "object",
+          "properties": {
+            "domains": {"type": "array", "items": {"type": "string"}},
+            "jurisdictions": {"type": "array", "items": {"type": "string"}},
+            "agent_tiers": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "effective_from": {
+          "$ref": "#/definitions/iso_utc"
+        },
+        "supersedes_id": {
+          "oneOf": [{"type": "string"}, {"type": "null"}],
+          "description": "str_entry_id of the entry this supersedes. Previous entry remains independently verifiable (SGIP-INV-001)."
+        },
+        "content_hash": {
+          "$ref": "#/definitions/hex64"
+        },
+        "pqc_signature": {
+          "oneOf": [{"$ref": "#/definitions/base64_string"}, {"type": "null"}]
+        },
+        "pqc_algorithm": {
+          "oneOf": [{"$ref": "#/definitions/pqc_algorithm_name"}, {"type": "null"}]
+        },
+        "created_at": {
+          "$ref": "#/definitions/iso_utc"
+        }
+      }
+    },
+    "SPV": {
+      "$id": "#/receipt_types/SPV",
+      "title": "Semantic Policy Vector (SPV)",
+      "description": "Point-in-time snapshot of a runtime's STR entries for all 8 core terms. The spv_hash is the semantic fingerprint of the runtime. ADR-171 §3.",
+      "type": "object",
+      "required": ["spv_id","runtime_id","generated_at","atf_core_term_set","spv_hash"],
+      "properties": {
+        "spv_id": {
+          "type": "string",
+          "description": "Format: OMNIX-SPV-{runtime_id}-{YYYYMMDD}-{16HEX}."
+        },
+        "runtime_id": {
+          "type": "string"
+        },
+        "generated_at": {
+          "$ref": "#/definitions/iso_utc"
+        },
+        "atf_core_term_set": {
+          "type": "object",
+          "description": "One entry per ATF Core Term. Complete SPV requires all 8.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["str_entry_id","content_hash"],
+            "properties": {
+              "str_entry_id": {"type": "string"},
+              "content_hash": {"$ref": "#/definitions/sha256_prefixed"},
+              "term_version": {"type": "string"}
+            }
+          }
+        },
+        "extended_terms": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Additional runtime-specific terms beyond the core set."
+        },
+        "spv_hash": {
+          "$ref": "#/definitions/hex64",
+          "description": "SHA-256 of canonical JSON of atf_core_term_set. Two runtimes with identical spv_hash are semantically equivalent."
+        },
+        "pqc_signature": {
+          "oneOf": [{"$ref": "#/definitions/base64_string"}, {"type": "null"}]
+        },
+        "pqc_algorithm": {
+          "oneOf": [{"$ref": "#/definitions/pqc_algorithm_name"}, {"type": "null"}]
+        },
+        "created_at": {
+          "$ref": "#/definitions/iso_utc"
+        }
+      }
+    }
+  }
+}
