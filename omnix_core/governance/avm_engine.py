@@ -6,6 +6,11 @@ admin endpoints) that need to:
   - Query which domains are stale or drifting beyond calibration limits.
   - Trigger auto-recalibration without touching internal AVM state.
 
+ADR-174 (AGVP) integration:
+  - check_anticipatory_veto() inserts the AGVP gate before AVM.evaluate().
+  - update_domain_signals() is called unconditionally to preserve watchdog observability.
+  - auto_recalibrate_stale_domains() respects AGV-INV-006 (skips domains with active PVRs).
+
 This module does NOT duplicate logic from assumption_validity_monitor.py.
 All decisions (drift computation, safety guards, persistence) remain there.
 """
@@ -15,23 +20,36 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Tuple
 
 logger = logging.getLogger("OMNIX.AVMEngine")
 
 
 class AVMEngine:
     """
-    ADR-120: High-level engine for AVM governance operations.
+    ADR-120 + ADR-174: High-level engine for AVM governance operations.
 
     Wraps the AssumptionValidityMonitor singleton and the AVMDatabaseBridge
     to expose a minimal, auditor-friendly interface.
+
+    AGVP integration (ADR-174):
+        call check_anticipatory_veto(domain, signals) before AVM.evaluate()
+        to enforce the two-layer veto architecture:
+          Layer 1 — Reactive Veto   (ADR-076): AVM.evaluate() at request time
+          Layer 2 — Anticipatory Veto (ADR-174): PVR emitted by AGVPWatchdog
 
     Usage:
         engine = AVMEngine()
         stale = engine.get_stale_domains()          # e.g. ['islamic_credit', 'trading']
         if stale:
             recalibrated = engine.auto_recalibrate_stale_domains()
+
+        # In governance pipeline:
+        blocked, pvr = engine.check_anticipatory_veto(domain, live_signals)
+        if blocked:
+            # Domain has an active proactive veto — do not proceed to AVM.evaluate()
+            return BLOCKED(pvr.block_reason, pvr_id=pvr.pvr_id)
+        result = AVM.evaluate(live_signals, domain)
     """
 
     def __init__(
@@ -39,15 +57,16 @@ class AVMEngine:
         recalib_interval_hours: float = 72.0,
         drift_threshold: float | None = None,
         max_drift_for_auto: float = 80.0,
+        tenant_id: str = "default",
     ) -> None:
         self._recalib_interval_hours = recalib_interval_hours
         self._max_drift_for_auto = max_drift_for_auto
-        # drift_threshold=None → use AVM's own configured threshold
         self._drift_threshold_override = drift_threshold
+        self.tenant_id = tenant_id
 
     def _get_avm(self):
         from omnix_core.governance.assumption_validity_monitor import get_avm_instance
-        return get_avm_instance()
+        return get_avm_instance(tenant_id=self.tenant_id)
 
     def _get_bridge(self):
         db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
@@ -59,6 +78,73 @@ class AVMEngine:
         except Exception as exc:
             logger.warning(f"[AVMEngine] DB bridge unavailable: {exc}")
             return None
+
+    # ── ADR-174: Anticipatory Governance Veto integration ─────────────────────
+
+    def check_anticipatory_veto(
+        self,
+        domain: str,
+        signals: dict[str, float],
+        snapshot_id: str = "",
+    ) -> Tuple[bool, Any]:
+        """
+        ADR-174 AGVP gate — call this BEFORE AVM.evaluate() in the governance pipeline.
+
+        Step 1: Always update the AGVP signal cache (preserves watchdog observability
+                even when the domain is blocked — breaks the deadlock, ADR-174 §Design).
+        Step 2: Check for an active ProactiveVetoReceipt for this domain.
+                If found → returns (True, pvr) — caller must block without calling AVM.
+                If not   → returns (False, None) — caller proceeds to AVM.evaluate().
+
+        AGV-INV-001: An active PVR has the same blocking authority as a reactive veto.
+        AGV-INV-005: Only domains with a genuine baseline (not pass_through) can have PVRs.
+
+        Args:
+            domain:      AVM domain identifier
+            signals:     Live governance signals for this request
+            snapshot_id: Optional — snapshot ID for telemetry
+
+        Returns:
+            (is_blocked: bool, pvr: ProactiveVetoReceipt | None)
+        """
+        try:
+            from omnix_core.governance.anticipatory_governance_veto import (
+                AGVPEngine,
+            )
+            agvp = AGVPEngine(self.tenant_id)
+
+            # Step 1: ALWAYS update signals — unconditional, before any PVR check
+            agvp.update_domain_signals(domain, signals, snapshot_id=snapshot_id)
+
+            # Step 2: Check for active anticipatory veto
+            pvr = agvp.get_active_pvr(domain)
+            if pvr is not None:
+                logger.warning(
+                    f"[AVMEngine] ANTICIPATORY_VETO_ACTIVE — domain={domain} "
+                    f"pvr_id={pvr.pvr_id} drift_score={pvr.drift_score:.1f} "
+                    f"veto_effective_from={pvr.veto_effective_from}"
+                )
+                return True, pvr
+            return False, None
+
+        except Exception as exc:
+            # AGVP errors must never block the reactive AVM path — log and continue
+            logger.warning(
+                f"[AVMEngine] AGVP check failed for domain={domain}: {exc} "
+                "— falling back to reactive AVM path only"
+            )
+            return False, None
+
+    def get_agvp_status(self) -> dict[str, Any]:
+        """Return AGVP watchdog health and active PVR summary (ADR-174)."""
+        try:
+            from omnix_core.governance.anticipatory_governance_veto import AGVPEngine
+            agvp = AGVPEngine(self.tenant_id)
+            return agvp.watchdog_status()
+        except Exception as exc:
+            return {"error": str(exc), "watchdog_running": False}
+
+    # ── Existing AVM operations (ADR-120) ─────────────────────────────────────
 
     def get_stale_domains(
         self,
@@ -154,7 +240,12 @@ class AVMEngine:
         """
         Auto-recalibrate all stale or drifted domains using live cached signals.
 
-        Delegates entirely to AssumptionValidityMonitor.auto_recalibrate_stale_domains()
+        ADR-174 AGV-INV-006: Skips domains that have an active ProactiveVetoReceipt.
+        Auto-recalibration during an active veto would update the baseline to drifted
+        conditions, masking the root cause. Domains with active PVRs are skipped and
+        logged — admin must revoke PVR before recalibration can proceed.
+
+        Delegates to AssumptionValidityMonitor.auto_recalibrate_stale_domains()
         so all safety guards and persistence logic remain in the canonical location.
 
         Returns:
@@ -163,6 +254,30 @@ class AVMEngine:
         interval = recalib_interval_hours or self._recalib_interval_hours
         max_drift = max_drift_for_auto or self._max_drift_for_auto
         avm = self._get_avm()
+
+        # AGV-INV-006: filter out domains with active PVRs before recalibration
+        stale_candidates = self.get_stale_domains(recalib_interval_hours=interval)
+        domains_to_skip: list[str] = []
+        try:
+            from omnix_core.governance.anticipatory_governance_veto import (
+                is_domain_safe_for_recalibration,
+            )
+            for domain in stale_candidates:
+                safe, reason = is_domain_safe_for_recalibration(domain, self.tenant_id)
+                if not safe:
+                    domains_to_skip.append(domain)
+                    logger.warning(
+                        f"[AVMEngine] AGV-INV-006: skipping recalibration for domain={domain} — {reason}"
+                    )
+        except Exception as exc:
+            logger.warning(f"[AVMEngine] AGVP recalibration guard check failed: {exc} — proceeding without guard")
+
+        if domains_to_skip:
+            logger.warning(
+                f"[AVMEngine] AGV-INV-006: {len(domains_to_skip)} domain(s) skipped "
+                f"(active PVR): {domains_to_skip}"
+            )
+
         logger.info(
             f"[AVMEngine] auto_recalibrate_stale_domains("
             f"interval={interval:.0f}h, max_drift_for_auto={max_drift:.0f}%)"
@@ -175,6 +290,7 @@ class AVMEngine:
     def get_avm_status(self) -> dict[str, Any]:
         """
         Return a summary of all AVM domains and their current health.
+        Includes AGVP active PVR status for each domain (ADR-174).
         Useful for /api/governance/avm-status and audit reports.
         """
         avm = self._get_avm()
@@ -182,6 +298,7 @@ class AVMEngine:
             "drift_threshold": avm.drift_threshold,
             "max_age_hours": avm.max_age_hours,
             "recalib_interval_hours": self._recalib_interval_hours,
+            "agvp": self.get_agvp_status(),
             "domains": {},
         }
 
@@ -191,6 +308,16 @@ class AVMEngine:
                 domains.add(p.stem.replace("_calibration", ""))
         except Exception as _e:
             logger.debug(f"[AVMEngine] get_avm_status: disk glob failed (dir may not exist yet): {_e}")
+
+        # Load active PVRs once for the status report
+        active_pvr_domains: set[str] = set()
+        try:
+            from omnix_core.governance.anticipatory_governance_veto import AGVPEngine
+            agvp = AGVPEngine(self.tenant_id)
+            for pvr in agvp.list_active_pvrs():
+                active_pvr_domains.add(pvr.domain)
+        except Exception:
+            pass
 
         for domain in sorted(domains):
             try:
@@ -210,6 +337,7 @@ class AVMEngine:
                     "drift_vs_live": round(drift_vs_live, 1) if drift_vs_live is not None else None,
                     "has_live_signals": live_signals is not None,
                     "tags": snapshot.tags,
+                    "anticipatory_veto_active": domain in active_pvr_domains,
                 }
             except Exception as exc:
                 status["domains"][domain] = {"error": str(exc)}

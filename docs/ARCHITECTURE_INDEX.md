@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **173 total**. Últimos: ADR-171 (SGIP · Layer 4) · ADR-172 (ATORS + Standalone Verifier) · **ADR-173 (DSPP — Dynamic Semantic Portability Protocol · Layer 5)**
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **58 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + **DSPP×7**)
+- **ADRs:** `docs/adr/` — **174 total**. Últimos: ADR-172 (ATORS) · ADR-173 (DSPP · Layer 5) · **ADR-174 (AGVP — Anticipatory Governance Veto Protocol)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **64 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + **AGVP×6**)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 
@@ -316,6 +316,53 @@ python sdk/python/omnix_atf_verify.py --receipt dr.json
 python sdk/python/omnix_atf_verify.py --receipt dr.json --public-key pub.b64 --exit-code
 python sdk/python/omnix_atf_verify.py --receipt sac.json --type SAC
 ```
+
+---
+
+### Anticipatory Governance Veto Protocol (AGVP) — ADR-174
+
+**Primera arquitectura de veto de gobernanza de dos capas del mundo: veto anticipatorio
+PQC-firmado emitido antes de cualquier request, cerrando el gap de latencia de detección.**
+
+| Artefacto | Archivo | Descripción |
+|---|---|---|
+| AGVP Engine | `omnix_core/governance/anticipatory_governance_veto.py` | AGVPWatchdog · AGVPEngine · PVR · DDL — ADR-174 completo |
+| AVMEngine (actualizado) | `omnix_core/governance/avm_engine.py` | check_anticipatory_veto() · AGV-INV-006 guard · get_agvp_status() |
+| ADR-174 Spec | `docs/adr/ADR-174-anticipatory-governance-veto-protocol.md` | Especificación normativa completa — 6 invariantes · Two-layer veto |
+| AGVP Tests | `tests/test_agvp.py` | Suite completa — AGV-INV-001–006 · idempotency · revocation · deadlock |
+
+**Arquitectura de Veto de Dos Capas:**
+```
+Layer 1 — Reactive Veto    [ADR-076 / AVM.evaluate()]
+  Triggered at request time — detection latency = time between adverse event and next request
+
+Layer 2 — Anticipatory Veto [ADR-174 / AGVP / AGVPWatchdog]
+  Triggered by continuous monitoring — detection latency = one watchdog interval (default 60s)
+  ProactiveVetoReceipt (PVR) exists in ledger BEFORE any subsequent request arrives
+```
+
+**Artefacto clave — ProactiveVetoReceipt (PVR):**
+- Identificador: `OMNIX-PVR-{16HEX}`
+- PQC-firmado con ML-DSA-65 · persisted en DB · AGV-INV-004 content_hash commitment
+- Un PVR ACTIVO bloquea **todos** los requests del dominio (AGV-INV-001)
+- Solo admin puede revocar — AGV-INV-002 (watchdog cannot self-revoke)
+- Dominio sin baseline no puede recibir PVRs — AGV-INV-005
+
+**AGV-INV-001–006:**
+- AGV-INV-001: ACTIVE PVR = mismo peso que veto reactivo
+- AGV-INV-002: Watchdog no puede auto-revocar
+- AGV-INV-003: Interval mínimo 30s estructural
+- AGV-INV-004: content_hash cubre domain+tenant+drift+signals+timestamp
+- AGV-INV-005: Solo dominios con baseline pueden recibir PVRs
+- AGV-INV-006: Auto-recalibración (ADR-120) frozen durante PVR activo
+
+**Solución al deadlock de observabilidad (ADR-174 §Design):**
+`update_domain_signals()` corre ANTES del check PVR — dominio bloqueado sigue
+alimentando el watchdog con telemetría fresca. Rompe el deadlock.
+
+**DB Table:** `avm_anticipatory_veto_receipts`  
+**UNIQUE constraint:** (tenant_id, domain) WHERE status='ACTIVE' — multi-dyno safe  
+**Priority Record:** OMNIX-PAR-2026-AGVP-001 · May 20, 2026 · **RFC-ATF-4 foundation**
 
 ---
 
