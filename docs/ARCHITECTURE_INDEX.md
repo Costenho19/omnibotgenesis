@@ -366,6 +366,18 @@ alimentando el watchdog con telemetría fresca. Rompe el deadlock.
 
 ---
 
+---
+
+## Producto Comercial
+
+| Documento | Archivo | Alcance |
+|---|---|---|
+| **OMNIX Governance API** | `docs/adr/ADR-176-omnix-governance-api-product.md` | Definición del producto comercial. RegTech SaaS. 4 tiers (VERIFIER/BUILDER/PROFESSIONAL/ENTERPRISE). Pricing: free → $500 → $2,000 → custom. Legal positioning: NOT financial advice. Endpoints REST, SDKs Python + Node.js. OMNIX-PRODUCT-GOV-API-001 |
+
+**Página React:** `omnix_web/src/pages/GovernanceAPIPage.tsx` · Ruta: `/governance-api`
+
+---
+
 ## Scripts de Verificación
 
 | Script | Uso |
