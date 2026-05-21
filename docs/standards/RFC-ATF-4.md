@@ -1683,12 +1683,12 @@ DSPP-INV-007 — Structural Threshold Constants
    The following table lists all twenty-three invariant properties
    defined in RFC-ATF-4 — six canonical named identifiers per the AGV
    family, six per the SSD/CRSI family, and eleven per the DSPP/SDU
-   family — with their sections, Z3 proof status, and the open problem
+   family — with their sections, proof method, and the open problem
    each closes.
 
    AGVP Invariants:
 
-   | Invariant   | Description                              | §    | Z3    | Gap   |
+   | Invariant   | Description                              | §    | Proof | Gap   |
    |-------------|------------------------------------------|------|-------|-------|
    | AGV-INV-001 | Anticipatory Authority Equivalence       | 5.6  | UNSAT | PVC   |
    | AGV-INV-002 | Watchdog Cannot Self-Revoke              | 5.6  | State | PVC   |
@@ -1699,7 +1699,7 @@ DSPP-INV-007 — Structural Threshold Constants
 
    SSD Invariants:
 
-   | Invariant   | Description                              | §    | Z3    | Gap   |
+   | Invariant   | Description                              | §    | Proof | Gap   |
    |-------------|------------------------------------------|------|-------|-------|
    | CRSI-BND-LO | CRSI ≥ 0.0 for all valid inputs          | 6.2  | UNSAT | TS    |
    | CRSI-BND-HI | CRSI ≤ 1.0 for all valid inputs          | 6.2  | UNSAT | TS    |
@@ -1710,7 +1710,7 @@ DSPP-INV-007 — Structural Threshold Constants
 
    DSPP Invariants:
 
-   | Invariant    | Description                             | §    | Z3    | Gap   |
+   | Invariant    | Description                             | §    | Proof | Gap   |
    |--------------|-----------------------------------------|------|-------|-------|
    | SDU-BND-LO   | SDU ≥ 0.0 for all valid inputs          | 7.2  | UNSAT | SP    |
    | SDU-BND-HI   | SDU ≤ 1.0 for all valid inputs          | 7.2  | UNSAT | SP    |
@@ -1724,11 +1724,17 @@ DSPP-INV-007 — Structural Threshold Constants
    | DSPP-INV-007a| Threshold Partition Totality            | 7.7  | UNSAT | SP    |
    | DSPP-INV-007b| Threshold Partition Exclusivity         | 7.7  | UNSAT | SP    |
 
-   Z3 column key:
-      UNSAT  — formally proved by Z3 SMT (OMNIX-FVS-1.0)
-      State  — verified by state-machine analysis (watchdog code path)
-      Struct — verified by structural analysis (data model)
-      Logic  — verified by logical argument (follows from definition)
+   Proof column key:
+      UNSAT  — formally proved by Z3 SMT solver (OMNIX-FVS-1.0); all
+               return UNSAT (unsatisfiable negation), confirming the
+               property holds for all valid inputs
+      State  — verified by state-machine analysis (exhaustive code-path
+               inspection confirming no reachable state violates the
+               invariant; not amenable to Z3 arithmetic encoding)
+      Struct — verified by structural analysis (data model enforces the
+               property by construction; no runtime check needed)
+      Logic  — verified by logical argument (property follows directly
+               from definition; Z3 encoding would be circular)
 
 
 11.  Compliance Designation: ATF-PGL-Compliant
@@ -2057,8 +2063,7 @@ DSPP-INV-007 — Structural Threshold Constants
    driver) is formalized as a metric rather than left to operator
    judgment.
 
-14.3.  Dynamic Semantic Portability Protocol (DSPP)
-       — O(1) Cross-Domain Assessment Without Negotiation
+14.3.  DSPP — O(1) Cross-Domain Assessment Without Negotiation
 
    The DSPP RSA is a unilateral, offline computation that scales to
    arbitrarily many receiving domains with O(1) computation per receipt
@@ -2245,6 +2250,8 @@ DSPP-INV-007 — Structural Threshold Constants
       Babatunde, R.L., "VeriSigil Governance Specification (VGS-001 to
       VGS-011)", Version 0.7.2, May 2026.
       DOI: 10.5281/zenodo.20264923
+      [NOTE: DOI unverified — confirm resolves to Published record
+      before submission to Zenodo]
 
    [ADR-076]
       Nunes, H., "Assumption Validity Monitor (AVM)",
@@ -2404,3 +2411,4 @@ OMNIX-PAR-2026-DSPP-001 · OMNIX-PAR-2026-FVS-001*
 
 *STATUS: DRAFT — NOT YET SUBMITTED TO ZENODO*
 *REVISION HISTORY: v0.1 initial draft — May 21, 2026*
+```
