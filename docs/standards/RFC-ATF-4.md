@@ -744,7 +744,7 @@ Table of Contents
               log(PVR_ALREADY_ACTIVE, domain=D, reason="no duplicate issuance")
           elif drift_subsiding(D) AND has_active_pvr(D):
             log(RECOVERY_CANDIDATE, domain=D, drift=result.drift_score)
-            [NOTE: watchdog MUST NOT revoke — AGV-INV-002]
+            # AGV-INV-002: watchdog MUST NOT revoke — RECOVERY_CANDIDATE is informational only
 
    The watchdog MUST NOT issue PVRs for domains with pass_through = True
    (AGV-INV-005).  A pass_through domain has no calibration baseline;
@@ -1730,9 +1730,9 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
 
    | Invariant   | Description                              | §    | Proof | Gap   |
    |-------------|------------------------------------------|------|-------|-------|
-   | CRSI-BND-LO | CRSI ≥ 0.0 for all valid inputs          | 6.2  | UNSAT | TS    |
-   | CRSI-BND-HI | CRSI ≤ 1.0 for all valid inputs          | 6.2  | UNSAT | TS    |
-   | CRSI-CLS-T  | CRSI classification is total (all cover) | 6.2  | UNSAT | TS    |
+   | CRSI-BOUND-LO  | CRSI ≥ 0.0 for all valid inputs       | 6.2  | UNSAT | TS    |
+   | CRSI-BOUND-HI  | CRSI ≤ 1.0 for all valid inputs       | 6.2  | UNSAT | TS    |
+   | CRSI-CLASS-TOT | CRSI classification is total (covers) | 6.2  | UNSAT | TS    |
    | SSD-INV-001 | STRUCTURAL_SHIFT Blocks Auto-Recal.      | 6.6  | UNSAT | TS    |
    | SSD-INV-002 | History Ring Buffer Is Append-Only       | 6.6  | State | TS    |
    | SSD-INV-003 | STRUCTURAL_SHIFT Requires ≥5 Cycles      | 6.6  | UNSAT | TS    |
@@ -1741,8 +1741,8 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
 
    | Invariant    | Description                             | §    | Proof | Gap   |
    |--------------|-----------------------------------------|------|-------|-------|
-   | SDU-BND-LO   | SDU ≥ 0.0 for all valid inputs          | 7.2  | UNSAT | SP    |
-   | SDU-BND-HI   | SDU ≤ 1.0 for all valid inputs          | 7.2  | UNSAT | SP    |
+   | SDU-BOUND-LO | SDU ≥ 0.0 for all valid inputs          | 7.2  | UNSAT | SP    |
+   | SDU-BOUND-HI | SDU ≤ 1.0 for all valid inputs          | 7.2  | UNSAT | SP    |
    | SDU-WSUM     | Weights sum to 1.0 (convex combination) | 7.2  | UNSAT | SP    |
    | DSPP-INV-001 | TSA Immutability                        | 7.7  | Struct| SP    |
    | DSPP-INV-002 | SDR Append-Only                         | 7.7  | Struct| SP    |
@@ -1778,14 +1778,9 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
              domain-independent for all valid inputs with no pairwise
              negotiation required
 
-   Identifier note: the table above uses abbreviated IDs for column
-   width.  The corresponding invariant_id values in the proof files
-   under omnix_core/formal_verification/ are:
-      CRSI-BND-LO  ↔  CRSI-BOUND-LO     CRSI-BND-HI  ↔  CRSI-BOUND-HI
-      CRSI-CLS-T   ↔  CRSI-CLASS-TOT    SDU-BND-LO   ↔  SDU-BOUND-LO
-      SDU-BND-HI   ↔  SDU-BOUND-HI
-   All other identifiers are identical between this table and the
-   proof files.
+   All invariant_id values in this table are identical to the
+   invariant_id fields in omnix_core/formal_verification/
+   proof files and the run_all.py output.
 
 
 11.  Compliance Designation: ATF-PGL-Compliant
@@ -2464,4 +2459,3 @@ OMNIX-PAR-2026-DSPP-001 · OMNIX-PAR-2026-FVS-001*
 
 *STATUS: DRAFT — NOT YET SUBMITTED TO ZENODO*
 *REVISION HISTORY: v0.1 initial draft — May 21, 2026*
-```
