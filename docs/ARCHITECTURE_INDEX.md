@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **175 total**. Últimos: ADR-173 (DSPP · Layer 5) · ADR-174 (AGVP — Anticipatory Governance Veto Protocol) · **ADR-175 (SSD — Structural Shift Detector)**
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **67 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + **SSD×3**)
+- **ADRs:** `docs/adr/` — **177 total**. Últimos: ADR-175 (SSD) · ADR-176 (OMNIX Governance API Product) · **ADR-177 (Formal Verification Suite — FVS)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **70 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + **FVS×3**)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 
@@ -109,6 +109,10 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | ATF Public Verifier CLI | `omnix_web/public/omnix_atf_verify.py` | **v1.1.0** · Offline · modos: receipt/chain/agent/replay/**block** · --archive-block · --verify-chain · --predecessor-block |
 | Forensic Operations Demo | `omnix_web/src/pages/ForensicOperationsDemoPage.tsx` | `/forensic-operations` · 5 demos interactivos: Runtime Degradation · Cross-Runtime Divergence · Archive Verification · Trust Anchor · Full DR→TAR→RCR→Receipt→Archive Replay · Mayo 2026 |
 | Technical Whitepaper | `docs/whitepaper/OMNIX_TECHNICAL_WHITEPAPER.md` | 14 secciones · 47 invariantes · CES formula · GPIL · OEP protocol · alineamiento regulatorio EU AI Act / NIST / UAE-DFSA · OMNIX-WP-TECH-2026-001 |
+| **Dynamic Semantic Portability** | `omnix_core/agents/atf/dynamic_semantic_portability.py` | TSA · SDR · RSA · SPV · SDU · portability verdicts · DSPP-INV-001–007 · ADR-173 |
+| **Anticipatory Governance Veto** | `omnix_core/governance/anticipatory_governance_veto.py` | AGVPWatchdog · ProactiveVetoReceipt · PVR DB persistence · ML-DSA-65 signed · AGV-INV-001–006 · ADR-174 |
+| **Structural Shift Detector** | `omnix_core/governance/assumption_validity_monitor.py` | SSD methods: CRSI algorithm · position-weighted Jaccard · ring buffer history · StructuralShiftReport · SSD-INV-001–003 · ADR-175 |
+| **Formal Verification Suite** | `omnix_core/formal_verification/` | **OMNIX-FVS-1.0** · 5 módulos Z3 · **19 proofs 19/19 UNSAT** · run_all.py (JSON output) · FVS-INV-001/002/003 · ADR-177 · Mayo 2026 |
 
 **APIs ATF:** `/api/atf/*` · `/api/atf/temporal/*` · `/api/atf/translate/*` · `/api/atf/continuity/*` · `/api/atf/escalations/*`
 
@@ -121,6 +125,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 - `tests/test_eap_extended_audit.py` — **45/49 PASS · 4 skip** · GPIL Policy Parameter Registry (I1–I12) · FVP two-plane verdict separation (III1–III6) · FEA RBAC export gate (IV1–IV5) · OEP offline self-containment (V1–V7) · EAP chain invariants (VI1–VI8) · ADR-161/163/165/166 · Mayo 2026 · *(VII/VIII moved to test_ai_fallback_observability.py)*
 - `tests/test_ai_fallback_observability.py` — **15/15 PASS** · AI Fallback Chain Observability (VII1–VII10) · Claude Model Name Regression (VIII1–VIII5) · T000 logging spec · ADR-161 settings regression · Mayo 2026
 - `tests/test_atf_domain_bridge.py` — **35/35 PASS** · CDTP-INV-001–005 · ADR-158 · CrossDomainBridge translate/verify_dtr/get_policy · domain-specific policies (HEAL→INSU 15%, HEAL→FIN 30%) · DTR immutability · authority reduction enforcement · content_hash + PQC fields · chain traceability · Mayo 2026
+- `tests/test_formal_verification.py` — **19/19 assertions** · Z3 SMT suite OMNIX-FVS-1.0 · ATF-INV-001/004 + RGC-INV-004 + AGV-INV-001/003/004/005/006 + CRSI-BOUND-LO/HI + CRSI-CLASS-TOT + SSD-INV-001/003 + SDU-BOUND-LO/HI/WSUM + DSPP-INV-005/007a/007b · ADR-177 · RFC-ATF-4 · Mayo 2026
 
 **GitHub CI — `Costenho19/omnibotgenesis` — 🟢 FULLY GREEN (Mayo 2026):**
 - `tests/test_atf_receipts.py` — **23/23 PASS** · ContentHash · MAR invariant · CES formula (94.39 correcto) · receipt type detection · identifier formats · ADR-156/RFC-ATF-1/RFC-ATF-2
@@ -139,15 +144,18 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | RFC-ATF-1 | `docs/standards/RFC-ATF-1.md` | Publicado · DOI: 10.5281/zenodo.20155016 · SSRN: 6757339 · Tag: `v1.0.0-rfc-atf-1` |
 | RFC-ATF-2 | `docs/standards/RFC-ATF-2.md` | Publicado · DOI: 10.5281/zenodo.20241344 · Tag: `v1.0.0-rfc-atf-2` |
 | RFC-ATF-3 | `docs/standards/RFC-ATF-3.md` | Publicado · DOI: 10.5281/zenodo.20247342 · Tag: `v1.0.0-rfc-atf-3` |
+| **RFC-ATF-4** | `docs/standards/RFC-ATF-4.md` | **DRAFT — pendiente revisión Harold** · Proactive Governance Layer: AGVP + SSD + DSPP · 16 nuevos invariantes · 19 Z3 proofs (OMNIX-FVS-1.0) · 108 conformance vectors · **NO publicado en Zenodo** · ADR-173/174/175/177 · Mayo 2026 |
 | TLA+ Spec | `docs/formal/ATF-TLA-SPEC.tla` | Incluido en Zenodo v1.0.0 |
-| TLA+ Verification | `docs/formal/ATF-FORMAL-VERIFICATION.md` | 5 propiedades formales |
+| TLA+ Verification | `docs/formal/ATF-FORMAL-VERIFICATION.md` | 5 propiedades formales · **Dual methodology: TLA+ + Z3 SMT** |
 | RFC-ATF-1 ABNF | RFC-ATF-1 §15 | Incluido en spec |
 | **Release Manifest** | `docs/RELEASE_MANIFEST.md` | Ancla DOI ↔ commit git ↔ SHA-256 para los 3 RFCs. Verificación independiente sin acceso a la plataforma. |
+| **Formal Verification Suite** | `omnix_core/formal_verification/` | OMNIX-FVS-1.0 · Zenodo package: `docs/zenodo/rfc_atf_4/` (metadata.json + conformance_vectors.json 108 vectores) · ADR-177 |
 
 **SSRN:** https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6757339
 **Zenodo RFC-ATF-1:** https://doi.org/10.5281/zenodo.20155016
 **Zenodo RFC-ATF-2:** https://doi.org/10.5281/zenodo.20241344
 **Zenodo RFC-ATF-3:** https://doi.org/10.5281/zenodo.20247342
+**RFC-ATF-4:** DRAFT — DOI pendiente (no publicado)
 
 ---
 

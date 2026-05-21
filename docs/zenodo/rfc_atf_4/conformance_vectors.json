@@ -1,0 +1,1269 @@
+{
+  "_metadata": {
+    "specification": "RFC-ATF-4: Agent Trust Fabric — Proactive Governance Layer",
+    "version": "1.0.0",
+    "suite": "OMNIX-CVS-1.0",
+    "status": "DRAFT — not yet submitted to Zenodo",
+    "generated": "2026-05-21",
+    "author": "Harold Nunes — OMNIX QUANTUM LTD",
+    "total_vectors": 108,
+    "modules": {
+      "AGVP_PVR_ISSUANCE": 20,
+      "AGVP_WATCHDOG": 12,
+      "AGVP_HASH_COMMITMENT": 10,
+      "SSD_CRSI_COMPUTATION": 18,
+      "SSD_SHIFT_CLASSIFICATION": 12,
+      "DSPP_SDU_COMPUTATION": 15,
+      "DSPP_RSA_DETERMINISM": 10,
+      "DSPP_THRESHOLD_PARTITION": 11
+    },
+    "invariants_covered": [
+      "AGV-INV-001", "AGV-INV-002", "AGV-INV-003", "AGV-INV-004",
+      "AGV-INV-005", "AGV-INV-006",
+      "CRSI-BOUND-LO", "CRSI-BOUND-HI", "CRSI-CLASS-TOT",
+      "SSD-INV-001", "SSD-INV-002", "SSD-INV-003",
+      "SDU-BOUND-LO", "SDU-BOUND-HI", "SDU-WSUM",
+      "DSPP-INV-005", "DSPP-INV-007a", "DSPP-INV-007b"
+    ]
+  },
+
+  "vectors": [
+
+    {
+      "vector_id": "AGVP-PVR-001",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "PVR ACTIVE blocks governance request — equivalence with reactive block",
+      "inputs": {
+        "drift_score": 0.85,
+        "drift_threshold": 0.70,
+        "pvr_status": "ACTIVE",
+        "request_incoming": true
+      },
+      "expected_result": "REQUEST_BLOCKED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-002",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "No PVR — request proceeds normally when drift below threshold",
+      "inputs": {
+        "drift_score": 0.40,
+        "drift_threshold": 0.70,
+        "pvr_status": null,
+        "request_incoming": true
+      },
+      "expected_result": "REQUEST_ALLOWED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-003",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "PVR REVOKED does not block — revocation lifts the block",
+      "inputs": {
+        "drift_score": 0.85,
+        "drift_threshold": 0.70,
+        "pvr_status": "REVOKED",
+        "request_incoming": true
+      },
+      "expected_result": "REQUEST_ALLOWED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-004",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "PVR ACTIVE blocks request regardless of current drift score recovery",
+      "inputs": {
+        "drift_score": 0.71,
+        "drift_threshold": 0.70,
+        "pvr_status": "ACTIVE",
+        "request_incoming": true
+      },
+      "expected_result": "REQUEST_BLOCKED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-005",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "block_reason in blocked receipt must reference PVR ID",
+      "inputs": {
+        "pvr_id": "PVR-A3F9C12B44E7001D",
+        "pvr_status": "ACTIVE",
+        "request_incoming": true
+      },
+      "expected_result": {
+        "blocked": true,
+        "block_reason_contains_pvr_id": true
+      },
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-006",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-005",
+      "description": "No PVR emitted for uncalibrated domain (pass_through=True)",
+      "inputs": {
+        "domain": "DOMAIN-UNCALIBRATED",
+        "pass_through": true,
+        "drift_score": 0.90,
+        "drift_threshold": 0.70
+      },
+      "expected_result": "PVR_NOT_EMITTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-007",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-005",
+      "description": "PVR emitted for calibrated domain with drift > threshold",
+      "inputs": {
+        "domain": "DOMAIN-CALIBRATED",
+        "pass_through": false,
+        "is_valid": false,
+        "drift_score": 0.85,
+        "drift_threshold": 0.70
+      },
+      "expected_result": "PVR_EMITTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-008",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-005",
+      "description": "No PVR emitted when is_valid=True (drift within threshold)",
+      "inputs": {
+        "domain": "DOMAIN-CALIBRATED",
+        "pass_through": false,
+        "is_valid": true,
+        "drift_score": 0.50,
+        "drift_threshold": 0.70
+      },
+      "expected_result": "PVR_NOT_EMITTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-009",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-006",
+      "description": "Auto-recalibration blocked when ACTIVE PVR exists",
+      "inputs": {
+        "domain": "DOMAIN-CALIBRATED",
+        "pvr_status": "ACTIVE",
+        "recalibration_requested": true
+      },
+      "expected_result": "RECALIBRATION_SKIPPED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-010",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-006",
+      "description": "Auto-recalibration proceeds when no PVR active",
+      "inputs": {
+        "domain": "DOMAIN-CALIBRATED",
+        "pvr_status": null,
+        "recalibration_requested": true
+      },
+      "expected_result": "RECALIBRATION_EXECUTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-011",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "PVR block authority identical at drift_score boundary (score = threshold + epsilon)",
+      "inputs": {
+        "drift_score": 0.7001,
+        "drift_threshold": 0.70,
+        "pvr_status": "ACTIVE"
+      },
+      "expected_result": "REQUEST_BLOCKED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-012",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "Maximum drift score (1.0) — ACTIVE PVR blocks",
+      "inputs": {
+        "drift_score": 1.0,
+        "drift_threshold": 0.70,
+        "pvr_status": "ACTIVE"
+      },
+      "expected_result": "REQUEST_BLOCKED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-013",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-005",
+      "description": "pass_through=True overrides high drift_score — no PVR",
+      "inputs": {
+        "pass_through": true,
+        "drift_score": 0.99,
+        "is_valid": false
+      },
+      "expected_result": "PVR_NOT_EMITTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-014",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-006",
+      "description": "REVOKED PVR does not block recalibration",
+      "inputs": {
+        "domain": "DOMAIN-RECOVERED",
+        "pvr_status": "REVOKED",
+        "recalibration_requested": true
+      },
+      "expected_result": "RECALIBRATION_EXECUTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-015",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "Multi-domain: PVR on domain A does not block domain B",
+      "inputs": {
+        "domain_a_pvr_status": "ACTIVE",
+        "domain_b_pvr_status": null,
+        "request_domain": "B"
+      },
+      "expected_result": "REQUEST_ALLOWED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-016",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-006",
+      "description": "SSD STRUCTURAL_SHIFT AND active PVR: both guards independently prevent recalibration",
+      "inputs": {
+        "pvr_status": "ACTIVE",
+        "ssd_shift_class": "STRUCTURAL_SHIFT"
+      },
+      "expected_result": "RECALIBRATION_SKIPPED",
+      "expected_invariant_holds": true,
+      "note": "Both AGV-INV-006 and SSD-INV-001 fire independently"
+    },
+    {
+      "vector_id": "AGVP-PVR-017",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-005",
+      "description": "is_valid=True with pass_through=False — no PVR (drift within envelope)",
+      "inputs": {
+        "pass_through": false,
+        "is_valid": true,
+        "drift_score": 0.65,
+        "drift_threshold": 0.70
+      },
+      "expected_result": "PVR_NOT_EMITTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-018",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "Custom threshold (0.50) — PVR ACTIVE blocks at lower threshold",
+      "inputs": {
+        "drift_score": 0.55,
+        "drift_threshold": 0.50,
+        "pvr_status": "ACTIVE"
+      },
+      "expected_result": "REQUEST_BLOCKED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-019",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-006",
+      "description": "Multiple stale domains: only domain with ACTIVE PVR skipped for recalibration",
+      "inputs": {
+        "stale_domains": ["DOMAIN-A", "DOMAIN-B", "DOMAIN-C"],
+        "active_pvr_domains": ["DOMAIN-B"]
+      },
+      "expected_result": {
+        "recalibrated": ["DOMAIN-A", "DOMAIN-C"],
+        "skipped": ["DOMAIN-B"]
+      },
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-PVR-020",
+      "module": "AGVP_PVR_ISSUANCE",
+      "invariant": "AGV-INV-001",
+      "description": "PVR ACTIVE with structural_shift_class=STRUCTURAL_SHIFT — block persists",
+      "inputs": {
+        "pvr_status": "ACTIVE",
+        "structural_shift_class": "STRUCTURAL_SHIFT",
+        "request_incoming": true
+      },
+      "expected_result": "REQUEST_BLOCKED",
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "AGVP-WD-001",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-003",
+      "description": "Watchdog initialized with interval=30 (minimum) — valid",
+      "inputs": {"watchdog_interval_seconds": 30},
+      "expected_result": "INIT_SUCCESS",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-002",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-003",
+      "description": "Watchdog initialized with interval=29 — rejected",
+      "inputs": {"watchdog_interval_seconds": 29},
+      "expected_result": "INIT_VALUEERROR",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-003",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-003",
+      "description": "Watchdog initialized with interval=0 — rejected",
+      "inputs": {"watchdog_interval_seconds": 0},
+      "expected_result": "INIT_VALUEERROR",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-004",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-003",
+      "description": "Watchdog initialized with interval=-1 — rejected",
+      "inputs": {"watchdog_interval_seconds": -1},
+      "expected_result": "INIT_VALUEERROR",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-005",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-003",
+      "description": "Default interval=60 — valid (above minimum)",
+      "inputs": {"watchdog_interval_seconds": 60},
+      "expected_result": "INIT_SUCCESS",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-006",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-003",
+      "description": "Large interval=3600 — valid",
+      "inputs": {"watchdog_interval_seconds": 3600},
+      "expected_result": "INIT_SUCCESS",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-007",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-002",
+      "description": "Watchdog cannot set PVR status to REVOKED",
+      "inputs": {
+        "actor": "watchdog",
+        "action": "revoke_pvr",
+        "pvr_id": "PVR-TESTID0000001"
+      },
+      "expected_result": "OPERATION_FORBIDDEN",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-008",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-002",
+      "description": "Admin with valid token can revoke PVR",
+      "inputs": {
+        "actor": "admin",
+        "admin_token_present": true,
+        "action": "revoke_pvr"
+      },
+      "expected_result": "PVR_REVOKED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-009",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-002",
+      "description": "Admin without token cannot revoke PVR",
+      "inputs": {
+        "actor": "admin",
+        "admin_token_present": false,
+        "action": "revoke_pvr"
+      },
+      "expected_result": "REVOCATION_LOCKED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-010",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-002",
+      "description": "RECOVERY_CANDIDATE event logged but PVR status unchanged by watchdog",
+      "inputs": {
+        "actor": "watchdog",
+        "drift_score_current": 0.60,
+        "drift_threshold": 0.70,
+        "pvr_status_before": "ACTIVE"
+      },
+      "expected_result": {
+        "event_logged": "RECOVERY_CANDIDATE",
+        "pvr_status_after": "ACTIVE"
+      },
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-011",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-003",
+      "description": "Interval boundary: exactly 30.0 accepted",
+      "inputs": {"watchdog_interval_seconds": 30.0},
+      "expected_result": "INIT_SUCCESS",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-WD-012",
+      "module": "AGVP_WATCHDOG",
+      "invariant": "AGV-INV-002",
+      "description": "Watchdog logs ANTICIPATORY_VETO_ISSUED but cannot self-revoke after emission",
+      "inputs": {
+        "actor": "watchdog",
+        "pvr_emitted": true,
+        "action": "revoke_self_pvr"
+      },
+      "expected_result": "OPERATION_FORBIDDEN",
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "AGVP-HASH-001",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "Identical committed fields produce identical content_hash",
+      "inputs": {
+        "pvr_a": {"drift_score": 0.80, "domain": "FINANCE", "timestamp": "2026-05-21T10:00:00Z"},
+        "pvr_b": {"drift_score": 0.80, "domain": "FINANCE", "timestamp": "2026-05-21T10:00:00Z"}
+      },
+      "expected_result": "HASH_EQUAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-002",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "Different drift_score produces different content_hash",
+      "inputs": {
+        "pvr_a": {"drift_score": 0.80, "domain": "FINANCE", "timestamp": "2026-05-21T10:00:00Z"},
+        "pvr_b": {"drift_score": 0.81, "domain": "FINANCE", "timestamp": "2026-05-21T10:00:00Z"}
+      },
+      "expected_result": "HASH_DIFFERENT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-003",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "Different domain produces different content_hash",
+      "inputs": {
+        "pvr_a": {"drift_score": 0.80, "domain": "FINANCE", "timestamp": "2026-05-21T10:00:00Z"},
+        "pvr_b": {"drift_score": 0.80, "domain": "TRADING", "timestamp": "2026-05-21T10:00:00Z"}
+      },
+      "expected_result": "HASH_DIFFERENT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-004",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "Different timestamp produces different content_hash",
+      "inputs": {
+        "pvr_a": {"drift_score": 0.80, "domain": "FINANCE", "timestamp": "2026-05-21T10:00:00Z"},
+        "pvr_b": {"drift_score": 0.80, "domain": "FINANCE", "timestamp": "2026-05-21T10:00:01Z"}
+      },
+      "expected_result": "HASH_DIFFERENT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-005",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "Post-issuance field modification invalidates ML-DSA-65 signature",
+      "inputs": {
+        "pvr_original": {"drift_score": 0.80, "signed": true},
+        "modification": {"drift_score": 0.75}
+      },
+      "expected_result": "SIGNATURE_INVALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-006",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "content_hash is SHA-256 of canonical JSON (keys sorted lexicographically)",
+      "inputs": {
+        "pvr_fields": {
+          "domain": "FINANCE",
+          "drift_score": 0.80,
+          "pvr_id": "PVR-A3F9C12B44E7001D",
+          "timestamp": "2026-05-21T10:00:00.000000000Z"
+        }
+      },
+      "expected_result": "content_hash = SHA-256(canonical_json_sorted_keys(pvr_fields))",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-007",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "JSON key ordering does not affect canonical hash (keys are sorted before hashing)",
+      "inputs": {
+        "pvr_unordered_keys": {"domain": "X", "drift_score": 0.9, "pvr_id": "PVR-TEST"},
+        "pvr_ordered_keys": {"drift_score": 0.9, "domain": "X", "pvr_id": "PVR-TEST"}
+      },
+      "expected_result": "HASH_EQUAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-008",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "Unicode field values hash consistently across encodings (UTF-8 canonical)",
+      "inputs": {
+        "pvr_a": {"domain": "FINANCE-UAE-\u0627\u0628\u0648\u0638\u0628\u064a"},
+        "pvr_b": {"domain": "FINANCE-UAE-\u0627\u0628\u0648\u0638\u0628\u064a"}
+      },
+      "expected_result": "HASH_EQUAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-009",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "content_hash length is always exactly 64 lowercase hex characters (SHA-256 output)",
+      "inputs": {"any_pvr_fields": "any_valid_committed_fields"},
+      "expected_result": "content_hash_hex_length = 64",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "AGVP-HASH-010",
+      "module": "AGVP_HASH_COMMITMENT",
+      "invariant": "AGV-INV-004",
+      "description": "PVR with pqc_algorithm != ML-DSA-65 is rejected at construction time",
+      "inputs": {"pqc_algorithm": "Ed25519"},
+      "expected_result": "ALGORITHM_REJECTED",
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "SSD-CRSI-001",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-BOUND-LO",
+      "description": "All components changed across all history entries — CRSI=0.0 (minimum)",
+      "inputs": {
+        "current_top_k": ["SIGNAL_X", "SIGNAL_Y", "SIGNAL_Z"],
+        "history_top_k": [["SIGNAL_A", "SIGNAL_B", "SIGNAL_C"]],
+        "K": 3
+      },
+      "expected_crsi": 0.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-002",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-BOUND-HI",
+      "description": "All components identical at same rank across all history — CRSI=1.0 (maximum)",
+      "inputs": {
+        "current_top_k": ["SIGNAL_A", "SIGNAL_B", "SIGNAL_C"],
+        "history_top_k": [["SIGNAL_A", "SIGNAL_B", "SIGNAL_C"]],
+        "K": 3
+      },
+      "expected_crsi": 1.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-003",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-BOUND-HI",
+      "description": "Perfect match across 5 history entries — CRSI=1.0",
+      "inputs": {
+        "current_top_k": ["A", "B", "C"],
+        "history_top_k": [
+          ["A", "B", "C"],
+          ["A", "B", "C"],
+          ["A", "B", "C"],
+          ["A", "B", "C"],
+          ["A", "B", "C"]
+        ],
+        "K": 3
+      },
+      "expected_crsi": 1.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-004",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=0.75 with cycles>=5 classifies as STABLE",
+      "inputs": {"crsi": 0.75, "cycles_analyzed": 5},
+      "expected_shift_class": "STABLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-005",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=0.70 classifies as STABLE (lower boundary of STABLE, inclusive)",
+      "inputs": {"crsi": 0.70, "cycles_analyzed": 5},
+      "expected_shift_class": "STABLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-006",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=0.69 classifies as DRIFT_WITH_INSTABILITY",
+      "inputs": {"crsi": 0.69, "cycles_analyzed": 5},
+      "expected_shift_class": "DRIFT_WITH_INSTABILITY",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-007",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=0.50 classifies as DRIFT_WITH_INSTABILITY (lower boundary, inclusive)",
+      "inputs": {"crsi": 0.50, "cycles_analyzed": 5},
+      "expected_shift_class": "DRIFT_WITH_INSTABILITY",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-008",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=0.49 with cycles>=5 classifies as STRUCTURAL_SHIFT",
+      "inputs": {"crsi": 0.49, "cycles_analyzed": 5},
+      "expected_shift_class": "STRUCTURAL_SHIFT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-009",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=0.0 with cycles>=5 classifies as STRUCTURAL_SHIFT (floor)",
+      "inputs": {"crsi": 0.0, "cycles_analyzed": 10},
+      "expected_shift_class": "STRUCTURAL_SHIFT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-010",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=0.30 with cycles=4 classifies as INSUFFICIENT_DATA (< SSD_MIN_CYCLES=5)",
+      "inputs": {"crsi": 0.30, "cycles_analyzed": 4},
+      "expected_shift_class": "INSUFFICIENT_DATA",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-011",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-BOUND-LO",
+      "description": "Single component overlap at rank-3 only — CRSI = 1/6 ≈ 0.1667",
+      "inputs": {
+        "current_top_k": ["A", "B", "C"],
+        "history_top_k": [["D", "E", "C"]],
+        "K": 3,
+        "position_weights": {"rank1": 3, "rank2": 2, "rank3": 1}
+      },
+      "expected_crsi": 0.1667,
+      "expected_invariant_holds": true,
+      "note": "C at rank-3 in both: weight=1, max_weight=6, CRSI=1/6"
+    },
+    {
+      "vector_id": "SSD-CRSI-012",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-BOUND-HI",
+      "description": "Rank-1 component identical only — CRSI = 3/6 = 0.5",
+      "inputs": {
+        "current_top_k": ["A", "B", "C"],
+        "history_top_k": [["A", "X", "Y"]],
+        "K": 3
+      },
+      "expected_crsi": 0.5,
+      "expected_invariant_holds": true,
+      "note": "A at rank-1 (weight=3): 3/6=0.5"
+    },
+    {
+      "vector_id": "SSD-CRSI-013",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=1.0 classifies as STABLE (ceiling)",
+      "inputs": {"crsi": 1.0, "cycles_analyzed": 20},
+      "expected_shift_class": "STABLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-014",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "CRSI=0.0 with cycles=0 — INSUFFICIENT_DATA (not STRUCTURAL_SHIFT)",
+      "inputs": {"crsi": 0.0, "cycles_analyzed": 0},
+      "expected_shift_class": "INSUFFICIENT_DATA",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-015",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-BOUND-LO",
+      "description": "CRSI computed over full 20-entry history — result bounded in [0,1]",
+      "inputs": {
+        "history_size": 20,
+        "all_different_components": true
+      },
+      "expected_result": "CRSI_IN_RANGE_0_1",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-016",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-CLASS-TOT",
+      "description": "Every CRSI at 0.05 increments in [0,1] maps to exactly one classification class",
+      "inputs": {
+        "crsi_values": [0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40,
+                        0.45, 0.49, 0.50, 0.55, 0.60, 0.65, 0.69,
+                        0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.0],
+        "cycles_analyzed": 10
+      },
+      "expected_result": "EACH_CRSI_MAPS_TO_EXACTLY_ONE_CLASS",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-017",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-BOUND-HI",
+      "description": "K=1 (single component tracked): identical component gives CRSI=1.0",
+      "inputs": {
+        "K": 1,
+        "current_top_k": ["A"],
+        "history_top_k": [["A"]]
+      },
+      "expected_crsi": 1.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-CRSI-018",
+      "module": "SSD_CRSI_COMPUTATION",
+      "invariant": "CRSI-BOUND-LO",
+      "description": "K=1: different component gives CRSI=0.0",
+      "inputs": {
+        "K": 1,
+        "current_top_k": ["A"],
+        "history_top_k": [["B"]]
+      },
+      "expected_crsi": 0.0,
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "SSD-SHIFT-001",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-001",
+      "description": "STRUCTURAL_SHIFT blocks auto_recalibrate",
+      "inputs": {"ssd_shift_class": "STRUCTURAL_SHIFT", "recalibration_requested": true},
+      "expected_result": "RECALIBRATION_SKIPPED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-002",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-001",
+      "description": "STABLE allows auto_recalibrate (when no active PVR)",
+      "inputs": {"ssd_shift_class": "STABLE", "active_pvr": false, "recalibration_requested": true},
+      "expected_result": "RECALIBRATION_EXECUTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-003",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-001",
+      "description": "DRIFT_WITH_INSTABILITY allows auto_recalibrate (SSD-INV-001 does not block this class)",
+      "inputs": {"ssd_shift_class": "DRIFT_WITH_INSTABILITY", "active_pvr": false, "recalibration_requested": true},
+      "expected_result": "RECALIBRATION_EXECUTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-004",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-001",
+      "description": "INSUFFICIENT_DATA allows auto_recalibrate (SSD-INV-001 does not block low-history domains)",
+      "inputs": {"ssd_shift_class": "INSUFFICIENT_DATA", "active_pvr": false, "recalibration_requested": true},
+      "expected_result": "RECALIBRATION_EXECUTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-005",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-003",
+      "description": "cycles=4 (<5) returns INSUFFICIENT_DATA regardless of crsi value",
+      "inputs": {"cycles_analyzed": 4, "crsi": 0.10},
+      "expected_shift_class": "INSUFFICIENT_DATA",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-006",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-003",
+      "description": "cycles=1 returns INSUFFICIENT_DATA",
+      "inputs": {"cycles_analyzed": 1, "crsi": 0.0},
+      "expected_shift_class": "INSUFFICIENT_DATA",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-007",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-003",
+      "description": "cycles=5 (boundary minimum) with crsi=0.30 — STRUCTURAL_SHIFT allowed",
+      "inputs": {"cycles_analyzed": 5, "crsi": 0.30},
+      "expected_shift_class": "STRUCTURAL_SHIFT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-008",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-002",
+      "description": "History ring buffer: oldest entry evicted when size exceeds SSD_MAX_HISTORY=20",
+      "inputs": {
+        "history_entries_added": 21,
+        "max_history_size": 20
+      },
+      "expected_result": {
+        "history_size_after": 20,
+        "oldest_entry_evicted": true
+      },
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-009",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-002",
+      "description": "Selective deletion of specific history entry — not permitted",
+      "inputs": {
+        "action": "delete_specific_history_entry",
+        "entry_index": 3
+      },
+      "expected_result": "OPERATION_NOT_PERMITTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-010",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-001",
+      "description": "STRUCTURAL_SHIFT blocks recalibration even without active PVR (independent guard)",
+      "inputs": {
+        "ssd_shift_class": "STRUCTURAL_SHIFT",
+        "active_pvr": false,
+        "recalibration_requested": true
+      },
+      "expected_result": "RECALIBRATION_SKIPPED",
+      "expected_invariant_holds": true,
+      "note": "SSD-INV-001 is independent of AGV-INV-006. Either is sufficient to block."
+    },
+    {
+      "vector_id": "SSD-SHIFT-011",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-003",
+      "description": "cycles=0 returns INSUFFICIENT_DATA",
+      "inputs": {"cycles_analyzed": 0, "crsi": 0.0},
+      "expected_shift_class": "INSUFFICIENT_DATA",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "SSD-SHIFT-012",
+      "module": "SSD_SHIFT_CLASSIFICATION",
+      "invariant": "SSD-INV-001",
+      "description": "StructuralShiftReport with STRUCTURAL_SHIFT is embedded in PVR as signed field",
+      "inputs": {
+        "pvr_emitted": true,
+        "ssd_shift_class": "STRUCTURAL_SHIFT"
+      },
+      "expected_result": {
+        "pvr_structural_shift_class": "STRUCTURAL_SHIFT",
+        "field_is_pqc_signed": true
+      },
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "DSPP-SDU-001",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-LO",
+      "description": "Identical terms with all sub-metrics = 0 — SDU=0.0",
+      "inputs": {"boundary_distance": 0.0, "scope_distance": 0.0, "regulatory_distance": 0.0},
+      "expected_sdu": 0.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-002",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-HI",
+      "description": "Maximum divergence on all sub-metrics — SDU=1.0",
+      "inputs": {"boundary_distance": 1.0, "scope_distance": 1.0, "regulatory_distance": 1.0},
+      "expected_sdu": 1.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-003",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-WSUM",
+      "description": "Weights form a convex combination: 0.40+0.35+0.25 = 1.00",
+      "inputs": {"w_boundary": 0.40, "w_scope": 0.35, "w_regulatory": 0.25},
+      "expected_weight_sum": 1.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-004",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-HI",
+      "description": "Partial divergence: SDU bounded in [0,1] for typical values",
+      "inputs": {"boundary_distance": 0.80, "scope_distance": 0.60, "regulatory_distance": 0.40},
+      "expected_sdu": 0.53,
+      "expected_computation": "0.40*0.80 + 0.35*0.60 + 0.25*0.40 = 0.32+0.21+0.10 = 0.53",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-005",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-LO",
+      "description": "Hash-equivalence shortcut: identical content_hash returns SDU=0.0 immediately",
+      "inputs": {
+        "term_a_content_hash": "abc123def456abc123def456abc123def456abc123def456abc123def456abcd",
+        "term_b_content_hash": "abc123def456abc123def456abc123def456abc123def456abc123def456abcd"
+      },
+      "expected_sdu": 0.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-006",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-HI",
+      "description": "Maximum boundary_distance only, scope and regulatory = 0 — SDU=0.40",
+      "inputs": {"boundary_distance": 1.0, "scope_distance": 0.0, "regulatory_distance": 0.0},
+      "expected_sdu": 0.40,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-007",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-HI",
+      "description": "Maximum scope_distance only — SDU=0.35",
+      "inputs": {"boundary_distance": 0.0, "scope_distance": 1.0, "regulatory_distance": 0.0},
+      "expected_sdu": 0.35,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-008",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-HI",
+      "description": "Maximum regulatory_distance only — SDU=0.25",
+      "inputs": {"boundary_distance": 0.0, "scope_distance": 0.0, "regulatory_distance": 1.0},
+      "expected_sdu": 0.25,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-009",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-WSUM",
+      "description": "SDU weights are structural constants — runtime override rejected",
+      "inputs": {"attempted_w_boundary": 0.33, "attempted_w_scope": 0.33, "attempted_w_regulatory": 0.34},
+      "expected_result": "CONFIGURATION_REJECTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-010",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-LO",
+      "description": "SDU is non-negative for representative sub-metric combination",
+      "inputs": {
+        "boundary_distance": 0.50,
+        "scope_distance": 0.25,
+        "regulatory_distance": 0.10
+      },
+      "expected_sdu": 0.3125,
+      "expected_computation": "0.40*0.50 + 0.35*0.25 + 0.25*0.10 = 0.20+0.0875+0.025 = 0.3125",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-011",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-HI",
+      "description": "Aggregate SDU = mean of 8 term SDUs — result bounded in [0,1]",
+      "inputs": {
+        "term_sdus": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.0]
+      },
+      "expected_aggregate_sdu": 0.51875,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-012",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-LO",
+      "description": "All 8 term SDUs = 0.0 — aggregate_sdu = 0.0",
+      "inputs": {"term_sdus": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]},
+      "expected_aggregate_sdu": 0.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-013",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-HI",
+      "description": "All 8 term SDUs = 1.0 — aggregate_sdu = 1.0",
+      "inputs": {"term_sdus": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
+      "expected_aggregate_sdu": 1.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-014",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-WSUM",
+      "description": "Environment variable weight override rejected — weights remain 0.40/0.35/0.25",
+      "inputs": {"env_var_attempt": "DSPP_WEIGHT_BOUNDARY=0.5"},
+      "expected_result": "WEIGHTS_UNCHANGED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-SDU-015",
+      "module": "DSPP_SDU_COMPUTATION",
+      "invariant": "SDU-BOUND-HI",
+      "description": "portability_confidence = 1.0 - aggregate_sdu is bounded in [0,1]",
+      "inputs": {"aggregate_sdu": 0.35},
+      "expected_portability_confidence": 0.65,
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "DSPP-RSA-001",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "Same (TSA, receiving_SPV, SDR_chain) in two independent domains — identical verdict",
+      "inputs": {
+        "tsa_hash": "TSA-HASH-ABC123",
+        "receiving_spv_hash_domain_a": "SPV-HASH-XYZ",
+        "receiving_spv_hash_domain_b": "SPV-HASH-XYZ",
+        "sdr_chain_hash": "SDR-CHAIN-HASH-001"
+      },
+      "expected_result": "VERDICTS_IDENTICAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-RSA-002",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "Different receiving SPVs legitimately produce different verdicts (not a violation)",
+      "inputs": {
+        "tsa_hash": "TSA-HASH-ABC123",
+        "receiving_spv_hash_domain_a": "SPV-HASH-XYZ",
+        "receiving_spv_hash_domain_b": "SPV-HASH-PQR",
+        "sdr_chain_hash": "SDR-CHAIN-HASH-001"
+      },
+      "expected_result": "VERDICTS_MAY_DIFFER",
+      "expected_invariant_holds": true,
+      "note": "DSPP-INV-005 applies within a single (TSA, SPV, SDR) tuple. Different SPVs are different inputs."
+    },
+    {
+      "vector_id": "DSPP-RSA-003",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "RSA computed twice sequentially with identical inputs — same aggregate_sdu",
+      "inputs": {
+        "computation_1_inputs": "identical",
+        "computation_2_inputs": "identical"
+      },
+      "expected_result": "AGGREGATE_SDU_IDENTICAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-RSA-004",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "RSA succeeds when originating runtime is unreachable (no network dependency)",
+      "inputs": {
+        "originating_runtime_reachable": false,
+        "tsa_available_locally": true,
+        "sdr_chain_available_locally": true
+      },
+      "expected_result": "RSA_COMPUTED_SUCCESSFULLY",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-RSA-005",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "aggregate_sdu=0.05 maps to verdict SEMANTICALLY_PORTABLE",
+      "inputs": {"aggregate_sdu": 0.05},
+      "expected_verdict": "SEMANTICALLY_PORTABLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-RSA-006",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "aggregate_sdu=0.25 maps to verdict DRIFT_ACKNOWLEDGED",
+      "inputs": {"aggregate_sdu": 0.25},
+      "expected_verdict": "DRIFT_ACKNOWLEDGED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-RSA-007",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "aggregate_sdu=0.55 maps to verdict DRIFT_CRITICAL",
+      "inputs": {"aggregate_sdu": 0.55},
+      "expected_verdict": "DRIFT_CRITICAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-RSA-008",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "aggregate_sdu=0.80 maps to verdict SEMANTICALLY_INCOMPATIBLE",
+      "inputs": {"aggregate_sdu": 0.80},
+      "expected_verdict": "SEMANTICALLY_INCOMPATIBLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-RSA-009",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "DSPP-INV-006: SEMANTICALLY_INCOMPATIBLE DR propagates verdict to all descendant receipts",
+      "inputs": {
+        "dr_verdict": "SEMANTICALLY_INCOMPATIBLE",
+        "descendant_receipts": ["RECEIPT-A", "RECEIPT-B", "RECEIPT-C"]
+      },
+      "expected_result": "ALL_DESCENDANTS_INCOMPATIBLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-RSA-010",
+      "module": "DSPP_RSA_DETERMINISM",
+      "invariant": "DSPP-INV-005",
+      "description": "RSA result is not affected by computation timestamp — pure function property",
+      "inputs": {
+        "computation_timestamp_1": "2026-05-21T00:00:00Z",
+        "computation_timestamp_2": "2026-12-01T00:00:00Z",
+        "all_inputs_otherwise_identical": true
+      },
+      "expected_result": "VERDICTS_IDENTICAL",
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "DSPP-THR-001",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "SDU=0.00 maps to SEMANTICALLY_PORTABLE (floor of range)",
+      "inputs": {"sdu": 0.00},
+      "expected_verdict": "SEMANTICALLY_PORTABLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-002",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "SDU=0.09 maps to SEMANTICALLY_PORTABLE (just below first boundary)",
+      "inputs": {"sdu": 0.09},
+      "expected_verdict": "SEMANTICALLY_PORTABLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-003",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "SDU=0.10 maps to DRIFT_ACKNOWLEDGED (first boundary, lower-inclusive)",
+      "inputs": {"sdu": 0.10},
+      "expected_verdict": "DRIFT_ACKNOWLEDGED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-004",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "SDU=0.39 maps to DRIFT_ACKNOWLEDGED (just below second boundary)",
+      "inputs": {"sdu": 0.39},
+      "expected_verdict": "DRIFT_ACKNOWLEDGED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-005",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "SDU=0.40 maps to DRIFT_CRITICAL (second boundary, lower-inclusive)",
+      "inputs": {"sdu": 0.40},
+      "expected_verdict": "DRIFT_CRITICAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-006",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "SDU=0.69 maps to DRIFT_CRITICAL (just below third boundary)",
+      "inputs": {"sdu": 0.69},
+      "expected_verdict": "DRIFT_CRITICAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-007",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "SDU=0.70 maps to SEMANTICALLY_INCOMPATIBLE (third boundary, lower-inclusive)",
+      "inputs": {"sdu": 0.70},
+      "expected_verdict": "SEMANTICALLY_INCOMPATIBLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-008",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "SDU=1.00 maps to SEMANTICALLY_INCOMPATIBLE (ceiling of range)",
+      "inputs": {"sdu": 1.00},
+      "expected_verdict": "SEMANTICALLY_INCOMPATIBLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-009",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007b",
+      "description": "SDU=0.0999 maps to exactly SEMANTICALLY_PORTABLE — not simultaneously DRIFT_ACKNOWLEDGED",
+      "inputs": {"sdu": 0.0999},
+      "expected_verdict": "SEMANTICALLY_PORTABLE",
+      "expected_second_class": null,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-010",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007b",
+      "description": "Verdict threshold override via environment variable rejected — thresholds immutable",
+      "inputs": {
+        "env_var_attempt": "DSPP_THRESHOLD_CRITICAL=0.35"
+      },
+      "expected_result": "THRESHOLD_UNCHANGED_REMAINS_0.40",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "DSPP-THR-011",
+      "module": "DSPP_THRESHOLD_PARTITION",
+      "invariant": "DSPP-INV-007a",
+      "description": "Every SDU at 0.001 step resolution in [0,1] maps to exactly one verdict class",
+      "inputs": {
+        "sdu_sample_count": 1000,
+        "range_start": 0.0,
+        "range_end": 1.0,
+        "step": 0.001
+      },
+      "expected_result": "ALL_1000_SAMPLES_CLASSIFIED_EXACTLY_ONCE",
+      "expected_invariant_holds": true
+    }
+
+  ]
+}
