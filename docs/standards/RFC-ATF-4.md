@@ -66,10 +66,13 @@ Abstract
    be topologically aware, and the result must travel independently of
    the platform that produced it.
 
-   All nineteen invariants introduced in this RFC are formally proved
-   using the Z3 SMT solver under the OMNIX Formal Verification Suite
-   (OMNIX-FVS-1.0).  Three invariants (ATF-INV-001, ATF-INV-004, and
-   RGC-INV-004) are additionally verified by TLA+ model checking, making
+   Nineteen formal properties are proved by the OMNIX Formal Verification
+   Suite (OMNIX-FVS-1.0) using the Z3 SMT solver: the new invariants
+   introduced in this RFC plus three foundational invariants from
+   RFC-ATF-1 and RFC-ATF-2 (ATF-INV-001, ATF-INV-004, RGC-INV-004),
+   providing end-to-end arithmetic verification of the complete ATF stack.
+   Three of those properties (ATF-INV-001, ATF-INV-004, RGC-INV-004) are
+   additionally verified by TLA+ model checking, making
    this specification the first AI governance RFC with dual-methodology
    formal verification: machine-checkable arithmetic proofs across the
    continuous input domain (Z3) and state-machine safety proofs across
@@ -1677,9 +1680,11 @@ DSPP-INV-007 — Structural Threshold Constants
 
 10.  Combined Invariant Summary
 
-   The following table lists all sixteen invariants introduced in
-   RFC-ATF-4, their sections, Z3 proof status, and the open problem
-   they close.
+   The following table lists all twenty-three invariant properties
+   defined in RFC-ATF-4 — six canonical named identifiers per the AGV
+   family, six per the SSD/CRSI family, and eleven per the DSPP/SDU
+   family — with their sections, Z3 proof status, and the open problem
+   each closes.
 
    AGVP Invariants:
 

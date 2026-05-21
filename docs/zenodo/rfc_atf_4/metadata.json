@@ -12,7 +12,7 @@
       "_note": "Add ORCID if available before submission"
     }
   ],
-  "description": "RFC-ATF-4 specifies the Proactive Governance Layer (PGL) of the Agent Trust Fabric (ATF) protocol — the fourth and capstone RFC in the ATF Open Standard series.\n\nRFC-ATF-4 defines three interoperating mechanisms: (1) the Anticipatory Governance Veto Protocol (AGVP), which emits ML-DSA-65 signed ProactiveVetoReceipts before any governance request arrives — closing the detection latency gap identified in ADR-174; (2) the Dynamic Semantic Portability Protocol (DSPP), which enables ATF receipts to be independently verified in receiving domains whose regulatory context has evolved since issuance, via a unilateral offline RSA computation over public artifacts (no pairwise negotiation required); and (3) the Structural Shift Detector (SSD), which distinguishes sustained drift excursions from fundamental signal-topology changes via the Component Rank Stability Index (CRSI), making recalibration safety a formally tractable decision.\n\nAll 16 new invariants introduced in this RFC are formally proved using Z3 SMT solver (OMNIX-FVS-1.0). Together with TLA+ model-checked properties from RFC-ATF-1/2/3, OMNIX holds the first dual-methodology formally verified AI governance protocol specification.\n\nIncludes:\n- 19 Z3 SMT proofs (OMNIX-FVS-1.0) — all return UNSAT, machine-reproducible\n- 108 deterministic conformance vectors organized by protocol module\n- Complete implementation at omnix_core/ (Python 3.11)\n- Full test suite: pytest tests/test_formal_verification.py (19 assertions)\n\nFormal verification suite: python -m omnix_core.formal_verification.run_all --json\n\nBuilds on: RFC-ATF-1 (DOI: 10.5281/zenodo.20155016) · RFC-ATF-2 (DOI: 10.5281/zenodo.20241344) · RFC-ATF-3 (DOI: 10.5281/zenodo.20247342)",
+  "description": "RFC-ATF-4 specifies the Proactive Governance Layer (PGL) — Layer 6 of the Agent Trust Fabric (ATF) protocol stack — and is the fourth and capstone RFC in the ATF Open Standard series.\n\nRFC-ATF-4 defines three interoperating mechanisms: (1) the Anticipatory Governance Veto Protocol (AGVP), which emits ML-DSA-65 signed ProactiveVetoReceipts before any governance request arrives — closing the detection latency gap identified in ADR-174; (2) the Dynamic Semantic Portability Protocol (DSPP), which enables ATF receipts to be independently assessed in receiving domains whose regulatory context has evolved since issuance, via a unilateral offline RSA computation over public artifacts (no pairwise negotiation required, O(1) per receipt per domain); and (3) the Structural Shift Detector (SSD), which distinguishes sustained drift excursions from fundamental signal-topology changes via the Component Rank Stability Index (CRSI), making recalibration safety a formally tractable decision.\n\n19 formal properties are proved by the OMNIX Formal Verification Suite (OMNIX-FVS-1.0) using the Z3 SMT solver — all return UNSAT. This includes all new invariants introduced in this RFC plus three foundational invariants from RFC-ATF-1 and RFC-ATF-2, providing end-to-end arithmetic verification of the complete ATF stack. Together with TLA+ model-checked properties, OMNIX-FVS-1.0 constitutes the first dual-methodology formally verified AI governance protocol specification (Z3 SMT for arithmetic invariants + TLA+ for state-machine safety).\n\nIncludes:\n- 19 Z3 SMT proofs (OMNIX-FVS-1.0) — all UNSAT, machine-reproducible in < 200ms\n- 108 deterministic conformance vectors organized by protocol module\n- Complete implementation at omnix_core/ (Python 3.11)\n- Full test suite: pytest tests/test_formal_verification.py (19 assertions)\n\nFormal verification suite: python -m omnix_core.formal_verification.run_all --json\n\nBuilds on: RFC-ATF-1 (DOI: 10.5281/zenodo.20155016) · RFC-ATF-2 (DOI: 10.5281/zenodo.20241344) · RFC-ATF-3 (DOI: 10.5281/zenodo.20247342)",
   "keywords": [
     "AI governance",
     "anticipatory veto",
@@ -50,23 +50,23 @@
   "access_right": "open",
   "version": "1.0.0",
   "language": "eng",
-  "notes": "OMNIX QUANTUM LTD · 71-75 Shelton Street, Covent Garden, London WC2H 9JQ, England. Operational HQ: Abu Dhabi, UAE.\n\nThis is the fourth specification in the ATF Open Standard series. RFC-ATF-1/2/3 are published at Zenodo; RFC-ATF-4 supersedes no prior RFC — it extends the protocol stack with Layer 5 (Proactive Governance).\n\nPriority Records: OMNIX-PAR-2026-AGVP-001 · OMNIX-PAR-2026-SSD-001 · OMNIX-PAR-2026-DSPP-001 · OMNIX-PAR-2026-FVS-001\n\nDual formal verification: TLA+ (state-machine safety) + Z3 SMT 4.x (arithmetic invariants). Machine-checkable proof runner included.",
+  "notes": "OMNIX QUANTUM LTD · 71-75 Shelton Street, Covent Garden, London WC2H 9JQ, England. Operational HQ: Abu Dhabi, UAE.\n\nThis is the fourth specification in the ATF Open Standard series. RFC-ATF-1/2/3 are published at Zenodo; RFC-ATF-4 supersedes no prior RFC — it extends the protocol stack with Layer 6 (Proactive Governance Layer).\n\nPriority Records: OMNIX-PAR-2026-AGVP-001 · OMNIX-PAR-2026-SSD-001 · OMNIX-PAR-2026-DSPP-001 · OMNIX-PAR-2026-FVS-001\n\nDual formal verification: TLA+ (state-machine safety) + Z3 SMT 4.x (arithmetic invariants). Machine-checkable proof runner included.",
   "related_identifiers": [
     {
       "identifier": "10.5281/zenodo.20155016",
-      "relation": "isContinuedBy",
+      "relation": "continues",
       "scheme": "doi",
       "resource_type": "publication-technicalnote"
     },
     {
       "identifier": "10.5281/zenodo.20241344",
-      "relation": "isContinuedBy",
+      "relation": "continues",
       "scheme": "doi",
       "resource_type": "publication-technicalnote"
     },
     {
       "identifier": "10.5281/zenodo.20247342",
-      "relation": "isContinuedBy",
+      "relation": "continues",
       "scheme": "doi",
       "resource_type": "publication-technicalnote"
     }
@@ -100,7 +100,7 @@
     "Harold has reviewed RFC-ATF-4.md and approved content",
     "All three related DOIs (RFC-ATF-1/2/3) verified as Published (not Draft)",
     "proof_report.json generated and verified (all_proved: true, total: 19)",
-    "conformance_vectors.json reviewed and validated",
+    "conformance_vectors.json reviewed and validated (108 vectors, valid JSON)",
     "ORCID added if available",
     "Version confirmed as 1.0.0",
     "Community identifiers confirmed"
