@@ -196,6 +196,10 @@ Table of Contents
         11.1.  Designation Requirements ......................... 71
         11.2.  Compliance Hierarchy ............................. 72
    12.  Implementation Requirements .............................. 73
+        12.1.  AGVP Requirements ................................ 73
+        12.2.  SSD Requirements ................................. 74
+        12.3.  DSPP Requirements ................................ 75
+        12.4.  Formal Verification Requirements ................. 76
    13.  Security Considerations .................................. 77
         13.1.  ProactiveVetoReceipt Spoofing .................... 77
         13.2.  Semantic Anchor Replay Attack .................... 78
@@ -204,6 +208,16 @@ Table of Contents
         13.5.  SDR Chain Forgery ................................ 80
         13.6.  Zero-Discount Delegation Cycle ................... 81
    14.  Novel Contributions ...................................... 82
+        14.1.  Anticipatory Governance Veto Receipt (PVR) ....... 82
+        14.2.  Component Rank Stability Index (CRSI) ............ 83
+        14.3.  DSPP — O(1) Cross-Domain Assessment Without
+               Negotiation ...................................... 84
+        14.4.  Dual-Methodology Formal Verification
+               (TLA+ + Z3 SMT) .................................. 84
+        14.5.  Proactive Governance Gap (Gap_PG) Formal
+               Definition ....................................... 85
+        14.6.  ATF-PGL-Compliant — Highest Tier Compliance
+               Designation ...................................... 85
    15.  Distinction from Prior Art ............................... 85
    16.  Regulatory Alignment ..................................... 87
    17.  References ............................................... 88
@@ -1239,8 +1253,8 @@ SSD-INV-003 — STRUCTURAL_SHIFT Requires Minimum History
       SDU ∈ [0.0, 1.0] for all valid inputs.
 
    The weight constants are structural constants of the DSPP
-   specification (DSPP-INV-007).  Implementations MUST NOT accept
-   runtime configuration that alters these weights.  A new RFC is
+   specification (DSPP-INV-007a and DSPP-INV-007b).  Implementations
+   MUST NOT accept runtime configuration that alters these weights.  A new RFC is
    required to change them.
 
 7.3.  Temporal Semantic Anchor (TSA)
@@ -1335,7 +1349,8 @@ SSD-INV-003 — STRUCTURAL_SHIFT Requires Minimum History
       ML-DSA-65 signature.
 
    SDR Append-Only Invariant (DSPP-INV-002):
-      No SDR may be modified or deleted after issuance.  The SDR chain
+      An SDR entry MUST NOT be modified or deleted after issuance.
+      The SDR chain
       for a runtime is an append-only public log.  This guarantees that
       any domain computing an RSA over the SDR chain obtains the complete,
       unmodified history of semantic evolution.
@@ -1374,7 +1389,8 @@ SSD-INV-003 — STRUCTURAL_SHIFT Requires Minimum History
          portability_confidence ← 1.0 − aggregate_sdu
 
       6. verdict ← classify_verdict(aggregate_sdu)
-         [§7.6 — DSPP-INV-007 guarantees totality and exclusivity]
+         [§7.6 — DSPP-INV-007a and DSPP-INV-007b guarantee totality
+          and exclusivity]
 
       7. Return RSAResult(
            receipt_id, receiving_runtime_id, aggregate_sdu,
@@ -1399,7 +1415,7 @@ SSD-INV-003 — STRUCTURAL_SHIFT Requires Minimum History
 
    The RSA produces one of four portability verdicts based on
    aggregate_sdu.  The verdict thresholds are structural constants of
-   the DSPP specification (DSPP-INV-007):
+   the DSPP specification (DSPP-INV-007a and DSPP-INV-007b):
 
    SEMANTICALLY_PORTABLE    [0.00, 0.10):
       The receiving domain's current posture for all assessed terms is
@@ -1435,7 +1451,7 @@ DSPP-INV-001 — TSA Immutability
    Its content_hash commits all fields at issuance time.
 
 DSPP-INV-002 — SDR Append-Only
-   No SDR may be modified or deleted after publication.
+   SDR entries MUST NOT be modified or deleted after publication.
    SDR chains are append-only public logs.
 
 DSPP-INV-003 — RSA Uses MORE_RESTRICTIVE Governing Posture
@@ -1461,7 +1477,7 @@ DSPP-INV-006 — Incompatibility Propagation
    propagates to all receipts descending from that DR in the receiving
    domain's assessment.
 
-DSPP-INV-007 — Structural Threshold Constants
+DSPP-INV-007 (a + b) — Structural Threshold Constants
    The verdict thresholds (0.10, 0.40, 0.70) and SDU weights
    (0.40, 0.35, 0.25) are structural constants of the DSPP
    specification.  They MUST NOT be overridden by runtime configuration.
@@ -1600,6 +1616,19 @@ DSPP-INV-007 — Structural Threshold Constants
    elapsed_ms, description, negation_asserted, adr_reference,
    rfc_reference, and model_counterexample (null if UNSAT).
 
+   The OMNIX-FVS-1.0 suite itself is governed by three meta-invariants
+   defined in ADR-177 [ADR-177]:
+
+   FVS-INV-001 — All proofs return UNSAT.  Any SAT or UNKNOWN result
+                 is a suite failure, not just a proof failure.
+   FVS-INV-002 — No UNKNOWN results.  A Z3 timeout violates the
+                 soundness assumption of the proof methodology.
+   FVS-INV-003 — Suite completes in under 10 seconds on reference
+                 hardware (Python 3.11, z3-solver 4.x, single core).
+
+   FVS-INV-001 through FVS-INV-003 are verified by
+   tests/test_formal_verification.py (class TestFullSuite).
+
    pytest integration:
 
       pytest tests/test_formal_verification.py   [19 assertions]
@@ -1735,6 +1764,28 @@ DSPP-INV-007 — Structural Threshold Constants
                property by construction; no runtime check needed)
       Logic  — verified by logical argument (property follows directly
                from definition; Z3 encoding would be circular)
+
+   Gap column key (open problem closed by each invariant):
+      PVC  — Proactive Veto Coverage: closes the detection-latency gap
+             (Gap_PG §2.4); governance evidence is cryptographically
+             attested before the request it governs arrives
+      TS   — Topology Safety: closes the recalibration topology problem
+             (§2.3); STRUCTURAL_SHIFT is formally distinguishable from
+             a sustained drift excursion, making recalibration safety
+             a decidable property
+      SP   — Semantic Portability: closes the semantic portability
+             problem (§2.2); RSA verdict is deterministic and
+             domain-independent for all valid inputs with no pairwise
+             negotiation required
+
+   Identifier note: the table above uses abbreviated IDs for column
+   width.  The corresponding invariant_id values in the proof files
+   under omnix_core/formal_verification/ are:
+      CRSI-BND-LO  ↔  CRSI-BOUND-LO     CRSI-BND-HI  ↔  CRSI-BOUND-HI
+      CRSI-CLS-T   ↔  CRSI-CLASS-TOT    SDU-BND-LO   ↔  SDU-BOUND-LO
+      SDU-BND-HI   ↔  SDU-BOUND-HI
+   All other identifiers are identical between this table and the
+   proof files.
 
 
 11.  Compliance Designation: ATF-PGL-Compliant
@@ -1939,7 +1990,7 @@ DSPP-INV-007 — Structural Threshold Constants
    the platform signing key fails verification — the signature cannot
    be forged without the private key.  ATF-PGL-Compliant implementations
    MUST verify PVR signatures before enforcing blocks (REQ-AGVP-004).
-   The ML-DSA-65 private key must be protected under the same controls
+   The ML-DSA-65 private key MUST be protected under the same controls
    as the platform signing key (RFC-ATF-3 §14.6).
 
 13.2.  Semantic Anchor Replay Attack
@@ -2325,7 +2376,8 @@ DSPP-INV-007 — Structural Threshold Constants
                        + 0.35 · scope_distance
                        + 0.25 · regulatory_distance
 
-   Portability verdict thresholds (structural constants, DSPP-INV-007):
+   Portability verdict thresholds (structural constants,
+   DSPP-INV-007a and DSPP-INV-007b):
 
    | Range           | Verdict                 | Interpretation                          |
    |-----------------|-------------------------|-----------------------------------------|
@@ -2338,7 +2390,7 @@ DSPP-INV-007 — Structural Threshold Constants
 20.  Appendix C — PGL Compliance Checklist
 
    Implementations claiming ATF-PGL-Compliant MUST satisfy all items.
-   Items marked (FEI) are inherited from RFC-ATF-3 and must be
+   Items marked (FEI) are inherited from RFC-ATF-3 and MUST be
    satisfied at that tier before this checklist applies.
 
    AGVP
@@ -2371,7 +2423,8 @@ DSPP-INV-007 — Structural Threshold Constants
    □ SDR published on every SPV change with non-empty rationale
    □ SDR chain is append-only; no modification or deletion (DSPP-INV-002)
    □ RSA computable with no originating runtime contact (DSPP-INV-004)
-   □ SDU weights (0.40, 0.35, 0.25) are hardcoded constants (DSPP-INV-007)
+   □ SDU weights (0.40, 0.35, 0.25) are hardcoded constants
+     (DSPP-INV-007a and DSPP-INV-007b)
    □ Verdict thresholds (0.10, 0.40, 0.70) are hardcoded constants
    □ SEMANTICALLY_INCOMPATIBLE propagates to DR descendants (DSPP-INV-006)
    □ TSA signing failure: receipt still issued, ERROR logged (§9.3)
