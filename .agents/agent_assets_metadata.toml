@@ -641,3 +641,9 @@ id = "PYtr_VRn0rxqL4IyrG_fD"
 uri = "file://RFC-ATF-2.pdf"
 type = "pdf"
 title = "RFC-ATF-2 — Runtime Governance Standard (ATF-RGC-Compliant)"
+
+[[outputs]]
+id = "LbApwW3yWW6stl4W9VRaj"
+uri = "file://docs/partners/verisigil/ATF_Field_Specification_v1.0.pdf"
+type = "pdf"
+title = "ATF Field Specification v1.0 — Day 1 Deliverable VeriSigil"
