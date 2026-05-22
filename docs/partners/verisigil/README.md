@@ -51,4 +51,6 @@ LinkedIn: [via hilo existente]
 |---|---|
 | 2026-05-21 | Raheem envía Mutual NDA + Integration Scope Memo |
 | 2026-05-22 | Harold firma ambos documentos |
-| 2026-05-22 | Pendiente: contrafirma Raheem + Day 1 kickoff |
+| 2026-05-22 | Harold envía ambos PDFs firmados a Raheem solicitando contrafirma |
+| Pendiente | Raheem devuelve NDA + Scope Memo con su firma |
+| Pendiente | Harold recibe contrafirma → envía ATF Field Specification v1.0 (Day 1) |
