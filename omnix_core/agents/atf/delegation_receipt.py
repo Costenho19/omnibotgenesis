@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS atf_delegation_receipts (
     delegation_depth            INTEGER       NOT NULL,
     delegator_public_key        TEXT          NOT NULL,
     content_hash                VARCHAR(64)   NOT NULL,
+    posture_state_hash          VARCHAR(64)   DEFAULT NULL,
     pqc_signature               TEXT          DEFAULT NULL,
     pqc_algorithm               VARCHAR(32)   DEFAULT NULL,
     expires_at                  TIMESTAMPTZ   DEFAULT NULL,
@@ -60,6 +61,8 @@ CREATE INDEX IF NOT EXISTS idx_atf_dr_chain_root
     ON atf_delegation_receipts (chain_root_id);
 CREATE INDEX IF NOT EXISTS idx_atf_dr_delegator
     ON atf_delegation_receipts (delegator_id);
+ALTER TABLE atf_delegation_receipts
+    ADD COLUMN IF NOT EXISTS posture_state_hash VARCHAR(64) DEFAULT NULL;
 """
 
 
@@ -88,6 +91,10 @@ class DelegationReceipt:
         delegation_depth            — 0=human, 1=first agent, N=Nth sub-agent
         delegator_public_key        — Dilithium-3 pub key embedded for verification
         content_hash                — SHA-256 of all fields except signature
+        posture_state_hash          — SHA-256 of authority posture at issuance
+                                      (delegator_id, task_scope, budgets, depth,
+                                       chain_root_id, created_at). Enables
+                                       TAR↔TAP bridge validation (SPV binding).
         pqc_signature               — Dilithium-3 sig over content_hash (delegator key)
         pqc_algorithm               — e.g. "dilithium3"
         expires_at                  — ISO UTC or None
@@ -106,6 +113,7 @@ class DelegationReceipt:
     delegation_depth: int
     delegator_public_key: str
     content_hash: str
+    posture_state_hash: Optional[str]
     pqc_signature: Optional[str]
     pqc_algorithm: Optional[str]
     expires_at: Optional[str]
@@ -146,6 +154,7 @@ class DelegationReceipt:
             "authority_reduction_pct": self.authority_reduction_pct(),
             "delegation_depth":   self.delegation_depth,
             "chain_root_id":      self.chain_root_id,
+            "posture_state_hash": self.posture_state_hash,
             "pqc_signed":         self.pqc_signature is not None,
             "status":             self.status,
         }
@@ -196,6 +205,42 @@ class DelegationReceiptEngine:
     @staticmethod
     def _build_delegation_id() -> str:
         return f"ATFDR-{uuid.uuid4().hex[:16].upper()}"
+
+    @staticmethod
+    def _compute_posture_state_hash(
+        delegator_id: str,
+        task_scope: Dict[str, Any],
+        authority_budget_delegator: float,
+        authority_budget_granted: float,
+        delegation_depth: int,
+        chain_root_id: str,
+        created_at: str,
+    ) -> str:
+        """
+        SHA-256 of the authority posture at the exact moment of DR issuance.
+
+        Captures the complete posture state binding — enabling cross-protocol
+        TAR↔TAP bridge validation (SPV binding per VeriSigil VGS integration).
+        This hash is stable: it does not change after issuance regardless of
+        subsequent authority evolution, making it safe for long-lived receipt
+        validation under evolving posture.
+
+        Committed fields (canonical JSON → SHA-256):
+            delegator_id, task_scope, authority_budget_delegator,
+            authority_budget_granted, delegation_depth,
+            chain_root_id, created_at
+        """
+        posture = {
+            "delegator_id":               delegator_id,
+            "task_scope":                 task_scope,
+            "authority_budget_delegator": round(authority_budget_delegator, 4),
+            "authority_budget_granted":   round(authority_budget_granted, 4),
+            "delegation_depth":           delegation_depth,
+            "chain_root_id":              chain_root_id,
+            "created_at":                 created_at,
+        }
+        canonical = json.dumps(posture, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical.encode()).hexdigest()
 
     @staticmethod
     def _compute_content_hash(fields: Dict[str, Any]) -> str:
@@ -312,6 +357,16 @@ class DelegationReceiptEngine:
         if chain_root_id is None:
             chain_root_id = delegation_id
 
+        posture_state_hash = self._compute_posture_state_hash(
+            delegator_id=delegator_id,
+            task_scope=task_scope,
+            authority_budget_delegator=round(authority_budget_delegator, 4),
+            authority_budget_granted=round(authority_budget_granted, 4),
+            delegation_depth=delegation_depth,
+            chain_root_id=chain_root_id,
+            created_at=now,
+        )
+
         core_fields: Dict[str, Any] = {
             "delegation_id":               delegation_id,
             "delegator_id":                delegator_id,
@@ -320,9 +375,10 @@ class DelegationReceiptEngine:
             "authority_budget_delegator":  round(authority_budget_delegator, 4),
             "authority_budget_granted":    round(authority_budget_granted, 4),
             "parent_delegation_id":        parent_delegation_id,
-            "chain_root_id":               chain_root_id,
+            "chain_root_id":              chain_root_id,
             "delegation_depth":            delegation_depth,
             "delegator_public_key":        delegator_public_key,
+            "posture_state_hash":          posture_state_hash,
             "expires_at":                  expires_at,
             "status":                      "ACTIVE",
             "created_at":                  now,
@@ -346,6 +402,7 @@ class DelegationReceiptEngine:
             delegation_depth=delegation_depth,
             delegator_public_key=delegator_public_key,
             content_hash=content_hash,
+            posture_state_hash=posture_state_hash,
             pqc_signature=pqc_sig,
             pqc_algorithm=pqc_alg,
             expires_at=expires_at,
@@ -519,11 +576,12 @@ class DelegationReceiptEngine:
                             authority_budget_granted, parent_delegation_id,
                             chain_root_id, delegation_depth,
                             delegator_public_key, content_hash,
+                            posture_state_hash,
                             pqc_signature, pqc_algorithm,
                             expires_at, status, created_at, metadata
                         ) VALUES (
                             %s, %s, %s, %s::jsonb, %s, %s, %s,
-                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb
                         )
                         ON CONFLICT (delegation_id) DO NOTHING
                     """, (
@@ -538,6 +596,7 @@ class DelegationReceiptEngine:
                         receipt.delegation_depth,
                         receipt.delegator_public_key,
                         receipt.content_hash,
+                        receipt.posture_state_hash,
                         receipt.pqc_signature,
                         receipt.pqc_algorithm,
                         receipt.expires_at,
@@ -583,6 +642,7 @@ class DelegationReceiptEngine:
             delegation_depth=int(row["delegation_depth"]),
             delegator_public_key=row.get("delegator_public_key", ""),
             content_hash=row["content_hash"],
+            posture_state_hash=row.get("posture_state_hash"),
             pqc_signature=row.get("pqc_signature"),
             pqc_algorithm=row.get("pqc_algorithm"),
             expires_at=ts(row.get("expires_at")),
