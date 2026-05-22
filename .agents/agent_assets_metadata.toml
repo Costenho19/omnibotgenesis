@@ -671,3 +671,9 @@ id = "c6RvpmsRrMq74FYcqi9Kv"
 uri = "file://docs/partners/verisigil/live_trace_v1.pdf"
 type = "pdf"
 title = "OMNIX ATF Live Trace — VeriSigil AI"
+
+[[outputs]]
+id = "kLvxrtKFayx-gk7tWpwXf"
+uri = "file://docs/partners/verisigil/live_trace_batch2.pdf"
+type = "pdf"
+title = "OMNIX ATF Live Trace Batch 2 — VeriSigil AI"
