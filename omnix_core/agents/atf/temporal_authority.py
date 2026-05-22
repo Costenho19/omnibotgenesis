@@ -233,7 +233,7 @@ class TemporalAuthorityEngine:
     def _compute_content_hash(fields: Dict[str, Any]) -> str:
         exclude = {"content_hash", "pqc_signature", "pqc_algorithm"}
         clean = {k: v for k, v in fields.items() if k not in exclude}
-        canonical = json.dumps(clean, sort_keys=True, separators=(",", ":"))
+        canonical = json.dumps(clean, sort_keys=True, separators=(",", ":"), default=str)
         return hashlib.sha256(canonical.encode()).hexdigest()
 
     def _sign(self, content_hash: str) -> Tuple[Optional[str], Optional[str]]:
