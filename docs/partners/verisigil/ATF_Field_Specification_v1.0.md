@@ -207,7 +207,7 @@ ADR reference: ADR-159
   "delegation_id": "ATFDR-A1B2C3D4E5F60001",
   "chain_root_id": "ATFDR-ROOT0000000001",
   "agent_id": "AID-COMPLIANCE-F1E2D3C4B5A60001",
-  "ces_score": 82.5,
+  "ces_score": 92.7,
   "continuity_status": "NOMINAL",
   "ces_temporal": 87.0,
   "ces_budget": 92.0,
