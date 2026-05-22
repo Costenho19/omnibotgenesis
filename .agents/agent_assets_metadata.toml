@@ -683,3 +683,9 @@ id = "hGrQt1LVJ_z04UB22NUas"
 uri = "file://docs/partners/antonio_socorro/OMNIX_Antonio_Socorro_NDA.pdf"
 type = "pdf"
 title = "NDA v1.0 — Strategic Technical Collaboration & Confidentiality Agreement"
+
+[[outputs]]
+id = "LFZMZarfTFKqbH3qwrc-Z"
+uri = "file://docs/partners/verisigil/ATF_Bridge_Validation_Final_Report_v1.0.pdf"
+type = "pdf"
+title = "ATF Bridge Validation — Final Report v1.0 (VeriSigil AI)"
