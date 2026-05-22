@@ -55,4 +55,4 @@ Menciona estándares U.S., europeos, EUDI Wallet y sector-específicos.
 | 2026-05-22 | Harold pregunta qué necesita Antonio de OMNIX para avanzar |
 | 2026-05-22 | Antonio responde — necesita material publicable de OMNIX/ATF, tiene IP activa (copyright + patente en proceso) |
 | 2026-05-22 | Harold envía NDA v1.0 — Strategic Technical Collaboration & Confidentiality Agreement |
-| 2026-05-22 | Antonio confirma recepción — devolverá firmado esta noche ✓ |
+| 2026-05-22 | Antonio confirma recepción del NDA — lo revisará y devolverá firmado esta noche (pendiente) |
