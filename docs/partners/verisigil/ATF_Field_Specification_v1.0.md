@@ -1,6 +1,6 @@
 ATF FIELD SPECIFICATION
 Agent Trust Fabric — Trace Format & Field Definitions
-Version: 1.0 · Date: 2026-05-21
+Version: 1.1 · Date: 2026-05-22
 Issued by: Harold Alberto Nunes Rodelo, ATF / OMNIX QUANTUM LTD
 For: VeriSigil AI (Raheem Larry Babatunde) — Bridge Validation Collaboration
 Status: Day 1 Deliverable — Sandbox / Evaluation Only
@@ -164,18 +164,25 @@ ADR reference: ADR-159
 | `delegation_id` | string | REQUIRED | `ATFDR-{16HEX}` of the authorizing DR. |
 | `chain_root_id` | string | REQUIRED | Chain root delegation ID. |
 | `agent_id` | string | REQUIRED | AID of the running agent. |
-| `ces` | float | REQUIRED | Continuity Eligibility Score. Range: 0.0–100.0. Formula: `(T×0.30) + (B×0.30) + (D×0.20) + (I×0.20)` |
-| `ces_tier` | string | REQUIRED | `NOMINAL` (75–100) \| `MONITORING` (50–75) \| `WARNING` (25–50) \| `CRITICAL` (10–25) \| `HALT` (0–10) |
-| `temporal_health` | float | REQUIRED | T component: time remaining on DR / total DR lifetime. Range: 0.0–1.0 |
-| `budget_health` | float | REQUIRED | B component: budget remaining / budget at admission. Range: 0.0–1.0 |
-| `context_fidelity` | float | REQUIRED | D component: `(100 - context_drift_pct) / 100`. Range: 0.0–1.0 |
-| `integrity_score` | float | REQUIRED | I component: `(100 - (active_anomalies × 10)) / 100`. Range: 0.0–1.0 |
-| `issued_at_ns` | integer | REQUIRED | Nanosecond Unix timestamp of RCR issuance. |
+| `ces_score` | float | REQUIRED | Continuity Eligibility Score. Range: 0.0–100.0. Formula: `(T×0.30) + (B×0.30) + (D×0.20) + (I×0.20)` |
+| `continuity_status` | string | REQUIRED | `NOMINAL` (75–100) \| `MONITORING` (50–75) \| `WARNING` (25–50) \| `CRITICAL` (10–25) \| `HALT` (0–10) |
+| `ces_temporal` | float | REQUIRED | T component: time remaining on DR / total DR lifetime. Range: 0.0–1.0 |
+| `ces_budget` | float | REQUIRED | B component: budget remaining / budget at admission. Range: 0.0–1.0 |
+| `ces_context` | float | REQUIRED | D component: `(100 - context_drift_pct) / 100`. Range: 0.0–1.0 |
+| `ces_integrity` | float | REQUIRED | I component: `(100 - (active_anomalies × 10)) / 100`. Range: 0.0–1.0 |
+| `execution_ns` | integer | REQUIRED | Nanosecond Unix timestamp of the execution event. |
+| `execution_ts` | string | REQUIRED | ISO 8601 UTC timestamp of the execution event. |
 | `issued_at` | string | REQUIRED | ISO 8601 UTC timestamp of RCR issuance. |
-| `content_hash` | string | REQUIRED | SHA-256 hex digest of all RCR fields except signature fields. |
+| `budget_at_admission` | float | REQUIRED | Authority budget at the moment of TAR admission. |
+| `budget_remaining` | float | REQUIRED | Authority budget remaining at this RCR snapshot. |
+| `context_drift_pct` | float | REQUIRED | Context drift percentage at this snapshot. Range: 0.0–100.0 |
+| `active_anomalies` | integer | REQUIRED | Count of active governance anomalies at this snapshot. |
+| `content_hash` | string | REQUIRED | SHA-256 hex digest of all RCR fields except `content_hash`, `pqc_signature`, `pqc_algorithm`. |
 | `pqc_signature` | string | CONDITIONAL | Dilithium-3 (ML-DSA-65) signature over `content_hash`, base64-encoded. |
 | `pqc_algorithm` | string | CONDITIONAL | `"dilithium3"` |
-| `escalation_action` | string | OPTIONAL | Action taken at this snapshot: `CONTINUE` \| `FLAG_OUTPUTS` \| `RESTRICT_SPAWNING` \| `REAUTHORIZATION_CHALLENGE` \| `HALT`. |
+| `sample_reason` | string | OPTIONAL | Reason for this RCR snapshot: `SCHEDULED` \| `EXECUTION_COMPLETE` \| `ANOMALY_DETECTED` \| `MANUAL`. |
+| `escalation_event_id` | string | OPTIONAL | Reference to ContinuityEscalationEvent if escalation was triggered. |
+| `predecessor_rcr_id` | string | OPTIONAL | ID of previous RCR in the continuity chain. |
 | `metadata` | object | REQUIRED | Extension dict. |
 
 ### 3.2 Invariants
@@ -196,18 +203,25 @@ ADR reference: ADR-159
   "delegation_id": "ATFDR-A1B2C3D4E5F60001",
   "chain_root_id": "ATFDR-ROOT0000000001",
   "agent_id": "AID-COMPLIANCE-F1E2D3C4B5A60001",
-  "ces": 82.5,
-  "ces_tier": "NOMINAL",
-  "temporal_health": 0.87,
-  "budget_health": 0.92,
-  "context_fidelity": 0.95,
-  "integrity_score": 1.0,
-  "issued_at_ns": 1748131260000000000,
+  "ces_score": 82.5,
+  "continuity_status": "NOMINAL",
+  "ces_temporal": 0.87,
+  "ces_budget": 0.92,
+  "ces_context": 0.95,
+  "ces_integrity": 1.0,
+  "execution_ns": 1748131200000000000,
+  "execution_ts": "2026-05-21T10:00:00+00:00",
   "issued_at": "2026-05-21T10:01:00+00:00",
+  "budget_at_admission": 60.0,
+  "budget_remaining": 55.2,
+  "context_drift_pct": 5.0,
+  "active_anomalies": 0,
   "content_hash": "d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
   "pqc_signature": "<base64-dilithium3-signature>",
   "pqc_algorithm": "dilithium3",
-  "escalation_action": "CONTINUE",
+  "sample_reason": "SCHEDULED",
+  "escalation_event_id": null,
+  "predecessor_rcr_id": null,
   "metadata": {}
 }
 ```
@@ -271,3 +285,4 @@ Recognized `domain` values:
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-05-21 | Initial release — Day 1 deliverable for VeriSigil bridge validation |
+| 1.1 | 2026-05-22 | RCR field names corrected to match implementation: ces→ces_score, ces_tier→continuity_status, temporal_health→ces_temporal, budget_health→ces_budget, context_fidelity→ces_context, integrity_score→ces_integrity. Added budget_at_admission, budget_remaining, context_drift_pct, active_anomalies, sample_reason, escalation_event_id, predecessor_rcr_id. |
