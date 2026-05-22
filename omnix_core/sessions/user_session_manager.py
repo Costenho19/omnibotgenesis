@@ -195,7 +195,7 @@ class UserSessionManager:
                 result = self.database_service.execute_query('''
                     SELECT auto_trading, is_paused, trading_enabled, 
                            paper_balance, total_trades, winning_trades,
-                           total_profit_loss, daily_profit_loss, risk_level
+                           total_profit_loss, daily_profit_loss
                     FROM user_settings
                     WHERE user_id = %s
                 ''', (user_id,))

@@ -98,9 +98,15 @@ class UserSettingsService:
                     daily_traded_usd NUMERIC(18,8) DEFAULT 0,
                     daily_stats_date DATE DEFAULT CURRENT_DATE,
                     weekly_pnl_usd NUMERIC(18,8) DEFAULT 0,
+                    risk_level TEXT DEFAULT 'MODERATE',
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 )
+            ''')
+
+            cursor.execute('''
+                ALTER TABLE user_settings
+                ADD COLUMN IF NOT EXISTS risk_level TEXT DEFAULT 'MODERATE'
             ''')
             
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_settings_profile ON user_settings(risk_profile)')
