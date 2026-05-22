@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **177 total**. Últimos: ADR-175 (SSD) · ADR-176 (OMNIX Governance API Product) · **ADR-177 (Formal Verification Suite — FVS)**
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **70 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + **FVS×3**)
+- **ADRs:** `docs/adr/` — **180 total**. Últimos: ADR-177 (FVS) · ADR-178 (CGE — Counterfactual Governance Engine) · ADR-179 (GUGT — Grand Unified Governance Theory) · **ADR-180 (TGB — Temporal Governance Bridge)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **88 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + FVS×3 + **CGE×7 + GUGT×6 + TGB×5**) — RFC-ATF-5 (Cognitive Governance Layer — PENDING DOI)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 

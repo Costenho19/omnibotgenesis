@@ -5,7 +5,7 @@
 **Classification:** INTERNAL — Architecture Reference  
 **Date:** May 2026  
 **Author:** Harold Nunes — OMNIX QUANTUM LTD  
-**Status:** ACTIVE — Frozen as of May 9, 2026  
+**Status:** ACTIVE — Updated May 22, 2026 (ADR-178/179/180 + RFC-ATF-5 CGL extension)  
 **Review Cycle:** Quarterly or upon any proposed core module change
 
 ---
