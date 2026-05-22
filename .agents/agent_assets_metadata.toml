@@ -653,3 +653,9 @@ id = "Y9rw8A2kkoCvibo71JOn_"
 uri = "file://docs/partners/verisigil/ATF_Field_Specification_v1.1.pdf"
 type = "pdf"
 title = "ATF Field Specification v1.1 — Para enviar a Raheem"
+
+[[outputs]]
+id = "S2veHaorHZdssPpp7KoUb"
+uri = "file://docs/partners/verisigil/ATF_Field_Specification_v1.2.pdf"
+type = "pdf"
+title = "ATF Field Specification v1.2 — FINAL"

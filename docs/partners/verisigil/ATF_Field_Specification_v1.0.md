@@ -1,6 +1,6 @@
 ATF FIELD SPECIFICATION
 Agent Trust Fabric — Trace Format & Field Definitions
-Version: 1.1 · Date: 2026-05-22
+Version: 1.2 · Date: 2026-05-22
 Issued by: Harold Alberto Nunes Rodelo, ATF / OMNIX QUANTUM LTD
 For: VeriSigil AI (Raheem Larry Babatunde) — Bridge Validation Collaboration
 Status: Day 1 Deliverable — Sandbox / Evaluation Only
@@ -166,10 +166,14 @@ ADR reference: ADR-159
 | `agent_id` | string | REQUIRED | AID of the running agent. |
 | `ces_score` | float | REQUIRED | Continuity Eligibility Score. Range: 0.0–100.0. Formula: `(T×0.30) + (B×0.30) + (D×0.20) + (I×0.20)` |
 | `continuity_status` | string | REQUIRED | `NOMINAL` (75–100) \| `MONITORING` (50–75) \| `WARNING` (25–50) \| `CRITICAL` (10–25) \| `HALT` (0–10) |
-| `ces_temporal` | float | REQUIRED | T component: time remaining on DR / total DR lifetime. Range: 0.0–1.0 |
-| `ces_budget` | float | REQUIRED | B component: budget remaining / budget at admission. Range: 0.0–1.0 |
-| `ces_context` | float | REQUIRED | D component: `(100 - context_drift_pct) / 100`. Range: 0.0–1.0 |
-| `ces_integrity` | float | REQUIRED | I component: `(100 - (active_anomalies × 10)) / 100`. Range: 0.0–1.0 |
+| `ces_temporal` | float | REQUIRED | T component: `(time remaining on DR / total DR lifetime) × 100`. Range: 0.0–100.0 |
+| `ces_budget` | float | REQUIRED | B component: `(budget remaining / budget at admission) × 100`. Range: 0.0–100.0 |
+| `ces_context` | float | REQUIRED | D component: `100 - context_drift_pct`. Range: 0.0–100.0 |
+| `ces_integrity` | float | REQUIRED | I component: `100 - (active_anomalies × 10)`. Range: 0.0–100.0 |
+| `time_remaining_ns` | integer | REQUIRED | Remaining DR lifetime in nanoseconds at this snapshot. |
+| `dr_expires_at` | string | OPTIONAL | ISO 8601 UTC expiry timestamp of the DR. Null if DR has no expiry. |
+| `fragmentation_score` | float | REQUIRED | Aggregate budget consumption across the delegation chain. Range: 0.0–1.0 |
+| `reauth_challenge_id` | string | OPTIONAL | Reference to ReauthorizationChallenge if issued (`ATFRC-{16HEX}`). Null otherwise. |
 | `execution_ns` | integer | REQUIRED | Nanosecond Unix timestamp of the execution event. |
 | `execution_ts` | string | REQUIRED | ISO 8601 UTC timestamp of the execution event. |
 | `issued_at` | string | REQUIRED | ISO 8601 UTC timestamp of RCR issuance. |
@@ -191,7 +195,7 @@ ADR reference: ADR-159
 - RGC-INV-002: CES MUST be computed from real-time values only — no cached inputs.
 - RGC-INV-003: `HALT` tier terminates execution and revokes in-flight sub-tasks.
 - RGC-INV-005: All RCRs are PQC-signed and immutable after issuance.
-- RGC-INV-006: RCR chain is acyclic — `issued_at_ns` MUST be strictly monotonically increasing per execution.
+- RGC-INV-006: RCR chain is acyclic — `issued_at` MUST be strictly monotonically increasing per execution session.
 - RCR is the bridge target for RCR↔Survivability receipt mapping. Join key: `tar_id`.
 
 ### 3.3 Example
@@ -205,10 +209,10 @@ ADR reference: ADR-159
   "agent_id": "AID-COMPLIANCE-F1E2D3C4B5A60001",
   "ces_score": 82.5,
   "continuity_status": "NOMINAL",
-  "ces_temporal": 0.87,
-  "ces_budget": 0.92,
-  "ces_context": 0.95,
-  "ces_integrity": 1.0,
+  "ces_temporal": 87.0,
+  "ces_budget": 92.0,
+  "ces_context": 95.0,
+  "ces_integrity": 100.0,
   "execution_ns": 1748131200000000000,
   "execution_ts": "2026-05-21T10:00:00+00:00",
   "issued_at": "2026-05-21T10:01:00+00:00",
@@ -216,6 +220,10 @@ ADR reference: ADR-159
   "budget_remaining": 55.2,
   "context_drift_pct": 5.0,
   "active_anomalies": 0,
+  "time_remaining_ns": 93600000000000,
+  "dr_expires_at": "2026-05-22T12:00:00+00:00",
+  "fragmentation_score": 0.08,
+  "reauth_challenge_id": null,
   "content_hash": "d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
   "pqc_signature": "<base64-dilithium3-signature>",
   "pqc_algorithm": "dilithium3",
@@ -286,3 +294,4 @@ Recognized `domain` values:
 |---|---|---|
 | 1.0 | 2026-05-21 | Initial release — Day 1 deliverable for VeriSigil bridge validation |
 | 1.1 | 2026-05-22 | RCR field names corrected to match implementation: ces→ces_score, ces_tier→continuity_status, temporal_health→ces_temporal, budget_health→ces_budget, context_fidelity→ces_context, integrity_score→ces_integrity. Added budget_at_admission, budget_remaining, context_drift_pct, active_anomalies, sample_reason, escalation_event_id, predecessor_rcr_id. |
+| 1.2 | 2026-05-22 | CES component ranges corrected: 0.0–1.0 → 0.0–100.0 for ces_temporal, ces_budget, ces_context, ces_integrity. Component formulas corrected (no /100 division). Added missing RCR fields: time_remaining_ns, dr_expires_at, fragmentation_score, reauth_challenge_id. Example JSON values corrected. Fixed RGC-INV-006 reference from issued_at_ns to issued_at. |
