@@ -677,3 +677,9 @@ id = "kLvxrtKFayx-gk7tWpwXf"
 uri = "file://docs/partners/verisigil/live_trace_batch2.pdf"
 type = "pdf"
 title = "OMNIX ATF Live Trace Batch 2 — VeriSigil AI"
+
+[[outputs]]
+id = "hGrQt1LVJ_z04UB22NUas"
+uri = "file://docs/partners/antonio_socorro/OMNIX_Antonio_Socorro_NDA.pdf"
+type = "pdf"
+title = "NDA — CAI-EXPERT-LAB ↔ OMNIX QUANTUM LTD"
