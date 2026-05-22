@@ -54,3 +54,11 @@ LinkedIn: [via hilo existente]
 | 2026-05-22 | Harold envía ambos PDFs firmados a Raheem solicitando contrafirma |
 | 2026-05-22 | Raheem devuelve NDA + Scope Memo contrafirmados — acuerdo ejecutado ✓ |
 | 2026-05-22 | Harold envía ATF Field Specification v1.0 — Day 1 kickoff |
+| 2026-05-22 | Harold envía ATF Field Specification v1.4 (PDF) con todas las correcciones aplicadas |
+| 2026-05-22 | Raheem confirma recepción de v1.4 y actualiza su bridge — ready for trace review |
+| 2026-05-22 | Harold autoriza inicio de trace review — Raheem corre validación bridge |
+| 2026-05-22 | Raheem reporta bridge validation completa: bridge_valid=true, 9 invariantes PASS, violations=0 |
+| 2026-05-22 | Harold genera live trace (DR+TAR+RCR) desde pipeline OMNIX — firmado Dilithium-3, CES 98.2 NOMINAL |
+| 2026-05-22 | Harold envía live_trace_v1.pdf a Raheem |
+| 2026-05-22 | Raheem completa live trace validation: BRIDGE VALID, 0 violaciones, todos los invariantes PASS, VGS trust score 0.982 |
+| 2026-05-22 | Raheem envía NDA Mutual VeriSigil AI ↔ ATF/OMNIX — pendiente firma Harold |
