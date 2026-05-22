@@ -62,3 +62,7 @@ LinkedIn: [via hilo existente]
 | 2026-05-22 | Harold envía live_trace_v1.pdf a Raheem |
 | 2026-05-22 | Raheem completa live trace validation: BRIDGE VALID, 0 violaciones, todos los invariantes PASS, VGS trust score 0.982 |
 | 2026-05-22 | Raheem envía NDA Mutual VeriSigil AI ↔ ATF/OMNIX — pendiente firma Harold |
+| 2026-05-22 | Harold genera live trace batch 2 (REJECTED TAR, MONITORING RCR CES=67.77, depth-2 chain) — enviado a Raheem como PDF |
+| 2026-05-22 | Raheem completa batch 2 validation: 3 trazas, 0 violaciones. REJECTED→DENY ✓, MONITORING→MONITOR ✓, depth-2 MAR ✓ |
+| 2026-05-22 | Harold genera ATF Bridge Validation Final Report v1.0 — 4 trazas, 9 invariantes PASS, 3 bridge mappings confirmados — enviado a Raheem |
+| 2026-05-22 | Harold reporta a Raheem: PDFs firmados (NDA + Scope Memo) no abren — solicitado reenvío |
