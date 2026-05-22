@@ -66,3 +66,5 @@ LinkedIn: [via hilo existente]
 | 2026-05-22 | Raheem completa batch 2 validation: 3 trazas, 0 violaciones. REJECTED→DENY ✓, MONITORING→MONITOR ✓, depth-2 MAR ✓ |
 | 2026-05-22 | Harold genera ATF Bridge Validation Final Report v1.0 — 4 trazas, 9 invariantes PASS, 3 bridge mappings confirmados — enviado a Raheem |
 | 2026-05-22 | Harold reporta a Raheem: PDFs firmados (NDA + Scope Memo) no abren — solicitado reenvío |
+| 2026-05-22 | Raheem reenvía PDFs firmados — recibidos correctamente ✓ |
+| 2026-05-22 | Harold envía ATF Bridge Validation Final Report v1.0 a Raheem |
