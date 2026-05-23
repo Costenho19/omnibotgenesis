@@ -218,7 +218,8 @@ class GovernanceRuntime:
     CREATE INDEX IF NOT EXISTS idx_ogr_started   ON atf_ogr_sessions(started_at DESC);
     """
 
-    # ATF layers activated per session — every layer, every time
+    # OGR-INV-001: all 6 ATF layers MUST be activated simultaneously per session.
+    # Partial activation (e.g. L1-L4 only) is not ATF-BEV-Compliant.
     _ATF_LAYERS = [
         "ATF-L1-Identity",
         "ATF-L2-Delegation",
@@ -227,12 +228,17 @@ class GovernanceRuntime:
         "ATF-L5-CognitiveGovernance",
         "ATF-L6-BehavioralVerification",
     ]
+    _REQUIRED_LAYER_COUNT = 6  # OGR-INV-001 enforcement constant
 
     def __init__(self):
         self._db_url = os.environ.get("DATABASE_URL")
         self._bar_engine = None
         self._ccs_engine = None
         self._ctchc_engine = None
+        # In-memory session cache — used as primary store when DATABASE_URL absent
+        # and as a read-through cache in production to reduce DB round-trips on
+        # record_turn (hot path). Always authoritative for the current process.
+        self._session_cache: Dict[str, "OGRSession"] = {}
 
     def _get_bar(self):
         if self._bar_engine is None:
@@ -341,6 +347,7 @@ class GovernanceRuntime:
             metadata=metadata or {},
         )
 
+        self._session_cache[session_id] = session
         self._persist_session(session)
         logger.info(
             f"[OGR] Session started: {session_id} | agent={agent_id} "
@@ -500,18 +507,23 @@ class GovernanceRuntime:
         sealed_chain = ctchc_engine.seal_chain(session_id)
 
         closed_at = datetime.now(timezone.utc).isoformat()
+        was_halted = session.session_status == STATUS_HALTED
         self._close_session_db(
             session_id=session_id,
             seal_hash=sealed_chain.seal_hash,
             closed_at=closed_at,
+            preserve_halted=was_halted,
         )
 
         ccs_trend = self._get_ccs().get_session_trend(session_id)
         bars = self._get_bar().list_bars(session_id)
 
+        # BEV-INV-003: preserve HALTED as terminal forensic state — not overwritten by CLOSED
+        final_status = STATUS_HALTED if was_halted else STATUS_CLOSED
+
         result = {
             "session_id": session_id,
-            "session_status": STATUS_CLOSED,
+            "session_status": final_status,
             "closed_at": closed_at,
             "turn_count": len(bars),
             "chain_seal": sealed_chain.chain_summary(),
@@ -646,8 +658,13 @@ class GovernanceRuntime:
         if artifact_type == "BAR":
             bar_engine = self._get_bar()
             if artifact_data:
-                from omnix_core.bev.behavioral_anchor_record import BehavioralAnchorRecord
-                bar = BehavioralAnchorRecord(**artifact_data)
+                # Use the same row-deserialization path to handle type coercions
+                # safely instead of direct **unpacking which fails on extra keys.
+                try:
+                    from omnix_core.bev.behavioral_anchor_record import BAREngine
+                    bar = BAREngine._row_to_bar(artifact_data)
+                except Exception as exc:
+                    return {"verified": False, "reason": f"BAR data invalid: {exc}"}
             else:
                 bar = bar_engine.get_bar(artifact_id)
                 if bar is None:
@@ -773,6 +790,9 @@ class GovernanceRuntime:
     # ─────────────────────────────────────────────────────────────
 
     def get_session(self, session_id: str) -> Optional[OGRSession]:
+        # Check in-memory cache first (no DB round-trip on hot path)
+        if session_id in self._session_cache:
+            return self._session_cache[session_id]
         if not self._db_url:
             return None
         try:
@@ -867,6 +887,19 @@ class GovernanceRuntime:
         new_status: str,
         halt_reason: Optional[str],
     ) -> None:
+        # Always update in-memory cache regardless of DB availability
+        cached = self._session_cache.get(session_id)
+        if cached is not None:
+            import dataclasses
+            self._session_cache[session_id] = dataclasses.replace(
+                cached,
+                turn_count=new_turn_count,
+                total_drift=total_drift,
+                chain_tip_hash=chain_tip_hash,
+                last_verdict=last_verdict,
+                session_status=new_status,
+                halt_reason=halt_reason,
+            )
         if not self._db_url:
             return
         try:
@@ -890,18 +923,28 @@ class GovernanceRuntime:
         session_id: str,
         seal_hash: Optional[str],
         closed_at: str,
+        preserve_halted: bool = False,
     ) -> None:
         if not self._db_url:
             return
         try:
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
-                    cur.execute("""
-                        UPDATE atf_ogr_sessions
-                        SET session_status=%s, chain_sealed=TRUE,
-                            chain_seal_hash=%s, closed_at=%s
-                        WHERE session_id=%s
-                    """, (STATUS_CLOSED, seal_hash, closed_at, session_id))
+                    if preserve_halted:
+                        # BEV-INV-003: HALTED status is the terminal forensic state.
+                        # Sealing is allowed but the HALT record must not be overwritten.
+                        cur.execute("""
+                            UPDATE atf_ogr_sessions
+                            SET chain_sealed=TRUE, chain_seal_hash=%s, closed_at=%s
+                            WHERE session_id=%s AND session_status='HALTED'
+                        """, (seal_hash, closed_at, session_id))
+                    else:
+                        cur.execute("""
+                            UPDATE atf_ogr_sessions
+                            SET session_status=%s, chain_sealed=TRUE,
+                                chain_seal_hash=%s, closed_at=%s
+                            WHERE session_id=%s AND session_status != 'HALTED'
+                        """, (STATUS_CLOSED, seal_hash, closed_at, session_id))
                 conn.commit()
         except Exception as exc:
             logger.warning(f"[OGR] close_session_db failed: {exc}")

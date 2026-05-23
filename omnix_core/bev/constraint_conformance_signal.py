@@ -12,6 +12,7 @@ Invariants enforced here:
   BEV-INV-007: CCS CRITICAL verdict MUST trigger AGVP watchdog evaluation.
   BEV-INV-008: Cumulative drift > MAX_DRIFT_PCT MUST produce HALT verdict.
   BEV-INV-009: CCS history MUST be append-only and tamper-evident via hash linkage.
+  BEV-INV-017: CCS drift accumulator MUST be isolated per session_id — never shared across sessions.
 
 Harold Nunes — OMNIX QUANTUM LTD — May 2026
 """

@@ -429,9 +429,16 @@ def manifest():
                     "BEV-INV-001", "BEV-INV-002", "BEV-INV-003", "BEV-INV-004",
                     "BEV-INV-005", "BEV-INV-006", "BEV-INV-007", "BEV-INV-008",
                     "BEV-INV-009", "BEV-INV-010", "BEV-INV-011", "BEV-INV-012",
-                    "BEV-INV-013", "BEV-INV-014",
+                    "BEV-INV-013", "BEV-INV-014", "BEV-INV-015", "BEV-INV-016",
+                    "BEV-INV-017", "BEV-INV-018",
                 ],
             },
+        },
+        "ogr_invariants": {
+            "OGR-INV-001": (
+                "A governed session MUST activate all 6 ATF layers simultaneously "
+                "— partial activation is not permitted."
+            ),
         },
         "pqc": {
             "algorithm": "ML-DSA-65",
@@ -450,6 +457,7 @@ def manifest():
         ],
         "total_invariants": 106,
         "bev_invariants": 18,
+        "ogr_invariants_count": 1,
         "endpoints": [
             "POST /v1/govern/session/start",
             "POST /v1/govern/session/{id}/turn",

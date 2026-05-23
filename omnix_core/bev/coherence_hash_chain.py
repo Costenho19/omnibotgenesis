@@ -12,6 +12,7 @@ Invariants enforced here:
   BEV-INV-012: Gaps in the turn sequence MUST cause chain verification to fail.
   BEV-INV-013: The seal hash MUST cover the complete chain (first→last link).
   BEV-INV-014: CTCHC seal MUST be PQC-signed (ML-DSA-65) before OEP export.
+  BEV-INV-018: Every link's governing_receipt_id MUST match the chain's governing_receipt_id.
 
 Harold Nunes — OMNIX QUANTUM LTD — May 2026
 """
@@ -386,6 +387,14 @@ class CTCHCEngine:
             if link.turn_index != expected_idx:
                 errors.append(f"Gap at turn_index {expected_idx} (found {link.turn_index})")
 
+            # BEV-INV-018: every link's governing_receipt_id must match the chain's
+            if link.governing_receipt_id != chain.governing_receipt_id:
+                errors.append(
+                    f"BEV-INV-018: governing_receipt_id mismatch at turn {link.turn_index} "
+                    f"(link={link.governing_receipt_id[:16]}… "
+                    f"chain={chain.governing_receipt_id[:16]}…)"
+                )
+
             link_payload = json.dumps({
                 "prev": prev_hash,
                 "turn": link.turn_hash,
@@ -416,6 +425,9 @@ class CTCHCEngine:
             expected_seal = hashlib.sha3_256(seal_payload.encode()).hexdigest()
             seal_ok = expected_seal == chain.seal_hash
 
+        receipt_errors = [e for e in errors if "BEV-INV-018" in e]
+        bev_inv_018 = len(receipt_errors) == 0
+
         return {
             "verified": chain_ok and (seal_ok if chain.is_sealed else True),
             "session_id": session_id,
@@ -430,6 +442,7 @@ class CTCHCEngine:
             "bev_inv_012": len(errors) == 0,
             "bev_inv_013": seal_ok,
             "bev_inv_014": chain.seal_pqc_signature is not None,
+            "bev_inv_018": bev_inv_018,
         }
 
     # ── Persistence helpers ───────────────────────────────────────

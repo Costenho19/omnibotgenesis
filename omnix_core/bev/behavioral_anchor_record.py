@@ -11,6 +11,8 @@ Invariants enforced here:
   BEV-INV-002: BAR content_hash MUST cover output_hash + governing_receipt_id + turn_index.
   BEV-INV-003: A HALT verdict in any BAR MUST propagate to the session immediately.
   BEV-INV-004: BAR PQC signature MUST be verifiable offline without calling OMNIX.
+  BEV-INV-015: Empty output_text MUST be rejected — output MUST have non-zero byte length.
+  BEV-INV-016: BAR identifier MUST follow "BAR-{HEX16}" format for global uniqueness.
 
 Harold Nunes — OMNIX QUANTUM LTD — May 2026
 """
@@ -302,6 +304,10 @@ class BAREngine:
           VIOLATION — hard constraint breached (CCS watchdog triggered)
           HALTED    — session-halting constraint breached (BEV-INV-003)
         """
+        # BEV-INV-015: empty output is a VIOLATION
+        if not output_text or not output_text.strip():
+            return "VIOLATION", "BEV-INV-015: empty output_text rejected"
+
         if not constraint_set:
             return "VALID", None
 
@@ -439,13 +445,21 @@ class BAREngine:
             except Exception:
                 pqc_ok = False
 
+        # BEV-INV-016: identifier format check
+        id_ok = (
+            bar.bar_id.startswith("BAR-")
+            and len(bar.bar_id) == 20  # "BAR-" + 16 hex chars
+        )
+
         return {
             "bar_id": bar.bar_id,
             "content_hash_valid": hash_ok,
             "pqc_signature_valid": pqc_ok,
-            "fully_verified": hash_ok and (pqc_ok if bar.pqc_signature else True),
+            "identifier_valid": id_ok,
+            "fully_verified": hash_ok and id_ok and (pqc_ok if bar.pqc_signature else True),
             "bar_status": bar.bar_status,
             "bev_inv_002": hash_ok,
             "bev_inv_004": pqc_ok,
+            "bev_inv_016": id_ok,
             "atf_layer": "BEV-L6",
         }
