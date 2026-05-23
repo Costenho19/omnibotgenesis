@@ -15,7 +15,7 @@ Abstract
 
    This document specifies the Proactive Governance Layer (PGL) of the
    Agent Trust Fabric protocol — the fourth RFC in the ATF Open Standard
-   series and the capstone of the complete governance infrastructure.
+   series.  RFC-ATF-5 (Cognitive Governance Layer) extends this work.
 
    RFC-ATF-1 answered the identity and delegation question: who authorized
    this agent, with what authority, and can that be proved offline?
@@ -80,7 +80,8 @@ Abstract
 
    An implementation that complies with RFC-ATF-1, RFC-ATF-2, RFC-ATF-3,
    and RFC-ATF-4 is designated ATF-PGL-Compliant (Proactive Governance
-   Layer Compliant) — the highest compliance tier in the ATF stack.
+   Layer Compliant) — the fourth compliance tier in the ATF stack.
+   RFC-ATF-5 defines the fifth tier: ATF-CGL-Compliant.
 
 
 Status of This Memo
@@ -428,8 +429,12 @@ Table of Contents
    and RFC-ATF-3 §3 without redefinition.  Additional terms:
 
    Proactive Governance Layer (PGL):
-      The sixth operational layer of the ATF stack (L6), defined by this
-      document.  Comprises AGVP, SSD, and DSPP operating in concert.
+      The sixth operational layer of the ATF stack (L6) in the six-plane
+      model used throughout this document (L1–L6), defined by this RFC.
+      Comprises AGVP, SSD, and DSPP operating in concert.  RFC-ATF-5
+      presents a consolidated five-layer model in which RFC-ATF-1's three
+      sub-planes (L1/L2/L3) are treated as a single Layer 1; the PGL
+      maps to Layer 4 in that consolidated view.
 
    ProactiveVetoReceipt (PVR):
       An ML-DSA-65 signed, database-persisted governance artifact emitted
@@ -1322,7 +1327,9 @@ SSD-INV-003 — STRUCTURAL_SHIFT Requires Minimum History
    previous_spv_hash (string, REQUIRED):
       The spv_hash of the SPV prior to this change.
       For the initial SDR (baseline), this is the genesis sentinel:
-      "00000000000000000000000000000000000000000000000000000000000000000".
+      "0000000000000000000000000000000000000000000000000000000000000000".
+      (64 hexadecimal zeros — the SHA-256 length.  Implementations MUST
+      reject a genesis sentinel of any other length.)
 
    new_spv_hash (string, REQUIRED):
       The spv_hash of the updated SPV.
@@ -1665,9 +1672,14 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
    │       RC: Reauthorization Challenge
    │
    L2/L3 ─ Delegation and Verification Planes (RFC-ATF-1)
-           DR: Delegation Receipts
-           TL: Trust Lattice
-           Offline Verification (ATF-INV-006)
+   │       DR: Delegation Receipts
+   │       TL: Trust Lattice
+   │       Offline Verification (ATF-INV-006)
+   │
+   L1 ──── Identity Plane (RFC-ATF-1)
+           AIR: Agent Identity Records
+           ML-DSA-65 key registration
+           Immutable human-principal binding (ATF-INV-002)
 
 9.2.  Cross-Layer Integration Points
 
@@ -1837,11 +1849,14 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
          ↓ extends
       ATF-FEI-Compliant   (+ RFC-ATF-3)
          ↓ extends
-      ATF-PGL-Compliant   (+ RFC-ATF-4)   ← highest tier
+      ATF-PGL-Compliant   (+ RFC-ATF-4)   ← fourth tier
+         ↓ extends
+      ATF-CGL-Compliant   (+ RFC-ATF-5)   ← fifth tier [RFC-ATF-5]
 
    Each tier subsumes all lower tiers.  An ATF-PGL-Compliant
    implementation is necessarily ATF-FEI-Compliant, ATF-RGC-Compliant,
-   and ATF-Compliant.
+   and ATF-Compliant.  RFC-ATF-5 defines the fifth and highest tier,
+   ATF-CGL-Compliant, which subsumes ATF-PGL-Compliant.
 
 
 12.  Implementation Requirements
@@ -2026,9 +2041,10 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
    watchdog continues to see stale signals and may never observe
    drift recovery — holding the ACTIVE PVR indefinitely.
 
-   Mitigation: AGV-INV-001 ensures that blocked requests still update
-   cached signals (§5.4) — the signal update occurs before any block
-   check.  Even when every request is blocked, the signals are refreshed.
+   Mitigation: the Signal Telemetry Update Protocol (§5.4) ensures that
+   blocked requests still update cached signals — the update occurs before
+   any block check.  Even when every request is blocked, the signals are
+   refreshed.
    Implementations SHOULD configure a maximum signal staleness threshold
    (RECOMMENDED: 5 × watchdog_interval) beyond which the watchdog
    does not use cached signals for new PVR issuance.
@@ -2164,16 +2180,19 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
    the gap between reactive and proactive governance coverage in
    formal terms.
 
-14.6.  ATF-PGL-Compliant — Highest Tier Compliance Designation
+14.6.  ATF-PGL-Compliant — Fourth Compliance Tier
 
-   The ATF compliance hierarchy now spans four tiers:
+   The ATF compliance hierarchy spans five tiers:
    ATF-Compliant → ATF-RGC-Compliant → ATF-FEI-Compliant →
-   ATF-PGL-Compliant.
+   ATF-PGL-Compliant → ATF-CGL-Compliant (RFC-ATF-5).
 
    ATF-PGL-Compliant is the first compliance tier that addresses
    evidence between requests (AGVP), semantic legitimacy over time
-   (DSPP), and recalibration safety (SSD) — the three governance
-   properties that no prior tier addressed.
+   (DSPP), and recalibration safety (SSD) — the three proactive
+   governance properties that no prior tier addressed.  RFC-ATF-5
+   introduces ATF-CGL-Compliant, the fifth tier, addressing decision
+   space documentation (CGE), universal multi-jurisdiction certification
+   (GUGT), and longitudinal evidence interpretability (TGB).
 
 
 15.  Distinction from Prior Art
@@ -2296,8 +2315,7 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
       Babatunde, R.L., "VeriSigil Governance Specification (VGS-001 to
       VGS-011)", Version 0.7.2, May 2026.
       DOI: 10.5281/zenodo.20264923
-      [NOTE: DOI unverified — confirm resolves to Published record
-      before submission to Zenodo]
+      Published record — verified May 2026.
 
    [ADR-076]
       Nunes, H., "Assumption Validity Monitor (AVM)",
