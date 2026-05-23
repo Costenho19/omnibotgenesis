@@ -1,24 +1,24 @@
 {
-  "snapshot_id": "AVM-D30F14F41F",
-  "parameter_version": "1.d30f14f41f",
+  "snapshot_id": "AVM-99502111D3",
+  "parameter_version": "1.99502111d3",
   "domain": "insurance",
+  "calibrated_at": "2026-05-23T09:28:02.611132+00:00",
+  "calibrated_at_epoch": 1779528482.611132,
   "baseline_signals": {
-    "risk_exposure": 19.64,
-    "signal_coherence": 77.29,
-    "logic_consistency": 63.27,
-    "probability_score": 72.06,
-    "stress_resilience": 78.75,
-    "trend_persistence": 37.72
+    "probability_score": 80.09,
+    "risk_exposure": 46.27,
+    "signal_coherence": 88.55,
+    "trend_persistence": 47.24,
+    "stress_resilience": 64.91,
+    "logic_consistency": 63.79
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=294h>=72h",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=78h>=72h",
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_9.3"
-  ],
-  "calibrated_at": "2026-05-20T03:01:55.361540+00:00",
-  "calibrated_at_epoch": 1779246115.36154
+    "prev_drift_15.3"
+  ]
 }

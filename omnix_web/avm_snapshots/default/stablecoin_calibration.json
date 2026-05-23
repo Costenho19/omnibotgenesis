@@ -1,14 +1,16 @@
 {
-  "snapshot_id": "AVM-3073FDF6CF",
-  "parameter_version": "1.3073fdf6cf",
+  "snapshot_id": "AVM-95D02B8453",
+  "parameter_version": "1.95d02b8453",
   "domain": "stablecoin",
+  "calibrated_at": "2026-05-23T09:28:10.413306+00:00",
+  "calibrated_at_epoch": 1779528490.413306,
   "baseline_signals": {
-    "risk_exposure": 35.28,
-    "signal_coherence": 90.73,
-    "logic_consistency": 66.35,
-    "probability_score": 81.04,
-    "stress_resilience": 55.82,
-    "trend_persistence": 71.29
+    "probability_score": 81.98,
+    "risk_exposure": 7.99,
+    "signal_coherence": 76.04,
+    "trend_persistence": 65.11,
+    "stress_resilience": 60.85,
+    "logic_consistency": 67.93
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -17,8 +19,6 @@
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_11.4"
-  ],
-  "calibrated_at": "2026-05-20T08:36:27.032524+00:00",
-  "calibrated_at_epoch": 1779266187.032524
+    "prev_drift_10.8"
+  ]
 }
