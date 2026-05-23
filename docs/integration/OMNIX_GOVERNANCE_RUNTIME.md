@@ -1,11 +1,12 @@
 # OMNIX Governance Runtime
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Compliance tier:** ATF-BEV-Compliant (highest)  
 **PQC algorithm:** ML-DSA-65 (Dilithium-3, FIPS 204)  
 **Issuer:** OMNIX QUANTUM LTD · Harold Nunes · UAE/UK  
-**ADR:** [ADR-184](../adr/ADR-184-omnix-gov33ernance-runtime.md)  
-**Standards:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · RFC-ATF-4 · RFC-ATF-5 · RFC-ATF-6
+**ADR:** [ADR-184](../adr/ADR-184-omnix-governance-runtime.md) · [ADR-185](../adr/ADR-185-ogr-bev-security-hardening.md)  
+**Standards:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · RFC-ATF-4 · RFC-ATF-5 · RFC-ATF-6  
+**Audit status:** Post-audit hardened — 267/267 tests passing
 
 ---
 
@@ -287,7 +288,7 @@ assert hashlib.sha3_256(canonical.encode()).hexdigest() == bar["content_hash"]
 
 # Verify CTCHC chain walk
 prev = chain["genesis_hash"]
-for link in sorted(links, key=lambda x: x["turn_in dex"]):
+for link in sorted(links, key=lambda x: x["turn_index"]):
     payload = json.dumps({
         "prev": prev,
         "turn": link["turn_hash"],
@@ -316,6 +317,106 @@ for link in sorted(links, key=lambda x: x["turn_in dex"]):
 
 ---
 
-*OMNIX Governance Runtime v1.0.0 · OMNIX QUANTUM LTD · Harold Nunes · May 2026*  
-*ADR-184 · RFC-ATF-1 through RFC-ATF-6*
+## Full Invariant Registry — BEV + OGR
+
+The compliance report (`GET /v1/govern/compliance/{id}`) evaluates every invariant
+below per-session. All 19 must pass for `overall_pass: true`.
+
+### Behavioral Anchor Record (BAR) — ADR-181
+
+| Invariant    | Description |
+|-------------|-------------|
+| `BEV-INV-001` | Every governed turn produces a BAR **before** the output is delivered |
+| `BEV-INV-002` | `content_hash = SHA3-256(output_hash ‖ receipt_id ‖ turn_index)` |
+| `BEV-INV-003` | A HALTED BAR immediately halts the session; session enters forensic state |
+| `BEV-INV-004` | Every BAR is verifiable offline — all inputs are embedded in the artifact |
+| `BEV-INV-015` | Empty `output_text` → BAR status `VIOLATION` (no silent outputs allowed) |
+| `BEV-INV-016` | BAR identifier MUST follow the `BAR-{HEX16}` canonical format |
+
+### Constraint Conformance Signal (CCS) — ADR-182
+
+| Invariant    | Description |
+|-------------|-------------|
+| `BEV-INV-005` | Every BAR produces a CCS in the same atomic step |
+| `BEV-INV-006` | Conformance score ∈ [0.0, 1.0] — never outside this range |
+| `BEV-INV-007` | Verdict `CRITICAL` → AGVP watchdog triggered |
+| `BEV-INV-008` | Cumulative drift > threshold → verdict `HALT` (default threshold: 35%) |
+| `BEV-INV-009` | CCS history is append-only and hash-linked per session |
+| `BEV-INV-017` | Drift accumulator is isolated per `session_id` and preserved across process restarts |
+
+### Cross-Turn Coherence Hash Chain (CTCHC) — ADR-183
+
+| Invariant    | Description |
+|-------------|-------------|
+| `BEV-INV-010` | Chain is initialized (genesis block) before the first BAR is created |
+| `BEV-INV-011` | `link[n] = SHA3-256(link[n-1] ‖ turn_hash ‖ receipt_id)` |
+| `BEV-INV-012` | Gaps in turn sequence → chain verification fails |
+| `BEV-INV-013` | Seal covers the complete chain (all links from genesis to tip) |
+| `BEV-INV-014` | Seal is ML-DSA-65 signed before any OEP export |
+| `BEV-INV-018` | Every link's `receipt_id` MUST match the chain's governing receipt |
+
+### OGR Orchestrator — ADR-184
+
+| Invariant    | Description |
+|-------------|-------------|
+| `OGR-INV-001` | A session MUST activate all 6 ATF layers simultaneously — partial activation is not ATF-BEV-Compliant |
+
+---
+
+## Security Hardening Notes
+
+This section documents security properties that were validated during the
+post-deployment audit (ADR-185) and are now permanently enforced.
+
+### Cache Coherence Guarantee
+
+> Any code path that mutates persisted state also reflects that mutation in the
+> corresponding in-process cache entry.
+
+This is a correctness requirement, not a performance note. Omitting a cache
+write-back is a bug that produces stale state (incorrect `session_status`,
+`chain_sealed`, `turn_count`) visible to callers between the DB commit and the
+next process restart. All three cache write-backs (session cache, chain cache,
+links cache) are now enforced after every state-mutating operation.
+
+### No-DB Operation
+
+The full OGR session lifecycle — `session/start` → `session/{id}/turn` (N times)
+→ `session/{id}/close` → `session/{id}/proof` — is fully functional without a
+`DATABASE_URL`. The CTCHC engine maintains `_chain_cache` and `_links_cache`
+in memory; the CCS engine maintains `_drift_cache`; the session cache maintains
+`_session_cache`. All caches are write-through: data is written to both memory
+and the DB whenever a DB connection is available.
+
+This makes the runtime safe for:
+- Automated test suites (no DB setup required)
+- Python SDK integration testing
+- Sandbox/demo environments
+- Short-lived single-process deployments
+
+For production multi-dyno deployments: use `DATABASE_URL`. The in-memory caches
+are per-process and do not survive restart or cross-dyno routing.
+
+### Input Validation at API Boundary
+
+All query parameters are validated before reaching the database layer:
+- `GET /v1/govern/sessions?status=X` — `X` must be one of `ACTIVE`, `CLOSED`,
+  `HALTED`, `EXPIRED`. Invalid values return HTTP 400.
+- `POST /v1/govern/verify?artifact_type=X` — `X` must be one of `BAR`, `CTCHC`,
+  `SESSION`. CCS is not offline-verifiable; it requires DB access and is
+  available through `GET /v1/govern/compliance/{id}` instead.
+
+### Offline Verification Scope
+
+| Artifact | Offline verifiable | Method |
+|----------|--------------------|--------|
+| BAR      | ✅ Yes              | `SHA3-256(canonical_fields) == content_hash` |
+| CTCHC    | ✅ Yes              | Walk the chain: `H(prev ‖ turn ‖ receipt) == link_hash` for each link |
+| SESSION  | ✅ Yes              | `OGR-INV-001` check + `chain_sealed` flag |
+| CCS      | ❌ No               | Use `GET /v1/govern/compliance/{id}` (DB read) |
+
+---
+
+*OMNIX Governance Runtime v1.1.0 · OMNIX QUANTUM LTD · Harold Nunes · May 2026*  
+*ADR-184 (amended by ADR-185) · RFC-ATF-1 through RFC-ATF-6*
  

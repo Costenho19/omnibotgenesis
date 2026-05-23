@@ -262,7 +262,40 @@ print(f"Compliance: {report['overall_pass']} — {report['compliance_tier']}")
 | `Session is not ACTIVE`              | Halted or closed session               | Start a new session                        |
 | `Chain not initialized`              | Bug: turn before start                 | Always call start before turn              |
 | `should_halt: true`                  | Policy violation in output             | Do not deliver output. Log halt_reason.    |
+| `Invalid status value`               | `?status=` param not in allowlist      | Use one of: `ACTIVE`, `CLOSED`, `HALTED`, `EXPIRED` |
 
 ---
 
-*OMNIX Governance Runtime Getting Started · v1.0.0 · OMNIX QUANTUM LTD · May 2026*
+## Security and Correctness Guarantees
+
+The OGR has been through a structured post-deployment audit (ADR-185).
+The following guarantees hold unconditionally:
+
+**1. Full lifecycle works without a database.**  
+The engines maintain in-memory caches (`_chain_cache`, `_links_cache`,
+`_drift_cache`, `_session_cache`). You can run start → turn(s) → close → proof
+with no `DATABASE_URL` — all results are correct. Use `DATABASE_URL` in
+production for persistence across restarts.
+
+**2. `turn_count` is always accurate.**  
+The session object tracks `turn_count` incrementally on every `record_turn()`
+call. It is never recomputed from a DB query. The `close_session` and `get_proof`
+responses both read from this value.
+
+**3. `get_session()` reflects closed/halted state immediately.**  
+Cache is updated synchronously after every state-mutating operation — no
+window where a caller sees stale `ACTIVE` status after a close.
+
+**4. `overall_pass: true` in the compliance report is trustworthy.**  
+It gates on all 19 invariants: 18 BEV (INV-001–018) and OGR-INV-001. No
+invariant is silently excluded.
+
+**5. All input parameters are validated at the API boundary.**  
+`?status=`, `?artifact_type=`, and all required JSON body fields are validated
+before reaching any engine. Invalid inputs return HTTP 400 with a descriptive
+error — never silent wrong-output.
+
+---
+
+*OMNIX Governance Runtime Getting Started · v1.1.0 · OMNIX QUANTUM LTD · May 2026*  
+*ADR-184 (amended by ADR-185) · RFC-ATF-1 through RFC-ATF-6*

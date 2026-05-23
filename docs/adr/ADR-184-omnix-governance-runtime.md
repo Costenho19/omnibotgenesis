@@ -5,6 +5,7 @@
 **Date:** 2026-05-23  
 **Supersedes:** —  
 **Related:** ADR-156, ADR-157, ADR-158, ADR-159, ADR-173, ADR-174, ADR-181, ADR-182, ADR-183  
+**Amended by:** [ADR-185](ADR-185-ogr-bev-security-hardening.md) — Post-Audit Security Hardening  
 **RFC:** RFC-ATF-1 through RFC-ATF-6 (all six)
 
 ---
@@ -144,9 +145,17 @@ All tables use `CREATE TABLE IF NOT EXISTS` — created automatically on first r
 ### Negative / Mitigations
 - Adds five new DB tables. Mitigated: auto-created, all indexed.
 - CTCHC `_tip_cache` is in-process memory; multi-dyno deployments should ensure
-  session affinity or use DB tip loading (implemented as fallback).
+  session affinity or use DB tip loading (implemented as fallback). The full
+  `CoherenceHashChain` object and per-turn `ChainLink` list are also cached
+  in `_chain_cache` / `_links_cache` so the entire session lifecycle works
+  correctly even without `DATABASE_URL` (see ADR-185, Finding R3-F1).
 - `verify_artifact` for CCS requires DB access; true offline verification is only
-  supported for BAR and CTCHC which embed all necessary fields in the artifact.
+  supported for BAR, CTCHC, and SESSION types which embed all necessary fields.
+  The docstring and error message have been corrected to reflect this (ADR-185,
+  Finding R2-F1).
+- Cache coherence is a correctness requirement: any code path that mutates
+  persisted state must also update the corresponding in-process cache entry.
+  See ADR-185 for the full list of cache write-back fixes applied.
 
 ---
 
@@ -163,4 +172,20 @@ The designation requires:
 
 ---
 
-*ADR-184 · OMNIX QUANTUM LTD · Harold Nunes · May 2026*
+---
+
+## Post-Audit Status
+
+A structured three-round security and correctness audit was conducted after
+initial deployment. 15 bugs were identified and resolved across the OGR
+orchestrator, BEV engines, REST API blueprint, and integration documentation.
+
+Full audit findings, root cause analysis, and test coverage added are recorded
+in [ADR-185 — OGR + BEV Post-Audit Security Hardening](ADR-185-ogr-bev-security-hardening.md).
+
+**Test suite after ADR-185:** 267/267 passing.
+
+---
+
+*ADR-184 · OMNIX QUANTUM LTD · Harold Nunes · May 2026*  
+*Amended by ADR-185 · 2026-05-23*
