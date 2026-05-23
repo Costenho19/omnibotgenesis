@@ -138,6 +138,47 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 
 ---
 
+---
+
+## Pipeline de Patentes — RFC-ATF-1 a RFC-ATF-6
+
+Cada RFC introduce conceptos novedosos patentables. Mantener este registro actualizado para futuras solicitudes de patente.
+
+### RFC-ATF-1 (publicado)
+- Monotonic Authority Reduction (MAR) — reducción jerárquica de autoridad con prueba Z3
+- Agent Identity Record (AIR) — vinculación inmutable agente-humano con firma PQC
+- Offline-verifiable governance receipts (ATF-INV-006)
+
+### RFC-ATF-2 (publicado)
+- Runtime Continuity Record (RCR) — continuidad de autoridad en tiempo real con attestation PQC
+- Authority Fragmentation Guard (AFG) — prevención de fragmentación de autoridad
+- Reauthorization Challenge (RC) — mecanismo de reautorización con HALT propagation
+
+### RFC-ATF-3 (publicado)
+- Governance Policy Interoperability Layer (GPIL) — contratos de interoperabilidad cross-dominio
+- COLD/WARM/HOT evidence lifecycle classification
+- OMNIX Evidence Package (OEP) — formato forense sellado con hash chain
+
+### RFC-ATF-4 (pendiente Zenodo — domingo)
+- Anticipatory Governance Veto Receipt (PVR) — primer artefacto de gobernanza proactiva firmado antes de que llegue la solicitud
+- Component Rank Stability Index (CRSI) — métrica continua de estabilidad topológica de señales
+- DSPP Retroactive Semantic Assessment (RSA) — portabilidad semántica O(1) sin negociación bilateral
+- Dual-methodology formal verification (Z3 + TLA+) sobre el mismo stack de protocolo
+
+### RFC-ATF-5 (pendiente Zenodo — jueves)
+- Counterfactual Governance Engine (CGE) — documentación del espacio de decisión con alternativas contrafactuales firmadas
+- Grand Unified Governance Theory (GUGT) — certificación multi-jurisdicción universal
+- Temporal Governance Bridge (TGB) — interpretabilidad longitudinal de evidencia
+
+### RFC-ATF-6 — Behavioral Execution Verification Protocol (a diseñar)
+Conceptos nuevos identificados en sesión 23 mayo 2026 — ninguno existe como estándar publicado:
+- **Behavioral Anchor Record (BAR):** registro firmado PQC de los outputs reales del modelo durante ejecución, vinculado criptográficamente al receipt de gobernanza que autorizó la acción. Los ingredientes (ML monitoring, output logging) existen; la combinación con firma PQC + receipt linkage es nueva.
+- **Constraint Conformance Signal (CCS):** señal continua que mide si los outputs del modelo se mantienen dentro de los límites definidos en el receipt de gobernanza, diseñada para alimentar el AGVP watchdog y permitir emisión de PVRs conductuales anticipatorios. El concepto de señal de drift existe; la integración arquitectónica con AGVP es nueva.
+- **Cross-Turn Coherence Hash Chain:** cadena de hashes turno a turno de los outputs del modelo en interacciones multi-turno, vinculada al receipt de gobernanza de la sesión para verificación forense post-hoc. Los audit log hash chains existen; el vínculo con governance receipts para verificación forense de comportamiento es nuevo.
+- Fundamento existente en OMNIX: ADR-131 (Execution Integrity Layer) + ADR-155 (Chain Completeness Score) son la base sobre la que construiría RFC-ATF-6.
+
+---
+
 ## User Preferences
 
 - Siempre responder a Harold en español.
