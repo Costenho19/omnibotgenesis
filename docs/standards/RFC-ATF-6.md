@@ -57,7 +57,7 @@ Abstract
        what the agent actually produced.
 
    (2) The Constraint Conformance Signal (CCS) is a continuous,
-       multi-component metric [0.0, 100.0] computed per BAR, measuring
+       conformance_score in [0.0, 1.0] computed per BAR, measuring
        how closely the agent's actual outputs conformed to the
        constraint boundaries defined in its governing receipt.  The CCS
        is integrated with the Anticipatory Governance Veto Protocol
@@ -585,9 +585,10 @@ Table of Contents
       A unique string of the form BEV-SESSION-{16HEX}.
 
    Constraint Conformance Signal (CCS):
-      A multi-component numerical score in [0.0, 100.0] computed
-      per execution turn, measuring how closely the turn's behavioral
-      output conforms to the Constraint Vector of the Governing
+      A conformance_score in [0.0, 1.0] computed per execution turn
+      (drift_delta = 1.0 - conformance_score), measuring how closely
+      the turn's behavioral output conforms to the Constraint Vector
+      of the Governing
       Receipt.  The CCS is embedded in every BAR and feeds into the
       AGVP watchdog.
 
@@ -795,8 +796,8 @@ Table of Contents
       3. Compute CCS score from BO and CV (if CCS_ENABLED).
       4. Compute chain_link from previous chain_link and turn_hash(n).
       5. Assemble BAR (all fields including ccs_score and chain_link).
-      6. Compute content_hash_bar.
-      7. Compute pqc_signature over content_hash_bar.
+      6. Compute content_hash.
+      7. Compute pqc_signature over content_hash.
       8. Persist BAR to atf_behavioral_anchor_records.
 
    Steps 3-4 MUST complete before step 5.  Step 8 MUST complete
@@ -902,9 +903,9 @@ Table of Contents
          domain_specific_constraints (object): Any additional
             domain-specific constraint fields declared at delegation.
 
-   ccs_score (number, REQUIRED):
-      Embedded Constraint Conformance Signal score for this turn.
-      Range: [0.0, 100.0].  Computed as specified in §6.3.
+   conformance_score (number, REQUIRED):
+      Embedded CCS conformance score for this turn.
+      Range: [0.0, 1.0]; drift_delta = 1.0 - conformance_score.  See §6.3.
       A value of -1.0 indicates CCS computation was not attempted
       (valid only when CCS_ENABLED=false).
 
@@ -950,14 +951,14 @@ Table of Contents
       bar_timestamp_ns.
       Format: YYYY-MM-DDTHH:MM:SS.nnnnnnnnn+00:00
 
-   content_hash_bar (string, REQUIRED):
+   content_hash (string, REQUIRED):
       SHA-256 hex digest of the canonical JSON of all BAR fields
-      except {content_hash_bar, pqc_signature, pqc_algorithm}.
+      except {content_hash, pqc_signature, pqc_algorithm}.
       Computation defined in §5.3.
 
    pqc_signature (string, REQUIRED):
       Base64-encoded Dilithium-3 (ML-DSA-65, FIPS 204) signature
-      over content_hash_bar.encode("utf-8"), signed with the
+      over content_hash.encode("utf-8"), signed with the
       platform ML-DSA-65 key.
 
    pqc_algorithm (string, REQUIRED):
@@ -968,10 +969,10 @@ Table of Contents
 
 5.3.  BAR Content Hash Construction
 
-   The content_hash_bar MUST be computed as follows:
+   The content_hash MUST be computed as follows:
 
    1. Construct a JSON object containing all fields of the BAR
-      EXCEPT: content_hash_bar, pqc_signature, pqc_algorithm.
+      EXCEPT: content_hash, pqc_signature, pqc_algorithm.
 
    2. Serialize to canonical JSON:
          json.dumps(obj, sort_keys=True, separators=(",", ":"))
@@ -988,7 +989,7 @@ Table of Contents
    places minimum.
 
    The output_payload field, when present (FULL mode), MUST be
-   included in the content_hash_bar computation as its canonical JSON
+   included in the content_hash computation as its canonical JSON
    form.  This ensures the output payload is tamper-evident.
 
 5.4.  BAR PQC Signature
@@ -997,7 +998,7 @@ Table of Contents
 
       pqc_signature = base64.b64encode(
           dilithium3.sign(
-              content_hash_bar.encode("utf-8"),
+              content_hash.encode("utf-8"),
               platform_secret_key
           )
       ).decode("ascii")
@@ -1011,7 +1012,7 @@ Table of Contents
    BAR verification proceeds as:
 
       dilithium3.verify(
-          content_hash_bar.encode("utf-8"),
+          content_hash.encode("utf-8"),
           base64.b64decode(pqc_signature),
           platform_public_key
       )
@@ -1027,7 +1028,7 @@ Table of Contents
 
    FULL mode:
       The complete output_payload is stored in the BAR record.
-      output_hash = SHA-256(canonical(output_payload).encode("utf-8"))
+      output_hash = SHA3-256(output_text.encode("utf-8"))
       Use: development environments, sessions where output content
       must be available for forensic review, sessions where output
       is non-sensitive.
@@ -1038,8 +1039,8 @@ Table of Contents
    HASHED mode (recommended for production):
       Only output_hash is stored.  output_payload is absent from
       the BAR record.
-      output_hash = SHA-256(canonical(output_payload).encode("utf-8"))
-      The canonical representation is computed by the BEV runtime
+      output_hash = SHA3-256(output_text.encode("utf-8"))
+      The hash is computed by the BEV runtime
       and discarded after hash computation.
       Use: production environments, sensitive outputs, GDPR-subject
       data.  Verification requires the original output to recompute
@@ -1111,12 +1112,12 @@ Table of Contents
 
    Step 1 — Content hash verification:
       Reconstruct the canonical JSON of all BAR fields except
-      {content_hash_bar, pqc_signature, pqc_algorithm}.
-      Compute SHA-256.  Compare to content_hash_bar.
+      {content_hash, pqc_signature, pqc_algorithm}.
+      Compute SHA-256.  Compare to content_hash.
       Failure: BAR content has been tampered.
 
    Step 2 — PQC signature verification:
-      Verify pqc_signature over content_hash_bar.encode("utf-8")
+      Verify pqc_signature over content_hash.encode("utf-8")
       using the platform ML-DSA-65 public key.
       Failure: BAR was not produced by the platform keyholder.
 
@@ -1379,9 +1380,9 @@ BEV-INV-016 — BAR Identifier Format
 
    CCS Score:
 
-      ccs_score = OBS + CSS + SDS + AAS
-      Range: [0.0, 100.0]
-      (Guaranteed by BEV-INV-006 and the component bounds above)
+      conformance_score ∈ [0.0, 1.0]
+      drift_delta = 1.0 - conformance_score
+      (Guaranteed by BEV-INV-006)
 
 6.3.  CCS Computation Protocol
 
@@ -1427,10 +1428,10 @@ BEV-INV-016 — BAR Identifier Format
 
    Step 7 — CCS embedding:
       Populate BAR.ccs_score, BAR.ccs_verdict, BAR.ccs_components
-      before content_hash_bar computation.
+      before content_hash computation.
 
-   The CCS MUST be computed and embedded before content_hash_bar
-   is computed (§4.4 step ordering).  A BAR whose content_hash_bar
+   The CCS MUST be computed and embedded before content_hash
+   is computed (§4.4 step ordering).  A BAR whose content_hash
    was computed before CCS embedding violates BEV-INV-009.
 
 6.4.  CCS Verdicts and Thresholds
@@ -1513,7 +1514,7 @@ BEV-INV-016 — BAR Identifier Format
    This design ensures:
 
    1. The CCS is tamper-evident: modifying ccs_score or
-      ccs_components after BAR sealing produces a content_hash_bar
+      ccs_components after BAR sealing produces a content_hash
       mismatch (BEV-INV-009).
 
    2. The CCS is co-located with the behavioral attestation: a BAR
@@ -1767,16 +1768,16 @@ BEV-INV-017 — Drift Accumulator Isolated per Session
       Fields include: ctchc_id, session_id, governing_receipt_id,
       genesis_hash, final_chain_hash, turn_count, session_start_ns,
       session_close_ns, all_bar_ids (ordered by turn_index),
-      content_hash_ctchc.
+      seal_hash.
 
    Step 3 — Content hash computation:
-      content_hash_ctchc = SHA-256(canonical_json(CTCHC record
-          excluding content_hash_ctchc and ctchc_seal))
+      seal_hash = SHA3-256(seal_payload(CTCHC record
+          excluding seal fields))
 
    Step 4 — CTCHC seal computation:
       ctchc_seal = base64.b64encode(
           dilithium3.sign(
-              content_hash_ctchc.encode("utf-8"),
+              seal_hash.encode("utf-8"),
               platform_secret_key
           )
       )
@@ -1794,16 +1795,16 @@ BEV-INV-017 — Drift Accumulator Isolated per Session
    Any party possessing the following may independently verify a
    completed BEV Session:
    1. The CTCHC record (ctchc_id, genesis_hash, final_chain_hash,
-      all_bar_ids, ctchc_seal, content_hash_ctchc).
+      all_bar_ids, ctchc_seal, seal_hash).
    2. All BAR records for the session, ordered by turn_index.
    3. The OMNIX platform ML-DSA-65 public key.
 
    Verification procedure:
 
    Step 1 — CTCHC record integrity:
-      Verify ctchc_seal over content_hash_ctchc using the platform
+      Verify ctchc_seal over seal_hash using the platform
       public key.
-      Recompute content_hash_ctchc from the CTCHC record.
+      Recompute seal_hash from the CTCHC record.
       Compare.  Failure: CTCHC record tampered.
 
    Step 2 — BAR completeness:
@@ -1994,10 +1995,10 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
          SHA-256 collision resistance: structural property
 
    CCS arithmetic properties:
-      BEV-FVS-003: CCS score bounds
-         OBS ∈ [0,40] ∧ CSS ∈ [0,30] ∧ SDS ∈ [0,20] ∧ AAS ∈ {0,10}
-         IMPLIES ccs_score ∈ [0.0, 100.0]
-         (bounded linear arithmetic over reals)
+      BEV-FVS-003: CCS conformance score bounds
+         conformance_score = clamp(raw_score, 0.0, 1.0)
+         IMPLIES conformance_score ∈ [0.0, 1.0]
+         (bounded real arithmetic)
       BEV-FVS-004: CCS component non-negativity
          max(0, base - deductions) >= 0 for all components
          (follows from max(0, ·) semantics)
@@ -2049,8 +2050,8 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
    s.add(sds >= 0, sds <= 20)
    s.add(And(Or(aas == 0, aas == 10)))
    ccs = obs + css + sds + aas
-   # Claim: ccs is always in [0.0, 100.0]
-   s.add(Or(ccs < 0, ccs > 100))
+   # Claim: conformance_score is always in [0.0, 1.0]
+   s.add(Or(ccs < 0, ccs > 1))
    assert s.check() == unsat  # no violation possible
 
    BEV-FVS-004 — CCS Component Non-Negativity:
@@ -2110,7 +2111,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
    │  3. CCS computed from BO and CV (if CCS_ENABLED)            │
    │  4. chain_link computed from prior link and turn_hash        │
    │  5. BAR assembled (all fields including ccs, chain_link)     │
-   │  6. content_hash_bar computed                               │
+   │  6. content_hash computed                               │
    │  7. pqc_signature computed                                  │
    │  8. BAR persisted to atf_behavioral_anchor_records          │
    └──────────────────────────────────────────────────────────────┘
@@ -2127,7 +2128,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
    ┌──────────────────────────────────────────────────────────────┐
    │ 12. CTCHC final chain hash extracted from last BAR          │
    │ 13. CTCHC record assembled                                  │
-   │ 14. content_hash_ctchc computed                             │
+   │ 14. seal_hash computed                             │
    │ 15. ctchc_seal computed                                     │
    │ 16. CTCHC persisted to atf_coherence_hash_chains            │
    │ 17. All session BARs transition to SEALED state             │
@@ -2336,9 +2337,9 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
 12.2.  CCS Requirements
 
    REQUIRED:
-   R-CCS-01: CCS computation MUST complete before content_hash_bar
+   R-CCS-01: CCS computation MUST complete before content_hash
       is computed (§4.4 step ordering).
-   R-CCS-02: ccs_score MUST be in [0.0, 100.0] for all non-REDACTED
+   R-CCS-02: conformance_score MUST be in [0.0, 1.0] for all non-REDACTED
       BARs when CCS_ENABLED=true (BEV-INV-006).
    R-CCS-03: ccs_verdict MUST be consistent with ccs_score per
       §6.4 threshold table.
@@ -2356,7 +2357,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
    NOT PERMITTED:
    R-CCS-08: CCS threshold environment variables MUST NOT be set
       below production floors defined in §6.4.
-   R-CCS-09: ccs_score MUST NOT be modified after content_hash_bar
+   R-CCS-09: ccs_score MUST NOT be modified after content_hash
       computation (BEV-INV-009).
 
 12.3.  CTCHC Requirements
@@ -2369,7 +2370,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
    R-CTCHC-03: CTCHC MUST be sealed at session close using the
       §7.4 procedure.
    R-CTCHC-04: ctchc_seal MUST use ML-DSA-65 over
-      content_hash_ctchc (BEV-INV-014).
+      seal_hash (BEV-INV-014).
    R-CTCHC-05: CV.turn_limit MUST NOT exceed 100_000 turns per
       session.  Sessions exceeding this limit MUST be split into
       sub-sessions with separate governing receipts.
@@ -2410,7 +2411,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
        session_start_ns          BIGINT,
        bar_timestamp_ns          BIGINT           NOT NULL DEFAULT 0,
        issued_at                 TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-       content_hash_bar          VARCHAR(64)      NOT NULL DEFAULT '',
+       content_hash          VARCHAR(64)      NOT NULL DEFAULT '',
        pqc_signature             TEXT             NOT NULL DEFAULT '',
        pqc_algorithm             VARCHAR(32)      NOT NULL
                                      DEFAULT 'ML-DSA-65',
@@ -2490,7 +2491,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
                                      DEFAULT 'BEV-COMPLETE',
        failure_turn_index        INTEGER,
        failure_reason            TEXT             NOT NULL DEFAULT '',
-       content_hash_ctchc        VARCHAR(64)      NOT NULL DEFAULT '',
+       seal_hash        VARCHAR(64)      NOT NULL DEFAULT '',
        ctchc_seal                TEXT             NOT NULL DEFAULT '',
        pqc_algorithm             VARCHAR(32)      NOT NULL
                                      DEFAULT 'ML-DSA-65',
@@ -2530,7 +2531,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
       Request: { session_id, turn_index, output_hash or
                  output_payload (if FULL mode), ccs_inputs? }
       Response: { bar_id, ccs_score, ccs_verdict, chain_link,
-                  content_hash_bar, pqc_signature }
+                  content_hash, pqc_signature }
 
    GET /v1/bev/bar/{bar_id}
       Retrieves a BAR record by ID.
@@ -2579,14 +2580,14 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
    the agent's actual behavioral output.
 
    Mitigation:
-   - BEV-INV-002: output_hash is covered by content_hash_bar.
-     Modifying output_hash invalidates content_hash_bar and
+   - BEV-INV-002: output_hash is covered by content_hash.
+     Modifying output_hash invalidates content_hash and
      thereby invalidates pqc_signature.
    - BEV-INV-004 (offline verifiability): any verifier can detect
-     the substitution by recomputing content_hash_bar from the
+     the substitution by recomputing content_hash from the
      BAR JSON and comparing to the signed value.
    - In FULL mode: the output_payload is also covered by
-     content_hash_bar, enabling direct verification.
+     content_hash, enabling direct verification.
 
 15.2.  BAR Fabrication Attack
 
@@ -2610,7 +2611,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
 
    Mitigation:
    - BEV-INV-009 (CCS integrity via BAR seal): ccs_score is
-     covered by content_hash_bar and pqc_signature.  Modification
+     covered by content_hash and pqc_signature.  Modification
      produces a signature verification failure.
    - BEV-INV-007 (DRIFTING triggers AGVP PVR): the CCS computation
      runs before BAR sealing, and the PVR issuance is triggered
@@ -2646,7 +2647,7 @@ BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
    - BEV-INV-010: genesis_hash is computed from the governing
      receipt ID and session ID.  A substituted genesis hash produces
      a chain verification failure at Step 4 of §7.5.
-   - genesis_hash is embedded in CTCHC.content_hash_ctchc, which is
+   - genesis_hash is embedded in CTCHC.seal_hash, which is
      covered by ctchc_seal.  Modifying genesis_hash after sealing
      invalidates ctchc_seal.
 
@@ -3044,16 +3045,16 @@ A.1  BAR Wire Format (normative field reference)
    | output_hash_mode       | string  | REQUIRED  | FULL | HASHED | REDACTED            |
    | output_payload         | any     | COND.     | Required when mode = FULL           |
    | constraint_vector      | object  | REQUIRED  | See §5.2 constraint_vector fields   |
-   | ccs_score              | number  | REQUIRED  | [0.0, 100.0] or -1.0 (NO_DATA)      |
-   | ccs_verdict            | string  | REQUIRED  | CONFORMANT|DRIFTING|BREACH|         |
-   |                        |         |           | VIOLATION|NO_DATA                  |
+   | conformance_score      | number  | REQUIRED  | [0.0, 1.0] or -1.0 (NO_DATA)        |
+   | ccs_verdict            | string  | REQUIRED  | CONFORMANT|WARNING|CRITICAL|HALT|    |
+   |                        |         |           | NO_DATA                             |
    | ccs_components         | object  | COND.     | Required when CCS_ENABLED           |
    | chain_link             | string  | REQUIRED  | 64 lowercase hex (SHA-256)          |
    | genesis_hash           | string  | COND.     | Required in turn_index=0 BAR only   |
    | session_start_ns       | integer | COND.     | Required in turn_index=0 BAR only   |
    | bar_timestamp_ns       | integer | REQUIRED  | Nanosecond epoch; > 0               |
    | issued_at              | string  | REQUIRED  | ISO-8601-UTC, nanosecond precision  |
-   | content_hash_bar       | string  | REQUIRED  | 64 lowercase hex                    |
+   | content_hash       | string  | REQUIRED  | 64 lowercase hex                    |
    | pqc_signature          | string  | REQUIRED  | ML-DSA-65 sig, base64               |
    | pqc_algorithm          | string  | REQUIRED  | MUST be "ML-DSA-65"                 |
    | atf_spec_version       | string  | REQUIRED  | MUST be "1.6"                       |
@@ -3087,7 +3088,7 @@ A.1  BAR Wire Format (normative field reference)
      "session_start_ns":     1748000000000000000,
      "bar_timestamp_ns":     1748000001500000000,
      "issued_at":            "2026-05-23T14:00:01.500000000+00:00",
-     "content_hash_bar":     "d4e5f6a7b8c9...64chars",
+     "content_hash":     "d4e5f6a7b8c9...64chars",
      "pqc_signature":        "<base64-ML-DSA-65-sig>",
      "pqc_algorithm":        "ML-DSA-65",
      "atf_spec_version":     "1.6"
@@ -3109,7 +3110,7 @@ A.2  CTCHC Wire Format (normative field reference)
    | session_status         | string   | REQUIRED | BEV-COMPLETE|BEV-INCOMPLETE|...    |
    | failure_turn_index     | integer  | OPTIONAL | Present when status != COMPLETE    |
    | failure_reason         | string   | OPTIONAL | Present when status != COMPLETE    |
-   | content_hash_ctchc     | string   | REQUIRED | 64 lowercase hex                   |
+   | seal_hash     | string   | REQUIRED | 64 lowercase hex                   |
    | ctchc_seal             | string   | REQUIRED | ML-DSA-65 sig, base64              |
    | pqc_algorithm          | string   | REQUIRED | MUST be "ML-DSA-65"                |
    | atf_spec_version       | string   | REQUIRED | MUST be "1.6"                      |
@@ -3130,7 +3131,7 @@ A.2  CTCHC Wire Format (normative field reference)
      "session_start_ns":     1748000000000000000,
      "session_close_ns":     1748003600000000000,
      "session_status":       "BEV-COMPLETE",
-     "content_hash_ctchc":   "e8f9a0b1c2d3...64chars",
+     "seal_hash":   "e8f9a0b1c2d3...64chars",
      "ctchc_seal":           "<base64-ML-DSA-65-sig>",
      "pqc_algorithm":        "ML-DSA-65",
      "atf_spec_version":     "1.6"

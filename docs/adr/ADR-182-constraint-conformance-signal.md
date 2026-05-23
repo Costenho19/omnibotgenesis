@@ -6,6 +6,7 @@
 **Registered:** England & Wales · 71-75 Shelton Street, Covent Garden, London WC2H 9JQ  
 **Operational HQ:** Abu Dhabi, UAE  
 **Supersedes:** None  
+**Amended by:** ADR-185 (invariant renumbering — see §Invariant Impact)  
 **Extends:** ADR-174 (AGVP) · ADR-173 (DSPP) · ADR-181 (BAR)  
 **Related:** ADR-181 (BAR) · ADR-183 (CTCHC) · RFC-ATF-6  
 **Priority Record:** OMNIX-PAR-2026-CCS-001 · May 2026
@@ -46,7 +47,7 @@ The CCS resolves all three problems by providing a governance-native conformance
 
 ### Establish the Constraint Conformance Signal (CCS)
 
-ADR-182 establishes the **Constraint Conformance Signal (CCS)** as the behavioral conformance measurement artifact of the BEV layer (RFC-ATF-6). The CCS is a multi-component numerical score in [0.0, 100.0] computed per execution turn, measuring how closely the turn's behavioral output conforms to the constraint vector of its governing receipt.
+ADR-182 establishes the **Constraint Conformance Signal (CCS)** as the behavioral conformance measurement artifact of the BEV layer (RFC-ATF-6). The CCS is a conformance_score in [0.0, 1.0] computed atomically per execution turn, measuring how closely the turn's behavioral output conforms to the constraint vector of its governing receipt. Drift = 1.0 - conformance_score per turn; cumulative_drift triggers HALT when it exceeds the threshold (default 0.35).
 
 ### Four CCS Components
 
@@ -57,23 +58,23 @@ ADR-182 establishes the **Constraint Conformance Signal (CCS)** as the behaviora
 | Semantic Drift Score (SDS) | 20 | Proportional to cosine distance from authorized profile | Semantic proximity to authorized behavior |
 | Authority Alignment Score (AAS) | 10 | -10 if scope exceeded | Agent acted within declared authority_scope |
 
-**CCS Score = OBS + CSS + SDS + AAS ∈ [0.0, 100.0]**
+**conformance_score ∈ [0.0, 1.0]; drift_delta = 1.0 - conformance_score**
 
-All components are non-negative (BEV-INV-011). A component can reach 0 but never go negative — preventing a high-violation component from being masked by negative offsets in another component.
+All components are non-negative (BEV-INV-006). A component can reach 0 but never go negative — preventing a high-violation component from being masked by negative offsets in another component.
 
 ### CCS Verdicts
 
-| Score | Verdict | Response |
+| conformance_score | Verdict | Response |
 |---|---|---|
-| ≥ 90.0 | CONFORMANT | Normal operation |
-| 70.0 – 89.9 | DRIFTING | AGVP PVR issuance triggered |
-| 50.0 – 69.9 | BREACH | Escalation required |
-| < 50.0 | VIOLATION | HALT propagation initiated |
+| ≥ 0.90 | CONFORMANT | Normal operation |
+| 0.70 – 0.89 | WARNING | Monitoring; drift accumulates |
+| 0.50 – 0.69 | CRITICAL | AGVP PVR issuance triggered (BEV-INV-007) |
+| < 0.50 | HALT | HALT propagation initiated (BEV-INV-008) |
 | -1.0 | NO_DATA | CCS_ENABLED=false or REDACTED mode |
 
 ### AGVP Integration
 
-When a BAR is persisted with `ccs_verdict ∈ {DRIFTING, BREACH, VIOLATION}`, the BEV runtime MUST submit a PVR issuance request to the AGVP watchdog within `BEV_AGVP_TRIGGER_TIMEOUT_MS` (default: 500ms).
+When a CCS record has verdict = CRITICAL or HALT, the BEV runtime MUST submit a PVR issuance request to the AGVP watchdog within `BEV_AGVP_TRIGGER_TIMEOUT_MS` (default: 500ms).
 
 PVR payload fields:
 ```json
@@ -82,10 +83,11 @@ PVR payload fields:
   "trigger_session_id":      "<session_id>",
   "trigger_bar_id":          "<bar_id>",
   "trigger_ccs_score":       74.5,
-  "trigger_ccs_verdict":     "DRIFTING",
+  "trigger_ccs_verdict":     "CRITICAL",
   "trigger_turn_index":      8,
   "governing_receipt_id":    "<receipt_id>",
   "veto_type":               "BEHAVIORAL_CONFORMANCE_DEGRADATION",
+  "drift_delta":             0.25,
   "anticipatory_risk_level": "MONITORING"
 }
 ```
@@ -96,7 +98,7 @@ For VIOLATION: `anticipatory_risk_level = "HALT"` and HALT propagation is initia
 
 The CCS is **not stored in a separate table at the turn level**. It is embedded in the BAR before the BAR is sealed. This design ensures:
 
-1. **Tamper-evidence:** modifying `ccs_score` after BAR sealing invalidates `pqc_signature` (BEV-INV-013)
+1. **Tamper-evidence:** modifying `conformance_score` after BAR sealing invalidates `pqc_signature` (BEV-INV-009)
 2. **Co-location:** a BAR is a complete behavioral evidence artifact — output hash, conformance measurement, chain link — in one document
 3. **Offline verifiability:** any verifier with the BAR JSON can verify the CCS score without OMNIX infrastructure
 
@@ -116,10 +118,10 @@ The separate `atf_constraint_conformance_signals` table (§ Database Schema belo
 5. AAS: check capability invocations against authority_scope
 6. ccs_score = OBS + CSS + SDS + AAS
 7. ccs_verdict = derive_verdict(ccs_score)
-8. Embed in BAR before content_hash_bar computation
+8. Embed CCS result in BAR record before content_hash computation
 ```
 
-Steps 1-7 MUST complete before BAR `content_hash_bar` is computed (BEV-INV-013).
+Steps 1-7 MUST complete before BAR `content_hash` is computed (BEV-INV-005).
 
 ### Threshold Configuration
 
@@ -178,12 +180,12 @@ CREATE TABLE IF NOT EXISTS atf_constraint_conformance_signals (
 
 | Invariant | Statement |
 |---|---|
-| BEV-INV-008 | Mandatory CCS per BAR (when CCS_ENABLED) |
-| BEV-INV-009 | ccs_score ∈ [0.0, 100.0] |
-| BEV-INV-010 | DRIFTING triggers AGVP PVR within BEV_AGVP_TRIGGER_TIMEOUT_MS |
-| BEV-INV-011 | All four CCS components non-negative |
-| BEV-INV-012 | VIOLATION triggers HALT propagation within BEV_HALT_TIMEOUT_MS |
-| BEV-INV-013 | CCS fields covered by content_hash_bar (tamper-evident) |
+| BEV-INV-005 | Mandatory CCS per BAR (atomic, same operation) |
+| BEV-INV-006 | conformance_score ∈ [0.0, 1.0]; drift derived; components non-negative |
+| BEV-INV-007 | CRITICAL verdict → AGVP watchdog triggered |
+| BEV-INV-008 | cumulative_drift > threshold → HALT |
+| BEV-INV-009 | CCS history append-only, hash-linked to CTCHC |
+| BEV-INV-017 | Drift accumulator isolated per session_id; reload-safe on restart |
 
 ---
 
@@ -199,9 +201,9 @@ s.add(obs >= 0, obs <= 40)
 s.add(css >= 0, css <= 30)
 s.add(sds >= 0, sds <= 20)
 s.add(And(Or(aas == 0, aas == 10)))
-ccs = obs + css + sds + aas
-s.add(Or(ccs < 0, ccs > 100))
-assert s.check() == unsat  # no violation of [0.0, 100.0] possible
+ccs = obs + css + sds + aas  # illustrative; actual code uses conformance_score in [0,1]
+s.add(Or(ccs < 0, ccs > 1))
+assert s.check() == unsat  # no violation of [0.0, 1.0] possible
 ```
 
 Z3 SMT proof BEV-FVS-004 verifies component non-negativity:
@@ -224,7 +226,7 @@ assert s.check() == unsat  # max(0, base-ded) >= 0 always
 - **Completes the AGVP input space:** behavioral conformance degradation now feeds the AGVP watchdog, enabling anticipatory behavioral vetoes
 - **Governance-native:** measurement references the PQC-signed governing receipt's CV — the policy and the measurement are cryptographically coupled
 - **Tamper-evident:** CCS is embedded in the PQC-sealed BAR; post-hoc CCS score modification is detectable
-- **Formally verified:** bounds [0.0, 100.0] and component non-negativity proven with Z3 (BEV-FVS-003, BEV-FVS-004)
+- **Formally verified:** conformance_score ∈ [0.0, 1.0] proven with Z3 (BEV-FVS-003); component non-negativity proven (BEV-FVS-004)
 - **Regulatory alignment:** provides NIST AI RMF MEASURE 2.6 ongoing monitoring evidence in governance-native form
 
 ### Negative / Trade-offs
@@ -236,7 +238,7 @@ assert s.check() == unsat  # max(0, base-ded) >= 0 always
 ### Not Permitted
 
 - `CCS_CONFORMANT_THRESHOLD` below 80.0 in production (security exception required below 85.0)
-- Modifying `ccs_score` or `ccs_components` after `content_hash_bar` computation
+- Modifying `conformance_score` or any CCS field after `content_hash` computation
 - Setting `AVM_AUTO_APPROVE=true` to bypass CCS-triggered AGVP escalation
 
 ---

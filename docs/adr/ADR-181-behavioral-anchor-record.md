@@ -6,6 +6,7 @@
 **Registered:** England & Wales · 71-75 Shelton Street, Covent Garden, London WC2H 9JQ  
 **Operational HQ:** Abu Dhabi, UAE  
 **Supersedes:** None  
+**Amended by:** ADR-185 (invariant renumbering — see §Invariant Impact)  
 **Extends:** ADR-131 (Execution Integrity Layer) · ADR-156 (ATF Identity & Delegation) · ADR-174 (AGVP)  
 **Related:** ADR-182 (CCS) · ADR-183 (CTCHC) · RFC-ATF-6  
 **Priority Record:** OMNIX-PAR-2026-BAR-001 · May 2026
@@ -59,7 +60,7 @@ Every execution turn under a BEV-enabled session MUST produce a persisted BAR be
 Every BAR carries a `governing_receipt_id` referencing the specific ATF record that authorized the session. A BAR without a valid governing receipt reference is structurally invalid.
 
 **Invariant 3: PQC sealing before persistence (BEV-INV-004)**  
-Every BAR is sealed with ML-DSA-65 over its `content_hash_bar` before being written to the database. Unsealed BARs are not permitted in `atf_behavioral_anchor_records`.
+Every BAR is sealed with ML-DSA-65 over its `content_hash` before being written to the database. Unsealed BARs are not permitted in `atf_behavioral_anchor_records`.
 
 ### Record Architecture
 
@@ -74,16 +75,16 @@ BAR (Behavioral Anchor Record)
   output_hash_mode        — FULL | HASHED | REDACTED
   output_payload          — actual output (FULL mode only)
   constraint_vector       — snapshot of CV from governing receipt
-  ccs_score               — embedded CCS score [0.0, 100.0]
-  ccs_verdict             — CONFORMANT | DRIFTING | BREACH | VIOLATION
+  conformance_score       — embedded CCS conformance score [0.0, 1.0]
+  ccs_verdict             — CONFORMANT | WARNING | CRITICAL | HALT | NO_DATA
   ccs_components          — {obs, css, sds, aas} breakdown
   chain_link              — CTCHC chain link for this turn
   genesis_hash            — present only in turn_index=0 BAR
   session_start_ns        — present only in turn_index=0 BAR
   bar_timestamp_ns        — nanosecond precision (time.time_ns())
   issued_at               — ISO 8601 UTC with nanosecond precision
-  content_hash_bar        — SHA-256 of canonical BAR JSON
-  pqc_signature           — ML-DSA-65 sig over content_hash_bar
+  content_hash        — SHA-256 of canonical BAR JSON
+  pqc_signature           — ML-DSA-65 sig over content_hash
   pqc_algorithm           — "ML-DSA-65"
   atf_spec_version        — "1.6"
 ```
@@ -117,12 +118,12 @@ FLAGGED → [terminal, no recovery]
 
 ```
 1. Agent produces behavioral output BO
-2. output_hash = SHA-256(canonical(BO)) [privacy mode applied]
+2. output_hash = SHA3-256(output_text.encode("utf-8")) [privacy mode applied]
 3. CCS computed from BO and CV (if CCS_ENABLED)
 4. chain_link computed from prior link and turn_hash(n)
 5. BAR assembled with all fields
-6. content_hash_bar = SHA-256(canonical_json(BAR \ sig fields))
-7. pqc_signature = ML-DSA-65.sign(content_hash_bar)
+6. content_hash = SHA3-256(output_hash || governing_receipt_id || str(turn_index))
+7. pqc_signature = ML-DSA-65.sign(content_hash.encode())
 8. INSERT INTO atf_behavioral_anchor_records
 ```
 
@@ -130,9 +131,9 @@ Steps 3-4 MUST complete before step 5. Step 8 MUST complete before next turn.
 
 ### Offline Verification (5 steps)
 
-1. Recompute `content_hash_bar` → compare to embedded value
+1. Recompute `content_hash` = SHA3-256(output_hash || receipt_id || turn_index) → compare
 2. Verify `pqc_signature` using platform public key
-3. Verify `output_hash` = SHA-256(output_payload) [FULL mode]
+3. Verify `output_hash` = SHA3-256(output_text.encode()) [FULL mode]
 4. Verify `chain_link` continuity from prior BAR or genesis hash
 5. Verify `turn_index` is previous + 1
 
@@ -159,7 +160,7 @@ CREATE TABLE IF NOT EXISTS atf_behavioral_anchor_records (
     session_start_ns          BIGINT,
     bar_timestamp_ns          BIGINT           NOT NULL DEFAULT 0,
     issued_at                 TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-    content_hash_bar          VARCHAR(64)      NOT NULL DEFAULT '',
+    content_hash          VARCHAR(64)      NOT NULL DEFAULT '',
     pqc_signature             TEXT             NOT NULL DEFAULT '',
     pqc_algorithm             VARCHAR(32)      NOT NULL DEFAULT 'ML-DSA-65',
     atf_spec_version          VARCHAR(8)       NOT NULL DEFAULT '1.6',
@@ -178,7 +179,7 @@ CREATE TABLE IF NOT EXISTS atf_behavioral_anchor_records (
 **Design decisions:**
 - `output_payload` is nullable — NULL when mode = HASHED or REDACTED
 - `genesis_hash` and `session_start_ns` are NULL for turns > 0
-- No UPDATE or DELETE triggers (BEV-INV-006 enforcement)
+- No UPDATE or DELETE triggers (BEV-INV-004 enforcement)
 
 ---
 
@@ -205,13 +206,12 @@ CREATE TABLE IF NOT EXISTS atf_behavioral_anchor_records (
 
 | Invariant | Impact |
 |---|---|
-| BEV-INV-001 | Defines this artifact: mandatory BAR per turn |
-| BEV-INV-002 | Governing receipt binding |
-| BEV-INV-003 | Output hash integrity via content_hash_bar |
-| BEV-INV-004 | PQC sealing requirement |
-| BEV-INV-005 | Fail-closed on persistence failure |
-| BEV-INV-006 | Append-only storage |
-| BEV-INV-007 | Offline verifiability |
+| BEV-INV-001 | Mandatory BAR before output is delivered |
+| BEV-INV-002 | content_hash = SHA3-256(output_hash ‖ receipt_id ‖ turn_index) |
+| BEV-INV-003 | HALTED BAR → immediate session halt |
+| BEV-INV-004 | PQC sealing + offline verifiability + append-only storage |
+| BEV-INV-015 | Empty output_text → VIOLATION |
+| BEV-INV-016 | BAR id MUST follow BAR-{HEX16} format |
 
 ---
 
