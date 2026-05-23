@@ -1,0 +1,24 @@
+{
+  "snapshot_id": "AVM-B3DA96E1E5",
+  "parameter_version": "1.b3da96e1e5",
+  "domain": "trading",
+  "baseline_signals": {
+    "risk_exposure": 34.0,
+    "signal_coherence": 69.0,
+    "logic_consistency": 74.0,
+    "probability_score": 76.0,
+    "stress_resilience": 62.0,
+    "trend_persistence": 65.0
+  },
+  "checkpoint_thresholds": {},
+  "drift_threshold": 35.0,
+  "max_age_hours": 168.0,
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 0h cycle \u2014 age=0h>=0h",
+  "tags": [
+    "AUTO_RECALIBRATION",
+    "interval_0h",
+    "prev_drift_4.3"
+  ],
+  "calibrated_at": "2026-04-25T04:21:16.455741+00:00",
+  "calibrated_at_epoch": 1777090876.455741
+}
