@@ -81,11 +81,13 @@ Abstract
    evidence and behavioral output attestation.
 
    Eighteen new invariants are introduced: BEV-INV-001 through
-   BEV-INV-007 (BAR family), BEV-INV-008 through BEV-INV-013 (CCS
-   family), and BEV-INV-014 through BEV-INV-018 (CTCHC family).
-   Combined with the 88 invariants of RFC-ATF-1 through RFC-ATF-5,
-   the ATF stack reaches 106 formally specified invariants across
-   20 protocol families.
+   BEV-INV-004 plus BEV-INV-015 and BEV-INV-016 (BAR family, 6
+   invariants), BEV-INV-005 through BEV-INV-009 plus BEV-INV-017
+   (CCS family, 6 invariants), and BEV-INV-010 through BEV-INV-014
+   plus BEV-INV-018 (CTCHC family, 6 invariants).  Combined with
+   the 88 invariants of RFC-ATF-1 through RFC-ATF-5, the ATF stack
+   reaches 106 formally specified invariants across 20 protocol
+   families.
 
    An implementation that complies with RFC-ATF-1 through RFC-ATF-6
    is designated ATF-BEV-Compliant — the sixth and highest compliance
@@ -188,7 +190,7 @@ Table of Contents
         5.5.  Output Hash Privacy Modes ........................  33
         5.6.  BAR Lifecycle ....................................  35
         5.7.  Offline Verifiability Protocol ...................  37
-        5.8.  BAR Invariants (BEV-INV-001-007) .................  38
+        5.8.  BAR Invariants (BEV-INV-001–004, 015–016) .......  38
     6.  Constraint Conformance Signal (CCS) ....................  44
         6.1.  Conformance Measurement Architecture .............  44
         6.2.  CCS Score Components .............................  46
@@ -196,7 +198,7 @@ Table of Contents
         6.4.  CCS Verdicts and Thresholds ......................  52
         6.5.  AGVP Integration: CCS-Driven Anticipatory Veto ...  54
         6.6.  CCS Embedding in BAR .............................  56
-        6.7.  CCS Invariants (BEV-INV-008-013) .................  57
+        6.7.  CCS Invariants (BEV-INV-005–009, 017) ...........  57
     7.  Cross-Turn Coherence Hash Chain (CTCHC) ................  63
         7.1.  Multi-Turn Coherence Architecture ................  63
         7.2.  Chain Initialization Protocol ....................  65
@@ -204,7 +206,7 @@ Table of Contents
         7.4.  Chain Sealing at Session Close ...................  69
         7.5.  Offline Chain Verification Protocol ..............  71
         7.6.  Partial Chain Recovery ...........................  73
-        7.7.  CTCHC Invariants (BEV-INV-014-018) ...............  74
+        7.7.  CTCHC Invariants (BEV-INV-010–014, 018) .........  74
     8.  Formal Verification (OMNIX-FVS-1.0 Extension) ..........  79
         8.1.  BEV Proof Inventory ..............................  79
         8.2.  BAR Arithmetic Proofs (Z3 SMT) ...................  80
@@ -864,7 +866,7 @@ Table of Contents
       Zero-based position of this turn within its BEV Session.
       MUST be strictly monotonically increasing: if the preceding BAR
       in this session has turn_index = k, this BAR MUST have
-      turn_index = k+1.  No gaps are permitted (BEV-INV-015).
+      turn_index = k+1.  No gaps are permitted (BEV-INV-011).
 
    output_hash (string, REQUIRED):
       SHA-256 hex digest of the agent's behavioral output for this
@@ -1031,7 +1033,7 @@ Table of Contents
       is non-sensitive.
       Warning: FULL mode should not be used for outputs containing
       personal data subject to GDPR right-to-erasure obligations, as
-      BAR records are append-only (BEV-INV-006).
+      BAR records are append-only (BEV-INV-004).
 
    HASHED mode (recommended for production):
       Only output_hash is stored.  output_payload is absent from
@@ -1092,7 +1094,7 @@ Table of Contents
       ACTIVE → FLAGGED: integrity verification failure
       FLAGGED: terminal (no recovery to ACTIVE or SEALED)
 
-   SEALED BARs MUST NOT be updated or deleted (BEV-INV-006).
+   SEALED BARs MUST NOT be updated or deleted (BEV-INV-004).
    FLAGGED BARs MUST NOT be deleted; they are forensic evidence of
    the failure event.
 
@@ -1138,123 +1140,123 @@ Table of Contents
    A BAR that passes all five steps is VERIFIED.  A BAR that fails
    any step is COMPROMISED and MUST be reported as such.
 
-5.8.  BAR Invariants (BEV-INV-001 through BEV-INV-007)
+5.8.  BAR Invariants (BEV-INV-001 through BEV-INV-004, BEV-INV-015,
+      BEV-INV-016)
 
 BEV-INV-001 — Mandatory BAR Production
 
    Every execution turn authorized by a Governing Receipt, in any
-   BEV-enabled deployment, MUST produce a persisted BAR before the
-   next turn begins.  There is no execution path that completes a
-   turn without a BAR.
+   BEV-enabled deployment, MUST produce a BAR before the agent
+   output is delivered to the caller.  There is no execution path
+   that delivers output without a BAR.
 
    Formally:
       For all sessions S and turns T_i in S where BEV_ENABLED:
          EXISTS(BAR b) WHERE b.session_id = S.session_id
             AND b.turn_index = i
-            AND b.persisted_at <= T_{i+1}.start_ns
+            AND b.created_before_output_delivery
 
-   A session where any turn T_i has no persisted BAR by the time
-   T_{i+1} begins is BEV-INCOMPLETE and MUST be flagged as such in
+   A session where any turn T_i has no BAR before its output is
+   delivered is BEV-INCOMPLETE and MUST be flagged as such in
    all compliance reporting.
 
-BEV-INV-002 — Mandatory Governing Receipt Binding
+BEV-INV-002 — Content Hash Binding (Receipt + Output + Index)
+
+   The content_hash in every BAR MUST be computed as:
+
+      content_hash = SHA3-256(output_hash
+                              || governing_receipt_id
+                              || str(turn_index))
+
+   where output_hash = SHA3-256(output_text.encode("utf-8")).
 
    Every BAR MUST carry a governing_receipt_id that references a
-   valid ATF record.  The agent_id in the BAR MUST match the
+   valid ATF record, and the agent_id in the BAR MUST match the
    agent_id in the referenced Governing Receipt.
 
    Formally:
       For all BARs b:
-         EXISTS(GR r) WHERE r.record_id = b.governing_receipt_id
+         b.content_hash = SHA3-256(
+            b.output_hash || b.governing_receipt_id ||
+            str(b.turn_index))
+         AND EXISTS(GR r) WHERE r.record_id = b.governing_receipt_id
             AND r.agent_id = b.agent_id
 
-   A BAR with an unresolvable governing_receipt_id or a mismatched
-   agent_id is structurally invalid as a behavioral attestation
-   artifact and MUST NOT be admitted as governance evidence.
+   This construction makes the output, the authorizing receipt, and
+   the turn position all simultaneously tamper-evident.  Modifying
+   any of the three inputs produces a content_hash mismatch
+   detectable offline (see BEV-INV-004).
 
-BEV-INV-003 — Output Hash Integrity
+BEV-INV-003 — HALTED BAR Immediately Halts Session
 
-   The output_hash in every BAR MUST be covered by the
-   content_hash_bar.  Modifying the output_hash after BAR sealing
-   MUST produce a content_hash_bar mismatch detectable by the
-   verification procedure in §5.7.
+   A BAR whose bar_status is HALTED MUST cause the session to
+   transition to SESSION_HALTED immediately.  The session MUST NOT
+   process any subsequent turn.  The session enters forensic state:
+   it may be closed and its proof exported, but no new turns are
+   admitted.
 
    Formally:
-      For all BARs b:
-         content_hash_bar(b) = SHA-256(canonical_json(b \ {
-            content_hash_bar, pqc_signature, pqc_algorithm
-         }))
-      output_hash ∈ b \ {content_hash_bar, pqc_signature,
-                          pqc_algorithm}
-      THEREFORE: modifying output_hash ⟹ content_hash_bar mismatch
+      For all sessions S and turns T_i:
+         BAR(T_i).bar_status = HALTED
+         IMPLIES session_status(S) = STATUS_HALTED
+         AND no T_{i+1} in S is permitted
 
-   This invariant is a structural consequence of §5.3 and requires
-   no additional enforcement logic.
+   This invariant provides behavioral-layer fail-closed semantics:
+   any output turn that triggers a HALT condition stops the session
+   before further outputs can accumulate.
 
-BEV-INV-004 — BAR PQC Sealing
+BEV-INV-004 — BAR PQC-Sealing and Offline Verifiability
 
    Every BAR MUST be sealed with Dilithium-3 (ML-DSA-65, FIPS 204)
-   over its content_hash_bar before persistence.  An unsealed BAR
-   MUST NOT be persisted to atf_behavioral_anchor_records.
+   over its content_hash before persistence.  An unsealed BAR MUST
+   NOT be persisted to atf_behavioral_anchor_records.
+
+   Every BAR MUST be independently verifiable offline by any party
+   possessing the BAR record, the platform ML-DSA-65 public key,
+   and the original output_text.  No OMNIX infrastructure access
+   is required.  No UPDATE or DELETE operation is permitted on any
+   record in atf_behavioral_anchor_records after creation.
 
    Formally:
       For all persisted BARs b:
          dilithium3.verify(
-            b.content_hash_bar.encode("utf-8"),
+            b.content_hash.encode("utf-8"),
             b.pqc_signature,
             platform_public_key
          ) = True
+      AND SHA3-256(b.output_text.encode()) = b.output_hash
+      AND SHA3-256(b.output_hash || b.governing_receipt_id ||
+                   str(b.turn_index)) = b.content_hash
 
-   Any BAR that fails this verification has either been tampered
-   after production or was produced by an entity that does not hold
-   the platform ML-DSA-65 key.
+   An implementation where this verification fails for a correctly-
+   formed BAR has a structural offline verifiability defect.
 
-BEV-INV-005 — BAR Fail-Closed
+BEV-INV-015 — Empty Output Text Is a Violation
 
-   If BAR persistence fails (database write error, connection
-   failure, constraint violation), the current execution session
-   MUST be flagged BEV-INCOMPLETE and the failure MUST be logged
-   to the governing receipt's audit trail.  No subsequent turn in
-   the session is permitted until the failure is resolved.
-
-   Formally:
-      For all sessions S:
-         BAR_persistence_failure(T_i) IMPLIES
-            session_status(S) = BEV-INCOMPLETE
-            AND no T_{i+1} in S is permitted
-            AND failure logged to GR.audit_trail
-
-   This is the behavioral-layer equivalent of ADR-131's
-   pre-intent-captured invariant: a turn whose behavioral record
-   cannot be written does not proceed.
-
-BEV-INV-006 — BAR Append-Only Storage
-
-   No UPDATE or DELETE operation is permitted on any record in
-   atf_behavioral_anchor_records.  BARs are append-only audit
-   artifacts.  FLAGGED BARs MUST remain in the table as forensic
-   evidence of the failure event.
+   An empty string or whitespace-only string MUST NOT be treated as
+   a valid agent output.  A BAR created with output_text = "" or
+   output_text consisting entirely of whitespace MUST have
+   bar_status = VIOLATION.  Silent outputs are not permissible
+   under any constraint set.
 
    Formally:
-      For all times t_1 < t_2 and all BAR record IDs r:
-         record(r, t_1) = record(r, t_2)
-         (BARs do not change after insertion)
+      For all BARs b:
+         output_text(b).strip() = "" IMPLIES b.bar_status = VIOLATION
 
-   Database-level enforcement: no UPDATE or DELETE triggers are
-   permitted on atf_behavioral_anchor_records.  Row-level security
-   SHOULD be configured to prohibit these operations.
+   This invariant prevents governance gaps where an agent produces
+   no observable output but the session continues.
 
-BEV-INV-007 — BAR Offline Verifiability
+BEV-INV-016 — BAR Identifier Format
 
-   Every BAR MUST be independently verifiable by any party
-   possessing only the BAR JSON, the platform ML-DSA-65 public
-   key, and (for FULL mode) the output_payload.  No OMNIX
-   infrastructure access is required for verification.
+   Every BAR identifier MUST conform to the canonical format
+   "BAR-{HEX16}" where HEX16 is exactly 16 uppercase hexadecimal
+   characters.  BAR identifiers that do not conform to this format
+   MUST NOT be accepted as valid artifact identifiers in any ATF
+   record, proof package, or compliance report.
 
-   The §5.7 verification procedure MUST succeed for any correctly
-   produced BAR.  An implementation where §5.7 fails for a
-   correctly-formed BAR has a structural offline verifiability
-   defect.
+   Formally:
+      For all BARs b:
+         MATCHES(b.bar_id, r"^BAR-[0-9A-F]{16}$")
 
 
 6.  Constraint Conformance Signal (CCS)
@@ -1295,7 +1297,7 @@ BEV-INV-007 — BAR Offline Verifiability
 6.2.  CCS Score Components
 
    The CCS score is a weighted sum of four components, maximum 100
-   points.  All components are non-negative (BEV-INV-011).
+   points.  All components are non-negative (BEV-INV-006).
 
    Component 1 — Output Boundary Score (OBS):
 
@@ -1379,7 +1381,7 @@ BEV-INV-007 — BAR Offline Verifiability
 
       ccs_score = OBS + CSS + SDS + AAS
       Range: [0.0, 100.0]
-      (Guaranteed by BEV-INV-009 and the component bounds above)
+      (Guaranteed by BEV-INV-006 and the component bounds above)
 
 6.3.  CCS Computation Protocol
 
@@ -1429,7 +1431,7 @@ BEV-INV-007 — BAR Offline Verifiability
 
    The CCS MUST be computed and embedded before content_hash_bar
    is computed (§4.4 step ordering).  A BAR whose content_hash_bar
-   was computed before CCS embedding violates BEV-INV-013.
+   was computed before CCS embedding violates BEV-INV-009.
 
 6.4.  CCS Verdicts and Thresholds
 
@@ -1512,14 +1514,14 @@ BEV-INV-007 — BAR Offline Verifiability
 
    1. The CCS is tamper-evident: modifying ccs_score or
       ccs_components after BAR sealing produces a content_hash_bar
-      mismatch (BEV-INV-013).
+      mismatch (BEV-INV-009).
 
    2. The CCS is co-located with the behavioral attestation: a BAR
       record is a complete behavioral attestation artifact — output
       hash, conformance measurement, chain link — in a single,
       independently verifiable document.
 
-   3. The CCS inherits BAR's offline verifiability (BEV-INV-007):
+   3. The CCS inherits BAR's offline verifiability (BEV-INV-004):
       any verifier with the BAR JSON and platform public key can
       verify the CCS score and the BAR's behavioral content together.
 
@@ -1529,97 +1531,103 @@ BEV-INV-007 — BAR Offline Verifiability
    This table is a projection of BAR data and MUST be kept in sync
    with atf_behavioral_anchor_records.
 
-6.7.  CCS Invariants (BEV-INV-008 through BEV-INV-013)
+6.7.  CCS Invariants (BEV-INV-005 through BEV-INV-009, BEV-INV-017)
 
-BEV-INV-008 — Mandatory CCS Computation per BAR
+BEV-INV-005 — Mandatory CCS Computation per BAR
 
-   Every BAR produced in a BEV_ENABLED + CCS_ENABLED deployment
-   MUST include a computed ccs_score and ccs_verdict.  A BAR with
-   ccs_score = -1.0 in a CCS-enabled deployment is incomplete.
-
-   Formally:
-      For all BARs b where CCS_ENABLED:
-         b.ccs_score ∈ [0.0, 100.0]
-         AND b.ccs_verdict ∈ {CONFORMANT, DRIFTING, BREACH,
-                               VIOLATION}
-         AND b.ccs_components is present
-
-   Exception: REDACTED mode BARs MAY have ccs_score = -1.0 with
-   ccs_verdict = NO_DATA, since the output content is unavailable
-   for evaluation.
-
-BEV-INV-009 — CCS Score Bounds
-
-   The ccs_score in every BAR MUST be in the range [0.0, 100.0].
-   No CCS score outside this range is valid.
+   Every BAR produced in a BEV_ENABLED deployment MUST be followed
+   by a CCS computation in the same atomic operation.  BAR and CCS
+   are produced as a single indivisible unit: there is no valid BAR
+   without a corresponding CCS record.
 
    Formally:
-      For all BARs b where b.ccs_score != -1.0:
-         0.0 <= b.ccs_score <= 100.0
+      For all BARs b where BEV_ENABLED:
+         EXISTS(CCS c) WHERE c.session_id = b.session_id
+            AND c.bar_id = b.bar_id
+            AND c.turn_index = b.turn_index
+            AND c.created_atomically_with(b)
 
-   This is a structural guarantee derived from the component bounds:
-   OBS ∈ [0, 40], CSS ∈ [0, 30], SDS ∈ [0, 20], AAS ∈ {0, 10}.
-   The Z3 proof is provided in §8.3.
+BEV-INV-006 — CCS Conformance Score Bounds
 
-BEV-INV-010 — DRIFTING Triggers AGVP PVR
-
-   A BAR persisted with ccs_verdict = DRIFTING, BREACH, or
-   VIOLATION MUST trigger a PVR issuance request to the AGVP
-   watchdog within BEV_AGVP_TRIGGER_TIMEOUT_MS (default: 500ms).
+   The conformance_score in every CCS MUST be in the range
+   [0.0, 1.0].  No score outside this range is valid.  The
+   drift_delta and cumulative_drift are derived from the inverse
+   of the score: drift = 1.0 - conformance_score per turn.
 
    Formally:
-      For all BARs b where b.ccs_verdict ∈ {DRIFTING, BREACH,
-                                              VIOLATION}:
-         EXISTS(PVR p) WHERE p.trigger_bar_id = b.bar_id
-            AND p.issued_at_ns <= b.bar_timestamp_ns +
-               BEV_AGVP_TRIGGER_TIMEOUT_MS × 1_000_000
+      For all CCS records c:
+         0.0 <= c.conformance_score <= 1.0
+         AND c.drift_delta = 1.0 - c.conformance_score
+         AND c.cumulative_drift >= 0.0
 
-   A deployment where DRIFTING BARs do not trigger PVRs has an
-   incomplete AGVP-CCS integration and MUST NOT be designated
+   All four CCS evaluation components (output_length, halt_keyword,
+   warn_keyword, forbidden_topic) MUST produce non-negative
+   individual scores.  Score inflation via negative components is
+   not permitted.
+
+BEV-INV-007 — CRITICAL Verdict Triggers AGVP Watchdog
+
+   A CCS record with verdict = CRITICAL MUST set
+   watchdog_triggered = true and MUST trigger a Proactive Veto
+   Receipt (PVR) issuance request to the AGVP watchdog.  This
+   is the behavioral-conformance input to the AGVP anticipatory
+   veto loop (RFC-ATF-4).
+
+   Formally:
+      For all CCS records c:
+         c.verdict = CRITICAL
+         IMPLIES c.watchdog_triggered = True
+            AND EXISTS(PVR p) WHERE p.trigger_ccs_id = c.ccs_id
+
+   A deployment where CRITICAL CCS records do not trigger PVRs has
+   an incomplete AGVP-CCS integration and MUST NOT be designated
    ATF-BEV-Compliant.
 
-BEV-INV-011 — CCS Component Non-Negativity
+BEV-INV-008 — Cumulative Drift Threshold Triggers HALT
 
-   All four CCS components (OBS, CSS, SDS, AAS) MUST be
-   non-negative.  Negative CCS components are not valid.
-
-   Formally:
-      For all BARs b where b.ccs_components is present:
-         b.ccs_components.output_boundary_score >= 0
-         AND b.ccs_components.constraint_satisfaction_score >= 0
-         AND b.ccs_components.semantic_drift_score >= 0
-         AND b.ccs_components.authority_alignment_score >= 0
-
-   This invariant ensures that the CCS score cannot be inflated
-   by a negative component masking a high-violation component.
-
-BEV-INV-012 — VIOLATION Triggers HALT Propagation
-
-   A BAR persisted with ccs_verdict = VIOLATION MUST trigger the
-   AGVP HALT propagation protocol (RFC-ATF-2 §7.3) within
-   BEV_HALT_TIMEOUT_MS (default: 100ms).  No subsequent turn is
-   permitted in the session until the HALT state is cleared by
-   a reauthorization event.
+   When the cumulative_drift for a session exceeds the configured
+   drift threshold (default: 0.35, i.e., 35%), the CCS verdict
+   MUST be HALT.  No subsequent turn is permitted in the session.
 
    Formally:
-      For all sessions S and turns T_i:
-         BAR(T_i).ccs_verdict = VIOLATION
-         IMPLIES session_halted(S)
-         AND no T_{i+1} in S is permitted until reauthorization
+      For all sessions S and CCS records c in S:
+         c.cumulative_drift > DRIFT_THRESHOLD
+         IMPLIES c.verdict = HALT
+         AND session_status(S) = STATUS_HALTED
+         AND no subsequent turn in S is permitted
 
-   The HALT state is propagated to the governing receipt's authority
-   chain per RFC-ATF-2 §7.3 semantics.
+   The DRIFT_THRESHOLD MUST NOT exceed 0.50 in production
+   deployments.  Values above 0.95 are structurally rejected.
 
-BEV-INV-013 — CCS Integrity via BAR Seal
+BEV-INV-009 — CCS History Append-Only and Hash-Linked
 
-   The ccs_score, ccs_verdict, and ccs_components fields are
-   covered by content_hash_bar.  Modifying any CCS field after BAR
-   sealing produces a content_hash_bar mismatch.
+   CCS records for a session form an append-only history.  Each CCS
+   record carries the chain_link_hash from the CTCHC at the time of
+   its computation, linking the conformance history to the coherence
+   chain.  No UPDATE or DELETE on atf_constraint_conformance_signals
+   is permitted.
 
    Formally:
-      {ccs_score, ccs_verdict, ccs_components} ⊂ canonical_json(BAR)
-         covered by content_hash_bar
-      THEREFORE: post-seal modification detectable from pqc_signature
+      For all sessions S, the sequence of CCS records ordered by
+      turn_index is strictly monotone and each record's
+      chain_link_hash matches the CTCHC link at that turn_index.
+
+BEV-INV-017 — Drift Accumulator Isolated per Session
+
+   The cumulative_drift accumulator is independent per session_id.
+   Drift accumulated in session S_1 MUST NOT affect the
+   cumulative_drift of session S_2.  On process restart or
+   multi-process deployment, the drift accumulator MUST be
+   reloaded from the last persisted CCS record for the session
+   before computing the next CCS.
+
+   Formally:
+      For all sessions S_1 ≠ S_2:
+         cumulative_drift(S_1, t) is independent of
+         cumulative_drift(S_2, t) for all times t
+      AND for any process restart at time t_r:
+         loaded_drift(S, t_r) = max persisted
+            cumulative_drift(S) before t_r
 
 
 7.  Cross-Turn Coherence Hash Chain (CTCHC)
@@ -1860,86 +1868,112 @@ BEV-INV-013 — CCS Integrity via BAR Seal
    sessions MUST be flagged CHAIN_BROKEN and cannot produce any
    partial coherence proof.
 
-7.7.  CTCHC Invariants (BEV-INV-014 through BEV-INV-018)
+7.7.  CTCHC Invariants (BEV-INV-010 through BEV-INV-014, BEV-INV-018)
 
-BEV-INV-014 — Genesis Hash Governing Receipt Binding
+BEV-INV-010 — Chain Initialized Before First BAR
 
-   The genesis hash of every CTCHC MUST be computed from the
-   governing_receipt_id, session_id, and session_start_ns of the
-   session's first BAR, as specified in §7.2.  Any other genesis
-   hash computation is non-conformant.
+   The CTCHC genesis block MUST be created and persisted before the
+   first BAR of the session is created.  No BAR may be appended
+   to a session that has no initialized CTCHC.
+
+   The genesis hash MUST be computed as:
+
+      genesis_hash = SHA3-256(session_id
+                              || "||"
+                              || governing_receipt_id
+                              || "||"
+                              || "OMNIX-CTCHC-GENESIS")
 
    Formally:
-      For all CTCHCs C:
-         C.genesis_hash = SHA-256(
-             BAR_0.governing_receipt_id.encode("utf-8") ||
-             b"||" ||
-             BAR_0.session_id.encode("utf-8") ||
-             b"||" ||
-             BAR_0.session_start_ns.to_bytes(8, "big")
-         )
+      For all sessions S:
+         EXISTS(CTCHC C) WHERE C.session_id = S.session_id
+            AND C.initialized_before_BAR_0
 
-   This binding makes cross-session BAR substitution detectable:
-   BARs from a session with a different governing_receipt_id or
-   session_id will produce a genesis hash mismatch.
+   This binding makes the session_id and governing_receipt_id
+   integral to every subsequent chain link.
 
-BEV-INV-015 — Chain Link Strict Monotonicity
+BEV-INV-011 — Chain Link Hash Construction
 
-   For every pair of consecutive BARs T_i, T_{i+1} in a session:
-      T_{i+1}.turn_index = T_i.turn_index + 1
-      T_{i+1}.chain_link ≠ T_i.chain_link
-      T_{i+1}.chain_link = SHA-256(
-          bytes.fromhex(T_i.chain_link) || turn_hash(i+1)
+   Every chain link MUST be computed as:
+
+      link[n] = SHA3-256(
+         json.dumps({
+            "prev": prev_hash,
+            "turn": output_hash_of_turn_n,
+            "receipt": governing_receipt_id,
+         }, sort_keys=True).encode()
       )
 
-   No two BARs in the same session may have the same chain_link
-   value (chain links are strictly distinct due to SHA-256
-   collision resistance).
-
-   This invariant ensures that turn reordering is detectable: if
-   T_i and T_{i+1} are swapped, the chain link at position i+1
-   will not match the expected value.
-
-BEV-INV-016 — Chain Completeness
-
-   The complete set of BARs for a sealed CTCHC MUST have no gaps
-   in turn_index values: {BAR_0.turn_index, ..., BAR_{N-1}.turn_index}
-   = {0, 1, ..., N-1}.
-
-   A sealed CTCHC where any turn_index in [0, N-1] has no
-   corresponding BAR is structurally invalid and MUST NOT be
-   accepted as a Session Integrity Proof.
-
-   Chain completeness is verifiable by any party: the absence of
-   BAR_k from a presented sequence of N-1 BARs causes all chain
-   links from position k onward to be unverifiable.
-
-BEV-INV-017 — Final Chain Hash Offline Verifiability
-
-   The final_chain_hash in every sealed CTCHC MUST be independently
-   recomputable by any party possessing the full BAR sequence and
-   the CTCHC genesis_hash, without accessing any OMNIX
-   infrastructure.
-
-   The §7.5 verification procedure MUST succeed for any correctly
-   produced CTCHC.  An implementation where §7.5 fails for a
-   correctly-formed session has a structural offline verifiability
-   defect.
-
-BEV-INV-018 — Session PQC Sealing at Close
-
-   Every completed CTCHC MUST be sealed with Dilithium-3
-   (ML-DSA-65, FIPS 204) over its content_hash_ctchc at session
-   close.  An unsealed CTCHC MUST NOT be presented as a Session
-   Integrity Proof in regulatory or legal proceedings.
+   where prev_hash = genesis_hash for n=0 and prev_hash =
+   link[n-1] for n>0, and output_hash = SHA3-256(output_text).
 
    Formally:
-      For all CTCHCs C with session_status = BEV-COMPLETE:
+      For all CTCHCs C and links L_n:
+         L_n.chain_link_hash = SHA3-256(
+            canonical(prev=L_{n-1}.hash, turn=output_hash_n,
+                      receipt=C.governing_receipt_id))
+
+   This construction makes turn reordering, omission, and output
+   substitution all produce chain link mismatches verifiable
+   without OMNIX infrastructure access.
+
+BEV-INV-012 — Gaps in Turn Sequence Fail Verification
+
+   The chain verification procedure MUST fail if any turn_index
+   in [0, N-1] has no corresponding chain link.  A sealed CTCHC
+   that claims N turns but presents N-1 links MUST be rejected as
+   a Session Integrity Proof.
+
+   Formally:
+      For all CTCHCs C sealed with turn_count = N:
+         {L.turn_index : L ∈ C.links} = {0, 1, ..., N-1}
+      Otherwise: verify(C) = FAIL
+
+BEV-INV-013 — Seal Covers Complete Chain
+
+   The seal hash for a CTCHC MUST be computed over the complete
+   set of chain links from genesis to tip.  A partial seal
+   covering fewer than all N links is invalid.
+
+   The seal is produced at close_session time and covers:
+   genesis_hash + all link hashes + current_tip_hash.
+
+   Formally:
+      For all CTCHCs C with chain_sealed = True:
+         C.seal_hash = SHA3-256(
+            C.genesis_hash || all_link_hashes || C.current_tip_hash)
+         AND C.seal_hash covers all N links
+
+BEV-INV-014 — Seal Is ML-DSA-65 Signed Before OEP Export
+
+   The CTCHC seal MUST be signed with Dilithium-3 (ML-DSA-65,
+   FIPS 204) before the session proof may be exported or submitted
+   as an OMNIX Evidence Package (OEP) artifact.  An unsigned or
+   partially-signed seal MUST NOT be accepted in regulatory or
+   legal proceedings.
+
+   Formally:
+      For all CTCHCs C exported as part of an OEP:
          dilithium3.verify(
-            C.content_hash_ctchc.encode("utf-8"),
-            C.ctchc_seal,
+            C.seal_hash.encode("utf-8"),
+            C.pqc_seal_signature,
             platform_public_key
          ) = True
+
+BEV-INV-018 — Every Link's Receipt ID Must Match Chain Receipt
+
+   Every chain link MUST carry the same governing_receipt_id as the
+   CTCHC genesis.  A link with a different governing_receipt_id
+   than its parent chain is structurally invalid.
+
+   Formally:
+      For all CTCHCs C and links L in C:
+         L.governing_receipt_id = C.governing_receipt_id
+
+   This invariant prevents cross-session link splicing: even if an
+   attacker replaces a link with one from a differently-authorized
+   session, the receipt_id mismatch is detectable without
+   chain recomputation.
 
 
 8.  Formal Verification (OMNIX-FVS-1.0 Extension)
@@ -2130,7 +2164,7 @@ BEV-INV-018 — Session PQC Sealing at Close
 9.3.  Failure Isolation
 
    BAR persistence failure (step 8):
-      Session is flagged BEV-INCOMPLETE (BEV-INV-005).
+      Session is flagged BEV-INCOMPLETE (BEV-INV-003).
       No subsequent turn is permitted.
       Failure is logged to governing receipt audit trail.
       Existing BARs remain valid attestation artifacts for turns
@@ -2171,26 +2205,26 @@ BEV-INV-018 — Session PQC Sealing at Close
 
    RFC-ATF-6 invariants:
 
-   | Family | Invariant    | Statement (summary)                         |
-   |--------|--------------|---------------------------------------------|
-   | BEV    | BEV-INV-001  | Mandatory BAR per authorized turn           |
-   | BEV    | BEV-INV-002  | Mandatory governing receipt binding         |
-   | BEV    | BEV-INV-003  | Output hash integrity via content_hash_bar  |
-   | BEV    | BEV-INV-004  | BAR PQC sealing (ML-DSA-65 required)       |
-   | BEV    | BEV-INV-005  | BAR fail-closed on persistence failure      |
-   | BEV    | BEV-INV-006  | BAR append-only storage                     |
-   | BEV    | BEV-INV-007  | BAR offline verifiability                   |
-   | BEV    | BEV-INV-008  | Mandatory CCS per BAR (when CCS_ENABLED)    |
-   | BEV    | BEV-INV-009  | CCS score ∈ [0.0, 100.0]                   |
-   | BEV    | BEV-INV-010  | DRIFTING triggers AGVP PVR issuance        |
-   | BEV    | BEV-INV-011  | CCS component non-negativity                |
-   | BEV    | BEV-INV-012  | VIOLATION triggers HALT propagation        |
-   | BEV    | BEV-INV-013  | CCS integrity via BAR seal                  |
-   | BEV    | BEV-INV-014  | Genesis hash governing receipt binding      |
-   | BEV    | BEV-INV-015  | Chain link strict monotonicity              |
-   | BEV    | BEV-INV-016  | Chain completeness (no turn gaps)           |
-   | BEV    | BEV-INV-017  | Final chain hash offline verifiability      |
-   | BEV    | BEV-INV-018  | Session PQC sealing at close                |
+   | Family | Invariant    | Module  | Statement (summary)                              |
+   |--------|--------------|---------|--------------------------------------------------|
+   | BAR    | BEV-INV-001  | BAR     | Mandatory BAR before output delivered            |
+   | BAR    | BEV-INV-002  | BAR     | Content hash = SHA3-256(output‖receipt‖index)    |
+   | BAR    | BEV-INV-003  | BAR     | HALTED BAR → immediate session halt              |
+   | BAR    | BEV-INV-004  | BAR     | PQC sealing + offline verifiability + append-only|
+   | BAR    | BEV-INV-015  | BAR     | Empty output_text → VIOLATION                    |
+   | BAR    | BEV-INV-016  | BAR     | BAR id MUST follow BAR-{HEX16} format            |
+   | CCS    | BEV-INV-005  | CCS     | Mandatory CCS per BAR (atomic with BAR)          |
+   | CCS    | BEV-INV-006  | CCS     | Conformance score ∈ [0.0, 1.0]; drift derived    |
+   | CCS    | BEV-INV-007  | CCS     | CRITICAL verdict → AGVP watchdog triggered       |
+   | CCS    | BEV-INV-008  | CCS     | Cumulative drift > threshold → HALT              |
+   | CCS    | BEV-INV-009  | CCS     | CCS history append-only, hash-linked to CTCHC    |
+   | CCS    | BEV-INV-017  | CCS     | Drift accumulator isolated per session_id        |
+   | CTCHC  | BEV-INV-010  | CTCHC   | Chain initialized before first BAR               |
+   | CTCHC  | BEV-INV-011  | CTCHC   | link = SHA3-256(prev ‖ turn ‖ receipt)           |
+   | CTCHC  | BEV-INV-012  | CTCHC   | Gaps in turn sequence → verification fails       |
+   | CTCHC  | BEV-INV-013  | CTCHC   | Seal covers complete chain (genesis to tip)      |
+   | CTCHC  | BEV-INV-014  | CTCHC   | Seal ML-DSA-65 signed before OEP export          |
+   | CTCHC  | BEV-INV-018  | CTCHC   | Every link's receipt_id MUST match chain receipt |
 
    Complete ATF invariant registry as of RFC-ATF-6:
 
@@ -2233,16 +2267,16 @@ BEV-INV-018 — Session PQC Sealing at Close
        prerequisite.
 
    (b) BAR operational: BEV_ENABLED=true, all execution turns
-       produce persisted BARs, all BEV-INV-001 through BEV-INV-007
+       produce persisted BARs, all BEV-INV-001 through BEV-INV-004
        satisfied.
 
    (c) CCS operational: CCS_ENABLED=true, CCS computed and embedded
        in every BAR, AGVP integration active for DRIFTING and worse
-       verdicts, all BEV-INV-008 through BEV-INV-013 satisfied.
+       verdicts, all BEV-INV-005 through BEV-INV-009 satisfied.
 
    (d) CTCHC operational: CTCHC_ENABLED=true, all completed sessions
-       have a sealed CTCHC record, all BEV-INV-014 through
-       BEV-INV-018 satisfied.
+       have a sealed CTCHC record, all BEV-INV-010 through
+       BEV-INV-014 satisfied.
 
    (e) BEV formal verification: OMNIX-FVS-1.0 BEV extension runs
        all BEV proof targets with result = "unsat" or "structural"
@@ -2281,7 +2315,7 @@ BEV-INV-018 — Session PQC Sealing at Close
       ATF receipt store at session initialization.  Sessions with
       unresolvable governing_receipt_id MUST NOT be started.
    R-BAR-03: turn_index MUST be assigned sequentially starting at 0.
-      No gaps are permitted (BEV-INV-015).
+      No gaps are permitted (BEV-INV-011).
    R-BAR-04: BAR MUST be persisted before the next turn begins.
       Failure to persist MUST trigger session BEV-INCOMPLETE flag.
    R-BAR-05: pqc_algorithm MUST be "ML-DSA-65" (BEV-INV-004).
@@ -2295,9 +2329,9 @@ BEV-INV-018 — Session PQC Sealing at Close
 
    NOT PERMITTED:
    R-BAR-09: No UPDATE or DELETE on atf_behavioral_anchor_records
-      (BEV-INV-006).
+      (BEV-INV-004).
    R-BAR-10: A BAR MUST NOT be produced after the session has
-      received a HALT state from a VIOLATION verdict (BEV-INV-012).
+      received a HALT state from a VIOLATION verdict (BEV-INV-008).
 
 12.2.  CCS Requirements
 
@@ -2305,13 +2339,13 @@ BEV-INV-018 — Session PQC Sealing at Close
    R-CCS-01: CCS computation MUST complete before content_hash_bar
       is computed (§4.4 step ordering).
    R-CCS-02: ccs_score MUST be in [0.0, 100.0] for all non-REDACTED
-      BARs when CCS_ENABLED=true (BEV-INV-009).
+      BARs when CCS_ENABLED=true (BEV-INV-006).
    R-CCS-03: ccs_verdict MUST be consistent with ccs_score per
       §6.4 threshold table.
    R-CCS-04: DRIFTING or worse verdict MUST trigger AGVP PVR
-      issuance within BEV_AGVP_TRIGGER_TIMEOUT_MS (BEV-INV-010).
+      issuance within BEV_AGVP_TRIGGER_TIMEOUT_MS (BEV-INV-007).
    R-CCS-05: VIOLATION verdict MUST trigger HALT propagation
-      within BEV_HALT_TIMEOUT_MS (BEV-INV-012).
+      within BEV_HALT_TIMEOUT_MS (BEV-INV-008).
 
    RECOMMENDED:
    R-CCS-06: CCS_CONFORMANT_THRESHOLD SHOULD be >= 85.0 in
@@ -2323,7 +2357,7 @@ BEV-INV-018 — Session PQC Sealing at Close
    R-CCS-08: CCS threshold environment variables MUST NOT be set
       below production floors defined in §6.4.
    R-CCS-09: ccs_score MUST NOT be modified after content_hash_bar
-      computation (BEV-INV-013).
+      computation (BEV-INV-009).
 
 12.3.  CTCHC Requirements
 
@@ -2335,7 +2369,7 @@ BEV-INV-018 — Session PQC Sealing at Close
    R-CTCHC-03: CTCHC MUST be sealed at session close using the
       §7.4 procedure.
    R-CTCHC-04: ctchc_seal MUST use ML-DSA-65 over
-      content_hash_ctchc (BEV-INV-018).
+      content_hash_ctchc (BEV-INV-014).
    R-CTCHC-05: CV.turn_limit MUST NOT exceed 100_000 turns per
       session.  Sessions exceeding this limit MUST be split into
       sub-sessions with separate governing receipts.
@@ -2398,7 +2432,7 @@ BEV-INV-018 — Session PQC Sealing at Close
    - output_payload is TEXT (nullable) — NULL when mode = HASHED/REDACTED
    - genesis_hash and session_start_ns NULL for turns > 0
    - session_status: ACTIVE | SEALED | FLAGGED
-   - No UPDATE or DELETE triggers (BEV-INV-006)
+   - No UPDATE or DELETE triggers (BEV-INV-004)
 
 13.2.  atf_constraint_conformance_signals
 
@@ -2476,7 +2510,7 @@ BEV-INV-018 — Session PQC Sealing at Close
    - session_status: BEV-COMPLETE | BEV-INCOMPLETE | CTCHC_SEAL_FAILED
      | CHAIN_BROKEN | CTCHC_PARTIAL
    - failure_turn_index and failure_reason populated for non-COMPLETE.
-   - No UPDATE or DELETE (BEV-INV-018 enforcement).
+   - No UPDATE or DELETE (BEV-INV-014 enforcement).
 
 
 14.  API Endpoints
@@ -2545,10 +2579,10 @@ BEV-INV-018 — Session PQC Sealing at Close
    the agent's actual behavioral output.
 
    Mitigation:
-   - BEV-INV-003: output_hash is covered by content_hash_bar.
+   - BEV-INV-002: output_hash is covered by content_hash_bar.
      Modifying output_hash invalidates content_hash_bar and
      thereby invalidates pqc_signature.
-   - BEV-INV-007 (offline verifiability): any verifier can detect
+   - BEV-INV-004 (offline verifiability): any verifier can detect
      the substitution by recomputing content_hash_bar from the
      BAR JSON and comparing to the signed value.
    - In FULL mode: the output_payload is also covered by
@@ -2562,10 +2596,10 @@ BEV-INV-018 — Session PQC Sealing at Close
    Mitigation:
    - BEV-INV-004 (PQC sealing): fabricated BARs require the
      platform ML-DSA-65 private key.  Key compromise required.
-   - BEV-INV-015 (chain link monotonicity): a fabricated BAR
+   - BEV-INV-011 (chain link monotonicity): a fabricated BAR
      inserted into an existing session sequence produces an
      incorrect chain_link, detectable from the CTCHC.
-   - BEV-INV-016 (chain completeness): inserting a BAR creates
+   - BEV-INV-012 (chain completeness): inserting a BAR creates
      a turn_index collision or gap, detectable in CTCHC verification.
 
 15.3.  CCS Score Inflation Attack
@@ -2575,10 +2609,10 @@ BEV-INV-018 — Session PQC Sealing at Close
    suppressing AGVP PVR issuance.
 
    Mitigation:
-   - BEV-INV-013 (CCS integrity via BAR seal): ccs_score is
+   - BEV-INV-009 (CCS integrity via BAR seal): ccs_score is
      covered by content_hash_bar and pqc_signature.  Modification
      produces a signature verification failure.
-   - BEV-INV-010 (DRIFTING triggers AGVP PVR): the CCS computation
+   - BEV-INV-007 (DRIFTING triggers AGVP PVR): the CCS computation
      runs before BAR sealing, and the PVR issuance is triggered
      from the in-memory verdict before BAR persistence.  An
      adversary modifying the persisted BAR cannot retroactively
@@ -2592,7 +2626,7 @@ BEV-INV-018 — Session PQC Sealing at Close
    SDS = 0 to produce score = 50).
 
    Mitigation:
-   - BEV-INV-011 (component non-negativity): no component can
+   - BEV-INV-006 (component non-negativity): no component can
      be negative to offset another.
    - Implementations SHOULD log ccs_components alongside ccs_score
      in all compliance reports.  Regulators reviewing CCS evidence
@@ -2609,7 +2643,7 @@ BEV-INV-018 — Session PQC Sealing at Close
    under the target receipt.
 
    Mitigation:
-   - BEV-INV-014: genesis_hash is computed from the governing
+   - BEV-INV-010: genesis_hash is computed from the governing
      receipt ID and session ID.  A substituted genesis hash produces
      a chain verification failure at Step 4 of §7.5.
    - genesis_hash is embedded in CTCHC.content_hash_ctchc, which is
@@ -2637,10 +2671,10 @@ BEV-INV-018 — Session PQC Sealing at Close
    subset is the complete session.
 
    Mitigation:
-   - BEV-INV-016 (chain completeness): the CTCHC turn_count field
+   - BEV-INV-012 (chain completeness): the CTCHC turn_count field
      declares the expected number of turns.  A verifier who receives
      fewer BARs than turn_count knows turns are missing.
-   - BEV-INV-015 (monotonicity): missing turns produce chain link
+   - BEV-INV-011 (monotonicity): missing turns produce chain link
      mismatches at subsequent turns, making omission detectable
      even without knowing the total turn_count.
    - The all_bar_ids array in the CTCHC record is a complete
@@ -3252,56 +3286,51 @@ B.3  CCS Threshold Configuration Reference
    □ BEV session initialized before first turn (session_id, genesis_hash)
    □ governing_receipt_id validated against ATF receipt store at session
      start (BEV-INV-002)
-   □ Every authorized turn produces a persisted BAR before next turn
-     begins (BEV-INV-001)
-   □ turn_index starts at 0 and is strictly monotonically increasing
-     per session (no gaps, no reuse) (BEV-INV-015)
-   □ output_hash computed per §5.5 for declared output_hash_mode
-   □ content_hash_bar = SHA-256(canonical_json(BAR \ sig fields))
-     (§5.3)
+   □ Every authorized turn produces a BAR before output is delivered
+     (BEV-INV-001)
+   □ output_text is non-empty and non-whitespace before BAR creation
+     (BEV-INV-015)
+   □ bar_id follows "BAR-{HEX16}" format exactly (BEV-INV-016)
+   □ content_hash = SHA3-256(output_hash || receipt_id || turn_index)
+     (BEV-INV-002)
    □ pqc_algorithm = "ML-DSA-65" in every BAR (BEV-INV-004)
-   □ pqc_signature = ML-DSA-65 sign(content_hash_bar.encode()) using
+   □ pqc_signature = ML-DSA-65 sign(content_hash.encode()) using
      platform key (BEV-INV-004)
    □ BAR sealed before persistence (BEV-INV-004)
-   □ BAR persistence failure triggers BEV-INCOMPLETE flag and blocks
-     next turn (BEV-INV-005)
-   □ No UPDATE or DELETE on atf_behavioral_anchor_records (BEV-INV-006)
-   □ §5.7 offline verification passes for all BARs (BEV-INV-007)
-   □ atf_spec_version = "1.6" in every BAR
+   □ HALTED BAR transitions session to STATUS_HALTED immediately
+     (BEV-INV-003)
+   □ No UPDATE or DELETE on atf_behavioral_anchor_records (BEV-INV-004)
+   □ §5.7 offline verification passes for all BARs (BEV-INV-004)
 
    CCS
    □ CCS_ENABLED=true in production
-   □ CCS computation completes before content_hash_bar computation
-     (§4.4 step ordering)
-   □ ccs_score ∈ [0.0, 100.0] for all non-REDACTED BARs (BEV-INV-009)
-   □ All four ccs_components present and non-negative (BEV-INV-011)
-   □ ccs_verdict consistent with ccs_score per §6.4 thresholds
-   □ DRIFTING, BREACH, or VIOLATION verdict triggers AGVP PVR within
-     BEV_AGVP_TRIGGER_TIMEOUT_MS (BEV-INV-010)
-   □ VIOLATION verdict triggers HALT propagation within
-     BEV_HALT_TIMEOUT_MS (BEV-INV-012)
-   □ No further turns permitted in a HALTED session (BEV-INV-012)
-   □ ccs_score, ccs_verdict, ccs_components covered by content_hash_bar
-     (BEV-INV-013)
-   □ CCS threshold variables at or above production floors (§6.4)
-   □ atf_constraint_conformance_signals table kept in sync with BAR
-     records
+   □ CCS computed in same atomic operation as BAR (BEV-INV-005)
+   □ conformance_score ∈ [0.0, 1.0] for all CCS records (BEV-INV-006)
+   □ All constraint evaluation components produce non-negative scores
+     (BEV-INV-006)
+   □ verdict consistent with conformance_score per §6.4 thresholds
+   □ CRITICAL verdict sets watchdog_triggered=true and triggers AGVP
+     PVR (BEV-INV-007)
+   □ cumulative_drift > DRIFT_THRESHOLD → verdict=HALT (BEV-INV-008)
+   □ No further turns permitted in a HALTED session (BEV-INV-008)
+   □ Drift accumulator reloaded from DB on process restart (BEV-INV-017)
+   □ CCS records append-only, chain_link_hash matches CTCHC (BEV-INV-009)
+   □ No UPDATE or DELETE on atf_constraint_conformance_signals
 
    CTCHC
    □ CTCHC_ENABLED=true in production
-   □ genesis_hash computed using §7.2 formula from governing_receipt_id,
-     session_id, session_start_ns (BEV-INV-014)
-   □ genesis_hash stored in turn_index=0 BAR
-   □ chain_link computed using §7.3 formula for every turn (BEV-INV-015)
-   □ chain_link embedded in BAR before BAR sealing (§4.4 ordering)
-   □ CTCHC sealed at session close using §7.4 procedure
-   □ content_hash_ctchc = SHA-256(canonical_json(CTCHC \ seal fields))
-   □ ctchc_seal = ML-DSA-65 sign(content_hash_ctchc) (BEV-INV-018)
-   □ all_bar_ids contains all session BAR IDs in turn_index order
-     (BEV-INV-016)
-   □ Session status BEV-COMPLETE only after CTCHC is sealed
+   □ genesis_hash computed as SHA3-256(session_id||"||"||receipt_id||
+     "||"||"OMNIX-CTCHC-GENESIS") before first BAR (BEV-INV-010)
+   □ chain_link = SHA3-256(json.dumps({"prev":..,"turn":..,"receipt":..},
+     sort_keys=True)) for every turn (BEV-INV-011)
+   □ Every link's governing_receipt_id matches chain receipt (BEV-INV-018)
+   □ CTCHC sealed at session close covering all N links (BEV-INV-013)
+   □ ctchc_seal = ML-DSA-65 sign(seal_hash) (BEV-INV-014)
+   □ Verification fails if any turn_index in [0,N-1] is missing
+     (BEV-INV-012)
+   □ Session status CLOSED only after chain_sealed = True
    □ §7.5 offline verification passes for all completed sessions
-     (BEV-INV-017)
+     (BEV-INV-013)
    □ No UPDATE or DELETE on atf_coherence_hash_chains
    □ CTCHC_PARTIAL records NOT presented as Session Integrity Proof
 
