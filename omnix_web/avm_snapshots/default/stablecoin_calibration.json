@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-95D02B8453",
   "parameter_version": "1.95d02b8453",
   "domain": "stablecoin",
-  "calibrated_at": "2026-05-23T09:28:10.413306+00:00",
-  "calibrated_at_epoch": 1779528490.413306,
   "baseline_signals": {
-    "probability_score": 81.98,
     "risk_exposure": 7.99,
     "signal_coherence": 76.04,
-    "trend_persistence": 65.11,
+    "logic_consistency": 67.93,
+    "probability_score": 81.98,
     "stress_resilience": 60.85,
-    "logic_consistency": 67.93
+    "trend_persistence": 65.11
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_10.8"
-  ]
+  ],
+  "calibrated_at": "2026-05-23T09:28:10.413306+00:00",
+  "calibrated_at_epoch": 1779528490.413306
 }

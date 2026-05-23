@@ -1,14 +1,14 @@
 {
-  "snapshot_id": "AVM-2FFEE012D1",
-  "parameter_version": "1.2ffee012d1",
+  "snapshot_id": "AVM-E35C6C6524",
+  "parameter_version": "1.e35c6c6524",
   "domain": "robotics",
   "baseline_signals": {
-    "risk_exposure": 19.27,
-    "signal_coherence": 79.66,
-    "logic_consistency": 82.8,
-    "probability_score": 71.3,
-    "stress_resilience": 64.47,
-    "trend_persistence": 74.22
+    "risk_exposure": 54.31,
+    "signal_coherence": 89.96,
+    "logic_consistency": 73.23,
+    "probability_score": 71.2,
+    "stress_resilience": 46.84,
+    "trend_persistence": 77.46
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -17,8 +17,8 @@
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_13.3"
+    "prev_drift_15.9"
   ],
-  "calibrated_at": "2026-05-20T08:36:25.195256+00:00",
-  "calibrated_at_epoch": 1779266185.195256
+  "calibrated_at": "2026-05-23T09:28:08.511781+00:00",
+  "calibrated_at_epoch": 1779528488.511781
 }
