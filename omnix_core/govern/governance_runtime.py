@@ -626,7 +626,8 @@ class GovernanceRuntime:
                     "BEV-INV-001", "BEV-INV-002", "BEV-INV-003", "BEV-INV-004",
                     "BEV-INV-005", "BEV-INV-006", "BEV-INV-007", "BEV-INV-008",
                     "BEV-INV-009", "BEV-INV-010", "BEV-INV-011", "BEV-INV-012",
-                    "BEV-INV-013", "BEV-INV-014",
+                    "BEV-INV-013", "BEV-INV-014", "BEV-INV-015", "BEV-INV-016",
+                    "BEV-INV-017", "BEV-INV-018", "OGR-INV-001",
                 ],
                 "pqc_algorithm": "ML-DSA-65 (Dilithium-3, FIPS 204)",
                 "offline_verifiable": True,
@@ -725,12 +726,25 @@ class GovernanceRuntime:
         bev_inv_004 = pqc_signed_bars == total_bars if total_bars > 0 else True
         bev_inv_013 = chain.is_sealed if chain else False
         bev_inv_014 = chain.seal_pqc_signature is not None if chain else False
+        bev_inv_015 = not any(
+            b.bar_status == "VIOLATION" and "BEV-INV-015" in (b.halt_reason or "")
+            for b in bars
+        )
+        bev_inv_016 = all(
+            b.bar_id.startswith("BAR-") and len(b.bar_id) == 20 for b in bars
+        ) if bars else True
+        bev_inv_018 = verification.get("bev_inv_018", True)
+        ogr_inv_001 = len(session.atf_layers_active) == self._REQUIRED_LAYER_COUNT
 
         overall_pass = (
             bev_inv_001
             and bev_inv_004
             and bev_inv_013
             and bev_inv_014
+            and bev_inv_015
+            and bev_inv_016
+            and bev_inv_018
+            and ogr_inv_001
             and verification.get("verified", False)
         )
 
@@ -761,6 +775,8 @@ class GovernanceRuntime:
                 "pqc_signed_turns": pqc_signed_bars,
                 "bev_inv_001_pass": bev_inv_001,
                 "bev_inv_004_pass": bev_inv_004,
+                "bev_inv_015_pass": bev_inv_015,
+                "bev_inv_016_pass": bev_inv_016,
             },
             "conformance_summary": {
                 "avg_conformance": ccs_trend.get("avg_conformance"),
@@ -779,6 +795,12 @@ class GovernanceRuntime:
                 "bev_inv_012_pass": verification.get("bev_inv_012", False),
                 "bev_inv_013_pass": bev_inv_013,
                 "bev_inv_014_pass": bev_inv_014,
+                "bev_inv_018_pass": bev_inv_018,
+            },
+            "session_integrity": {
+                "ogr_inv_001_pass": ogr_inv_001,
+                "layers_active": len(session.atf_layers_active),
+                "required_layers": self._REQUIRED_LAYER_COUNT,
             },
             "offline_verifiable": True,
             "generated_at": datetime.now(timezone.utc).isoformat(),

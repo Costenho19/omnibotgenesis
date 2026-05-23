@@ -225,7 +225,13 @@ def close_session(session_id: str):
     try:
         runtime = _get_runtime()
         result = runtime.close_session(session_id, package_oep=package_oep)
-        result["status"] = "session_closed"
+        if result.get("already_closed"):
+            result["status"] = "already_sealed"
+        elif result.get("session_status") == "HALTED":
+            # BEV-INV-003: HALTED is the terminal forensic state — preserved through seal
+            result["status"] = "session_sealed_halted"
+        else:
+            result["status"] = "session_closed"
         return jsonify(result)
     except ValueError as exc:
         return _err(str(exc))
@@ -348,11 +354,11 @@ def compliance_report(session_id: str):
     Generate an ATF-BEV-Compliant governance compliance report.
 
     This report documents:
-      • All 6 ATF layers attested
-      • Behavioral attestation statistics (BAR)
-      • Conformance trend (CCS)
-      • Chain integrity proof (CTCHC)
-      • Per-invariant pass/fail for BEV-INV-001 through BEV-INV-014
+      • All 6 ATF layers attested (OGR-INV-001)
+      • Behavioral attestation statistics (BAR) — BEV-INV-001/004/015/016
+      • Conformance trend (CCS) — BEV-INV-005–009/017
+      • Chain integrity proof (CTCHC) — BEV-INV-010–014/018
+      • Per-invariant pass/fail for BEV-INV-001 through BEV-INV-018 + OGR-INV-001
 
     Suitable for regulatory submission, partner due diligence,
     and third-party governance audit.

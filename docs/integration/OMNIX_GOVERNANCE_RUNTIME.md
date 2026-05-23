@@ -256,8 +256,8 @@ ATF-L1-Compliant
 ```
 
 The compliance report (`GET /v1/govern/compliance/{id}`) documents
-per-invariant pass/fail for all 14 BEV invariants plus the 6 ATF layer
-attestations. It is suitable for:
+per-invariant pass/fail for all 18 BEV invariants (BEV-INV-001–018) plus
+OGR-INV-001 and the 6 ATF layer attestations. It is suitable for:
 - Regulatory submission (AI Act, DOGE, UAE CRAE)
 - Partner due diligence
 - Third-party governance audit

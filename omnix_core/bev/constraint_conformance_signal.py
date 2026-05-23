@@ -198,7 +198,16 @@ class CCSEngine:
 
         drift_delta = 1.0 - conformance_score
 
-        prev_cumulative = self._drift_cache.get(session_id, 0.0)
+        # BEV-INV-017 + multi-dyno safety: if this process has no cache entry
+        # for this session (e.g. new dyno, restart), load the last known state
+        # from DB so drift accumulation is never reset mid-session.
+        if session_id not in self._drift_cache:
+            db_drift, db_chain_hash = self._load_session_state_from_db(session_id)
+            self._drift_cache[session_id] = db_drift
+            if db_chain_hash is not None:
+                self._chain_cache[session_id] = db_chain_hash
+
+        prev_cumulative = self._drift_cache[session_id]
         cumulative_drift = prev_cumulative + drift_delta
         self._drift_cache[session_id] = cumulative_drift
 
@@ -405,6 +414,38 @@ class CCSEngine:
         except Exception as exc:
             logger.error(f"[CCS] list_signals error: {exc}")
             return []
+
+    def _load_session_state_from_db(
+        self, session_id: str
+    ) -> tuple:
+        """
+        Load the latest cumulative_drift and chain_link_hash from DB for a session.
+
+        Called when the in-process cache has no entry — typically on a new dyno
+        or after a process restart. Returns (0.0, None) if no DB or no records.
+
+        This ensures BEV-INV-017 holds across dyno restarts: drift never resets
+        to 0.0 mid-session just because the process is fresh.
+        """
+        if not self._db_url:
+            return 0.0, None
+        try:
+            with self._get_conn() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        SELECT cumulative_drift, chain_link_hash
+                        FROM atf_constraint_conformance_signals
+                        WHERE session_id=%s
+                        ORDER BY turn_index DESC
+                        LIMIT 1
+                    """, (session_id,))
+                    row = cur.fetchone()
+                    if row:
+                        return float(row[0]), row[1]
+                    return 0.0, None
+        except Exception as exc:
+            logger.warning(f"[CCS] _load_session_state_from_db failed (non-blocking): {exc}")
+            return 0.0, None
 
     @staticmethod
     def _row_to_ccs(row: Dict[str, Any]) -> ConstraintConformanceSignal:

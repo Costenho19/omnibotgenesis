@@ -91,22 +91,32 @@ External AI Agent
 
 ### Key invariants delegated to BEV (ADR-181/182/183)
 
-| Invariant    | Enforced in        | Description                                   |
-|-------------|-------------------|-----------------------------------------------|
-| BEV-INV-001 | BAREngine          | Every turn → BAR before output delivered     |
-| BEV-INV-002 | BAREngine          | BAR content_hash covers output+receipt+index |
-| BEV-INV-003 | BAREngine          | HALT BAR → immediate session halt            |
-| BEV-INV-004 | BAREngine          | BAR PQC-verifiable offline                   |
-| BEV-INV-005 | CCSEngine          | Every BAR → CCS in same atomic step          |
-| BEV-INV-006 | CCSEngine          | CCS score ∈ [0.0, 1.0]                       |
-| BEV-INV-007 | CCSEngine          | CRITICAL verdict → AGVP watchdog             |
-| BEV-INV-008 | CCSEngine          | Cumulative drift > threshold → HALT          |
-| BEV-INV-009 | CCSEngine          | CCS history append-only, hash-linked         |
-| BEV-INV-010 | CTCHCEngine        | Chain initialized before first BAR           |
-| BEV-INV-011 | CTCHCEngine        | Link = H(prev ‖ turn ‖ receipt)              |
-| BEV-INV-012 | CTCHCEngine        | Gaps in sequence → verify fails              |
-| BEV-INV-013 | CTCHCEngine        | Seal covers complete chain                   |
-| BEV-INV-014 | CTCHCEngine        | Seal PQC-signed before OEP export            |
+| Invariant    | Enforced in           | Description                                          |
+|-------------|----------------------|------------------------------------------------------|
+| BEV-INV-001 | BAREngine             | Every turn → BAR before output delivered             |
+| BEV-INV-002 | BAREngine             | BAR content_hash covers output+receipt+index         |
+| BEV-INV-003 | BAREngine             | HALT BAR → immediate session halt (forensic state)  |
+| BEV-INV-004 | BAREngine             | BAR PQC-verifiable offline                           |
+| BEV-INV-005 | CCSEngine             | Every BAR → CCS in same atomic step                 |
+| BEV-INV-006 | CCSEngine             | CCS score ∈ [0.0, 1.0]                              |
+| BEV-INV-007 | CCSEngine             | CRITICAL verdict → AGVP watchdog                    |
+| BEV-INV-008 | CCSEngine             | Cumulative drift > threshold → HALT                 |
+| BEV-INV-009 | CCSEngine             | CCS history append-only, hash-linked                |
+| BEV-INV-010 | CTCHCEngine           | Chain initialized before first BAR                  |
+| BEV-INV-011 | CTCHCEngine           | Link = H(prev ‖ turn ‖ receipt)                     |
+| BEV-INV-012 | CTCHCEngine           | Gaps in sequence → verify fails                     |
+| BEV-INV-013 | CTCHCEngine           | Seal covers complete chain                          |
+| BEV-INV-014 | CTCHCEngine           | Seal PQC-signed before OEP export                   |
+| BEV-INV-015 | BAREngine             | Empty output_text → VIOLATION (no silent outputs)   |
+| BEV-INV-016 | BAREngine             | BAR id MUST follow "BAR-{HEX16}" format             |
+| BEV-INV-017 | CCSEngine             | Drift accumulator isolated per session_id           |
+| BEV-INV-018 | CTCHCEngine           | Every link's receipt_id MUST match chain receipt    |
+
+### OGR-level invariant (ADR-184)
+
+| Invariant    | Enforced in           | Description                                          |
+|-------------|----------------------|------------------------------------------------------|
+| OGR-INV-001 | GovernanceRuntime     | Session MUST activate all 6 ATF layers simultaneously — partial activation is not ATF-BEV-Compliant |
 
 ### Database tables introduced
 
