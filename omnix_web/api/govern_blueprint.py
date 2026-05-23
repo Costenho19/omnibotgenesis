@@ -14,6 +14,7 @@ Endpoints:
     GET  /v1/govern/sessions                — List sessions for an agent
     POST /v1/govern/verify                  — Offline artifact verification
     GET  /v1/govern/compliance/<id>         — ATF-BEV-Compliant report
+    GET  /v1/govern/manifest                — Protocol manifest & invariant registry
 
 Harold Nunes — OMNIX QUANTUM LTD — May 2026
 """
@@ -281,6 +282,14 @@ def list_sessions():
     """
     agent_id = request.args.get("agent_id")
     status = request.args.get("status")
+    _VALID_STATUSES = {"ACTIVE", "CLOSED", "HALTED", "EXPIRED"}
+    if status and status.upper() not in _VALID_STATUSES:
+        return _err(
+            f"Invalid status '{status}'. Must be one of: "
+            + ", ".join(sorted(_VALID_STATUSES))
+        )
+    if status:
+        status = status.upper()
     try:
         limit = min(int(request.args.get("limit", 50)), 200)
     except (TypeError, ValueError):

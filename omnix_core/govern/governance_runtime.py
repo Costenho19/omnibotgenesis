@@ -516,16 +516,34 @@ class GovernanceRuntime:
         )
 
         ccs_trend = self._get_ccs().get_session_trend(session_id)
-        bars = self._get_bar().list_bars(session_id)
 
         # BEV-INV-003: preserve HALTED as terminal forensic state — not overwritten by CLOSED
         final_status = STATUS_HALTED if was_halted else STATUS_CLOSED
+
+        # Use session.turn_count — always accurate (updated by _update_session_turn
+        # on every record_turn, both in-cache and in DB). Never query bars just
+        # for this count: list_bars returns [] when DATABASE_URL is absent, which
+        # would silently produce turn_count=0 for in-memory sessions.
+        turn_count = session.turn_count
+
+        # Sync the in-memory cache to the post-close state so any subsequent
+        # get_session() call sees chain_sealed=True, closed_at, and final_status
+        # without a DB round-trip.
+        if session_id in self._session_cache:
+            import dataclasses as _dc
+            self._session_cache[session_id] = _dc.replace(
+                self._session_cache[session_id],
+                session_status=final_status,
+                chain_sealed=True,
+                chain_seal_hash=sealed_chain.seal_hash,
+                closed_at=closed_at,
+            )
 
         result = {
             "session_id": session_id,
             "session_status": final_status,
             "closed_at": closed_at,
-            "turn_count": len(bars),
+            "turn_count": turn_count,
             "chain_seal": sealed_chain.chain_summary(),
             "ccs_final": {
                 "avg_conformance": ccs_trend.get("avg_conformance"),
@@ -546,7 +564,7 @@ class GovernanceRuntime:
             )
 
         logger.info(
-            f"[OGR] Session closed: {session_id} | turns={len(bars)} "
+            f"[OGR] Session closed: {session_id} | turns={turn_count} "
             f"| sealed={sealed_chain.is_sealed}"
         )
         return result
@@ -589,7 +607,10 @@ class GovernanceRuntime:
             "compliance_tier": ATF_BEV_COMPLIANT,
             "atf_layers_active": session.atf_layers_active,
             "behavioral_attestation_chain": {
-                "turn_count": len(bars),
+                # session.turn_count is always accurate (updated on every record_turn).
+                # len(bars) would be 0 without DATABASE_URL — misleading in the proof.
+                "turn_count": session.turn_count,
+                "bars_retrieved": len(bars),
                 "bars": [b.trust_summary() for b in bars],
                 "all_pqc_signed": all(b.pqc_signature is not None for b in bars),
             },
@@ -648,9 +669,12 @@ class GovernanceRuntime:
         Offline verification of any OGR artifact.
 
         Accepts:
-          artifact_type = "BAR" | "CCS" | "CTCHC" | "SESSION"
+          artifact_type = "BAR" | "CTCHC" | "SESSION"
           artifact_id   = the artifact's primary key
           artifact_data = optional embedded dict (for fully offline use)
+
+        Note: "CCS" verification requires DB access and is not supported
+        in the offline verify endpoint. Use compliance_report for CCS data.
 
         Returns verification result with BEV invariant flags.
         """
@@ -692,7 +716,7 @@ class GovernanceRuntime:
         return {
             "verified": False,
             "reason": f"Unknown artifact_type: {artifact_type}. "
-                      "Supported: BAR, CCS, CTCHC, SESSION",
+                      "Supported: BAR, CTCHC, SESSION",
         }
 
     # ─────────────────────────────────────────────────────────────

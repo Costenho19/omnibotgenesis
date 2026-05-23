@@ -453,12 +453,12 @@ class TestCTCHCChain:
         assert link.chain_link_hash == expected
 
     def test_seal_chain_no_db_in_memory(self):
-        """BEV-INV-013/014: seal_chain works with no DB (in-memory)."""
+        """BEV-INV-013/014: seal_chain raises RuntimeError for uninitialised session."""
         engine = _ctchc_engine_no_db()
-        # With no DB, get_chain returns None → seal_chain raises RuntimeError
-        # This is expected behavior — sealing requires a persisted chain
+        # get_chain returns None for a session_id that never had initialize_chain called,
+        # regardless of DB presence — the _chain_cache miss triggers RuntimeError.
         with pytest.raises(RuntimeError, match="No chain found"):
-            engine.seal_chain("NO-DB-SESSION")
+            engine.seal_chain("NEVER-INITIALISED-SESSION")
 
     def test_verify_chain_not_found(self):
         """verify_chain returns not-verified for missing chain (no DB)."""
@@ -817,6 +817,137 @@ class TestOGRBlueprint:
                 content_type="application/json",
             )
             assert resp.status_code == 400
+
+
+# ═════════════════════════════════════════════════════════════════
+#  CLOSE SESSION — cache invalidation & turn_count fixes
+# ═════════════════════════════════════════════════════════════════
+
+class TestCloseSessionFixes:
+    """
+    Regression tests for the close_session bugs fixed in audit round 3:
+      - Cache not invalidated → post-close get_session returned stale ACTIVE state
+      - turn_count used len(bars) → 0 without DB instead of session.turn_count
+      - verify_artifact docstring/error listed CCS as supported (it is not)
+      - list_sessions accepted any status string without validation
+    """
+
+    def _make_runtime(self):
+        from omnix_core.govern.governance_runtime import GovernanceRuntime
+        rt = GovernanceRuntime()
+        rt._db_url = None
+        rt._bar_engine = _bar_engine_no_db()
+        rt._ccs_engine = _ccs_engine_no_db()
+        rt._ctchc_engine = _ctchc_engine_no_db()
+        return rt
+
+    def test_get_session_after_close_returns_closed_status(self):
+        """
+        Bug: close_session did not update _session_cache → get_session returned ACTIVE.
+        After close, cached session MUST show CLOSED (or HALTED if was halted).
+        """
+        rt = self._make_runtime()
+        session = rt.start_session("AID-CACHE", "RCP-CACHE-001")
+        rt.record_turn(session.session_id, "Turn 0 output.")
+        rt.close_session(session.session_id)
+
+        # Must NOT return ACTIVE anymore
+        refreshed = rt.get_session(session.session_id)
+        assert refreshed is not None
+        assert refreshed.session_status == "CLOSED"
+        assert refreshed.chain_sealed is True
+        assert refreshed.closed_at is not None
+
+    def test_get_session_after_halted_close_preserves_halted(self):
+        """
+        BEV-INV-003: HALTED session sealed via close_session must remain HALTED,
+        not overwritten with CLOSED in the cache.
+        """
+        rt = self._make_runtime()
+        session = rt.start_session(
+            "AID-HALT", "RCP-HALT-001",
+            constraint_set={"halt_on_keywords": ["HALT_NOW"]},
+        )
+        rt.record_turn(session.session_id, "Please HALT_NOW immediately.")
+        rt.close_session(session.session_id)
+
+        refreshed = rt.get_session(session.session_id)
+        assert refreshed is not None
+        assert refreshed.session_status == "HALTED", (
+            "HALTED status must be preserved after sealing (BEV-INV-003)"
+        )
+        assert refreshed.chain_sealed is True
+
+    def test_close_session_turn_count_matches_actual_turns(self):
+        """
+        Bug: close_session returned turn_count=len(bars) where bars=[] without DB.
+        After fix: turn_count must match session.turn_count (number of record_turn calls).
+        """
+        rt = self._make_runtime()
+        session = rt.start_session("AID-TC", "RCP-TC-001")
+        rt.record_turn(session.session_id, "Turn 0.")
+        rt.record_turn(session.session_id, "Turn 1.")
+        rt.record_turn(session.session_id, "Turn 2.")
+        result = rt.close_session(session.session_id)
+
+        assert result["turn_count"] == 3, (
+            f"Expected 3 turns, got {result['turn_count']} "
+            "(bug: was using len(bars) which is 0 without DB)"
+        )
+
+    def test_verify_artifact_ccs_not_supported_gives_clear_error(self):
+        """
+        Bug: error message listed 'CCS' as supported type but it is not implemented.
+        After fix: error says 'BAR, CTCHC, SESSION' without CCS.
+        """
+        rt = self._make_runtime()
+        result = rt.verify_artifact("CCS", "CCS-ABC123")
+        assert result["verified"] is False
+        assert "CCS" not in result.get("reason", "").replace("Unknown artifact_type: CCS", ""), (
+            "CCS should not appear as a SUPPORTED type in the error message"
+        )
+        assert "BAR" in result["reason"]
+        assert "CTCHC" in result["reason"]
+        assert "SESSION" in result["reason"]
+
+    def test_list_sessions_invalid_status_returns_400(self):
+        """
+        Bug: list_sessions blueprint accepted any status string including invalid ones.
+        After fix: invalid status must return 400.
+        """
+        from flask import Flask
+        from api.govern_blueprint import ogr_bp
+
+        app = Flask(__name__)
+        app.register_blueprint(ogr_bp)
+        with app.test_client() as client:
+            resp = client.get("/v1/govern/sessions?status=INVALID_STATUS")
+            assert resp.status_code == 400
+            data = resp.get_json()
+            assert "Invalid status" in data.get("error", "") or "Invalid status" in str(data)
+
+    def test_list_sessions_valid_statuses_accepted(self):
+        """list_sessions blueprint accepts all 4 valid status values (no 400)."""
+        from flask import Flask
+        from api.govern_blueprint import ogr_bp
+
+        app = Flask(__name__)
+        app.register_blueprint(ogr_bp)
+        with app.test_client() as client:
+            for status in ("ACTIVE", "CLOSED", "HALTED", "EXPIRED"):
+                resp = client.get(f"/v1/govern/sessions?status={status}")
+                assert resp.status_code != 400, f"Status '{status}' should be valid"
+
+    def test_list_sessions_case_insensitive_status(self):
+        """list_sessions normalises lowercase status to uppercase."""
+        from flask import Flask
+        from api.govern_blueprint import ogr_bp
+
+        app = Flask(__name__)
+        app.register_blueprint(ogr_bp)
+        with app.test_client() as client:
+            resp = client.get("/v1/govern/sessions?status=active")
+            assert resp.status_code == 200
 
 
 # ═════════════════════════════════════════════════════════════════

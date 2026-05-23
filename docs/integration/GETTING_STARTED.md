@@ -172,7 +172,8 @@ curl https://omnixquantum.net/v1/govern/compliance/OGR-... \
 ```
 
 Returns an ATF-BEV-Compliant report with per-invariant pass/fail for all
-14 BEV invariants. Suitable for regulatory submission or partner audit.
+18 BEV invariants (BEV-INV-001–018) plus OGR-INV-001. Suitable for
+regulatory submission or partner audit.
 
 ---
 

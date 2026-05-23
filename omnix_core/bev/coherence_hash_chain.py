@@ -169,6 +169,13 @@ class CTCHCEngine:
         self._pqc = None
         # In-process chain tips: session_id → current_tip_hash
         self._tip_cache: Dict[str, str] = {}
+        # In-process full chain objects: session_id → CoherenceHashChain
+        # Required for no-DB (in-memory) operation — DB writes are no-ops without
+        # DATABASE_URL, so seal_chain / get_chain must fall back to this cache.
+        self._chain_cache: Dict[str, "CoherenceHashChain"] = {}
+        # In-process chain links: session_id → List[ChainLink]
+        # Mirrors _chain_cache: populated by append_turn for no-DB operation.
+        self._links_cache: Dict[str, List["ChainLink"]] = {}
 
     def _get_pqc(self):
         if self._pqc is None:
@@ -233,6 +240,10 @@ class CTCHCEngine:
         )
 
         self._tip_cache[session_id] = genesis_hash
+        # Cache the full chain object for no-DB (in-memory) operation.
+        # seal_chain / get_chain fall back to this when DATABASE_URL is absent.
+        self._chain_cache[session_id] = chain
+        self._links_cache[session_id] = []
         self._persist_chain(chain)
         return chain
 
@@ -293,6 +304,8 @@ class CTCHCEngine:
         )
 
         self._tip_cache[session_id] = chain_link_hash
+        # Keep in-memory links list in sync for no-DB operation.
+        self._links_cache.setdefault(session_id, []).append(link)
         self._persist_link(link)
         self._update_chain_tip(session_id, chain_link_hash, turn_index + 1)
         return link
@@ -495,6 +508,10 @@ class CTCHCEngine:
     def _update_chain_tip(
         self, session_id: str, new_tip: str, new_count: int
     ) -> None:
+        # Always sync the in-memory chain object so no-DB callers see correct state.
+        if session_id in self._chain_cache:
+            self._chain_cache[session_id].current_tip_hash = new_tip
+            self._chain_cache[session_id].turn_count = new_count
         if not self._db_url:
             return
         try:
@@ -553,7 +570,9 @@ class CTCHCEngine:
 
     def get_chain(self, session_id: str) -> Optional[CoherenceHashChain]:
         if not self._db_url:
-            return None
+            # No database — return the in-memory cached chain (may be None if
+            # initialize_chain was never called for this session_id).
+            return self._chain_cache.get(session_id)
         try:
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
@@ -572,7 +591,8 @@ class CTCHCEngine:
 
     def get_links(self, session_id: str) -> List[ChainLink]:
         if not self._db_url:
-            return []
+            # No database — return cached links (empty list for uninitialised session).
+            return list(self._links_cache.get(session_id, []))
         try:
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
