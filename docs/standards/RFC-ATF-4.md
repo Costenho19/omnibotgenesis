@@ -217,8 +217,7 @@ Table of Contents
                (TLA+ + Z3 SMT) .................................. 84
         14.5.  Proactive Governance Gap (Gap_PG) Formal
                Definition ....................................... 85
-        14.6.  ATF-PGL-Compliant — Highest Tier Compliance
-               Designation ...................................... 85
+        14.6.  ATF-PGL-Compliant — Fourth Compliance Tier ........ 85
    15.  Distinction from Prior Art ............................... 85
    16.  Regulatory Alignment ..................................... 87
    17.  References ............................................... 88
@@ -501,8 +500,8 @@ Table of Contents
    ATF-PGL-Compliant:
       The compliance designation for implementations that satisfy all
       invariants of RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, and RFC-ATF-4.
-      ATF-PGL-Compliant implementations provide the complete five-layer
-      ATF governance infrastructure including proactive evidence,
+      ATF-PGL-Compliant implementations provide the complete six-layer
+      ATF governance infrastructure (L1–L6) including proactive evidence,
       recalibration safety, and cross-domain semantic portability.
 
    Detection Latency:
@@ -1357,10 +1356,9 @@ SSD-INV-003 — STRUCTURAL_SHIFT Requires Minimum History
 
    SDR Append-Only Invariant (DSPP-INV-002):
       An SDR entry MUST NOT be modified or deleted after issuance.
-      The SDR chain
-      for a runtime is an append-only public log.  This guarantees that
-      any domain computing an RSA over the SDR chain obtains the complete,
-      unmodified history of semantic evolution.
+      The SDR chain for a runtime is an append-only public log.  This
+      guarantees that any domain computing an RSA over the SDR chain
+      obtains the complete, unmodified history of semantic evolution.
 
 7.5.  Retroactive Semantic Assessment (RSA)
 
@@ -2046,8 +2044,9 @@ DSPP-INV-007 (a + b) — Structural Threshold Constants
    any block check.  Even when every request is blocked, the signals are
    refreshed.
    Implementations SHOULD configure a maximum signal staleness threshold
-   (RECOMMENDED: 5 × watchdog_interval) beyond which the watchdog
-   does not use cached signals for new PVR issuance.
+   consistent with the normative rule in §5.4 — signals older than
+   max(3 × AGVP_WATCHDOG_INTERVAL_SECONDS, 300 seconds) MUST NOT be
+   used for new PVR issuance.
 
 13.5.  SDR Chain Forgery
 
