@@ -374,7 +374,10 @@ class TestFilterCalibrationMetricsService(unittest.TestCase):
         self.assertEqual(written, 0)
 
     def test_flush_with_no_db_url_returns_zero(self):
-        svc = FilterCalibrationMetricsService(db_url=None)
+        import os
+        from unittest.mock import patch
+        with patch.dict(os.environ, {"DATABASE_URL": "", "OMNIX_DB_URL": ""}):
+            svc = FilterCalibrationMetricsService(db_url=None)
         svc.record(FilterCalibrationEvent())
         written = svc.flush()
         self.assertEqual(written, 0)

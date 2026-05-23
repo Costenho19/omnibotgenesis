@@ -324,8 +324,8 @@ class TestDomainBaselinesRegression:
 
     def test_domain_baselines_has_nine_domains(self):
         from scripts.initialize_avm_baselines import DOMAIN_BASELINES
-        assert len(DOMAIN_BASELINES) == 9, (
-            f"Expected 9 domains in DOMAIN_BASELINES, got {len(DOMAIN_BASELINES)}: "
+        assert len(DOMAIN_BASELINES) == 10, (
+            f"Expected 10 domains in DOMAIN_BASELINES, got {len(DOMAIN_BASELINES)}: "
             f"{list(DOMAIN_BASELINES.keys())}"
         )
 

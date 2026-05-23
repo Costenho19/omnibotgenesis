@@ -717,7 +717,7 @@ class TestAVMSingleton:
     def test_singleton_same_instance(self):
         from omnix_core.governance.assumption_validity_monitor import get_avm_instance
         import omnix_core.governance.assumption_validity_monitor as avm_mod
-        avm_mod._avm_instance = None
+        avm_mod._avm_registry.pop("default", None)
 
         a = get_avm_instance()
         b = get_avm_instance()
@@ -725,11 +725,11 @@ class TestAVMSingleton:
 
     def test_singleton_respects_env_threshold(self):
         import omnix_core.governance.assumption_validity_monitor as avm_mod
-        avm_mod._avm_instance = None
+        avm_mod._avm_registry.pop("default", None)
 
         with patch.dict(os.environ, {"AVM_DRIFT_THRESHOLD": "42.0"}):
-            avm_mod._avm_instance = None
+            avm_mod._avm_registry.pop("default", None)
             avm = avm_mod.get_avm_instance()
             assert avm.drift_threshold == 42.0
 
-        avm_mod._avm_instance = None
+        avm_mod._avm_registry.pop("default", None)

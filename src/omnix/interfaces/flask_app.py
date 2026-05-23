@@ -127,13 +127,14 @@ def _register_blueprints(app: Flask) -> None:
         except Exception as _e:
             logger.warning(f"[Credit] Table init skipped: {_e}")
 
-        # Start credit simulation engine
-        try:
-            from omnix_core.credit.credit_simulator import start_credit_simulation_background
-            start_credit_simulation_background()
-            logger.info("✅ [Credit] Islamic Credit Governance engine started")
-        except Exception as _e:
-            logger.warning(f"[Credit] Simulation engine skipped: {_e}")
+        # Start credit simulation engine (skip in test mode)
+        if not os.environ.get('TESTING'):
+            try:
+                from omnix_core.credit.credit_simulator import start_credit_simulation_background
+                start_credit_simulation_background()
+                logger.info("✅ [Credit] Islamic Credit Governance engine started")
+            except Exception as _e:
+                logger.warning(f"[Credit] Simulation engine skipped: {_e}")
 
         logger.info("Registered 18 dashboard blueprints")
     except ImportError as e:

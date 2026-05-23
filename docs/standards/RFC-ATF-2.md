@@ -94,6 +94,12 @@ Acknowledgements
    boundary attestation and continuous governability supervision directly
    motivated the formalization of ADR-159 and this extension document.
 
+   Antonio Socorro (CAI-EXPERT-LAB) independently identified the structural
+   tension between cryptographic receipt portability and live governance
+   enforcement during cross-system review of RFC-ATF-2, clarifying that
+   the continuity invariants in §14 require explicit runtime authority
+   attribution beyond static delegation chains.
+
    The formal distinction between Cryptographic Interoperability and
    Governance Interoperability (§21) arises from structural analysis of
    the policy divergence surface between sovereign ATF runtimes, formalized

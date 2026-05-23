@@ -84,7 +84,8 @@ def _anomaly_result(
 
 def _engine_no_db() -> AnomalyResponseEngine:
     """Engine with no DB URL — all DB calls degrade gracefully."""
-    return AnomalyResponseEngine(db_url=None)
+    with patch.dict(os.environ, {"DATABASE_URL": "", "OMNIX_DB_URL": ""}):
+        return AnomalyResponseEngine(db_url=None)
 
 
 def _mock_conn(rowcount: int = 1) -> MagicMock:

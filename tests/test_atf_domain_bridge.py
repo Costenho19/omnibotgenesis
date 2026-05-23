@@ -93,6 +93,7 @@ def _make_dr(
         delegation_depth=1,
         delegator_public_key="",
         content_hash=content_hash,
+        posture_state_hash=None,
         pqc_signature=None,
         pqc_algorithm=None,
         expires_at=expires,

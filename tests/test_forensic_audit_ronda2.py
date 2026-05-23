@@ -532,7 +532,7 @@ class TestEndToEndTruthAudit:
         assert restored == 1, "Debe restaurar 1 snapshot"
         assert tampered == 0
 
-        json_path = pathlib.Path(tmp_dir) / "trading_calibration.json"
+        json_path = pathlib.Path(tmp_dir) / "default" / "trading_calibration.json"
         assert json_path.exists(), "Archivo JSON debe existir"
         with open(json_path) as f:
             saved = json.load(f)

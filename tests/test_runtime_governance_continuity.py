@@ -256,7 +256,7 @@ class TestRCRIssuance:
             if k not in ("content_hash", "pqc_signature", "pqc_algorithm")
         }
         expected_hash = hashlib.sha256(
-            json.dumps(payload, sort_keys=True, default=str).encode()
+            json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
         ).hexdigest()
         assert rcr.content_hash == expected_hash
 

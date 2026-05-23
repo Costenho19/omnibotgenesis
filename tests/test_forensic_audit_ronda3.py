@@ -432,8 +432,8 @@ class TestPersistenceChaos:
 
         assert restored == 1, f"Solo 1 snapshot válido debe restaurarse, got {restored}"
         assert tampered == 1, f"1 snapshot TAMPERED debe contarse, got {tampered}"
-        assert (pathlib.Path(tmp) / "trading_calibration.json").exists()
-        assert not (pathlib.Path(tmp) / "insurance_calibration.json").exists()
+        assert (pathlib.Path(tmp) / "default" / "trading_calibration.json").exists()
+        assert not (pathlib.Path(tmp) / "default" / "insurance_calibration.json").exists()
 
     def test_D3_restore_is_idempotent(self):
         """Restaurar el mismo snapshot 3 veces no altera el contenido del JSON."""
@@ -478,7 +478,7 @@ class TestPersistenceChaos:
         for _ in range(3):
             with patch.object(bridge, "_get_conn", return_value=make_mock()):
                 bridge.restore_to_json(tmp)
-            with open(pathlib.Path(tmp) / "trading_calibration.json") as f:
+            with open(pathlib.Path(tmp) / "default" / "trading_calibration.json") as f:
                 contents.append(json.load(f))
 
         assert contents[0] == contents[1] == contents[2], (

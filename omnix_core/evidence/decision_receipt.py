@@ -633,6 +633,15 @@ class ReceiptVerifier:
             if timing_field in receipt:
                 payload_for_hash[timing_field] = receipt[timing_field]
 
+        # Fields present in generate_receipt payload before hash is computed
+        for metadata_field in (
+            'signing_key_id', 'domain',
+            'governance_schema_version', 'checkpoint_logic_fingerprint',
+            'hash_version', 'genealogy',
+        ):
+            if metadata_field in receipt:
+                payload_for_hash[metadata_field] = receipt[metadata_field]
+
         for optional_block in (
             'sharia_compliance', 'aml_compliance', 'fraud_compliance',
             'jurisdiction_compliance', 'context_admission', 'avm_result',

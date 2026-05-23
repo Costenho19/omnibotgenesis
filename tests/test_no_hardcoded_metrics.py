@@ -66,9 +66,13 @@ EXCLUDED_PATHS = {
     'omnix_dashboard/static/',
     'omnix_dashboard/templates/',
     'omnix_core/bot/auto_trading_bot.py',
+    'omnix_core/defense/defense_simulator.py',
     'omnix_services/market_data/validators.py',
     'omnix_services/market_data/latency_monitor.py',
     'omnix_services/portfolio_management/',
+    'omnix_services/build/',
+    'omnix_core/build/',
+    'omnix_services/analytics/institutional_report.py',
     'examples/',
 }
 

@@ -1390,7 +1390,7 @@ class TestRegressionAudit:
             if k not in ("content_hash", "pqc_signature", "pqc_algorithm")
         }
         recomputed = hashlib.sha256(
-            json.dumps(hash_fields, sort_keys=True, default=str).encode()
+            json.dumps(hash_fields, sort_keys=True, separators=(",", ":"), default=str).encode()
         ).hexdigest()
         assert recomputed == rcr.content_hash, "content_hash must be independently reproducible"
 
