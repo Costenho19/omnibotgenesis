@@ -43,8 +43,11 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 - `/omnix_services/` — Telegram bot · AI service · coherence · trading
 - `/omnix_core/` — Governance engine · PQC security · receipts · AVM · ATF
   - `omnix_core/agents/atf/` — Agent Trust Fabric: DR · TAR · DTR · RCR · AFG · RC
-- `/docs/adr/` — 176 ADRs. Fuente de verdad de arquitectura
+  - `omnix_core/bev/` — Behavioral Execution Verification: BAR · CCS · CTCHC (RFC-ATF-6, ADR-181/182/183)
+  - `omnix_core/govern/` — OGR Orchestrator: `governance_runtime.py` — 6-layer session lifecycle (ADR-184)
+- `/docs/adr/` — **184 ADRs**. Fuente de verdad de arquitectura
 - `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (publicado) · RFC-ATF-3 (publicado)
+- `/docs/integration/` — `OMNIX_GOVERNANCE_RUNTIME.md` · `GETTING_STARTED.md` — integration product docs
 - `/sdk/` — Python SDK · Node.js SDK
 
 ---
@@ -109,6 +112,8 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 | `atf_behavioral_anchor_records` | BEV — BAR per-turn behavioral attestation | ADR-181 |
 | `atf_constraint_conformance_signals` | BEV — CCS conformance history projection | ADR-182 |
 | `atf_coherence_hash_chains` | BEV — CTCHC session integrity proof | ADR-183 |
+| `atf_coherence_chain_links` | BEV — CTCHC per-turn hash links | ADR-183 |
+| `atf_ogr_sessions` | OGR — Governance Runtime sessions | ADR-184 |
 | `book_leads` | CRM / lead capture | — |
 
 ---

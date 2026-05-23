@@ -824,6 +824,13 @@ try:
 except Exception as _atf_err:
     logger.warning("[server] atf_bp not loaded: %s", _atf_err)
 
+try:
+    from api.govern_blueprint import ogr_bp
+    app.register_blueprint(ogr_bp)
+    logger.info("[server] ogr_bp registered — /v1/govern/* active (ADR-184)")
+except Exception as _ogr_err:
+    logger.warning("[server] ogr_bp not loaded: %s", _ogr_err)
+
 # ── Startup: ensure b2b_clients has webhook columns (ADR-053) ────────────────
 try:
     from api.gov_auth_rbac import _ensure_webhook_columns, _ensure_key_expiry_column

@@ -374,6 +374,66 @@ alimentando el watchdog con telemetría fresca. Rompe el deadlock.
 
 ---
 
+### Behavioral Execution Verification Protocol (BEV) — ADR-181/182/183
+
+**RFC-ATF-6 — Capa 6 del ATF stack. Primera especificación del mundo de verificación conductual
+de outputs de modelos IA con firma PQC, vinculada criptográficamente a governance receipts.**
+
+| Artefacto | Archivo | Descripción |
+|---|---|---|
+| BAR Engine | `omnix_core/bev/behavioral_anchor_record.py` | BAREngine · BehavioralAnchorRecord — per-turn output attestation firmada ML-DSA-65 (ADR-181) |
+| CCS Engine | `omnix_core/bev/constraint_conformance_signal.py` | CCSEngine · ConstraintConformanceSignal — señal continua de conformidad → AGVP watchdog (ADR-182) |
+| CTCHC Engine | `omnix_core/bev/coherence_hash_chain.py` | CTCHCEngine · CoherenceHashChain — hash chain SHA3-256 por turno, sellado con ML-DSA-65 (ADR-183) |
+| ADR-181 Spec | `docs/adr/ADR-181-behavioral-anchor-record.md` | BAR spec — 6 invariantes BEV-INV-001–006 |
+| ADR-182 Spec | `docs/adr/ADR-182-constraint-conformance-signal.md` | CCS spec — 6 invariantes BEV-INV-007–012 |
+| ADR-183 Spec | `docs/adr/ADR-183-cross-turn-coherence-hash-chain.md` | CTCHC spec — 6 invariantes BEV-INV-013–018 |
+| BEV Init | `omnix_core/bev/__init__.py` | Package exports |
+
+**BEV-INV-001–018:** 18 invariantes en 3 familias — BAR receipt linkage · CCS→AGVP feed · CTCHC append-only chain
+
+**DB Tables:** `atf_behavioral_anchor_records` · `atf_constraint_conformance_signals` · `atf_coherence_hash_chains` · `atf_coherence_chain_links`
+
+---
+
+### OMNIX Governance Runtime (OGR) — ADR-184
+
+**Integration product premium que empaqueta el ATF stack L1–L6 completo en una API de sesión
+única. El único producto del mercado con 6 capas simultáneas PQC-firmadas + CCS→AGVP loop.**
+
+| Artefacto | Archivo | Descripción |
+|---|---|---|
+| OGR Orchestrator | `omnix_core/govern/governance_runtime.py` | GovernanceRuntime — start_session · record_turn · close_session · get_proof · get_status · verify_artifact · compliance_report |
+| OGR Init | `omnix_core/govern/__init__.py` | Package exports |
+| Flask Blueprint | `omnix_web/api/govern_blueprint.py` | 9 endpoints REST en `/v1/govern/` (ADR-184) |
+| ADR-184 Spec | `docs/adr/ADR-184-omnix-governance-runtime.md` | Especificación normativa completa |
+| Product Docs | `docs/integration/OMNIX_GOVERNANCE_RUNTIME.md` | Documentación premium · comparación CLARIXO / MTCP |
+| Getting Started | `docs/integration/GETTING_STARTED.md` | Quickstart 5 pasos · Python client example |
+
+**OGR Endpoints (9):**
+```
+POST   /v1/govern/session/start           — Open new 6-layer governance session
+POST   /v1/govern/session/{id}/turn       — Record turn with BAR+CCS+CTCHC artifacts
+GET    /v1/govern/session/{id}/proof      — Full cryptographic proof bundle (PQC-signed)
+POST   /v1/govern/session/{id}/close      — Close session + issue final CTCHC seal
+GET    /v1/govern/session/{id}/status     — Session status + compliance summary
+GET    /v1/govern/sessions                — List active sessions
+POST   /v1/govern/verify                  — Offline-verify any OGR artifact
+GET    /v1/govern/compliance/{id}         — Compliance report (106 invariants)
+GET    /v1/govern/manifest                — API capabilities manifest
+```
+
+**Diferenciadores únicos vs CLARIXO / MTCP:**
+1. 6 capas ATF activadas simultáneamente en cada sesión (único en el mercado)
+2. ML-DSA-65 (FIPS 204) en cada artefacto — CLARIXO usa ECDSA · MTCP: sin firma
+3. CCS → AGVP anticipatory veto loop — ningún competidor tiene veto conductual proactivo
+4. Offline-verifiable CTCHC seal — verificación forense sin llamar a OMNIX
+5. receipt-bound BAR — link criptográfico output→governance_receipt
+6. 106 invariantes formales cubiertos por sesión
+
+**DB Table:** `atf_ogr_sessions`
+
+---
+
 ---
 
 ## Producto Comercial
@@ -381,8 +441,9 @@ alimentando el watchdog con telemetría fresca. Rompe el deadlock.
 | Documento | Archivo | Alcance |
 |---|---|---|
 | **OMNIX Governance API** | `docs/adr/ADR-176-omnix-governance-api-product.md` | Definición del producto comercial. RegTech SaaS. 4 tiers (VERIFIER/BUILDER/PROFESSIONAL/ENTERPRISE). Pricing: free → $500 → $2,000 → custom. Legal positioning: NOT financial advice. Endpoints REST, SDKs Python + Node.js. OMNIX-PRODUCT-GOV-API-001 |
+| **OMNIX Governance Runtime** | `docs/integration/OMNIX_GOVERNANCE_RUNTIME.md` | Integration product premium — ATF L1–L6 stack completo en API de sesión única. 9 endpoints REST. Comparación CLARIXO/MTCP. 6 diferenciadores únicos. 106 invariantes. compliance_tier: ATF-BEV-Compliant. |
 
-**Página React:** `omnix_web/src/pages/GovernanceAPIPage.tsx` · Ruta: `/governance-api`
+**Páginas React:** `omnix_web/src/pages/GovernanceAPIPage.tsx` · Ruta: `/governance-api`
 
 ---
 
