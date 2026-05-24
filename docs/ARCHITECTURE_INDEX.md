@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **180 total**. Últimos: ADR-177 (FVS) · ADR-178 (CGE — Counterfactual Governance Engine) · ADR-179 (GUGT — Grand Unified Governance Theory) · **ADR-180 (TGB — Temporal Governance Bridge)**
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **88 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + FVS×3 + **CGE×7 + GUGT×6 + TGB×5**) — RFC-ATF-5 (Cognitive Governance Layer — PENDING DOI)
+- **ADRs:** `docs/adr/` — **186 total**. Últimos: ADR-181 (BAR) · ADR-182 (CCS) · ADR-183 (CTCHC) · ADR-184 (OGR) · ADR-185 (OGR Hardening) · **ADR-186 (PoGR — Proof of Governance Public Registry)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **118 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + FVS×3 + CGE×7 + GUGT×6 + TGB×5 + BEV×18 + OGR×1 + **PoGR×6**) — RFC-ATF-5 (Cognitive Governance Layer — PENDING DOI) · RFC-ATF-6 (BEV) · PoGR (ADR-186)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 
@@ -238,6 +238,55 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 **UI:**
 - `/archive-verify` → header institucional con 3-plane strip · Trust Anchor panel · trust badges por bloque · HOT/WARM/COLD lifecycle
 - `/trust-infrastructure` → registro completo: live fingerprint · 3 canales · distinción trust levels · key rotation states · 47 invariants collapsibles
+
+---
+
+## Proof of Governance Registry (PoGR) — ADR-186
+
+**Primera capa de confianza pública del mundo para gobernanza de decisiones de IA.**
+El "SSL para decisiones de agentes" — verificable offline, firmado PQC, append-only.
+
+| Artefacto | Archivo | Descripción |
+|---|---|---|
+| **ADR-186** | `docs/adr/ADR-186-proof-of-governance-registry.md` | Especificación arquitectónica completa — 6 invariantes PoGR-INV-001–006 · DB schema · API endpoints · tiers · regulatory alignment · OMNIX-POGR-2026-001 |
+| **Product Spec** | `docs/products/POG_REGISTRY_SPEC.md` | Especificación B2B completa — diferenciadores · comparación · tiers · Go-To-Market EU AI Act · integración con OGR |
+| **One-Pager** | `docs/products/POG_ONEPAGER.md` | One-pager ejecutivo para LinkedIn, inversores y partners estratégicos |
+
+**Invariantes PoGR-INV-001–006:**
+- **PoGR-INV-001** — Todo certificate está respaldado por una OGR session sellada y PQC-signed
+- **PoGR-INV-002** — El registry es append-only — ningún certificate puede ser eliminado
+- **PoGR-INV-003** — Verificación requiere zero acceso a OMNIX
+- **PoGR-INV-004** — TTL explícito — renewal requiere nueva sesión OGR, no override administrativo
+- **PoGR-INV-005** — Platform public key publicada en 3 canales independientes (HTTP · DNS · Zenodo)
+- **PoGR-INV-006** — Revocación requiere PQC proof del emisor original
+
+**Nuevo artifact class: PoG Certificate (PoGC)**
+- ID format: `POGC-{HEX16}`
+- PQC-signed: ML-DSA-65 · content_hash: SHA3-256 canonical
+- Public verification: `GET /v1/pogr/verify/{pogc_id}` — zero auth
+- Embeddable badge SVG
+- DB table: `pogr_certificates`
+
+**API endpoints (ADR-187 — implementación pendiente):**
+
+| Endpoint | Auth | Descripción |
+|---|---|---|
+| `POST /v1/pogr/certify` | API Key | Emite PoGC desde OGR session sellada |
+| `GET /v1/pogr/verify/{pogc_id}` | **Ninguna** | Verificación pública de cualquier certificate |
+| `GET /v1/pogr/certificate/{pogc_id}` | **Ninguna** | Certificate JSON completo con proof |
+| `GET /v1/pogr/organization/{org_id}` | **Ninguna** | Todos los certificates de una organización |
+| `GET /v1/pogr/badge/{pogc_id}.svg` | **Ninguna** | Badge embeddable |
+| `POST /v1/pogr/revoke/{pogc_id}` | API Key + PQC proof | Revocación por emisor original |
+
+**Stack completo:**
+```
+OMNIX Governance API (ADR-176)
+    └── OMNIX Governance Runtime / OGR (ADR-184)
+            └── Proof of Governance Registry / PoGR (ADR-186)
+                    └── /proof-of-governance (React SPA — pendiente)
+```
+
+**Regulatory alignment:** EU AI Act Art. 9/13/17 · NIST AI RMF · UAE CRAE · MiFID-II · SOC-2-AI
 
 ---
 

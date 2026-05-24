@@ -135,6 +135,26 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 
 ---
 
+## Proof of Governance Registry (PoGR) — ADR-186
+
+**Primera capa de confianza pública del mundo para gobernanza de decisiones de IA.**  
+El "SSL para decisiones de agentes de IA" — verificable offline, firmado PQC, append-only.  
+**Product ID:** OMNIX-POGR-2026-001  
+
+| Artefacto | Archivo |
+|---|---|
+| ADR-186 (spec arquitectónica) | `docs/adr/ADR-186-proof-of-governance-registry.md` |
+| Product Spec B2B | `docs/products/POG_REGISTRY_SPEC.md` |
+| One-Pager ejecutivo | `docs/products/POG_ONEPAGER.md` |
+
+**Nuevo artifact class:** `PoG Certificate (PoGC)` · ID: `POGC-{HEX16}` · PQC-signed ML-DSA-65  
+**6 invariantes:** PoGR-INV-001–006 (append-only · zero-trust verify · TTL explícito · 3-channel trust anchor · issuer-only revocation)  
+**DB table:** `pogr_certificates` (auto-created en Railway)  
+**Implementación pendiente:** ADR-187 (endpoints `/v1/pogr/*`) · React page `/proof-of-governance`  
+**Go-to-market:** primer PoGC emitido antes del 1 julio 2026 — 32 días antes del EU AI Act enforcement
+
+---
+
 ## Arquitectura — Principios Inamovibles
 
 - **React SPA = único frontend.** Flask solo sirve APIs y `dist/index.html` para el SPA catch-all.
