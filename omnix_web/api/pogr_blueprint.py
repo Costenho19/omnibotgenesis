@@ -322,7 +322,7 @@ def certify():
         "certificate": cert_data,
         "verify_url":  f"{base_url}/v1/pogr/verify/{pogc_id}",
         "badge_url":   f"{base_url}/v1/pogr/badge/{pogc_id}.svg",
-        "public_page": f"{base_url}/proof-of-governance?id={pogc_id}",
+        "public_page": f"{base_url}/pogr/verify/{pogc_id}",
         "invariants_satisfied": [
             "PoGR-INV-001", "PoGR-INV-002", "PoGR-INV-004",
         ],

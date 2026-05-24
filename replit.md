@@ -123,7 +123,7 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 ## Gotchas Críticos
 
 - **Variable names matter:** Dashboard usa `SESSION_SECRET` (no `SECRET_KEY`). Webhooks usan `PAYLOAD_ENCRYPTION_KEY`. Nombres incorrectos = fallos silenciosos.
-- **React Build:** Siempre hacer `npm run build` en `omnix_web/` y commitear `dist/`. Railway sirve desde ahí. Build usa `React.lazy()` + `Suspense` en todas las rutas (65 páginas) desde Mayo 2026.
+- **React Build:** Siempre hacer `npm run build` en `omnix_web/` y commitear `dist/`. Railway sirve desde ahí. Build usa `React.lazy()` + `Suspense` en todas las rutas (67 páginas) desde Mayo 2026.
 - **TESTING=true en producción:** NUNCA. Desactiva alertas AVM, scheduler de snapshots y simuladores.
 - **PQC Keys sin Railway:** Sin `OMNIX_SIGNING_SECRET_KEY_B64/PUBLIC`, cada restart genera claves efímeras y todos los receipts previos dejan de ser verificables permanentemente (FMR-001).
 - **Anti-replay en Railway:** Configurar `OMNIX_ANTI_REPLAY_MODE=strict`. El default `best_effort` permite replay cross-dyno cuando Redis no está disponible.
