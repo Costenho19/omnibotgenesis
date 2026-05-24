@@ -73,6 +73,7 @@ const InstitutionalBriefPage      = lazy(() => import('./pages/InstitutionalBrie
 const VideoTemplate               = lazy(() => import('./components/video/VideoTemplate'))
 const ReviewerStartPage           = lazy(() => import('./pages/ReviewerStartPage'))
 const GovernanceAPIPage           = lazy(() => import('./pages/GovernanceAPIPage'))
+const ProofOfGovernancePage       = lazy(() => import('./pages/ProofOfGovernancePage'))
 
 // ─── Loading fallback ─────────────────────────────────────────────────────────
 function PageLoader() {
@@ -183,6 +184,7 @@ function App() {
             <Route path="/institutional-brief"           element={<InstitutionalBriefPage />} />
             <Route path="/start"                          element={<ReviewerStartPage />} />
             <Route path="/governance-api"                 element={<GovernanceAPIPage />} />
+            <Route path="/proof-of-governance"            element={<ProofOfGovernancePage />} />
             <Route path="/video"                          element={<VideoTemplate />} />
             <Route path="/terminal"                       element={<Navigate to="/" replace />} />
             <Route path="*"                               element={<Navigate to="/" replace />} />

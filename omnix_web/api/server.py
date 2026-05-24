@@ -141,6 +141,16 @@ def _api_error(exc: Exception, ctx: str = "") -> tuple:
 from api.sandbox import register_sandbox_routes
 register_sandbox_routes(app)
 
+# ── ADR-186/187: Proof of Governance Public Registry (PoGR) ───────────────────
+try:
+    from api.pogr_blueprint import pogr_bp
+    app.register_blueprint(pogr_bp)
+    print("[startup] PoGR blueprint registered — /v1/pogr/certify, /v1/pogr/verify, /v1/pogr/badge, /v1/pogr/manifest, /v1/pogr/registry")
+except Exception as _pogr_err:
+    import traceback
+    print(f"[startup] WARNING: PoGR blueprint failed to register: {_pogr_err}")
+    print(traceback.format_exc())
+
 # ── ADR-164/165: Forensic Archive Verification Portal + OEP ──────────────────
 try:
     from api.forensic_blueprint import forensic_bp
