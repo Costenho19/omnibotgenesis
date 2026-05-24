@@ -689,3 +689,9 @@ id = "LFZMZarfTFKqbH3qwrc-Z"
 uri = "file://docs/partners/verisigil/ATF_Bridge_Validation_Final_Report_v1.0.pdf"
 type = "pdf"
 title = "ATF Bridge Validation — Final Report v1.0 (para Raheem)"
+
+[[outputs]]
+id = "a_M-q3b7UXZMKPDL0qm_v"
+uri = "file://docs/zenodo/rfc_atf_4/RFC-ATF-4.pdf"
+type = "pdf"
+title = "RFC-ATF-4 — Proactive Governance Layer (Zenodo)"

@@ -1,7 +1,7 @@
 # OMNIX QUANTUM — Decision Governance Infrastructure
 
 Plataforma de gobernanza de decisiones auditable, con IA y criptografía post-cuántica (Dilithium-3).
-Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE.
+Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
 
 **Índice de arquitectura completo:** `docs/ARCHITECTURE_INDEX.md`
 

@@ -170,7 +170,7 @@ Technical Note
 ### NOTAS ADICIONALES
 ```
 OMNIX QUANTUM LTD · 71-75 Shelton Street, Covent Garden,
-London WC2H 9JQ, England · Operational HQ: Abu Dhabi, UAE.
+London WC2H 9JQ, England.
 
 Fourth specification in the ATF Open Standard series.
 Extends RFC-ATF-1/2/3 — does not supersede any prior RFC.
