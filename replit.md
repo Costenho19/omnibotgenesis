@@ -115,6 +115,8 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes · Sede operativa: UAE
 | `atf_coherence_chain_links` | BEV — CTCHC per-turn hash links | ADR-183 |
 | `atf_ogr_sessions` | OGR — Governance Runtime sessions | ADR-184 |
 | `book_leads` | CRM / lead capture | — |
+| `pogr_certificates` | Proof of Governance Registry | ADR-186/187 |
+| `osg_validation_receipts` | Settlement Gate — VR append-only | ADR-188 |
 
 ---
 

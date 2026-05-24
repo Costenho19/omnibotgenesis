@@ -151,6 +151,16 @@ except Exception as _pogr_err:
     print(f"[startup] WARNING: PoGR blueprint failed to register: {_pogr_err}")
     print(traceback.format_exc())
 
+# ── ADR-188: OMNIX Settlement Gate (OSG) ──────────────────────────────────────
+try:
+    from api.osg_blueprint import osg_bp
+    app.register_blueprint(osg_bp)
+    print("[startup] OSG blueprint registered — /v1/osg/validate, /v1/osg/anchor, /v1/osg/validation, /v1/osg/manifest")
+except Exception as _osg_err:
+    import traceback
+    print(f"[startup] WARNING: OSG blueprint failed to register: {_osg_err}")
+    print(traceback.format_exc())
+
 # ── ADR-164/165: Forensic Archive Verification Portal + OEP ──────────────────
 try:
     from api.forensic_blueprint import forensic_bp
