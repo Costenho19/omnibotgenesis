@@ -1,7 +1,7 @@
 ```
 OMNIX QUANTUM Open Standard                            OMNIX QUANTUM LTD
 Category: Standards Track                                    H. Nunes, Ed.
-DOI: [PENDING — not yet submitted to Zenodo]                    May 2026
+DOI: 10.5281/zenodo.20368895                                    May 2026
 
 
          RFC-ATF-4: Agent Trust Fabric — Proactive Governance Layer
