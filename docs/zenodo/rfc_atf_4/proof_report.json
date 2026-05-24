@@ -1,0 +1,288 @@
+{
+  "suite": "OMNIX-FVS-1.0",
+  "generated_at": "2026-05-24T11:12:39.344155+00:00",
+  "solver": "Z3 4.16.0",
+  "protocol": "OMNIX ATF Open Standard (RFC-ATF-1 \u00b7 RFC-ATF-2 \u00b7 RFC-ATF-3 \u00b7 RFC-ATF-4)",
+  "methodology": "Negation refutation: UNSAT \u2261 invariant formally proved",
+  "total": 19,
+  "proved": 19,
+  "failed": 0,
+  "unknown": 0,
+  "all_proved": true,
+  "total_elapsed_ms": 48.6,
+  "modules": {
+    "atf_invariants_z3": {
+      "proved": 3,
+      "failed": 0,
+      "invariants": [
+        "ATF-INV-001",
+        "ATF-INV-004",
+        "RGC-INV-004"
+      ]
+    },
+    "agv_invariants_z3": {
+      "proved": 5,
+      "failed": 0,
+      "invariants": [
+        "AGV-INV-001",
+        "AGV-INV-003",
+        "AGV-INV-004",
+        "AGV-INV-005",
+        "AGV-INV-006"
+      ]
+    },
+    "ssd_invariants_z3": {
+      "proved": 5,
+      "failed": 0,
+      "invariants": [
+        "CRSI-BOUND-LO",
+        "CRSI-BOUND-HI",
+        "CRSI-CLASS-TOT",
+        "SSD-INV-001",
+        "SSD-INV-003"
+      ]
+    },
+    "dspp_invariants_z3": {
+      "proved": 6,
+      "failed": 0,
+      "invariants": [
+        "SDU-BOUND-LO",
+        "SDU-BOUND-HI",
+        "SDU-WSUM",
+        "DSPP-INV-005",
+        "DSPP-INV-007a",
+        "DSPP-INV-007b"
+      ]
+    }
+  },
+  "proofs": [
+    {
+      "invariant_id": "ATF-INV-001",
+      "invariant_name": "Monotonic Authority Reduction (MAR)",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 15.936,
+      "description": "No delegation can produce a receipt whose authority_budget_granted exceeds the delegator's authority_budget. Authority can only decrease \u2014 never increase \u2014 across a delegation chain.",
+      "negation_asserted": "budget_granted > budget_delegator",
+      "adr_reference": "ADR-156",
+      "rfc_reference": "RFC-ATF-1 \u00a75.1",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "ATF-INV-004",
+      "invariant_name": "Budget Ceiling (Cross-Chain Inductive Step)",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 4.003,
+      "description": "If the root agent's authority_budget \u2264 100 (registration constraint) and MAR holds at every delegation step, then no agent in any chain can possess a budget exceeding 100. Proved by structural induction; Z3 verifies the inductive step.",
+      "negation_asserted": "child_budget > 100 (given parent_budget \u2264 100, MAR)",
+      "adr_reference": "ADR-156",
+      "rfc_reference": "RFC-ATF-1 \u00a75.2",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "RGC-INV-004",
+      "invariant_name": "Trust Lattice Acyclicity (Three-Node Bound)",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.984,
+      "description": "No positive-budget three-node cycle can exist in the ATF delegation graph when MAR is enforced. A cycle A\u2192B\u2192C\u2192A would require bA \u2264 bB \u2264 bC \u2264 bA, forcing all three budgets to equality; combined with strict monotonic decrease (discount > 0), no non-zero solution exists. Full unbounded acyclicity is model-checked by TLA+ (AcyclicityInvariant).",
+      "negation_asserted": "bA > 0 \u2227 bB \u2264 bA \u2227 bC \u2264 bB \u2227 bA \u2264 bC (positive budget 3-cycle)",
+      "adr_reference": "ADR-159",
+      "rfc_reference": "RFC-ATF-2 \u00a76.4",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "AGV-INV-001",
+      "invariant_name": "Anticipatory Authority Equivalence",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.336,
+      "description": "When drift_score exceeds threshold and an ACTIVE PVR exists for the domain, every governance request for that domain MUST be blocked. The anticipatory block carries identical governance authority as the reactive AVM block. There is no path in which a PVR is ACTIVE yet the request proceeds.",
+      "negation_asserted": "has_pvr=True \u2227 drift_score>threshold \u2227 request_blocked=False",
+      "adr_reference": "ADR-174",
+      "rfc_reference": "RFC-ATF-4 \u00a74.1",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "AGV-INV-003",
+      "invariant_name": "Minimum Watchdog Interval",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.738,
+      "description": "A valid AGVP watchdog cannot have a polling interval below 30 seconds. Initialization with interval < 30 raises ValueError at construction time. No valid AGVP instance can ever observe a watchdog_interval < 30.",
+      "negation_asserted": "system_valid=True \u2227 watchdog_interval < 30",
+      "adr_reference": "ADR-174",
+      "rfc_reference": "RFC-ATF-4 \u00a74.3",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "AGV-INV-004",
+      "invariant_name": "PVR Content Hash Commitment (Determinism)",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.745,
+      "description": "The PVR content_hash is a deterministic function of its committed fields. Two PVR instances with identical {pvr_id, drift_score, drift_threshold, assessment_timestamp} produce identical content_hash values. Post-issuance field modification invalidates the ML-DSA-65 signature, making tampering cryptographically detectable.",
+      "negation_asserted": "fields_identical=True \u2227 hash_equal=False",
+      "adr_reference": "ADR-174",
+      "rfc_reference": "RFC-ATF-4 \u00a74.4",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "AGV-INV-005",
+      "invariant_name": "No Veto Without Baseline",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.133,
+      "description": "The AGVP watchdog cannot emit a ProactiveVetoReceipt for a domain that has no calibration snapshot (pass_through=True). An uncalibrated domain has no governance baseline \u2014 there is nothing to compare against, and therefore no authoritative basis for a proactive veto.",
+      "negation_asserted": "pvr_emitted=True \u2227 pass_through=True",
+      "adr_reference": "ADR-174",
+      "rfc_reference": "RFC-ATF-4 \u00a74.5",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "AGV-INV-006",
+      "invariant_name": "Auto-Recalibration Freeze During Active PVR",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 0.982,
+      "description": "auto_recalibrate_stale_domains() is prohibited from executing on any domain for which has_active_pvr() returns True. Recalibrating to drifted conditions while a PVR is active would destroy the governance baseline and render the PVR's forensic evidence meaningless. This guard is independent of and additive to SSD-INV-001.",
+      "negation_asserted": "recalibrate_executed=True \u2227 has_active_pvr=True",
+      "adr_reference": "ADR-174",
+      "rfc_reference": "RFC-ATF-4 \u00a74.6",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "CRSI-BOUND-LO",
+      "invariant_name": "CRSI Non-Negativity",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 2.806,
+      "description": "The Component Rank Stability Index is always \u2265 0. CRSI = overlap / max_weight. Since overlap \u2265 0 (sum of non-negative position weights) and max_weight > 0, the quotient is non-negative.",
+      "negation_asserted": "overlap \u2265 0 \u2227 max_weight > 0 \u2227 crsi < 0",
+      "adr_reference": "ADR-175",
+      "rfc_reference": "RFC-ATF-4 \u00a75.2",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "CRSI-BOUND-HI",
+      "invariant_name": "CRSI Upper Bound",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 3.281,
+      "description": "The Component Rank Stability Index is always \u2264 1. overlap \u2264 max_weight by definition (overlap sums only matching components using position_weights; max_weight sums ALL K components at full weight). Therefore crsi = overlap / max_weight \u2264 1.",
+      "negation_asserted": "0 \u2264 overlap \u2264 max_weight \u2227 max_weight > 0 \u2227 crsi > 1",
+      "adr_reference": "ADR-175",
+      "rfc_reference": "RFC-ATF-4 \u00a75.2",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "CRSI-CLASS-TOT",
+      "invariant_name": "CRSI Classification Totality",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.72,
+      "description": "The three CRSI classes \u2014 STRUCTURAL_SHIFT [0, 0.5), DRIFT_WITH_INSTABILITY [0.5, 0.7), STABLE [0.7, 1] \u2014 partition [0, 1] completely. No CRSI value in [0, 1] is unclassified. The classification function is total.",
+      "negation_asserted": "crsi \u2208 [0,1] \u2227 \u00ac(STRUCTURAL_SHIFT \u2228 DRIFT_WITH_INSTABILITY \u2228 STABLE)",
+      "adr_reference": "ADR-175",
+      "rfc_reference": "RFC-ATF-4 \u00a75.2",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "SSD-INV-001",
+      "invariant_name": "Structural Shift Blocks Auto-Recalibration",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 0.922,
+      "description": "auto_recalibrate_stale_domains() cannot execute on a domain when the SSD has classified its component topology as STRUCTURAL_SHIFT. Recalibrating during a structural shift would embed unvalidated assumptions into the governance baseline. This guard is independent of and additive to AGV-INV-006 (active PVR freeze). A domain can be STRUCTURAL_SHIFT without an active PVR \u2014 in that case AGV-INV-006 would not block but SSD-INV-001 does.",
+      "negation_asserted": "recalibrate_executed=True \u2227 is_structural_shift=True",
+      "adr_reference": "ADR-175",
+      "rfc_reference": "RFC-ATF-4 \u00a75.3",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "SSD-INV-003",
+      "invariant_name": "Minimum History for STRUCTURAL_SHIFT Verdict",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.78,
+      "description": "The SSD cannot issue a STRUCTURAL_SHIFT verdict with fewer than 5 history entries. With insufficient data, the function returns INSUFFICIENT_DATA, preventing false recalibration blocks on cold start. A single-cycle topology observation cannot be statistically distinguished from a transient anomaly.",
+      "negation_asserted": "cycles < 5 \u2227 is_structural_shift=True",
+      "adr_reference": "ADR-175",
+      "rfc_reference": "RFC-ATF-4 \u00a75.5",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "SDU-BOUND-LO",
+      "invariant_name": "SDU Non-Negativity",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.755,
+      "description": "The Semantic Distance Unit (SDU) is always \u2265 0. SDU = 0.40\u00b7boundary + 0.35\u00b7scope + 0.25\u00b7regulatory. Each sub-metric \u2208 [0,1] and all weights are positive. Therefore SDU \u2265 0 by the non-negativity of weighted sums.",
+      "negation_asserted": "boundary,scope,regulatory \u2208 [0,1] \u2227 sdu < 0",
+      "adr_reference": "ADR-173",
+      "rfc_reference": "RFC-ATF-4 \u00a76.2",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "SDU-BOUND-HI",
+      "invariant_name": "SDU Upper Bound",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.514,
+      "description": "The Semantic Distance Unit (SDU) is always \u2264 1. The three weights (0.40 + 0.35 + 0.25 = 1.00) form a convex combination. The weighted sum of values bounded by [0,1] with weights summing to 1.0 is itself bounded by [0,1].",
+      "negation_asserted": "boundary,scope,regulatory \u2208 [0,1] \u2227 sdu > 1",
+      "adr_reference": "ADR-173",
+      "rfc_reference": "RFC-ATF-4 \u00a76.2",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "SDU-WSUM",
+      "invariant_name": "SDU Weight Sum = 1.0 (Convex Combination)",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.187,
+      "description": "The SDU weights (0.40, 0.35, 0.25) are a valid probability distribution: they sum to exactly 1.0. This is a structural constant of the DSPP specification \u2014 not a configurable parameter. Z3 confirms the arithmetic identity, establishing that the SDU formula is a true convex combination.",
+      "negation_asserted": "0.40 + 0.35 + 0.25 \u2260 1.0",
+      "adr_reference": "ADR-173",
+      "rfc_reference": "RFC-ATF-4 \u00a76.2",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "DSPP-INV-005",
+      "invariant_name": "RSA Verdict Determinism",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.254,
+      "description": "The Retroactive Semantic Assessment (RSA) is a pure, stateless function. Given identical (TSA, receiving_SPV, SDR_chain), the RSA always produces the same aggregate_sdu and the same verdict. No negotiation state, no stochastic component, no runtime-specific behavior. Two independent receiving domains computing an RSA for the same receipt against the same SPV will always reach the same verdict \u2014 verifiable by any third party.",
+      "negation_asserted": "same_inputs=True \u2227 aggregate_sdu_A \u2260 aggregate_sdu_B",
+      "adr_reference": "ADR-173",
+      "rfc_reference": "RFC-ATF-4 \u00a76.5",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "DSPP-INV-007a",
+      "invariant_name": "SDU Threshold Partition (Totality)",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.374,
+      "description": "The four DSPP verdict classes \u2014 SEMANTICALLY_PORTABLE [0, 0.1), DRIFT_ACKNOWLEDGED [0.1, 0.4), DRIFT_CRITICAL [0.4, 0.7), SEMANTICALLY_INCOMPATIBLE [0.7, 1] \u2014 partition [0,1] completely. Every valid SDU maps to exactly one class. No SDU is unclassified. These boundaries are structural constants of the DSPP specification (DSPP-INV-007) \u2014 changing them requires a new ADR.",
+      "negation_asserted": "sdu \u2208 [0,1] \u2227 \u00ac(PORTABLE \u2228 ACKNOWLEDGED \u2228 CRITICAL \u2228 INCOMPATIBLE)",
+      "adr_reference": "ADR-173",
+      "rfc_reference": "RFC-ATF-4 \u00a76.6",
+      "model_counterexample": null
+    },
+    {
+      "invariant_id": "DSPP-INV-007b",
+      "invariant_name": "SDU Threshold Exclusivity",
+      "result": "UNSAT",
+      "proved": true,
+      "elapsed_ms": 1.703,
+      "description": "No SDU value can simultaneously satisfy two DSPP verdict conditions. The threshold boundaries use strict inequalities at lower bounds and inclusive at upper bounds \u2014 forming a partition with no overlap. Together with DSPP-INV-007a (totality), this proves the verdict classification is a well-defined total function.",
+      "negation_asserted": "sdu satisfies two or more class conditions simultaneously",
+      "adr_reference": "ADR-173",
+      "rfc_reference": "RFC-ATF-4 \u00a76.6",
+      "model_counterexample": null
+    }
+  ]
+}
