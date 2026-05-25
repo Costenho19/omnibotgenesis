@@ -3466,20 +3466,66 @@ def api_governance_regulatory_catalog():
     GET /api/governance/regulatory/catalog
     Returns the full regulatory framework catalog covered by OMNIX.
     Maps all 11 checkpoints to applicable frameworks (EU AI Act, DORA, NIST AI RMF,
-    ISO 42001, CA SB 243, GDPR, FATF, Basel III).
+    ISO 42001, CA SB 243, GDPR, FATF, Basel III, OHADA).
     Public endpoint — no authentication required.
-    ADR-062.
+    ADR-062, ADR-192.
     """
     try:
         catalog = get_full_framework_catalog()
+
+        # ── ADR-192: OHADA Regulatory Coverage — 17-country West/Central Africa zone ──
+        ohada_entry = {
+            'framework':   'OHADA',
+            'full_name':   'Organisation pour l\'Harmonisation en Afrique du Droit des Affaires',
+            'jurisdiction': 'West & Central Africa — 17 member states',
+            'member_states': [
+                'BJ','BF','CM','CF','TD','KM','CD','CG',
+                'CI','GQ','GA','GN','GW','ML','NE','SN','TG'
+            ],
+            'sub_frameworks': [
+                {
+                    'tag':         'SYSCOHADA',
+                    'name':        'Système Comptable OHADA',
+                    'scope':       'Financial and accounting decisions — AI systems touching financial records in OHADA jurisdictions',
+                },
+                {
+                    'tag':         'AUDCG',
+                    'name':        'Acte Uniforme relatif au Droit Commercial Général',
+                    'scope':       'Commercial decisions — AI-driven vendor selection, contract review, procurement',
+                },
+                {
+                    'tag':         'IFRS-OHADA',
+                    'name':        'IFRS as adopted under SYSCOHADA',
+                    'scope':       'Financial reporting decisions — AI systems generating or validating financial statements',
+                },
+                {
+                    'tag':         'CCJA',
+                    'name':        'Cour Commune de Justice et d\'Arbitrage',
+                    'scope':       'Dispute resolution traceability — AI decisions that may require forensic audit under OHADA arbitration',
+                },
+            ],
+            'pqc_signing':  'ML-DSA-65 (Dilithium-3) — same as all OMNIX receipts. No degraded signing for any jurisdiction. (ADR-192 OHADA-INV-002)',
+            'adr':          'ADR-192',
+            'note':         'OHADA tags are structural markers enabling receipt-level jurisdiction tagging. '
+                            'Consult OHADA-qualified counsel before making compliance claims to OHADA-jurisdiction clients.',
+        }
+
+        # Append OHADA to catalog if it is a list, or add as a dedicated key
+        if isinstance(catalog, list):
+            catalog.append(ohada_entry)
+        elif isinstance(catalog, dict):
+            catalog['OHADA'] = ohada_entry
+
         return jsonify({
             'status': 'ok',
             'regulatory_catalog': catalog,
+            'ohada_coverage': ohada_entry,
             'attestation': (
                 'OMNIX governance receipts constitute cryptographically signed evidence '
                 'of compliance evaluation against the frameworks listed. '
-                'Receipts are post-quantum signed (NIST-standardized algorithms) '
-                'and chain-linked to the OMNIX Transparency Chain.'
+                'Receipts are post-quantum signed (NIST-standardized algorithms, Dilithium-3 ML-DSA-65) '
+                'and chain-linked to the OMNIX Transparency Chain. '
+                'OHADA coverage added per ADR-192 — 17 West/Central African jurisdictions.'
             ),
         }), 200
     except Exception as e:

@@ -1,0 +1,3 @@
+- [Sovereign AI Layer](sovereign-ai-layer.md) — Groq/Llama-3 + Mistral añadidos como proveedores soberanos en ai_models.py. OMNIX_AI_SOVEREIGN_MODE=true invierte la cadena. ADR-190.
+- [OHADA Coverage](ohada-coverage.md) — 17 países África Occidental añadidos al catálogo regulatorio en gov_blueprint.py. ADR-192.
+- [Executive View](executive-view.md) — Página React premium /executive para C-suite sin jerga técnica. ADR-191.

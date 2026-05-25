@@ -46,9 +46,11 @@ from omnix_services.ai_service.ai_error_handler import (
 logger = get_logger(__name__)
 
 # Timeouts adaptativos por proveedor (2025 best practices)
-TIMEOUT_GEMINI = 30.0   # Gemini necesita más tiempo para function calling
-TIMEOUT_OPENAI = 30.0   # OpenAI timeout aumentado para evitar cortes en respuestas largas
-TIMEOUT_ANTHROPIC = 30.0  # Claude similar a OpenAI
+TIMEOUT_GEMINI    = 30.0   # Gemini necesita más tiempo para function calling
+TIMEOUT_OPENAI    = 30.0   # OpenAI timeout aumentado para evitar cortes en respuestas largas
+TIMEOUT_ANTHROPIC = 30.0   # Claude similar a OpenAI
+TIMEOUT_GROQ      = 30.0   # Groq LPU inference — muy rápido, timeout conservador (ADR-190)
+TIMEOUT_MISTRAL   = 30.0   # Mistral AI — European sovereign provider (ADR-190)
 
 
 class AIModelsManager:
@@ -77,18 +79,38 @@ class AIModelsManager:
         self.primary_model = settings.ai.primary_model
         self.fallback_models = settings.ai.fallback_models
         
+        self.groq_client    = None
+        self.mistral_client = None
+
         self._initialize_openai()
         self._initialize_gemini()
         self._initialize_anthropic()
-        
+        self._initialize_groq()
+        self._initialize_mistral()
+
+        # ── ADR-190: Sovereign AI Layer — chain ordering ──────────────────────
+        sovereign_mode = os.getenv('OMNIX_AI_SOVEREIGN_MODE', 'false').lower() == 'true'
+        base_fallbacks  = list(self.fallback_models)
+
+        if sovereign_mode:
+            # Open-source models lead — Groq/Llama-3 first, Mistral second
+            self.primary_model   = 'groq-llama-3'
+            self.fallback_models = ['mistral-large'] + [self.primary_model] + base_fallbacks
+            logger.info("🛡️  [SAL] SOVEREIGN MODE ACTIVE — Groq/Llama-3 leads | SAL-INV-001 enforced")
+        else:
+            # Standard chain: existing providers + sovereign providers appended as last fallbacks
+            self.fallback_models = base_fallbacks + ['groq-llama-3', 'mistral-large']
+
         available = []
-        if self.openai_client:
-            available.append("OpenAI")
-        if self.gemini_client:
-            available.append("Gemini")
-        if self.anthropic_client:
-            available.append("Anthropic")
-        logger.info(f"🤖 AI Fallback Chain: Primary={self.primary_model} | Available: {available or ['NONE']} | Fallbacks: {self.fallback_models}")
+        if self.openai_client:    available.append("OpenAI")
+        if self.gemini_client:    available.append("Gemini")
+        if self.anthropic_client: available.append("Anthropic")
+        if self.groq_client:      available.append("Groq/Llama-3[SOVEREIGN]")
+        if self.mistral_client:   available.append("Mistral[SOVEREIGN-EU]")
+        logger.info(
+            f"🤖 AI Fallback Chain: Primary={self.primary_model} | "
+            f"Available: {available or ['NONE']} | Sovereign={sovereign_mode}"
+        )
     
     def _validate_response(self, response: Optional[str], is_simple: bool = False) -> Tuple[bool, str]:
         """
@@ -165,6 +187,36 @@ class AIModelsManager:
                 logger.info("✅ Anthropic Claude initialized successfully")
         except Exception as e:
             logger.error(f"❌ Error initializing Anthropic: {e}")
+
+    def _initialize_groq(self):
+        """Initialize Groq/Llama-3 — open-source sovereign AI provider (ADR-190 SAL-INV-001)"""
+        try:
+            groq_key = os.getenv('GROQ_API_KEY')
+            if groq_key:
+                self.groq_client = AsyncOpenAI(
+                    api_key=groq_key,
+                    base_url="https://api.groq.com/openai/v1",
+                )
+                logger.info("✅ Groq/Llama-3 [SOVEREIGN] initialized — ADR-190 SAL-INV-001 active")
+            else:
+                logger.info("ℹ️  GROQ_API_KEY not set — Groq/Llama-3 unavailable (set to enable sovereign mode)")
+        except Exception as e:
+            logger.error(f"❌ Error initializing Groq: {e}")
+
+    def _initialize_mistral(self):
+        """Initialize Mistral AI — European sovereign provider (ADR-190)"""
+        try:
+            mistral_key = os.getenv('MISTRAL_API_KEY')
+            if mistral_key:
+                self.mistral_client = AsyncOpenAI(
+                    api_key=mistral_key,
+                    base_url="https://api.mistral.ai/v1",
+                )
+                logger.info("✅ Mistral AI [SOVEREIGN-EU] initialized — ADR-190 active")
+            else:
+                logger.info("ℹ️  MISTRAL_API_KEY not set — Mistral unavailable")
+        except Exception as e:
+            logger.error(f"❌ Error initializing Mistral: {e}")
     
     async def generate(
         self, 
@@ -200,6 +252,8 @@ class AIModelsManager:
             if 'gpt-4o' in n:      return 'GPT-4o'
             if 'gemini' in n:      return 'GEMINI'
             if 'claude' in n:      return 'CLAUDE'
+            if 'groq' in n:        return 'GROQ/LLAMA-3[SOVEREIGN]'
+            if 'mistral' in n:     return 'MISTRAL[SOVEREIGN-EU]'
             return name.upper()
 
         total_attempts = 0
@@ -236,6 +290,10 @@ class AIModelsManager:
                     response, ai_error = await self._generate_gemini_async(prompt, system_prompt)
                 elif 'claude' in model_name.lower():
                     response, ai_error = await self._generate_anthropic_async(prompt, system_prompt)
+                elif 'groq' in model_name.lower():
+                    response, ai_error = await self._generate_groq_async(prompt, system_prompt)
+                elif 'mistral' in model_name.lower():
+                    response, ai_error = await self._generate_mistral_async(prompt, system_prompt)
                 
                 if ai_error:
                     last_error = ai_error
@@ -585,10 +643,106 @@ Generate a substantial response of 2000+ characters. Follow the language policy 
             logger.error(f"❌ Error extracting Gemini text: {e}")
             return None
     
+    async def _generate_groq_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Generate with Groq/Llama-3.3-70b — open-source sovereign inference (ADR-190)"""
+        if not self.groq_client:
+            return None, AIError(
+                provider="groq",
+                category=ErrorCategory.AUTH_ERROR,
+                http_code=None,
+                message="Groq client no inicializado — configura GROQ_API_KEY (ADR-190 SAL)",
+                raw_error=None,
+                is_retryable=False,
+                suggested_action="Configurar GROQ_API_KEY en Railway para activar modo soberano"
+            )
+        try:
+            response = await asyncio.wait_for(
+                self.groq_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user",   "content": prompt},
+                    ],
+                    temperature=0.8,
+                    max_tokens=4000,
+                    top_p=0.95,
+                ),
+                timeout=TIMEOUT_GROQ
+            )
+            result = response.choices[0].message.content if response.choices else None
+            if result:
+                logger.info(f"✅ Groq/Llama-3 [SOVEREIGN] generated {len(result)} characters")
+            return result, None
+        except asyncio.TimeoutError:
+            ai_error = ErrorClassifier.classify_timeout("groq", TIMEOUT_GROQ)
+            log_ai_error(ai_error)
+            return None, ai_error
+        except Exception as e:
+            ai_error = AIError(
+                provider="groq",
+                category=ErrorCategory.UNKNOWN_ERROR,
+                http_code=None,
+                message=str(e)[:200],
+                raw_error=e,
+                is_retryable=True,
+                suggested_action="Verificar GROQ_API_KEY y cuota en console.groq.com"
+            )
+            log_ai_error(ai_error)
+            return None, ai_error
+
+    async def _generate_mistral_async(self, prompt: str, system_prompt: str) -> Tuple[Optional[str], Optional[AIError]]:
+        """Generate with Mistral AI — European sovereign provider (ADR-190)"""
+        if not self.mistral_client:
+            return None, AIError(
+                provider="mistral",
+                category=ErrorCategory.AUTH_ERROR,
+                http_code=None,
+                message="Mistral client no inicializado — configura MISTRAL_API_KEY (ADR-190 SAL)",
+                raw_error=None,
+                is_retryable=False,
+                suggested_action="Configurar MISTRAL_API_KEY en Railway para activar proveedor EU soberano"
+            )
+        try:
+            response = await asyncio.wait_for(
+                self.mistral_client.chat.completions.create(
+                    model="mistral-large-latest",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user",   "content": prompt},
+                    ],
+                    temperature=0.8,
+                    max_tokens=4000,
+                    top_p=0.95,
+                ),
+                timeout=TIMEOUT_MISTRAL
+            )
+            result = response.choices[0].message.content if response.choices else None
+            if result:
+                logger.info(f"✅ Mistral AI [SOVEREIGN-EU] generated {len(result)} characters")
+            return result, None
+        except asyncio.TimeoutError:
+            ai_error = ErrorClassifier.classify_timeout("mistral", TIMEOUT_MISTRAL)
+            log_ai_error(ai_error)
+            return None, ai_error
+        except Exception as e:
+            ai_error = AIError(
+                provider="mistral",
+                category=ErrorCategory.UNKNOWN_ERROR,
+                http_code=None,
+                message=str(e)[:200],
+                raw_error=e,
+                is_retryable=True,
+                suggested_action="Verificar MISTRAL_API_KEY y cuota en console.mistral.ai"
+            )
+            log_ai_error(ai_error)
+            return None, ai_error
+
     def health_check(self) -> Dict[str, bool]:
-        """Check health status of all AI models"""
+        """Check health status of all AI models — ADR-190: includes sovereign providers"""
         return {
-            'openai': self.openai_client is not None,
-            'gemini': self.gemini_client is not None,
-            'anthropic': self.anthropic_client is not None
+            'openai':    self.openai_client    is not None,
+            'gemini':    self.gemini_client    is not None,
+            'anthropic': self.anthropic_client is not None,
+            'groq':      self.groq_client      is not None,
+            'mistral':   self.mistral_client   is not None,
         }

@@ -76,6 +76,7 @@ const GovernanceAPIPage           = lazy(() => import('./pages/GovernanceAPIPage
 const ProofOfGovernancePage       = lazy(() => import('./pages/ProofOfGovernancePage'))
 const SettlementGatePage          = lazy(() => import('./pages/SettlementGatePage'))
 const PoGRVerifyPage              = lazy(() => import('./pages/PoGRVerifyPage'))
+const ExecutiveViewPage           = lazy(() => import('./pages/ExecutiveViewPage'))
 
 // ─── Loading fallback ─────────────────────────────────────────────────────────
 function PageLoader() {
@@ -190,6 +191,7 @@ function App() {
             <Route path="/pogr/verify"                    element={<PoGRVerifyPage />} />
             <Route path="/pogr/verify/:pogcId"            element={<PoGRVerifyPage />} />
             <Route path="/settlement-gate"                element={<SettlementGatePage />} />
+            <Route path="/executive"                      element={<ExecutiveViewPage />} />
             <Route path="/video"                          element={<VideoTemplate />} />
             <Route path="/terminal"                       element={<Navigate to="/" replace />} />
             <Route path="*"                               element={<Navigate to="/" replace />} />
