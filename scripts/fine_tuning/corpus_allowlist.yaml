@@ -1,0 +1,56 @@
+# ── OMNIX OGI Corpus Allowlist ─────────────────────────────────────────────────
+# ADR-193 OGI-INV-001: ONLY files listed here contribute to the training corpus.
+# Add a file path (relative to repo root) to include it.
+# DO NOT add: secrets, .env files, NDA documents, partner contracts, API keys,
+#             raw logs, database dumps, or anything under /private/.
+#
+# Version: 1.0.0
+# Maintainer: Harold Nunes <harold@omnixquantum.net>
+
+allowed_sources:
+
+  # ── Architecture Decision Records (ADRs) ──────────────────────────────────────
+  adr_directory: "docs/adr/"
+  adr_pattern: "ADR-*.md"
+  adr_exclude:
+    []  # Add filenames here to exclude specific ADRs from training
+
+  # ── Published RFCs ────────────────────────────────────────────────────────────
+  rfc_files:
+    - "docs/standards/RFC-ATF-1.md"
+    - "docs/standards/RFC-ATF-2.md"
+    - "docs/standards/RFC-ATF-3.md"
+    - "docs/standards/RFC-ATF-4.md"
+    - "docs/standards/RFC-ATF-5.md"
+    - "docs/standards/RFC-ATF-6.md"
+
+  # ── Integration Documentation ─────────────────────────────────────────────────
+  integration_docs:
+    - "docs/integration/OMNIX_GOVERNANCE_RUNTIME.md"
+    - "docs/integration/GETTING_STARTED.md"
+
+  # ── Architecture Index ────────────────────────────────────────────────────────
+  architecture_docs:
+    - "docs/ARCHITECTURE_INDEX.md"
+
+# ── Security Controls ─────────────────────────────────────────────────────────
+security:
+
+  # Patterns that trigger automatic rejection of an example (OGI-INV-004)
+  secret_patterns:
+    - 'OMNIX-[A-Za-z0-9]{20,}'        # API keys
+    - 'sk-[A-Za-z0-9]{20,}'           # OpenAI keys
+    - 'AIzaSy[A-Za-z0-9_-]{33}'       # Google API keys
+    - '-----BEGIN.*PRIVATE KEY-----'  # PEM private keys
+    - 'railway_[A-Za-z0-9]{20,}'      # Railway tokens
+
+  # PII patterns to redact (replaced with [REDACTED])
+  pii_patterns:
+    - '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'  # emails
+    - '\+[0-9]{1,3}[\s-]?[0-9]{6,14}'                    # phone numbers
+
+  # Authors allowed to appear by name in training data
+  allowed_authors:
+    - "Harold Nunes"
+    - "OMNIX QUANTUM LTD"
+    - "OMNIX Quantum Ltd"

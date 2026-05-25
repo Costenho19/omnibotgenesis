@@ -1,0 +1,76 @@
+# ── OMNIX OGI Fine-Tuning Configuration ───────────────────────────────────────
+# ADR-193 — OMNIX Governance Intelligence (OGI)
+# Platform: Together.ai
+# Version: 1.0.0
+
+model:
+  # MVP: Llama-3.1-8B-Instruct (~$20-30 for full corpus run)
+  # Production: Llama-3.3-70B-Instruct (~$150-300)
+  base_model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+  output_name: "ogi-llama3-8b-v1"
+
+  # Together.ai fine-tuning API endpoint
+  api_endpoint: "https://api.together.xyz/v1/fine-tunes"
+
+training:
+  # Hyperparameters (Together.ai defaults are good for SFT)
+  n_epochs: 3
+  batch_size: 16
+  learning_rate: 2.0e-5
+  warmup_ratio: 0.03
+  lr_scheduler: "cosine"
+
+  # Context length — ADR content can be long
+  max_seq_length: 4096
+
+  # Checkpointing
+  save_steps: 100
+  eval_steps: 50
+
+corpus:
+  train_file: "scripts/fine_tuning/output/train.jsonl"
+  val_file:   "scripts/fine_tuning/output/val.jsonl"
+  format: "chat"   # Llama-3 chat JSONL format (OGI-002)
+
+  # Split ratios (OGI-006)
+  train_ratio: 0.80
+  val_ratio:   0.10
+  test_ratio:  0.10
+  random_seed: 42
+
+  # Quality gates (OGI-INV-006)
+  dedup_similarity_threshold: 0.97
+  min_assistant_tokens: 30
+  max_assistant_tokens: 2000
+
+evaluation:
+  # Minimum passing scores before deployment (OGI-007)
+  gates:
+    factual_accuracy:       0.90
+    invariant_citation_f1:  0.92
+    scenario_verdict_acc:   0.85
+    hallucination_rate_max: 0.03
+    refusal_correctness:    0.95
+
+cost_estimate:
+  llama_3_1_8b:
+    training_tokens_per_dollar: 5_000_000   # Together.ai pricing
+    estimated_corpus_tokens:    4_000_000   # ~4M tokens for 3k examples
+    estimated_cost_usd:         20
+
+  llama_3_3_70b:
+    training_tokens_per_dollar: 500_000
+    estimated_corpus_tokens:    4_000_000
+    estimated_cost_usd:         240         # Premium tier
+
+deployment:
+  # Environment variables to set in Railway after fine-tune completes
+  env_vars:
+    OMNIX_OGI_MODEL_ENDPOINT: "https://api.together.xyz/v1/chat/completions"
+    OMNIX_OGI_MODEL_NAME:     "harold-nunes/ogi-llama3-8b-v1"  # updated after training
+    OMNIX_AI_SOVEREIGN_MODE:  "true"
+    TOGETHER_API_KEY:         "<your-together-api-key>"
+
+  # Rollback: set OMNIX_OGI_MODEL_ENDPOINT to empty string
+  # Chain reverts to: Groq → Mistral → Gemini → OpenAI → Anthropic
+  rollback_instruction: "Remove OMNIX_OGI_MODEL_ENDPOINT from Railway env vars"
