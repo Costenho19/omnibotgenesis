@@ -1538,6 +1538,26 @@ def run(dry_run: bool = False, categories: Optional[list[str]] = None,
     for ex in gen_RTR(sys_prompt):               _add(ex)   # RTR — base refusals
     for ex in gen_TRM(sys_prompt):               _add(ex)   # TRM — full ontology (45 terms)
 
+    # ── GOLD CORPUS — institutional domain intelligence tier ──────────────────
+    # GRT: Governance Reasoning Traces  (step-by-step causal chains)
+    # NEG: Negative/Failure Cases       (attacks, forgeries, continuity breaks)
+    # TON: Tone Alignment               (institutional register, vocabulary locking)
+    # RPL: Governance Replay Trainer    (case analysis: what happened, what should have)
+    try:
+        from gold_corpus import build_gold_corpus  # type: ignore
+        gold_examples = build_gold_corpus()
+        for g in gold_examples:
+            gold_ex = TrainingExample(
+                category=g["category"],
+                source_adr=g["source"],
+                messages=g["messages"],
+            )
+            gold_ex.compute_fingerprint()
+            _add(gold_ex)
+        log.info(f"Gold corpus loaded: {len(gold_examples)} premium examples (GRT/NEG/TON/RPL)")
+    except ImportError:
+        log.warning("gold_corpus.py not found — skipping gold corpus tier")
+
     if max_examples:
         all_examples = all_examples[:max_examples]
 
