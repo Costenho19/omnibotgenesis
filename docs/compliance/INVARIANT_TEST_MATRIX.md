@@ -147,6 +147,23 @@
 
 ---
 
+## Family 11 — MIVP Invariants (ADR-194)
+
+| ID | Formal Statement | Implementation | Test File | Test ID / Count | Status |
+|---|---|---|---|---|---|
+| MIVP-INV-001 | MBR MUST be issued and PQC-signed BEFORE the first agent turn when `mandate_binding` is present in governing receipt | `mandate_integrity_verification.py` — `create_mbr()` called in `GovernanceRuntime.start_session()` before session cache write | `tests/test_mivp.py` (pending) | Pre-turn MBR creation test | ⚠️ Structural |
+| MIVP-INV-002 | `mandate_objective_hash` MUST be SHA-256 of `mandate_objective` at session start and MUST NOT change during the session | `MandateBindingRecord.compute_content_hash()` — hash computed at `create_mbr()` and embedded in PQC-signed `content_hash` | `tests/test_mivp.py` (pending) | Hash immutability test | ⚠️ Structural |
+| MIVP-INV-003 | Every turn in an MBR-bound session MUST produce a MAS before output delivery | `mandate_integrity_verification.py` — `compute_mas()` called in `record_turn()` Step 4, before OGR verdict determination | `tests/test_mivp.py` (pending) | Per-turn MAS creation test | ⚠️ Structural |
+| MIVP-INV-004 | MAS MUST be in [0.0, 1.0]; out-of-range MUST produce HALT verdict | `compute_mas()` — `max(0.0, min(1.0, 1.0 - weighted_sum))` clamp enforced + out-of-range treated as HALT | `tests/test_mivp.py` (pending) | Boundary clamp test | ⚠️ Structural |
+| MIVP-INV-005 | When MAS < `mas_halt_threshold`, runtime MUST issue HALT verdict before next turn proceeds | `compute_mas()` — `verdict = "HALT"` when `alignment_score < mbr.mas_halt_threshold`; `record_turn()` checks `mas.verdict == "HALT"` | `tests/test_mivp.py` (pending) | Mandate HALT enforcement test | ⚠️ Structural |
+| MIVP-INV-006 | MAS history MUST be append-only and linked to CTCHC turn hash | `compute_mas()` — `ctchc_link_hash` parameter from `link.chain_link_hash`; appended to in-memory list + DB | `tests/test_mivp.py` (pending) | Append-only chain linkage test | ⚠️ Structural |
+| MIVP-INV-007 | At session close, MBR Seal MUST be issued covering all turns | `seal_mbr()` called in `GovernanceRuntime.close_session()` when `session.mbr_id` present | `tests/test_mivp.py` (pending) | Seal completeness test | ⚠️ Structural |
+| MIVP-INV-008 | MANDATE-BOUND PoGC tag MUST only be issued when MBR present, seal complete, `turns_in_violation = 0` | `seal_mbr()` — `mandate_bound_eligible = (turns_in_violation == 0 and mbr is not None)`; `close_session()` appends `MANDATE-BOUND` to `pogc_tags` only when `mandate_bound = True` | `tests/test_mivp.py` (pending) | MANDATE-BOUND eligibility test | ⚠️ Structural |
+
+**Note:** All 8 MIVP invariants are enforced at the structural/implementation level. Dedicated test suite `tests/test_mivp.py` to be created. ProxyGuard keyword-density activation is a baseline implementation — production deployments should extend with domain-specific ML classifiers per ADR-194 §Consequential Risk.
+
+---
+
 ## Coverage Summary
 
 ```
@@ -161,20 +178,24 @@ OEP-INV         6             6            0               0          Active
 FEA-INV         5             4            1               0          Active
 FVP-INV         1             1            0               0          Active
 GECR-INV        6             5            1               0          Active ← ADR-170
+MIVP-INV        8             0            8               0          Active ← ADR-194 (new)
 ─────────────────────────────────────────────────────────────────────────────
-ACTIVE TOTAL    47            41           6               0
+ACTIVE TOTAL    55            41           14              0
 ─────────────────────────────────────────────────────────────────────────────
 SGIP-INV        4             0            0               4          PROPOSED ← ADR-171
 ─────────────────────────────────────────────────────────────────────────────
-GRAND TOTAL     51            41           6               4
+GRAND TOTAL     59            41           14              4
 
-Active coverage (47 invariants):
-  Direct:      41/47 = 87.2%
-  Structural:   6/47 = 12.8%
-  None:         0/47 =  0.0%
+Active coverage (55 invariants):
+  Direct:      41/55 = 74.5%
+  Structural:  14/55 = 25.5%
+  None:         0/55 =  0.0%
 
 Proposed (SGIP, 4 invariants):
   All 4 pending implementation — RFC-ATF-4 sprint
+
+MIVP-INV (8 invariants, all Structural — pending tests/test_mivp.py):
+  Priority action: create test_mivp.py — target 8/8 Direct
 ```
 
 ---

@@ -1,6 +1,6 @@
 """
 OMNIX Governance Runtime (OGR) — Central Orchestrator
-ADR-184 · RFC-ATF-1 through RFC-ATF-6
+ADR-184 · ADR-194 · RFC-ATF-1 through RFC-ATF-6
 
 The GovernanceRuntime is the single "body and soul" of the OMNIX integration
 product. One session activates all six ATF layers simultaneously:
@@ -10,12 +10,20 @@ product. One session activates all six ATF layers simultaneously:
   L3 — Temporal Authority (TAR)   RFC-ATF-2
   L4 — Runtime Continuity (RCR)   RFC-ATF-2
   L5 — Cognitive Governance       RFC-ATF-5
-  L6 — Behavioral Verification    RFC-ATF-6  ← NEW
+  L6 — Behavioral Verification    RFC-ATF-6
+
+Optional extension when governing receipt includes 'mandate_binding':
+  MIVP — Mandate Integrity Verification Protocol   ADR-194
+       → MBR issued before turn 1 (MIVP-INV-001)
+       → MAS computed per turn    (MIVP-INV-003)
+       → MBR Seal at close        (MIVP-INV-007)
+       → MANDATE-BOUND PoGC tag   (MIVP-INV-008)
 
 No competitor activates all six simultaneously with:
   • ML-DSA-65 (PQC) sealing on every artifact
   • Receipt-bound behavioral attestation (BAR)
-  • Anticipatory veto integration (CCS → AGVP)
+  • Continuous mandate alignment verification (MAS — ADR-194)
+  • Anticipatory veto integration (CCS + MAS → AGVP)
   • Offline-verifiable session proof (CTCHC seal)
 
 Harold Nunes — OMNIX QUANTUM LTD — May 2026
@@ -42,9 +50,12 @@ STATUS_HALTED  = "HALTED"
 STATUS_EXPIRED = "EXPIRED"
 
 # ATF compliance tier
-ATF_BEV_COMPLIANT = "ATF-BEV-Compliant"   # highest designation
-ATF_L4_COMPLIANT  = "ATF-L4-Compliant"
-ATF_L3_COMPLIANT  = "ATF-L3-Compliant"
+ATF_BEV_COMPLIANT  = "ATF-BEV-Compliant"   # highest BEV designation
+ATF_L4_COMPLIANT   = "ATF-L4-Compliant"
+ATF_L3_COMPLIANT   = "ATF-L3-Compliant"
+
+# MIVP extended tags (ADR-194)
+MIVP_MANDATE_BOUND = "MANDATE-BOUND"       # added to PoGC when MIVP-INV-008 satisfied
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -80,6 +91,9 @@ class OGRSession:
     halt_reason: Optional[str]
     oep_export_id: Optional[str]
     atf_layers_active: List[str]
+    # MIVP fields (ADR-194) — populated when constraint_set contains 'mandate_binding'
+    mbr_id: Optional[str]
+    mandate_bound: bool
     started_at: str
     closed_at: Optional[str]
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -104,6 +118,9 @@ class OGRSession:
             "chain_sealed": self.chain_sealed,
             "chain_seal_hash": self.chain_seal_hash,
             "atf_layers_active": self.atf_layers_active,
+            # MIVP (ADR-194)
+            "mbr_id": self.mbr_id,
+            "mandate_bound": self.mandate_bound,
             "started_at": self.started_at,
             "closed_at": self.closed_at,
         }
@@ -126,7 +143,8 @@ class OGRTurnResult:
     The atomic result of recording one agent turn through all active ATF layers.
 
     Contains: BAR (behavioral attestation), CCS (conformance signal),
-    chain link hash (CTCHC), and governance verdict.
+    chain link hash (CTCHC), MAS (mandate alignment — MIVP, when active),
+    and governance verdict.
     """
     session_id: str
     turn_index: int
@@ -145,9 +163,14 @@ class OGRTurnResult:
     halt_reason: Optional[str]
     ogr_verdict: str
     processed_at: str
+    # MIVP fields — None when no MBR active (ADR-194)
+    mas_id: Optional[str] = None
+    mas_score: Optional[float] = None
+    mas_verdict: Optional[str] = None
+    mandate_dominant_proxy: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        result = {
             "session_id": self.session_id,
             "turn_index": self.turn_index,
             "bar": {
@@ -172,6 +195,14 @@ class OGRTurnResult:
             "ogr_verdict": self.ogr_verdict,
             "processed_at": self.processed_at,
         }
+        if self.mas_id is not None:
+            result["mivp"] = {
+                "mas_id": self.mas_id,
+                "alignment_score": round(self.mas_score, 4) if self.mas_score is not None else None,
+                "verdict": self.mas_verdict,
+                "dominant_proxy": self.mandate_dominant_proxy,
+            }
+        return result
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -235,6 +266,7 @@ class GovernanceRuntime:
         self._bar_engine = None
         self._ccs_engine = None
         self._ctchc_engine = None
+        self._mivp_engine = None   # MIVP — lazy, only created when first needed (ADR-194)
         # In-memory session cache — used as primary store when DATABASE_URL absent
         # and as a read-through cache in production to reduce DB round-trips on
         # record_turn (hot path). Always authoritative for the current process.
@@ -258,6 +290,13 @@ class GovernanceRuntime:
             self._ctchc_engine = CTCHCEngine()
         return self._ctchc_engine
 
+    def _get_mivp(self):
+        """Lazy-load MIVPEngine — only instantiated when a session has mandate_binding."""
+        if self._mivp_engine is None:
+            from omnix_core.bev.mandate_integrity_verification import MIVPEngine
+            self._mivp_engine = MIVPEngine()
+        return self._mivp_engine
+
     def _get_conn(self):
         import psycopg2
         return psycopg2.connect(self._db_url)
@@ -265,7 +304,7 @@ class GovernanceRuntime:
     # ── Startup ───────────────────────────────────────────────────
 
     def ensure_tables(self) -> None:
-        """Create all OGR + BEV tables. Safe to call on every startup."""
+        """Create all OGR + BEV + MIVP tables. Safe to call on every startup."""
         if not self._db_url:
             logger.debug("[OGR] No DATABASE_URL — skipping table creation")
             return
@@ -277,7 +316,8 @@ class GovernanceRuntime:
             self._get_bar().ensure_tables()
             self._get_ccs().ensure_tables()
             self._get_ctchc().ensure_tables()
-            logger.info("[OGR] All governance runtime tables ready")
+            self._get_mivp().ensure_tables()   # MIVP tables (ADR-194)
+            logger.info("[OGR] All governance runtime tables ready (BEV + MIVP)")
         except Exception as exc:
             logger.warning(f"[OGR] ensure_tables failed (non-blocking): {exc}")
 
@@ -342,16 +382,38 @@ class GovernanceRuntime:
             halt_reason=None,
             oep_export_id=None,
             atf_layers_active=self._ATF_LAYERS.copy(),
+            mbr_id=None,
+            mandate_bound=False,
             started_at=started_at,
             closed_at=None,
             metadata=metadata or {},
         )
 
+        # ── MIVP: create MBR before first turn (MIVP-INV-001) ────────
+        mandate_binding = constraint_set.get("mandate_binding") if constraint_set else None
+        if mandate_binding:
+            try:
+                mivp = self._get_mivp()
+                mbr = mivp.create_mbr(
+                    session_id=session_id,
+                    governing_receipt_id=governing_receipt_id,
+                    mandate_binding=mandate_binding,
+                )
+                import dataclasses as _dc
+                session = _dc.replace(session, mbr_id=mbr.mbr_id)
+                logger.info(
+                    f"[OGR] MIVP activated: MBR={mbr.mbr_id} | session={session_id} "
+                    f"| guards={len(mbr.proxy_guards)} (ADR-194)"
+                )
+            except Exception as mivp_exc:
+                logger.warning(f"[OGR] MIVP MBR creation failed (non-blocking): {mivp_exc}")
+
         self._session_cache[session_id] = session
         self._persist_session(session)
         logger.info(
             f"[OGR] Session started: {session_id} | agent={agent_id} "
-            f"| domain={domain} | receipt={governing_receipt_id[:16]}…"
+            f"| domain={domain} | receipt={governing_receipt_id[:16]}… "
+            f"| mivp={'ON' if mandate_binding else 'OFF'}"
         )
         return session
 
@@ -427,18 +489,40 @@ class GovernanceRuntime:
             governing_receipt_id=session.governing_receipt_id,
         )
 
-        # ── Step 4: Determine OGR verdict ─────────────────────────
+        # ── Step 4: MIVP — Mandate Alignment Score (MIVP-INV-003) ───
+        mas = None
+        if session.mbr_id:
+            try:
+                mivp = self._get_mivp()
+                mas = mivp.compute_mas(
+                    session_id=session_id,
+                    bar_id=bar.bar_id,
+                    turn_index=turn_index,
+                    output_text=output_text,
+                    ctchc_link_hash=link.chain_link_hash,
+                    metadata=turn_metadata,
+                )
+            except Exception as mivp_exc:
+                logger.warning(f"[OGR] MIVP MAS computation failed (non-blocking): {mivp_exc}")
+
+        # ── Step 5: Determine OGR verdict ─────────────────────────
+        mivp_halt = mas is not None and mas.verdict == "HALT"
         should_halt = (
             bar.bar_status == "HALTED"
             or ccs.verdict == "HALT"
+            or mivp_halt
         )
         halt_reason = bar.halt_reason or (
             f"CCS HALT: cumulative_drift={ccs.cumulative_drift:.3f}"
             if ccs.verdict == "HALT" else None
+        ) or (
+            f"MIVP HALT: mandate_alignment={mas.alignment_score:.3f} < threshold "
+            f"(dominant_proxy={mas.dominant_proxy})"
+            if mivp_halt and mas else None
         )
         ogr_verdict = "HALT" if should_halt else ccs.verdict
 
-        # ── Step 5: Update session state ──────────────────────────
+        # ── Step 6: Update session state ──────────────────────────
         new_status = STATUS_HALTED if should_halt else STATUS_ACTIVE
         self._update_session_turn(
             session_id=session_id,
@@ -474,6 +558,11 @@ class GovernanceRuntime:
             halt_reason=halt_reason,
             ogr_verdict=ogr_verdict,
             processed_at=processed_at,
+            # MIVP (ADR-194) — None when no MBR active
+            mas_id=mas.mas_id if mas else None,
+            mas_score=mas.alignment_score if mas else None,
+            mas_verdict=mas.verdict if mas else None,
+            mandate_dominant_proxy=mas.dominant_proxy if mas else None,
         )
 
     # ─────────────────────────────────────────────────────────────
@@ -517,6 +606,22 @@ class GovernanceRuntime:
 
         ccs_trend = self._get_ccs().get_session_trend(session_id)
 
+        # ── MIVP: seal MBR at session close (MIVP-INV-007) ──────────
+        mivp_seal = None
+        mandate_bound = False
+        if session.mbr_id:
+            try:
+                mivp = self._get_mivp()
+                mivp_seal = mivp.seal_mbr(session_id)
+                mandate_bound = mivp_seal.mandate_bound_eligible
+                logger.info(
+                    f"[OGR] MIVP MBR sealed: {mivp_seal.seal_id} | "
+                    f"mandate_bound={mandate_bound} | "
+                    f"verdict={mivp_seal.mandate_verdict} (MIVP-INV-007)"
+                )
+            except Exception as mivp_exc:
+                logger.warning(f"[OGR] MIVP seal failed (non-blocking): {mivp_exc}")
+
         # BEV-INV-003: preserve HALTED as terminal forensic state — not overwritten by CLOSED
         final_status = STATUS_HALTED if was_halted else STATUS_CLOSED
 
@@ -537,7 +642,13 @@ class GovernanceRuntime:
                 chain_sealed=True,
                 chain_seal_hash=sealed_chain.seal_hash,
                 closed_at=closed_at,
+                mandate_bound=mandate_bound,
             )
+
+        # Determine compliance tags (MIVP-INV-008)
+        pogc_tags = [ATF_BEV_COMPLIANT]
+        if mandate_bound:
+            pogc_tags.append(MIVP_MANDATE_BOUND)
 
         result = {
             "session_id": session_id,
@@ -551,12 +662,18 @@ class GovernanceRuntime:
                 "last_verdict": ccs_trend.get("last_verdict"),
             },
             "compliance_tier": ATF_BEV_COMPLIANT,
+            "pogc_tags": pogc_tags,
+            "mandate_bound": mandate_bound,
             "governing_receipt_id": session.governing_receipt_id,
             "pqc_sealed": sealed_chain.seal_pqc_signature is not None,
             "pqc_algorithm": sealed_chain.seal_pqc_algorithm,
             "offline_verifiable": True,
             "atf_layers_attested": self._ATF_LAYERS,
         }
+
+        # MIVP seal summary if active (ADR-194)
+        if mivp_seal:
+            result["mivp_seal"] = mivp_seal.seal_summary()
 
         if package_oep:
             result["oep_note"] = (
@@ -565,7 +682,8 @@ class GovernanceRuntime:
 
         logger.info(
             f"[OGR] Session closed: {session_id} | turns={turn_count} "
-            f"| sealed={sealed_chain.is_sealed}"
+            f"| sealed={sealed_chain.is_sealed} "
+            f"| mandate_bound={mandate_bound}"
         )
         return result
 
@@ -600,11 +718,20 @@ class GovernanceRuntime:
         if chain:
             verification = ctchc_engine.verify_chain(session_id)
 
+        # MIVP proof (ADR-194) — included when session has MBR
+        mivp_proof = None
+        if session.mbr_id:
+            try:
+                mivp_proof = self._get_mivp().get_mandate_proof(session_id)
+            except Exception as exc:
+                logger.warning(f"[OGR] MIVP proof retrieval failed: {exc}")
+
         return {
             "session_id": session_id,
             "governing_receipt_id": session.governing_receipt_id,
             "session_status": session.session_status,
             "compliance_tier": ATF_BEV_COMPLIANT,
+            "mandate_bound": session.mandate_bound,
             "atf_layers_active": session.atf_layers_active,
             "behavioral_attestation_chain": {
                 # session.turn_count is always accurate (updated on every record_turn).
@@ -618,6 +745,7 @@ class GovernanceRuntime:
             "ctchc": chain.chain_summary() if chain else None,
             "ctchc_links": [lk.to_dict() for lk in chain_links],
             "verification": verification,
+            "mivp": mivp_proof,
             "offline_verifiable": True,
             "proof_generated_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -649,9 +777,17 @@ class GovernanceRuntime:
                     "BEV-INV-009", "BEV-INV-010", "BEV-INV-011", "BEV-INV-012",
                     "BEV-INV-013", "BEV-INV-014", "BEV-INV-015", "BEV-INV-016",
                     "BEV-INV-017", "BEV-INV-018", "OGR-INV-001",
+                    # MIVP active when session has mandate_binding (ADR-194)
+                    *([
+                        "MIVP-INV-001", "MIVP-INV-002", "MIVP-INV-003",
+                        "MIVP-INV-004", "MIVP-INV-005", "MIVP-INV-006",
+                        "MIVP-INV-007", "MIVP-INV-008",
+                    ] if session.mbr_id else []),
                 ],
                 "pqc_algorithm": "ML-DSA-65 (Dilithium-3, FIPS 204)",
                 "offline_verifiable": True,
+                "mandate_bound": session.mandate_bound,
+                "mivp_active": session.mbr_id is not None,
             },
         }
 

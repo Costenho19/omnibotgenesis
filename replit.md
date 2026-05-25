@@ -118,6 +118,9 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
 | `book_leads` | CRM / lead capture | — |
 | `pogr_certificates` | Proof of Governance Registry | ADR-186/187 |
 | `osg_validation_receipts` | Settlement Gate — VR append-only | ADR-188 |
+| `atf_mandate_binding_records` | MIVP — MBR per-session | ADR-194 |
+| `atf_mandate_alignment_scores` | MIVP — MAS per-turn | ADR-194 |
+| `atf_mbr_seals` | MIVP — MBRSeal al cierre de sesión | ADR-194 |
 
 ---
 
@@ -165,7 +168,7 @@ El "SSL para decisiones de agentes de IA" — verificable offline, firmado PQC, 
 - **Excepción:** `/terminal` y `/classic` son dashboards operacionales internos en Jinja2. No aplica la regla React.
 - **PQC-first:** Todos los receipts de gobernanza se firman con Dilithium-3.
 - **ATF stack (L1–L4):** Identity (AIR) → Delegation (DR) → Temporal (TAR) → Runtime Continuity (RCR). Cada capa extiende sin reemplazar la anterior.
-- **106 invariantes totales:** ATF-INV-001–006 (RFC-ATF-1) + RGC-INV-001–008 (RFC-ATF-2) + GPIL-INV-001–003 + ELR-INV-001–004 + EAP-INV-001–007 + OEP-INV-001–006 + FEA-INV-001–005 + FVP-INV-007 (RFC-ATF-3) + GECR-INV-001–006 + SGIP-INV-001–004 + DSPP-INV-001–007 (ADR-173) + AGV-INV-001–006 (ADR-174) + SSD-INV-001–003 (ADR-175) + FVS-INV-001–003 (ADR-177) + **CGE-INV-001–007** (ADR-178) + **GUGT-INV-001–006** (ADR-179) + **TGB-INV-001–005** (ADR-180) — RFC-ATF-5 Cognitive Governance Layer + **BEV-INV-001–018** (ADR-181/182/183) — RFC-ATF-6 Behavioral Execution Verification Layer + **OGR-INV-001** (ADR-184) — OMNIX Governance Runtime simultaneous-layer invariant. BEV breakdown: BAR 001–004+015–016 · CCS 005–009+017 · CTCHC 010–014+018.
+- **114 invariantes totales:** ATF-INV-001–006 (RFC-ATF-1) + RGC-INV-001–008 (RFC-ATF-2) + GPIL-INV-001–003 + ELR-INV-001–004 + EAP-INV-001–007 + OEP-INV-001–006 + FEA-INV-001–005 + FVP-INV-007 (RFC-ATF-3) + GECR-INV-001–006 + SGIP-INV-001–004 + DSPP-INV-001–007 (ADR-173) + AGV-INV-001–006 (ADR-174) + SSD-INV-001–003 (ADR-175) + FVS-INV-001–003 (ADR-177) + **CGE-INV-001–007** (ADR-178) + **GUGT-INV-001–006** (ADR-179) + **TGB-INV-001–005** (ADR-180) — RFC-ATF-5 Cognitive Governance Layer + **BEV-INV-001–018** (ADR-181/182/183) — RFC-ATF-6 Behavioral Execution Verification Layer + **OGR-INV-001** (ADR-184) — OMNIX Governance Runtime simultaneous-layer invariant + **MIVP-INV-001–008** (ADR-194) — Mandate Integrity Verification Protocol: proxy-optimization detection + MANDATE-BOUND PoGC tag. BEV breakdown: BAR 001–004+015–016 · CCS 005–009+017 · CTCHC 010–014+018 · MIVP 001–008.
 
 ---
 

@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **189 total**. Últimos: ADR-186 (PoGR) · ADR-187 (PoGR API) · ADR-188 (OSG — OMNIX Settlement Gate) · **ADR-189 (PoGR Public Verifier)**
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **124 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + FVS×3 + CGE×7 + GUGT×6 + TGB×5 + BEV×18 + OGR×1 + PoGR×6 + **OSG×6**) — RFC-ATF-5 (Cognitive Governance Layer — PENDING DOI) · RFC-ATF-6 (BEV) · PoGR (ADR-186) · OSG (ADR-188)
+- **ADRs:** `docs/adr/` — **194 total**. Últimos: ADR-191 · ADR-192 · ADR-193 · **ADR-194 (MIVP — Mandate Integrity Verification Protocol)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **132 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + FVS×3 + CGE×7 + GUGT×6 + TGB×5 + BEV×18 + OGR×1 + PoGR×6 + OSG×6 + **MIVP×8**) — RFC-ATF-5 (Cognitive Governance Layer — PENDING DOI) · RFC-ATF-6 (BEV) · PoGR (ADR-186) · OSG (ADR-188) · MIVP (ADR-194)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 
@@ -113,6 +113,9 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | **Anticipatory Governance Veto** | `omnix_core/governance/anticipatory_governance_veto.py` | AGVPWatchdog · ProactiveVetoReceipt · PVR DB persistence · ML-DSA-65 signed · AGV-INV-001–006 · ADR-174 |
 | **Structural Shift Detector** | `omnix_core/governance/assumption_validity_monitor.py` | SSD methods: CRSI algorithm · position-weighted Jaccard · ring buffer history · StructuralShiftReport · SSD-INV-001–003 · ADR-175 |
 | **Formal Verification Suite** | `omnix_core/formal_verification/` | **OMNIX-FVS-1.0** · 5 módulos Z3 · **19 proofs 19/19 UNSAT** · run_all.py (JSON output) · FVS-INV-001/002/003 · ADR-177 · Mayo 2026 |
+| **Behavioral Execution Verification (BEV)** | `omnix_core/bev/` | BAR · CCS · CTCHC · **MIVP** — BEV-INV-001–018 + MIVP-INV-001–008 · RFC-ATF-6 · ADR-181/182/183/**194** |
+| **Mandate Integrity Verification Protocol (MIVP)** | `omnix_core/bev/mandate_integrity_verification.py` | **ADR-194** — MBR (Mandate Binding Record) · MAS (Mandate Alignment Score) · MBRSeal · ProxyGuard · MIVPEngine · 8 invariantes MIVP-INV-001–008 · MANDATE-BOUND PoGC tag · closes the proxy-optimization governance gap · Mayo 2026 |
+| **OMNIX Governance Runtime (OGR)** | `omnix_core/govern/governance_runtime.py` | **ADR-184** — 6-layer orchestrator: BAR+CCS+CTCHC+**MIVP** per turn · start_session/record_turn/close_session/get_proof lifecycle · MANDATE-BOUND tagging · OGR-INV-001 |
 
 **APIs ATF:** `/api/atf/*` · `/api/atf/temporal/*` · `/api/atf/translate/*` · `/api/atf/continuity/*` · `/api/atf/escalations/*`
 
