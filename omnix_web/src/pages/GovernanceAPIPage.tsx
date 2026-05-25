@@ -285,7 +285,7 @@ export default function GovernanceAPIPage() {
 
         <p style={{ fontSize: 18, color: MUTED, maxWidth: 600, lineHeight: 1.7, marginBottom: 40 }}>
           OMNIX issues cryptographically signed governance receipts for every AI decision.
-          Formally specified. 67 invariants. 3 published RFCs. Verifiable by any auditor
+          Formally specified. 67 invariants. 4 published RFCs. Verifiable by any auditor
           without OMNIX infrastructure.
         </p>
 
@@ -681,7 +681,7 @@ VERIFICATION: FULL  ✓  No OMNIX runtime required.`}
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Shield size={16} color={GOLD} />
-            <span style={{ color: MUTED, fontSize: 13 }}>OMNIX QUANTUM LTD · England & Wales · Operational HQ: Abu Dhabi, UAE</span>
+            <span style={{ color: MUTED, fontSize: 13 }}>OMNIX QUANTUM LTD · England & Wales · United Kingdom</span>
           </div>
           <div style={{ display: 'flex', gap: 20 }}>
             <Link to="/terms" style={{ color: DIMMED, fontSize: 12, textDecoration: 'none' }}>Terms</Link>

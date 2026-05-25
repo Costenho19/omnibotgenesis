@@ -378,7 +378,7 @@ export default function PartnersPage() {
           }}
         >
           <div style={{ fontSize: 12, color: '#334155' }}>
-            OMNIX QUANTUM · Partner Program · Abu Dhabi, UAE
+            OMNIX QUANTUM · Partner Program · United Kingdom
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
             3 modelos de partnership · API-first · EU AI Act aligned

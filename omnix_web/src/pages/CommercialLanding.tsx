@@ -1473,12 +1473,29 @@ export default function CommercialLanding() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            {/* RFC-ATF-3 — newest, featured */}
+            {/* RFC-ATF-4 — newest, featured */}
+            <div className="md:col-span-2 p-5 rounded-2xl border border-orange-500/30 bg-[#0A1628]/80">
+              <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">LATEST</span>
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Zenodo</span>
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-pink-500/10 text-pink-400 border border-pink-500/20">Figshare</span>
+                </div>
+                <span className="text-xs text-orange-400/60 font-mono">19 Z3 proofs · 108 vectors · dual Z3+TLA+</span>
+              </div>
+              <h3 className="text-white font-semibold text-sm mb-2 leading-snug">RFC-ATF-4: Agent Trust Fabric — Proactive Governance Layer · AGVP · Structural Shift Detection · Dynamic Semantic Portability</h3>
+              <p className="text-muted text-xs mb-2">Harold Nunes · OMNIX QUANTUM LTD · May 2026</p>
+              <div className="flex gap-4 flex-wrap">
+                <a href="https://doi.org/10.5281/zenodo.20368895" target="_blank" rel="noopener noreferrer" className="text-emerald-400 text-xs hover:text-emerald-300 transition-colors">Zenodo: 10.5281/zenodo.20368895 ↗</a>
+                <a href="https://doi.org/10.6084/m9.figshare.32394192" target="_blank" rel="noopener noreferrer" className="text-pink-400 text-xs hover:text-pink-300 transition-colors">Figshare: 10.6084/m9.figshare.32394192 ↗</a>
+              </div>
+            </div>
+
+            {/* RFC-ATF-3 */}
             <div className="md:col-span-2 p-5 rounded-2xl border border-purple-500/30 bg-[#0A1628]/80">
               <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
                 <div className="flex gap-2 flex-wrap">
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">LATEST</span>
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Zenodo</span>
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">Zenodo</span>
                   <span className="text-xs font-semibold px-2 py-1 rounded-full bg-pink-500/10 text-pink-400 border border-pink-500/20">Figshare</span>
                 </div>
                 <span className="text-xs text-purple-400/60 font-mono">47 formal invariants · ADR-170 GECR</span>

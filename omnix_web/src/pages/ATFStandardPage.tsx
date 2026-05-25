@@ -610,14 +610,15 @@ export default function ATFStandardPage() {
               OMNIX ATF — Priority Record
             </div>
             <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.7 }}>
-              Published May 2026 · OMNIX QUANTUM LTD · Harold Nunes, Abu Dhabi UAE<br />
+              Published May 2026 · OMNIX QUANTUM LTD · Harold Nunes<br />
               RFC-ATF-1: Zenodo 10.5281/zenodo.20155016 · Figshare 10.6084/m9.figshare.32308077 · SSRN 6757339<br />
               RFC-ATF-2: Zenodo 10.5281/zenodo.20241344 · Figshare 10.6084/m9.figshare.32308095 · SSRN 6763978<br />
-              RFC-ATF-3: Zenodo 10.5281/zenodo.20247342 · Figshare 10.6084/m9.figshare.32308119 · 47 formal invariants
+              RFC-ATF-3: Zenodo 10.5281/zenodo.20247342 · Figshare 10.6084/m9.figshare.32308119 · 47 formal invariants<br />
+              RFC-ATF-4: Zenodo 10.5281/zenodo.20368895 · Figshare 10.6084/m9.figshare.32394192 · 19 Z3 proofs · dual Z3+TLA+
             </div>
           </div>
           <div style={{ fontSize: 12, color: '#475569', fontFamily: 'monospace' }}>
-            RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-156/157/158/159/161/170 · ATF-FV-1.0
+            RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · RFC-ATF-4 · ADR-156/157/158/159/161/170/174/181/182/183/184 · ATF-FV-1.0
           </div>
         </div>
 

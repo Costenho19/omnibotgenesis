@@ -245,6 +245,11 @@ export default function AboutPage() {
               </div>
               {[
                 {
+                  label: 'RFC-ATF-4: Proactive Governance Layer · 19 Z3 Proofs · Dual Z3+TLA+',
+                  sub: 'Zenodo: 10.5281/zenodo.20368895 · Figshare: 10.6084/m9.figshare.32394192 · May 2026',
+                  link: 'https://doi.org/10.5281/zenodo.20368895',
+                },
+                {
                   label: 'RFC-ATF-3: Forensic Verification Protocol · 40 Invariants',
                   sub: 'Zenodo: 10.5281/zenodo.20247342 · Figshare: 10.6084/m9.figshare.32308119 · May 2026',
                   link: 'https://doi.org/10.5281/zenodo.20247342',
@@ -503,7 +508,7 @@ export default function AboutPage() {
           }}
         >
           <div style={{ fontSize: 12, color: '#334155' }}>
-            OMNIX QUANTUM · Abu Dhabi, UAE · Founded 2025
+            OMNIX QUANTUM · United Kingdom · Founded 2025
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
             171 ADRs · 184+ tests · GOVERNANCE_BASELINE-2026-Q2-001

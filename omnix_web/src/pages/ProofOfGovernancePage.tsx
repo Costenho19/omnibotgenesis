@@ -694,6 +694,7 @@ export default function ProofOfGovernancePage() {
                   ['RFC-ATF-1', '10.5281/zenodo.20155016', 'Identity · Delegation · PQC Signing'],
                   ['RFC-ATF-2', '10.5281/zenodo.20241344', 'Runtime Continuity · Authority Fragmentation Guard'],
                   ['RFC-ATF-3', '10.5281/zenodo.20247342', 'Evidence Lifecycle · Forensic Verification Protocol'],
+                  ['RFC-ATF-4', '10.5281/zenodo.20368895', 'Proactive Governance · AGVP · SSD · DSPP · 19 Z3 Proofs'],
                 ].map(([rfc, doi, desc]) => (
                   <div key={rfc} style={{
                     display: 'flex', gap: 16, alignItems: 'center',
@@ -706,7 +707,7 @@ export default function ProofOfGovernancePage() {
                 ))}
               </div>
               <div style={{ fontSize: 11, color: SLATE, marginTop: 12 }}>
-                Three published standards · Six permanent DOIs · Zenodo + Figshare · Prior art established
+                Four published standards · Eight permanent DOIs · Zenodo + Figshare · Prior art established
               </div>
             </div>
 

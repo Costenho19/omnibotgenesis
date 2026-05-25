@@ -27,6 +27,7 @@ const PURPLE = '#a855f7'
 const DOI_ATF1 = 'https://doi.org/10.5281/zenodo.20155016'
 const DOI_ATF2 = 'https://doi.org/10.5281/zenodo.20241344'
 const DOI_ATF3 = 'https://doi.org/10.5281/zenodo.20247342'
+const DOI_ATF4 = 'https://doi.org/10.5281/zenodo.20368895'
 
 const KEY_PROPERTIES = [
   { label: 'Runtime Admissibility', desc: 'Execution authority verified at the exact moment a decision is bound to consequences — not after.', color: GOLD },
@@ -74,6 +75,15 @@ const RFC_STACK = [
     doi: DOI_ATF3,
     doiLabel: 'zenodo.20247342',
     color: PURPLE,
+  },
+  {
+    id: 'RFC-ATF-4',
+    title: 'Proactive Governance Layer',
+    invariants: 'AGV/SSD/DSPP · 19 Z3 proofs · dual Z3+TLA+',
+    scope: 'Anticipatory Governance Veto Protocol (AGVP), Structural Shift Detector (CRSI), Dynamic Semantic Portability (DSPP). First dual-methodology verified AI governance RFC.',
+    doi: DOI_ATF4,
+    doiLabel: 'zenodo.20368895',
+    color: '#f97316',
   },
 ]
 
@@ -175,7 +185,7 @@ export default function InstitutionalBriefPage() {
               From human-signed delegation to immutable forensic archive — at the exact moment execution occurs.
             </p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {['47 Active Invariants', '9 Invariant Families', '3 Published RFCs', '171 ADRs', 'ML-DSA-65 · FIPS 204'].map(t => (
+              {['67 Active Invariants', '9 Invariant Families', '4 Published RFCs', '184 ADRs', 'ML-DSA-65 · FIPS 204'].map(t => (
                 <span key={t} style={{
                   fontSize: 10, fontWeight: 600, color: GOLD,
                   background: `${GOLD}12`, border: `1px solid ${GOLD}28`,
@@ -187,7 +197,7 @@ export default function InstitutionalBriefPage() {
           <div style={{ textAlign: 'right', fontSize: 11, color: SLATE, lineHeight: 2 }}>
             <div>Harold Nunes · Founder & CEO</div>
             <div>OMNIX QUANTUM LTD</div>
-            <div>Abu Dhabi, UAE · United Kingdom</div>
+            <div>United Kingdom · OMNIX QUANTUM LTD</div>
             <div style={{ marginTop: 8, color: MUTED, fontFamily: 'monospace' }}>May 2026 · v1.0</div>
             <div style={{ color: MUTED, fontFamily: 'monospace', fontSize: 10 }}>OMNIX-WALK-001</div>
           </div>
@@ -436,10 +446,10 @@ export default function InstitutionalBriefPage() {
           display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10,
         }}>
           <div style={{ fontSize: 11, color: SLATE, fontFamily: 'monospace' }}>
-            OMNIX QUANTUM LTD · Abu Dhabi, UAE · omnixquantum.com
+            OMNIX QUANTUM LTD · United Kingdom · omnixquantum.com
           </div>
           <div style={{ fontSize: 11, color: SLATE, fontFamily: 'monospace' }}>
-            RFC-ATF-1/2/3 · 47 invariants · 171 ADRs · GOVERNANCE_BASELINE-2026-Q2-001
+            RFC-ATF-1/2/3/4 · 67 invariants · 184 ADRs · GOVERNANCE_BASELINE-2026-Q2-001
           </div>
         </div>
 

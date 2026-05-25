@@ -83,16 +83,18 @@ const STEPS = [
     color: RED,
     tag: 'PUBLISHED',
     tagColor: RED,
-    desc: 'Three published RFCs with DOI deposits on Zenodo and Figshare. Independent of any OMNIX runtime — verifiable by any party.',
+    desc: 'Four published RFCs with DOI deposits on Zenodo and Figshare. Independent of any OMNIX runtime — verifiable by any party.',
     what: [
       'RFC-ATF-1 · zenodo.20155016 · figshare.32308077',
       'RFC-ATF-2 · zenodo.20241344 · figshare.32308095',
       'RFC-ATF-3 · zenodo.20247342 · figshare.32308119',
+      'RFC-ATF-4 · zenodo.20368895 · figshare.32394192',
     ],
     rfcs: [
       { id: 'RFC-ATF-1', title: 'ATF Delegation Protocol', doi: 'https://doi.org/10.5281/zenodo.20155016', sub: 'ATF-INV-001–006 · Identity, delegation, PQC' },
       { id: 'RFC-ATF-2', title: 'Runtime Governance Continuity', doi: 'https://doi.org/10.5281/zenodo.20241344', sub: 'RGC-INV-001–008 · CES, HALT, RCR states' },
       { id: 'RFC-ATF-3', title: 'Forensic Evidence & Interoperability', doi: 'https://doi.org/10.5281/zenodo.20247342', sub: '26 invariants · EAP/OEP/FEA/FVP' },
+      { id: 'RFC-ATF-4', title: 'Proactive Governance Layer', doi: 'https://doi.org/10.5281/zenodo.20368895', sub: '19 Z3 proofs · AGVP · SSD · DSPP · dual Z3+TLA+' },
     ],
   },
   {
@@ -220,7 +222,7 @@ export default function ReviewerStartPage() {
           fontSize: 11, color: SLATE, fontFamily: 'monospace',
         }}>
           <span>OMNIX QUANTUM LTD · omnixquantum.com</span>
-          <span>47 invariants · 9 families · 171 ADRs · 3 RFCs published</span>
+          <span>67 invariants · 9 families · 184 ADRs · 4 RFCs published</span>
         </div>
       </div>
     </div>

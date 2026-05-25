@@ -729,6 +729,7 @@ export default function GovernanceFlowPage() {
               { l: 'RFC-ATF-1', href: 'https://doi.org/10.5281/zenodo.20155016' },
               { l: 'RFC-ATF-2', href: 'https://doi.org/10.5281/zenodo.20241344' },
               { l: 'RFC-ATF-3', href: 'https://doi.org/10.5281/zenodo.20247342' },
+              { l: 'RFC-ATF-4', href: 'https://doi.org/10.5281/zenodo.20368895' },
             ].map(r => (
               <a key={r.l} href={r.href} target="_blank" rel="noreferrer" style={{
                 fontFamily: 'monospace', fontSize: 9, color: C.gold,
@@ -736,7 +737,7 @@ export default function GovernanceFlowPage() {
                 padding: '3px 10px', borderRadius: 2, letterSpacing: '0.10em', textDecoration: 'none',
               }}>{r.l} · DOI ↗</a>
             ))}
-            {['47 INVARIANTS · 9 FAMILIES', '171 ADRs', 'ML-DSA-65 · FIPS 204', 'OMNIX-WALK-001'].map(b => (
+            {['67 INVARIANTS · 9 FAMILIES', '184 ADRs', 'ML-DSA-65 · FIPS 204', 'OMNIX-WALK-001'].map(b => (
               <span key={b} style={{ fontFamily: 'monospace', fontSize: 9, color: C.subtle, background: `rgba(255,255,255,0.03)`, border: `1px solid ${C.dim}50`, padding: '3px 10px', borderRadius: 2, letterSpacing: '0.08em' }}>{b}</span>
             ))}
           </div>
@@ -767,10 +768,10 @@ export default function GovernanceFlowPage() {
             background: C.navy2, border: `1px solid ${C.dim}40`, borderRadius: 5, overflow: 'hidden', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto',
           }}>
             {[
-              { v: '47', l: 'Active Invariants', c: C.gold },
+              { v: '67', l: 'Active Invariants', c: C.gold },
               { v: '9',  l: 'Invariant Families', c: C.gold },
-              { v: '3',  l: 'Published RFCs',    c: C.green },
-              { v: '171', l: 'ADRs',             c: C.blue },
+              { v: '4',  l: 'Published RFCs',    c: C.green },
+              { v: '184', l: 'ADRs',             c: C.blue },
               { v: '245+', l: 'Tests passing',   c: C.green },
             ].map((s, i) => (
               <div key={s.l} style={{
@@ -835,11 +836,12 @@ export default function GovernanceFlowPage() {
         <div style={{ position: 'relative', zIndex: 1, borderTop: `1px solid ${C.dim}40`, background: C.navy2, padding: '28px 32px' }}>
           <div style={{ maxWidth: 800, margin: '0 auto' }}>
             <div style={{ fontFamily: 'monospace', fontSize: 9, color: C.gold, letterSpacing: '0.12em', marginBottom: 14 }}>PUBLISHED RFC STACK — PERMANENT DOI RECORD</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
               {[
                 { rfc: 'RFC-ATF-1', title: 'Delegation Protocol with PQC (ML-DSA-65 / FIPS 204)', zenodo: 'https://doi.org/10.5281/zenodo.20155016', fig: 'https://doi.org/10.6084/m9.figshare.32308077' },
                 { rfc: 'RFC-ATF-2', title: 'Runtime Governance Continuity',                       zenodo: 'https://doi.org/10.5281/zenodo.20241344', fig: 'https://doi.org/10.6084/m9.figshare.32308095' },
                 { rfc: 'RFC-ATF-3', title: 'GPIL · Evidence Lifecycle · Forensic Verification',   zenodo: 'https://doi.org/10.5281/zenodo.20247342', fig: 'https://doi.org/10.6084/m9.figshare.32308119' },
+                { rfc: 'RFC-ATF-4', title: 'Proactive Governance · AGVP · SSD · DSPP · 19 Z3 Proofs', zenodo: 'https://doi.org/10.5281/zenodo.20368895', fig: 'https://doi.org/10.6084/m9.figshare.32394192' },
               ].map(r => (
                 <div key={r.rfc} style={{ background: C.navy3, border: `1px solid ${C.goldBorder}`, borderRadius: 4, padding: '12px 14px' }}>
                   <div style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: C.gold, marginBottom: 5 }}>{r.rfc}</div>

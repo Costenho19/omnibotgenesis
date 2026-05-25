@@ -1288,7 +1288,7 @@ export default function ForensicOperationsDemoPage() {
                   note: 'Not connected to a live OMNIX runtime. Production engine produces real PQC-signed artifacts.',
                 },
                 reference_walkthrough: 'OMNIX-WALK-001',
-                rfc_stack: ['RFC-ATF-1 (zenodo.20155016)', 'RFC-ATF-2 (zenodo.20241344)', 'RFC-ATF-3 (zenodo.20247342)'],
+                rfc_stack: ['RFC-ATF-1 (zenodo.20155016)', 'RFC-ATF-2 (zenodo.20241344)', 'RFC-ATF-3 (zenodo.20247342)', 'RFC-ATF-4 (zenodo.20368895)'],
                 invariant_coverage: { total: 47, families: 9, direct_tested: 41, structural: 6 },
                 demos: [
                   { id: 'DEMO-A', title: 'Runtime Authority Degradation', adr: 'ADR-159', rfc: 'RFC-ATF-2', invariant: 'RGC-INV-003' },
@@ -1303,7 +1303,7 @@ export default function ForensicOperationsDemoPage() {
                   oep_export: 'OEP-20260518-A3F8C241',
                   algorithm: 'ML-DSA-65 (FIPS 204)',
                 },
-                issuer: 'OMNIX QUANTUM LTD · Abu Dhabi, UAE',
+                issuer: 'OMNIX QUANTUM LTD · United Kingdom',
               }
               const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
               const url = URL.createObjectURL(blob)

@@ -212,7 +212,7 @@ export default function TrustInfrastructurePage() {
           {/* Metric strip */}
           <div style={{ display: 'flex', gap: 40, marginTop: 32, paddingTop: 28, borderTop: `1px solid rgba(255,255,255,0.05)`, flexWrap: 'wrap' }}>
             {[
-              { label: 'Invariants enforced', value: '47', sub: '9 families · 3 RFCs' },
+              { label: 'Invariants enforced', value: '67', sub: '9 families · 4 RFCs' },
               { label: 'PQC Algorithm', value: 'ML-DSA-65', sub: 'FIPS 204 · NIST Level 3' },
               { label: 'Verification planes', value: '3', sub: 'Browser · Server · Offline' },
               { label: 'Offline verifiable', value: 'Yes', sub: 'OEP + CLI verifier' },
@@ -546,7 +546,7 @@ export default function TrustInfrastructurePage() {
 
         {/* ── Section 6: Invariant Reference ── */}
         <div style={{ marginBottom: 56 }}>
-          <SectionHeader label="Invariant Reference" adr="47 invariants · 9 families · RFC-ATF-1/2/3" />
+          <SectionHeader label="Invariant Reference" adr="67 invariants · 9 families · RFC-ATF-1/2/3/4" />
 
           {/* Category filter */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -623,9 +623,9 @@ export default function TrustInfrastructurePage() {
           </div>
           <div style={{ display: 'flex', gap: 20, fontSize: 11, color: SLATE }}>
             <span>ADR-156–170</span>
-            <span>RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3</span>
+            <span>RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · RFC-ATF-4</span>
             <span>FIPS 204 · ML-DSA-65</span>
-            <span>47 invariants · 9 families</span>
+            <span>67 invariants · 9 families</span>
           </div>
         </div>
 
