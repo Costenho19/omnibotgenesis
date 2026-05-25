@@ -19,7 +19,7 @@ const FALLBACK_METRICS: LiveMetrics = {
   pqc_signed_receipts: 0,
   decisions_blocked: 0,
   capital_preserved_pct: 0,
-  verticals_demo: 9,
+  verticals_demo: 10,
   system_uptime_days: calcUptimeDays(),
   ebip_score: 0,
 }
@@ -74,7 +74,7 @@ export function useLiveMetrics(refreshIntervalMs = 10000) {
               pqc_signed_receipts: gs.total_receipts || FALLBACK_METRICS.pqc_signed_receipts,
               decisions_blocked: gs.decisions_blocked ?? FALLBACK_METRICS.decisions_blocked,
               capital_preserved_pct: gs.capital_preserved_pct ?? FALLBACK_METRICS.capital_preserved_pct,
-              verticals_demo: Math.max(gs.verticals_demo ?? 9, 9),
+              verticals_demo: Math.max(gs.verticals_demo ?? 10, 10),
               system_uptime_days: gs.system_uptime_days ?? FALLBACK_METRICS.system_uptime_days,
               ebip_score: ebip,
             })
