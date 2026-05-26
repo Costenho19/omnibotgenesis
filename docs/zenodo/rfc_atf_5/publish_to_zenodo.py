@@ -41,6 +41,7 @@ for key in ["creators", "communities", "subjects"]:
         META[key] = [{k2: v2 for k2, v2 in item.items() if not k2.startswith("_")} for item in META[key]]
 
 FILES_TO_UPLOAD = [
+    DIR / "RFC-ATF-5.pdf",
     DIR / "RFC-ATF-5.md",
     DIR / "conformance_vectors.json",
 ]

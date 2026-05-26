@@ -115,6 +115,7 @@
     }
   ],
   "_files_to_upload": [
+    "RFC-ATF-5.pdf (this directory — primary document with visual diagrams)",
     "RFC-ATF-5.md (docs/standards/RFC-ATF-5.md — copy here before upload)",
     "conformance_vectors.json (this directory)"
   ],
