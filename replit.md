@@ -246,3 +246,4 @@ Conceptos nuevos identificados en sesión 23 mayo 2026 — ninguno existe como e
 
 - Siempre responder a Harold en español.
 - **DOI verification rule:** Antes de incluir cualquier link DOI (Zenodo, Figshare) en un comentario de LinkedIn u otro canal público, recordar a Harold que verifique que el link resuelve y el registro está en estado Published (no Draft). Si no está verificado, omitir el link del mensaje hasta confirmarlo.
+- **Regla absoluta — no asumir datos:** NUNCA escribir en ningún documento, archivo, PDF, metadata o cualquier artefacto información que Harold no haya dicho explícitamente (localización, sede operativa, país, ciudad, dirección adicional, afiliaciones, etc.). Ante cualquier duda, preguntar antes de escribir. Prohibido inventar o asumir.
