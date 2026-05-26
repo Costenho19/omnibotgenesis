@@ -2052,14 +2052,13 @@ def build(output):
         Paragraph('OMNIX QUANTUM LTD', s['abody']),
         Paragraph('71-75 Shelton Street, Covent Garden', s['abody']),
         Paragraph('London WC2H 9JQ, England', s['abody']),
-        Paragraph('Operational Headquarters: Abu Dhabi, UAE', s['abody']),
         sp(4),
         Paragraph('Email: standards@omnixquantum.com', s['abody']),
         Paragraph('Web:   omnixquantum.net', s['abody']),
         sp(8),
         Paragraph('RFC-ATF-5 Version 1.0.0 -- May 2026', s['caption']),
         Paragraph('Priority Records: OMNIX-PAR-2026-CGE-001 -- OMNIX-PAR-2026-GUGT-001 -- OMNIX-PAR-2026-TGB-001', s['caption']),
-        Paragraph('DRAFT -- pending Zenodo submission', s['caption']),
+        Paragraph('DOI: 10.5281/zenodo.20391721', s['caption']),
     ], s, border=ACCENT_GOLD))
 
     doc.build(st, onFirstPage=on_page, onLaterPages=on_page)

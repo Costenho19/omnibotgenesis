@@ -1,7 +1,7 @@
 ```
 OMNIX QUANTUM Open Standard                            OMNIX QUANTUM LTD
 Category: Standards Track                                    H. Nunes, Ed.
-DOI: 10.5281/zenodo.20391722                                    May 2026
+DOI: 10.5281/zenodo.20391721                                    May 2026
 
 
          RFC-ATF-5: Agent Trust Fabric — Cognitive Governance Layer
@@ -107,7 +107,7 @@ Status of This Memo
 
    [STATUS: PUBLISHED — Zenodo record 20391722]
 
-   DOI: 10.5281/zenodo.20391722
+   DOI: 10.5281/zenodo.20391721
    Zenodo record: https://zenodo.org/record/20391722
    Feedback: standards@omnixquantum.com
 
