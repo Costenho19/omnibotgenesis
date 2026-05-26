@@ -1,4 +1,4 @@
-"""RFC-ATF-5 PDF Generator — OMNIX QUANTUM — ASCII-safe, ~55 pages"""
+"""RFC-ATF-5 PDF Generator — OMNIX QUANTUM — visual diagrams + ASCII code blocks"""
 import os, sys
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm, cm
@@ -9,6 +9,10 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
     PageBreak, HRFlowable, KeepTogether, Image
 )
+from reportlab.graphics.shapes import (
+    Drawing, Rect, String, Line, Polygon, Group, Circle
+)
+from reportlab.graphics import renderPDF
 
 DARK_BG      = colors.HexColor('#0d0d1a')
 ACCENT_BLUE  = colors.HexColor('#5b5bd6')
@@ -123,6 +127,327 @@ def box(items, s, title=None, border=None):
             ('LEFTPADDING',(0,0),(-1,-1),14),('RIGHTPADDING',(0,0),(-1,-1),14),
             ('TOPPADDING',(0,0),(-1,-1),12),('BOTTOMPADDING',(0,0),(-1,-1),12),
         ]))
+
+AVAIL_W = PAGE_W - 2*MARGIN  # ~470pt
+
+
+def _drect(d, x, y, w, h, fill, stroke=None, sw=1):
+    r = Rect(x, y, w, h, fillColor=fill, strokeColor=stroke or fill, strokeWidth=sw)
+    d.add(r)
+
+
+def _dtext(d, x, y, text, font='Helvetica', size=9, color=None, anchor='middle'):
+    s = String(x, y, text, fontName=font, fontSize=size,
+               fillColor=color or TEXT_WHITE, textAnchor=anchor)
+    d.add(s)
+
+
+def _darrow(d, x1, y1, x2, y2, color=None, head=6):
+    c = color or ACCENT_BLUE
+    d.add(Line(x1, y1, x2, y2, strokeColor=c, strokeWidth=1.5))
+    if y2 < y1:  # pointing down
+        pts = [x2, y2, x2 - head/2, y2 + head, x2 + head/2, y2 + head]
+    elif y2 > y1:
+        pts = [x2, y2, x2 - head/2, y2 - head, x2 + head/2, y2 - head]
+    elif x2 > x1:
+        pts = [x2, y2, x2 - head, y2 + head/2, x2 - head, y2 - head/2]
+    else:
+        pts = [x2, y2, x2 + head, y2 + head/2, x2 + head, y2 - head/2]
+    d.add(Polygon(pts, fillColor=c, strokeColor=c, strokeWidth=0))
+
+
+def _dbox_label(d, x, y, w, h, title, sub='', fill=None, border=None, tsize=9, ssize=7.5):
+    fc = fill or colors.HexColor('#1e1e3a')
+    bc = border or ACCENT_BLUE
+    _drect(d, x, y, w, h, fc, bc, 1.5)
+    mid_y = y + h / 2
+    if sub:
+        _dtext(d, x + w/2, mid_y + 4, title, 'Helvetica-Bold', tsize, TEXT_WHITE)
+        _dtext(d, x + w/2, mid_y - 8, sub, 'Helvetica', ssize, TEXT_GRAY)
+    else:
+        _dtext(d, x + w/2, mid_y - 4, title, 'Helvetica-Bold', tsize, TEXT_WHITE)
+
+
+def diagram_atf_stack():
+    W, H = AVAIL_W, 310
+    d = Drawing(W, H)
+    _drect(d, 0, 0, W, H, colors.HexColor('#0a0a16'))
+
+    layers = [
+        (colors.HexColor('#1a1a2e'), ACCENT_BLUE,   'LAYER 1 — Identity & Delegation (RFC-ATF-1)',     '6 invariants  |  AIR  DR  TAR  Trust Lattice',              6),
+        (colors.HexColor('#16162a'), ACCENT_BLUE,   'LAYER 2 — Runtime Continuity (RFC-ATF-2)',         '8 invariants  |  RCR  CES  AFG  RC  HALT propagation',     14),
+        (colors.HexColor('#131326'), ACCENT_LIGHT,  'LAYER 3 — Evidence & Forensic (RFC-ATF-3)',        '40 invariants  |  OEP  GPIL  ELC  FVP  GECR  SGIP',       54),
+        (colors.HexColor('#111124'), ACCENT_LIGHT,  'LAYER 4 — Proactive Governance (RFC-ATF-4)',       '16 invariants  |  AGVP  SSD  DSPP  PVR  CRSI  RSA',        70),
+        (colors.HexColor('#1a140a'), ACCENT_GOLD,   'LAYER 5 — Cognitive Governance (RFC-ATF-5)  THIS RFC', '18 invariants  |  CGE  GUGT  TGB  CAT  UIR  TCS  RAR', 88),
+    ]
+
+    pad = 8
+    lh = 44
+    gap = 6
+    total = len(layers) * lh + (len(layers) - 1) * gap + 2 * pad
+    start_y = (H - total) / 2 + pad
+
+    for i, (fill, border, title, sub, total_inv) in enumerate(layers):
+        y = start_y + i * (lh + gap)
+        _drect(d, pad, y, W - 2*pad, lh, fill, border, 1.8 if i == 4 else 1)
+        mid = y + lh / 2
+        _dtext(d, 20 + pad, mid + 7, title, 'Helvetica-Bold', 9, TEXT_WHITE, 'start')
+        _dtext(d, 20 + pad, mid - 7, sub, 'Helvetica', 7.5, TEXT_GRAY, 'start')
+        badge_x = W - pad - 64
+        _drect(d, badge_x, y + 10, 60, lh - 20, border, border, 0)
+        _dtext(d, badge_x + 30, y + lh/2 - 5,
+               f'{total_inv} inv total', 'Helvetica-Bold', 7, DARK_BG, 'middle')
+
+    _dtext(d, W/2, H - 12, 'ATF PROTOCOL STACK — Five-Layer Architecture',
+           'Helvetica-Bold', 10, ACCENT_GOLD, 'middle')
+    return d
+
+
+def diagram_cge_flow():
+    W, H = AVAIL_W, 290
+    d = Drawing(W, H)
+    _drect(d, 0, 0, W, H, colors.HexColor('#0a0a16'))
+
+    _dtext(d, W/2, H - 14, 'CGE — Counterfactual Governance Engine Flow',
+           'Helvetica-Bold', 10, ACCENT_GOLD, 'middle')
+
+    pw, ph = 200, 46
+    px = (W - pw) / 2
+    py = H - 75
+    _drect(d, px, py, pw, ph, colors.HexColor('#1a1a3a'), ACCENT_BLUE, 2)
+    _dtext(d, W/2, py + ph/2 + 7, 'PRIMARY RECEIPT', 'Helvetica-Bold', 9, TEXT_WHITE)
+    _dtext(d, W/2, py + ph/2 - 8, 'ATFDR-4A2B8F1C  |  outcome: NOMINAL  |  CES: 82.5',
+           'Helvetica', 7.5, TEXT_GRAY)
+
+    _dtext(d, W/2, py - 16, 'DB INSERT committed — CGE starts async',
+           'Helvetica-Oblique', 7.5, TEXT_GRAY, 'middle')
+
+    seed_y = py - 60
+    sw, sh = 180, 36
+    sx = (W - sw) / 2
+    _drect(d, sx, seed_y, sw, sh, colors.HexColor('#141428'), BORDER_GRAY, 1)
+    _dtext(d, W/2, seed_y + sh/2 + 6, 'VV SEED = SHA256(eval_id || receipt_id)',
+           'Helvetica-Bold', 7.5, ACCENT_LIGHT, 'middle')
+    _dtext(d, W/2, seed_y + sh/2 - 7, 'Deterministic  |  Reproducible by any party',
+           'Helvetica', 7, TEXT_GRAY, 'middle')
+    _darrow(d, W/2, py, W/2, seed_y + sh, ACCENT_BLUE)
+
+    cfr_configs = [
+        (W*0.12, 'CFR-1', 'MONITORING', 'CES: 72.0', colors.HexColor('#2a1a0a'), colors.HexColor('#d4943a'), True),
+        (W*0.43, 'CFR-2', 'NOMINAL',    'CES: 82.5', colors.HexColor('#0a1a0a'), colors.HexColor('#3ab43a'), False),
+        (W*0.73, 'CFR-3', 'HALT',       'CES: 15.3', colors.HexColor('#1a0a0a'), colors.HexColor('#d43a3a'), True),
+    ]
+    cw, ch = 90, 52
+    cfr_y = seed_y - 78
+
+    for cx, cid, outcome, ces, fill, border, diverges in cfr_configs:
+        _drect(d, cx, cfr_y, cw, ch, fill, border, 1.8)
+        _dtext(d, cx + cw/2, cfr_y + ch - 12, cid, 'Helvetica-Bold', 8, TEXT_WHITE)
+        _dtext(d, cx + cw/2, cfr_y + ch/2 + 2, outcome, 'Helvetica-Bold', 8.5, border)
+        _dtext(d, cx + cw/2, cfr_y + 10, ces, 'Helvetica', 7.5, TEXT_GRAY)
+        if diverges:
+            _dtext(d, cx + cw/2, cfr_y + 24, 'DIVERGES', 'Helvetica-Bold', 6.5,
+                   colors.HexColor('#ff6b6b'))
+        _darrow(d, W/2, seed_y, cx + cw/2, cfr_y + ch, BORDER_GRAY)
+
+    cat_y = 14
+    catw, cath = 220, 44
+    catx = (W - catw) / 2
+    _drect(d, catx, cat_y, catw, cath, colors.HexColor('#1a140a'), ACCENT_GOLD, 2)
+    _dtext(d, W/2, cat_y + cath/2 + 9, 'COUNTERFACTUAL ATTESTATION TOKEN (CAT)',
+           'Helvetica-Bold', 8, ACCENT_GOLD)
+    _dtext(d, W/2, cat_y + cath/2 - 3, 'cfr_count: 3   divergence_count: 2',
+           'Helvetica', 7.5, TEXT_WHITE)
+    _dtext(d, W/2, cat_y + cath/2 - 14, 'fragility_score: 0.67   ML-DSA-65 SEALED',
+           'Helvetica-Bold', 7.5, ACCENT_LIGHT)
+
+    for cx, cid, *_ in cfr_configs:
+        _darrow(d, cx + cw/2, cfr_y, W/2, cat_y + cath, colors.HexColor('#555588'))
+
+    return d
+
+
+def diagram_gugt():
+    W, H = AVAIL_W, 280
+    d = Drawing(W, H)
+    _drect(d, 0, 0, W, H, colors.HexColor('#0a0a16'))
+
+    _dtext(d, W/2, H - 14, 'GUGT — Grand Unified Governance Theory: 5-Framework Intersection',
+           'Helvetica-Bold', 10, ACCENT_GOLD, 'middle')
+
+    frameworks = ['EU AI Act', 'NIST AI RMF', 'GCC / DIFC', 'ISO/IEC 42001', 'UK AISI']
+    fw_colors = [
+        colors.HexColor('#1a1a3e'),
+        colors.HexColor('#1a2e1a'),
+        colors.HexColor('#2e1a1a'),
+        colors.HexColor('#1a2a2e'),
+        colors.HexColor('#2a1a2e'),
+    ]
+    fw_borders = [
+        colors.HexColor('#4444cc'),
+        colors.HexColor('#44aa44'),
+        colors.HexColor('#cc4444'),
+        colors.HexColor('#44aaaa'),
+        colors.HexColor('#aa44aa'),
+    ]
+    fw_w, fw_h = 80, 38
+    total_fw_w = len(frameworks) * fw_w + (len(frameworks) - 1) * 6
+    fw_start_x = (W - total_fw_w) / 2
+    fw_y = H - 72
+
+    for i, (name, fill, border) in enumerate(zip(frameworks, fw_colors, fw_borders)):
+        fx = fw_start_x + i * (fw_w + 6)
+        _drect(d, fx, fw_y, fw_w, fw_h, fill, border, 1.5)
+        words = name.split()
+        if len(words) == 1:
+            _dtext(d, fx + fw_w/2, fw_y + fw_h/2 - 4, name, 'Helvetica-Bold', 7.5, TEXT_WHITE)
+        else:
+            _dtext(d, fx + fw_w/2, fw_y + fw_h/2 + 4, words[0], 'Helvetica-Bold', 7.5, TEXT_WHITE)
+            _dtext(d, fx + fw_w/2, fw_y + fw_h/2 - 8, ' '.join(words[1:]), 'Helvetica', 7, TEXT_GRAY)
+        center_x = fx + fw_w/2
+        _darrow(d, center_x, fw_y, W/2, fw_y - 34, border, 5)
+
+    inter_y = fw_y - 52
+    iw, ih = 280, 32
+    ix = (W - iw) / 2
+    _drect(d, ix, inter_y, iw, ih, colors.HexColor('#111130'), ACCENT_LIGHT, 1.5)
+    _dtext(d, W/2, inter_y + ih/2 + 6, 'CLAUSE-LEVEL INTERSECTION',
+           'Helvetica-Bold', 8.5, ACCENT_LIGHT)
+    _dtext(d, W/2, inter_y + ih/2 - 7, '5 frameworks  x  6 properties  =  6 Universal Invariants',
+           'Helvetica', 7.5, TEXT_GRAY)
+
+    _darrow(d, W/2, inter_y, W/2, inter_y - 22, ACCENT_LIGHT)
+
+    ugi_y = inter_y - 62
+    ugis = ['UGI-001\nHuman Anchor', 'UGI-002\nOffline Verify', 'UGI-003\nExec Bound',
+            'UGI-004\nPre-Commit', 'UGI-005\nNo Self-Mod', 'UGI-006\nSelf-Contain']
+    uw, uh = 68, 42
+    total_uw = len(ugis) * uw + (len(ugis) - 1) * 5
+    ux_start = (W - total_uw) / 2
+    for i, ugi in enumerate(ugis):
+        ux = ux_start + i * (uw + 5)
+        _drect(d, ux, ugi_y, uw, uh, colors.HexColor('#0f1a2a'), ACCENT_BLUE, 1.2)
+        lines_t = ugi.split('\n')
+        _dtext(d, ux + uw/2, ugi_y + uh/2 + 6, lines_t[0], 'Helvetica-Bold', 7.5, ACCENT_LIGHT)
+        _dtext(d, ux + uw/2, ugi_y + uh/2 - 7, lines_t[1], 'Helvetica', 6.5, TEXT_GRAY)
+
+    _darrow(d, W/2, ugi_y, W/2, ugi_y - 22, ACCENT_BLUE)
+
+    uir_y = 10
+    uirw, uirh = 240, 44
+    uirx = (W - uirw) / 2
+    _drect(d, uirx, uir_y, uirw, uirh, colors.HexColor('#1a140a'), ACCENT_GOLD, 2.5)
+    _dtext(d, W/2, uir_y + uirh/2 + 11, 'UNIVERSAL INVARIANT RECEIPT (UIR)',
+           'Helvetica-Bold', 9, ACCENT_GOLD)
+    _dtext(d, W/2, uir_y + uirh/2 - 2, 'GUGT-L3+ATF  |  6/6 UGIs: PASS',
+           'Helvetica-Bold', 8, TEXT_WHITE)
+    _dtext(d, W/2, uir_y + uirh/2 - 14, 'EU + NIST + GCC + ISO + UK  |  ML-DSA-65 SEALED',
+           'Helvetica', 7.5, TEXT_GRAY)
+
+    return d
+
+
+def diagram_tgb_timeline():
+    W, H = AVAIL_W, 200
+    d = Drawing(W, H)
+    _drect(d, 0, 0, W, H, colors.HexColor('#0a0a16'))
+
+    _dtext(d, W/2, H - 14, 'TGB — Temporal Governance Bridge: Nanoseconds to 7 Years',
+           'Helvetica-Bold', 10, ACCENT_GOLD, 'middle')
+
+    line_y = H/2 + 10
+    lx0, lx1 = 40, W - 40
+    d.add(Line(lx0, line_y, lx1, line_y, strokeColor=ACCENT_BLUE, strokeWidth=2))
+
+    milestones = [
+        (0.0,  'T = 0 ns',    'PRIMARY\nRECORD\n+ TCS',  ACCENT_BLUE,   True),
+        (0.20, 'T = 6 months','LIFECYCLE\nHOT->WARM\nTMR-001', colors.HexColor('#44aaaa'), False),
+        (0.55, 'T = 3 years', 'LIFECYCLE\nWARM->COLD\nTMR-002', colors.HexColor('#aaaa44'), False),
+        (1.0,  'T = 7 years', 'REGULATORY\nAUDIT\nRAR issued', ACCENT_GOLD,  True),
+    ]
+
+    for frac, label, box_text, col, bold in milestones:
+        mx = lx0 + frac * (lx1 - lx0)
+        d.add(Circle(mx, line_y, 7, fillColor=col, strokeColor=col, strokeWidth=0))
+
+        text_y = line_y + 22
+        _dtext(d, mx, text_y + 10, label,
+               'Helvetica-Bold' if bold else 'Helvetica', 7.5, col, 'middle')
+
+        box_lines = box_text.split('\n')
+        bw, bh = 78, len(box_lines) * 12 + 10
+        bx = mx - bw/2
+        by = line_y - bh - 28
+        _drect(d, bx, by, bw, bh, colors.HexColor('#111128'), col, 1.2)
+        for k, bl in enumerate(box_lines):
+            ty = by + bh - 12 - k * 12
+            _dtext(d, mx, ty, bl, 'Helvetica-Bold' if k == 0 else 'Helvetica',
+                   7 if k > 0 else 7.5, TEXT_WHITE if k > 0 else col, 'middle')
+        d.add(Line(mx, line_y - 7, mx, by + bh,
+                   strokeColor=col, strokeWidth=0.8, strokeDashArray=[3, 2]))
+
+    phases = [
+        (0.0,  0.20, 'HOT',  colors.HexColor('#1a3a1a')),
+        (0.20, 0.55, 'WARM', colors.HexColor('#2a2a1a')),
+        (0.55, 1.0,  'COLD', colors.HexColor('#1a2a3a')),
+    ]
+    for f0, f1, phase_name, pcol in phases:
+        x0 = lx0 + f0 * (lx1 - lx0) + 8
+        x1 = lx0 + f1 * (lx1 - lx0) - 8
+        ph = 14
+        _drect(d, x0, line_y - ph/2, x1 - x0, ph, pcol, pcol, 0)
+        _dtext(d, (x0 + x1)/2, line_y - 5, phase_name,
+               'Helvetica-Bold', 7, TEXT_GRAY, 'middle')
+
+    _dtext(d, W/2, 10, 'EU AI Act Art.72: 7-year retention for high-risk AI  |  TCS sealed at T=0  |  RAR non-destructive projection at review',
+           'Helvetica-Oblique', 7, TEXT_GRAY, 'middle')
+
+    return d
+
+
+def diagram_fragility_spectrum():
+    W, H = AVAIL_W, 110
+    d = Drawing(W, H)
+    _drect(d, 0, 0, W, H, colors.HexColor('#0a0a16'))
+
+    _dtext(d, W/2, H - 14, 'fragility_score — Decision Robustness Spectrum (CGE)',
+           'Helvetica-Bold', 10, ACCENT_GOLD, 'middle')
+
+    bx, bw, bh = 30, W - 60, 28
+    by = H/2 + 2
+
+    segments = [
+        (0.00, 0.33, colors.HexColor('#1a3a1a'), colors.HexColor('#22aa22'), 'ROBUST'),
+        (0.33, 0.67, colors.HexColor('#3a3a1a'), colors.HexColor('#aaaa22'), 'SENSITIVE'),
+        (0.67, 1.00, colors.HexColor('#3a1a1a'), colors.HexColor('#cc4422'), 'FRAGILE'),
+    ]
+
+    for f0, f1, fill, border, label in segments:
+        sx = bx + f0 * bw
+        sw_seg = (f1 - f0) * bw
+        _drect(d, sx, by, sw_seg, bh, fill, border, 1.2)
+        _dtext(d, sx + sw_seg/2, by + bh/2 - 4, label,
+               'Helvetica-Bold', 8.5, border, 'middle')
+
+    for frac, tick_label in [(0.0,'0.0'), (0.33,'0.33'), (0.67,'0.67'), (1.0,'1.0')]:
+        tx = bx + frac * bw
+        d.add(Line(tx, by - 2, tx, by + bh + 2,
+                   strokeColor=TEXT_WHITE, strokeWidth=1))
+        _dtext(d, tx, by - 12, tick_label, 'Helvetica-Bold', 7.5, TEXT_WHITE, 'middle')
+
+    descs = [
+        (0.165, 'All paths agree\nwith primary'),
+        (0.500, 'Half of paths\ndiverge'),
+        (0.835, 'Most paths diverge\nfrom primary'),
+    ]
+    for frac, desc in descs:
+        tx = bx + frac * bw
+        for k, line_txt in enumerate(desc.split('\n')):
+            _dtext(d, tx, by + bh + 14 + k * 10, line_txt,
+                   'Helvetica', 6.5, TEXT_GRAY, 'middle')
+
+    return d
+
 
 def build(output):
     s = S()
@@ -441,6 +766,9 @@ def build(output):
     # ==========================================================================
     st.append(Paragraph('3.  Architecture Overview: Cognitive Governance Layer', s['h1'])); st.append(rule(s))
     st.append(Paragraph('3.1  ATF Stack -- Five-Layer Architecture', s['h2']))
+    st.append(diagram_atf_stack())
+    st.append(Paragraph('Figure 1. ATF five-layer protocol stack. Layer 5 (gold border) is introduced by RFC-ATF-5.', s['caption']))
+    st.append(sp(10))
     st.append(cb(
 """  +=========================================================================+
   |         ATF PROTOCOL STACK -- FIVE-LAYER COMPLETE ARCHITECTURE         |
@@ -547,6 +875,9 @@ def build(output):
         'assembled into a Counterfactual Attestation Token (CAT).', s['body']))
 
     st.append(Paragraph('4.1  Decision Space Architecture', s['h2']))
+    st.append(diagram_cge_flow())
+    st.append(Paragraph('Figure 2. CGE flow: primary receipt triggers async computation of M CFRs, assembled into a PQC-sealed CAT with fragility_score.', s['caption']))
+    st.append(sp(10))
     st.append(cb(
 """  PRIMARY EVALUATION (sealed first -- CGE-INV-002):
   +------------------------------------------------------------------+
@@ -664,6 +995,9 @@ def build(output):
         'The fragility_score is the first formally specified decision robustness metric in any published '
         'AI governance standard. It quantifies what proportion of the explored decision space diverges '
         'from the primary governance outcome under parametric variation.', s['body']))
+    st.append(diagram_fragility_spectrum())
+    st.append(Paragraph('Figure 3. fragility_score spectrum: 0.0 = fully robust (all paths agree), 1.0 = maximum fragility (all paths diverge).', s['caption']))
+    st.append(sp(8))
     st.append(tbl(['fragility_score','Interpretation','Governance Signal','Recommended Action'],
         [['0.0','All counterfactuals agree with primary outcome','Decision robust -- parameter-insensitive','No action required'],
          ['0.01 - 0.33','Minority of paths diverge','Decision moderately robust','Periodic review recommended'],
@@ -796,6 +1130,9 @@ def build(output):
         'simultaneously, for any agent type, under any covered framework.', s['body']))
 
     st.append(Paragraph('5.1  Universal Invariant Architecture', s['h2']))
+    st.append(diagram_gugt())
+    st.append(Paragraph('Figure 4. GUGT architecture: five frameworks converge through clause-level intersection into six Universal Governance Invariants, certified by a single PQC-sealed UIR.', s['caption']))
+    st.append(sp(10))
     st.append(Paragraph(
         'The GUGT invariant derivation follows a four-step methodology: (1) extract governance '
         'requirements from each framework at the clause level; (2) map each clause to ATF protocol '
@@ -988,6 +1325,9 @@ def build(output):
         'Record (TMR).', s['body']))
 
     st.append(Paragraph('6.1  Two-Scale Architecture: Nanoseconds to Years', s['h2']))
+    st.append(diagram_tgb_timeline())
+    st.append(Paragraph('Figure 5. TGB timeline: TCS embedded at T=0 nanosecond; TMR issued at lifecycle transitions; RAR produced non-destructively at 7-year regulatory review.', s['caption']))
+    st.append(sp(10))
     st.append(cb(
 """  TGB TWO-SCALE ARCHITECTURE:
 
