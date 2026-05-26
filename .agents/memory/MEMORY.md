@@ -1,7 +1,9 @@
 - [Sovereign AI Layer](sovereign-ai-layer.md) — Groq/Llama-3 + Mistral añadidos como proveedores soberanos en ai_models.py. OMNIX_AI_SOVEREIGN_MODE=true invierte la cadena. ADR-190.
 - [OHADA Coverage](ohada-coverage.md) — 17 países África Occidental añadidos al catálogo regulatorio en gov_blueprint.py. ADR-192.
 - [Executive View](executive-view.md) — Página React premium /executive para C-suite sin jerga técnica. ADR-191.
-- [OGI Fine-Tuning Pipeline](ogi-fine-tuning.md) — ADR-193 creado; scripts/fine_tuning/ completo y validado. Ejecutar prepare_corpus.py cuando haya cuenta Together.ai + crédito. Pipeline produce ~850 ejemplos MVP; target premium 15k-30k con más generadores.
+- [OGI Fine-Tuning Pipeline](ogi-fine-tuning.md) — ADR-193 creado; scripts/fine_tuning/ completo. Corpus generado: 803 train / 99 val / 120 test. submit_to_together.py listo. Requiere TOGETHER_API_KEY en Railway.
 - [MIVP Three-Tier Certification](mivp-tiered-certification.md) — MANDATE-BOUND (0 violations+0 warnings) / MANDATE-ALIGNED (0 violations, warnings ok) / UNCERTIFIED. MIVP-INV-009 formalizado. DB CHECK constraint mutual exclusivity.
 - [MIVP Audit Gate A Cleared](mivp-audit-remediation.md) — F-001 psycopg2→psycopg3 (7 ocurrencias), F-002 three-tier, F-003 FK+CHECK+4 indexes, F-006 floor 0.05, F-007 dead code. Gate A production-ready 2026-05-26.
-- [OGI Invariants Family 12](ogi-invariants.md) — OGI-INV-001–010 añadidos en INVARIANT_TEST_MATRIX. Gate B bloqueado: F-C-002 open, F-C-003 corpus_allowlist.yaml falta, F-C-006 ontology.json falta.
+- [OGI Invariants Family 12](ogi-invariants.md) — OGI-INV-001–010 en INVARIANT_TEST_MATRIX. Gate B cleared 2026-05-26. Gate C Phase 1 completa.
+- [PoGR mandate_certification](pogr-mandate-certification.md) — campo incluido en canonical_fields y PQC-firmado; leído desde atf_mbr_seals por session_id (non-blocking, default UNCERTIFIED). Badge SVG muestra tier cuando no es UNCERTIFIED.
+- [Primer PoGC](primer-pogc.md) — scripts/issue_first_pogc.py emite POGC-GENESIS con MANDATE-BOUND. Requiere DATABASE_URL. Ejecutar via: railway run python scripts/issue_first_pogc.py

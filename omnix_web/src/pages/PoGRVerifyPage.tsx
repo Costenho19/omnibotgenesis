@@ -43,6 +43,7 @@ interface Certificate {
   issuer: string
   subject_org: string
   compliance_tier: string
+  mandate_certification: string
   turn_count: number
   avg_conformance: number
   issued_at: string
@@ -263,10 +264,41 @@ function ValidCertDisplay({ result }: { result: VerifyResult }) {
           </div>
         </div>
 
+        {/* ── Mandate tier banner (MIVP-INV-008/009 — ADR-194) ── */}
+        {cert.mandate_certification && cert.mandate_certification !== 'UNCERTIFIED' && (
+          <div style={{
+            background: cert.mandate_certification === 'MANDATE-BOUND'
+              ? 'rgba(34,197,94,0.07)' : 'rgba(245,158,11,0.07)',
+            border: `1px solid ${cert.mandate_certification === 'MANDATE-BOUND'
+              ? 'rgba(34,197,94,0.25)' : 'rgba(245,158,11,0.25)'}`,
+            borderRadius: 10, padding: '14px 20px', marginBottom: 8,
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>
+              {cert.mandate_certification === 'MANDATE-BOUND' ? '🔒' : '✅'}
+            </span>
+            <div>
+              <div style={{
+                fontFamily: 'monospace', fontSize: 13, fontWeight: 700,
+                color: cert.mandate_certification === 'MANDATE-BOUND' ? GREEN : AMBER,
+                letterSpacing: '0.04em',
+              }}>
+                {cert.mandate_certification}
+              </div>
+              <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>
+                {cert.mandate_certification === 'MANDATE-BOUND'
+                  ? 'Pristine mandate fidelity — zero violations, zero warnings · MIVP-INV-008 (ADR-194)'
+                  : 'Mission-aligned — zero violations, warnings within tolerance · MIVP-INV-009 (ADR-194)'}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 20 }}>
           <Field label="Issuer" value={cert.issuer} />
           <Field label="Organization" value={cert.subject_org} />
           <Field label="Compliance Tier" value={cert.compliance_tier} />
+          <Field label="Mandate Certification" value={cert.mandate_certification || 'UNCERTIFIED'} mono />
           <Field label="Agent" value={cert.agent_id || '—'} mono />
           <Field label="Session Turns" value={String(cert.turn_count)} />
           <Field label="PQC Algorithm" value={(cert.pqc_algorithm || 'ml-dsa-65').toUpperCase()} mono />

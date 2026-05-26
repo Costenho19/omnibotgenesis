@@ -45,33 +45,38 @@ pogr_bp = Blueprint("pogr", __name__)
 
 _DDL = """
 CREATE TABLE IF NOT EXISTS pogr_certificates (
-    pogc_id             TEXT PRIMARY KEY,
-    session_id          TEXT NOT NULL,
-    ctchc_seal_hash     TEXT NOT NULL,
-    issuer              TEXT NOT NULL DEFAULT 'OMNIX QUANTUM LTD',
-    subject_org         TEXT NOT NULL,
-    subject_org_id      TEXT NOT NULL,
-    agent_id            TEXT NOT NULL,
-    compliance_tier     TEXT NOT NULL DEFAULT 'ATF-BEV-Compliant',
-    turn_count          INTEGER NOT NULL DEFAULT 0,
-    avg_conformance     REAL NOT NULL DEFAULT 0.0,
-    issued_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at          TIMESTAMPTZ NOT NULL,
-    regulatory_tags     TEXT[] NOT NULL DEFAULT '{}',
-    content_hash        TEXT NOT NULL,
-    pqc_signature       TEXT NOT NULL,
-    pqc_algorithm       TEXT NOT NULL DEFAULT 'ml-dsa-65',
-    status              TEXT NOT NULL DEFAULT 'ACTIVE'
-                            CHECK (status IN ('ACTIVE', 'EXPIRED', 'REVOKED')),
-    revoked_at          TIMESTAMPTZ,
-    revocation_reason   TEXT,
-    revocation_proof    TEXT,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    pogc_id               TEXT PRIMARY KEY,
+    session_id            TEXT NOT NULL,
+    ctchc_seal_hash       TEXT NOT NULL,
+    issuer                TEXT NOT NULL DEFAULT 'OMNIX QUANTUM LTD',
+    subject_org           TEXT NOT NULL,
+    subject_org_id        TEXT NOT NULL,
+    agent_id              TEXT NOT NULL,
+    compliance_tier       TEXT NOT NULL DEFAULT 'ATF-BEV-Compliant',
+    mandate_certification TEXT NOT NULL DEFAULT 'UNCERTIFIED'
+                              CHECK (mandate_certification IN ('MANDATE-BOUND', 'MANDATE-ALIGNED', 'UNCERTIFIED')),
+    turn_count            INTEGER NOT NULL DEFAULT 0,
+    avg_conformance       REAL NOT NULL DEFAULT 0.0,
+    issued_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at            TIMESTAMPTZ NOT NULL,
+    regulatory_tags       TEXT[] NOT NULL DEFAULT '{}',
+    content_hash          TEXT NOT NULL,
+    pqc_signature         TEXT NOT NULL,
+    pqc_algorithm         TEXT NOT NULL DEFAULT 'ml-dsa-65',
+    status                TEXT NOT NULL DEFAULT 'ACTIVE'
+                              CHECK (status IN ('ACTIVE', 'EXPIRED', 'REVOKED')),
+    revoked_at            TIMESTAMPTZ,
+    revocation_reason     TEXT,
+    revocation_proof      TEXT,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_pogr_org     ON pogr_certificates (subject_org_id);
-CREATE INDEX IF NOT EXISTS idx_pogr_status  ON pogr_certificates (status);
-CREATE INDEX IF NOT EXISTS idx_pogr_session ON pogr_certificates (session_id);
-CREATE INDEX IF NOT EXISTS idx_pogr_expires ON pogr_certificates (expires_at);
+ALTER TABLE pogr_certificates ADD COLUMN IF NOT EXISTS
+    mandate_certification TEXT NOT NULL DEFAULT 'UNCERTIFIED';
+CREATE INDEX IF NOT EXISTS idx_pogr_org        ON pogr_certificates (subject_org_id);
+CREATE INDEX IF NOT EXISTS idx_pogr_status     ON pogr_certificates (status);
+CREATE INDEX IF NOT EXISTS idx_pogr_session    ON pogr_certificates (session_id);
+CREATE INDEX IF NOT EXISTS idx_pogr_expires    ON pogr_certificates (expires_at);
+CREATE INDEX IF NOT EXISTS idx_pogr_mandate    ON pogr_certificates (mandate_certification);
 """
 
 _tables_ensured = False
@@ -117,16 +122,40 @@ def _pogc_id() -> str:
 def _canonical_fields(data: Dict[str, Any]) -> Dict[str, Any]:
     """Return the canonical subset used for content_hash and PQC signing."""
     return {
-        "pogc_id":          data["pogc_id"],
-        "session_id":       data["session_id"],
-        "ctchc_seal_hash":  data["ctchc_seal_hash"],
-        "issuer":           data["issuer"],
-        "subject_org":      data["subject_org"],
-        "agent_id":         data["agent_id"],
-        "compliance_tier":  data["compliance_tier"],
-        "issued_at":        data["issued_at"],
-        "expires_at":       data["expires_at"],
+        "pogc_id":                data["pogc_id"],
+        "session_id":             data["session_id"],
+        "ctchc_seal_hash":        data["ctchc_seal_hash"],
+        "issuer":                 data["issuer"],
+        "subject_org":            data["subject_org"],
+        "agent_id":               data["agent_id"],
+        "compliance_tier":        data["compliance_tier"],
+        "mandate_certification":  data.get("mandate_certification", "UNCERTIFIED"),
+        "issued_at":              data["issued_at"],
+        "expires_at":             data["expires_at"],
     }
+
+
+def _get_mandate_certification(session_id: str) -> str:
+    """
+    Read mandate_certification_tier from atf_mbr_seals for this session.
+    Returns 'MANDATE-BOUND' | 'MANDATE-ALIGNED' | 'UNCERTIFIED'.
+    MIVP-INV-008 / MIVP-INV-009 — ADR-194.
+    """
+    try:
+        conn = _get_db()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT mandate_certification_tier "
+                "FROM atf_mbr_seals WHERE session_id = %s LIMIT 1",
+                (session_id,)
+            )
+            row = cur.fetchone()
+        conn.close()
+        if row:
+            return row["mandate_certification_tier"]
+    except Exception as exc:
+        logger.warning(f"[PoGR] mandate_certification lookup failed (non-blocking): {exc}")
+    return "UNCERTIFIED"
 
 
 def _content_hash(canonical: Dict[str, Any]) -> str:
@@ -253,6 +282,9 @@ def certify():
         chain_seal.get("seal_hash") if isinstance(chain_seal, dict) else str(chain_seal)
     )
 
+    # ── Read MIVP mandate_certification tier (ADR-194) ─────────────────────
+    mandate_certification = _get_mandate_certification(session_id)
+
     # ── Build certificate ────────────────────────────────────────────────────
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=365)  # PoGR-INV-004
@@ -265,19 +297,20 @@ def certify():
     expires_at_str = expires.isoformat()
 
     cert_data = {
-        "pogc_id":         pogc_id,
-        "session_id":      session_id,
-        "ctchc_seal_hash": ctchc_seal_hash,
-        "issuer":          "OMNIX QUANTUM LTD",
-        "subject_org":     subject_org,
-        "subject_org_id":  client["client_id"],
-        "agent_id":        session.get("agent_id", ""),
-        "compliance_tier": "ATF-BEV-Compliant",
-        "turn_count":      turn_count,
-        "avg_conformance": avg_conformance,
-        "issued_at":       issued_at_str,
-        "expires_at":      expires_at_str,
-        "regulatory_tags": regulatory_tags,
+        "pogc_id":                pogc_id,
+        "session_id":             session_id,
+        "ctchc_seal_hash":        ctchc_seal_hash,
+        "issuer":                 "OMNIX QUANTUM LTD",
+        "subject_org":            subject_org,
+        "subject_org_id":         client["client_id"],
+        "agent_id":               session.get("agent_id", ""),
+        "compliance_tier":        "ATF-BEV-Compliant",
+        "mandate_certification":  mandate_certification,
+        "turn_count":             turn_count,
+        "avg_conformance":        avg_conformance,
+        "issued_at":              issued_at_str,
+        "expires_at":             expires_at_str,
+        "regulatory_tags":        regulatory_tags,
     }
 
     canonical = _canonical_fields(cert_data)
@@ -298,13 +331,15 @@ def certify():
                     INSERT INTO pogr_certificates (
                         pogc_id, session_id, ctchc_seal_hash, issuer,
                         subject_org, subject_org_id, agent_id,
-                        compliance_tier, turn_count, avg_conformance,
+                        compliance_tier, mandate_certification,
+                        turn_count, avg_conformance,
                         issued_at, expires_at, regulatory_tags,
                         content_hash, pqc_signature, pqc_algorithm, status
                     ) VALUES (
                         %(pogc_id)s, %(session_id)s, %(ctchc_seal_hash)s, %(issuer)s,
                         %(subject_org)s, %(subject_org_id)s, %(agent_id)s,
-                        %(compliance_tier)s, %(turn_count)s, %(avg_conformance)s,
+                        %(compliance_tier)s, %(mandate_certification)s,
+                        %(turn_count)s, %(avg_conformance)s,
                         %(issued_at)s, %(expires_at)s, %(regulatory_tags)s,
                         %(content_hash)s, %(pqc_signature)s, %(pqc_algorithm)s, %(status)s
                     )
@@ -314,18 +349,27 @@ def certify():
         logger.error(f"[PoGR] certify INSERT failed: {exc}")
         return jsonify({"error": "Registry write failed", "status": "error"}), 500
 
-    logger.info(f"[PoGR] Certificate issued: {pogc_id} for org={subject_org} session={session_id}")
+    logger.info(
+        f"[PoGR] Certificate issued: {pogc_id} | org={subject_org} | "
+        f"session={session_id} | mandate={mandate_certification}"
+    )
 
     base_url = os.environ.get("OMNIX_WEB_URL", "https://omnixquantum.net")
+
+    inv_satisfied = ["PoGR-INV-001", "PoGR-INV-002", "PoGR-INV-004"]
+    if mandate_certification == "MANDATE-BOUND":
+        inv_satisfied.append("MIVP-INV-008")
+    elif mandate_certification == "MANDATE-ALIGNED":
+        inv_satisfied.append("MIVP-INV-009")
+
     return jsonify({
-        "status": "issued",
-        "certificate": cert_data,
-        "verify_url":  f"{base_url}/v1/pogr/verify/{pogc_id}",
-        "badge_url":   f"{base_url}/v1/pogr/badge/{pogc_id}.svg",
-        "public_page": f"{base_url}/pogr/verify/{pogc_id}",
-        "invariants_satisfied": [
-            "PoGR-INV-001", "PoGR-INV-002", "PoGR-INV-004",
-        ],
+        "status":               "issued",
+        "certificate":          cert_data,
+        "verify_url":           f"{base_url}/v1/pogr/verify/{pogc_id}",
+        "badge_url":            f"{base_url}/v1/pogr/badge/{pogc_id}.svg",
+        "public_page":          f"{base_url}/pogr/verify/{pogc_id}",
+        "mandate_certification": mandate_certification,
+        "invariants_satisfied": inv_satisfied,
     }), 201
 
 
@@ -570,21 +614,35 @@ def badge(pogc_id: str):
     except Exception:
         row = None
 
-    status       = row["status"] if row else "UNKNOWN"
-    org_name     = row["subject_org"][:28] if row else "Unknown"
-    tier         = row["compliance_tier"] if row else "Unknown"
-    conformance  = f"{float(row['avg_conformance'])*100:.1f}%" if row else "—"
-    is_active    = status == "ACTIVE"
-    status_color = "#22c55e" if is_active else ("#f59e0b" if status == "EXPIRED" else "#ef4444")
-    border_color = "#C9A227"
+    status                = row["status"] if row else "UNKNOWN"
+    org_name              = row["subject_org"][:28] if row else "Unknown"
+    tier                  = row["compliance_tier"] if row else "Unknown"
+    conformance           = f"{float(row['avg_conformance'])*100:.1f}%" if row else "—"
+    mandate_cert          = (row.get("mandate_certification") or "UNCERTIFIED") if row else "UNCERTIFIED"
+    is_active             = status == "ACTIVE"
+    status_color          = "#22c55e" if is_active else ("#f59e0b" if status == "EXPIRED" else "#ef4444")
+    border_color          = "#C9A227"
+    mandate_color         = "#22c55e" if mandate_cert == "MANDATE-BOUND" else (
+                            "#f59e0b" if mandate_cert == "MANDATE-ALIGNED" else "#475569")
+    mandate_label         = mandate_cert if mandate_cert != "UNCERTIFIED" else ""
+    short_id              = pogc_id[:20] + "..." if len(pogc_id) > 20 else pogc_id
+    label                 = "VERIFIED" if is_active else status
+    badge_height          = 100 if mandate_label else 84
 
-    short_id = pogc_id[:20] + "..." if len(pogc_id) > 20 else pogc_id
-    label    = "VERIFIED" if is_active else status
+    mandate_row = f"""
+  <!-- Mandate tier (ADR-194 MIVP) -->
+  <rect x="50" y="70" width="120" height="13" rx="3" fill="{mandate_color}" opacity="0.12"/>
+  <rect x="50" y="70" width="120" height="13" rx="3" fill="none" stroke="{mandate_color}" stroke-width="0.8"/>
+  <text x="110" y="80" font-family="monospace" font-size="7" fill="{mandate_color}" text-anchor="middle" font-weight="700">{mandate_label}</text>
+""" if mandate_label else ""
 
-    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="280" height="84" role="img" aria-label="Proof of Governance — {tier}">
+    id_y    = 90 if mandate_label else 76
+    omnix_y = id_y
+
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="280" height="{badge_height}" role="img" aria-label="Proof of Governance — {tier}">
   <title>Proof of Governance · {tier} · OMNIX QUANTUM</title>
-  <rect width="280" height="84" rx="8" fill="#060F1E"/>
-  <rect x="1" y="1" width="278" height="82" rx="7" fill="none" stroke="{border_color}" stroke-width="1.5"/>
+  <rect width="280" height="{badge_height}" rx="8" fill="#060F1E"/>
+  <rect x="1" y="1" width="278" height="{badge_height-2}" rx="7" fill="none" stroke="{border_color}" stroke-width="1.5"/>
   <!-- Hexagon icon -->
   <polygon points="14,42 20,31.6 32,31.6 38,42 32,52.4 20,52.4" fill="none" stroke="{border_color}" stroke-width="1.5"/>
   <polygon points="17,42 22,33.7 32,33.7 37,42 32,50.3 22,50.3" fill="{border_color}" opacity="0.15"/>
@@ -595,16 +653,17 @@ def badge(pogc_id: str):
   <text x="50" y="37" font-family="monospace" font-size="9" fill="#e2e8f0">{tier}</text>
   <!-- Org -->
   <text x="50" y="51" font-family="sans-serif" font-size="8.5" fill="#94a3b8">{org_name}</text>
-  <!-- Stats row -->
+  <!-- Conformance -->
   <text x="50" y="64" font-family="monospace" font-size="7.5" fill="#64748b">Conformance: {conformance}</text>
+  {mandate_row}
   <!-- Status badge -->
   <rect x="196" y="14" width="72" height="16" rx="4" fill="{status_color}" opacity="0.15"/>
   <rect x="196" y="14" width="72" height="16" rx="4" fill="none" stroke="{status_color}" stroke-width="1"/>
   <text x="232" y="25" font-family="monospace" font-size="7.5" fill="{status_color}" text-anchor="middle" font-weight="700">{label}</text>
   <!-- ID -->
-  <text x="50" y="76" font-family="monospace" font-size="6.5" fill="#475569">{short_id}</text>
+  <text x="50" y="{id_y}" font-family="monospace" font-size="6.5" fill="#475569">{short_id}</text>
   <!-- OMNIX -->
-  <text x="266" y="76" font-family="monospace" font-size="6" fill="#475569" text-anchor="end">OMNIX QUANTUM</text>
+  <text x="266" y="{omnix_y}" font-family="monospace" font-size="6" fill="#475569" text-anchor="end">OMNIX QUANTUM</text>
 </svg>"""
 
     return Response(svg, mimetype="image/svg+xml", headers={
