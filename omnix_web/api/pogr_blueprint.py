@@ -211,7 +211,7 @@ def _load_session(session_id: str) -> Optional[Dict[str, Any]]:
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT session_id, agent_id, status, domain, vertical,
-                       turn_count, avg_conformance, chain_seal,
+                       turn_count, avg_conformance, chain_seal_hash AS chain_seal,
                        governing_receipt_id, created_at
                 FROM atf_ogr_sessions
                 WHERE session_id = %s
