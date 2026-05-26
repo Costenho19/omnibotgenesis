@@ -116,7 +116,6 @@ Copyright Notice
 
    Copyright (c) 2026 OMNIX QUANTUM LTD.  All rights reserved.
    71-75 Shelton Street, Covent Garden, London WC2H 9JQ, England.
-   Operational headquarters: Abu Dhabi, UAE.
 
    Permission is granted to reproduce this document for review and
    implementation purposes, provided this copyright notice is retained.
@@ -2992,7 +2991,6 @@ B.2  GUGT Conformance Verification Procedure
    OMNIX QUANTUM LTD
    71-75 Shelton Street, Covent Garden
    London WC2H 9JQ, England
-   Operational Headquarters: Abu Dhabi, UAE
    Email: standards@omnixquantum.com
    Web:   omnixquantum.net
 ```
