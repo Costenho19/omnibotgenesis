@@ -77,13 +77,13 @@ Este documento registra la emisión del primer Proof of Governance Certificate (
 
 ```
 # Página pública de verificación
-https://omnibotgenesis-production.up.railway.app/pogr/verify/POGC-GENESIS-E071CC96
+https://omnixquantum.net/pogr/verify/POGC-GENESIS-E071CC96
 
 # API REST (sin autenticación — PoGR-INV-003)
-curl https://omnibotgenesis-production.up.railway.app/v1/pogr/verify/POGC-GENESIS-E071CC96
+curl https://omnixquantum.net/v1/pogr/verify/POGC-GENESIS-E071CC96
 
 # Badge SVG embebible
-https://omnibotgenesis-production.up.railway.app/v1/pogr/badge/POGC-GENESIS-E071CC96.svg
+https://omnixquantum.net/v1/pogr/badge/POGC-GENESIS-E071CC96.svg
 ```
 
 ---
@@ -92,7 +92,7 @@ https://omnibotgenesis-production.up.railway.app/v1/pogr/badge/POGC-GENESIS-E071
 
 ```html
 <img
-  src="https://omnibotgenesis-production.up.railway.app/v1/pogr/badge/POGC-GENESIS-E071CC96.svg"
+  src="https://omnixquantum.net/v1/pogr/badge/POGC-GENESIS-E071CC96.svg"
   alt="Proof of Governance — OMNIX QUANTUM LTD"
 />
 ```
