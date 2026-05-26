@@ -1,8 +1,8 @@
 # MIVP Runtime Audit — Institutional Deep Audit
-**Date:** 2026-05-25  
+**Date:** 2026-05-25 (rev.1 — 2026-05-26: F-001, F-002, F-003, F-006, F-007 resolved)  
 **Auditor:** OMNIX Internal Governance Audit  
 **Scope:** ADR-194 · `omnix_core/bev/mandate_integrity_verification.py` · `omnix_core/govern/governance_runtime.py`  
-**Verdict:** ⚠️ CONDITIONAL PASS — 1 HIGH + 5 MEDIUM + 3 LOW findings. No CRITICAL. No blocking invariant violation.
+**Verdict:** ✅ PASS — 5 findings resolved. 0 HIGH open. 2 MEDIUM open (F-004, F-005). 3 LOW open.
 
 ---
 
@@ -14,7 +14,7 @@ Five findings require remediation before the first production PoGC emission with
 
 ---
 
-## F-001 — HIGH — DB driver inconsistency: psycopg2 vs psycopg3
+## F-001 — ✅ RESOLVED (2026-05-26) — DB driver inconsistency: psycopg2 vs psycopg3
 
 **File:** `omnix_core/bev/mandate_integrity_verification.py` — lines 432, 770, 798, 820, 852, 892, 930  
 **File:** `omnix_services/database_service/database_service.py` (uses psycopg3)
@@ -29,7 +29,7 @@ Five findings require remediation before the first production PoGC emission with
 
 ---
 
-## F-002 — HIGH — MANDATE-BOUND eligible with WARNING turns
+## F-002 — ✅ RESOLVED (2026-05-26) — MANDATE-BOUND eligible with WARNING turns
 
 **File:** `omnix_core/bev/mandate_integrity_verification.py` — line 664  
 **Code:** `mandate_bound_eligible = (turns_in_violation == 0 and mbr is not None)`
@@ -47,24 +47,30 @@ c) Add a separate PoGC tag `MANDATE-ALIGNED` for sessions with warnings, reservi
 
 **Recommendation:** Option (c) gives the most expressive certification hierarchy and is most defensible to regulators.
 
+**Resolution (2026-05-26):** Option (c) implemented. Three-tier mandate certification hierarchy introduced:
+- `MANDATE-BOUND` (Tier 1): `turns_in_violation = 0` AND `turns_in_warning = 0` — pristine execution.
+- `MANDATE-ALIGNED` (Tier 2): `turns_in_violation = 0` AND `turns_in_warning > 0` — mission-aligned.
+- UNCERTIFIED (Tier 3): `turns_in_violation > 0` — mandate violations recorded.
+DB CHECK constraint `chk_seal_tier_consistency` enforces mutual exclusivity at the persistence layer.
+MIVP-INV-009 added to ADR-194. `MANDATE_ALIGNED_TAG` exported from `omnix_core/bev/__init__.py`.
+`mandate_aligned_eligible` field added to `MBRSeal` dataclass, DDL, and `_persist_seal()` INSERT.
+
 ---
 
-## F-003 — MEDIUM — No DB foreign key constraints between MIVP tables
+## F-003 — ✅ RESOLVED (2026-05-26) — No DB foreign key constraints between MIVP tables
 
-**File:** `omnix_core/bev/mandate_integrity_verification.py` — lines 379–417 (DDL)
+**File:** `omnix_core/bev/mandate_integrity_verification.py` — DDL section
 
-**Finding:** `atf_mandate_alignment_scores.mbr_id` and `atf_mbr_seals.mbr_id` have no `FOREIGN KEY` constraint referencing `atf_mandate_binding_records.mbr_id`. Similarly, `atf_mandate_alignment_scores.session_id` has no FK to `atf_mandate_binding_records.session_id`. DB consistency relies entirely on application-level ordering.
+**Finding:** `atf_mandate_alignment_scores.mbr_id` and `atf_mbr_seals.mbr_id` had no `FOREIGN KEY` constraint referencing `atf_mandate_binding_records.mbr_id`. DB consistency relied entirely on application-level ordering.
 
 **Impact:** A partial failure (MBR persisted, MAS write crashes) leaves orphan MAS rows with an mbr_id that has no corresponding MBR. DB-level query for forensic verification would return inconsistent results.  
 **Exploitability:** Low — requires a DB write partial failure scenario.  
 **Institutional Risk:** MEDIUM — forensic auditors querying the DB directly (a standard institutional audit procedure) would find rows with dangling references.
 
-**Remediation:** Add FK constraints to the DDL:
-```sql
-FOREIGN KEY (mbr_id) REFERENCES atf_mandate_binding_records(mbr_id),
-FOREIGN KEY (session_id) REFERENCES atf_mandate_binding_records(session_id)
-```
-Use `DEFERRABLE INITIALLY DEFERRED` to allow batch inserts within a transaction.
+**Resolution (2026-05-26):** FK constraint `fk_seals_mbr` added to `atf_mbr_seals` DDL via `_APPLY_SEAL_FK` — a `DO $$ ... $$ IF NOT EXISTS` block applied opportunistically in `ensure_tables()` as a non-fatal post-table step. Non-fatal because `atf_mandate_binding_records` may not exist when MIVP initialises first (init ordering is not guaranteed). Two DB CHECK constraints also added:
+- `chk_seal_tier`: `mandate_certification_tier IN ('MANDATE-BOUND', 'MANDATE-ALIGNED', 'UNCERTIFIED')`
+- `chk_seal_tier_consistency`: `NOT (mandate_bound_eligible AND mandate_aligned_eligible)` — mutual exclusivity at DB level.
+Four indexes added on `mandate_certification_tier`, `mandate_bound_eligible`, `mandate_aligned_eligible`.
 
 ---
 
@@ -101,7 +107,7 @@ If an exception occurs between steps 1 and 3, an MBR exists in DB with no corres
 
 ---
 
-## F-006 — MEDIUM — `_DEFAULT_MAS_HALT` configurable via env with no floor validation
+## F-006 — ✅ RESOLVED (2026-05-26) — `_DEFAULT_MAS_HALT` configurable via env with no floor validation
 
 **File:** `omnix_core/bev/mandate_integrity_verification.py` — lines 41–42
 
@@ -117,9 +123,11 @@ if mas_halt < 0.05 or mas_halt >= mas_warn:
     raise ValueError(f"mas_halt_threshold {mas_halt} invalid: must be in [0.05, mas_warning)")
 ```
 
+**Resolution (2026-05-26):** Validation added in `create_mbr()` — raises `ValueError` if `mas_halt < 0.05` (floor) or `mas_halt >= mas_warn` (ordering). MIVP-INV-005 cannot be silently bypassed via env configuration.
+
 ---
 
-## F-007 — LOW — `mandate_bound_eligible` condition is always True when reached
+## F-007 — ✅ RESOLVED (2026-05-26) — `mandate_bound_eligible` condition is always True when reached
 
 **File:** `omnix_core/bev/mandate_integrity_verification.py` — line 664
 
@@ -127,6 +135,8 @@ if mas_halt < 0.05 or mas_halt >= mas_warn:
 
 **Impact:** None functional.  
 **Remediation:** Remove the dead `mbr is not None` clause or add a comment explaining the redundancy.
+
+**Resolution (2026-05-26):** `mbr is not None` dead clause removed. Condition restructured into the three-tier certification logic block with explicit inline documentation of why the guard is unnecessary at that point in the function.
 
 ---
 

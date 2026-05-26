@@ -1,14 +1,17 @@
-# OMNIX QUANTUM — 47-Invariant Test Coverage Matrix
+# OMNIX QUANTUM — Invariant Test Coverage Matrix
 **Document ID:** OMNIX-COMPLIANCE-INV-MATRIX-2026-05  
-**Date:** May 2026 (rev.3 — May 17, 2026)  
-**Standard:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · ADR-157 rev.2 · ADR-161 through ADR-167 · ADR-170  
-**Total Invariants:** 47 across 9 families (GECR-INV-001–006 added in ADR-170)  
-**Coverage:** 36/47 direct test (76.6%) · 11/47 structural only (23.4%) · 0/47 untested  
+**Date:** May 2026 (rev.5 — May 26, 2026)  
+**Standard:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · RFC-ATF-6 · ADR-157 rev.2 · ADR-161–167 · ADR-170 · ADR-193 · ADR-194  
+**Total Active Invariants:** 65 across 12 families  
+**Proposed (SGIP):** 4 invariants — pending implementation  
+**Coverage (active):** 41/65 direct test (63.1%) · 24/65 structural only (36.9%) · 0/65 untested  
 
-> This matrix is the authoritative traceability document between the 47 formal invariants published in RFC-ATF-1, RFC-ATF-2, RFC-ATF-3, ADR-157 rev.2, ADR-170, and the test suite. It is referenced by the Technical Whitepaper (Section 13) and the Institutional Audit Report (OMNIX-AUDIT-ATF-EAP-OEP-2026-05).
+> This matrix is the authoritative traceability document between all formal invariants published across the OMNIX RFC and ADR corpus, and the test suite. Referenced by the Technical Whitepaper (Section 13) and all Institutional Audit Reports.
 >
 > **rev.2 changes:** TAR-INV-006 (Compiled Staleness Bound) added to Family 1. RGC-INV-007 gap closed — `RCR_CES_STALENESS_BOUND_SECONDS=300` compiled constant.
 > **rev.3 changes:** GECR-INV-001–006 (Governance Execution Context Router) added in ADR-170. Total raised to 47.
+> **rev.4 changes:** MIVP-INV-001–008 (Mandate Integrity Verification Protocol, ADR-194) added. SGIP-INV proposed family added. Active total raised to 55.
+> **rev.5 changes:** MIVP-INV-009 (MANDATE-ALIGNED mutual exclusivity, three-tier certification) formalised. OGI-INV-001–010 (OGI Fine-Tuning Pipeline, ADR-193) added as Family 12. Active total raised to 65. F-C-002 resolved.
 
 ---
 
@@ -158,9 +161,29 @@
 | MIVP-INV-005 | When MAS < `mas_halt_threshold`, runtime MUST issue HALT verdict before next turn proceeds | `compute_mas()` — `verdict = "HALT"` when `alignment_score < mbr.mas_halt_threshold`; `record_turn()` checks `mas.verdict == "HALT"` | `tests/test_mivp.py` (pending) | Mandate HALT enforcement test | ⚠️ Structural |
 | MIVP-INV-006 | MAS history MUST be append-only and linked to CTCHC turn hash | `compute_mas()` — `ctchc_link_hash` parameter from `link.chain_link_hash`; appended to in-memory list + DB | `tests/test_mivp.py` (pending) | Append-only chain linkage test | ⚠️ Structural |
 | MIVP-INV-007 | At session close, MBR Seal MUST be issued covering all turns | `seal_mbr()` called in `GovernanceRuntime.close_session()` when `session.mbr_id` present | `tests/test_mivp.py` (pending) | Seal completeness test | ⚠️ Structural |
-| MIVP-INV-008 | MANDATE-BOUND PoGC tag MUST only be issued when MBR present, seal complete, `turns_in_violation = 0` | `seal_mbr()` — `mandate_bound_eligible = (turns_in_violation == 0 and mbr is not None)`; `close_session()` appends `MANDATE-BOUND` to `pogc_tags` only when `mandate_bound = True` | `tests/test_mivp.py` (pending) | MANDATE-BOUND eligibility test | ⚠️ Structural |
+| MIVP-INV-008 | `MANDATE-BOUND` PoGC tag MUST only be issued when MBR present, seal complete, `turns_in_violation = 0`, AND `turns_in_warning = 0` — pristine mandate fidelity | `seal_mbr()` — `mandate_bound_eligible = (turns_in_violation == 0 and turns_in_warning == 0)`; `close_session()` appends `MANDATE-BOUND` only when `mandate_bound = True` | `tests/test_mivp.py` (pending) | MANDATE-BOUND eligibility (zero violations + zero warnings) | ⚠️ Structural |
+| MIVP-INV-009 | `MANDATE-ALIGNED` PoGC tag MUST only be issued when MBR present, seal complete, `turns_in_violation = 0`, AND `turns_in_warning > 0`. `MANDATE-ALIGNED` and `MANDATE-BOUND` MUST be mutually exclusive on the same PoGC — enforced by DB constraint `chk_seal_tier_consistency` | `seal_mbr()` — `mandate_aligned_eligible = (turns_in_violation == 0 and turns_in_warning > 0)`; DB DDL `chk_seal_tier_consistency: NOT (mandate_bound_eligible AND mandate_aligned_eligible)` | `tests/test_mivp.py` (pending) | MANDATE-ALIGNED eligibility + mutual exclusivity with MANDATE-BOUND | ⚠️ Structural |
 
-**Note:** All 8 MIVP invariants are enforced at the structural/implementation level. Dedicated test suite `tests/test_mivp.py` to be created. ProxyGuard keyword-density activation is a baseline implementation — production deployments should extend with domain-specific ML classifiers per ADR-194 §Consequential Risk.
+**Note:** All 9 MIVP invariants are enforced at the structural/implementation level. Three-tier certification hierarchy: MANDATE-BOUND (Tier 1, pristine) → MANDATE-ALIGNED (Tier 2, mission-aligned) → UNCERTIFIED (Tier 3, violations). Dedicated test suite `tests/test_mivp.py` to be created. ProxyGuard keyword-density activation is a baseline — production deployments should extend with ML classifiers per ADR-194 §Consequential Risk.
+
+---
+
+## Family 12 — OGI Invariants (ADR-193 · OMNIX Governance Intelligence Fine-Tuning Pipeline)
+
+> **F-C-002 resolution:** These invariants define the compliance gates for the OGI corpus generation and model training pipeline. All 10 are structural (implementation exists in ADR-193 spec + scripts design); dedicated test suite `tests/test_ogi.py` to be created once `corpus_allowlist.yaml` and `ontology.json` exist.
+
+| ID | Formal Statement | Implementation | Test File | Test ID / Count | Status |
+|---|---|---|---|---|---|
+| OGI-INV-001 | The corpus generator MUST apply the `corpus_allowlist.yaml` filter before processing any source document — no document outside the allowlist may be included | `scripts/fine_tuning/generate_corpus.py` — allowlist check (design spec; file pending) | `tests/test_ogi.py` (pending) | Allowlist enforcement test | ⚠️ Structural |
+| OGI-INV-002 | No personally identifiable information (PII), secret, credential, or environment variable value MAY appear in any generated corpus entry | `scripts/fine_tuning/generate_corpus.py` — PII scrubber pass required | `tests/test_ogi.py` (pending) | PII scan test | ⚠️ Structural |
+| OGI-INV-003 | Every corpus entry MUST be tagged with its source category (KQA, RTR, SCN, CIP, CSC, EVL, ADR, RFC, INV, OGR, MSC, MIVP, BEV) and source document ID | `scripts/fine_tuning/generate_corpus.py` — metadata schema with `category` + `source_id` fields | `tests/test_ogi.py` (pending) | Corpus entry schema test | ⚠️ Structural |
+| OGI-INV-004 | The training set MUST contain a minimum of 100 examples per primary category and 60 examples per adversarial category (RTR, SCN Tier 3) | `scripts/fine_tuning/generate_corpus.py` — per-category count gate | `tests/test_ogi.py` (pending) | Category count gate test | ⚠️ Structural |
+| OGI-INV-005 | All rejected corpus samples MUST be written to `rejected_samples.jsonl` with rejection reason — no silent discard | `scripts/fine_tuning/generate_corpus.py` — rejection log required | `tests/test_ogi.py` (pending) | Rejection log completeness test | ⚠️ Structural |
+| OGI-INV-006 | Train/validation/test split MUST be 70/15/15 for standard categories and 60/20/20 for adversarial categories (RTR + SCN Tier 3) | `scripts/fine_tuning/split_corpus.py` — per-category split logic (pending) | `tests/test_ogi.py` (pending) | Split ratio test | ⚠️ Structural |
+| OGI-INV-007 | The model MUST pass all 5 evaluation gates before deployment: (1) F1 ≥ 0.90 on KQA, (2) RTR recall ≥ 0.85, (3) 4-class verdict accuracy ≥ 0.85, (3b) HALT recall ≥ 0.80, (4) hallucination rate < 0.05 on ontology.json probes, (5) adversarial scenario precision ≥ 0.80 | `scripts/fine_tuning/evaluate_model.py` — 5-gate evaluation runner (pending) | `tests/test_ogi.py` (pending) | Gate evaluation test | ⚠️ Structural |
+| OGI-INV-008 | Corpus generation MUST be deterministic and reproducible — same input documents + same `corpus_allowlist.yaml` MUST produce the same output corpus (modulo random seed, which MUST be fixed and logged) | `scripts/fine_tuning/generate_corpus.py` — `random.seed(OMNIX_CORPUS_SEED)` required | `tests/test_ogi.py` (pending) | Determinism test | ⚠️ Structural |
+| OGI-INV-009 | Ground truth verdict labels MUST be annotated by at least two independent annotators; inter-annotator agreement MUST reach Cohen's κ ≥ 0.80 before labels are used for training or gate evaluation | Annotation protocol (design spec; tooling pending) | `tests/test_ogi.py` (pending) | IAA score test | ⚠️ Structural |
+| OGI-INV-010 | MIVP corpus category MUST contain a minimum of 150 examples covering: MBR issuance, MAS computation, three-tier certification (MANDATE-BOUND / MANDATE-ALIGNED / UNCERTIFIED), and proxy-optimization detection scenarios | `scripts/fine_tuning/generate_corpus.py` — MIVP category gate (150 min examples) | `tests/test_ogi.py` (pending) | MIVP corpus count gate | ⚠️ Structural |
 
 ---
 
@@ -178,24 +201,30 @@ OEP-INV         6             6            0               0          Active
 FEA-INV         5             4            1               0          Active
 FVP-INV         1             1            0               0          Active
 GECR-INV        6             5            1               0          Active ← ADR-170
-MIVP-INV        8             0            8               0          Active ← ADR-194 (new)
+MIVP-INV        9             0            9               0          Active ← ADR-194 · rev.5: INV-009 added
+OGI-INV        10             0           10               0          Active ← ADR-193 · Family 12 (F-C-002 closed)
 ─────────────────────────────────────────────────────────────────────────────
-ACTIVE TOTAL    55            41           14              0
+ACTIVE TOTAL    65            41           24              0
 ─────────────────────────────────────────────────────────────────────────────
 SGIP-INV        4             0            0               4          PROPOSED ← ADR-171
 ─────────────────────────────────────────────────────────────────────────────
-GRAND TOTAL     59            41           14              4
+GRAND TOTAL     69            41           24              4
 
-Active coverage (55 invariants):
-  Direct:      41/55 = 74.5%
-  Structural:  14/55 = 25.5%
-  None:         0/55 =  0.0%
+Active coverage (65 invariants):
+  Direct:      41/65 = 63.1%
+  Structural:  24/65 = 36.9%
+  None:         0/65 =  0.0%
 
 Proposed (SGIP, 4 invariants):
   All 4 pending implementation — RFC-ATF-4 sprint
 
-MIVP-INV (8 invariants, all Structural — pending tests/test_mivp.py):
-  Priority action: create test_mivp.py — target 8/8 Direct
+MIVP-INV (9 invariants, all Structural — pending tests/test_mivp.py):
+  Priority action: create test_mivp.py — target 9/9 Direct
+  INV-009 (rev.5): MANDATE-ALIGNED mutual exclusivity + three-tier certification hierarchy.
+
+OGI-INV (10 invariants, all Structural — pending tests/test_ogi.py):
+  Priority action: create corpus_allowlist.yaml + ontology.json → then create test_ogi.py — target 10/10 Direct
+  See F-C-002 in FINAL_RISK_MATRIX.md for remediation order.
 ```
 
 ---
@@ -209,8 +238,10 @@ MIVP-INV (8 invariants, all Structural — pending tests/test_mivp.py):
 | 3 | ELR-INV-004 | Add compression rejection test: attempt to strip `LEGAL`-class artifact fields, assert rejection | `tests/test_eap_audit.py` | Next |
 | 4 | EAP-INV-007 | Add production-mode Redis probe test: `OMNIX_ARCHIVE_REDIS_REQUIRED=true` + absent REDIS_URL = hard fail | `tests/test_cold_block_archive.py` | Next |
 | 5 | FEA-INV-001 | Add env var default test: absent `FORENSIC_EXPORT_ALLOW_CALLER_KEYS` behaves as `false` | `tests/test_oep_forensic_audit.py` | Next |
-| 6 | ELR-INV-003 (GPIL) | Implement `omnix_core/governance/gpil.py` runtime module — CRGC issuance, signing, storage | `omnix_core/governance/gpil.py` | Future |
-| 7 | SGIP-INV-001–004 | Implement `omnix_core/agents/atf/semantic_governance.py` — STR, SPV, SAC classes; create `tests/test_sgip_audit.py` | `semantic_governance.py` + test file | RFC-ATF-4 sprint |
+| 6 | MIVP-INV-001–009 | Create `tests/test_mivp.py` — 9 invariants, all currently Structural. Priority sub-tests: INV-001 (MBR pre-turn), INV-005 (HALT enforcement), INV-008/009 (three-tier eligibility + mutual exclusivity). Target: 9/9 Direct. | `tests/test_mivp.py` | BEV sprint |
+| 7 | OGI-INV-001–010 | Prerequisite: create `corpus_allowlist.yaml` + `ontology.json`. Then create `tests/test_ogi.py`. Priority sub-tests: INV-001 (allowlist gate), INV-007 (5-gate model evaluation), INV-010 (MIVP category count). Target: 10/10 Direct. | `tests/test_ogi.py` | OGI sprint |
+| 8 | ELR-INV-003 (GPIL) | Implement `omnix_core/governance/gpil.py` runtime module — CRGC issuance, signing, storage | `omnix_core/governance/gpil.py` | Future |
+| 9 | SGIP-INV-001–004 | Implement `omnix_core/agents/atf/semantic_governance.py` — STR, SPV, SAC classes; create `tests/test_sgip_audit.py` | `semantic_governance.py` + test file | RFC-ATF-4 sprint |
 
 > **Closed items:** RGC-INV-007 — removed from backlog May 17 2026 (ADR-157 rev.2). Structural gap closed via compiled constant `RCR_CES_STALENESS_BOUND_SECONDS=300` in `runtime_continuity.py`.
 

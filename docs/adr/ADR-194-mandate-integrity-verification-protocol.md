@@ -44,6 +44,18 @@ Introduce the **Mandate Integrity Verification Protocol (MIVP)** as an optional 
 
 MIVP is **additive** — it does not replace or modify any existing BEV, AVM, or OGR behavior.
 
+### Three-Tier Mandate Certification Hierarchy
+
+When MIVP is active and `seal_mbr()` is called at session close, exactly one certification outcome is determined:
+
+| Tier | PoGC Tag | Condition | Semantics |
+|---|---|---|---|
+| **1 — Pristine** | `MANDATE-BOUND` | `turns_in_violation = 0` AND `turns_in_warning = 0` | Every agent turn tracked at or above the warning threshold. Mandate was followed without a single detected drift signal. |
+| **2 — Aligned** | `MANDATE-ALIGNED` | `turns_in_violation = 0` AND `turns_in_warning > 0` | Agent never violated the mandate halt boundary; warning-level drift occurred but was never confirmed as a mandate breach. |
+| **3 — Uncertified** | *(no MIVP tag)* | `turns_in_violation > 0` | Mandate violations recorded. Both higher tiers withheld. |
+
+`MANDATE-BOUND` and `MANDATE-ALIGNED` are **mutually exclusive**. Only one tag is ever appended to the PoGC. `MANDATE-BOUND` supersedes `MANDATE-ALIGNED` — they are never issued simultaneously (enforced by DB constraint `chk_seal_tier_consistency`).
+
 ---
 
 ## Artifacts
@@ -122,7 +134,9 @@ Issued at session close (MIVP-INV-007). Contains:
 
 **MIVP-INV-007:** At session close, an MBR Seal MUST be issued covering all turns. A session with an incomplete MBR Seal cannot receive the `MANDATE-BOUND` PoGC tag.
 
-**MIVP-INV-008:** The `MANDATE-BOUND` PoGC tag MUST only be issued when: MBR is present and PQC-valid, MBR Seal covers all turns, and `turns_in_violation` = 0.
+**MIVP-INV-008:** The `MANDATE-BOUND` PoGC tag MUST only be issued when: MBR is present and PQC-valid, MBR Seal covers all turns, `turns_in_violation` = 0, AND `turns_in_warning` = 0. This is the highest mandate certification tier — pristine execution with zero detected drift signals.
+
+**MIVP-INV-009:** The `MANDATE-ALIGNED` PoGC tag MUST only be issued when: MBR is present and PQC-valid, MBR Seal covers all turns, `turns_in_violation` = 0, AND `turns_in_warning` > 0. `MANDATE-ALIGNED` and `MANDATE-BOUND` are mutually exclusive — both MUST NOT appear on the same PoGC. A DB-level CHECK constraint (`chk_seal_tier_consistency`) enforces this at the persistence layer.
 
 ---
 
@@ -173,12 +187,14 @@ The AGVP watchdog monitors both CCS trajectory (existing) and MAS trajectory (ne
 ### OGR Session Lifecycle
 - `SESSION_START`: MBR issued if `mandate_binding` present in governing receipt
 - `TURN_SUBMITTED`: MAS computed, linked to CTCHC, fed to AGVP
-- `SESSION_CLOSE`: MBR Seal issued, `MANDATE-BOUND` tag evaluated
-- `PoGC_ISSUANCE`: `MANDATE-BOUND` tag included if MIVP-INV-008 satisfied
+- `SESSION_CLOSE`: MBR Seal issued; three-tier certification evaluated
+- `PoGC_ISSUANCE`: exactly one MIVP tag appended per MIVP-INV-008/009 (or none if violations)
 
-### PoGC Tags
-- `ATF-BEV-COMPLIANT`: existing — behavioral drift within bounds
-- `MANDATE-BOUND`: new — mandate alignment verified throughout session, zero violations
+### PoGC Tags — Tiered Mandate Certification
+- `ATF-BEV-COMPLIANT`: always present when BEV layers attested — behavioral drift within bounds
+- `MANDATE-BOUND` (Tier 1): pristine mandate fidelity — zero violations AND zero warnings throughout session
+- `MANDATE-ALIGNED` (Tier 2): mission-aligned — zero violations, warnings occurred but not confirmed as breaches
+- *(no MIVP tag)*: MIVP inactive or violations recorded — mandate certification withheld
 
 ---
 
@@ -212,7 +228,7 @@ The following concepts introduced in MIVP have no prior published equivalent:
 - **Pre-turn mandate binding with PQC signature** (MBR) — no existing AI governance protocol binds a declared objective cryptographically before execution
 - **Mandate Alignment Score (MAS)** — continuous per-turn proxy-drift measurement as a governance signal feeding an anticipatory veto protocol
 - **Dual-signal AGVP** — proactive veto based on both constraint drift (CCS) and mandate alignment drift (MAS) simultaneously
-- **MANDATE-BOUND PoGC tag** — certificate class proving mandate alignment, not merely constraint conformance
+- **MANDATE-BOUND / MANDATE-ALIGNED tiered PoGC certification** — first published governance protocol with a three-tier cryptographic mandate certification hierarchy. MANDATE-BOUND proves pristine mandate fidelity (zero drift signals); MANDATE-ALIGNED proves mission alignment despite transient drift. Mutually exclusive, DB-constraint-enforced, PQC-signed at seal time.
 
 ---
 

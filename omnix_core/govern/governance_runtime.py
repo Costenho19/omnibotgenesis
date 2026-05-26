@@ -54,8 +54,19 @@ ATF_BEV_COMPLIANT  = "ATF-BEV-Compliant"   # highest BEV designation
 ATF_L4_COMPLIANT   = "ATF-L4-Compliant"
 ATF_L3_COMPLIANT   = "ATF-L3-Compliant"
 
-# MIVP extended tags (ADR-194)
-MIVP_MANDATE_BOUND = "MANDATE-BOUND"       # added to PoGC when MIVP-INV-008 satisfied
+# ── MIVP Tiered Mandate Certification Tags (ADR-194) ─────────────────────────
+#
+#  MANDATE-BOUND   — Tier 1 (highest): zero violations AND zero warnings.
+#                    Pristine mandate fidelity throughout the session.
+#                    MIVP-INV-008.
+#
+#  MANDATE-ALIGNED — Tier 2: zero violations, warnings allowed.
+#                    Mission-aligned; drift signals occurred but never confirmed.
+#                    MIVP-INV-009.
+#
+#  Only one tag is appended to the PoGC per session.
+MIVP_MANDATE_BOUND   = "MANDATE-BOUND"
+MIVP_MANDATE_ALIGNED = "MANDATE-ALIGNED"
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -608,16 +619,18 @@ class GovernanceRuntime:
 
         # ── MIVP: seal MBR at session close (MIVP-INV-007) ──────────
         mivp_seal = None
-        mandate_bound = False
+        mandate_bound   = False
+        mandate_aligned = False
         if session.mbr_id:
             try:
                 mivp = self._get_mivp()
                 mivp_seal = mivp.seal_mbr(session_id)
-                mandate_bound = mivp_seal.mandate_bound_eligible
+                mandate_bound   = mivp_seal.mandate_bound_eligible
+                mandate_aligned = mivp_seal.mandate_aligned_eligible
                 logger.info(
                     f"[OGR] MIVP MBR sealed: {mivp_seal.seal_id} | "
-                    f"mandate_bound={mandate_bound} | "
-                    f"verdict={mivp_seal.mandate_verdict} (MIVP-INV-007)"
+                    f"tier={mivp_seal.seal_summary()['mandate_certification_tier']} | "
+                    f"verdict={mivp_seal.mandate_verdict} (MIVP-INV-007/009)"
                 )
             except Exception as mivp_exc:
                 logger.warning(f"[OGR] MIVP seal failed (non-blocking): {mivp_exc}")
@@ -645,10 +658,14 @@ class GovernanceRuntime:
                 mandate_bound=mandate_bound,
             )
 
-        # Determine compliance tags (MIVP-INV-008)
+        # ── Compliance tag hierarchy (MIVP-INV-008 / MIVP-INV-009) ───────────
+        # MANDATE-BOUND and MANDATE-ALIGNED are mutually exclusive.
+        # Only one is appended; MANDATE-BOUND supersedes MANDATE-ALIGNED.
         pogc_tags = [ATF_BEV_COMPLIANT]
         if mandate_bound:
             pogc_tags.append(MIVP_MANDATE_BOUND)
+        elif mandate_aligned:
+            pogc_tags.append(MIVP_MANDATE_ALIGNED)
 
         result = {
             "session_id": session_id,
@@ -664,6 +681,13 @@ class GovernanceRuntime:
             "compliance_tier": ATF_BEV_COMPLIANT,
             "pogc_tags": pogc_tags,
             "mandate_bound": mandate_bound,
+            "mandate_aligned": mandate_aligned,
+            "mandate_certification_tier": (
+                "MANDATE-BOUND" if mandate_bound
+                else "MANDATE-ALIGNED" if mandate_aligned
+                else "UNCERTIFIED" if session.mbr_id
+                else None
+            ),
             "governing_receipt_id": session.governing_receipt_id,
             "pqc_sealed": sealed_chain.seal_pqc_signature is not None,
             "pqc_algorithm": sealed_chain.seal_pqc_algorithm,

@@ -6,8 +6,11 @@ Layer 6 of the Agent Trust Fabric: receipt-bound behavioral attestation,
 continuous constraint conformance measurement, cross-turn coherence proof,
 and mandate integrity verification.
 
-ATF-BEV-Compliant is the highest standard governance designation.
-MANDATE-BOUND is the extended designation for sessions with verified mandate alignment.
+Compliance Designation Hierarchy (highest to lowest):
+  ATF-BEV-Compliant  — all BEV layers attested (BAR + CCS + CTCHC)
+  MANDATE-BOUND      — pristine mandate fidelity: zero violations AND zero warnings
+  MANDATE-ALIGNED    — mission-aligned: zero violations, warnings permitted
+  (no MIVP tag)      — MIVP inactive or mandate violations recorded
 
 Harold Nunes — OMNIX QUANTUM LTD — May 2026
 """
@@ -21,6 +24,7 @@ from omnix_core.bev.mandate_integrity_verification import (
     ProxyGuard,
     MIVPEngine,
     MANDATE_BOUND_TAG,
+    MANDATE_ALIGNED_TAG,
 )
 
 __all__ = [
@@ -40,4 +44,5 @@ __all__ = [
     "ProxyGuard",
     "MIVPEngine",
     "MANDATE_BOUND_TAG",
+    "MANDATE_ALIGNED_TAG",
 ]

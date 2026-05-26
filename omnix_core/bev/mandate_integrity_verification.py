@@ -41,8 +41,25 @@ logger = logging.getLogger("OMNIX.BEV.MIVP")
 _DEFAULT_MAS_HALT    = float(os.environ.get("MIVP_MAS_HALT_THRESHOLD", "0.30"))
 _DEFAULT_MAS_WARNING = float(os.environ.get("MIVP_MAS_WARNING_THRESHOLD", "0.65"))
 
-# Compliance tag issued on PoGC when mandate alignment is verified
-MANDATE_BOUND_TAG = "MANDATE-BOUND"
+# ── PoGC Compliance Tags — Tiered Mandate Certification ─────────────────────
+#
+# Three-tier hierarchy (MIVP-INV-008 / MIVP-INV-009):
+#
+#   MANDATE-BOUND   — Pristine execution: zero violations AND zero warnings.
+#                     Highest designation. Every turn tracked at or above the
+#                     warning threshold throughout the session.
+#
+#   MANDATE-ALIGNED — Mission-aligned: zero violations, warnings allowed.
+#                     Agent stayed within mandate intent despite transient
+#                     drift signals. Second-tier designation.
+#
+#   (no tag)        — Mandate violations recorded. MANDATE-BOUND and
+#                     MANDATE-ALIGNED are both withheld.
+#
+# Only one tag is appended to the PoGC per session. MANDATE-BOUND supersedes
+# MANDATE-ALIGNED — both are never issued simultaneously.
+MANDATE_BOUND_TAG   = "MANDATE-BOUND"
+MANDATE_ALIGNED_TAG = "MANDATE-ALIGNED"
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -302,7 +319,8 @@ class MBRSeal:
     turns_in_warning: int
     turns_in_violation: int
     mandate_verdict: str              # ALIGNED | WARNING | VIOLATED
-    mandate_bound_eligible: bool      # MIVP-INV-008
+    mandate_bound_eligible: bool      # MIVP-INV-008: zero violations + zero warnings
+    mandate_aligned_eligible: bool    # MIVP-INV-009: zero violations (warnings allowed)
     sealed_at: str
     content_hash: str
     pqc_signature: Optional[str]
@@ -321,6 +339,12 @@ class MBRSeal:
             "turns_in_violation": self.turns_in_violation,
             "mandate_verdict": self.mandate_verdict,
             "mandate_bound_eligible": self.mandate_bound_eligible,
+            "mandate_aligned_eligible": self.mandate_aligned_eligible,
+            "mandate_certification_tier": (
+                "MANDATE-BOUND" if self.mandate_bound_eligible
+                else "MANDATE-ALIGNED" if self.mandate_aligned_eligible
+                else "UNCERTIFIED"
+            ),
             "sealed_at": self.sealed_at,
             "content_hash": self.content_hash,
             "pqc_signature": self.pqc_signature,
@@ -332,9 +356,16 @@ class MBRSeal:
             "seal_id": self.seal_id,
             "mandate_verdict": self.mandate_verdict,
             "mandate_bound_eligible": self.mandate_bound_eligible,
+            "mandate_aligned_eligible": self.mandate_aligned_eligible,
+            "mandate_certification_tier": (
+                "MANDATE-BOUND" if self.mandate_bound_eligible
+                else "MANDATE-ALIGNED" if self.mandate_aligned_eligible
+                else "UNCERTIFIED"
+            ),
             "mas_average": round(self.mas_average, 4),
             "mas_minimum": round(self.mas_minimum, 4),
             "turns_covered": self.turns_covered,
+            "turns_in_warning": self.turns_in_warning,
             "turns_in_violation": self.turns_in_violation,
         }
 
@@ -398,23 +429,51 @@ class MIVPEngine:
 
     _CREATE_SEAL_TABLE = """
     CREATE TABLE IF NOT EXISTS atf_mbr_seals (
-        seal_id              TEXT PRIMARY KEY,
-        session_id           TEXT NOT NULL UNIQUE,
-        mbr_id               TEXT NOT NULL,
-        final_mas            REAL NOT NULL,
-        mas_average          REAL NOT NULL,
-        mas_minimum          REAL NOT NULL,
-        turns_covered        INTEGER NOT NULL DEFAULT 0,
-        turns_in_warning     INTEGER NOT NULL DEFAULT 0,
-        turns_in_violation   INTEGER NOT NULL DEFAULT 0,
-        mandate_verdict      TEXT NOT NULL DEFAULT 'ALIGNED',
-        mandate_bound_eligible BOOLEAN NOT NULL DEFAULT FALSE,
-        content_hash         TEXT NOT NULL,
-        pqc_signature        TEXT,
-        pqc_algorithm        TEXT,
-        sealed_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        seal_id                  TEXT PRIMARY KEY,
+        session_id               TEXT NOT NULL UNIQUE,
+        mbr_id                   TEXT NOT NULL,
+        final_mas                REAL NOT NULL,
+        mas_average              REAL NOT NULL,
+        mas_minimum              REAL NOT NULL,
+        turns_covered            INTEGER NOT NULL DEFAULT 0,
+        turns_in_warning         INTEGER NOT NULL DEFAULT 0,
+        turns_in_violation       INTEGER NOT NULL DEFAULT 0,
+        mandate_verdict          TEXT NOT NULL DEFAULT 'ALIGNED',
+        mandate_bound_eligible   BOOLEAN NOT NULL DEFAULT FALSE,
+        mandate_aligned_eligible BOOLEAN NOT NULL DEFAULT FALSE,
+        mandate_certification_tier TEXT NOT NULL DEFAULT 'UNCERTIFIED',
+        content_hash             TEXT NOT NULL,
+        pqc_signature            TEXT,
+        pqc_algorithm            TEXT,
+        sealed_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT chk_seal_tier CHECK (
+            mandate_certification_tier IN ('MANDATE-BOUND', 'MANDATE-ALIGNED', 'UNCERTIFIED')
+        ),
+        CONSTRAINT chk_seal_tier_consistency CHECK (
+            NOT (mandate_bound_eligible AND mandate_aligned_eligible)
+        )
     );
-    CREATE INDEX IF NOT EXISTS idx_mbrseal_session ON atf_mbr_seals(session_id);
+    CREATE INDEX IF NOT EXISTS idx_mbrseal_session  ON atf_mbr_seals(session_id);
+    CREATE INDEX IF NOT EXISTS idx_mbrseal_tier     ON atf_mbr_seals(mandate_certification_tier);
+    CREATE INDEX IF NOT EXISTS idx_mbrseal_bound    ON atf_mbr_seals(mandate_bound_eligible);
+    CREATE INDEX IF NOT EXISTS idx_mbrseal_aligned  ON atf_mbr_seals(mandate_aligned_eligible);
+    """
+
+    # F-003: FK constraints applied as a non-fatal post-table step (referencing
+    # atf_ogr_sessions and atf_mandate_binding_records, which may not yet exist
+    # when MIVP initialises first). Applied opportunistically in ensure_tables().
+    _APPLY_SEAL_FK = """
+    DO $$ BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint WHERE conname = 'fk_seals_mbr'
+        ) THEN
+            ALTER TABLE atf_mbr_seals
+                ADD CONSTRAINT fk_seals_mbr
+                FOREIGN KEY (mbr_id)
+                REFERENCES atf_mandate_binding_records(mbr_id)
+                ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+        END IF;
+    END $$;
     """
 
     def __init__(self):
@@ -439,6 +498,19 @@ class MIVPEngine:
                         "atf_mandate_alignment_scores, atf_mbr_seals")
         except Exception as exc:
             logger.warning(f"[MIVP] ensure_tables failed (non-blocking): {exc}")
+
+        # F-003: Apply FK constraint opportunistically — non-fatal if referenced
+        # table (atf_mandate_binding_records) was not created in the same init order.
+        if self._db_url:
+            try:
+                import psycopg
+                with psycopg.connect(self._db_url) as conn:
+                    with conn.cursor() as cur:
+                        cur.execute(self._APPLY_SEAL_FK)
+                    conn.commit()
+                logger.debug("[MIVP] FK constraint fk_seals_mbr applied (or already exists)")
+            except Exception as fk_exc:
+                logger.debug(f"[MIVP] FK constraint not applied (non-blocking): {fk_exc}")
 
     # ── PQC signing (mirrors BAR/CCS pattern) ────────────────────
 
@@ -672,8 +744,24 @@ class MIVPEngine:
         else:
             mandate_verdict = "ALIGNED"
 
-        # MIVP-INV-008: MANDATE-BOUND requires zero violations
-        mandate_bound_eligible = (turns_in_violation == 0 and mbr is not None)
+        # ── Three-tier mandate certification (MIVP-INV-008 / MIVP-INV-009) ──────
+        #
+        # MANDATE-BOUND   (tier 1, highest): pristine execution.
+        #   Requires turns_in_violation = 0 AND turns_in_warning = 0.
+        #   Every agent turn was tracked at or above the warning threshold.
+        #   The governing mandate was followed without a single detected drift signal.
+        #
+        # MANDATE-ALIGNED (tier 2): mission-aligned despite transient signals.
+        #   Requires turns_in_violation = 0, warnings are permitted.
+        #   The agent never violated the mandate halt boundary; warning-level
+        #   drift occurred but was never confirmed as a mandate breach.
+        #
+        # (no tag)        (tier 3): mandate violations recorded.
+        #   turns_in_violation > 0. Both higher tiers are withheld.
+        #
+        # At this point mbr is always non-None (early-return guard above).
+        mandate_bound_eligible   = (turns_in_violation == 0 and turns_in_warning == 0)
+        mandate_aligned_eligible = (turns_in_violation == 0 and turns_in_warning > 0)
 
         sealed_at = datetime.now(timezone.utc).isoformat()
         seal_id   = f"MBRS-{uuid.uuid4().hex[:16].upper()}"
@@ -690,6 +778,12 @@ class MIVPEngine:
             "turns_in_violation": turns_in_violation,
             "mandate_verdict": mandate_verdict,
             "mandate_bound_eligible": mandate_bound_eligible,
+            "mandate_aligned_eligible": mandate_aligned_eligible,
+            "mandate_certification_tier": (
+                "MANDATE-BOUND" if mandate_bound_eligible
+                else "MANDATE-ALIGNED" if mandate_aligned_eligible
+                else "UNCERTIFIED"
+            ),
             "sealed_at": sealed_at,
         }, sort_keys=True)
         content_hash = hashlib.sha3_256(seal_content.encode()).hexdigest()
@@ -707,6 +801,7 @@ class MIVPEngine:
             turns_in_violation=turns_in_violation,
             mandate_verdict=mandate_verdict,
             mandate_bound_eligible=mandate_bound_eligible,
+            mandate_aligned_eligible=mandate_aligned_eligible,
             sealed_at=sealed_at,
             content_hash=content_hash,
             pqc_signature=pqc_sig,
@@ -840,16 +935,23 @@ class MIVPEngine:
                           (seal_id, session_id, mbr_id, final_mas, mas_average,
                            mas_minimum, turns_covered, turns_in_warning,
                            turns_in_violation, mandate_verdict,
-                           mandate_bound_eligible, content_hash,
-                           pqc_signature, pqc_algorithm, sealed_at)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                           mandate_bound_eligible, mandate_aligned_eligible,
+                           mandate_certification_tier,
+                           content_hash, pqc_signature, pqc_algorithm, sealed_at)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                         ON CONFLICT (session_id) DO NOTHING
                     """, (
                         seal.seal_id, seal.session_id, seal.mbr_id,
                         seal.final_mas, seal.mas_average, seal.mas_minimum,
                         seal.turns_covered, seal.turns_in_warning,
                         seal.turns_in_violation, seal.mandate_verdict,
-                        seal.mandate_bound_eligible, seal.content_hash,
+                        seal.mandate_bound_eligible, seal.mandate_aligned_eligible,
+                        (
+                            "MANDATE-BOUND" if seal.mandate_bound_eligible
+                            else "MANDATE-ALIGNED" if seal.mandate_aligned_eligible
+                            else "UNCERTIFIED"
+                        ),
+                        seal.content_hash,
                         seal.pqc_signature, seal.pqc_algorithm, seal.sealed_at,
                     ))
                 conn.commit()

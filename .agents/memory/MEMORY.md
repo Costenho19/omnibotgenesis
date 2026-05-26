@@ -2,3 +2,6 @@
 - [OHADA Coverage](ohada-coverage.md) — 17 países África Occidental añadidos al catálogo regulatorio en gov_blueprint.py. ADR-192.
 - [Executive View](executive-view.md) — Página React premium /executive para C-suite sin jerga técnica. ADR-191.
 - [OGI Fine-Tuning Pipeline](ogi-fine-tuning.md) — ADR-193 creado; scripts/fine_tuning/ completo y validado. Ejecutar prepare_corpus.py cuando haya cuenta Together.ai + crédito. Pipeline produce ~850 ejemplos MVP; target premium 15k-30k con más generadores.
+- [MIVP Three-Tier Certification](mivp-tiered-certification.md) — MANDATE-BOUND (0 violations+0 warnings) / MANDATE-ALIGNED (0 violations, warnings ok) / UNCERTIFIED. MIVP-INV-009 formalizado. DB CHECK constraint mutual exclusivity.
+- [MIVP Audit Gate A Cleared](mivp-audit-remediation.md) — F-001 psycopg2→psycopg3 (7 ocurrencias), F-002 three-tier, F-003 FK+CHECK+4 indexes, F-006 floor 0.05, F-007 dead code. Gate A production-ready 2026-05-26.
+- [OGI Invariants Family 12](ogi-invariants.md) — OGI-INV-001–010 añadidos en INVARIANT_TEST_MATRIX. Gate B bloqueado: F-C-002 open, F-C-003 corpus_allowlist.yaml falta, F-C-006 ontology.json falta.
