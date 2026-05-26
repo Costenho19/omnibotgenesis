@@ -2,7 +2,7 @@
   "upload_type": "publication",
   "publication_type": "technicalnote",
   "title": "RFC-ATF-6: Agent Trust Fabric — Behavioral Execution Verification Protocol. Behavioral Anchor Record, Constraint Conformance Signal, and Cross-Turn Coherence Hash Chain",
-  "description": "<p><strong>RFC-ATF-6</strong> specifies the <strong>Behavioral Execution Verification Layer (BEV)</strong> of the Agent Trust Fabric — the sixth RFC in the ATF Open Standard series published by OMNIX QUANTUM LTD.</p><p>RFC-ATF-6 answers the question no prior RFC addresses: <em>did the agent actually behave within its authorized constraints during execution, turn by turn?</em></p><p>Three protocol components are introduced:</p><ul><li><strong>Behavioral Anchor Record (BAR):</strong> A PQC-signed record produced at each execution turn, binding the SHA3-256 hash of the agent's output to the governing receipt and turn index via content_hash = SHA3-256(output_hash ‖ receipt_id ‖ turn_index). The BAR is the first ATF artifact that closes the authorization-to-output chain: every authorized action has a verifiable, tamper-evident record of what the agent actually produced. A HALTED BAR immediately stops the session. Sealed with Dilithium-3 (ML-DSA-65, FIPS 204). Six invariants: BEV-INV-001 through BEV-INV-004, BEV-INV-015, BEV-INV-016.</li><li><strong>Constraint Conformance Signal (CCS):</strong> A conformance_score in [0.0, 1.0] computed atomically with each BAR, measuring behavioral conformance against the constraint vector in the governing receipt. Drift = 1.0 - conformance_score per turn; cumulative drift triggers HALT when it exceeds the threshold (default 0.35). Verdicts: CONFORMANT / WARNING / CRITICAL / HALT. CRITICAL triggers AGVP PVR issuance. HALT blocks all subsequent turns. Drift accumulator isolated per session_id and reload-safe on process restart. Six invariants: BEV-INV-005 through BEV-INV-009, BEV-INV-017.</li><li><strong>Cross-Turn Coherence Hash Chain (CTCHC):</strong> A hash chain where every link = SHA3-256(json.dumps({\"prev\": prev_hash, \"turn\": output_hash, \"receipt\": receipt_id}, sort_keys=True)), seeded by a genesis hash bound to session_id and governing_receipt_id. The chain seal (ML-DSA-65) is the Session Integrity Proof: offline-verifiable detection of turn omission, turn reordering, and cross-session BAR substitution. Every link's receipt_id must match the chain receipt. Six invariants: BEV-INV-010 through BEV-INV-014, BEV-INV-018.</li></ul><p><strong>Novel contributions:</strong></p><ul><li>Behavioral Anchor Record (BAR) — first PQC-signed, governance-receipt-bound per-turn behavioral output attestation artifact in any published governance specification</li><li>Constraint Conformance Signal (CCS) — first governance-native behavioral conformance metric referencing the governing receipt's constraint vector (not a separate monitoring policy)</li><li>Cross-Turn Coherence Hash Chain (CTCHC) — first receipt-seeded hash chain for multi-turn AI agent session behavioral coherence verification</li><li>CCS-AGVP integration loop — first mechanism connecting behavioral output monitoring to anticipatory governance veto issuance in a cryptographically attested protocol</li><li>Behavioral Attestation Chain — first end-to-end forensic artifact spanning authorization → per-turn behavioral output → conformance measurement → session coherence proof</li><li>ATF-BEV-Compliant — sixth compliance tier, 106 formally specified invariants across 20 protocol families</li></ul><p><strong>Formal verification:</strong> Five Z3 SMT and structural proof targets (BEV-FVS-001 through BEV-FVS-005) covering BAR binding, CCS conformance_score bounds [0.0, 1.0], CCS component non-negativity, and CTCHC chain monotonicity. Machine-reproducible via <code>python omnix_core/formal_verification/run_bev_proofs.py</code>.</p><p><strong>Compliance:</strong> ATF-BEV-Compliant designation requires satisfaction of all RFC-ATF-1 through RFC-ATF-6 requirements — 106 invariants across 20 protocol families including BAR, CCS, and CTCHC operational with AGVP integration.</p><p><strong>Regulatory alignment:</strong> EU AI Act Art. 9, 12, 13, 72 · NIST AI RMF MEASURE 2.6, MANAGE 2.2, GOVERN 1.7 · ISO/IEC 42001 §8.4, §9.1 · UK AISI §3-5 · MiFID II Art. 17 · GCC/DIFC · SOC 2 Type II CC7.2</p><p><strong>ATF series:</strong> RFC-ATF-1 (Identity &amp; Delegation, Zenodo 10.5281/zenodo.20155016) · RFC-ATF-2 (Runtime Continuity, Zenodo 10.5281/zenodo.20241344) · RFC-ATF-3 (Governance Policy Interoperability &amp; Forensic Evidence, Zenodo 10.5281/zenodo.20247342) · RFC-ATF-4 (Proactive Governance Layer, pending) · RFC-ATF-5 (Cognitive Governance Layer, pending)</p><p><em>OMNIX QUANTUM LTD, registered in England and Wales. Harold Alberto Nunes Rodelo, Founder and Editor. Operational headquarters: Abu Dhabi, UAE.</em></p>",
+  "description": "<p><strong>RFC-ATF-6</strong> specifies the <strong>Behavioral Execution Verification Layer (BEV)</strong> of the Agent Trust Fabric — the sixth and final RFC in the ATF Open Standard series published by OMNIX QUANTUM LTD.</p><p>RFC-ATF-6 answers the structural question that no prior RFC in the series addresses: <em>did the agent actually behave within its authorized constraints during execution, turn by turn?</em> This is the Behavioral Execution Gap — the space between authorization evidence and behavioral output attestation.</p><p>Three protocol components are introduced:</p><ul><li><strong>Behavioral Anchor Record (BAR):</strong> A PQC-signed record produced at each execution turn, binding the SHA3-256 hash of the agent's output to the governing receipt and turn index via <code>content_hash = SHA3-256(output_hash ‖ receipt_id ‖ turn_index)</code>. The BAR is the first ATF artifact that closes the authorization-to-output chain: every authorized action now has a verifiable, tamper-evident record of what the agent actually produced. A HALTED BAR immediately stops the session. Sealed with Dilithium-3 (ML-DSA-65, FIPS 204). Six invariants: BEV-INV-001 through BEV-INV-004, BEV-INV-015, BEV-INV-016.</li><li><strong>Constraint Conformance Signal (CCS):</strong> A <code>conformance_score ∈ [0.0, 1.0]</code> computed atomically with each BAR, measuring behavioral conformance against the constraint vector in the governing receipt. Four components: Output Boundary Score (40 pts), Constraint Satisfaction Score (30 pts), Semantic Drift Score (20 pts), Authority Alignment Score (10 pts). Verdicts: CONFORMANT (≥90) / DRIFTING (70–89.9) / BREACH (50–69.9) / VIOLATION (&lt;50). Cumulative drift accumulator per session; HALT triggered when threshold exceeded (default 0.35). DRIFTING or worse triggers AGVP Proactive Veto Receipt issuance. Six invariants: BEV-INV-005 through BEV-INV-009, BEV-INV-017.</li><li><strong>Cross-Turn Coherence Hash Chain (CTCHC):</strong> A hash chain seeded by governing_receipt_id and session_id, where every link = SHA3-256(json.dumps({\"prev\": prev_hash, \"turn\": output_hash, \"receipt\": receipt_id}, sort_keys=True)). The chain seal (ML-DSA-65) is the Session Integrity Proof: offline-verifiable proof that all turns were recorded in order, without omission or substitution. Six invariants: BEV-INV-010 through BEV-INV-014, BEV-INV-018.</li></ul><p>Together, BAR, CCS, and CTCHC constitute the <strong>Behavioral Execution Verification Layer</strong> — Layer 6 of the ATF stack. BEV is additive and backward compatible with all prior ATF layers.</p><p><strong>18 new invariants</strong> are introduced (BEV-INV-001 through BEV-INV-018), bringing the total ATF invariant count to <strong>106 formally specified invariants across 20 protocol families</strong>.</p><p>An implementation complying with RFC-ATF-1 through RFC-ATF-6 is designated <strong>ATF-BEV-Compliant</strong> — the sixth and highest compliance tier in the ATF stack, superseding ATF-CGL-Compliant (RFC-ATF-5).</p><p><strong>Compliance hierarchy:</strong> ATF-COMPLIANT-L1/L2/L3 → ATF-RGC-Compliant (14 inv.) → ATF-FEI-Compliant (40 inv.) → ATF-PGL-Compliant (70 inv.) → ATF-CGL-Compliant (88 inv.) → <strong>ATF-BEV-Compliant (106 inv.)</strong></p><p><strong>Formal verification:</strong> Five Z3 SMT proof targets (BEV-FVS-001 through BEV-FVS-005) cover BAR binding completeness, output hash integrity, CCS score bounds, CCS component non-negativity, and CTCHC chain monotonicity.</p><p><strong>Regulatory alignment:</strong> EU AI Act Art. 9/12/14, NIST AI RMF MEASURE 2.6, ISO/IEC 42001 §8.4 and §9.1, GCC/DIFC Art. 9/12, MiFID II Art. 17, SOC 2 Type II CC7.2.</p><p><strong>DB tables:</strong> atf_behavioral_anchor_records · atf_constraint_conformance_signals · atf_coherence_hash_chains (auto-created via CREATE TABLE IF NOT EXISTS).</p><p><strong>Related ADRs:</strong> ADR-181 (BAR) · ADR-182 (CCS) · ADR-183 (CTCHC) · ADR-131 (Execution Integrity Layer foundation).</p><p><strong>Priority records:</strong> OMNIX-PAR-2026-BAR-001 · OMNIX-PAR-2026-CCS-001 · OMNIX-PAR-2026-CTCHC-001.</p>",
   "creators": [
     {
       "name": "Nunes Rodelo, Harold Alberto",
@@ -13,13 +13,13 @@
   "keywords": [
     "AI governance",
     "behavioral attestation",
+    "behavioral execution verification",
     "post-quantum cryptography",
     "Dilithium-3",
     "ML-DSA-65",
     "FIPS 204",
     "hash chain",
     "autonomous agents",
-    "behavioral execution verification",
     "constraint conformance",
     "anticipatory governance veto",
     "governance receipt",
@@ -41,44 +41,63 @@
     "Z3 SMT",
     "governance infrastructure",
     "BEV layer",
-    "behavioral drift detection"
+    "behavioral drift detection",
+    "ATF-BEV-Compliant",
+    "behavioral execution gap",
+    "conformance signal",
+    "SHA3-256",
+    "output attestation"
   ],
-  "license": "other-open",
+  "license": {"id": "CC-BY-4.0"},
   "access_right": "open",
   "language": "eng",
-  "publication_date": "2026-05-23",
+  "publication_date": "2026-05-26",
   "version": "1.0.0",
   "references": [
     "Nunes Rodelo, H. (2026). RFC-ATF-1: Agent Trust Fabric Delegation Protocol. OMNIX QUANTUM Open Standard. DOI: 10.5281/zenodo.20155016",
     "Nunes Rodelo, H. (2026). RFC-ATF-2: Agent Trust Fabric — Runtime Governance Continuity. OMNIX QUANTUM Open Standard. DOI: 10.5281/zenodo.20241344",
     "Nunes Rodelo, H. (2026). RFC-ATF-3: Agent Trust Fabric — Governance Policy Interoperability, Evidence Lifecycle, and Forensic Verification Protocol. OMNIX QUANTUM Open Standard. DOI: 10.5281/zenodo.20247342",
+    "Nunes Rodelo, H. (2026). RFC-ATF-4: Agent Trust Fabric — Proactive Governance Layer. OMNIX QUANTUM Open Standard. DOI: 10.5281/zenodo.20368895",
+    "Nunes Rodelo, H. (2026). RFC-ATF-5: Agent Trust Fabric — Cognitive Governance Layer. OMNIX QUANTUM Open Standard. DOI: 10.5281/zenodo.20391721",
     "NIST (2024). Module-Lattice-Based Digital Signature Standard (ML-DSA). FIPS 204.",
     "NIST (2015). Secure Hash Standard (SHS). FIPS 180-4.",
     "de Moura, L. & Bjørner, N. (2008). Z3: An Efficient SMT Solver. TACAS 2008. LNCS 4963.",
     "European Parliament (2024). Regulation (EU) 2024/1689 on Artificial Intelligence. Official Journal of the European Union.",
     "NIST (2023). Artificial Intelligence Risk Management Framework. NIST AI 100-1.",
     "ISO/IEC 42001:2023. Artificial Intelligence — Management System.",
-    "Nunes Rodelo, H. (2026). RFC-ATF-4: Agent Trust Fabric — Proactive Governance Layer. OMNIX QUANTUM Open Standard. [PENDING DOI]",
-    "Nunes Rodelo, H. (2026). RFC-ATF-5: Agent Trust Fabric — Cognitive Governance Layer. OMNIX QUANTUM Open Standard. [PENDING DOI]"
+    "Nunes Rodelo, H. (2026). ADR-181: Behavioral Anchor Record (BAR). OMNIX QUANTUM.",
+    "Nunes Rodelo, H. (2026). ADR-182: Constraint Conformance Signal (CCS). OMNIX QUANTUM.",
+    "Nunes Rodelo, H. (2026). ADR-183: Cross-Turn Coherence Hash Chain (CTCHC). OMNIX QUANTUM.",
+    "Nunes Rodelo, H. (2026). ADR-131: Execution Integrity Layer. OMNIX QUANTUM."
   ],
-  "notes": "OMNIX QUANTUM LTD is registered in England and Wales (71-75 Shelton Street, Covent Garden, London WC2H 9JQ). Harold Alberto Nunes Rodelo is Founder and Editor. Operational headquarters: Abu Dhabi, UAE. Priority records: OMNIX-PAR-2026-BAR-001 · OMNIX-PAR-2026-CCS-001 · OMNIX-PAR-2026-CTCHC-001. RFC-ATF-6 is the sixth and final layer of the Agent Trust Fabric Open Standard series. Related ADRs: ADR-181 (BAR) · ADR-182 (CCS) · ADR-183 (CTCHC). This document is the normative specification. New database tables: atf_behavioral_anchor_records · atf_constraint_conformance_signals · atf_coherence_hash_chains. 18 BEV invariants: BAR (BEV-INV-001–004, 015–016), CCS (BEV-INV-005–009, 017), CTCHC (BEV-INV-010–014, 018). 106 total ATF invariants across 20 protocol families. ATF-BEV-Compliant is the sixth and highest compliance tier.",
+  "related_identifiers": [
+    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20155016", "scheme": "doi"},
+    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20241344", "scheme": "doi"},
+    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20247342", "scheme": "doi"},
+    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20368895", "scheme": "doi"},
+    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20391721", "scheme": "doi"},
+    {"relation": "isSupplementTo", "identifier": "10.6084/m9.figshare.32308077", "scheme": "doi"},
+    {"relation": "isSupplementTo", "identifier": "10.6084/m9.figshare.32308095", "scheme": "doi"},
+    {"relation": "isSupplementTo", "identifier": "10.6084/m9.figshare.32308119", "scheme": "doi"},
+    {"relation": "isSupplementTo", "identifier": "10.6084/m9.figshare.32394192", "scheme": "doi"}
+  ],
+  "notes": "OMNIX QUANTUM LTD is registered in England and Wales (71-75 Shelton Street, Covent Garden, London WC2H 9JQ). Harold Alberto Nunes Rodelo is Founder and Editor. Priority records: OMNIX-PAR-2026-BAR-001 · OMNIX-PAR-2026-CCS-001 · OMNIX-PAR-2026-CTCHC-001. RFC-ATF-6 is the sixth and final layer of the Agent Trust Fabric Open Standard series. Related ADRs: ADR-181 (BAR) · ADR-182 (CCS) · ADR-183 (CTCHC). New database tables: atf_behavioral_anchor_records · atf_constraint_conformance_signals · atf_coherence_hash_chains. 18 BEV invariants across 3 families: BAR (BEV-INV-001–004, 015–016), CCS (BEV-INV-005–009, 017), CTCHC (BEV-INV-010–014, 018). 106 total ATF invariants across 20 protocol families. ATF-BEV-Compliant is the sixth and highest compliance tier.",
   "_submission_checklist": {
     "doi_verification_required": true,
-    "note": "Before submitting, verify that RFC-ATF-4 and RFC-ATF-5 DOIs are in Published (not Draft) status on Zenodo. Do not include their DOIs in the references field above until verified.",
+    "note": "VERIFY before submitting: confirm RFC-ATF-4 (10.5281/zenodo.20368895) and RFC-ATF-5 (10.5281/zenodo.20391721) DOIs resolve to Published records on Zenodo. If either is still Draft, do not include in public posts until confirmed Published.",
     "files_to_upload": [
-      "docs/standards/RFC-ATF-6.md"
+      "docs/zenodo/rfc_atf_6/RFC-ATF-6.pdf",
+      "docs/standards/RFC-ATF-6.md",
+      "docs/zenodo/rfc_atf_6/conformance_vectors.json"
     ],
-    "communities_to_submit": [
-      "omnix-atf-standards"
-    ],
+    "communities_warning": "DO NOT include 'communities' field — causes HTTP 400 on Zenodo API. Submit to community manually via web UI after upload.",
     "submission_steps": [
-      "1. Go to zenodo.org → New Upload",
-      "2. Upload RFC-ATF-6.md (or PDF export)",
-      "3. Fill metadata from this file",
-      "4. Set Access: Open",
-      "5. Save and Publish (not just Save)",
-      "6. Copy DOI and update replit.md + RFC-ATF-6.md header",
-      "7. Update RFC-ATF-4 and RFC-ATF-5 references in RFC-ATF-6 once their DOIs are confirmed"
+      "1. Run: python docs/zenodo/rfc_atf_6/publish_to_zenodo.py",
+      "2. Copy DOI printed to console",
+      "3. Update replit.md RFC-ATF-6 row in DOI table",
+      "4. Update docs/standards/RFC-ATF-6.md header DOI field",
+      "5. Verify DOI resolves at zenodo.org before any public announcement",
+      "6. Submit to figshare separately for dual-repository redundancy"
     ]
   }
 }

@@ -1,0 +1,247 @@
+{
+  "schema_version": "1.0",
+  "rfc": "RFC-ATF-6",
+  "title": "Behavioral Execution Verification Protocol — BEV Conformance Vectors",
+  "spec_version": "1.6",
+  "compliance_designation": "ATF-BEV-Compliant",
+  "total_invariants": 18,
+  "total_atf_invariants": 106,
+  "invariant_families": {
+    "BAR": {
+      "count": 6,
+      "invariants": ["BEV-INV-001", "BEV-INV-002", "BEV-INV-003", "BEV-INV-004", "BEV-INV-015", "BEV-INV-016"]
+    },
+    "CCS": {
+      "count": 6,
+      "invariants": ["BEV-INV-005", "BEV-INV-006", "BEV-INV-007", "BEV-INV-008", "BEV-INV-009", "BEV-INV-017"]
+    },
+    "CTCHC": {
+      "count": 6,
+      "invariants": ["BEV-INV-010", "BEV-INV-011", "BEV-INV-012", "BEV-INV-013", "BEV-INV-014", "BEV-INV-018"]
+    }
+  },
+  "invariants": [
+    {
+      "id": "BEV-INV-001",
+      "family": "BAR",
+      "title": "Mandatory BAR Production",
+      "statement": "Every execution turn authorized by a Governing Receipt MUST produce a BAR before the agent output is delivered to the caller. There is no execution path that delivers output without a BAR.",
+      "formal": "For all sessions S and turns T_i where BEV_ENABLED: EXISTS(BAR b) WHERE b.session_id = S AND b.turn_index = i AND b.created_before_output_delivery",
+      "violation_consequence": "Session flagged BEV-INCOMPLETE. No subsequent turn permitted.",
+      "enforcement": "fail-closed",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-002",
+      "family": "BAR",
+      "title": "Content Hash Binding (Receipt + Output + Index)",
+      "statement": "The content_hash in every BAR MUST be computed as SHA3-256(output_hash || governing_receipt_id || str(turn_index)) where output_hash = SHA3-256(output_text.encode('utf-8')).",
+      "formal": "For all BARs b: b.content_hash = SHA3-256(b.output_hash || b.governing_receipt_id || str(b.turn_index))",
+      "violation_consequence": "BAR rejected as structurally invalid. Not accepted as attestation evidence.",
+      "enforcement": "structural",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-003",
+      "family": "BAR",
+      "title": "HALTED BAR Immediately Halts Session",
+      "statement": "A BAR whose bar_status is HALTED MUST cause the session to transition to SESSION_HALTED immediately. The session MUST NOT process any subsequent turn.",
+      "formal": "For all sessions S and turns T_i: BAR(T_i).bar_status = HALTED IMPLIES session_status(S) = STATUS_HALTED AND no T_{i+1} in S is permitted",
+      "violation_consequence": "Session continues past HALT — critical governance violation.",
+      "enforcement": "fail-closed",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-004",
+      "family": "BAR",
+      "title": "BAR PQC-Sealing and Offline Verifiability",
+      "statement": "Every BAR MUST be sealed with Dilithium-3 (ML-DSA-65, FIPS 204) over its content_hash before persistence. No UPDATE or DELETE permitted on atf_behavioral_anchor_records.",
+      "formal": "For all persisted BARs b: dilithium3.verify(b.content_hash.encode('utf-8'), b.pqc_signature, platform_public_key) = True AND append_only(atf_behavioral_anchor_records)",
+      "violation_consequence": "BAR not independently verifiable offline. PQC guarantee broken.",
+      "enforcement": "append-only + PQC",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-005",
+      "family": "CCS",
+      "title": "Mandatory CCS Computation per BAR",
+      "statement": "Every BAR produced in a BEV_ENABLED deployment MUST be followed by a CCS computation in the same atomic operation. BAR and CCS are produced as a single indivisible unit.",
+      "formal": "For all BARs b where BEV_ENABLED: EXISTS(CCS c) WHERE c.session_id = b.session_id AND c.bar_id = b.bar_id AND c.created_atomically_with(b)",
+      "violation_consequence": "BAR without CCS fails ATF-BEV-Compliant designation. AGVP input space incomplete.",
+      "enforcement": "atomic",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-006",
+      "family": "CCS",
+      "title": "CCS Conformance Score Bounds",
+      "statement": "The conformance_score in every CCS MUST be in [0.0, 1.0]. The drift_delta per turn = 1.0 - conformance_score. All four CCS components must produce non-negative scores.",
+      "formal": "For all CCS records c: 0.0 <= c.conformance_score <= 1.0 AND c.drift_delta = 1.0 - c.conformance_score AND c.cumulative_drift >= 0.0",
+      "violation_consequence": "Score inflation attack vector. CCS verdict derived from out-of-range value is invalid.",
+      "enforcement": "arithmetic bounds",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-007",
+      "family": "CCS",
+      "title": "CRITICAL Verdict Triggers AGVP Watchdog",
+      "statement": "A CCS record with verdict DRIFTING or worse MUST set watchdog_triggered = true and MUST trigger a Proactive Veto Receipt (PVR) issuance request to the AGVP watchdog.",
+      "formal": "For all CCS records c: c.verdict IN {DRIFTING, BREACH, VIOLATION} IMPLIES c.watchdog_triggered = True AND EXISTS(PVR p) WHERE p.trigger_ccs_id = c.ccs_id",
+      "violation_consequence": "Incomplete AGVP-CCS integration. ATF-BEV-Compliant certification blocked.",
+      "enforcement": "integration-required",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-008",
+      "family": "CCS",
+      "title": "Cumulative Drift Threshold Triggers HALT",
+      "statement": "When cumulative_drift for a session exceeds the configured drift threshold (default 0.35), the CCS verdict MUST be HALT and no subsequent turn is permitted. DRIFT_THRESHOLD MUST NOT exceed 0.50 in production.",
+      "formal": "For all sessions S and CCS records c in S: c.cumulative_drift > DRIFT_THRESHOLD IMPLIES c.verdict = HALT AND session_status(S) = STATUS_HALTED",
+      "violation_consequence": "Session continues with excessive cumulative drift — behavioral integrity failure.",
+      "enforcement": "fail-closed",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-009",
+      "family": "CCS",
+      "title": "CCS History Append-Only and Hash-Linked",
+      "statement": "CCS records form an append-only history. Each CCS record carries the chain_link_hash from CTCHC at computation time. No UPDATE or DELETE on atf_constraint_conformance_signals permitted.",
+      "formal": "For all sessions S: CCS records ordered by turn_index are strictly monotone AND each record's chain_link_hash matches CTCHC link at that turn_index",
+      "violation_consequence": "Retroactive conformance falsification possible. Forensic integrity broken.",
+      "enforcement": "append-only",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-010",
+      "family": "CTCHC",
+      "title": "Chain Initialized Before First BAR",
+      "statement": "The CTCHC genesis block MUST be created and persisted before the first BAR of the session. Genesis hash = SHA3-256(session_id || '||' || governing_receipt_id || '||' || 'OMNIX-CTCHC-GENESIS').",
+      "formal": "For all sessions S: EXISTS(CTCHC C) WHERE C.session_id = S AND C.initialized_before_BAR_0",
+      "violation_consequence": "Chain cannot be reconstructed. Session has no integrity anchor.",
+      "enforcement": "initialization-required",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-011",
+      "family": "CTCHC",
+      "title": "Chain Link Hash Construction",
+      "statement": "Every chain link MUST be: link[n] = SHA3-256(json.dumps({'prev': prev_hash, 'turn': output_hash_of_turn_n, 'receipt': governing_receipt_id}, sort_keys=True).encode()). For n=0, prev_hash = genesis_hash.",
+      "formal": "For all CTCHCs C and links L_n: L_n.chain_link_hash = SHA3-256(canonical({prev: L_{n-1}.hash, turn: output_hash_n, receipt: C.governing_receipt_id}))",
+      "violation_consequence": "Turn reordering, omission, and substitution undetectable. SIP invalid.",
+      "enforcement": "structural",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-012",
+      "family": "CTCHC",
+      "title": "Gaps in Turn Sequence Fail Verification",
+      "statement": "Chain verification MUST fail if any turn_index in [0, N-1] has no corresponding chain link. A sealed CTCHC claiming N turns but presenting N-1 links MUST be rejected as Session Integrity Proof.",
+      "formal": "For all CTCHCs C sealed with turn_count = N: {L.turn_index : L in C.links} = {0, 1, ..., N-1} OR verify(C) = FAIL",
+      "violation_consequence": "Partial session presented as complete. Forensic attribution incomplete.",
+      "enforcement": "completeness-check",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-013",
+      "family": "CTCHC",
+      "title": "Seal Covers Complete Chain",
+      "statement": "The CTCHC seal hash MUST be computed over the complete set of chain links from genesis to tip. seal_hash = SHA3-256(genesis_hash || all_link_hashes || current_tip_hash).",
+      "formal": "For all CTCHCs C with chain_sealed = True: C.seal_hash = SHA3-256(C.genesis_hash || all_link_hashes || C.current_tip_hash) AND covers all N links",
+      "violation_consequence": "Partial seal accepted as complete. Tail turns unprotected by PQC seal.",
+      "enforcement": "seal-completeness",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-014",
+      "family": "CTCHC",
+      "title": "Seal Is ML-DSA-65 Signed Before OEP Export",
+      "statement": "The CTCHC seal MUST be signed with Dilithium-3 (ML-DSA-65, FIPS 204) before the session proof may be exported or submitted as an OEP artifact. Unsigned seals MUST NOT be accepted in regulatory proceedings.",
+      "formal": "For all CTCHCs C exported as OEP: dilithium3.verify(C.seal_hash.encode('utf-8'), C.pqc_seal_signature, platform_public_key) = True",
+      "violation_consequence": "Session Integrity Proof not post-quantum secure. Regulatory submission blocked.",
+      "enforcement": "PQC-required",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-015",
+      "family": "BAR",
+      "title": "Empty Output Text Is a Violation",
+      "statement": "A BAR created with output_text = '' or whitespace-only output_text MUST have bar_status = VIOLATION. Silent outputs are not permissible under any constraint set.",
+      "formal": "For all BARs b: output_text(b).strip() = '' IMPLIES b.bar_status = VIOLATION",
+      "violation_consequence": "Governance gap where agent produces no observable output but session continues.",
+      "enforcement": "input-validation",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-016",
+      "family": "BAR",
+      "title": "BAR Identifier Format",
+      "statement": "Every BAR identifier MUST conform to 'BAR-{HEX16}' where HEX16 is exactly 16 uppercase hexadecimal characters. Non-conforming identifiers MUST NOT be accepted in ATF records, proof packages, or compliance reports.",
+      "formal": "For all BARs b: MATCHES(b.bar_id, r'^BAR-[0-9A-F]{16}$')",
+      "violation_consequence": "BAR not recognizable as canonical ATF artifact. Interoperability broken.",
+      "enforcement": "format-validation",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-017",
+      "family": "CCS",
+      "title": "Drift Accumulator Isolated per Session",
+      "statement": "The cumulative_drift accumulator is independent per session_id. On process restart, drift MUST be reloaded from last persisted CCS record before computing next CCS.",
+      "formal": "For all sessions S_1 != S_2: cumulative_drift(S_1, t) is independent of cumulative_drift(S_2, t) for all times t",
+      "violation_consequence": "Cross-session drift contamination. HALT triggered by unrelated session's drift.",
+      "enforcement": "isolation-required",
+      "testable": true
+    },
+    {
+      "id": "BEV-INV-018",
+      "family": "CTCHC",
+      "title": "Every Link's Receipt ID Must Match Chain Receipt",
+      "statement": "Every chain link MUST carry the same governing_receipt_id as the CTCHC genesis. A link with a different governing_receipt_id is structurally invalid.",
+      "formal": "For all CTCHCs C and links L in C: L.governing_receipt_id = C.governing_receipt_id",
+      "violation_consequence": "Cross-session link splicing undetectable without chain recomputation.",
+      "enforcement": "receipt-binding",
+      "testable": true
+    }
+  ],
+  "ccs_thresholds": {
+    "CONFORMANT": {"min": 90.0, "max": 100.0, "action": "none"},
+    "DRIFTING":   {"min": 70.0, "max": 89.9, "action": "AGVP_PVR_MONITORING"},
+    "BREACH":     {"min": 50.0, "max": 69.9, "action": "AGVP_PVR_WARNING"},
+    "VIOLATION":  {"min": 0.0,  "max": 49.9, "action": "HALT_PROPAGATION"},
+    "NO_DATA":    {"value": -1.0,             "action": "none"}
+  },
+  "ccs_components": {
+    "OBS": {"name": "Output Boundary Score", "max_points": 40, "formula": "max(0, 40 - 10 * boundary_violation_count)"},
+    "CSS": {"name": "Constraint Satisfaction Score", "max_points": 30, "formula": "max(0, 30 - 8 * constraint_failure_count)"},
+    "SDS": {"name": "Semantic Drift Score", "max_points": 20, "formula": "max(0, 20 * (1 - drift_magnitude))"},
+    "AAS": {"name": "Authority Alignment Score", "max_points": 10, "formula": "10 if authority_scope_satisfied else 0"}
+  },
+  "drift_threshold_default": 0.35,
+  "drift_threshold_production_max": 0.50,
+  "compliance_hierarchy": [
+    {"tier": 1, "designation": "ATF-COMPLIANT-L1/L2/L3", "rfcs": ["RFC-ATF-1"], "invariants": 6},
+    {"tier": 2, "designation": "ATF-RGC-Compliant",      "rfcs": ["RFC-ATF-1", "RFC-ATF-2"], "invariants": 14},
+    {"tier": 3, "designation": "ATF-FEI-Compliant",      "rfcs": ["RFC-ATF-1", "RFC-ATF-2", "RFC-ATF-3"], "invariants": 40},
+    {"tier": 4, "designation": "ATF-PGL-Compliant",      "rfcs": ["RFC-ATF-1", "RFC-ATF-2", "RFC-ATF-3", "RFC-ATF-4"], "invariants": 70},
+    {"tier": 5, "designation": "ATF-CGL-Compliant",      "rfcs": ["RFC-ATF-1", "RFC-ATF-2", "RFC-ATF-3", "RFC-ATF-4", "RFC-ATF-5"], "invariants": 88},
+    {"tier": 6, "designation": "ATF-BEV-Compliant",      "rfcs": ["RFC-ATF-1", "RFC-ATF-2", "RFC-ATF-3", "RFC-ATF-4", "RFC-ATF-5", "RFC-ATF-6"], "invariants": 106}
+  ],
+  "db_tables": [
+    {"table": "atf_behavioral_anchor_records", "adr": "ADR-181", "component": "BAR"},
+    {"table": "atf_constraint_conformance_signals", "adr": "ADR-182", "component": "CCS"},
+    {"table": "atf_coherence_hash_chains", "adr": "ADR-183", "component": "CTCHC"}
+  ],
+  "formal_verification": {
+    "suite": "OMNIX-FVS-1.0 (BEV extension)",
+    "proof_targets": [
+      {"id": "BEV-FVS-001", "target": "BAR binding completeness", "method": "Z3 boolean implication"},
+      {"id": "BEV-FVS-002", "target": "Output hash structural uniqueness", "method": "SHA-256 collision resistance"},
+      {"id": "BEV-FVS-003", "target": "CCS conformance score bounds [0.0, 1.0]", "method": "Z3 bounded real arithmetic"},
+      {"id": "BEV-FVS-004", "target": "CCS component non-negativity", "method": "Z3 max(0, ...) semantics"},
+      {"id": "BEV-FVS-005", "target": "CTCHC chain monotonicity", "method": "SHA-256 structural induction"}
+    ],
+    "run_command": "python omnix_core/formal_verification/run_bev_proofs.py"
+  },
+  "generated_at": "2026-05-26",
+  "author": "Harold Alberto Nunes Rodelo",
+  "organization": "OMNIX QUANTUM LTD"
+}
