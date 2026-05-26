@@ -3,12 +3,13 @@
 **Status:** Accepted (rev.2 — 2026-05-26)
 **Author:** Harold Nunes
 **Date:** 2026-05-25
-**Related:** ADR-190 (SAL — Sovereign AI Layer), ADR-184 (OGR), ADR-181/182/183 (BEV), ADR-194 (MIVP)
+**Related:** ADR-190 (SAL — Sovereign AI Layer), ADR-184 (OGR), ADR-181/182/183 (BEV), ADR-194 (MIVP), ADR-195 (Gate C Deployment Protocol)
 **RFC:** RFC-ATF-6 (Behavioral Execution Verification — corpus foundation)
+**Product docs:** [OGI_SPEC.md](../products/OGI_SPEC.md) · [OGI_ONEPAGER.md](../products/OGI_ONEPAGER.md)
 
 **Revision history:**
 - rev.1 (2026-05-25): Initial ADR — OGI-INV-001–010, 12 corpus categories, 5 evaluation gates
-- rev.2 (2026-05-26): B-001 resolved (Gate 3b HALT recall), B-002 resolved (inter-annotator protocol), F-C-004 resolved (adversarial split 60/20/20), F-C-005 resolved (MIVP 13th corpus category), F-C-007 resolved (canonical rejected_samples path), OGI-006b + OGI-006c + Gate 6 (MIVP) added, invariant counts updated to 125 / 13 families + OGI
+- rev.2 (2026-05-26): B-001 resolved (Gate 3b HALT recall), B-002 resolved (inter-annotator protocol), F-C-004 resolved (adversarial split 60/20/20), F-C-005 resolved (MIVP 13th corpus category), F-C-007 resolved (canonical rejected_samples path), OGI-006b + OGI-006c + Gate 6 (MIVP) added, invariant counts updated to 125 / 24 families. Gate C formalized in ADR-195.
 
 ---
 

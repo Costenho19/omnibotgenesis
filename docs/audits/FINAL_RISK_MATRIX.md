@@ -67,15 +67,46 @@
 - [x] B-001 resolved (Gate 3b `halt_class_recall: 0.80` · HALT-001–005 eval suite · ADR-193 OGI-007)
 - [x] B-002 resolved (ADR-193 OGI-006c dual-annotation · Cohen's κ ≥ 0.80 · `training_config.yaml`)
 
-### Gate C — OGI Model Deployment Ready
-- [x] Gate B passed ✅
-- [ ] All 7 OGI-007 evaluation gates passing (Gates 1–6 + Gate 3b)
-- [ ] Corpus pipeline executed: `python prepare_corpus.py` → train/val/test JSONL generated
-- [ ] Ontology generated: `python generate_ontology.py` → `output/ontology.json`
-- [ ] Together.ai fine-tune job submitted and completed
-- [ ] `eval_suite_generator.py` run against model outputs — all gate thresholds met
-- [ ] Inter-annotator agreement completed for INV + SCN + MIVP test sets (κ ≥ 0.80)
-- [ ] `eval_results.json` populated (OGI-INV-008)
+### Gate C — OGI Model Deployment Ready — ⏳ PENDING (Gate B cleared 2026-05-26)
+*Formal protocol: ADR-195 — OGI Gate C Deployment Protocol*
+
+**Phase 1 — Corpus generation:**
+- [x] Gate B cleared — corpus pipeline ready to execute ✅
+- [ ] `python prepare_corpus.py` executed → `output/train.jsonl` + `val.jsonl` + `test.jsonl` + `manifest.json`
+- [ ] MIVP category ≥ 150 examples confirmed (OGI-INV-010 / GC-INV-002)
+- [ ] `rejected_samples.jsonl` present at canonical path (F-C-007)
+
+**Phase 2 — Ontology generation:**
+- [ ] `python generate_ontology.py` executed → `output/ontology.json`
+- [ ] `ontology.json` contains ≥ 125 invariant codes + ≥ 60 canonical terms + ≥ 194 ADR IDs
+
+**Phase 3 — Fine-tuning:**
+- [ ] Corpus uploaded to Together.ai
+- [ ] Fine-tune job submitted (Llama-3.1-8B MVP or Llama-3.3-70B production)
+- [ ] Job status: `completed` — no divergence in training/val loss
+- [ ] `together_job_id` recorded in `manifest.json` (GC-INV-007)
+
+**Phase 4–5 — Evaluation (7 gates):**
+- [ ] `eval_suite_generator.py` executed → `output/eval_suite.jsonl`
+- [ ] Gate 1: `factual_accuracy` ≥ 0.90
+- [ ] Gate 2: `invariant_citation_f1` ≥ 0.92 *(blocked until κ ≥ 0.80 confirmed)*
+- [ ] Gate 3: `scenario_verdict_acc` ≥ 0.85
+- [ ] Gate 3b: `halt_class_recall` ≥ 0.80
+- [ ] Gate 4: `hallucination_rate` ≤ 0.03 *(requires `ontology.json`)*
+- [ ] Gate 5: `refusal_correctness` ≥ 0.95 AND `false_refusal_rate` ≤ 0.05
+- [ ] Gate 6: `mivp_scenario_acc` ≥ 0.80 *(requires MIVP corpus ≥ 150 examples)*
+- [ ] `eval_results.json` populated with all gate scores (OGI-INV-008 / GC-INV-006)
+
+**Phase 6 — Inter-annotator agreement:**
+- [ ] Dual annotation complete for INV + SCN + MIVP test sets
+- [ ] Cohen's κ ≥ 0.80 for all three categories
+- [ ] 10% Type 3 hallucination spot-check complete
+- [ ] κ scores recorded in `eval_results.json["annotation"]` (GC-INV-005)
+
+**Phase 7 — Deployment:**
+- [ ] Railway env vars set: `OMNIX_OGI_MODEL_ENDPOINT` + `OMNIX_OGI_MODEL_NAME` + `OMNIX_AI_SOVEREIGN_MODE=true`
+- [ ] Smoke test passed: OGI response contains OMNIX-specific vocabulary (GC-INV-009)
+- [ ] Rollback procedure documented in `eval_results.json["rollback_instruction"]` (GC-INV-008)
 
 ### Gate D — RFC-ATF-6 External Publication Ready — ✅ CLEARED (2026-05-26 rev.2)
 - [x] Gate A passed ✅

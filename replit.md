@@ -143,6 +143,26 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
 
 ---
 
+## OMNIX Governance Intelligence (OGI) — ADR-193 + ADR-195
+
+**El primer modelo de IA entrenado exclusivamente en un protocolo de gobernanza formal.**
+OGI = Llama-3.x fine-tuned sobre 194 ADRs + 6 RFCs + 125 invariantes + 13 categorías de corpus.
+Slot en el SAL (ADR-190): **OGI → Groq → Mistral → Gemini → OpenAI → Anthropic**
+
+| Artefacto | Archivo |
+|---|---|
+| ADR-193 (corpus architecture) | `docs/adr/ADR-193-ogi-fine-tuning-pipeline.md` |
+| ADR-195 (Gate C deployment protocol) | `docs/adr/ADR-195-ogi-gate-c-deployment-protocol.md` |
+| Product Spec | `docs/products/OGI_SPEC.md` |
+| One-Pager ejecutivo | `docs/products/OGI_ONEPAGER.md` |
+
+**Gate B:** ✅ CLEARED (2026-05-26) — 11 findings resueltos  
+**Gate C:** ⏳ PENDING — corpus generation → Together.ai fine-tune → 7 evaluation gates → Railway deploy  
+**Corpus scripts:** `scripts/fine_tuning/` — `prepare_corpus.py` · `generate_ontology.py` · `eval_suite_generator.py`  
+**7 evaluation gates:** factual accuracy ≥ 90% · citation F1 ≥ 0.92 · verdict acc ≥ 85% · HALT recall ≥ 80% · hallucination ≤ 3% · refusal ≥ 95% · MIVP acc ≥ 80%
+
+---
+
 ## Proof of Governance Registry (PoGR) — ADR-186
 
 **Primera capa de confianza pública del mundo para gobernanza de decisiones de IA.**  
