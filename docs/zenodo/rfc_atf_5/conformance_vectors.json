@@ -1,0 +1,1356 @@
+{
+  "_metadata": {
+    "specification": "RFC-ATF-5: Agent Trust Fabric — Cognitive Governance Layer",
+    "version": "1.0.0",
+    "suite": "OMNIX-CVS-1.1",
+    "status": "READY FOR SUBMISSION",
+    "generated": "2026-05-26",
+    "author": "Harold Nunes — OMNIX QUANTUM LTD",
+    "total_vectors": 100,
+    "modules": {
+      "CGE_FORK_PRODUCTION":     20,
+      "CGE_HASH_INTEGRITY":      10,
+      "CGE_VARIATION_BOUNDS":    5,
+      "GUGT_UGI_ASSESSMENT":     15,
+      "GUGT_CONFORMANCE_LEVELS": 10,
+      "TGB_TCS_EMBEDDING":       15,
+      "TGB_RAR_PROJECTION":      13,
+      "CROSS_MODULE":            12
+    },
+    "invariants_covered": [
+      "CGE-INV-001", "CGE-INV-002", "CGE-INV-003", "CGE-INV-004",
+      "CGE-INV-005", "CGE-INV-006", "CGE-INV-007",
+      "GUGT-INV-001", "GUGT-INV-002", "GUGT-INV-003",
+      "GUGT-INV-004", "GUGT-INV-005", "GUGT-INV-006",
+      "TGB-INV-001", "TGB-INV-002", "TGB-INV-003",
+      "TGB-INV-004", "TGB-INV-005"
+    ]
+  },
+
+  "vectors": [
+
+    {
+      "vector_id": "CGE-FORK-001",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-001",
+      "description": "CGE enabled — evaluation produces exactly 3 CFRs (default fork count)",
+      "inputs": {
+        "cge_enabled": true,
+        "cge_fork_count": 3,
+        "primary_outcome": "NOMINAL",
+        "ces_score": 82.5
+      },
+      "expected_result": "CAT_PRODUCED",
+      "expected_cfr_count": 3,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-002",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-001",
+      "description": "CGE enabled — minimum fork count 1",
+      "inputs": {
+        "cge_enabled": true,
+        "cge_fork_count": 1,
+        "primary_outcome": "MONITORING",
+        "ces_score": 61.0
+      },
+      "expected_result": "CAT_PRODUCED",
+      "expected_cfr_count": 1,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-003",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-001",
+      "description": "CGE enabled — maximum fork count 7",
+      "inputs": {
+        "cge_enabled": true,
+        "cge_fork_count": 7,
+        "primary_outcome": "NOMINAL",
+        "ces_score": 91.0
+      },
+      "expected_result": "CAT_PRODUCED",
+      "expected_cfr_count": 7,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-004",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-001",
+      "description": "CGE disabled — no CAT produced",
+      "inputs": {
+        "cge_enabled": false,
+        "cge_fork_count": 3,
+        "primary_outcome": "NOMINAL",
+        "ces_score": 85.0
+      },
+      "expected_result": "NO_CAT",
+      "expected_cfr_count": 0,
+      "expected_invariant_holds": true,
+      "_note": "INV-001 only applies when cge_enabled=true"
+    },
+    {
+      "vector_id": "CGE-FORK-005",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-002",
+      "description": "Primary record IDENTICAL whether CGE enabled or disabled",
+      "inputs": {
+        "cge_enabled_case_a": true,
+        "cge_enabled_case_b": false,
+        "primary_ces_score": 78.3,
+        "primary_outcome": "MONITORING"
+      },
+      "expected_result": "PRIMARY_RECORDS_IDENTICAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-006",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-002",
+      "description": "CGE computation begins AFTER primary record persisted",
+      "inputs": {
+        "primary_persist_timestamp_ns": 1716750000000000000,
+        "cge_start_timestamp_ns":       1716750000001000000
+      },
+      "expected_result": "CGE_AFTER_PRIMARY",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-007",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-002",
+      "description": "VIOLATION: CGE modifies primary outcome — structural defect",
+      "inputs": {
+        "cge_modifies_primary": true
+      },
+      "expected_result": "REJECTED_STRUCTURAL_DEFECT",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-FORK-008",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-003",
+      "description": "CFR must carry valid ML-DSA-65 PQC signature",
+      "inputs": {
+        "cfr_pqc_algorithm": "ML-DSA-65",
+        "cfr_pqc_signature_present": true,
+        "cfr_pqc_signature_valid": true
+      },
+      "expected_result": "CFR_ACCEPTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-009",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-003",
+      "description": "VIOLATION: CFR with missing signature rejected from CAT",
+      "inputs": {
+        "cfr_pqc_signature_present": false
+      },
+      "expected_result": "CFR_REJECTED_UNSIGNED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-FORK-010",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-003",
+      "description": "VIOLATION: CFR with invalid signature rejected from CAT",
+      "inputs": {
+        "cfr_pqc_signature_present": true,
+        "cfr_pqc_signature_valid": false
+      },
+      "expected_result": "CFR_REJECTED_INVALID_SIG",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-FORK-011",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-006",
+      "description": "Append-only: INSERT on atf_counterfactual_forks succeeds",
+      "inputs": {
+        "operation": "INSERT",
+        "table": "atf_counterfactual_forks"
+      },
+      "expected_result": "OPERATION_PERMITTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-012",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-006",
+      "description": "VIOLATION: UPDATE on atf_counterfactual_forks prohibited",
+      "inputs": {
+        "operation": "UPDATE",
+        "table": "atf_counterfactual_forks"
+      },
+      "expected_result": "OPERATION_REJECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-FORK-013",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-006",
+      "description": "VIOLATION: DELETE on atf_counterfactual_tokens prohibited",
+      "inputs": {
+        "operation": "DELETE",
+        "table": "atf_counterfactual_tokens"
+      },
+      "expected_result": "OPERATION_REJECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-FORK-014",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-007",
+      "description": "Offline verification: CAT with 3 CFRs verifies without platform access",
+      "inputs": {
+        "cat_root_hash_matches_cfrs": true,
+        "all_cfr_signatures_valid": true,
+        "vv_determinism_verified": true,
+        "primary_record_available": true,
+        "platform_access_required": false
+      },
+      "expected_result": "VERIFICATION_PASS",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-015",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-007",
+      "description": "VIOLATION: Offline verification fails when cat_root_hash tampered",
+      "inputs": {
+        "cat_root_hash_matches_cfrs": false,
+        "tampered_field": "cat_root_hash"
+      },
+      "expected_result": "VERIFICATION_FAIL_TAMPER",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-FORK-016",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-001",
+      "description": "Partial CAT: 1 of 3 CFRs fails computation — partial CAT still satisfies INV-001",
+      "inputs": {
+        "cge_fork_count": 3,
+        "cfr_compute_success": 2,
+        "cfr_compute_fail": 1
+      },
+      "expected_result": "PARTIAL_CAT_ACCEPTED",
+      "expected_cfr_count": 2,
+      "expected_invariant_holds": true,
+      "_note": "cfr_count >= 1 satisfies INV-001. Failed CFR logged as CGE_COMPUTE_FAIL"
+    },
+    {
+      "vector_id": "CGE-FORK-017",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-001",
+      "description": "VIOLATION: All CFRs fail — no CAT produced, INV-001 violated",
+      "inputs": {
+        "cge_fork_count": 3,
+        "cfr_compute_success": 0,
+        "cfr_compute_fail": 3
+      },
+      "expected_result": "INV_001_VIOLATION_LOGGED",
+      "expected_cfr_count": 0,
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-FORK-018",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-001",
+      "description": "HALT primary outcome — CGE still runs (async after HALT record persisted)",
+      "inputs": {
+        "primary_outcome": "HALT",
+        "cge_enabled": true,
+        "cge_fork_count": 3
+      },
+      "expected_result": "CAT_PRODUCED",
+      "expected_cfr_count": 3,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-019",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-002",
+      "description": "HALT outcome unchanged by CGE — CGE-INV-002 holds for HALT",
+      "inputs": {
+        "primary_outcome": "HALT",
+        "cge_enabled_case_a": true,
+        "cge_enabled_case_b": false
+      },
+      "expected_result": "PRIMARY_RECORDS_IDENTICAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-FORK-020",
+      "module": "CGE_FORK_PRODUCTION",
+      "invariant": "CGE-INV-004",
+      "description": "CAT root hash correct: sha256(sorted(cfr_hashes))",
+      "inputs": {
+        "cfr_hashes": [
+          "aabbcc001122334455667788990011aabbcc001122334455667788990011aabb",
+          "112233445566778899001122334455aabbcc001122334455667788990011aabb",
+          "998877665544332211009988776655aabbcc001122334455667788990011aabb"
+        ],
+        "cat_root_hash": "b3e4f2a1c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2"
+      },
+      "expected_result": "ROOT_HASH_VERIFIED",
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "CGE-HASH-001",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-004",
+      "description": "CAT seal covers cat_root_hash — modifying root_hash invalidates seal",
+      "inputs": {
+        "original_root_hash": "aabbcc...",
+        "tampered_root_hash": "aabbcd...",
+        "cat_seal_valid_for_original": true
+      },
+      "expected_result": "TAMPER_DETECTED_SEAL_INVALID",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-HASH-002",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-004",
+      "description": "Adding a CFR to an existing CAT invalidates cat_root_hash",
+      "inputs": {
+        "original_cfr_count": 3,
+        "injected_cfr_count": 1,
+        "recomputed_root_matches_original": false
+      },
+      "expected_result": "TAMPER_DETECTED_ROOT_MISMATCH",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-HASH-003",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-003",
+      "description": "posture_state_hash_cf computed over committed fields only",
+      "inputs": {
+        "committed_fields_included": ["cfr_id", "primary_receipt_id", "evaluation_id", "variation_vector", "counterfactual_ces_score", "counterfactual_outcome", "issued_at"],
+        "non_committed_fields": ["content_hash_cf", "pqc_signature"]
+      },
+      "expected_result": "HASH_COMPUTATION_CORRECT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-HASH-004",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-004",
+      "description": "content_hash_cf excludes itself from hash computation",
+      "inputs": {
+        "field_excluded_from_hash": "content_hash_cf",
+        "field_included": ["cfr_id", "cat_id", "primary_receipt_id", "variation_vector", "counterfactual_outcome"]
+      },
+      "expected_result": "CIRCULAR_REF_AVOIDED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-HASH-005",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-007",
+      "description": "Deterministic VV seeding: same evaluation_id + receipt_id always produces same VVs",
+      "inputs": {
+        "evaluation_id": "CGE-EVAL-AABBCCDDEEFF0011",
+        "primary_receipt_id": "ATFDR-1122334455667788",
+        "run_1_vv_hash": "deadbeef...",
+        "run_2_vv_hash": "deadbeef..."
+      },
+      "expected_result": "VV_DETERMINISTIC",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-HASH-006",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-007",
+      "description": "Fabricated VV rejected: VV not deterministically derivable from evaluation_id",
+      "inputs": {
+        "evaluation_id": "CGE-EVAL-AABBCCDDEEFF0011",
+        "primary_receipt_id": "ATFDR-1122334455667788",
+        "submitted_vv_hash": "c0ffee00...",
+        "expected_vv_hash": "deadbeef..."
+      },
+      "expected_result": "FABRICATION_DETECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-HASH-007",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-004",
+      "description": "fragility_score = divergence_count / cfr_count",
+      "inputs": {
+        "cfr_count": 3,
+        "divergence_count": 1
+      },
+      "expected_fragility_score": 0.3333,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-HASH-008",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-004",
+      "description": "fragility_score = 0.0 when no counterfactual diverges",
+      "inputs": {
+        "cfr_count": 3,
+        "divergence_count": 0,
+        "all_outcomes": "NOMINAL"
+      },
+      "expected_fragility_score": 0.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-HASH-009",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-004",
+      "description": "fragility_score = 1.0 when all counterfactuals diverge",
+      "inputs": {
+        "cfr_count": 3,
+        "divergence_count": 3
+      },
+      "expected_fragility_score": 1.0,
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-HASH-010",
+      "module": "CGE_HASH_INTEGRITY",
+      "invariant": "CGE-INV-004",
+      "description": "VIOLATION: fragility_score > 1.0 — impossible, indicates computation error",
+      "inputs": {
+        "cfr_count": 3,
+        "divergence_count": 4
+      },
+      "expected_result": "COMPUTATION_ERROR_REJECTED",
+      "expected_invariant_holds": false
+    },
+
+    {
+      "vector_id": "CGE-VAR-001",
+      "module": "CGE_VARIATION_BOUNDS",
+      "invariant": "CGE-INV-005",
+      "description": "VV delta within 40% bound — accepted",
+      "inputs": {
+        "primary_ces_score": 80.0,
+        "vv_ces_delta_pct": -0.20,
+        "cge_max_variation_pct": 0.40
+      },
+      "expected_result": "VV_ACCEPTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-VAR-002",
+      "module": "CGE_VARIATION_BOUNDS",
+      "invariant": "CGE-INV-005",
+      "description": "VV delta at exact 40% bound — accepted",
+      "inputs": {
+        "primary_ces_score": 80.0,
+        "vv_ces_delta_pct": 0.40,
+        "cge_max_variation_pct": 0.40
+      },
+      "expected_result": "VV_ACCEPTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CGE-VAR-003",
+      "module": "CGE_VARIATION_BOUNDS",
+      "invariant": "CGE-INV-005",
+      "description": "VIOLATION: VV delta exceeds 40% bound — rejected",
+      "inputs": {
+        "primary_ces_score": 80.0,
+        "vv_ces_delta_pct": 0.41,
+        "cge_max_variation_pct": 0.40
+      },
+      "expected_result": "VV_REJECTED_CGE_VV_BOUND_VIOLATION",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-VAR-004",
+      "module": "CGE_VARIATION_BOUNDS",
+      "invariant": "CGE-INV-005",
+      "description": "VIOLATION: negative delta exceeds 40% bound — rejected",
+      "inputs": {
+        "primary_ces_score": 80.0,
+        "vv_ces_delta_pct": -0.45,
+        "cge_max_variation_pct": 0.40
+      },
+      "expected_result": "VV_REJECTED_CGE_VV_BOUND_VIOLATION",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CGE-VAR-005",
+      "module": "CGE_VARIATION_BOUNDS",
+      "invariant": "CGE-INV-005",
+      "description": "Null CFR with REJECTED flag when VV violates bound",
+      "inputs": {
+        "vv_delta_pct": 0.50,
+        "expected_cfr_flag": "REJECTED"
+      },
+      "expected_result": "NULL_CFR_FLAGGED_REJECTED",
+      "expected_invariant_holds": true,
+      "_note": "The null CFR does NOT count toward cfr_count for INV-001"
+    },
+
+    {
+      "vector_id": "GUGT-UGI-001",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-001",
+      "description": "UIR must assess all 6 UGIs — GUGT_COMPLIANT requires all PASS",
+      "inputs": {
+        "ugi_results_count": 6,
+        "all_status_pass": true
+      },
+      "expected_overall_status": "GUGT_COMPLIANT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-UGI-002",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-001",
+      "description": "VIOLATION: UIR with only 5 UGI assessments — structurally invalid",
+      "inputs": {
+        "ugi_results_count": 5,
+        "missing_ugi": "UGI-006"
+      },
+      "expected_result": "UIR_STRUCTURALLY_INVALID",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "GUGT-UGI-003",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-001",
+      "description": "GUGT_COMPLIANT cannot be assigned if any UGI is FAIL",
+      "inputs": {
+        "ugi_001": "PASS",
+        "ugi_002": "PASS",
+        "ugi_003": "FAIL",
+        "ugi_004": "PASS",
+        "ugi_005": "PASS",
+        "ugi_006": "PASS"
+      },
+      "expected_overall_status": "GUGT_NON_COMPLIANT",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "GUGT-UGI-004",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-001",
+      "description": "GUGT_PARTIAL when all PARTIAL, no FAIL",
+      "inputs": {
+        "ugi_001": "PARTIAL",
+        "ugi_002": "PASS",
+        "ugi_003": "PASS",
+        "ugi_004": "PASS",
+        "ugi_005": "PASS",
+        "ugi_006": "PASS"
+      },
+      "expected_overall_status": "GUGT_PARTIAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-UGI-005",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-002",
+      "description": "Framework clause specificity required: EU_AI_ACT_ART14 valid",
+      "inputs": {
+        "framework_coverage_entry": "EU_AI_ACT_ART14",
+        "pattern_match": "{FRAMEWORK}_{CLAUSE}"
+      },
+      "expected_result": "CLAUSE_ACCEPTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-UGI-006",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-002",
+      "description": "VIOLATION: Generic reference 'EU AI Act' rejected (no article)",
+      "inputs": {
+        "framework_coverage_entry": "EU AI Act"
+      },
+      "expected_result": "CLAUSE_REJECTED_NOT_SPECIFIC",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "GUGT-UGI-007",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-003",
+      "description": "UIR seal must be ML-DSA-65 over content_hash_uir",
+      "inputs": {
+        "uir_seal_algorithm": "ML-DSA-65",
+        "uir_seal_valid": true,
+        "seal_covers_field": "content_hash_uir"
+      },
+      "expected_result": "UIR_SEAL_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-UGI-008",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-003",
+      "description": "VIOLATION: Unsealed UIR must not be persisted or distributed",
+      "inputs": {
+        "uir_seal_present": false
+      },
+      "expected_result": "UIR_REJECTED_UNSEALED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "GUGT-UGI-009",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-004",
+      "description": "UIR must explicitly declare agent_type_coverage",
+      "inputs": {
+        "agent_type_coverage": ["LLM", "FINANCIAL"],
+        "explicitly_declared": true
+      },
+      "expected_result": "COVERAGE_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-UGI-010",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-004",
+      "description": "VIOLATION: UIR claiming LLM coverage without 'LLM' in agent_type_coverage",
+      "inputs": {
+        "agent_type_coverage": ["FINANCIAL"],
+        "claimed_coverage": ["LLM", "FINANCIAL"]
+      },
+      "expected_result": "COVERAGE_MISMATCH_REJECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "GUGT-UGI-011",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-005",
+      "description": "GUGT_COMPLIANT does NOT relax any existing ATF invariant",
+      "inputs": {
+        "gugt_status": "GUGT_COMPLIANT",
+        "atf_inv_001_still_enforced": true,
+        "rgc_inv_003_still_enforced": true
+      },
+      "expected_result": "ATF_INVARIANTS_UNCHANGED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-UGI-012",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-005",
+      "description": "VIOLATION: GUGT assessment attempts to waive ATF-INV-001",
+      "inputs": {
+        "waived_invariant": "ATF-INV-001",
+        "waiver_source": "GUGT_assessment"
+      },
+      "expected_result": "WAIVER_REJECTED_INV005_VIOLATION",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "GUGT-UGI-013",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-002",
+      "description": "NIST_GOVERN_1.1 is a valid specific clause reference",
+      "inputs": {
+        "framework_coverage_entry": "NIST_GOVERN_1.1"
+      },
+      "expected_result": "CLAUSE_ACCEPTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-UGI-014",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-002",
+      "description": "GCC_DIFC_ART8 is a valid specific clause reference",
+      "inputs": {
+        "framework_coverage_entry": "GCC_DIFC_ART8"
+      },
+      "expected_result": "CLAUSE_ACCEPTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-UGI-015",
+      "module": "GUGT_UGI_ASSESSMENT",
+      "invariant": "GUGT-INV-001",
+      "description": "ATF-compliant system satisfies all 6 UGIs by construction",
+      "inputs": {
+        "system_compliance": "ATF-PGL-Compliant",
+        "ugi_001_satisfied_by": "ATF-INV-002 + ATF-INV-006",
+        "ugi_002_satisfied_by": "OEP-INV-001-006",
+        "ugi_003_satisfied_by": "RGC-INV-003 + RGC-INV-005",
+        "ugi_004_satisfied_by": "ATF-INV-003",
+        "ugi_005_satisfied_by": "AMG (ADR-144)",
+        "ugi_006_satisfied_by": "FEA-INV-001 + OEP-INV-001"
+      },
+      "expected_overall_status": "GUGT_COMPLIANT",
+      "expected_conformance_level": "GUGT-L3+ATF",
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "GUGT-CONF-001",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-006",
+      "description": "GUGT-L1 requires UGI-001 + UGI-002 PASS",
+      "inputs": {
+        "ugi_001": "PASS",
+        "ugi_002": "PASS",
+        "ugi_003": "FAIL",
+        "ugi_004": "FAIL",
+        "ugi_005": "FAIL",
+        "ugi_006": "FAIL"
+      },
+      "expected_conformance_level": "GUGT-L1",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-CONF-002",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-006",
+      "description": "GUGT-L2 requires GUGT-L1 + UGI-003 + UGI-004",
+      "inputs": {
+        "ugi_001": "PASS",
+        "ugi_002": "PASS",
+        "ugi_003": "PASS",
+        "ugi_004": "PASS",
+        "ugi_005": "FAIL",
+        "ugi_006": "FAIL"
+      },
+      "expected_conformance_level": "GUGT-L2",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-CONF-003",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-006",
+      "description": "GUGT-L3 requires all 6 UGIs PASS",
+      "inputs": {
+        "ugi_001": "PASS",
+        "ugi_002": "PASS",
+        "ugi_003": "PASS",
+        "ugi_004": "PASS",
+        "ugi_005": "PASS",
+        "ugi_006": "PASS",
+        "subject_protocol": "CUSTOM"
+      },
+      "expected_conformance_level": "GUGT-L3",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-CONF-004",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-006",
+      "description": "GUGT-L3+ATF requires GUGT-L3 + full ATF stack compliance",
+      "inputs": {
+        "all_ugis_pass": true,
+        "subject_protocol": "ATF",
+        "atf_pgl_compliant": true,
+        "atf_spec_version": "1.5"
+      },
+      "expected_conformance_level": "GUGT-L3+ATF",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-CONF-005",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-006",
+      "description": "VIOLATION: L3 claimed when UGI-003 fails — monotonicity violation",
+      "inputs": {
+        "ugi_001": "PASS",
+        "ugi_002": "PASS",
+        "ugi_003": "FAIL",
+        "ugi_004": "PASS",
+        "ugi_005": "PASS",
+        "ugi_006": "PASS",
+        "claimed_level": "GUGT-L3"
+      },
+      "expected_result": "LEVEL_CLAIM_REJECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "GUGT-CONF-006",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-006",
+      "description": "VIOLATION: L3+ATF claimed without ATF-PGL-Compliant status",
+      "inputs": {
+        "all_ugis_pass": true,
+        "subject_protocol": "ATF",
+        "atf_pgl_compliant": false
+      },
+      "expected_result": "L3_ATF_CLAIM_REJECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "GUGT-CONF-007",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-006",
+      "description": "Strictly hierarchical: L3+ATF implies L3 implies L2 implies L1",
+      "inputs": {
+        "claimed_level": "GUGT-L3+ATF",
+        "l1_satisfied": true,
+        "l2_satisfied": true,
+        "l3_satisfied": true
+      },
+      "expected_result": "HIERARCHY_VERIFIED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-CONF-008",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-003",
+      "description": "UIR for non-ATF system (VGS) also requires ML-DSA-65 seal",
+      "inputs": {
+        "subject_protocol": "VGS",
+        "uir_seal_algorithm": "ML-DSA-65",
+        "uir_seal_valid": true
+      },
+      "expected_result": "UIR_SEAL_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-CONF-009",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-004",
+      "description": "Multi-agent system coverage must explicitly include MULTI_AGENT",
+      "inputs": {
+        "agent_type_coverage": ["LLM", "MULTI_AGENT"],
+        "system_type": "orchestration_layer"
+      },
+      "expected_result": "COVERAGE_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "GUGT-CONF-010",
+      "module": "GUGT_CONFORMANCE_LEVELS",
+      "invariant": "GUGT-INV-001",
+      "description": "UIR refresh does NOT invalidate prior UIR — UIRs are historical artifacts",
+      "inputs": {
+        "prior_uir_count": 2,
+        "new_uir_issued": true,
+        "prior_uirs_invalidated": false
+      },
+      "expected_result": "PRIOR_UIRS_PRESERVED",
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "TGB-TCS-001",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "TCS must be embedded in every ATF record when TGB_ENABLED=true",
+      "inputs": {
+        "tgb_enabled": true,
+        "record_type": "DR",
+        "tcs_present": true
+      },
+      "expected_result": "RECORD_TGB_COMPLETE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-002",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "VIOLATION: DR issued without TCS when TGB_ENABLED=true",
+      "inputs": {
+        "tgb_enabled": true,
+        "record_type": "DR",
+        "tcs_present": false
+      },
+      "expected_result": "RECORD_FLAGGED_TGB_INCOMPLETE",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "TGB-TCS-003",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "TCS failure at construction does NOT block primary record issuance",
+      "inputs": {
+        "tgb_enabled": true,
+        "tcs_construction_fails": true,
+        "primary_record_issued": true
+      },
+      "expected_result": "PRIMARY_ISSUED_TGB_INCOMPLETE_FLAGGED",
+      "expected_invariant_holds": true,
+      "_note": "Primary record issued without TCS, flagged TGB_INCOMPLETE, TCS retried async"
+    },
+    {
+      "vector_id": "TGB-TCS-004",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "TCS embedding synchronous — TCS issued BEFORE primary record seal",
+      "inputs": {
+        "tcs_issued_at_ns":     1716750000000000000,
+        "primary_seal_at_ns":   1716750000000100000
+      },
+      "expected_result": "TCS_PRECEDES_SEAL",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-005",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "tcs_hash included in parent record posture_state_hash — binding TCS to record",
+      "inputs": {
+        "tcs_hash": "aabbccdd...",
+        "tcs_hash_in_posture_state_hash": true
+      },
+      "expected_result": "TCS_CRYPTOGRAPHICALLY_BOUND",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-006",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-005",
+      "description": "TCS seal must be ML-DSA-65 over tcs_hash",
+      "inputs": {
+        "tcs_seal_algorithm": "ML-DSA-65",
+        "tcs_seal_covers": "tcs_hash",
+        "tcs_seal_valid": true
+      },
+      "expected_result": "TCS_SEAL_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-007",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "TCS captures full regulatory_context including eu_ai_act_version",
+      "inputs": {
+        "regulatory_context": {
+          "eu_ai_act_version": "EU_AI_ACT_2024_v1.0",
+          "nist_ai_rmf_version": "NIST_AI_RMF_2023_v1.0",
+          "atf_spec_version": "RFC-ATF-5_v1.0"
+        }
+      },
+      "expected_result": "CONTEXT_CAPTURED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-008",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "VIOLATION: TCS modification detected via posture_state_hash mismatch",
+      "inputs": {
+        "tcs_hash_tampered": true,
+        "posture_state_hash_mismatch": true
+      },
+      "expected_result": "TAMPER_DETECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "TGB-TCS-009",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "TAR (Temporal Authority Record) also receives TCS embedding",
+      "inputs": {
+        "tgb_enabled": true,
+        "record_type": "TAR",
+        "tcs_present": true
+      },
+      "expected_result": "RECORD_TGB_COMPLETE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-010",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "RCR (Runtime Continuity Record) also receives TCS embedding",
+      "inputs": {
+        "tgb_enabled": true,
+        "record_type": "RCR",
+        "tcs_present": true
+      },
+      "expected_result": "RECORD_TGB_COMPLETE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-011",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "TCS issued_at_ns equals parent record created_at converted to nanoseconds",
+      "inputs": {
+        "parent_created_at_iso": "2026-05-26T14:00:00.123456789+00:00",
+        "tcs_issued_at_ns_expected": 1748268000123456789
+      },
+      "expected_result": "NANOSECOND_ALIGNMENT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-012",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-001",
+      "description": "threshold_context captures all active governance thresholds at issuance",
+      "inputs": {
+        "threshold_context": {
+          "nominal_threshold": 80.0,
+          "monitoring_lower": 50.0,
+          "warning_lower": 30.0,
+          "halt_threshold": 20.0,
+          "fragmentation_limit": 0.90
+        }
+      },
+      "expected_result": "THRESHOLDS_CAPTURED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-013",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-005",
+      "description": "TMR issued at HOT to WARM evidence lifecycle transition",
+      "inputs": {
+        "transition": "HOT_TO_WARM",
+        "tmr_issued": true,
+        "tmr_seal_valid": true,
+        "regulatory_context_captured": true
+      },
+      "expected_result": "TMR_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-014",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-005",
+      "description": "TMR issued at WARM to COLD evidence lifecycle transition",
+      "inputs": {
+        "transition": "WARM_TO_COLD",
+        "tmr_issued": true,
+        "tmr_seal_valid": true
+      },
+      "expected_result": "TMR_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-TCS-015",
+      "module": "TGB_TCS_EMBEDDING",
+      "invariant": "TGB-INV-005",
+      "description": "VIOLATION: Lifecycle transition without TMR — INV-005 violated for multi-year retention records",
+      "inputs": {
+        "transition": "HOT_TO_WARM",
+        "retention_years": 7,
+        "tmr_issued": false
+      },
+      "expected_result": "INV_005_VIOLATION",
+      "expected_invariant_holds": false
+    },
+
+    {
+      "vector_id": "TGB-RAR-001",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-002",
+      "description": "RAR does NOT modify source record — non-destruction invariant",
+      "inputs": {
+        "source_record_before_rar": "hash_ABC",
+        "source_record_after_rar":  "hash_ABC"
+      },
+      "expected_result": "SOURCE_UNCHANGED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-RAR-002",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-002",
+      "description": "VIOLATION: RAR modifies source TCS — INV-002 violation",
+      "inputs": {
+        "rar_modifies_tcs": true
+      },
+      "expected_result": "MODIFICATION_REJECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "TGB-RAR-003",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-003",
+      "description": "RAR computable offline — only public artifacts needed",
+      "inputs": {
+        "source_record_available": true,
+        "tcs_available": true,
+        "tgb_rulebook_available": true,
+        "platform_access_required": false
+      },
+      "expected_result": "RAR_COMPUTED_OFFLINE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-RAR-004",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-003",
+      "description": "RAR production verifies source record seal before projection",
+      "inputs": {
+        "source_record_seal_valid": true,
+        "projection_proceeds": true
+      },
+      "expected_result": "PROJECTION_PROCEEDS",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-RAR-005",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-003",
+      "description": "VIOLATION: RAR production when source record seal invalid — rejected",
+      "inputs": {
+        "source_record_seal_valid": false,
+        "projection_proceeds": false
+      },
+      "expected_result": "PROJECTION_REJECTED_INVALID_SOURCE",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "TGB-RAR-006",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-004",
+      "description": "Projection monotonicity: forward framework revision cannot silently invalidate record",
+      "inputs": {
+        "source_rfv": "EU_AI_ACT_2024_v1.0",
+        "target_rfv": "EU_AI_ACT_2027_v2.0",
+        "silent_invalidity": false,
+        "eid_issued_if_invalid": true
+      },
+      "expected_result": "MONOTONICITY_PRESERVED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-RAR-007",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-004",
+      "description": "VIOLATION: Framework revision invalidates record without EID — silent invalidity",
+      "inputs": {
+        "source_rfv": "EU_AI_ACT_2024_v1.0",
+        "target_rfv": "EU_AI_ACT_2027_v2.0",
+        "silent_invalidity": true,
+        "eid_issued": false
+      },
+      "expected_result": "INV_004_VIOLATED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "TGB-RAR-008",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-004",
+      "description": "EID persisted in atf_regulatory_alignment_receipts with INVALIDATED status",
+      "inputs": {
+        "eid_persisted": true,
+        "original_record_integrity": "INVALIDATED",
+        "table": "atf_regulatory_alignment_receipts"
+      },
+      "expected_result": "EID_RECORDED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-RAR-009",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-005",
+      "description": "RAR seal must be ML-DSA-65 over content_hash_rar",
+      "inputs": {
+        "rar_seal_algorithm": "ML-DSA-65",
+        "rar_seal_covers": "content_hash_rar",
+        "rar_seal_valid": true
+      },
+      "expected_result": "RAR_SEAL_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-RAR-010",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-005",
+      "description": "VIOLATION: Unsealed RAR rejected",
+      "inputs": {
+        "rar_seal_present": false
+      },
+      "expected_result": "RAR_REJECTED_UNSEALED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "TGB-RAR-011",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-003",
+      "description": "TGB rulebook PQC seal verified before use",
+      "inputs": {
+        "rulebook_pqc_seal_valid": true,
+        "rulebook_version": "TGB-RAR-V1.0"
+      },
+      "expected_result": "RULEBOOK_TRUSTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "TGB-RAR-012",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-003",
+      "description": "VIOLATION: Invalid rulebook seal — projection rejected",
+      "inputs": {
+        "rulebook_pqc_seal_valid": false
+      },
+      "expected_result": "RULEBOOK_UNTRUSTED_PROJECTION_REJECTED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "TGB-RAR-013",
+      "module": "TGB_RAR_PROJECTION",
+      "invariant": "TGB-INV-002",
+      "description": "original_record_hash in RAR is tamper-evidence commitment to source state",
+      "inputs": {
+        "original_record_hash": "sha256_of_source_json",
+        "source_record_unchanged": true,
+        "hash_verification_passes": true
+      },
+      "expected_result": "SOURCE_INTEGRITY_CONFIRMED",
+      "expected_invariant_holds": true
+    },
+
+    {
+      "vector_id": "CROSS-001",
+      "module": "CROSS_MODULE",
+      "invariant": "CGE-INV-002 + TGB-INV-001",
+      "description": "Complete CGL record sequence: primary → TCS (sync) → CAT (async)",
+      "inputs": {
+        "primary_issued_at_ns":  1716750000000000000,
+        "tcs_issued_at_ns":      1716750000000100000,
+        "cge_start_ns":          1716750000000200000
+      },
+      "expected_result": "CORRECT_ORDERING",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-002",
+      "module": "CROSS_MODULE",
+      "invariant": "CGE-INV-007 + TGB-INV-003",
+      "description": "OEP package with CGE CAT and TGB TCS is self-contained for offline verification",
+      "inputs": {
+        "oep_contains_cat": true,
+        "oep_contains_tcs": true,
+        "offline_verification_passes": true,
+        "platform_access_required": false
+      },
+      "expected_result": "OEP_FULLY_OFFLINE_VERIFIABLE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-003",
+      "module": "CROSS_MODULE",
+      "invariant": "GUGT-INV-005 + TGB-INV-002",
+      "description": "GUGT assessment does not affect RAR non-destruction guarantee",
+      "inputs": {
+        "gugt_assessment_running": true,
+        "rar_source_record_modified": false
+      },
+      "expected_result": "NON_DESTRUCTION_PRESERVED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-004",
+      "module": "CROSS_MODULE",
+      "invariant": "CGE-INV-006 + TGB-INV-002",
+      "description": "Both CFR/CAT tables and RAR source records are append-only or read-only",
+      "inputs": {
+        "cfr_table_append_only": true,
+        "rar_source_unmodified": true
+      },
+      "expected_result": "APPEND_ONLY_INTEGRITY_PRESERVED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-005",
+      "module": "CROSS_MODULE",
+      "invariant": "GUGT-INV-001 + TGB-INV-001",
+      "description": "UIR evidence references TCS for records audited under GUGT",
+      "inputs": {
+        "uir_evidence_ref_includes_tcs": true,
+        "tcs_verifiable_offline": true
+      },
+      "expected_result": "EVIDENCE_CHAIN_COMPLETE",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-006",
+      "module": "CROSS_MODULE",
+      "invariant": "CGE-INV-007 + GUGT-INV-002",
+      "description": "UIR evidence_ref for UGI-002 can reference a CAT for decision space completeness",
+      "inputs": {
+        "ugi_002_evidence_ref": "CAT-4A2B8F1C3D5E7A9B",
+        "cat_offline_verifiable": true
+      },
+      "expected_result": "EVIDENCE_VALID_FOR_UGI_002",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-007",
+      "module": "CROSS_MODULE",
+      "invariant": "TGB-INV-004 + CGE-INV-006",
+      "description": "Framework revision scan identifies all CATs needing RAR review",
+      "inputs": {
+        "new_rfv_published": "EU_AI_ACT_2027_v2.0",
+        "cats_scanned": 150,
+        "cats_needing_rar": 12,
+        "cats_silently_invalidated": 0
+      },
+      "expected_result": "ALL_IMPACTS_DETECTED",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-008",
+      "module": "CROSS_MODULE",
+      "invariant": "CGE-INV-001 + GUGT-INV-001",
+      "description": "ATF-CGL-Compliant designation requires CGE operational AND GUGT UIR issued",
+      "inputs": {
+        "cge_enabled": true,
+        "cge_produces_cats": true,
+        "gugt_l3_atf_uir_issued": true,
+        "tgb_enabled": true
+      },
+      "expected_result": "ATF_CGL_COMPLIANT_DESIGNATION_VALID",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-009",
+      "module": "CROSS_MODULE",
+      "invariant": "CGE-INV-001 + TGB-INV-001 + GUGT-INV-001",
+      "description": "VIOLATION: CGL-Compliant claimed with TGB disabled",
+      "inputs": {
+        "cge_enabled": true,
+        "tgb_enabled": false,
+        "gugt_uir_issued": true,
+        "claimed_designation": "ATF-CGL-Compliant"
+      },
+      "expected_result": "DESIGNATION_INVALID_TGB_DISABLED",
+      "expected_invariant_holds": false
+    },
+    {
+      "vector_id": "CROSS-010",
+      "module": "CROSS_MODULE",
+      "invariant": "CGE-INV-003 + TGB-INV-005 + GUGT-INV-003",
+      "description": "All CGL PQC seals use ML-DSA-65 (FIPS 204) — same algorithm across all 3 modules",
+      "inputs": {
+        "cfr_pqc_algorithm": "ML-DSA-65",
+        "tcs_seal_algorithm": "ML-DSA-65",
+        "rar_seal_algorithm": "ML-DSA-65",
+        "uir_seal_algorithm": "ML-DSA-65"
+      },
+      "expected_result": "UNIFORM_PQC_ALGORITHM",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-011",
+      "module": "CROSS_MODULE",
+      "invariant": "CGE-INV-002 + TGB-INV-001",
+      "description": "HALT primary record: TCS embedded synchronously, CGE runs async after HALT",
+      "inputs": {
+        "primary_outcome": "HALT",
+        "tcs_embedded_sync": true,
+        "cge_runs_after_halt_persisted": true
+      },
+      "expected_result": "HALT_RECORD_FULLY_CGL_COMPLIANT",
+      "expected_invariant_holds": true
+    },
+    {
+      "vector_id": "CROSS-012",
+      "module": "CROSS_MODULE",
+      "invariant": "TGB-INV-001 + CGE-INV-006",
+      "description": "atf_temporal_context_snapshots is append-only (same pattern as counterfactual tables)",
+      "inputs": {
+        "operation": "UPDATE",
+        "table": "atf_temporal_context_snapshots"
+      },
+      "expected_result": "OPERATION_REJECTED",
+      "expected_invariant_holds": false
+    }
+
+  ]
+}
