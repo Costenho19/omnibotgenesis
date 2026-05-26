@@ -1,0 +1,24 @@
+{
+  "pogc_id": "POGC-GENESIS-E071CC96",
+  "session_id": "OGR-9281699E5A325ACF8181",
+  "ctchc_seal_hash": "sha3-256:0650a5551bf70d5f35d65c7f5d5f70ca16d5dc59594ce8b350ab798b00d318b5",
+  "issuer": "OMNIX QUANTUM LTD",
+  "subject_org": "OMNIX QUANTUM LTD",
+  "subject_org_id": "OMNIX-GENESIS-CLIENT",
+  "agent_id": "OMNIX-OGI-GENESIS-AGENT-v1",
+  "compliance_tier": "ATF-BEV-Compliant",
+  "mandate_certification": "MANDATE-BOUND",
+  "turn_count": 5,
+  "avg_conformance": 0.97,
+  "issued_at": "2026-05-26T10:24:33.342875+00:00",
+  "expires_at": "2027-05-26T10:24:33.342875+00:00",
+  "regulatory_tags": [
+    "EU-AI-ACT",
+    "NIST-AI-RMF",
+    "UAE-CRAE"
+  ],
+  "content_hash": "sha3-256:eaec43f706827220ab6cb10fa8cdf51c9ba79707fa461bad912f595a8d3005cb",
+  "pqc_signature": "STUB-SHA3-256:38b6a63a6d0c29955af2c3e99b3243e368260aa2a88f5b04003940b7ce9cd7fa",
+  "pqc_algorithm": "ml-dsa-65",
+  "status": "ACTIVE"
+}

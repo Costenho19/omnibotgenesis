@@ -55,27 +55,29 @@ def _get_db():
 
 
 def _ensure_b2b_client(conn) -> dict:
-    """Ensure OMNIX QUANTUM LTD demo client exists. Returns client dict."""
+    """Ensure OMNIX QUANTUM LTD genesis client exists. Returns client dict."""
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT client_id, api_key, name FROM b2b_clients WHERE client_id = 'OMNIX-GENESIS-CLIENT' LIMIT 1"
+            "SELECT client_id, name FROM b2b_clients WHERE client_id = 'OMNIX-GENESIS-CLIENT' LIMIT 1"
         )
         row = cur.fetchone()
     if row:
         return dict(row)
 
-    demo_key = "GENESIS-" + secrets.token_hex(24)
+    # api_key_hash stores SHA-256 of the raw key (real schema uses api_key_hash)
+    raw_key  = "GENESIS-" + secrets.token_hex(24)
+    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
     with conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO b2b_clients (client_id, name, api_key, active, created_at)
+                INSERT INTO b2b_clients (client_id, name, api_key_hash, is_active, created_at)
                 VALUES (%s, %s, %s, TRUE, NOW())
                 ON CONFLICT (client_id) DO NOTHING
                 """,
-                ("OMNIX-GENESIS-CLIENT", "OMNIX QUANTUM LTD", demo_key),
+                ("OMNIX-GENESIS-CLIENT", "OMNIX QUANTUM LTD", key_hash),
             )
-    return {"client_id": "OMNIX-GENESIS-CLIENT", "name": "OMNIX QUANTUM LTD", "api_key": demo_key}
+    return {"client_id": "OMNIX-GENESIS-CLIENT", "name": "OMNIX QUANTUM LTD"}
 
 
 # ── OGR Session helpers ────────────────────────────────────────────────────────
@@ -104,18 +106,18 @@ def _create_genesis_session(conn) -> str:
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO atf_ogr_sessions (
-                    session_id, agent_id, status, domain, vertical,
-                    turn_count, avg_conformance, chain_sealed, chain_seal_hash,
-                    governing_receipt_id, started_at, closed_at, created_at
+                    session_id, agent_id, session_status, domain, vertical,
+                    turn_count, chain_sealed, chain_seal_hash,
+                    governing_receipt_id, started_at, closed_at
                 ) VALUES (
                     %s, %s, 'SEALED', 'governance', 'enterprise',
-                    5, 0.97, TRUE, %s,
-                    %s, %s, %s, %s
+                    5, TRUE, %s,
+                    %s, %s, %s
                 )
             """, (
                 session_id, agent_id, chain_seal,
                 "GENESIS-RECEIPT-" + secrets.token_hex(8).upper(),
-                now - timedelta(minutes=10), now, now,
+                now - timedelta(minutes=10), now,
             ))
 
     return session_id, seal_hash
