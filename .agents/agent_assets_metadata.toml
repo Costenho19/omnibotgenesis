@@ -695,3 +695,9 @@ id = "a_M-q3b7UXZMKPDL0qm_v"
 uri = "file://docs/zenodo/rfc_atf_4/RFC-ATF-4.pdf"
 type = "pdf"
 title = "RFC-ATF-4 — Con gráficos (ATF Stack, AGVP, SSD, DSPP, 19 Pruebas)"
+
+[[outputs]]
+id = "W8vB8L5by6A6WKYUEp-u-"
+uri = "file://docs/zenodo/rfc_atf_5/RFC-ATF-5.pdf"
+type = "pdf"
+title = "RFC-ATF-5 — Cognitive Governance Layer (CGE · GUGT · TGB)"
