@@ -47,7 +47,7 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
   - `omnix_core/bev/` — Behavioral Execution Verification: BAR · CCS · CTCHC (RFC-ATF-6, ADR-181/182/183)
   - `omnix_core/govern/` — OGR Orchestrator: `governance_runtime.py` — 6-layer session lifecycle (ADR-184)
 - `/docs/adr/` — **184 ADRs**. Fuente de verdad de arquitectura
-- `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (publicado) · RFC-ATF-3 (publicado)
+- `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (publicado) · RFC-ATF-3 (publicado) · RFC-ATF-4 (publicado) · RFC-ATF-5 (pendiente publicación Zenodo)
 - `/docs/integration/` — `OMNIX_GOVERNANCE_RUNTIME.md` · `GETTING_STARTED.md` — integration product docs
 - `/sdk/` — Python SDK · Node.js SDK
 
@@ -123,6 +123,12 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
 | `atf_mandate_binding_records` | MIVP — MBR per-session | ADR-194 |
 | `atf_mandate_alignment_scores` | MIVP — MAS per-turn | ADR-194 |
 | `atf_mbr_seals` | MIVP — MBRSeal al cierre de sesión | ADR-194 |
+| `atf_counterfactual_forks` | CGE — Counterfactual Fork Record (CFR) | ADR-178 / RFC-ATF-5 |
+| `atf_counterfactual_tokens` | CGE — Counterfactual Token per decision path | ADR-178 / RFC-ATF-5 |
+| `gugt_universal_invariant_receipts` | GUGT — Universal Invariant Receipt (UIR) | ADR-179 / RFC-ATF-5 |
+| `atf_temporal_context_snapshots` | TGB — Temporal Context Snapshot (TCS) | ADR-180 / RFC-ATF-5 |
+| `atf_regulatory_alignment_receipts` | TGB — Regulatory Alignment Receipt (RAR) | ADR-180 / RFC-ATF-5 |
+| `atf_temporal_migration_records` | TGB — Temporal Migration Record (TMR) | ADR-180 / RFC-ATF-5 |
 
 ---
 

@@ -6,6 +6,7 @@ Requires: ZENODO_TOKEN environment variable
   export ZENODO_TOKEN=your_personal_access_token
 
 Files uploaded:
+  - RFC-ATF-5.pdf (primary document with visual diagrams)
   - RFC-ATF-5.md  (copy from docs/standards/ into this dir first)
   - conformance_vectors.json (this directory)
 """
@@ -36,9 +37,12 @@ with open(DIR / "metadata.json") as f:
 
 META = {k: v for k, v in META_RAW.items() if not k.startswith("_")}
 # Also strip _note fields inside nested objects
-for key in ["creators", "communities", "subjects"]:
+for key in ["creators", "subjects"]:
     if key in META and isinstance(META[key], list):
         META[key] = [{k2: v2 for k2, v2 in item.items() if not k2.startswith("_")} for item in META[key]]
+# Remove communities — Zenodo returns 422 if identifier doesn't exist.
+# Add to a community manually from the Zenodo UI after publishing.
+META.pop("communities", None)
 
 FILES_TO_UPLOAD = [
     DIR / "RFC-ATF-5.pdf",
