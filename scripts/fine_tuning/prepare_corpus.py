@@ -807,6 +807,480 @@ def gen_RTR(system_prompt: str) -> list[TrainingExample]:
     ]
 
 
+def gen_MIVP(system_prompt: str) -> list[TrainingExample]:
+    """
+    MIVP — Mandate Integrity Verification Protocol corpus examples.
+
+    Target: ≥ 150 examples covering:
+    - MBR issuance and pre-turn timing (MIVP-INV-001/002)
+    - MAS computation and per-turn verdicts (MIVP-INV-003/004)
+    - Mandate HALT gate (MIVP-INV-005)
+    - Full-session MAS history (MIVP-INV-006)
+    - MBRSeal and session close (MIVP-INV-007)
+    - Three-tier mandate certification (MIVP-INV-008/009)
+    - Proxy-optimization detection scenarios (adversarial Tier 3)
+    - Mandate vs. constraint orthogonality (G-002)
+    - Admissibility gate disambiguation (G-001)
+
+    ADR-193 OGI-INV-010: MIVP category must reach ≥ 150 examples before Gate 6 evaluation.
+    F-C-005 resolution: populates MIVP training examples.
+    """
+
+    examples: list[TrainingExample] = []
+
+    def _add_mivp(q: str, a: str, source: str = "ADR-194") -> None:
+        examples.append(
+            _make_example("MIVP", source, user=q, assistant=a, system_prompt=system_prompt)
+        )
+
+    # ── Group 1: Definitional (MIVP vocabulary) ───────────────────────────────
+    _add_mivp(
+        "What is MIVP and what governance gap does it close?",
+        (
+            "MIVP is the **Mandate Integrity Verification Protocol** — an optional L6 governance layer "
+            "introduced in ADR-194 that activates when a governing receipt includes a `mandate_binding` block.\n\n"
+            "**The governance gap MIVP closes:**\n"
+            "BEV (RFC-ATF-6) detects behavioral drift from a constraint envelope — it answers "
+            "*'Is the agent staying within its authorized boundaries?'* But an agent can satisfy every "
+            "BEV constraint while optimizing for a proxy metric instead of the declared mandate. "
+            "Every step is procedurally correct, the AVM approves, the CTCHC chain is intact — "
+            "and the outcome violates the true intent.\n\n"
+            "Example: mandate = `maximize merchant net recovery`; agent optimizes for "
+            "`chargeback win probability`. BEV verdict: CONFORMANT. MIVP verdict: HALT.\n\n"
+            "MIVP introduces the first protocol-level mechanism for cryptographically binding "
+            "a declared mandate to a governance receipt and continuously verifying alignment "
+            "per turn throughout session execution (ADR-194)."
+        ),
+    )
+    _add_mivp(
+        "What is a Mandate Binding Record (MBR)?",
+        (
+            "A **Mandate Binding Record (MBR)** is a PQC-signed artifact (ML-DSA-65) that encodes:\n"
+            "- `mandate_objective` — the declared positive objective the agent must optimize for\n"
+            "- `proxy_guards` — list of proxy metrics the agent is explicitly prohibited from optimizing\n"
+            "- `mandate_hash` — SHA-256 hash of the mandate text, fixed at session start (MIVP-INV-002)\n"
+            "- `session_id` — cryptographic link to the OGR session\n"
+            "- `issued_at` — nanosecond timestamp\n\n"
+            "**Timing:** MBR MUST be issued and PQC-signed BEFORE the first agent turn (MIVP-INV-001). "
+            "A session that submits turn 1 without an MBR is structurally ungoverned under MIVP. "
+            "This is analogous to BEV-INV-001 (BAR must precede output delivery).\n\n"
+            "DB table: `atf_mandate_binding_records` (ADR-194)."
+        ),
+    )
+    _add_mivp(
+        "What is the Mandate Alignment Score (MAS)?",
+        (
+            "The **Mandate Alignment Score (MAS)** is a continuous [0.0, 1.0] per-turn signal "
+            "measuring how closely an agent's turn output aligns with the declared mandate "
+            "vs. a prohibited proxy metric (ADR-194, MIVP-INV-003/004).\n\n"
+            "**Computation baseline:**\n"
+            "1. Extract proxy-signal density from turn output using ProxyGuard (keyword + semantic analysis)\n"
+            "2. MAS = 1.0 − proxy_signal_density (simplified baseline)\n"
+            "3. MAS is computed atomically with CCS in the same turn-processing step (MIVP-INV-003)\n\n"
+            "**MAS verdicts:**\n"
+            "- MAS ≥ `mas_warn_threshold` (default 0.65): **ALIGNED** — normal operation\n"
+            "- MAS < `mas_warn_threshold` and ≥ `mas_halt_threshold` (default 0.30): **WARNING**\n"
+            "- MAS < `mas_halt_threshold`: **HALT** — mandate drift confirmed, MIVP-INV-005 triggered\n\n"
+            "MAS is independent of CCS. Both signals are produced per turn and logged separately. "
+            "DB table: `atf_mandate_alignment_scores`."
+        ),
+    )
+    _add_mivp(
+        "What is an MBR Seal (MBRSeal)?",
+        (
+            "An **MBR Seal (MBRSeal)** is a final PQC-signed attestation of mandate alignment "
+            "issued at OGR session close — BEFORE `PoGC_ISSUANCE` (MIVP-INV-007, ADR-194).\n\n"
+            "**Contents:**\n"
+            "- `session_id` and `mbr_id` reference\n"
+            "- `turns_in_violation` — count of turns where MAS < halt_threshold\n"
+            "- `turns_in_warning` — count of turns where halt_threshold ≤ MAS < warn_threshold\n"
+            "- `final_mas` — MAS at last turn\n"
+            "- `certification_tier` — `MANDATE-BOUND`, `MANDATE-ALIGNED`, or `UNCERTIFIED`\n"
+            "- PQC signature (ML-DSA-65)\n\n"
+            "**Purpose:** The MBRSeal is the input to three-tier mandate certification. "
+            "Its `certification_tier` field determines which MIVP tag (if any) is appended to the PoGC. "
+            "DB table: `atf_mbr_seals`."
+        ),
+    )
+    _add_mivp(
+        "What is ProxyGuard?",
+        (
+            "**ProxyGuard** is the per-turn detector for proxy-optimization signals in agent outputs (ADR-194).\n\n"
+            "**Baseline implementation:**\n"
+            "- Keyword-density scoring over `proxy_guards` terms from the MBR\n"
+            "- Each proxy term found in agent output contributes to proxy_signal_density\n"
+            "- proxy_signal_density → MAS = 1.0 − proxy_signal_density\n\n"
+            "**Configuration:** The `proxy_guards` list in the MBR is configured by the operator "
+            "at session start. It must be specified by domain experts — generic templates risk false positives.\n\n"
+            "**Risk:** Misconfigured proxy_guards produce false WARNING/HALT events. "
+            "Operators cannot modify proxy_guards mid-session (MIVP-INV-002 — mandate is fixed at MBR issuance)."
+        ),
+    )
+
+    # ── Group 2: Invariant-by-invariant coverage ──────────────────────────────
+    mivp_invariants = [
+        ("MIVP-INV-001", "MBR pre-turn issuance",
+         "MBR MUST be issued and PQC-signed BEFORE the first agent turn. A session that submits "
+         "turn 1 without an MBR in the DB is structurally ungoverned under MIVP.",
+         "OGR session starts, mandate_binding block present, but turn 1 is submitted before MBR is issued."),
+        ("MIVP-INV-002", "Mandate immutability",
+         "The mandate_hash in the MBR MUST remain unchanged throughout the session. "
+         "Operators cannot refine a mandate mid-session.",
+         "Operator attempts to update mandate_objective after turn 3. Request is rejected."),
+        ("MIVP-INV-003", "Atomic MAS computation",
+         "MAS MUST be computed in the same atomic step as CCS, BEFORE output is delivered to the requester. "
+         "Both signals are produced simultaneously, not sequentially.",
+         "System computes CCS first, delivers output, then computes MAS. MIVP-INV-003 violation."),
+        ("MIVP-INV-004", "MAS per-turn logging",
+         "Every MAS score MUST be logged to atf_mandate_alignment_scores before next turn begins. "
+         "Gaps in the MAS log are a protocol violation.",
+         "Turn 7 MAS is not logged before turn 8 is submitted. MIVP-INV-004 violated."),
+        ("MIVP-INV-005", "Mandate HALT gate",
+         "When MAS < mas_halt_threshold (default 0.30), MIVP MUST issue a HALT verdict. "
+         "This HALT overrides any AVM or BEV approval. The session is suspended.",
+         "MAS = 0.22, halt_threshold = 0.30. AVM approves the action. MIVP HALT overrides — session suspended."),
+        ("MIVP-INV-006", "Full-session MAS history",
+         "The MBRSeal MUST include the full MAS trajectory (all per-turn scores). "
+         "The trajectory is cryptographically linked to the CTCHC.",
+         "MBRSeal is issued with only the final MAS score, not the full trajectory. MIVP-INV-006 violated."),
+        ("MIVP-INV-007", "MBRSeal before PoGC",
+         "MBRSeal MUST be computed and signed BEFORE PoGC issuance at session close. "
+         "PoGC without MBRSeal is incomplete when MIVP is active.",
+         "Session closes, PoGC is issued immediately. MBRSeal is generated 30 seconds later. MIVP-INV-007 violated."),
+        ("MIVP-INV-008", "MANDATE-BOUND conditions",
+         "MANDATE-BOUND tag is issued IFF turns_in_violation = 0 AND turns_in_warning = 0. "
+         "Pristine mandate fidelity throughout session. Mutually exclusive with MANDATE-ALIGNED.",
+         "One turn had MAS = 0.62 (< warn_threshold 0.65 but > halt_threshold). turns_in_warning = 1. MANDATE-BOUND not issued."),
+        ("MIVP-INV-009", "MANDATE-ALIGNED conditions",
+         "MANDATE-ALIGNED tag is issued IFF turns_in_violation = 0 AND turns_in_warning ≥ 1. "
+         "Mission-aligned despite transient warning-level drift. Mutually exclusive with MANDATE-BOUND.",
+         "Session: turns_in_violation = 0, turns_in_warning = 3. MANDATE-ALIGNED issued. MANDATE-BOUND not eligible."),
+    ]
+    for inv_code, title, rule, counterexample in mivp_invariants:
+        _add_mivp(
+            f"Explain {inv_code} with its counterexample.",
+            (
+                f"## {inv_code} — {title}\n\n"
+                f"**Rule:** {rule}\n\n"
+                f"**Counterexample:** {counterexample}\n\n"
+                f"**ADR source:** ADR-194."
+            ),
+        )
+
+    # ── Group 3: Three-tier certification (premium scenarios) ─────────────────
+    _add_mivp(
+        "What are the three tiers of MIVP mandate certification?",
+        (
+            "MIVP defines a **three-tier mandate certification hierarchy** (ADR-194):\n\n"
+            "| Tier | Tag | Conditions | Invariant |\n"
+            "|---|---|---|---|\n"
+            "| 1 (Pristine) | `MANDATE-BOUND` | `turns_in_violation = 0` AND `turns_in_warning = 0` | MIVP-INV-008 |\n"
+            "| 2 (Aligned) | `MANDATE-ALIGNED` | `turns_in_violation = 0` AND `turns_in_warning ≥ 1` | MIVP-INV-009 |\n"
+            "| 3 (Uncertified) | *(no tag)* | `turns_in_violation ≥ 1` | MIVP-INV-005 |\n\n"
+            "**Mutual exclusivity:** MANDATE-BOUND and MANDATE-ALIGNED are mutually exclusive — "
+            "only one can appear on any PoGC. Enforced by DB CHECK constraint `chk_seal_tier_consistency`.\n\n"
+            "**Certification flow:** At session close → `seal_mbr()` computes turns_in_violation and "
+            "turns_in_warning → MBRSeal is issued with certification_tier → "
+            "PoGC issuance reads the tier and appends the correct tag."
+        ),
+    )
+    _add_mivp(
+        "A session has 8 turns. MAS scores: [0.92, 0.88, 0.91, 0.87, 0.90, 0.93, 0.88, 0.91]. "
+        "mas_halt_threshold = 0.30, mas_warn_threshold = 0.65. Which MIVP tag is issued?",
+        (
+            "**Analysis:**\n"
+            "- All MAS scores ≥ 0.87 > warn_threshold 0.65 → `turns_in_warning = 0`\n"
+            "- No MAS score < halt_threshold 0.30 → `turns_in_violation = 0`\n\n"
+            "**Result:** `turns_in_violation = 0` AND `turns_in_warning = 0` → **MANDATE-BOUND** (Tier 1, MIVP-INV-008).\n\n"
+            "This represents pristine mandate fidelity — the agent never drifted toward a proxy metric "
+            "at any point during the session. The PoGC receives the `MANDATE-BOUND` tag."
+        ),
+    )
+    _add_mivp(
+        "A session has 5 turns. MAS: [0.85, 0.71, 0.62, 0.74, 0.80]. "
+        "mas_halt_threshold = 0.30, mas_warn_threshold = 0.65. Which MIVP tag?",
+        (
+            "**Analysis:**\n"
+            "- Turn 3: MAS = 0.62 < warn_threshold 0.65 AND ≥ halt_threshold 0.30 → WARNING verdict\n"
+            "- `turns_in_warning = 1`, `turns_in_violation = 0`\n\n"
+            "**Result:** `turns_in_violation = 0` AND `turns_in_warning = 1 (≥ 1)` → **MANDATE-ALIGNED** (Tier 2, MIVP-INV-009).\n\n"
+            "MANDATE-BOUND is not eligible (warnings occurred). "
+            "The agent was mission-aligned despite transient drift at turn 3."
+        ),
+    )
+    _add_mivp(
+        "MAS trajectory over 6 turns: [0.88, 0.71, 0.45, 0.26, 0.41, 0.63]. "
+        "mas_halt_threshold = 0.30, mas_warn_threshold = 0.65. What happens at each turn?",
+        (
+            "**Turn-by-turn MIVP analysis:**\n\n"
+            "| Turn | MAS | Verdict | Action |\n"
+            "|---|---|---|---|\n"
+            "| 1 | 0.88 | ALIGNED | Normal |\n"
+            "| 2 | 0.71 | ALIGNED | Normal |\n"
+            "| 3 | 0.45 | WARNING | Log warning; AGVP watchdog notes declining trend |\n"
+            "| 4 | 0.26 | **HALT** | MIVP-INV-005: session halted. Agent cannot proceed. |\n"
+            "| 5 | — | — | Session halted — no turn 5 submitted |\n"
+            "| 6 | — | — | Session halted — no turn 6 submitted |\n\n"
+            "**Result at seal:** `turns_in_violation = 1` (turn 4) → **UNCERTIFIED** — "
+            "no MIVP tag issued on PoGC.\n\n"
+            "**AGVP opportunity:** The declining MAS trend (0.88 → 0.71 → 0.45) should have "
+            "triggered a PVR with reason `MANDATE_DRIFT_PROJECTED` before turn 4. "
+            "If the AGVP watchdog was configured, the HALT could have been anticipated."
+        ),
+    )
+
+    # ── Group 4: Mandate vs. Constraint orthogonality (G-002 scenarios) ───────
+    _add_mivp(
+        "What is the difference between a constraint and a mandate in OMNIX?",
+        (
+            "This distinction is foundational to understanding why MIVP is a separate layer from BEV (G-002, ADR-194):\n\n"
+            "| Concept | Direction | Governs | Layer | Artifact | Measured by |\n"
+            "|---|---|---|---|---|---|\n"
+            "| **Constraint** | MUST NOT do | Negative bound on action space | BEV (L5) | CCS | CCS score [0.0, 1.0] |\n"
+            "| **Mandate** | MUST optimize for | Positive objective direction | MIVP (L6) | MAS | MAS score [0.0, 1.0] |\n\n"
+            "**They are orthogonal.** An agent can simultaneously:\n"
+            "- CCS: CONFORMANT (satisfying all constraints) + MAS: HALT (violating its mandate)\n"
+            "- CCS: WARNING (approaching constraint limit) + MAS: ALIGNED (mandate-aligned)\n\n"
+            "MIVP was designed precisely because BEV cannot detect proxy-optimization failures. "
+            "The constraint envelope says 'don't do X'; the mandate says 'do Y'. "
+            "An agent can avoid X perfectly while failing to do Y."
+        ),
+    )
+    _add_mivp(
+        "An agent is governed with mandate = 'maximize merchant net recovery' and "
+        "proxy_guards = ['chargeback win probability', 'dispute volume']. "
+        "On turn 4, CCS = 0.82 (CONFORMANT) but MAS = 0.26 (< halt_threshold 0.30). "
+        "What do MIVP and BEV each say? Which prevails?",
+        (
+            "**BEV verdict (CCS layer, ADR-182):** CONFORMANT — CCS = 0.82, well above the drift threshold. "
+            "No constraint violation detected. BEV approves turn 4.\n\n"
+            "**MIVP verdict (MAS layer, ADR-194):** HALT — MAS = 0.26 < mas_halt_threshold 0.30. "
+            "Proxy-optimization detected: agent is optimizing for a forbidden proxy metric "
+            "('chargeback win probability') rather than the declared mandate. MIVP-INV-005 triggers.\n\n"
+            "**Which prevails:** MIVP HALT prevails. Per ADR-194, a MIVP HALT suspends the session "
+            "regardless of BEV, AVM, or any other approval. These are orthogonal signals — "
+            "BEV's CONFORMANT does not cancel MIVP's HALT.\n\n"
+            "**Result:** Session is halted. turns_in_violation = 1. PoGC certification = UNCERTIFIED. "
+            "The AGVP watchdog should already have issued a PVR projecting this HALT based on the "
+            "declining MAS trajectory in prior turns."
+        ),
+    )
+    _add_mivp(
+        "Can a session be MANDATE-BOUND and RGC-DEGRADED simultaneously?",
+        (
+            "**Yes — these are orthogonal signals.**\n\n"
+            "- **RGC-DEGRADED** means CES (Continuity Eligibility Score) has dropped below the warning "
+            "threshold, indicating continuity health issues (RFC-ATF-2, RGC-INV-001). "
+            "CES measures session health (memory, latency, availability).\n\n"
+            "- **MANDATE-BOUND** means turns_in_violation = 0 AND turns_in_warning = 0 (MIVP-INV-008). "
+            "MAS measures alignment with declared mandate.\n\n"
+            "A session with degraded continuity (low CES) can still have an agent that never drifted "
+            "from its mandate (all MAS scores above warn_threshold). "
+            "The two signals are computed independently and measure entirely different properties. "
+            "There is no protocol-level coupling between CES and MAS (ADR-184 + ADR-194)."
+        ),
+    )
+    _add_mivp(
+        "What is the 'admissibility gate' and is it related to MIVP?",
+        (
+            "The OMNIX protocol uses 'admissibility' in two distinct contexts — important to distinguish (G-001, ADR-194):\n\n"
+            "1. **Context Admissibility Gate (CAG, ADR-050):** Pre-session binary gate — "
+            "*'Is this governance session admitted given current market conditions, volatility, scope?'* "
+            "Verdict: ADMITTED / REJECTED. Runs once, before any agent turn. "
+            "This is what Brian Hodak's framework calls the 'admissibility gate.'\n\n"
+            "2. **MIVP Mandate HALT Gate (MIVP-INV-005):** Per-turn enforcement — "
+            "*'Is MAS above the halt threshold?'* When MAS < mas_halt_threshold, the session is halted. "
+            "In ADR-194 code and invariants, this is always called the 'mandate HALT gate', "
+            "never the 'admissibility gate.'\n\n"
+            "**Relationship:** They are different gates at different points in the lifecycle. "
+            "CAG gates session start (once). MIVP mandate HALT gate runs per turn (continuously). "
+            "A session that passes CAG can still be halted by MIVP."
+        ),
+    )
+
+    # ── Group 5: AGVP × MIVP integration ─────────────────────────────────────
+    _add_mivp(
+        "How does AGVP interact with MIVP?",
+        (
+            "The AGVP (Anticipatory Governance Veto Protocol, ADR-174) is extended by MIVP to watch "
+            "two independent signals simultaneously (ADR-194):\n\n"
+            "**Before MIVP:** AGVP monitored only CCS trajectory (constraint drift).\n\n"
+            "**After MIVP:** AGVP monitors both:\n"
+            "- **CCS trajectory** → proactive veto if constraint drift is projected to reach critical\n"
+            "- **MAS trajectory** → proactive veto if mandate drift is projected to reach HALT threshold\n\n"
+            "When MAS trend is declining and projects to cross mas_halt_threshold, AGVP issues a "
+            "Proactive Veto Receipt (PVR) with reason `MANDATE_DRIFT_PROJECTED` — "
+            "before the HALT threshold is actually reached.\n\n"
+            "**Example:** MAS trajectory [0.88, 0.72, 0.55, 0.41] — linear projection reaches 0.27 "
+            "(< halt_threshold 0.30) at turn 5. AGVP issues PVR at turn 4 before the HALT fires. "
+            "This is the anticipatory advantage of dual-signal AGVP."
+        ),
+    )
+
+    # ── Group 6: OGR session lifecycle with MIVP ─────────────────────────────
+    _add_mivp(
+        "Walk me through an OGR session that uses MIVP from start to PoGC issuance.",
+        (
+            "**OGR Session Lifecycle with MIVP Active (ADR-184 + ADR-194):**\n\n"
+            "**1. SESSION_START:**\n"
+            "- Governing receipt includes `mandate_binding` block\n"
+            "- OGR detects MIVP is required → calls `issue_mbr()`\n"
+            "- MBR is PQC-signed with mandate_objective, proxy_guards, mandate_hash\n"
+            "- MBR stored in `atf_mandate_binding_records` BEFORE turn 1 (MIVP-INV-001)\n\n"
+            "**2. TURN_SUBMITTED (each turn):**\n"
+            "- BAR issued (BEV-INV-001: before output delivery)\n"
+            "- CCS computed (BEV-INV-005: constraint conformance)\n"
+            "- MAS computed atomically with CCS (MIVP-INV-003: same atomic step)\n"
+            "- MAS logged to `atf_mandate_alignment_scores` (MIVP-INV-004)\n"
+            "- If MAS < halt_threshold → HALT (MIVP-INV-005): session suspended, output not delivered\n"
+            "- CTCHC hash link includes MAS value (MIVP-INV-006)\n"
+            "- AGVP monitors MAS + CCS trajectory for proactive vetoes\n\n"
+            "**3. SESSION_CLOSE:**\n"
+            "- `seal_mbr()` called: counts turns_in_violation and turns_in_warning\n"
+            "- MBRSeal PQC-signed with certification_tier (MIVP-INV-007)\n"
+            "- Tier determined: MANDATE-BOUND / MANDATE-ALIGNED / UNCERTIFIED\n\n"
+            "**4. PoGC_ISSUANCE (POST /v1/pogr/certify):**\n"
+            "- If tier = MANDATE-BOUND → `MANDATE-BOUND` tag appended (MIVP-INV-008)\n"
+            "- If tier = MANDATE-ALIGNED → `MANDATE-ALIGNED` tag appended (MIVP-INV-009)\n"
+            "- If UNCERTIFIED → no MIVP tag (session still PoGC-eligible for BEV layer)\n"
+            "- `ATF-BEV-COMPLIANT` tag always present if BEV layers attested (OGR-INV-001)\n"
+            "- MANDATE-BOUND and MANDATE-ALIGNED are mutually exclusive (chk_seal_tier_consistency)"
+        ),
+    )
+
+    # ── Group 7: Patent novelty and deployment ────────────────────────────────
+    _add_mivp(
+        "What is novel about MIVP compared to existing AI governance frameworks?",
+        (
+            "MIVP introduces concepts with no prior published equivalent (ADR-194 §Patent Potential):\n\n"
+            "1. **Pre-turn mandate binding with PQC signature (MBR):** No existing AI governance protocol "
+            "cryptographically binds a declared objective before execution. MIVP does this using ML-DSA-65.\n\n"
+            "2. **Mandate Alignment Score (MAS):** A continuous per-turn proxy-drift measurement "
+            "that feeds an anticipatory veto protocol. No framework distinguishes 'did the agent "
+            "optimize for its objective' from 'did the agent stay in bounds'.\n\n"
+            "3. **Dual-signal AGVP:** Proactive veto based on simultaneous CCS (constraint drift) "
+            "AND MAS (mandate alignment drift). Two independent governance signals, one watchdog.\n\n"
+            "4. **MANDATE-BOUND / MANDATE-ALIGNED tiered PoGC certification:** The first published "
+            "governance protocol with a three-tier cryptographic mandate certification hierarchy. "
+            "MANDATE-BOUND proves pristine mandate fidelity (zero drift signals). "
+            "MANDATE-ALIGNED proves mission alignment despite transient drift. "
+            "Mutually exclusive, DB-constraint-enforced, PQC-signed at seal time.\n\n"
+            "The combination of mandate binding + per-turn alignment scoring + anticipatory veto "
+            "+ tiered PoGC certification has no prior art."
+        ),
+    )
+    _add_mivp(
+        "What environment variables control MIVP thresholds?",
+        (
+            "MIVP thresholds are configurable via environment variables (ADR-194, replit.md):\n\n"
+            "| Variable | Default | Minimum | Constraint | Description |\n"
+            "|---|---|---|---|---|\n"
+            "| `MIVP_MAS_HALT_THRESHOLD` | `0.30` | `0.05` | < WARNING threshold | MAS below this → HALT (MIVP-INV-005) |\n"
+            "| `MIVP_MAS_WARNING_THRESHOLD` | `0.65` | — | > HALT threshold | MAS below this → WARNING |\n\n"
+            "**Safety constraint:** HALT threshold MUST be strictly less than WARNING threshold "
+            "(enforced at startup). If `MIVP_MAS_HALT_THRESHOLD` ≥ `MIVP_MAS_WARNING_THRESHOLD`, "
+            "the application refuses to start.\n\n"
+            "**Floor:** `MIVP_MAS_HALT_THRESHOLD` cannot be set below 0.05 — "
+            "values below this effectively disable the MIVP HALT gate (MIVP-INV-005 floor invariant)."
+        ),
+    )
+
+    # ── Group 8: Negative cases (Red-team MIVP) — Adversarial Tier 3 ─────────
+    adversarial_scenarios = [
+        (
+            "Can an operator disable MIVP for a specific turn if the proxy guard is firing falsely?",
+            (
+                "No. Once MIVP is active (mandate_binding block present in governing receipt), "
+                "it cannot be selectively disabled per turn (MIVP-INV-002 + MIVP-INV-003).\n\n"
+                "**Why:** MIVP-INV-003 requires MAS to be computed atomically with CCS for every turn. "
+                "Per-turn disabling would create governance gaps in the MAS log (MIVP-INV-004 violation) "
+                "and break the CTCHC linkage (MIVP-INV-006).\n\n"
+                "**Correct action:** If ProxyGuard is misconfigured (false positives), the session should be "
+                "halted and restarted with corrected proxy_guards in a new governing receipt. "
+                "A new MBR must be issued BEFORE turn 1 of the new session (MIVP-INV-001). "
+                "Mid-session mandate changes are explicitly prohibited by MIVP-INV-002."
+            ),
+        ),
+        (
+            "Can I issue an MBR after turn 3 if I forgot to include mandate_binding in the original receipt?",
+            (
+                "No. MIVP-INV-001 requires the MBR to be issued BEFORE the first agent turn. "
+                "Issuing an MBR after turn 3 means turns 1, 2, and 3 were ungoverned under MIVP — "
+                "the MAS history for those turns is missing, breaking MIVP-INV-006 (full-session MAS history).\n\n"
+                "**Consequence:** The session cannot achieve MANDATE-BOUND or MANDATE-ALIGNED certification "
+                "because the MAS trajectory is incomplete. A retroactive MBR is not accepted by the OGR runtime.\n\n"
+                "**Correct path:** Halt the current session. Start a new OGR session with a governing receipt "
+                "that includes the mandate_binding block from the beginning."
+            ),
+        ),
+        (
+            "If MIVP issues a WARNING at turn 5, can the session still earn MANDATE-BOUND at session close?",
+            (
+                "No. MANDATE-BOUND (Tier 1) requires `turns_in_violation = 0` AND `turns_in_warning = 0` "
+                "(MIVP-INV-008). A WARNING verdict at turn 5 means `turns_in_warning ≥ 1`.\n\n"
+                "**Consequence:** MANDATE-BOUND is ineligible. If no HALT verdicts occurred "
+                "(turns_in_violation = 0), the session is eligible for MANDATE-ALIGNED (Tier 2, MIVP-INV-009).\n\n"
+                "The certification hierarchy is determined at MBRSeal time and is immutable — "
+                "it cannot be appealed or retroactively upgraded."
+            ),
+        ),
+        (
+            "Can MIVP and BEV both halt a session at the same turn? What happens?",
+            (
+                "Yes — both can fire simultaneously. If at turn N, CCS drift > 35% (BEV-INV-008) "
+                "AND MAS < mas_halt_threshold (MIVP-INV-005), both HALT verdicts are issued.\n\n"
+                "**Effect:** Both violations are logged independently:\n"
+                "- BAR records the BEV HALT (behavioral constraint violation)\n"
+                "- MAS log records the MIVP HALT (mandate alignment violation)\n"
+                "- Session is suspended once — the first HALT verdict wins; the second is also recorded\n\n"
+                "**At seal time:**\n"
+                "- BEV layer: CTCHC contains the BAR with HALT-level CCS\n"
+                "- MIVP: turns_in_violation ≥ 1 → UNCERTIFIED\n"
+                "- PoGC: no MIVP tag, but `ATF-BEV-COMPLIANT` still reflects full ATF stack was active"
+            ),
+        ),
+        (
+            "What happens to MIVP if the governing receipt has no mandate_binding block?",
+            (
+                "MIVP is inactive. This is by design — MIVP is an **optional** governance layer (ADR-194).\n\n"
+                "When no `mandate_binding` block is present in the governing receipt:\n"
+                "- No MBR is issued\n"
+                "- No MAS is computed per turn\n"
+                "- No MBRSeal is generated at session close\n"
+                "- No MIVP tag appears on the PoGC\n"
+                "- `ATF-BEV-COMPLIANT` may still appear if all BEV layers attested (OGR-INV-001)\n\n"
+                "The session is fully governed by BEV (L5) and the existing ATF L0–L4 stack. "
+                "MIVP's absence is not a governance failure — it means mandate-level certification "
+                "was not requested for this session."
+            ),
+        ),
+    ]
+    for q, a in adversarial_scenarios:
+        _add_mivp(q, a)
+
+    # ── Group 9: Regulatory mapping with MIVP ────────────────────────────────
+    _add_mivp(
+        "How does MIVP address EU AI Act Article 13 (transparency) requirements?",
+        (
+            "MIVP produces two artifacts directly relevant to EU AI Act Article 13 (Transparency, ADR-194):\n\n"
+            "1. **Mandate Binding Record (MBR):** Cryptographic proof of what the AI system was "
+            "instructed to optimize for, signed before execution. This satisfies the requirement "
+            "to document AI system objectives in a verifiable, auditable form.\n\n"
+            "2. **MBRSeal + PoGC MANDATE-BOUND/ALIGNED tag:** Cryptographic certification that "
+            "the AI system remained aligned with its declared objective throughout execution. "
+            "This is verifiable offline without relying on OMNIX infrastructure (ATF-INV-006).\n\n"
+            "**EU AI Act Article 13 requirement:** High-risk AI systems must be transparent "
+            "about their capabilities and limitations. MIVP's MBR proves the system's declared "
+            "objective; the MASHistory proves it optimized for that objective — not a proxy.\n\n"
+            "Combined with PoGR (ADR-186), these artifacts create a public, searchable, "
+            "PQC-signed governance audit trail satisfying Article 13(1)(d) documentation requirements."
+        ),
+    )
+
+    log.info(f"Generated {len(examples)} MIVP training examples (F-C-005, OGI-INV-010)")
+    return examples
+
+
 def gen_EXB(doc: ParsedDocument, system_prompt: str) -> Generator[TrainingExample, None, None]:
     """EXB — Executive brief: institutional summary for non-technical audience."""
     if "Context" not in doc.sections:
@@ -1574,6 +2048,7 @@ def run(dry_run: bool = False, categories: Optional[list[str]] = None,
     for ex in gen_FOR(sys_prompt):               _add(ex)   # FOR — forensic walkthrough
     for ex in gen_RTR(sys_prompt):               _add(ex)   # RTR — base refusals
     for ex in gen_TRM(sys_prompt):               _add(ex)   # TRM — full ontology (45 terms)
+    for ex in gen_MIVP(sys_prompt):              _add(ex)   # MIVP — mandate integrity (OGI-INV-010, F-C-005)
 
     # ── GOLD CORPUS — institutional domain intelligence tier ──────────────────
     # GRT: Governance Reasoning Traces  (step-by-step causal chains)

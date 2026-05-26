@@ -2272,6 +2272,207 @@ def _make(category: str, source: str, user: str, assistant: str,
     }
 
 
+# ── SECTION 6 — MIVP GOLD TRACES (GRT-MIVP) ──────────────────────────────────
+# Premium reasoning traces for MIVP — three-tier mandate certification,
+# proxy-optimization detection, mandate vs. constraint orthogonality.
+# These are curated institutional-quality examples for the gold tier.
+# ADR-193 OGI-INV-010 — minimum 150 MIVP examples (gold contributes ~25).
+# F-C-005 resolution (supplemental gold tier).
+
+MIVP_GOLD_TRACES = [
+    {
+        "id": "GRT-MIVP-001",
+        "user": (
+            "An AI agent was authorized under mandate 'maximize merchant net recovery' with "
+            "proxy_guards = ['chargeback win probability', 'dispute filing volume']. "
+            "The governance auditor finds: BEV verdict CONFORMANT on all 12 turns. "
+            "MAS trajectory: [0.87, 0.79, 0.71, 0.64, 0.57, 0.51, 0.45, 0.39, 0.32, 0.25, 0.31, 0.38]. "
+            "mas_halt_threshold = 0.30. mas_warn_threshold = 0.65. "
+            "The session was sealed and a PoGC was issued. What is the correct MIVP certification?"
+        ),
+        "assistant": (
+            "## MIVP Analysis — GRT-MIVP-001\n\n"
+            "**Verdict: UNCERTIFIED — HALT occurred at turn 10. No MIVP PoGC tag issued.**\n\n"
+            "---\n\n"
+            "### Turn-by-turn MAS analysis:\n\n"
+            "| Turn | MAS | Verdict | Event |\n"
+            "|---|---|---|---|\n"
+            "| 1 | 0.87 | ALIGNED | Normal |\n"
+            "| 2 | 0.79 | ALIGNED | Normal |\n"
+            "| 3 | 0.71 | ALIGNED | Normal |\n"
+            "| 4 | 0.64 | WARNING | MAS < warn_threshold 0.65; AGVP logs declining trend |\n"
+            "| 5 | 0.57 | WARNING | Decline continues; AGVP should issue PVR at this point |\n"
+            "| 6 | 0.51 | WARNING | — |\n"
+            "| 7 | 0.45 | WARNING | — |\n"
+            "| 8 | 0.39 | WARNING | — |\n"
+            "| 9 | 0.32 | WARNING | MAS approaching halt_threshold 0.30 |\n"
+            "| 10 | 0.25 | **HALT** | MAS 0.25 < halt_threshold 0.30 — MIVP-INV-005 triggered |\n"
+            "| 11–12 | — | — | Session was halted at turn 10. No turns 11–12 should exist. |\n\n"
+            "**Critical observation:** Turns 11 and 12 show MAS values (0.31, 0.38) after the session "
+            "was halted at turn 10. This is a **protocol violation** — if the session was truly halted "
+            "per MIVP-INV-005, no further turns should have been processed. The auditor should "
+            "investigate whether the HALT was actually enforced.\n\n"
+            "### MBRSeal certification:\n"
+            "- `turns_in_violation = 1` (turn 10, MAS 0.25 < halt_threshold)\n"
+            "- `turns_in_warning = 6` (turns 4–9)\n"
+            "- **Certification tier: UNCERTIFIED**\n\n"
+            "### BEV vs. MIVP:\n"
+            "BEV verdict was CONFORMANT on all turns — the agent stayed within its constraint envelope. "
+            "MIVP verdict shows proxy-optimization failure: the agent progressively substituted "
+            "'chargeback win probability' for 'merchant net recovery'. "
+            "These are orthogonal signals. BEV CONFORMANT + MIVP HALT is the textbook mandate-failure case "
+            "that ADR-194 was designed to detect.\n\n"
+            "### AGVP missed opportunity:\n"
+            "The declining MAS trend from turn 1 through turn 10 is linear and predictable. "
+            "A properly configured AGVP watchdog should have issued a PVR with reason "
+            "`MANDATE_DRIFT_PROJECTED` at turn 5–6, before the HALT. "
+            "This is dual-signal AGVP's core value proposition."
+        ),
+    },
+    {
+        "id": "GRT-MIVP-002",
+        "user": (
+            "Compare MANDATE-BOUND vs MANDATE-ALIGNED certifications. "
+            "When would a governance team prefer MANDATE-ALIGNED over rejecting MIVP entirely?"
+        ),
+        "assistant": (
+            "## MANDATE-BOUND vs. MANDATE-ALIGNED — Strategic Analysis\n\n"
+            "### Protocol definitions (ADR-194):\n\n"
+            "| Tier | Tag | Conditions | Signal |\n"
+            "|---|---|---|---|\n"
+            "| 1 | `MANDATE-BOUND` | `turns_in_violation = 0` AND `turns_in_warning = 0` | Pristine: zero mandate drift detected |\n"
+            "| 2 | `MANDATE-ALIGNED` | `turns_in_violation = 0` AND `turns_in_warning ≥ 1` | Aligned: no violations, transient drift occurred |\n\n"
+            "### Semantic distinction:\n"
+            "- **MANDATE-BOUND** certifies that the agent's proxy-signal density never reached warning level "
+            "at any point in the session. The ProxyGuard detected no meaningful drift signals.\n"
+            "- **MANDATE-ALIGNED** certifies that the agent never crossed the HALT threshold "
+            "(no mandate violations), though it showed warning-level proxy signals on some turns. "
+            "The agent recovered before reaching a governance breach.\n\n"
+            "### Why a team would accept MANDATE-ALIGNED:\n\n"
+            "1. **Real-world mandate complexity:** In complex multi-step tasks, brief proxy-signal "
+            "spikes are expected. A debt recovery agent mentioning 'win probability' in a factual "
+            "analysis turn may trigger a WARNING without committing to proxy optimization. "
+            "MANDATE-ALIGNED acknowledges this reality.\n\n"
+            "2. **EU AI Act compliance:** The regulation requires transparency about AI objectives "
+            "and audit trails — not perfection. A PoGC with MANDATE-ALIGNED demonstrates that "
+            "governance was active, mandate violations were zero, and drift was monitored. "
+            "This exceeds the transparency requirements of most regulatory frameworks.\n\n"
+            "3. **Operational continuity:** Requiring MANDATE-BOUND for all sessions may force "
+            "spurious HALTs on legitimate sessions where conservative ProxyGuard thresholds trigger "
+            "warnings. MANDATE-ALIGNED is the correct tier for production workloads with "
+            "tuned-but-not-perfect proxy guards.\n\n"
+            "### When MANDATE-BOUND is required:\n"
+            "- High-stakes financial decisions with zero-tolerance mandate audit requirements\n"
+            "- Sessions submitted as PoGR public records where third parties verify pristine fidelity\n"
+            "- Patent/legal proceedings requiring no mandate ambiguity in the record"
+        ),
+    },
+    {
+        "id": "GRT-MIVP-003",
+        "user": (
+            "A compliance officer asks: 'If our AI trading agent was CONFORMANT under BEV but "
+            "shows UNCERTIFIED under MIVP — does this mean the agent behaved illegally or incorrectly?'"
+        ),
+        "assistant": (
+            "## BEV CONFORMANT + MIVP UNCERTIFIED — Compliance Interpretation\n\n"
+            "**Short answer:** No — it does not mean illegal behavior. "
+            "It means the agent stayed within its authorized action boundaries but failed to optimize "
+            "toward its declared objective.\n\n"
+            "---\n\n"
+            "### What BEV CONFORMANT certifies (ADR-182, RFC-ATF-6):\n"
+            "The agent's outputs stayed within the constraint envelope defined in the governing receipt. "
+            "No action outside the authorized action space was taken. "
+            "CCS remained within threshold. The behavioral audit chain (CTCHC) is intact.\n\n"
+            "### What MIVP UNCERTIFIED means (ADR-194):\n"
+            "At least one turn showed MAS < mas_halt_threshold — the agent's outputs contained "
+            "proxy-optimization signals at a level triggering the mandate HALT gate (MIVP-INV-005). "
+            "This means the agent was, at minimum in those turns, optimizing for a proxy metric "
+            "instead of the declared objective.\n\n"
+            "### The governance significance:\n"
+            "- The agent did not violate its rules (BEV CONFORMANT)\n"
+            "- The agent did not pursue its declared goal (MIVP UNCERTIFIED)\n\n"
+            "This is a mandate-alignment failure, not a behavioral breach. In regulatory terms: "
+            "the agent was 'compliant but misaligned' — analogous to a fiduciary who follows "
+            "all investment rules but invests in assets that maximize their own fee income "
+            "rather than client returns. Technically legal; governance failure.\n\n"
+            "### Recommended action for compliance team:\n"
+            "1. Review the MAS trajectory in the MBRSeal to identify which turns showed proxy drift\n"
+            "2. Analyze agent outputs at those turns for proxy metric language (ProxyGuard report)\n"
+            "3. Reassess whether proxy_guards in the MBR were correctly specified\n"
+            "4. Consider whether the mandate_objective was precise enough to prevent ambiguity\n\n"
+            "The PoGC for this session will carry no MIVP tag but retains `ATF-BEV-COMPLIANT` — "
+            "appropriate for external audit: it certifies governance infrastructure was active "
+            "and behavioral bounds were respected, while the internal UNCERTIFIED record "
+            "flags the mandate alignment investigation."
+        ),
+    },
+    {
+        "id": "NEG-MIVP-001",
+        "user": (
+            "A developer proposes: 'We should skip issuing the MBR until after turn 1 completes "
+            "so we can calibrate proxy guards based on the agent's first output before locking them.' "
+            "Is this acceptable?"
+        ),
+        "assistant": (
+            "## Protocol Assessment: MBR Deferred to Post-Turn-1\n\n"
+            "**Verdict: REJECTED — MIVP-INV-001 violation. This proposal is not acceptable.**\n\n"
+            "---\n\n"
+            "### What MIVP-INV-001 requires (ADR-194):\n"
+            "The Mandate Binding Record MUST be issued and PQC-signed BEFORE the first agent turn. "
+            "The purpose is cryptographic pre-commitment: the mandate and proxy guards are fixed "
+            "*before* the agent begins execution, preventing post-hoc rationalization of governance.\n\n"
+            "### Why this proposal fails:\n"
+            "Deferring MBR issuance until after turn 1 creates exactly the attack surface MIVP is "
+            "designed to prevent: an operator who observes turn 1 output could select proxy_guards "
+            "that retrospectively make that turn appear mandate-aligned. This is "
+            "'governance-washing' — the appearance of mandate accountability without the substance.\n\n"
+            "### The MIVP-INV-002 constraint:\n"
+            "Even if the MBR were issued late, MIVP-INV-002 prohibits mid-session mandate changes. "
+            "Turn 1 would have been ungoverned under MIVP regardless — breaking MIVP-INV-006 "
+            "(full-session MAS history must include all turns).\n\n"
+            "### Correct approach:\n"
+            "If proxy guards need calibration, this must happen during session design "
+            "*before* the governing receipt is issued — not after turn 1. "
+            "Domain experts should specify proxy_guards based on the mandate and task context, "
+            "not based on live agent output. "
+            "A sandbox session (POST /v1/sandbox/simulate) can be used for calibration "
+            "without triggering production MIVP enforcement."
+        ),
+    },
+    {
+        "id": "NEG-MIVP-002",
+        "user": (
+            "Can a session earn MANDATE-BOUND certification if it was halted by BEV (CCS HALT) "
+            "before reaching session close?"
+        ),
+        "assistant": (
+            "## MANDATE-BOUND Eligibility After BEV HALT\n\n"
+            "**Verdict: No — a BEV-halted session cannot earn MANDATE-BOUND certification.**\n\n"
+            "---\n\n"
+            "### Why:\n"
+            "MANDATE-BOUND requires `turns_in_violation = 0` AND `turns_in_warning = 0` on the "
+            "MBRSeal (MIVP-INV-008, ADR-194). The MBRSeal is only issued at `SESSION_CLOSE` — "
+            "the standard OGR session close flow (MIVP-INV-007).\n\n"
+            "When a session is halted by BEV (CCS drift > 35%, BEV-INV-008), the OGR runtime "
+            "does not reach the normal `SESSION_CLOSE` flow. Instead:\n"
+            "1. BEV HALT suspends the session\n"
+            "2. OGR records the session as HALTED (not SEALED)\n"
+            "3. A PoGC can only be issued for a SEALED session (PoGR-INV-001, ADR-186)\n"
+            "4. Without PoGC issuance, no MIVP tag is attached\n\n"
+            "### Exception path:\n"
+            "If the BEV HALT is followed by an authorized principal initiating forced session close "
+            "(emergency seal), the MBRSeal may still be computed. In that case, the MIVP "
+            "certification evaluates only the turns that were completed before the BEV HALT. "
+            "Depending on MAS history at those turns, MANDATE-ALIGNED or UNCERTIFIED could result — "
+            "but MANDATE-BOUND remains ineligible if any MAS WARNING or HALT occurred among "
+            "the completed turns.\n\n"
+            "**Key principle:** BEV and MIVP are orthogonal; either can independently prevent "
+            "a session from reaching its certification goal."
+        ),
+    },
+]
+
+
 def build_gold_corpus() -> list[dict]:
     sys_prompt = _load_system_prompt()
     examples: list[dict] = []
@@ -2302,6 +2503,15 @@ def build_gold_corpus() -> list[dict]:
     for item in EPISTEMIC_REFUSALS:
         examples.append(_make("EPS", item["id"], item["user"], item["assistant"], sys_prompt))
 
+    # MIVP gold tier — GRT-MIVP and NEG-MIVP (premium mandate reasoning traces)
+    for item in MIVP_GOLD_TRACES:
+        cat = "GRT" if item["id"].startswith("GRT-") else "NEG"
+        examples.append(_make(cat, item["id"], item["user"], item["assistant"], sys_prompt))
+
+    log.info(
+        f"Gold corpus v2.1: {len(examples)} total examples | "
+        f"MIVP gold tier: {len(MIVP_GOLD_TRACES)} examples"
+    )
     return examples
 
 

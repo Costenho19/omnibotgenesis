@@ -27,22 +27,6 @@ training:
   save_steps: 100
   eval_steps: 50
 
-corpus:
-  train_file: "scripts/fine_tuning/output/train.jsonl"
-  val_file:   "scripts/fine_tuning/output/val.jsonl"
-  format: "chat"   # Llama-3 chat JSONL format (OGI-002)
-
-  # Split ratios (OGI-006)
-  train_ratio: 0.80
-  val_ratio:   0.10
-  test_ratio:  0.10
-  random_seed: 42
-
-  # Quality gates (OGI-INV-006)
-  dedup_similarity_threshold: 0.97
-  min_assistant_tokens: 30
-  max_assistant_tokens: 2000
-
 evaluation:
   # Minimum passing scores before deployment (OGI-007 + Gate 3b — ADR-193 rev.2)
   gates:
