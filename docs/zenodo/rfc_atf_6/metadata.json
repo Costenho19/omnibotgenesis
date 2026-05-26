@@ -71,15 +71,15 @@
     "Nunes Rodelo, H. (2026). ADR-131: Execution Integrity Layer. OMNIX QUANTUM."
   ],
   "related_identifiers": [
-    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20155016", "scheme": "doi"},
-    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20241344", "scheme": "doi"},
-    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20247342", "scheme": "doi"},
-    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20368895", "scheme": "doi"},
-    {"relation": "isCitedBy",    "identifier": "10.5281/zenodo.20391721", "scheme": "doi"},
-    {"relation": "isSupplementTo", "identifier": "10.6084/m9.figshare.32308077", "scheme": "doi"},
-    {"relation": "isSupplementTo", "identifier": "10.6084/m9.figshare.32308095", "scheme": "doi"},
-    {"relation": "isSupplementTo", "identifier": "10.6084/m9.figshare.32308119", "scheme": "doi"},
-    {"relation": "isSupplementTo", "identifier": "10.6084/m9.figshare.32394192", "scheme": "doi"}
+    {"relation": "cites", "identifier": "10.5281/zenodo.20155016", "scheme": "doi"},
+    {"relation": "cites", "identifier": "10.5281/zenodo.20241344", "scheme": "doi"},
+    {"relation": "cites", "identifier": "10.5281/zenodo.20247342", "scheme": "doi"},
+    {"relation": "cites", "identifier": "10.5281/zenodo.20368895", "scheme": "doi"},
+    {"relation": "cites", "identifier": "10.5281/zenodo.20391721", "scheme": "doi"},
+    {"relation": "cites", "identifier": "10.6084/m9.figshare.32308077", "scheme": "doi"},
+    {"relation": "cites", "identifier": "10.6084/m9.figshare.32308095", "scheme": "doi"},
+    {"relation": "cites", "identifier": "10.6084/m9.figshare.32308119", "scheme": "doi"},
+    {"relation": "cites", "identifier": "10.6084/m9.figshare.32394192", "scheme": "doi"}
   ],
   "notes": "OMNIX QUANTUM LTD is registered in England and Wales (71-75 Shelton Street, Covent Garden, London WC2H 9JQ). Harold Alberto Nunes Rodelo is Founder and Editor. Priority records: OMNIX-PAR-2026-BAR-001 · OMNIX-PAR-2026-CCS-001 · OMNIX-PAR-2026-CTCHC-001. RFC-ATF-6 is the sixth and final layer of the Agent Trust Fabric Open Standard series. Related ADRs: ADR-181 (BAR) · ADR-182 (CCS) · ADR-183 (CTCHC). New database tables: atf_behavioral_anchor_records · atf_constraint_conformance_signals · atf_coherence_hash_chains. 18 BEV invariants across 3 families: BAR (BEV-INV-001–004, 015–016), CCS (BEV-INV-005–009, 017), CTCHC (BEV-INV-010–014, 018). 106 total ATF invariants across 20 protocol families. ATF-BEV-Compliant is the sixth and highest compliance tier.",
   "_submission_checklist": {
