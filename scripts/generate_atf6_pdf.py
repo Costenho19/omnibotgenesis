@@ -120,6 +120,20 @@ def tbl(headers, rows, s, cw=None):
             ('VALIGN',      (0,0), (-1,-1), 'TOP'),
         ]))
 
+def dg(drawing):
+    """Wrap a Drawing in a Table to guarantee ReportLab reserves its full height + padding."""
+    return Table([[drawing]],
+        colWidths=[AVAIL_W],
+        style=TableStyle([
+            ('BACKGROUND',    (0,0), (-1,-1), DARK_BG),
+            ('LEFTPADDING',   (0,0), (-1,-1), 0),
+            ('RIGHTPADDING',  (0,0), (-1,-1), 0),
+            ('TOPPADDING',    (0,0), (-1,-1), 8),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+            ('BOX',           (0,0), (-1,-1), 0.5, BORDER_GRAY),
+        ]))
+
+
 def box(items, s, title=None, border=None):
     bcolor = border or ACCENT_BLUE
     content = []
@@ -737,7 +751,7 @@ def build(output):
     st += [Paragraph('2.  Architecture Overview -- BEV Layer', s['h1']), rule(s)]
 
     st.append(Paragraph('2.1  ATF Stack -- Six-Layer Architecture', s['h2']))
-    st.append(diagram_atf_stack())
+    st.append(dg(diagram_atf_stack()))
     st.append(Paragraph(
         'Figure 1. ATF six-layer protocol stack. Layer 6 (gold border) is introduced by RFC-ATF-6.',
         s['caption']))
@@ -845,7 +859,7 @@ def build(output):
         'position simultaneously tamper-evident.', s['body']))
 
     st.append(Paragraph('3.1  BAR Architecture Flow', s['h2']))
-    st.append(diagram_bar_flow())
+    st.append(dg(diagram_bar_flow()))
     st.append(Paragraph(
         'Figure 2. BAR creation pipeline. Every turn\'s output is hashed, bound to the governing '
         'receipt and turn index, then ML-DSA-65 signed before the BAR is persisted.',
@@ -987,7 +1001,7 @@ def build(output):
         'configured policy files, creating a receipt-to-policy binding gap.', s['body']))
 
     st.append(Paragraph('4.1  CCS Score Components and Verdict Ladder', s['h2']))
-    st.append(diagram_ccs_score())
+    st.append(dg(diagram_ccs_score()))
     st.append(Paragraph(
         'Figure 3. CCS score breakdown (left) and verdict ladder (right). Four components sum to 100 points, '
         'normalized to conformance_score in [0.0, 1.0] (BEV-INV-006).',
@@ -1031,7 +1045,7 @@ def build(output):
     st.append(sp(6))
 
     st.append(Paragraph('4.3  CCS-AGVP Integration Loop', s['h2']))
-    st.append(diagram_agvp_loop())
+    st.append(dg(diagram_agvp_loop()))
     st.append(Paragraph(
         'Figure 4. CCS-AGVP integration. Verdicts DRIFTING, BREACH, and VIOLATION trigger escalating '
         'AGVP responses. VIOLATION and HALT terminate the session before further outputs accumulate.',
@@ -1124,7 +1138,7 @@ def build(output):
         'substitution, and session-mixing attacks.', s['body']))
 
     st.append(Paragraph('5.1  CTCHC Chain Architecture', s['h2']))
-    st.append(diagram_ctchc())
+    st.append(dg(diagram_ctchc()))
     st.append(Paragraph(
         'Figure 5. CTCHC hash chain. Genesis hash binds to session_id and governing_receipt_id. '
         'Each link encodes prior link, turn output hash, and receipt. ML-DSA-65 chain seal = SIP.',
@@ -1281,7 +1295,7 @@ def build(output):
     st += [Paragraph('6.  BEV Layer Composition', s['h1']), rule(s)]
 
     st.append(Paragraph('6.1  Per-Turn Execution Timeline', s['h2']))
-    st.append(diagram_bev_timeline())
+    st.append(dg(diagram_bev_timeline()))
     st.append(Paragraph(
         'Figure 6. BEV per-turn execution timeline. Steps 1-8 mandatory for every turn (BEV-INV-001). '
         'Step 9 conditional on verdict (BEV-INV-007).',
@@ -1289,7 +1303,7 @@ def build(output):
     st.append(sp(8))
 
     st.append(Paragraph('6.2  Three-Gap Closure', s['h2']))
-    st.append(diagram_three_gaps())
+    st.append(dg(diagram_three_gaps()))
     st.append(Paragraph(
         'Figure 7. BEV closes the three structural behavioral governance gaps: BAR closes Gap_BAG, '
         'CCS closes Gap_COP, and CTCHC closes Gap_MCP.',
@@ -1415,7 +1429,7 @@ def build(output):
 
     # ── SECTION 9 — COMPLIANCE DESIGNATION ───────────────────────────────────
     st += [Paragraph('9.  ATF-BEV-Compliant Designation', s['h1']), rule(s)]
-    st.append(diagram_compliance())
+    st.append(dg(diagram_compliance()))
     st.append(Paragraph(
         'Figure 8. ATF compliance hierarchy. ATF-BEV-Compliant (gold) is the sixth and highest tier.',
         s['caption']))
