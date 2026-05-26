@@ -29,6 +29,8 @@ A model trained on this corpus can:
 4. Map client use cases to the correct ATF layer without hallucination
 5. Produce executive briefs that accurately reflect the OMNIX architecture
 
+> **Corpus count (updated automatically):** 194 ADRs · 55+ active invariants across 11 families (ATF · TAR · RGC · GPIL · ELR · EAP · OEP · FEA · FVP · GECR · MIVP) · RFC-ATF-1 through RFC-ATF-6. Update this line after each ADR addition.
+
 This creates a sustainable competitive moat: competitors can replicate the API surface
 but cannot replicate a model trained on OMNIX's proprietary corpus.
 

@@ -428,8 +428,8 @@ class MIVPEngine:
         if not self._db_url:
             return
         try:
-            import psycopg2
-            with psycopg2.connect(self._db_url) as conn:
+            import psycopg
+            with psycopg.connect(self._db_url) as conn:
                 with conn.cursor() as cur:
                     cur.execute(self._CREATE_MBR_TABLE)
                     cur.execute(self._CREATE_MAS_TABLE)
@@ -497,6 +497,18 @@ class MIVPEngine:
         objective_constraints = mandate_binding.get("objective_constraints", [])
         mas_halt = float(mandate_binding.get("mas_halt_threshold", _DEFAULT_MAS_HALT))
         mas_warn = float(mandate_binding.get("mas_warning_threshold", _DEFAULT_MAS_WARNING))
+
+        # F-006: floor validation — prevents disabling HALT via env/config (MIVP-INV-005)
+        if mas_halt < 0.05:
+            raise ValueError(
+                f"mas_halt_threshold {mas_halt} invalid: minimum is 0.05. "
+                "Setting below 0.05 effectively disables mandate HALT (MIVP-INV-005)."
+            )
+        if mas_halt >= mas_warn:
+            raise ValueError(
+                f"mas_halt_threshold {mas_halt} must be strictly less than "
+                f"mas_warning_threshold {mas_warn}."
+            )
 
         issued_at = datetime.now(timezone.utc).isoformat()
         mbr_id = f"MBR-{uuid.uuid4().hex[:16].upper()}"
@@ -766,8 +778,8 @@ class MIVPEngine:
         if not self._db_url:
             return
         try:
-            import psycopg2
-            with psycopg2.connect(self._db_url) as conn:
+            import psycopg
+            with psycopg.connect(self._db_url) as conn:
                 with conn.cursor() as cur:
                     cur.execute("""
                         INSERT INTO atf_mandate_binding_records
@@ -795,8 +807,8 @@ class MIVPEngine:
         if not self._db_url:
             return
         try:
-            import psycopg2
-            with psycopg2.connect(self._db_url) as conn:
+            import psycopg
+            with psycopg.connect(self._db_url) as conn:
                 with conn.cursor() as cur:
                     cur.execute("""
                         INSERT INTO atf_mandate_alignment_scores
@@ -820,8 +832,8 @@ class MIVPEngine:
         if not self._db_url:
             return
         try:
-            import psycopg2
-            with psycopg2.connect(self._db_url) as conn:
+            import psycopg
+            with psycopg.connect(self._db_url) as conn:
                 with conn.cursor() as cur:
                     cur.execute("""
                         INSERT INTO atf_mbr_seals
@@ -848,8 +860,8 @@ class MIVPEngine:
         if not self._db_url:
             return None
         try:
-            import psycopg2
-            with psycopg2.connect(self._db_url) as conn:
+            import psycopg
+            with psycopg.connect(self._db_url) as conn:
                 with conn.cursor() as cur:
                     cur.execute(
                         "SELECT * FROM atf_mandate_binding_records WHERE session_id=%s",
@@ -888,8 +900,8 @@ class MIVPEngine:
         if not self._db_url:
             return []
         try:
-            import psycopg2
-            with psycopg2.connect(self._db_url) as conn:
+            import psycopg
+            with psycopg.connect(self._db_url) as conn:
                 with conn.cursor() as cur:
                     cur.execute(
                         "SELECT * FROM atf_mandate_alignment_scores "
@@ -927,8 +939,8 @@ class MIVPEngine:
         if not self._db_url:
             return None
         try:
-            import psycopg2
-            with psycopg2.connect(self._db_url) as conn:
+            import psycopg
+            with psycopg.connect(self._db_url) as conn:
                 with conn.cursor() as cur:
                     cur.execute(
                         "SELECT * FROM atf_mbr_seals WHERE session_id=%s",
