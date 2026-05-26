@@ -701,3 +701,9 @@ id = "W8vB8L5by6A6WKYUEp-u-"
 uri = "file://docs/zenodo/rfc_atf_5/RFC-ATF-5.pdf"
 type = "pdf"
 title = "RFC-ATF-5 — con 5 diagramas visuales (302 KB)"
+
+[[outputs]]
+id = "PTUPUr4_WlCOhL7X931Le"
+uri = "file://docs/zenodo/rfc_atf_6/RFC-ATF-6.pdf"
+type = "pdf"
+title = "RFC-ATF-6 — Behavioral Execution Verification Protocol"
