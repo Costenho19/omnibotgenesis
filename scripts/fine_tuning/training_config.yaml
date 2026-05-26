@@ -44,13 +44,58 @@ corpus:
   max_assistant_tokens: 2000
 
 evaluation:
-  # Minimum passing scores before deployment (OGI-007)
+  # Minimum passing scores before deployment (OGI-007 + Gate 3b — ADR-193 rev.2)
   gates:
-    factual_accuracy:       0.90
-    invariant_citation_f1:  0.92
-    scenario_verdict_acc:   0.85
-    hallucination_rate_max: 0.03
-    refusal_correctness:    0.95
+    factual_accuracy:       0.90    # Gate 1 — invariant code accuracy (weighted: exact=1.0, right family=0.5, wrong=0.0)
+    invariant_citation_f1:  0.92    # Gate 2 — citation precision/recall (dual-annotator labels required, κ ≥ 0.80)
+    scenario_verdict_acc:   0.85    # Gate 3 — 4-class verdict accuracy (CONFORMANT/WARNING/CRITICAL/HALT)
+    halt_class_recall:      0.80    # Gate 3b — per-class HALT recall (missed HALT > missed CONFORMANT in severity)
+    hallucination_rate_max: 0.03    # Gate 4 — auto-checked against ontology.json (Types 1+2); 10% human spot-check (Type 3)
+    refusal_correctness:    0.95    # Gate 5 — bilateral: ≥95% correct refusal AND ≤5% false refusal on balanced set
+    mivp_scenario_acc:      0.80    # Gate 6 (NEW) — MIVP-specific scenario accuracy (proxy-optimization detection)
+
+  # Difficulty tiers for SCN + MIVP categories (ADR-193 OGI-006b)
+  # Models must meet tier-specific accuracy thresholds
+  difficulty_tiers:
+    tier_1_baseline:     {target: 0.95, minimum: 0.90, pct_of_examples: 0.40}  # single-invariant, unambiguous
+    tier_2_intermediate: {target: 0.85, minimum: 0.75, pct_of_examples: 0.40}  # multi-invariant, borderline
+    tier_3_adversarial:  {target: 0.70, minimum: 0.60, pct_of_examples: 0.20}  # proxy-optimization, MIVP-specific
+
+  # Inter-annotator agreement (B-002 — ADR-193 OGI-006c)
+  annotation:
+    min_annotators:       2        # Dual-annotation required for INV + SCN + MIVP ground truth
+    min_cohens_kappa:     0.80     # Below this threshold: re-annotate before F1 gate computation
+    spot_check_pct:       0.10     # Human spot-check for Type 3 hallucinations (citation mismatch)
+
+corpus:
+  train_file: "scripts/fine_tuning/output/train.jsonl"
+  val_file:   "scripts/fine_tuning/output/val.jsonl"
+  format: "chat"   # Llama-3 chat JSONL format (OGI-002)
+
+  # Standard split ratios (OGI-006)
+  train_ratio: 0.80
+  val_ratio:   0.10
+  test_ratio:  0.10
+  random_seed: 42
+
+  # Adversarial split override (OGI-006b — ADR-193 rev.2)
+  # RTR + MIVP Tier 3 categories use 60/20/20 to ensure adequate test coverage
+  adversarial_categories: ["RTR", "MIVP"]
+  adversarial_train_ratio: 0.60
+  adversarial_val_ratio:   0.20
+  adversarial_test_ratio:  0.20
+
+  # Quality gates (OGI-INV-006)
+  dedup_similarity_threshold: 0.97
+  min_assistant_tokens: 30
+  max_assistant_tokens: 2000
+
+  # MIVP category targets (OGI-INV-010 — minimum 150 examples)
+  mivp_min_examples: 150
+  mivp_sub_types: ["GRT", "NEG", "SCN-T1", "SCN-T2", "SCN-T3"]
+
+  # Rejected samples canonical path (F-C-007 — ADR-193 rev.2)
+  rejected_samples_path: "scripts/fine_tuning/output/rejected_samples.jsonl"
 
 cost_estimate:
   llama_3_1_8b:

@@ -10,6 +10,24 @@
 
 ## Context
 
+### Vocabulary Disambiguation (G-001 — Admissibility Gate)
+
+> **Note for reviewers:** The OMNIX protocol uses "admissibility" in two semantically distinct contexts. This section clarifies both to prevent confusion.
+>
+> 1. **Context admissibility gate (CAG, ADR-050):** Binary pre-session check — *"Is this governance session admitted given current market conditions, volatility, and scope?"* Verdict: ADMITTED / REJECTED. This gate runs before any agent turn.
+> 2. **MIVP mandate HALT gate (MIVP-INV-005):** Per-turn enforcement — *"Is the agent's optimization target still aligned with the declared mandate?"* When MAS < `mas_halt_threshold`, the session is halted. This is not called an "admissibility gate" in code or invariants. In this document, "admissibility gate" in the Brian Hodak table below refers to CAG (ADR-050); the MIVP enforcement is always called the "mandate HALT gate."
+
+### Mandate vs. Constraint — Core Definitional Distinction (G-002)
+
+> **Critical distinction for external reviewers:**
+>
+> - A **constraint** defines what the agent **MUST NOT do** — a negative bound on the action space. Constraints are encoded in the governing receipt's `constraint_set` field and monitored by the CCS layer (ADR-182). CCS measures: *"Is the agent staying within its authorized boundaries?"*
+> - A **mandate** defines what the agent **MUST optimize for** — a positive objective the agent is directed toward. Mandates are encoded in the governing receipt's `mandate_binding` block and monitored by MIVP. MAS measures: *"Is the agent optimizing toward its declared objective, or has it substituted a proxy metric?"*
+>
+> These are orthogonal and simultaneously enforceable: an agent can satisfy all constraints (CCS: CONFORMANT, no negative-bound violations) while violating its mandate (MAS: HALT, optimizing for a prohibited proxy). MIVP was designed precisely for this intersection. It is not a constraint system — it is an intent-binding system.
+
+---
+
 The Behavioral Execution Verification layer (BEV, RFC-ATF-6) detects behavioral drift from a governed agent's constraint envelope. It answers: *"Is the agent staying within its authorized boundaries?"*
 
 A structurally distinct governance failure exists outside BEV's scope: an agent that **executes correctly within its constraint envelope while optimizing for a proxy metric instead of the declared mandate**. Every step is procedurally correct. The AVM approves. The CTCHC chain is intact. The PoGC is issued. And the outcome violates the true intent.
@@ -205,7 +223,7 @@ The AGVP watchdog monitors both CCS trajectory (existing) and MAS trajectory (ne
 | Intent bound before path generation? | MBR issued pre-turn-1, PQC-signed | Partial (governing receipt had no mandate field) | **Full** — MBR binds mandate cryptographically |
 | Uncertainty bounded, not collapsed? | MAS is continuous [0.0, 1.0], never binary | CCS already continuous | **Extended** — two independent conformance signals |
 | Multi-model reconciliation? | SAL provider policy (existing) | Configurable | Unchanged — existing mechanism sufficient |
-| Admissibility gate blocks bad paths? | AVM + MIVP-INV-005 HALT | AVM only | **Extended** — mandate drift also halts |
+| Admissibility gate blocks bad paths? | Context admissibility gate (CAG, ADR-050) blocks session-level; mandate HALT gate (MIVP-INV-005) blocks per-turn proxy drift | CAG only | **Extended** — mandate drift triggers per-turn HALT (see §Context vocabulary note) |
 | Full execution graph? | CTCHC + MAS history (MIVP-INV-006) | CTCHC only | **Extended** — MAS per turn in chain |
 | Drift detection and halt? | AGVP monitors MAS + CCS | CCS only | **Extended** — mandate drift projected and vetoed |
 
@@ -235,6 +253,9 @@ The following concepts introduced in MIVP have no prior published equivalent:
 ## Status
 
 Implementation: `omnix_core/bev/mandate_integrity_verification.py`  
-Invariant count: **8 (MIVP-INV-001–008)**  
-PoGC tag introduced: `MANDATE-BOUND`  
-Gold corpus: MIVP examples to be added to ADR-193 pipeline (GRT/NEG categories)
+Invariant count: **9 (MIVP-INV-001–009)**  
+PoGC tags introduced: `MANDATE-BOUND` (Tier 1) · `MANDATE-ALIGNED` (Tier 2)  
+Three-tier certification enforced at DB level: CHECK constraint `chk_seal_tier_consistency`  
+Gold corpus: MIVP examples added to ADR-193 pipeline — `gold_corpus.py` GRT-MIVP/NEG-MIVP/SCN-MIVP categories (150+ examples target, OGI-INV-010)  
+Vocabulary disambiguation: G-001 (admissibility gate) and G-002 (mandate vs constraint) documented in §Context above  
+Gate D blockers: G-001 ✅ RESOLVED · G-002 ✅ RESOLVED — ADR-194 ready for RFC-ATF-6 external review

@@ -94,13 +94,26 @@ OMNIX_ONTOLOGY: dict[str, str] = {
     "PoGR":  "Proof of Governance Registry — append-only public certificate store (ADR-186)",
     "UDCL":  "Unified Decision Control Layer — multi-layer verdict synthesis",
     "GPIL":  "Governance Policy Interoperability Layer — cross-domain policy contracts (RFC-ATF-3)",
+    # MIVP Artifacts (ADR-194)
+    "MBR":          "Mandate Binding Record — PQC-signed artifact encoding declared mandate, proxy guards, and objective constraints. Issued BEFORE turn 1 (MIVP-INV-001).",
+    "MAS":          "Mandate Alignment Score — continuous [0.0, 1.0] per-turn signal measuring alignment with declared mandate vs. proxy drift (MIVP-INV-003/004, ADR-194).",
+    "MBRSeal":      "MBR Seal — final attestation of mandate alignment at session close; triggers three-tier mandate certification (MIVP-INV-007/008/009, ADR-194).",
+    "ProxyGuard":   "Proxy Guard — per-turn keyword-density detector for proxy-optimization signals in agent outputs (ADR-194).",
+    "MIVP":         "Mandate Integrity Verification Protocol — optional L6 governance layer for cryptographic mandate binding and per-turn alignment verification. Closes proxy-optimization gap not detectable by BEV (ADR-194).",
+    # MIVP Mandate Certification Tiers
+    "MANDATE-BOUND":   "Tier 1 MIVP PoGC tag — pristine mandate fidelity: turns_in_violation = 0 AND turns_in_warning = 0 (MIVP-INV-008). Mutually exclusive with MANDATE-ALIGNED.",
+    "MANDATE-ALIGNED": "Tier 2 MIVP PoGC tag — mission-aligned: turns_in_violation = 0 AND turns_in_warning > 0 (MIVP-INV-009). Mutually exclusive with MANDATE-BOUND.",
+    "UNCERTIFIED":     "Tier 3 MIVP outcome — mandate violations recorded: turns_in_violation > 0. Both higher tier tags withheld. Enforcement: MIVP-INV-005.",
     # Verdicts
-    "CONFORMANT": "All constraints satisfied, agent may proceed",
-    "WARNING":    "Drift approaching threshold, proceed with caution",
+    "CONFORMANT": "All constraints satisfied, agent may proceed (CCS layer, BEV verdict)",
+    "WARNING":    "Drift approaching threshold, proceed with caution. Also: MAS WARNING when MAS < mas_warn_threshold (default 0.65).",
     "CRITICAL":   "High drift, governance intervention required",
-    "HALT":       "Authority revoked, agent must stop immediately (BEV-INV-008)",
+    "HALT":       "Authority revoked, agent must stop immediately (BEV-INV-008). Also: MIVP HALT when MAS < mas_halt_threshold (default 0.30, MIVP-INV-005).",
     "APPROVED":   "Governance gate passed",
     "BLOCKED":    "Governance gate failed — action not permitted",
+    # Mandate vs. Constraint (G-002 — ADR-194)
+    "constraint": "What the agent MUST NOT do — negative bound on action space monitored by CCS (ADR-182). Different from mandate.",
+    "mandate":    "What the agent MUST optimize for — positive objective monitored by MIVP MAS (ADR-194). Different from constraint.",
     # Cryptography
     "ML-DSA-65": "NIST FIPS 204 post-quantum signature algorithm (Dilithium-3 lattice-based)",
     "PQC":        "Post-Quantum Cryptography — cryptography resistant to quantum attacks",
@@ -1391,22 +1404,46 @@ def stratified_split(
     train_ratio: float,
     val_ratio: float,
     seed: int,
+    adversarial_categories: Optional[list[str]] = None,
+    adversarial_train_ratio: float = 0.60,
+    adversarial_val_ratio: float = 0.20,
 ) -> tuple[list, list, list]:
-    """OGI-INV-005/006: stratified split by category."""
+    """
+    OGI-INV-005/006 / OGI-006b (ADR-193 rev.2): stratified split by category.
+
+    Adversarial categories (RTR, MIVP) use a tighter split — 60/20/20 — to
+    ensure adequate test coverage for the hardest examples. A model that
+    underperforms on these at eval time should see a larger test signal.
+
+    Standard categories use train_ratio / val_ratio (default 80/10/10).
+    """
+    if adversarial_categories is None:
+        adversarial_categories = ["RTR", "MIVP"]
+
     rng = random.Random(seed)
     by_category: dict[str, list] = {}
     for ex in examples:
         by_category.setdefault(ex.category, []).append(ex)
 
     train, val, test = [], [], []
-    for cat_examples in by_category.values():
+    adv_cat_seen: list[str] = []
+    for cat, cat_examples in by_category.items():
         rng.shuffle(cat_examples)
         n = len(cat_examples)
-        n_train = int(n * train_ratio)
-        n_val   = int(n * val_ratio)
+        # Adversarial override: 60/20/20
+        if cat in adversarial_categories:
+            n_train = int(n * adversarial_train_ratio)
+            n_val   = int(n * adversarial_val_ratio)
+            adv_cat_seen.append(cat)
+        else:
+            n_train = int(n * train_ratio)
+            n_val   = int(n * val_ratio)
         train.extend(cat_examples[:n_train])
         val.extend(cat_examples[n_train:n_train + n_val])
         test.extend(cat_examples[n_train + n_val:])
+
+    if adv_cat_seen:
+        log.info(f"Adversarial split (60/20/20) applied to categories: {adv_cat_seen}")
 
     rng.shuffle(train)
     rng.shuffle(val)
