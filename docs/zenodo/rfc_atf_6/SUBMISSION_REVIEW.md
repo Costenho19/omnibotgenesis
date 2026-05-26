@@ -1,7 +1,7 @@
 # RFC-ATF-6 — Zenodo Submission Review
 ## OMNIX QUANTUM LTD — Harold Nunes, Editor
 
-**Status:** READY FOR HAROLD'S REVIEW — DO NOT PUBLISH UNTIL APPROVED
+**Status:** PUBLISHED ✅ — DOI: 10.5281/zenodo.20393089 — Record: https://zenodo.org/record/20393089
 
 ---
 

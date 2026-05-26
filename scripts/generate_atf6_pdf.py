@@ -1825,7 +1825,7 @@ def build(output):
         sp(8),
         Paragraph('RFC-ATF-6 Version 1.0.0 -- May 2026', s['caption']),
         Paragraph('Priority Records: OMNIX-PAR-2026-BAR-001 -- OMNIX-PAR-2026-CCS-001 -- OMNIX-PAR-2026-CTCHC-001', s['caption']),
-        Paragraph('DOI: pending submission', s['caption']),
+        Paragraph('DOI: 10.5281/zenodo.20393088', s['caption']),
     ], s, border=ACCENT_GOLD))
 
     doc = SimpleDocTemplate(
