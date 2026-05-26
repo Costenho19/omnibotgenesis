@@ -66,7 +66,7 @@ def S():
     s['h3']      = ParagraphStyle('h3',      fontName='Helvetica-Bold', fontSize=10,  leading=14, textColor=TEXT_GRAY, spaceBefore=10, spaceAfter=4)
     s['body']    = ParagraphStyle('body',    fontName='Helvetica',      fontSize=9.5, leading=15, textColor=TEXT_WHITE, alignment=TA_JUSTIFY, spaceAfter=6)
     s['bullet']  = ParagraphStyle('bullet',  fontName='Helvetica',      fontSize=9.5, leading=15, textColor=TEXT_WHITE, leftIndent=16, firstLineIndent=-8, spaceAfter=2)
-    s['code']    = ParagraphStyle('code',    fontName='Courier',        fontSize=7.5, leading=11, textColor=ACCENT_LIGHT, leftIndent=4, backColor=CODE_BG)
+    s['code']    = ParagraphStyle('code',    fontName='Courier',        fontSize=7.5, leading=11, textColor=TEXT_WHITE, leftIndent=4, backColor=CODE_BG)
     s['caption'] = ParagraphStyle('caption', fontName='Helvetica-Oblique', fontSize=8, leading=12, textColor=TEXT_GRAY, alignment=TA_CENTER, spaceBefore=2)
     s['ref']     = ParagraphStyle('ref',     fontName='Helvetica',      fontSize=8.5, leading=13, textColor=TEXT_GRAY, leftIndent=16, firstLineIndent=-16, spaceAfter=2)
     s['gold']    = ParagraphStyle('gold',    fontName='Helvetica-Bold', fontSize=10,  leading=14, textColor=ACCENT_GOLD)
