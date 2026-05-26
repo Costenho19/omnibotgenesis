@@ -48,7 +48,7 @@ and Cross-Turn Coherence Hash Chain
 | RFC-ATF-3 | https://doi.org/10.5281/zenodo.20247342 | https://doi.org/10.6084/m9.figshare.32308119 |
 | RFC-ATF-4 | https://doi.org/10.5281/zenodo.20368895 | https://doi.org/10.6084/m9.figshare.32394192 |
 | RFC-ATF-5 | https://doi.org/10.5281/zenodo.20391721 | pendiente Figshare |
-| RFC-ATF-6 | https://doi.org/10.5281/zenodo.20393088 | pendiente Figshare |
+| RFC-ATF-6 | https://doi.org/10.5281/zenodo.20393088 | https://doi.org/10.6084/m9.figshare.32407080 |
 
 ---
 
