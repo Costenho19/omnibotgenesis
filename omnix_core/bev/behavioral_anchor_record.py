@@ -252,16 +252,24 @@ class BAREngine:
         pqc = self._get_pqc()
         if pqc.pqc_enabled:
             try:
-                sig_bytes, _, alg = pqc.sign_receipt({
-                    "bar_id": bar_id,
-                    "content_hash": content_hash,
-                    "governing_receipt_id": governing_receipt_id,
-                    "created_at": created_at,
-                })
-                pqc_sig = sig_bytes if isinstance(sig_bytes, str) else (
-                    sig_bytes.decode() if isinstance(sig_bytes, bytes) else None
-                )
-                pqc_alg = alg
+                import base64 as _b64
+                _sk_b64 = os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64", "").strip()
+                if _sk_b64:
+                    _sk_bytes = _b64.b64decode(_sk_b64)
+                    _payload = json.dumps({
+                        "bar_id": bar_id,
+                        "content_hash": content_hash,
+                        "governing_receipt_id": governing_receipt_id,
+                        "created_at": created_at,
+                    }, sort_keys=True).encode("utf-8")
+                    _sig_raw = pqc.sign_message(_payload, _sk_bytes)
+                    if _sig_raw:
+                        pqc_sig = _b64.b64encode(_sig_raw).decode("utf-8")
+                        pqc_alg = "ML-DSA-65"
+                    else:
+                        logger.warning("[BAR] sign_message returned None — BAR unsigned")
+                else:
+                    logger.debug("[BAR] OMNIX_SIGNING_SECRET_KEY_B64 not set — BAR unsigned")
             except Exception as exc:
                 logger.warning(f"[BAR] PQC signing failed (non-blocking): {exc}")
 

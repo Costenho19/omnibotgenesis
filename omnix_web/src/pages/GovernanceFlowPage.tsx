@@ -737,7 +737,7 @@ export default function GovernanceFlowPage() {
                 padding: '3px 10px', borderRadius: 2, letterSpacing: '0.10em', textDecoration: 'none',
               }}>{r.l} · DOI ↗</a>
             ))}
-            {['67 INVARIANTS · 9 FAMILIES', '184 ADRs', 'ML-DSA-65 · FIPS 204', 'OMNIX-WALK-001'].map(b => (
+            {['169 INVARIANTS · 28 FAMILIES', '199 ADRs', 'ML-DSA-65 · FIPS 204', 'OMNIX-WALK-001'].map(b => (
               <span key={b} style={{ fontFamily: 'monospace', fontSize: 9, color: C.subtle, background: `rgba(255,255,255,0.03)`, border: `1px solid ${C.dim}50`, padding: '3px 10px', borderRadius: 2, letterSpacing: '0.08em' }}>{b}</span>
             ))}
           </div>
@@ -768,10 +768,10 @@ export default function GovernanceFlowPage() {
             background: C.navy2, border: `1px solid ${C.dim}40`, borderRadius: 5, overflow: 'hidden', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto',
           }}>
             {[
-              { v: '67', l: 'Active Invariants', c: C.gold },
-              { v: '9',  l: 'Invariant Families', c: C.gold },
-              { v: '4',  l: 'Published RFCs',    c: C.green },
-              { v: '184', l: 'ADRs',             c: C.blue },
+              { v: '169', l: 'Active Invariants', c: C.gold },
+              { v: '28',  l: 'Invariant Families', c: C.gold },
+              { v: '6',  l: 'Published RFCs',    c: C.green },
+              { v: '199', l: 'ADRs',             c: C.blue },
               { v: '245+', l: 'Tests passing',   c: C.green },
             ].map((s, i) => (
               <div key={s.l} style={{

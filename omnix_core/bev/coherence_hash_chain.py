@@ -343,15 +343,23 @@ class CTCHCEngine:
         pqc = self._get_pqc()
         if pqc.pqc_enabled:
             try:
-                sig_bytes, _, alg = pqc.sign_receipt({
-                    "chain_id": chain.chain_id,
-                    "seal_hash": seal_hash,
-                    "session_id": session_id,
-                })
-                pqc_sig = sig_bytes if isinstance(sig_bytes, str) else (
-                    sig_bytes.decode() if isinstance(sig_bytes, bytes) else None
-                )
-                pqc_alg = alg
+                import base64 as _b64, os as _os
+                _sk_b64 = _os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64", "").strip()
+                if _sk_b64:
+                    _sk_bytes = _b64.b64decode(_sk_b64)
+                    _payload = json.dumps({
+                        "chain_id": chain.chain_id,
+                        "seal_hash": seal_hash,
+                        "session_id": session_id,
+                    }, sort_keys=True).encode("utf-8")
+                    _sig_raw = pqc.sign_message(_payload, _sk_bytes)
+                    if _sig_raw:
+                        pqc_sig = _b64.b64encode(_sig_raw).decode("utf-8")
+                        pqc_alg = "ML-DSA-65"
+                    else:
+                        logger.warning("[CTCHC] sign_message returned None — seal unsigned")
+                else:
+                    logger.debug("[CTCHC] OMNIX_SIGNING_SECRET_KEY_B64 not set — seal unsigned")
             except Exception as exc:
                 logger.warning(f"[CTCHC] PQC seal signing failed (non-blocking): {exc}")
 
