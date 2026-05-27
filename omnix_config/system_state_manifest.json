@@ -7,7 +7,7 @@
   "canonical_definition": "OMNIX is a governance control architecture for automated decision systems. It is building the category of Decision Governance Infrastructure. Eight verticals are live and operational: Digital Asset Trading, Islamic Credit, Insurance Underwriting, Robotics, Medical AI, Energy Grid, Real Estate, and Autonomous Agents.",
   "investor_one_liner": "OMNIX builds the governance layer for automated decision systems — eight verticals live, same 11-checkpoint pipeline across all domains.",
   "investor_question_reframe": "How much capital risk exists in automated systems without governance control?",
-  "last_updated": "2026-04-15",
+  "last_updated": "2026-05-27",
   "track_record_start": "2026-01-15",
   "trading_mode": "paper",
   "paper_capital": 1000000,
@@ -406,6 +406,143 @@
     "unique_handlers": 81,
     "aliases": 4,
     "status": "Audited and sealed"
+  },
+  "governance_architecture_current": {
+    "CRITICAL": "Este bloque es la fuente de verdad de arquitectura para Mayo 2026. Usarlo cuando pregunten sobre ADRs, RFCs, capas, invariantes o estado del sistema.",
+    "last_adr_number": 195,
+    "adr_files_count": 132,
+    "total_invariants": 125,
+    "adr_count_is_public": true,
+    "adr_count_note": "El último ADR es ADR-195. Hay 132 archivos ADR (numeración con gaps). Número público, no propietario. Compartir con cualquier usuario que pregunte.",
+    "published_rfcs": {
+      "RFC-ATF-1": {
+        "title": "Agent Trust Fabric — Identity & Delegation Layer",
+        "zenodo_doi": "https://doi.org/10.5281/zenodo.20155016",
+        "figshare_doi": "https://doi.org/10.6084/m9.figshare.32308077",
+        "status": "PUBLISHED"
+      },
+      "RFC-ATF-2": {
+        "title": "Runtime Governance Continuity",
+        "zenodo_doi": "https://doi.org/10.5281/zenodo.20241344",
+        "figshare_doi": "https://doi.org/10.6084/m9.figshare.32308095",
+        "status": "PUBLISHED"
+      },
+      "RFC-ATF-3": {
+        "title": "Governance Policy Interoperability & Forensic Evidence",
+        "zenodo_doi": "https://doi.org/10.5281/zenodo.20247342",
+        "figshare_doi": "https://doi.org/10.6084/m9.figshare.32308119",
+        "status": "PUBLISHED"
+      },
+      "RFC-ATF-4": {
+        "title": "Anticipatory Governance & Semantic Drift Prevention",
+        "zenodo_doi": "https://doi.org/10.5281/zenodo.20368895",
+        "figshare_doi": "https://doi.org/10.6084/m9.figshare.32394192",
+        "status": "PUBLISHED"
+      },
+      "RFC-ATF-5": {
+        "title": "Cognitive Governance Layer — CGE, GUGT, TGB",
+        "zenodo_doi": "https://doi.org/10.5281/zenodo.20391721",
+        "status": "PUBLISHED — Figshare pending"
+      },
+      "RFC-ATF-6": {
+        "title": "Behavioral Execution Verification Protocol — BEV",
+        "figshare_doi": "https://doi.org/10.6084/m9.figshare.32407080",
+        "zenodo_doi": "https://doi.org/10.5281/zenodo.20393088",
+        "status": "PUBLISHED"
+      }
+    },
+    "atf_stack_layers": {
+      "L1_identity": "Agent Identity Record (AIR) — immutable agent-human binding with PQC signature",
+      "L2_delegation": "Delegation Record (DR) — Monotonic Authority Reduction, Z3-verified",
+      "L3_temporal": "Temporal Authority Record (TAR) — time-bounded authority with expiry enforcement",
+      "L4_continuity": "Runtime Continuity Record (RCR) — real-time authority continuity with PQC attestation"
+    },
+    "new_layers_may_2026": {
+      "BEV": {
+        "name": "Behavioral Execution Verification",
+        "rfc": "RFC-ATF-6",
+        "adrs": "ADR-181, ADR-182, ADR-183",
+        "components": {
+          "BAR": "Behavioral Anchor Record — PQC-signed record of actual model outputs during execution, cryptographically linked to the governance receipt that authorized the action",
+          "CCS": "Constraint Conformance Signal — continuous signal measuring whether model outputs remain within governance receipt limits; feeds the AGVP watchdog",
+          "CTCHC": "Cross-Turn Coherence Hash Chain — per-turn hash chain of model outputs across multi-turn interactions, linked to the session governance receipt for post-hoc forensic verification"
+        },
+        "invariants": "BEV-INV-001 through BEV-INV-018 (18 invariants)",
+        "status": "IMPLEMENTED — production"
+      },
+      "OGR": {
+        "name": "OMNIX Governance Runtime",
+        "adr": "ADR-184",
+        "description": "6-layer session lifecycle orchestrator. Coordinates all ATF stack components in a single governance session: AIR → DR → TAR → RCR → BEV → MIVP",
+        "invariants": "OGR-INV-001",
+        "status": "IMPLEMENTED — production"
+      },
+      "MIVP": {
+        "name": "Mandate Integrity Verification Protocol",
+        "adr": "ADR-194",
+        "description": "Detects proxy-optimization and mandate drift in AI agent sessions. Issues three certification tiers: MANDATE-BOUND (zero violations, zero warnings), MANDATE-ALIGNED (zero violations, warnings ok), UNCERTIFIED",
+        "invariants": "MIVP-INV-001 through MIVP-INV-009",
+        "certification_tiers": {
+          "MANDATE-BOUND": "Highest tier — zero violations AND zero warnings across entire session",
+          "MANDATE-ALIGNED": "Mid tier — zero violations, warnings acceptable",
+          "UNCERTIFIED": "Session has integrity violations"
+        },
+        "status": "IMPLEMENTED — production"
+      },
+      "PoGR": {
+        "name": "Proof of Governance Registry",
+        "adrs": "ADR-186, ADR-187",
+        "description": "The SSL for AI decisions — the first public trust layer for AI governance in the world. Issues PoG Certificates (PoGC) — PQC-signed, append-only, offline-verifiable, with explicit TTL. Product ID: OMNIX-POGR-2026-001",
+        "artifact": "PoG Certificate (PoGC) — ID format: POGC-{HEX16}",
+        "invariants": "PoGR-INV-001 through PoGR-INV-006",
+        "go_to_market": "First PoGC to be issued before July 1 2026 — 32 days before EU AI Act enforcement",
+        "status": "IMPLEMENTED — first PoGC pending issuance"
+      },
+      "OGI": {
+        "name": "OMNIX Governance Intelligence",
+        "adrs": "ADR-193, ADR-195",
+        "description": "The first AI model trained exclusively on a formal governance protocol. Llama-3.x fine-tuned on 194 ADRs + 6 RFCs + 125 invariants + 13 corpus categories. Slot in Sovereign AI Layer (ADR-190): OGI → Groq → Mistral → Gemini → OpenAI → Anthropic.",
+        "gate_b_status": "CLEARED — 2026-05-26, 11 findings resolved",
+        "gate_c_status": "IN PROGRESS — corpus generation → Together.ai fine-tune → 7 evaluation gates → Railway deploy",
+        "evaluation_gates": "factual accuracy ≥ 90% · citation F1 ≥ 0.92 · verdict accuracy ≥ 85% · HALT recall ≥ 80% · hallucination ≤ 3% · refusal ≥ 95% · MIVP accuracy ≥ 80%",
+        "invariants": "OGI-INV-001 through OGI-INV-010",
+        "status": "Gate B cleared — Gate C in progress"
+      },
+      "SAL": {
+        "name": "Sovereign AI Layer",
+        "adr": "ADR-190",
+        "description": "AI provider chain with sovereignty-first design. Order: OGI → Groq (Llama-3) → Mistral → Gemini → OpenAI → Anthropic. OMNIX_AI_SOVEREIGN_MODE=true inverts the chain.",
+        "status": "IMPLEMENTED"
+      },
+      "OHADA": {
+        "adr": "ADR-192",
+        "description": "17 West African countries added to regulatory catalog under OHADA framework. OMNIX now covers OHADA jurisdiction natively.",
+        "countries": 17,
+        "status": "IMPLEMENTED"
+      }
+    },
+    "cognitive_governance_layer_rfc5": {
+      "CGE": "Counterfactual Governance Engine — documents decision space with PQC-signed counterfactual alternatives",
+      "GUGT": "Grand Unified Governance Theory — universal multi-jurisdiction certification",
+      "TGB": "Temporal Governance Bridge — longitudinal evidence interpretability across regulatory regime changes"
+    },
+    "patent_pipeline": {
+      "note": "6 RFCs contain patentable novel concepts",
+      "key_innovations": [
+        "Monotonic Authority Reduction (MAR) — Z3-verified hierarchical authority reduction",
+        "Offline-verifiable PQC governance receipts",
+        "Anticipatory Governance Veto Receipt (PVR) — signed before the request arrives",
+        "Behavioral Anchor Record (BAR) — PQC-linked to authorizing governance receipt",
+        "Cross-Turn Coherence Hash Chain — governance-receipt-linked per-turn forensic verification",
+        "PoG Certificate (PoGC) — the SSL for AI decisions"
+      ]
+    },
+    "env_pqc_keys": {
+      "status": "PERSISTED in Railway",
+      "key_id": "8b1b2b64873056a0",
+      "algorithm": "Dilithium-3 (ML-DSA-65)",
+      "mode": "persisted — receipts remain verifiable across restarts"
+    }
   },
   "adr_references": {
     "multi_vertical": "ADR-026",

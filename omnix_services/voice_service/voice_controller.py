@@ -290,29 +290,17 @@ def send_telegram_response_with_voice(chat_id, response_text, user_name="Usuario
                 # NOTA: gTTS genera archivos MP3, debemos usar sendAudio con MIME correcto
                 bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
                 
-                # Detectar tipo de archivo y usar endpoint correcto
+                # Siempre usar sendVoice — Telegram acepta MP3, OGG y M4A como notas de voz
+                voice_url = f"https://api.telegram.org/bot{bot_token}/sendVoice"
                 if audio_path.endswith('.mp3'):
-                    # Para MP3: usar sendAudio con MIME correcto
-                    audio_url = f"https://api.telegram.org/bot{bot_token}/sendAudio"
                     with open(audio_path, 'rb') as audio_file:
-                        files = {'audio': ('voice.mp3', audio_file, 'audio/mpeg')}
-                        caption = "🎤 OMNIX Voz automática - Respuesta completa" if is_admin_voice else "🎤 OMNIX Voz automática"
-                        data = {
-                            'chat_id': chat_id,
-                            'caption': caption,
-                            'title': 'OMNIX Voice Response'
-                        }
-                        voice_response = requests.post(audio_url, files=files, data=data)
+                        files = {'voice': ('voice.mp3', audio_file, 'audio/mpeg')}
+                        data = {'chat_id': chat_id}
+                        voice_response = requests.post(voice_url, files=files, data=data)
                 else:
-                    # Para OGG/OPUS: usar sendVoice
-                    voice_url = f"https://api.telegram.org/bot{bot_token}/sendVoice"
                     with open(audio_path, 'rb') as audio_file:
                         files = {'voice': ('voice.ogg', audio_file, 'audio/ogg')}
-                        caption = "🎤 OMNIX Voz automática - Respuesta completa" if is_admin_voice else "🎤 OMNIX Voz automática"
-                        data = {
-                            'chat_id': chat_id,
-                            'caption': caption
-                        }
+                        data = {'chat_id': chat_id}
                         voice_response = requests.post(voice_url, files=files, data=data)
                 
                 # Verificar respuesta de Telegram
@@ -445,19 +433,17 @@ def _process_and_send_voice(chat_id, response_text, user_name="Usuario", user_id
         
         bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
         
+        # Siempre usar sendVoice — Telegram acepta MP3, OGG y M4A como notas de voz
+        voice_url = f"https://api.telegram.org/bot{bot_token}/sendVoice"
         if audio_path.endswith('.mp3'):
-            audio_url = f"https://api.telegram.org/bot{bot_token}/sendAudio"
             with open(audio_path, 'rb') as audio_file:
-                files = {'audio': ('voice.mp3', audio_file, 'audio/mpeg')}
-                caption = "🎤 OMNIX Voz automática" if not is_admin_voice else "🎤 OMNIX Voz completa"
-                data = {'chat_id': chat_id, 'caption': caption, 'title': 'OMNIX Voice'}
-                voice_response = requests.post(audio_url, files=files, data=data, timeout=30)
+                files = {'voice': ('voice.mp3', audio_file, 'audio/mpeg')}
+                data = {'chat_id': chat_id}
+                voice_response = requests.post(voice_url, files=files, data=data, timeout=30)
         else:
-            voice_url = f"https://api.telegram.org/bot{bot_token}/sendVoice"
             with open(audio_path, 'rb') as audio_file:
                 files = {'voice': ('voice.ogg', audio_file, 'audio/ogg')}
-                caption = "🎤 OMNIX Voz automática" if not is_admin_voice else "🎤 OMNIX Voz completa"
-                data = {'chat_id': chat_id, 'caption': caption}
+                data = {'chat_id': chat_id}
                 voice_response = requests.post(voice_url, files=files, data=data, timeout=30)
         
         if voice_response.status_code == 200 and voice_response.json().get('ok'):

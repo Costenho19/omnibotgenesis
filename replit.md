@@ -48,7 +48,7 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
   - `omnix_core/agents/atf/` — Agent Trust Fabric: DR · TAR · DTR · RCR · AFG · RC
   - `omnix_core/bev/` — Behavioral Execution Verification: BAR · CCS · CTCHC (RFC-ATF-6, ADR-181/182/183)
   - `omnix_core/govern/` — OGR Orchestrator: `governance_runtime.py` — 6-layer session lifecycle (ADR-184)
-- `/docs/adr/` — **184 ADRs**. Fuente de verdad de arquitectura
+- `/docs/adr/` — **132 archivos ADR, último numerado ADR-195**. Fuente de verdad de arquitectura
 - `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (publicado) · RFC-ATF-3 (publicado) · RFC-ATF-4 (publicado) · RFC-ATF-5 (pendiente publicación Zenodo)
 - `/docs/integration/` — `OMNIX_GOVERNANCE_RUNTIME.md` · `GETTING_STARTED.md` — integration product docs
 - `/sdk/` — Python SDK · Node.js SDK

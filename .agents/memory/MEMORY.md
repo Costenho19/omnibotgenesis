@@ -7,3 +7,5 @@
 - [OGI Invariants Family 12](ogi-invariants.md) — OGI-INV-001–010 en INVARIANT_TEST_MATRIX. Gate B cleared 2026-05-26. Gate C Phase 1 completa.
 - [PoGR mandate_certification](pogr-mandate-certification.md) — campo incluido en canonical_fields y PQC-firmado; leído desde atf_mbr_seals por session_id (non-blocking, default UNCERTIFIED). Badge SVG muestra tier cuando no es UNCERTIFIED.
 - [Primer PoGC](primer-pogc.md) — POGC-GENESIS-E071CC96 emitido 2026-05-26. atf_ogr_sessions usa session_status/sin avg_conformance; b2b_clients usa api_key_hash/is_active.
+- [Bot Voice Fix](bot-voice-fix.md) — gTTS genera MP3; voice_controller tenía sendAudio (música) en vez de sendVoice (nota de voz). Fix: ambos paths (sync+async) usan sendVoice con audio/mpeg. Telegram acepta MP3 en sendVoice.
+- [Bot Prompt Architecture](bot-prompt-architecture.md) — ADR count real: 132 archivos, último ADR-195. Arquitectura ATF/BEV/OGR/MIVP/PoGR/OGI es PÚBLICA (6 RFCs con DOI). Solo propietario: internals del trading engine (SIV/FTI/TCV/QME/pesos).
