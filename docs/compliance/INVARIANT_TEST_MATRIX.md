@@ -1,10 +1,10 @@
 # OMNIX QUANTUM — Invariant Test Coverage Matrix
 **Document ID:** OMNIX-COMPLIANCE-INV-MATRIX-2026-05  
-**Date:** May 2026 (rev.5 — May 26, 2026)  
-**Standard:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · RFC-ATF-6 · ADR-157 rev.2 · ADR-161–167 · ADR-170 · ADR-193 · ADR-194  
-**Total Active Invariants:** 65 across 12 families  
+**Date:** May 2026 (rev.6 — May 27, 2026)  
+**Standard:** RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · RFC-ATF-6 · ADR-157 rev.2 · ADR-161–167 · ADR-170 · ADR-193 · ADR-194 · ADR-200  
+**Total Active Invariants:** 71 across 13 families  
 **Proposed (SGIP):** 4 invariants — pending implementation  
-**Coverage (active):** 41/65 direct test (63.1%) · 24/65 structural only (36.9%) · 0/65 untested  
+**Coverage (active):** 41/71 direct test (57.7%) · 30/71 structural only (42.3%) · 0/71 untested  
 
 > This matrix is the authoritative traceability document between all formal invariants published across the OMNIX RFC and ADR corpus, and the test suite. Referenced by the Technical Whitepaper (Section 13) and all Institutional Audit Reports.
 >
@@ -12,6 +12,7 @@
 > **rev.3 changes:** GECR-INV-001–006 (Governance Execution Context Router) added in ADR-170. Total raised to 47.
 > **rev.4 changes:** MIVP-INV-001–008 (Mandate Integrity Verification Protocol, ADR-194) added. SGIP-INV proposed family added. Active total raised to 55.
 > **rev.5 changes:** MIVP-INV-009 (MANDATE-ALIGNED mutual exclusivity, three-tier certification) formalised. OGI-INV-001–010 (OGI Fine-Tuning Pipeline, ADR-193) added as Family 12. Active total raised to 65. F-C-002 resolved.
+> **rev.6 changes:** RCEP-INV-001–006 (Route-Complete Evidence Package, ADR-200) added as Family 13. Active total raised to 71. Coverage: 41/71 direct (57.7%) · 30/71 structural (42.3%).
 
 ---
 
@@ -187,6 +188,23 @@
 
 ---
 
+## Family 13 — RCEP Invariants (ADR-200)
+
+> **ADR-200 — Route-Complete Evidence Package.** Dual-route evidence for offline TA-14 review. Proves simultaneously that execution is impossible under invalid authority (Route A) and admitted under valid authority (Route B). Generator: `scripts/generate_route_evidence_package.py`. Standalone verifier: `scripts/verify_evidence_package.py` — 52/52 checks PASS on fresh packages. Dedicated pytest suite `tests/test_rcep.py` pending.
+
+| ID | Formal Statement | Implementation | Test File | Test ID / Count | Status |
+|---|---|---|---|---|---|
+| RCEP-INV-001 | Every RCEP package MUST be signed with ML-DSA-65 (Dilithium-3, FIPS 204) using an ephemeral keypair; the public key MUST be embedded in the package — offline verification requires no external key material | `generate_route_evidence_package.py` — ephemeral Dilithium-3 keypair generated per package; `public_key_b64` embedded in `package_metadata` | `tests/test_rcep.py` (pending) | PQC signature + embedded key test | ⚠️ Structural |
+| RCEP-INV-002 | Route A MUST produce execution HALT before any decision output is emitted; the verifier MUST confirm the HALT verdict preceded output | `generate_route_evidence_package.py` — Route A injects invalid authority; HALT recorded in `route_a.execution_trace`; `verify_evidence_package.py` checks `route_a_halted = True` | `tests/test_rcep.py` (pending) | Route A HALT-before-output test | ⚠️ Structural |
+| RCEP-INV-003 | Route B MUST produce an APPROVED execution verdict; the verifier MUST confirm the APPROVED decision preceded any output | `generate_route_evidence_package.py` — Route B uses valid authority; APPROVED recorded in `route_b.execution_trace`; `verify_evidence_package.py` checks `route_b_approved = True` | `tests/test_rcep.py` (pending) | Route B APPROVED verdict test | ⚠️ Structural |
+| RCEP-INV-004 | The package MUST contain all required canonical fields as defined in the Canonicalization Profile Registry (ADR-200 §4); absence of any required field MUST cause verifier failure with `FAIL` status | `verify_evidence_package.py` — `_check_required_fields()` validates all canonical fields; any missing field → `FAIL` | `tests/test_rcep.py` (pending) | Canonical fields completeness test | ⚠️ Structural |
+| RCEP-INV-005 | The package content hash MUST be reproducible using the documented canonicalization profile; cross-verifier reproducibility MUST be demonstrable offline without platform access | `verify_evidence_package.py` — `_verify_content_hash()` recomputes SHA-256 over canonical JSON and compares with stored `content_hash`; deterministic serialization per ADR-200 §4 | `tests/test_rcep.py` (pending) | Content hash reproducibility test | ⚠️ Structural |
+| RCEP-INV-006 | The package MUST be self-contained and offline-verifiable; `verify_evidence_package.py` MUST reach 52/52 PASS verdict using only the package JSON and its embedded public key — no network access, no platform credentials | `verify_evidence_package.py` — all 52 checks use only embedded data; `package_metadata.public_key_b64` used for PQC sig verification; no external calls | `tests/test_rcep.py` (pending) | 52/52 PASS offline verification test | ⚠️ Structural |
+
+**Gap note:** All 6 RCEP invariants are validated by `scripts/verify_evidence_package.py` (52/52 PASS, 0 FAIL confirmed May 27 2026). No pytest-integrated test file exists yet. Create `tests/test_rcep.py` to promote all 6 to ✅ Direct. Priority action: generate a package in the test, run the verifier, assert 52/52.
+
+---
+
 ## Coverage Summary
 
 ```
@@ -203,17 +221,18 @@ FVP-INV         1             1            0               0          Active
 GECR-INV        6             5            1               0          Active ← ADR-170
 MIVP-INV        9             0            9               0          Active ← ADR-194 · rev.5: INV-009 added
 OGI-INV        10             0           10               0          Active ← ADR-193 · Family 12 (F-C-002 closed)
+RCEP-INV        6             0            6               0          Active ← ADR-200 · rev.6 added
 ─────────────────────────────────────────────────────────────────────────────
-ACTIVE TOTAL    65            41           24              0
+ACTIVE TOTAL    71            41           30              0
 ─────────────────────────────────────────────────────────────────────────────
 SGIP-INV        4             0            0               4          PROPOSED ← ADR-171
 ─────────────────────────────────────────────────────────────────────────────
-GRAND TOTAL     69            41           24              4
+GRAND TOTAL     75            41           30              4
 
-Active coverage (65 invariants):
-  Direct:      41/65 = 63.1%
-  Structural:  24/65 = 36.9%
-  None:         0/65 =  0.0%
+Active coverage (71 invariants):
+  Direct:      41/71 = 57.7%
+  Structural:  30/71 = 42.3%
+  None:         0/71 =  0.0%
 
 Proposed (SGIP, 4 invariants):
   All 4 pending implementation — RFC-ATF-4 sprint
@@ -225,6 +244,10 @@ MIVP-INV (9 invariants, all Structural — pending tests/test_mivp.py):
 OGI-INV (10 invariants, all Structural — pending tests/test_ogi.py):
   Priority action: create corpus_allowlist.yaml + ontology.json → then create test_ogi.py — target 10/10 Direct
   See F-C-002 in FINAL_RISK_MATRIX.md for remediation order.
+
+RCEP-INV (6 invariants, all Structural — pending tests/test_rcep.py):
+  Validated by scripts/verify_evidence_package.py (52/52 PASS, 0 FAIL — May 27 2026).
+  Priority action: create test_rcep.py — generate package in test, run verifier, assert 52/52. Target: 6/6 Direct.
 ```
 
 ---
@@ -240,8 +263,9 @@ OGI-INV (10 invariants, all Structural — pending tests/test_ogi.py):
 | 5 | FEA-INV-001 | Add env var default test: absent `FORENSIC_EXPORT_ALLOW_CALLER_KEYS` behaves as `false` | `tests/test_oep_forensic_audit.py` | Next |
 | 6 | MIVP-INV-001–009 | Create `tests/test_mivp.py` — 9 invariants, all currently Structural. Priority sub-tests: INV-001 (MBR pre-turn), INV-005 (HALT enforcement), INV-008/009 (three-tier eligibility + mutual exclusivity). Target: 9/9 Direct. | `tests/test_mivp.py` | BEV sprint |
 | 7 | OGI-INV-001–010 | Prerequisite: create `corpus_allowlist.yaml` + `ontology.json`. Then create `tests/test_ogi.py`. Priority sub-tests: INV-001 (allowlist gate), INV-007 (5-gate model evaluation), INV-010 (MIVP category count). Target: 10/10 Direct. | `tests/test_ogi.py` | OGI sprint |
-| 8 | ELR-INV-003 (GPIL) | Implement `omnix_core/governance/gpil.py` runtime module — CRGC issuance, signing, storage | `omnix_core/governance/gpil.py` | Future |
-| 9 | SGIP-INV-001–004 | Implement `omnix_core/agents/atf/semantic_governance.py` — STR, SPV, SAC classes; create `tests/test_sgip_audit.py` | `semantic_governance.py` + test file | RFC-ATF-4 sprint |
+| 8 | RCEP-INV-001–006 | Create `tests/test_rcep.py` — 6 invariants, all currently Structural. Pattern: generate package in test, invoke verifier, assert 52/52 PASS. Also add field-strip and invalid-authority rejection tests. Target: 6/6 Direct. | `tests/test_rcep.py` | Next sprint |
+| 9 | ELR-INV-003 (GPIL) | Implement `omnix_core/governance/gpil.py` runtime module — CRGC issuance, signing, storage | `omnix_core/governance/gpil.py` | Future |
+| 10 | SGIP-INV-001–004 | Implement `omnix_core/agents/atf/semantic_governance.py` — STR, SPV, SAC classes; create `tests/test_sgip_audit.py` | `semantic_governance.py` + test file | RFC-ATF-4 sprint |
 
 > **Closed items:** RGC-INV-007 — removed from backlog May 17 2026 (ADR-157 rev.2). Structural gap closed via compiled constant `RCR_CES_STALENESS_BOUND_SECONDS=300` in `runtime_continuity.py`.
 

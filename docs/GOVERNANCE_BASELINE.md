@@ -272,5 +272,55 @@ This ADR does not modify any active invariant. It adds **4 PROPOSED invariants**
 - Test suite pending: `tests/test_sgip_audit.py`
 - Future RFC: RFC-ATF-4
 
+---
+
+## Addendum — ADR-181/182/183 (RFC-ATF-6): Behavioral Execution Verification (BEV)
+
+**Filed:** May 2026 · **Status:** Accepted
+
+Three ADRs formalizing the BEV layer: BAR (ADR-181), CCS (ADR-182), CTCHC (ADR-183). Adds 18 invariants (BEV-INV-001–018). New DB tables: `atf_behavioral_anchor_records`, `atf_constraint_conformance_signals`, `atf_coherence_hash_chains`, `atf_coherence_chain_links`. Test suite: `tests/test_bev_ogr.py` (73 tests).
+
+**Impact on counts from ADR-171:** ADRs: 171 → **184** (including OGR, MIVP, OGI, PoGR, OSG, SAL, stress/soak/obs/reg ADRs).
+
+---
+
+## Addendum — ADR-194: Mandate Integrity Verification Protocol (MIVP)
+
+**Filed:** May 2026 · **Status:** Accepted
+
+MIVP adds per-session mandate binding (MBR) and per-turn alignment scoring (MAS) with three-tier certification: MANDATE-BOUND · MANDATE-ALIGNED · UNCERTIFIED. Adds 9 invariants (MIVP-INV-001–009). Dedicated test suite `tests/test_mivp.py` pending (all 9 currently Structural).
+
+---
+
+## Addendum — ADR-196/197/198/199: Production Hardening Layer
+
+**Filed:** May 2026 · **Status:** Accepted
+
+Four ADRs establishing the Production Hardening Layer: SVP (Stress Validation, ADR-196 · 8 invariants), SOAK (Soak Reliability, ADR-197 · 7 invariants), GOL (Governance Observability, ADR-198 · 6 invariants), PRG (Production Regulatory Governance, ADR-199 · 6 invariants). Total: 27 new invariants.
+
+**Impact on counts:** ADRs → **199** · Active invariants +27
+
+---
+
+## Addendum — ADR-200: Route-Complete Evidence Package (RCEP)
+
+**Filed:** May 27, 2026 · **Status:** Accepted · **Extends:** ADR-085 (PQC signing) · ADR-163 (EAP)
+
+ADR-200 defines the **Route-Complete Evidence Package (RCEP)**: a dual-route offline evidence package designed for TA-14 technical advisor reviews without platform access. It simultaneously proves that execution is impossible under invalid authority (Route A — HALT) and admitted under valid authority (Route B — APPROVED).
+
+Key artifacts:
+- Generator: `scripts/generate_route_evidence_package.py`
+- Standalone verifier: `scripts/verify_evidence_package.py` — **52/52 checks PASS, 0 FAIL** (verified May 27 2026)
+- Packages directory: `evidence_packages/`
+- **Canonicalization Profile Registry** documented in ADR-200 §4
+
+6 new invariants (RCEP-INV-001–006) added. All structural pending `tests/test_rcep.py`. PQC: ephemeral Dilithium-3 ML-DSA-65 keypair per package, public key embedded.
+
+**Impact on counts:**
+- ADRs: 199 → **200**
+- Active invariants: +6 (RCEP-INV-001–006) → **total 71 active** (per INVARIANT_TEST_MATRIX rev.6)
+- Proposed invariants: 4 (SGIP, unchanged)
+- Grand total: **75 invariants** (71 active + 4 proposed)
+
 *OMNIX QUANTUM — Decision Governance Infrastructure*  
-*Governance Baseline OMNIX-BASELINE-2026-Q2-001 · May 2026 · omnixquantum.net*
+*Governance Baseline OMNIX-BASELINE-2026-Q2-001 · May 2026 (updated May 27, 2026) · omnixquantum.net*
