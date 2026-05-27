@@ -2180,10 +2180,13 @@ class ConversationalAI:
                 return response_text
                 
             except Exception as e:
+                import traceback
                 logger.error(f"❌ Gemini falló [{type(e).__name__}]: {e} — intentando GPT-4 fallback")
+                logger.error(f"❌ Gemini TRACEBACK: {traceback.format_exc()}")
         
-        # PRIORIDAD 2: GPT-4 fallback (solo si Gemini falla)
-        if hasattr(self, 'openai_client') and self.openai_client:
+        # PRIORIDAD 2: GPT-4 fallback (solo si Gemini falla y OpenAI no está deshabilitado)
+        _openai_disabled = os.environ.get('OMNIX_DISABLE_OPENAI', 'false').lower() == 'true'
+        if not _openai_disabled and hasattr(self, 'openai_client') and self.openai_client:
             try:
                 logger.info("⚠️ Usando GPT-4 fallback")
                 

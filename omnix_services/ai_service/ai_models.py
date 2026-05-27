@@ -152,6 +152,9 @@ class AIModelsManager:
     
     def _initialize_openai(self):
         """Initialize OpenAI GPT-4o with Async support"""
+        if os.getenv('OMNIX_DISABLE_OPENAI', 'false').lower() == 'true':
+            logger.info("ℹ️  OpenAI deshabilitado via OMNIX_DISABLE_OPENAI=true")
+            return
         try:
             if settings.ai.openai_key:
                 self.openai_client = AsyncOpenAI(api_key=settings.ai.openai_key)
