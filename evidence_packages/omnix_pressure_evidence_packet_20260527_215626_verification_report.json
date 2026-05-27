@@ -1,0 +1,425 @@
+{
+  "packet_id": "OMNIX-PEP-73F019BA3CB0411E",
+  "verified_at": "2026-05-27T21:56:35.503505+00:00",
+  "total_checks": 69,
+  "passed": 69,
+  "failed": 0,
+  "skipped": 0,
+  "verdict": "PASS",
+  "checks": [
+    {
+      "id": "P1_AUTHORITY_DRIFT.DR.MAR",
+      "label": "DR ATFDR-1E1E0B95FBC44B \u2014 MAR (granted\u2264delegator)",
+      "result": "PASS",
+      "detail": "granted=75.0 delegator=100.0"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.DR.HASH",
+      "label": "DR ATFDR-1E1E0B95FBC44B \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=c9b617bb5cd3b89d... expected=c9b617bb5cd3b89d..."
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.DR.SIG",
+      "label": "DR ATFDR-1E1E0B95FBC44B \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.TAR.HASH",
+      "label": "TAR ATFTAR-07AC7E553FE84 \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=553e0aebc4f61cfc... expected=553e0aebc4f61cfc..."
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.TAR.STATUS",
+      "label": "TAR ATFTAR-07AC7E553FE84 \u2014 admission_status",
+      "result": "PASS",
+      "detail": "status=REJECTED"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.TAR.SIG",
+      "label": "TAR ATFTAR-07AC7E553FE84 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.RCR.HASH",
+      "label": "RCR RCR-P1-464D84A1F02E \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=15644680f9759a73... expected=15644680f9759a73..."
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.RCR.SIG",
+      "label": "RCR RCR-P1-464D84A1F02E \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.BIND.HASH",
+      "label": "Binding BIND-P1-5448DFAE24F4 \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=b7c3c4a4cd98809a... expected=b7c3c4a4cd98809a..."
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.BIND.STATUS",
+      "label": "Binding BIND-P1-5448DFAE24F4 \u2014 status is REFUSED/HALT",
+      "result": "PASS",
+      "detail": "status=REFUSED"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.BIND.SIG",
+      "label": "Binding BIND-P1-5448DFAE24F4 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.EXEC.HASH",
+      "label": "HARD_REFUSAL REFUSAL-DBD8739BD090 \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=726f7fb68a5c677b... expected=726f7fb68a5c677b..."
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.EXEC.TYPE",
+      "label": "HARD_REFUSAL REFUSAL-DBD8739BD090 \u2014 type is HARD_REFUSAL or HALT",
+      "result": "PASS",
+      "detail": "type=HARD_REFUSAL"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.EXEC.SIG",
+      "label": "HARD_REFUSAL REFUSAL-DBD8739BD090 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.OUT.HASH",
+      "label": "Outcome OUT-P1-7F5DC01959E0 \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=1d13b1f78b5122ab... expected=1d13b1f78b5122ab..."
+    },
+    {
+      "id": "P1_AUTHORITY_DRIFT.OUT.EXEC",
+      "label": "Outcome OUT-P1-7F5DC01959E0 \u2014 execution_occurred=False",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P1.ASSERT.TAR_REJECTED",
+      "label": "P1 \u2014 TAR rejected expired DR (TAR-INV-003)",
+      "result": "PASS",
+      "detail": "status=REJECTED"
+    },
+    {
+      "id": "P1.ASSERT.BIND_REFUSED",
+      "label": "P1 \u2014 Binding refused after drift",
+      "result": "PASS",
+      "detail": "status=REFUSED"
+    },
+    {
+      "id": "P1.ASSERT.DRIFT",
+      "label": "P1 \u2014 drift_confirmed=True in binding",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P1.ASSERT.NO_EXEC",
+      "label": "P1 \u2014 execution_occurred=False",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P1.ASSERT.DRIFT_NOTE",
+      "label": "P1 \u2014 source captured before expiry (pressure_note present)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.DR.MAR",
+      "label": "DR ATFDR-C782C925B35A46 \u2014 MAR (granted\u2264delegator)",
+      "result": "PASS",
+      "detail": "granted=75.0 delegator=100.0"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.DR.HASH",
+      "label": "DR ATFDR-C782C925B35A46 \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=9a2899c9e272176a... expected=9a2899c9e272176a..."
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.DR.SIG",
+      "label": "DR ATFDR-C782C925B35A46 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.TAR.HASH",
+      "label": "TAR ATFTAR-7B0A9CC4C9E04 \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=1c861d42643d2fb3... expected=1c861d42643d2fb3..."
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.TAR.STATUS",
+      "label": "TAR ATFTAR-7B0A9CC4C9E04 \u2014 admission_status",
+      "result": "PASS",
+      "detail": "status=ADMITTED"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.TAR.SIG",
+      "label": "TAR ATFTAR-7B0A9CC4C9E04 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.RCR.HASH",
+      "label": "RCR ATFRCR-P2-217488255D \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=9d80dad56b757ceb... expected=9d80dad56b757ceb..."
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.RCR.SIG",
+      "label": "RCR ATFRCR-P2-217488255D \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.BIND.HASH",
+      "label": "Binding BIND-P2-BCE30B7575E1 \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=1d7b62cc5456e1d5... expected=1d7b62cc5456e1d5..."
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.BIND.STATUS",
+      "label": "Binding BIND-P2-BCE30B7575E1 \u2014 status is REFUSED/HALT",
+      "result": "PASS",
+      "detail": "status=REFUSED"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.BIND.SIG",
+      "label": "Binding BIND-P2-BCE30B7575E1 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.EXEC.HASH",
+      "label": "HARD_REFUSAL REFUSAL-24E63155E475 \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=83dadc4f34ef8ae9... expected=83dadc4f34ef8ae9..."
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.EXEC.TYPE",
+      "label": "HARD_REFUSAL REFUSAL-24E63155E475 \u2014 type is HARD_REFUSAL or HALT",
+      "result": "PASS",
+      "detail": "type=HARD_REFUSAL"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.EXEC.SIG",
+      "label": "HARD_REFUSAL REFUSAL-24E63155E475 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.OUT.HASH",
+      "label": "Outcome OUT-P2-3D21BFB3EE49 \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=e60fb50d7b5f572a... expected=e60fb50d7b5f572a..."
+    },
+    {
+      "id": "P2_STALE_CONTINUITY.OUT.EXEC",
+      "label": "Outcome OUT-P2-3D21BFB3EE49 \u2014 execution_occurred=False",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P2.ASSERT.CES_HALT",
+      "label": "P2 \u2014 CES score in HALT/WARNING band (RGC-INV-002)",
+      "result": "PASS",
+      "detail": "ces=63.4 band=MONITORING"
+    },
+    {
+      "id": "P2.ASSERT.STALE",
+      "label": "P2 \u2014 staleness_confirmed=True in continuity",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P2.ASSERT.HALT_POSTURE",
+      "label": "P2 \u2014 halt_posture_raised=True",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P2.ASSERT.BIND_REFUSED",
+      "label": "P2 \u2014 Binding refused (CES HALT posture)",
+      "result": "PASS",
+      "detail": "status=REFUSED"
+    },
+    {
+      "id": "P2.ASSERT.NO_EXEC",
+      "label": "P2 \u2014 execution_occurred=False",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.DR.MAR",
+      "label": "DR ATFDR-626222C28CFD4D \u2014 MAR (granted\u2264delegator)",
+      "result": "PASS",
+      "detail": "granted=75.0 delegator=100.0"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.DR.HASH",
+      "label": "DR ATFDR-626222C28CFD4D \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=7d540f7788a141ac... expected=7d540f7788a141ac..."
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.DR.SIG",
+      "label": "DR ATFDR-626222C28CFD4D \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.TAR.HASH",
+      "label": "TAR ATFTAR-6E968E2791634 \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=61ce395dfc5f076e... expected=61ce395dfc5f076e..."
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.TAR.STATUS",
+      "label": "TAR ATFTAR-6E968E2791634 \u2014 admission_status",
+      "result": "PASS",
+      "detail": "status=ADMITTED"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.TAR.SIG",
+      "label": "TAR ATFTAR-6E968E2791634 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.RCR.HASH",
+      "label": "RCR ATFRCR-P3-2D31D38FA8 \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=e89eaf72ac5b4fe1... expected=e89eaf72ac5b4fe1..."
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.RCR.SIG",
+      "label": "RCR ATFRCR-P3-2D31D38FA8 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.BIND.HASH",
+      "label": "Binding BIND-P3-3F807D9B5E68 \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=639f669040da0a5d... expected=639f669040da0a5d..."
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.BIND.STATUS",
+      "label": "Binding BIND-P3-3F807D9B5E68 \u2014 status is REFUSED/HALT",
+      "result": "PASS",
+      "detail": "status=HALT"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.BIND.SIG",
+      "label": "Binding BIND-P3-3F807D9B5E68 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.EXEC.HASH",
+      "label": "HALT HALT-63DABEDE2428449 \u2014 content_hash",
+      "result": "PASS",
+      "detail": "stored=45fd8590fe4a671c... expected=45fd8590fe4a671c..."
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.EXEC.TYPE",
+      "label": "HALT HALT-63DABEDE2428449 \u2014 type is HARD_REFUSAL or HALT",
+      "result": "PASS",
+      "detail": "type=HALT"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.EXEC.SIG",
+      "label": "HALT HALT-63DABEDE2428449 \u2014 PQC signature",
+      "result": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.OUT.HASH",
+      "label": "Outcome OUT-P3-E6C4773E1320 \u2014 hash integrity",
+      "result": "PASS",
+      "detail": "stored=022a4f470f6b6850... expected=022a4f470f6b6850..."
+    },
+    {
+      "id": "P3_RC_TTL_ENFORCEMENT.OUT.EXEC",
+      "label": "Outcome OUT-P3-E6C4773E1320 \u2014 execution_occurred=False",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P3.ASSERT.RC_EXPIRED",
+      "label": "P3 \u2014 rc_expired=True in continuity (RGC-INV-008)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P3.ASSERT.HALT_RC",
+      "label": "P3 \u2014 halt_triggered_by_rc=True",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P3.ASSERT.BIND_HALT",
+      "label": "P3 \u2014 Binding status=HALT",
+      "result": "PASS",
+      "detail": "status=HALT"
+    },
+    {
+      "id": "P3.ASSERT.SUBTASKS",
+      "label": "P3 \u2014 sub_tasks_revoked=True in commit (RGC-INV-003)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "P3.ASSERT.HALT_TYPE",
+      "label": "P3 \u2014 execution receipt type=HALT",
+      "result": "PASS",
+      "detail": "type=HALT"
+    },
+    {
+      "id": "P3.ASSERT.NO_EXEC",
+      "label": "P3 \u2014 execution_occurred=False",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "PKT.VERSION",
+      "label": "Packet version present",
+      "result": "PASS",
+      "detail": "version=1.0.0"
+    },
+    {
+      "id": "PKT.PQC_KEY",
+      "label": "Ephemeral public key embedded",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "PKT.SCENARIOS",
+      "label": "Three pressure scenarios present",
+      "result": "PASS",
+      "detail": "found=3"
+    },
+    {
+      "id": "PKT.INVARIANTS",
+      "label": "Invariants stress-tested list present",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "PKT.VERIF_INSTR",
+      "label": "Verification instructions present",
+      "result": "PASS",
+      "detail": ""
+    }
+  ]
+}
