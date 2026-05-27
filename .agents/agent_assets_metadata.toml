@@ -707,3 +707,15 @@ id = "PTUPUr4_WlCOhL7X931Le"
 uri = "file://docs/zenodo/rfc_atf_6/RFC-ATF-6.pdf"
 type = "pdf"
 title = "RFC-ATF-6 — Corregido (gráficos separados del texto)"
+
+[[outputs]]
+id = "_lTw4a8-JK0Sd5tUfzvyq"
+uri = "file://evidence_packages/omnix_evidence_package_20260527_191542.json"
+type = "unspecified"
+title = "OMNIX-EP-76A900F4A33640BC — Route-Complete Evidence Package"
+
+[[outputs]]
+id = "QY5LqpEyZ_JWWVFBTWZSv"
+uri = "file://evidence_packages/omnix_evidence_package_20260527_191542_verification_report.json"
+type = "unspecified"
+title = "Verification Report — 52/52 PASS"
