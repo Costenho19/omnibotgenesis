@@ -2127,34 +2127,29 @@ class ConversationalAI:
             try:
                 logger.info("✅ Usando GEMINI en modo legacy")
 
-                def _call_gemini_sync():
-                    """Llama Gemini sincrónicamente — ejecutar via run_in_executor para no bloquear el loop."""
-                    if hasattr(self.gemini_client, 'models'):
-                        try:
-                            from google.genai import types as _genai_types
-                            _cfg = _genai_types.GenerateContentConfig(
-                                temperature=0.7,
-                                max_output_tokens=2000,
-                                top_p=0.95,
-                            )
-                            return self.gemini_client.models.generate_content(
-                                model='gemini-2.0-flash',
-                                contents=system_prompt,
-                                config=_cfg
-                            )
-                        except Exception:
-                            return self.gemini_client.models.generate_content(
-                                model='gemini-2.0-flash',
-                                contents=system_prompt
-                            )
-                    else:
-                        return self.gemini_client.generate_content(system_prompt)
-
-                _loop = asyncio.get_event_loop()
-                response = await asyncio.wait_for(
-                    _loop.run_in_executor(None, _call_gemini_sync),
-                    timeout=25.0
-                )
+                # Llamada síncrona a Gemini (generate_response es método sync)
+                if hasattr(self.gemini_client, 'models'):
+                    # Nuevo SDK (google.genai.Client)
+                    try:
+                        from google.genai import types as _genai_types
+                        _cfg = _genai_types.GenerateContentConfig(
+                            temperature=0.7,
+                            max_output_tokens=2000,
+                            top_p=0.95,
+                        )
+                        response = self.gemini_client.models.generate_content(
+                            model='gemini-2.0-flash',
+                            contents=system_prompt,
+                            config=_cfg
+                        )
+                    except Exception:
+                        response = self.gemini_client.models.generate_content(
+                            model='gemini-2.0-flash',
+                            contents=system_prompt
+                        )
+                else:
+                    # SDK clásico (google.generativeai)
+                    response = self.gemini_client.generate_content(system_prompt)
 
                 # Extracción segura del texto — aplica a nuevo SDK y legacy
                 try:
