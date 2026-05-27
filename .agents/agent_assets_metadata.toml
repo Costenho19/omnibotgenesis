@@ -719,3 +719,15 @@ id = "QY5LqpEyZ_JWWVFBTWZSv"
 uri = "file://evidence_packages/omnix_evidence_package_20260527_191542_verification_report.json"
 type = "unspecified"
 title = "Verification Report — 52/52 PASS"
+
+[[outputs]]
+id = "W3wlUUyG_FXZMK2lvyOuG"
+uri = "file://evidence_packages/OMNIX_RouteComplete_EvidencePackage.pdf"
+type = "pdf"
+title = "PDF 1 — Route-Complete Evidence Package (OMNIX-EP-76A900F4A33640BC)"
+
+[[outputs]]
+id = "4_5QHfwH6HIANsMEXZFtc"
+uri = "file://evidence_packages/OMNIX_VerificationReport_52_52.pdf"
+type = "pdf"
+title = "PDF 2 — Verification Report (52/52 PASS)"
