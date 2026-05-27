@@ -629,8 +629,8 @@ class TransparencyChain:
         if not self._db_url:
             return None
         try:
-            import psycopg2
-            return psycopg2.connect(self._db_url)
+            import psycopg
+            return psycopg.connect(self._db_url)
         except ImportError:
             try:
                 import psycopg

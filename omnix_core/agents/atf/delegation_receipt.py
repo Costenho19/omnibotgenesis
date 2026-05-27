@@ -193,10 +193,8 @@ class DelegationReceiptEngine:
 
     def _get_conn(self):
         try:
-            import psycopg2
-            import psycopg2.extras
-            conn = psycopg2.connect(self._db_url)
-            psycopg2.extras.register_uuid()
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             return conn
         except Exception as exc:
             logger.warning(f"[ATF.Delegation] DB connection failed: {exc}")

@@ -93,8 +93,8 @@ def _probe_database(db_url: Optional[str]) -> SubsystemHealth:
                                "DATABASE_URL not configured", critical=True)
     t0 = time.monotonic()
     try:
-        import psycopg2
-        conn = psycopg2.connect(db_url, connect_timeout=5)
+        import psycopg
+        conn = psycopg.connect(db_url, connect_timeout=5)
         cur = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM decision_receipts LIMIT 1")
         count = cur.fetchone()[0]

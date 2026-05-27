@@ -26,8 +26,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg.rows import dict_row
 
 logger = logging.getLogger("OMNIX.Governance.HumanOversight")
 
@@ -42,7 +42,7 @@ def _get_conn():
             "DATABASE_URL not configured — HumanOversightEngine requires database access. "
             "Set DATABASE_URL environment variable."
         )
-    return psycopg2.connect(db_url)
+    return psycopg.connect(db_url)
 
 
 def _load_receipt_engine():
@@ -141,7 +141,7 @@ class HumanOversightEngine:
 
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 INSERT INTO governance_overrides
@@ -181,7 +181,7 @@ class HumanOversightEngine:
         """Verify the content hash integrity of an override record."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute("SELECT * FROM governance_overrides WHERE id = %s", (override_id,))
             row = cur.fetchone()
         finally:
@@ -211,7 +211,7 @@ class HumanOversightEngine:
         """List override records for the authenticated client."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 SELECT id, client_id, receipt_id, decision_before, decision_after,
@@ -237,7 +237,7 @@ class HumanOversightEngine:
         """Get full override detail (client isolation enforced)."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 "SELECT * FROM governance_overrides WHERE id = %s AND client_id = %s",
                 (override_id, client_id),

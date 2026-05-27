@@ -309,8 +309,8 @@ class GovernanceRuntime:
         return self._mivp_engine
 
     def _get_conn(self):
-        import psycopg2
-        return psycopg2.connect(self._db_url)
+        import psycopg
+        return psycopg.connect(self._db_url)
 
     # ── Startup ───────────────────────────────────────────────────
 

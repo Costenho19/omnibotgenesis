@@ -543,8 +543,8 @@ class MetaCoherenceMonitor:
             return False
 
         try:
-            import psycopg2
-            conn = psycopg2.connect(self._db_url)
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             cur  = conn.cursor()
 
             rows_written = 0
@@ -713,8 +713,8 @@ class MetaCoherenceMonitor:
             return result
 
         try:
-            import psycopg2
-            conn = psycopg2.connect(self._db_url)
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             cur  = conn.cursor()
 
             # Pull verdict counts for both windows in one query.
@@ -894,8 +894,8 @@ class MetaCoherenceMonitor:
             return result
 
         try:
-            import psycopg2
-            conn = psycopg2.connect(self._db_url)
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             cur  = conn.cursor()
 
             cur.execute("""
@@ -1045,8 +1045,8 @@ class MetaCoherenceMonitor:
             return result
 
         try:
-            import psycopg2
-            conn = psycopg2.connect(self._db_url)
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             cur  = conn.cursor()
 
             # Load AVM calibration snapshot for this domain
@@ -1241,8 +1241,8 @@ class MetaCoherenceMonitor:
             return result
 
         try:
-            import psycopg2
-            conn = psycopg2.connect(self._db_url)
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             cur  = conn.cursor()
 
             # Pull per-period verdict counts using DATE_TRUNC for stable weekly
@@ -1708,8 +1708,8 @@ class MetaCoherenceMonitor:
         if not self._db_url:
             return []
         try:
-            import psycopg2
-            conn = psycopg2.connect(self._db_url)
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             cur  = conn.cursor()
             cur.execute(
                 "SELECT domain FROM avm_calibration_snapshots WHERE is_active = true ORDER BY domain"
@@ -1746,8 +1746,8 @@ class MetaCoherenceMonitor:
             return False
 
         try:
-            import psycopg2
-            conn = psycopg2.connect(self._db_url)
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             cur  = conn.cursor()
 
             # ── Rate-limit: 1 remediation per domain per 6h ────────────────────

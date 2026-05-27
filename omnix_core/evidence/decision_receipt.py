@@ -149,8 +149,8 @@ def _get_db_connection(db_url: str):
     if not db_url:
         return None
     try:
-        import psycopg2
-        return psycopg2.connect(db_url)
+        import psycopg
+        return psycopg.connect(db_url)
     except ImportError:
         try:
             import psycopg

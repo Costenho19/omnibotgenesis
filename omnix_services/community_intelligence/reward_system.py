@@ -14,6 +14,10 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Any
 import json
+try:
+    from psycopg.rows import dict_row as _dict_row
+except ImportError:
+    _dict_row = None
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +136,7 @@ class RewardSystem:
             if not conn:
                 return self._get_default_profile(user_id)
             
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=_dict_row) if _dict_row else conn.cursor()
             
             cursor.execute('SELECT * FROM user_contributions WHERE user_id = %s', (user_id,))
             user_data = cursor.fetchone()
@@ -279,7 +283,7 @@ class RewardSystem:
             return []
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=_dict_row) if _dict_row else conn.cursor()
             
             cursor.execute('''
                 SELECT 
@@ -394,7 +398,7 @@ class RewardSystem:
             return {'success': False, 'error': 'Database not available'}
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=_dict_row) if _dict_row else conn.cursor()
             
             cursor.execute('''
                 SELECT user_id, is_verified FROM community_feedback WHERE id = %s

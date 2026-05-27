@@ -556,8 +556,8 @@ class ExitGovernanceEngine:
         if not self.db_url:
             return None
         try:
-            import psycopg2
-            return psycopg2.connect(self.db_url)
+            import psycopg
+            return psycopg.connect(self.db_url)
         except ImportError:
             logger.debug("[EGL] psycopg2 not available — trying psycopg3")
         try:

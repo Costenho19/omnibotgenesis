@@ -1448,8 +1448,8 @@ class AssumptionValidityMonitor:
             return None
 
         try:
-            import psycopg2
-            conn = psycopg2.connect(_db_url)
+            import psycopg
+            conn = psycopg.connect(_db_url)
             cur  = conn.cursor()
 
             from datetime import datetime as _dt, timezone as _tz, timedelta as _td

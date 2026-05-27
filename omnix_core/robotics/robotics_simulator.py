@@ -431,9 +431,9 @@ class RoboticsSimulator:
         self._robot_fleet: dict = {}
 
     def _get_conn(self):
-        import psycopg2
+        import psycopg
         if self._conn is None or self._conn.closed:
-            self._conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
+            self._conn = psycopg.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
         return self._conn
 
     def run_cycle(self) -> dict:
@@ -493,10 +493,10 @@ def get_simulator() -> RoboticsSimulator:
 
 def start_background_simulator():
     import threading
-    import psycopg2
+    import psycopg
 
     try:
-        conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
+        conn = psycopg.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
         _ensure_robotics_tables(conn)
         conn.close()
     except Exception as e:

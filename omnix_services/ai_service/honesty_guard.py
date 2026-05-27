@@ -167,14 +167,14 @@ class PerformanceHonestyGuard:
     def _fetch_performance_from_db(self) -> PerformanceSnapshot:
         """Fetch real performance metrics from PostgreSQL."""
         try:
-            import psycopg2
+            import psycopg
             database_url = os.environ.get('DATABASE_URL')
             
             if not database_url:
                 logger.warning("DATABASE_URL not available for HonestyGuard")
                 return PerformanceSnapshot(data_available=False, error="No DATABASE_URL")
             
-            conn = psycopg2.connect(database_url)
+            conn = psycopg.connect(database_url)
             cursor = conn.cursor()
             
             cursor.execute('''
@@ -478,13 +478,13 @@ class HonestFramingFormatter:
         MUESTRA TODOS los datos reales, con contexto positivo pero verdadero.
         """
         try:
-            import psycopg2
+            import psycopg
             database_url = os.environ.get('DATABASE_URL')
             
             if not database_url:
                 return self._default_honest_summary(language)
             
-            conn = psycopg2.connect(database_url)
+            conn = psycopg.connect(database_url)
             cursor = conn.cursor()
             
             # Obtener métricas REALES
@@ -658,12 +658,12 @@ class GovernanceLiveMetrics:
     def _fetch(self) -> Dict[str, Any]:
         """Consulta la BD y devuelve métricas de gobernanza reales."""
         try:
-            import psycopg2
+            import psycopg
             database_url = os.environ.get('DATABASE_URL')
             if not database_url:
                 return {}
 
-            conn = psycopg2.connect(database_url)
+            conn = psycopg.connect(database_url)
             cur = conn.cursor()
 
             # 1. Total recibos PQC

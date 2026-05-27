@@ -184,10 +184,10 @@ def _verify_pqc_signature(receipt: Dict) -> Optional[bool]:
 
 def _get_db_connection(db_url: str):
     try:
-        import psycopg2
+        import psycopg
         # FIX-3: connect_timeout=10 prevents the archival daemon from blocking
         # indefinitely on a slow or unreachable PostgreSQL host.
-        return psycopg2.connect(db_url, connect_timeout=10)
+        return psycopg.connect(db_url, connect_timeout=10)
     except Exception as exc:
         logger.error("[Archival] DB connection failed: %s", exc)
         return None

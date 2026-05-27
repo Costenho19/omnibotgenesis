@@ -329,7 +329,6 @@ def _evaluate_claim(claim_data: dict) -> dict:
 
 def _persist_claim(result: dict, conn) -> None:
     """Persist evaluated claim to PostgreSQL."""
-    import psycopg2.extras
     import json
     with conn.cursor() as cur:
         cur.execute("""
@@ -393,9 +392,9 @@ class InsuranceSimulator:
         self._conn = None
 
     def _get_conn(self):
-        import psycopg2
+        import psycopg
         if self._conn is None or self._conn.closed:
-            self._conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
+            self._conn = psycopg.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
         return self._conn
 
     def run_cycle(self) -> dict:
@@ -458,10 +457,10 @@ def get_simulator() -> InsuranceSimulator:
 def start_background_simulator():
     """Start the simulator in a background thread — called from app.py startup."""
     import threading
-    import psycopg2
+    import psycopg
 
     try:
-        conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
+        conn = psycopg.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
         _ensure_insurance_tables(conn)
         conn.close()
     except Exception as e:

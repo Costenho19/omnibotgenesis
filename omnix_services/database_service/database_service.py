@@ -2995,8 +2995,29 @@ class DatabaseServiceEnterprise:
             
         except Exception as e:
             logger.error(f"❌ ensure_user_exists EXCEPTION: {e}", exc_info=True)
+            # Retry once after brief wait — handles Railway startup DB readiness timing
+            import time
+            time.sleep(1)
+            try:
+                conn2 = self._get_connection()
+                if conn2:
+                    cursor2 = conn2.cursor()
+                    cursor2.execute('''
+                        INSERT INTO users (user_id, username, first_name, language_code, created_at)
+                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                        ON CONFLICT (user_id) DO UPDATE SET
+                            username = COALESCE(EXCLUDED.username, users.username),
+                            first_name = COALESCE(EXCLUDED.first_name, users.first_name)
+                    ''', (user_id, username or f"user_{user_id}", first_name or "Usuario", language_code))
+                    conn2.commit()
+                    cursor2.close()
+                    conn2.close()
+                    logger.info(f"✅ ensure_user_exists RETRY SUCCESS: User {user_id}")
+                    return True
+            except Exception as e2:
+                logger.error(f"❌ ensure_user_exists RETRY FAILED: {e2}")
             return False
-    
+
     def save_conversation(self, user_id: str, user_message: str, ai_response: str, language: str = 'es') -> bool:
         """Guardar conversación IA en PostgreSQL (persistente)"""
         if not self.connected:
@@ -3012,12 +3033,30 @@ class DatabaseServiceEnterprise:
                 return False
             
             cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO conversations (user_id, user_message, ai_response, language)
-                VALUES (%s, %s, %s, %s)
-            ''', (user_id, user_message, ai_response, language))
-            
-            conn.commit()
+            try:
+                cursor.execute('''
+                    INSERT INTO conversations (user_id, user_message, ai_response, language)
+                    VALUES (%s, %s, %s, %s)
+                ''', (user_id, user_message, ai_response, language))
+                conn.commit()
+            except Exception as insert_err:
+                err_str = str(insert_err).lower()
+                if 'foreign key' in err_str or 'violates' in err_str:
+                    # User not in users table yet — create and retry
+                    logger.warning(f"⚠️ save_conversation FK violation for {user_id} — creating user and retrying")
+                    conn.rollback()
+                    cursor.execute('''
+                        INSERT INTO users (user_id, username, first_name, language_code, created_at)
+                        VALUES (%s, %s, %s, 'es', CURRENT_TIMESTAMP)
+                        ON CONFLICT (user_id) DO NOTHING
+                    ''', (user_id, f"user_{user_id}", "Usuario"))
+                    cursor.execute('''
+                        INSERT INTO conversations (user_id, user_message, ai_response, language)
+                        VALUES (%s, %s, %s, %s)
+                    ''', (user_id, user_message, ai_response, language))
+                    conn.commit()
+                else:
+                    raise
             cursor.close()
             conn.close()
             

@@ -48,16 +48,10 @@ def _standalone_db_connection():
         try:
             import psycopg
             conn = psycopg.connect(database_url)
-            logger.debug("VetoRepository using psycopg v3")
         except ImportError:
-            try:
-                import psycopg2
-                conn = psycopg2.connect(database_url)
-                logger.debug("VetoRepository using psycopg2 fallback")
-            except ImportError:
-                logger.warning("No psycopg driver available - veto logging disabled")
-                yield None
-                return
+            logger.warning("psycopg (v3) not available - veto logging disabled")
+            yield None
+            return
         
         yield conn
         

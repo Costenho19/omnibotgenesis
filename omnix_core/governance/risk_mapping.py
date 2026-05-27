@@ -16,8 +16,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg.rows import dict_row
 
 logger = logging.getLogger("OMNIX.Governance.RiskMapping")
 
@@ -25,7 +25,7 @@ VALID_CLASSIFICATIONS = ("CRITICAL", "HIGH", "MEDIUM", "LOW")
 
 
 def _get_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+    return psycopg.connect(os.environ["DATABASE_URL"])
 
 
 class RiskMappingEngine:
@@ -68,7 +68,7 @@ class RiskMappingEngine:
 
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 INSERT INTO governance_risk_map
@@ -106,7 +106,7 @@ class RiskMappingEngine:
         """Return risk maps for the client, optionally filtered by use_case."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             if use_case:
                 cur.execute(
                     "SELECT * FROM governance_risk_map WHERE client_id=%s AND use_case=%s ORDER BY updated_at DESC",

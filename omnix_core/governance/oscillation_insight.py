@@ -116,7 +116,7 @@ def _get_pool(db_url: Optional[str] = None):
         raise RuntimeError("No database URL configured (OMNIX_DB_URL / DATABASE_URL)")
     with _pool_lock:
         if _pool is None or _pool_url != url:
-            import psycopg2.pool as pgpool
+            import psycopg.pool as pgpool
             logger.info("[OIE] Initialising ThreadedConnectionPool (minconn=1 maxconn=5)")
             _pool     = pgpool.ThreadedConnectionPool(1, 5, url)
             _pool_url = url

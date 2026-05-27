@@ -130,8 +130,8 @@ class AMLGate:
             import json
 
             try:
-                import psycopg2
-                conn = psycopg2.connect(db_url)
+                import psycopg
+                conn = psycopg.connect(db_url)
                 cur = conn.cursor()
                 cur.execute(
                     """

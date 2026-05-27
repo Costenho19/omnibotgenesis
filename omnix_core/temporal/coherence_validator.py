@@ -350,15 +350,14 @@ class TemporalCoherenceValidator:
         return events[: self.window], sources
 
     def _fetch_with_psycopg2(self, symbol: str) -> Tuple[List[Dict[str, Any]], List[str]]:
-        import psycopg2
-        import psycopg2.extras
-
+        import psycopg
+        
         since = datetime.now(timezone.utc) - timedelta(hours=72)
         half = self.window // 2
 
-        conn = psycopg2.connect(self.db_url)
+        conn = psycopg.connect(self.db_url)
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 SELECT

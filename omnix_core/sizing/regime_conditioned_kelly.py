@@ -234,7 +234,7 @@ class RegimeConditionedKelly:
             conn_factory = lambda: psycopg.connect(self.db_url)
         except ImportError:
             try:
-                import psycopg2 as pg
+                import psycopg as pg
                 conn_factory = lambda: pg.connect(self.db_url)
             except ImportError:
                 logger.warning("[RCK] No DB driver (psycopg/psycopg2)")

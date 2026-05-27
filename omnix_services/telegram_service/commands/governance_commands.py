@@ -72,12 +72,12 @@ def _sandbox_url() -> str:
 
 def _db_connect():
     """Abre una conexión PostgreSQL usando DATABASE_URL. Lanza si no está configurado."""
-    import psycopg2
-    import psycopg2.extras
+    import psycopg
+    from psycopg.rows import dict_row
     db_url = os.environ.get("DATABASE_URL")
     if not db_url:
         raise RuntimeError("DATABASE_URL no configurado")
-    return psycopg2.connect(db_url), psycopg2.extras
+    return psycopg.connect(db_url, row_factory=dict_row), None
 
 
 # ── /evaluar ─────────────────────────────────────────────────────────────────
@@ -244,8 +244,8 @@ async def velos_command(self, update, context):
         return
 
     try:
-        conn, extras = _db_connect()
-        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        conn, _ = _db_connect()
+        cur = conn.cursor()
         cur.execute(
             """
             SELECT receipt_id, client_id, decision, disposition,
@@ -319,8 +319,8 @@ async def recibo_command(self, update, context):
             pass
 
     try:
-        conn, extras = _db_connect()
-        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        conn, _ = _db_connect()
+        cur = conn.cursor()
         cur.execute(
             """
             SELECT receipt_id, asset, decision, timestamp_utc, created_at
@@ -403,8 +403,8 @@ async def impact_command(self, update, context):
     )
 
     try:
-        conn, extras = _db_connect()
-        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        conn, _ = _db_connect()
+        cur = conn.cursor()
 
         # ── 1. Decisiones por dominio (últimos 7 días) ──────────────────────
         cur.execute(
@@ -582,9 +582,9 @@ async def clientes_command(self, update, context):
     processing = await update.message.reply_text("⏳ Consultando clientes B2B...")
 
     try:
-        conn, extras = _db_connect()
+        conn, _ = _db_connect()
         with conn:
-            with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
+            with conn.cursor() as cur:
                 cur.execute("""
                     SELECT
                         b.client_id,
@@ -701,7 +701,7 @@ async def nuevo_cliente_command(self, update, context):
     try:
         import secrets as _secrets
         import hashlib
-        import psycopg2
+        import psycopg
 
         raw_key = "OMNIX-" + _secrets.token_hex(24).upper()
         key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
@@ -713,7 +713,7 @@ async def nuevo_cliente_command(self, update, context):
         if not db_url:
             raise RuntimeError("DATABASE_URL no configurado")
 
-        conn = psycopg2.connect(db_url)
+        conn = psycopg.connect(db_url)
         with conn:
             with conn.cursor() as cur:
                 cur.execute("""

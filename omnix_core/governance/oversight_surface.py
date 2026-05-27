@@ -37,6 +37,9 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
+import psycopg
+from psycopg.rows import dict_row
+
 logger = logging.getLogger("OMNIX.Governance.OversightSurface")
 
 DELIBERATION_WINDOW_SECONDS: int = 30
@@ -55,14 +58,13 @@ VALID_STATUSES: set[str] = {"PENDING", "OPEN", "SUBMITTED", "EXPIRED"}
 
 
 def _get_conn():
-    import psycopg2  # lazy import — avoids collection-time import errors in test environments
     db_url = os.environ.get("DATABASE_URL") or os.environ.get("OMNIX_DB_URL")
     if not db_url:
         raise RuntimeError(
             "DATABASE_URL not configured — OversightSurfaceEngine requires "
             "database access. Set DATABASE_URL or OMNIX_DB_URL."
         )
-    return psycopg2.connect(db_url)
+    return psycopg.connect(db_url)
 
 
 def _now() -> datetime:
@@ -417,8 +419,7 @@ class OversightSurfaceEngine:
 
         conn = _get_conn()
         try:
-            import psycopg2.extras  # lazy import — only needed at runtime, not at collection
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
                     f"""
                     SELECT * FROM oversight_sessions
@@ -463,10 +464,9 @@ class OversightSurfaceEngine:
             conn.close()
 
     def _load_session(self, session_id: str) -> dict:
-        import psycopg2.extras  # lazy import — only needed at runtime, not at collection
         conn = _get_conn()
         try:
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
                     "SELECT * FROM oversight_sessions WHERE session_id = %s",
                     (session_id,),

@@ -184,8 +184,8 @@ class CTCHCEngine:
         return self._pqc
 
     def _get_conn(self):
-        import psycopg2
-        return psycopg2.connect(self._db_url)
+        import psycopg
+        return psycopg.connect(self._db_url)
 
     def ensure_tables(self) -> None:
         if not self._db_url:

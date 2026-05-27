@@ -21,14 +21,14 @@ import os
 from datetime import datetime, timezone
 from typing import Any
 
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg.rows import dict_row
 
 logger = logging.getLogger("OMNIX.Governance.Reporting")
 
 
 def _get_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+    return psycopg.connect(os.environ["DATABASE_URL"])
 
 
 class GovernanceReportingEngine:
@@ -68,7 +68,7 @@ class GovernanceReportingEngine:
 
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 INSERT INTO governance_reports
@@ -115,7 +115,7 @@ class GovernanceReportingEngine:
         period_end: datetime,
     ) -> dict[str, Any]:
         """Collect all data sections for the compliance report."""
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = conn.cursor(row_factory=dict_row)
 
         # 1. Decision receipts summary
         cur.execute(
@@ -260,7 +260,7 @@ class GovernanceReportingEngine:
         """Retrieve a stored compliance report by ID (client isolation enforced)."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 "SELECT * FROM governance_reports WHERE id=%s AND client_id=%s",
                 (report_id, client_id),
@@ -281,7 +281,7 @@ class GovernanceReportingEngine:
         """List report metadata (without full content_json) for a client."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 SELECT id, client_id, period_start, period_end, report_type, content_hash, generated_by, created_at
@@ -336,7 +336,7 @@ class GovernanceReportingEngine:
         """
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
 
             cur.execute(
                 """

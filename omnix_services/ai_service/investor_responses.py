@@ -375,7 +375,7 @@ def get_honest_metrics() -> Dict[str, Any]:
     NO oculta datos negativos - los presenta con contexto verdadero.
     """
     try:
-        import psycopg2
+        import psycopg
         database_url = os.environ.get('DATABASE_URL')
         
         if not database_url:
@@ -390,7 +390,7 @@ def get_honest_metrics() -> Dict[str, Any]:
                 'system_status': 'Sin conexión a base de datos'
             }
         
-        conn = psycopg2.connect(database_url)
+        conn = psycopg.connect(database_url)
         cursor = conn.cursor()
         
         cursor.execute('''

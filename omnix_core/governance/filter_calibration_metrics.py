@@ -458,8 +458,8 @@ def _extract_black_swan_level(
 # ── DB helpers ─────────────────────────────────────────────────────────────────
 
 def _get_db_conn(db_url: str):
-    import psycopg2
-    return psycopg2.connect(db_url, connect_timeout=10)
+    import psycopg
+    return psycopg.connect(db_url, connect_timeout=10)
 
 
 def _window_clause(window: str) -> str:

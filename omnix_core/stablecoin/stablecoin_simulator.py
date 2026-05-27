@@ -521,13 +521,13 @@ def _run_cycle(conn, cycle_num: int) -> None:
 
 
 def _simulator_loop() -> None:
-    import psycopg2
+    import psycopg
     db_url = os.environ.get("DATABASE_URL")
     if not db_url:
         logger.error("DATABASE_URL not set — Stablecoin Governance simulator cannot start")
         return
 
-    conn = psycopg2.connect(db_url)
+    conn = psycopg.connect(db_url)
     _create_stablecoin_tables(conn)
     logger.info("Stablecoin Reserve Governance Simulator started — 24/7 mode")
 
@@ -542,7 +542,7 @@ def _simulator_loop() -> None:
                 conn.rollback()
             except Exception:
                 try:
-                    conn = psycopg2.connect(db_url)
+                    conn = psycopg.connect(db_url)
                 except Exception:
                     pass
         time.sleep(CYCLE_INTERVAL)

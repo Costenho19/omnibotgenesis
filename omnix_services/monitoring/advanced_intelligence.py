@@ -1010,7 +1010,7 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
     
     def get_intelligence_metrics(self):
         """Métricas de gobernanza reales desde base de datos PostgreSQL"""
-        import psycopg2
+        import psycopg
         metrics = {
             'total_evaluation_cycles': 0,
             'total_pqc_receipts': 0,
@@ -1023,7 +1023,7 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
             if not db_url:
                 logger.warning("DATABASE_URL not available for intelligence metrics")
                 return metrics
-            conn = psycopg2.connect(db_url)
+            conn = psycopg.connect(db_url)
             cur = conn.cursor()
 
             cur.execute("SELECT COUNT(*) FROM shadow_trade_events")
@@ -1074,11 +1074,11 @@ Sistema operando con $3,477 USD real en Kraken, APIs tiempo real verificadas, an
         """Insights de gobernanza basados en datos reales de PostgreSQL"""
         insights = []
         try:
-            import psycopg2
+            import psycopg
             db_url = os.environ.get('DATABASE_URL')
             if not db_url:
                 return ["📡 Database not available for insights"]
-            conn = psycopg2.connect(db_url)
+            conn = psycopg.connect(db_url)
             cur = conn.cursor()
 
             cur.execute("""

@@ -207,13 +207,12 @@ _pvr_cache_lock = threading.Lock()
 
 def _get_db_conn():
     """Get a psycopg2 connection from DATABASE_URL."""
-    import psycopg2
-    import psycopg2.extras
+    import psycopg
     db_url = os.environ.get("DATABASE_URL", "")
     if not db_url:
         raise RuntimeError("[AGVP] DATABASE_URL not set — DB persistence unavailable")
-    conn = psycopg2.connect(db_url)
-    psycopg2.extras.register_uuid(conn)
+    conn = psycopg.connect(db_url)
+    None.register_uuid(conn)
     return conn
 
 

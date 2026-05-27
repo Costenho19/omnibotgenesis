@@ -48,9 +48,8 @@ logger = logging.getLogger("OMNIX.ExecutionIntegrity")
 
 def _get_conn():
     try:
-        import psycopg2
-        import psycopg2.extras
-        return psycopg2.connect(os.environ["DATABASE_URL"])
+        import psycopg
+        return psycopg.connect(os.environ["DATABASE_URL"])
     except Exception as e:
         logger.warning(f"DB connection failed: {e}")
         return None

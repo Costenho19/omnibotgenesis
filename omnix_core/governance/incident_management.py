@@ -15,8 +15,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg.rows import dict_row
 
 logger = logging.getLogger("OMNIX.Governance.IncidentManagement")
 
@@ -25,7 +25,7 @@ VALID_STATUSES = ("OPEN", "UNDER_REVIEW", "RESOLVED", "CLOSED")
 
 
 def _get_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+    return psycopg.connect(os.environ["DATABASE_URL"])
 
 
 def _make_incident_id() -> str:
@@ -73,7 +73,7 @@ class IncidentManagementEngine:
 
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 INSERT INTO governance_incidents
@@ -111,7 +111,7 @@ class IncidentManagementEngine:
 
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
 
             cur.execute(
                 "SELECT incident_id FROM governance_incidents WHERE incident_id = %s",
@@ -151,7 +151,7 @@ class IncidentManagementEngine:
         """Mark incident as RESOLVED and store the resolution review."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
 
             cur.execute(
                 "SELECT incident_id, status FROM governance_incidents WHERE incident_id = %s",
@@ -200,7 +200,7 @@ class IncidentManagementEngine:
         """List incidents for a client with optional filters."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
 
             conditions = ["client_id = %s"]
             params: list = [client_id]
@@ -236,7 +236,7 @@ class IncidentManagementEngine:
         """Get incident detail with all reviews (client isolation enforced)."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
 
             cur.execute(
                 "SELECT * FROM governance_incidents WHERE incident_id=%s AND client_id=%s",
@@ -265,7 +265,7 @@ class IncidentManagementEngine:
         """
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
 
             cur.execute(
                 "SELECT created_at FROM governance_incidents WHERE incident_id=%s AND client_id=%s",

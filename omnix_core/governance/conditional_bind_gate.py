@@ -188,14 +188,14 @@ class BindGateResult:
 
 def _get_conn():
     """Lazy psycopg2 connection — avoids import errors in test environments."""
-    import psycopg2
+    import psycopg
     db_url = os.environ.get("OMNIX_DB_URL") or os.environ.get("DATABASE_URL")
     if not db_url:
         raise RuntimeError(
             "No database URL configured — ConditionalBindGate requires "
             "OMNIX_DB_URL or DATABASE_URL."
         )
-    return psycopg2.connect(db_url)
+    return psycopg.connect(db_url)
 
 
 def _now() -> datetime:

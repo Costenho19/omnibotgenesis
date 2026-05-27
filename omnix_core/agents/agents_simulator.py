@@ -451,9 +451,9 @@ class AgentSimulator:
         self._conn = None
 
     def _get_conn(self):
-        import psycopg2
+        import psycopg
         if self._conn is None or self._conn.closed:
-            self._conn = psycopg2.connect(os.environ["DATABASE_URL"])
+            self._conn = psycopg.connect(os.environ["DATABASE_URL"])
         return self._conn
 
     def _ensure_tables(self):

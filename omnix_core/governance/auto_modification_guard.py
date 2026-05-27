@@ -111,8 +111,8 @@ AUTO_APPROVE:             bool  = False  # noqa — see _auto_approve()
 
 def _get_conn(db_url: str):
     try:
-        import psycopg2
-        return psycopg2.connect(db_url)
+        import psycopg
+        return psycopg.connect(db_url)
     except Exception as exc:
         logger.error(f"[AMG] DB connection failed: {exc}")
         return None

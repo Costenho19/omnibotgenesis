@@ -1153,10 +1153,10 @@ class AutoTradingBot:
         """
         try:
             import os
-            import psycopg2
+            import psycopg
             db_url = os.environ.get('OMNIX_DB_URL') or os.environ.get('DATABASE_URL')
             if db_url:
-                conn = psycopg2.connect(db_url)
+                conn = psycopg.connect(db_url)
                 cur = conn.cursor()
                 cur.execute("""
                     SELECT COUNT(*) FROM shadow_trade_events

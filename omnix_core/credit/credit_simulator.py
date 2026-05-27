@@ -551,7 +551,7 @@ async def run_credit_simulation_engine():
     Main 24/7 simulation engine.
     Runs indefinitely, one cycle every CYCLE_INTERVAL seconds.
     """
-    import psycopg2
+    import psycopg
 
     logger.info("🏦 [CreditSim] OMNIX Islamic Credit Governance Engine starting...")
     logger.info(f"[CreditSim] Cycle interval: {CYCLE_INTERVAL}s | Batch: {BATCH_SIZE_MIN}-{BATCH_SIZE_MAX} apps/cycle")
@@ -560,7 +560,7 @@ async def run_credit_simulation_engine():
     cycle_num = 0
 
     try:
-        conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
+        conn = psycopg.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
         logger.info("[CreditSim] ✅ PostgreSQL connected")
         _ensure_tables(conn)
 
@@ -575,7 +575,7 @@ async def run_credit_simulation_engine():
                     conn.close()
                 except Exception:
                     pass
-                conn = psycopg2.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
+                conn = psycopg.connect(os.environ.get("OMNIX_DB_URL") or os.environ["DATABASE_URL"])
             except Exception as e:
                 logger.error(f"[CreditSim] Cycle {cycle_num} error: {e}", exc_info=True)
 

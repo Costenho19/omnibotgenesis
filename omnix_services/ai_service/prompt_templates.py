@@ -1389,7 +1389,24 @@ class LanguageContextManager:
             'tr': 'Turkish'
         }
         self._redis_client = None
+        self._prewarm_fastlangdetect()
         
+    def _prewarm_fastlangdetect(self):
+        """Pre-download lid.176.bin at startup instead of first user request."""
+        try:
+            import threading
+            def _download():
+                try:
+                    from fast_langdetect import detect
+                    detect("hello world this is a warm up call to pre-download the language model")
+                    logger.info("✅ fast-langdetect model pre-warmed (lid.176.bin ready)")
+                except Exception:
+                    pass
+            t = threading.Thread(target=_download, daemon=True)
+            t.start()
+        except Exception:
+            pass
+
     def _get_redis(self):
         """Lazy load Redis client (consistent with database_service.py pattern)."""
         if self._redis_client is None:

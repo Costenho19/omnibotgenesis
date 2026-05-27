@@ -239,13 +239,13 @@ def load_sharia_config_for_client(client_id: Optional[str] = None) -> ShariaGate
 
     try:
         import os
-        import psycopg2
+        import psycopg
 
         db_url = os.environ.get("DATABASE_URL")
         if not db_url:
             return ShariaGateConfig(enabled=False)
 
-        conn = psycopg2.connect(db_url)
+        conn = psycopg.connect(db_url)
         cur = conn.cursor()
         cur.execute(
             """

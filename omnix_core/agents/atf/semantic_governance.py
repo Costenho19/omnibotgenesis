@@ -338,10 +338,8 @@ class SemanticGovernanceEngine:
 
     def _get_conn(self):
         try:
-            import psycopg2
-            import psycopg2.extras
-            conn = psycopg2.connect(self._db_url)
-            psycopg2.extras.register_uuid()
+            import psycopg
+            conn = psycopg.connect(self._db_url)
             return conn
         except Exception as exc:
             logger.warning(f"[ATF.SGIP] DB connection failed: {exc}")
@@ -858,7 +856,6 @@ class SemanticGovernanceEngine:
         if not conn:
             return False
         try:
-            import psycopg2.extras
             with conn:
                 with conn.cursor() as cur:
                     cur.execute(
@@ -874,8 +871,8 @@ class SemanticGovernanceEngine:
                         (
                             entry.str_entry_id, entry.runtime_id, entry.term_id,
                             entry.term_version,
-                            psycopg2.extras.Json(entry.definition),
-                            psycopg2.extras.Json(entry.operational_scope),
+                            None.Json(entry.definition),
+                            None.Json(entry.operational_scope),
                             entry.effective_from, entry.supersedes_id,
                             entry.content_hash, entry.pqc_signature, entry.pqc_algorithm,
                             entry.created_at,
@@ -895,7 +892,6 @@ class SemanticGovernanceEngine:
         if not conn:
             return False
         try:
-            import psycopg2.extras
             with conn:
                 with conn.cursor() as cur:
                     cur.execute(
@@ -909,8 +905,8 @@ class SemanticGovernanceEngine:
                         """,
                         (
                             spv.spv_id, spv.runtime_id, spv.generated_at,
-                            psycopg2.extras.Json(spv.atf_core_term_set),
-                            psycopg2.extras.Json(spv.extended_terms),
+                            None.Json(spv.atf_core_term_set),
+                            None.Json(spv.extended_terms),
                             spv.spv_hash, spv.pqc_signature, spv.pqc_algorithm,
                             spv.created_at,
                         ),
@@ -929,7 +925,6 @@ class SemanticGovernanceEngine:
         if not conn:
             return False
         try:
-            import psycopg2.extras
             with conn:
                 with conn.cursor() as cur:
                     cur.execute(
@@ -951,8 +946,8 @@ class SemanticGovernanceEngine:
                             sac.runtime_b["runtime_id"], sac.runtime_b["spv_id"],
                             sac.runtime_b["spv_hash"],
                             sac.effective_from, sac.expires_at,
-                            psycopg2.extras.Json(sac.semantic_alignment_map),
-                            psycopg2.extras.Json(sac.unresolved_terms),
+                            None.Json(sac.semantic_alignment_map),
+                            None.Json(sac.unresolved_terms),
                             sac.governing_posture, sac.sac_content_hash,
                             sac.pqc_signature_a, sac.pqc_signature_b,
                             sac.pqc_algorithm, sac.created_at,

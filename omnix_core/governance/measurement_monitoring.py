@@ -15,8 +15,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg.rows import dict_row
 
 logger = logging.getLogger("OMNIX.Governance.Measurement")
 
@@ -25,7 +25,7 @@ DRIFT_WARNING_THRESHOLD = 1.0
 
 
 def _get_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+    return psycopg.connect(os.environ["DATABASE_URL"])
 
 
 class MeasurementMonitoringEngine:
@@ -53,7 +53,7 @@ class MeasurementMonitoringEngine:
         """Store a performance metrics snapshot for a checkpoint."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 INSERT INTO governance_metrics
@@ -117,7 +117,7 @@ class MeasurementMonitoringEngine:
 
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 INSERT INTO governance_drift_log
@@ -164,7 +164,7 @@ class MeasurementMonitoringEngine:
         """Retrieve the most recent baseline stats for this signal from governance_metrics."""
         try:
             conn = _get_conn()
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 SELECT avg_score FROM governance_metrics
@@ -189,7 +189,7 @@ class MeasurementMonitoringEngine:
         """Return performance metrics for the last N days, grouped by checkpoint."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 SELECT checkpoint_id,
@@ -222,7 +222,7 @@ class MeasurementMonitoringEngine:
         """Return drift log entries, optionally filtered to ALERT/WARNING only."""
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             if alert_only:
                 cur.execute(
                     """
@@ -255,7 +255,7 @@ class MeasurementMonitoringEngine:
         """
         conn = _get_conn()
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                 SELECT decision, veto_chain, created_at

@@ -28,6 +28,10 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Any
 import json
 import hashlib
+try:
+    from psycopg.rows import dict_row as _dict_row
+except ImportError:
+    _dict_row = None
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +225,7 @@ class SignalContributionManager:
             return {'success': False, 'error': 'Database no disponible'}
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=_dict_row) if _dict_row else conn.cursor()
             
             cursor.execute(
                 'SELECT * FROM community_signals WHERE signal_id = %s AND status = %s',
@@ -283,7 +287,7 @@ class SignalContributionManager:
             return {'success': False, 'error': 'Database no disponible'}
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=_dict_row) if _dict_row else conn.cursor()
             
             cursor.execute('''
                 UPDATE signal_executions 
@@ -360,7 +364,7 @@ class SignalContributionManager:
             return []
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=_dict_row) if _dict_row else conn.cursor()
             
             cursor.execute('''
                 SELECT 
@@ -398,7 +402,7 @@ class SignalContributionManager:
             return {}
         
         try:
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(row_factory=_dict_row) if _dict_row else conn.cursor()
             
             cursor.execute('''
                 SELECT * FROM alpha_leaderboard WHERE user_id = %s
