@@ -1020,7 +1020,7 @@ class ConversationalAI:
     """
     def __init__(self):
         # Siempre inicializar atributos legacy — necesarios como fallback de emergencia
-        self.model_name = "gemini-2.0-flash"
+        self.model_name = "gemini-2.5-flash"
         self.conversation_history = {}
         self.user_preferences = {}
         self.market_context = {}
@@ -1053,11 +1053,11 @@ class ConversationalAI:
                 if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
                     if GEMINI_SDK_VERSION == 'new':
                         self.gemini_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
-                        logger.info("✅ Gemini 2.0 Flash inicializado con NUEVO SDK (google-genai)")
+                        logger.info("✅ Gemini 2.5 Flash inicializado con NUEVO SDK (google-genai)")
                     else:
                         genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-                        self.gemini_client = genai.GenerativeModel('gemini-2.0-flash')
-                        logger.info("✅ Gemini 2.0 Flash inicializado con LEGACY SDK")
+                        self.gemini_client = genai.GenerativeModel('gemini-2.5-flash')
+                        logger.info("✅ Gemini 2.5 Flash inicializado con LEGACY SDK")
             except Exception as e:
                 logger.error(f"Error initializing legacy AI clients: {e}")
     
@@ -2141,13 +2141,13 @@ class ConversationalAI:
                             top_p=0.95,
                         )
                         response = self.gemini_client.models.generate_content(
-                            model='gemini-2.0-flash',
+                            model='gemini-2.5-flash',
                             contents=system_prompt,
                             config=_cfg
                         )
                     except Exception:
                         response = self.gemini_client.models.generate_content(
-                            model='gemini-2.0-flash',
+                            model='gemini-2.5-flash',
                             contents=system_prompt
                         )
                 else:

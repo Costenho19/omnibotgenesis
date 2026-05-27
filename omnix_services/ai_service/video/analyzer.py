@@ -451,12 +451,12 @@ class VideoAnalyzerUltra:
             
             if self._gemini_sdk == 'new':
                 response = self.gemini_client.models.generate_content(
-                    model='gemini-2.0-flash',
+                    model='gemini-2.5-flash',
                     contents=[CHART_ANALYSIS_PROMPT, img]
                 )
                 content = response.text if response else None
             else:
-                model = self.gemini_client.GenerativeModel('gemini-2.0-flash')
+                model = self.gemini_client.GenerativeModel('gemini-2.5-flash')
                 response = model.generate_content([CHART_ANALYSIS_PROMPT, img])
                 content = response.text if response else None
             
@@ -1300,12 +1300,12 @@ Proporciona un análisis estructurado con:
                 
                 if self._gemini_sdk == 'new':
                     response = self.gemini_client.models.generate_content(
-                        model='gemini-2.0-flash',
+                        model='gemini-2.5-flash',
                         contents=prompt
                     )
                     content = response.text if response else ''
                 else:
-                    model = self.gemini_client.GenerativeModel('gemini-2.0-flash')
+                    model = self.gemini_client.GenerativeModel('gemini-2.5-flash')
                     response = model.generate_content(prompt)
                     content = response.text if response else ''
                 

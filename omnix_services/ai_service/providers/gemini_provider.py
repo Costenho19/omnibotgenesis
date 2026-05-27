@@ -73,13 +73,13 @@ class GeminiProvider(BaseAIProvider):
 
     @property
     def default_model(self) -> str:
-        return "gemini-2.0-flash"
+        return "gemini-2.5-flash"
 
     def get_models(self) -> List[ModelInfo]:
         return [
             ModelInfo(
                 provider=ModelProvider.GEMINI,
-                model_name="gemini-2.0-flash",
+                model_name="gemini-2.5-flash",
                 max_tokens=8192,
                 supports_vision=True,
                 supports_streaming=True,

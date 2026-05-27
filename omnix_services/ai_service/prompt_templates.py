@@ -1388,7 +1388,7 @@ Return ONLY the code (en, es, fr, de, pt, it, nl, ar, zh, ja, ko, ru, hi, no, sv
 No explanation, just the code."""
             
             response = _gemini_lang_client.models.generate_content(
-                model="gemini-2.0-flash-lite",
+                model="gemini-2.5-flash-lite",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     max_output_tokens=5,

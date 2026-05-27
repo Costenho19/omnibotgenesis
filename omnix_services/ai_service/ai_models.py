@@ -537,7 +537,7 @@ Generate a substantial response of 2000+ characters. Follow the language policy 
 
             if GEMINI_SDK_VERSION == 'new' and self.gemini_client:
                 response = self.gemini_client.models.generate_content(
-                    model="gemini-2.0-flash",
+                    model="gemini-2.5-flash",
                     contents=enhanced_prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.85,
@@ -552,7 +552,7 @@ Generate a substantial response of 2000+ characters. Follow the language policy 
                     return text, None
             elif GEMINI_SDK_VERSION == 'legacy':
                 model = genai.GenerativeModel(
-                    "gemini-2.0-flash",
+                    "gemini-2.5-flash",
                     system_instruction=system_prompt
                 )
                 response = model.generate_content(
