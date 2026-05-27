@@ -322,5 +322,71 @@ Key artifacts:
 - Proposed invariants: 4 (SGIP, unchanged)
 - Grand total: **75 invariants** (71 active + 4 proposed)
 
+---
+
+## Addendum — test_ogi.py: OGI-INV-001–010 promoted to Direct
+
+**Filed:** May 27, 2026 · **Closes Priority #7** · **Suite:** `tests/test_ogi.py`
+
+`tests/test_ogi.py` created: **86 tests, 85 PASS, 1 xfailed, 0 FAIL**. All 10 OGI invariants promoted from Structural to Direct coverage (INVARIANT_TEST_MATRIX rev.8).
+
+**Invariant coverage (10/10 Direct):**
+
+| Invariant | Test Class | Tests | Verification |
+|---|---|---|---|
+| OGI-INV-001 | TestOGIAllowlist | 6 | corpus_allowlist.yaml structural completeness + no-private-paths |
+| OGI-INV-002 | TestOGIOntology | 10 | OMNIX_ONTOLOGY: 40+ terms, ATF/BEV/MIVP/PoGR/verdict tokens |
+| OGI-INV-003 | TestOGIInvariantRegistry | 9 | INVARIANT_REGISTRY: 5 canonical fields per entry, ADR citations |
+| OGI-INV-004 | TestOGISanitization | 7 | _sanitize(): API keys, PII emails, multi-secret redaction |
+| OGI-INV-005 | TestOGICorpusSplits | 8 | SHA-256 fingerprint no-overlap train∩val=0, train∩test=0, val∩test=0 |
+| OGI-INV-006 | TestOGIRejectionLog | 7 | rejected_samples.jsonl: 266 entries, all have reason+fingerprint |
+| OGI-INV-007 | TestOGIManifestReproducibility | 10 | manifest.json: version+seed(42)+hashes+counts+generated_at |
+| OGI-INV-008 | TestOGIEvaluationGates | 6 | 7-gate spec, thresholds, eval_suite.jsonl+ontology.json exist |
+| OGI-INV-009 | TestOGISALCompatibility | 4 | OpenAI chat format, system prompt OGI persona, ogi_system_prompt.txt |
+| OGI-INV-010 | TestOGIMIVPCorpus | 5 | MIVP in distribution, 3-tier concepts, Gate 6 readiness (xfail < 150) |
+
+**Technical note:** `prepare_corpus.py` uses `@dataclass` decorators that require `sys.modules` registration at load time. The loader pattern `sys.modules["prepare_corpus"] = mod` before `exec_module()` resolves the `AttributeError: 'NoneType'.__dict__` edge case in isolated importlib contexts — documented in `tests/test_ogi.py` `_load_corpus_module()`.
+
+**Impact on INVARIANT_TEST_MATRIX rev.8:** OGI-INV → 10 Direct, 0 Structural. Coverage 71/71 (100%).
+
+---
+
+## Addendum — test_rcep.py: RCEP-INV-001–006 promoted to Direct
+
+**Filed:** May 27, 2026 · **Closes Priority #8** · **Suite:** `tests/test_rcep.py`
+
+`tests/test_rcep.py` created: **86 tests, 86 PASS, 0 FAIL**. All 6 RCEP invariants promoted from Structural to Direct coverage. Includes the critical `test_full_verification_52_checks_pass` that programmatically runs the offline verifier and asserts 52/52 PASS.
+
+**Invariant coverage (6/6 Direct):**
+
+| Invariant | Test Class | Tests | Verification |
+|---|---|---|---|
+| RCEP-INV-001 | TestRCEPPackageStructure | 10 | Dual-route presence, ML-DSA-65 keypair, public_key_b64=1952 bytes, package_id format |
+| RCEP-INV-002 | TestRCEPRouteA | 14 | execution_occurred=False, HARD_REFUSAL PQC-signed, binding=REFUSED, commit=BLOCKED |
+| RCEP-INV-003 | TestRCEPRouteB | 22 | TAR=ADMITTED, BAR=VALID, CTCHC is_sealed=True, MANDATE-BOUND, linked_artifacts complete |
+| RCEP-INV-004 | TestRCEPRouteA/B | 2 | 8 chain_steps in both routes, outcome_receipt.linked_artifacts 5 references |
+| RCEP-INV-005 | TestRCEPCanonicalizationRegistry | 5 | SHA-256/compact (DR, TAR), SHA3-256/default (RCR/binding/commit/refusal/outcome/PoGC), pqc_algorithm included in PoGC hash (ADR-200 §4.3) |
+| RCEP-INV-006 | TestRCEPOfflineVerification | 8 | 52/52 PASS programmatic + VerificationReport unit tests, verification report on disk |
+
+**Canonicalization asymmetry validated (ADR-200 §4):** DR and TAR use SHA-256 + compact separators (legacy DelegationReceiptEngine / TemporalAuthorityEngine behavior). All generator-native artifacts (RCR, binding, commit, refusal receipt, outcome, PoGC) use SHA3-256 + default separators. The PoGC uniquely includes `pqc_algorithm` in the hash input (§4.3) — `test_pogc_includes_pqc_algorithm_in_hash` asserts this asymmetry explicitly.
+
+**Impact on INVARIANT_TEST_MATRIX rev.8:** RCEP-INV → 6 Direct, 0 Structural. Coverage 71/71 (100%).
+
+---
+
+## Coverage Milestone — 100% Direct (71/71)
+
+**Achieved:** May 27, 2026 · **INVARIANT_TEST_MATRIX:** rev.8
+
+All 71 active invariants across 13 families now have dedicated Direct test coverage. Zero structural-only gaps remain.
+
+| Test Suite | Tests | PASS | FAIL | Invariants Closed |
+|---|---|---|---|---|
+| `tests/test_mivp.py` | 49 | 49 | 0 | MIVP-INV-001–009 (9) |
+| `tests/test_ogi.py` | 86 | 85 | 0 (1 xfail) | OGI-INV-001–010 (10) |
+| `tests/test_rcep.py` | 86 | 86 | 0 | RCEP-INV-001–006 (6) |
+
+The xfail in `test_ogi.py` (`test_mivp_gate6_readiness_assessment`) is expected by design — it documents that the MIVP category count (32 examples) has not yet reached the Gate 6 minimum threshold of 150 examples (OGI-INV-010). This is a corpus generation target, not a test failure.
+
 *OMNIX QUANTUM — Decision Governance Infrastructure*  
 *Governance Baseline OMNIX-BASELINE-2026-Q2-001 · May 2026 (updated May 27, 2026) · omnixquantum.net*
