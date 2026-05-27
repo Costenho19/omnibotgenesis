@@ -5197,7 +5197,7 @@ def get_book_leads():
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_frontend(path):
-    if request.path.startswith('/api/'):
+    if request.path.startswith('/api/') or request.path.startswith('/v1/'):
         return jsonify({'error': 'API endpoint not found', 'path': request.path}), 404
     if path and os.path.exists(os.path.join(DIST_DIR, path)):
         resp = send_from_directory(DIST_DIR, path)
