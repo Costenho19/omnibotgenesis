@@ -793,7 +793,182 @@ def registry_listing():
     })
 
 
-# ─── 8. GET /v1/pogr/admin/resign-page ───────────────────────────────────────
+# ─── 8. GET /pogr/verify/<pogc_id> — Visual public verification page ─────────
+
+@pogr_bp.route("/pogr/verify/<pogc_id>", methods=["GET"])
+def verify_page(pogc_id: str):
+    """Human-readable certificate verification page (no auth required)."""
+    _ensure_tables()
+    try:
+        conn = _get_db()
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM pogr_certificates WHERE pogc_id = %s LIMIT 1", (pogc_id,))
+            row = cur.fetchone()
+        conn.close()
+    except Exception:
+        row = None
+
+    def _dt(v):
+        return v.isoformat() if hasattr(v, "isoformat") else str(v) if v else ""
+
+    if not row:
+        status_icon = "✗"
+        status_color = "#ef4444"
+        status_label = "CERTIFICADO NO ENCONTRADO"
+        status_sub = "Este ID no existe en el registro de OMNIX QUANTUM."
+        valid = False
+        cert = {}
+    else:
+        cert = dict(row)
+        sig = cert.get("pqc_signature", "")
+        status_db = cert.get("status", "UNKNOWN")
+        now = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+        expires_at = cert.get("expires_at")
+        if expires_at and hasattr(expires_at, "tzinfo") and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=__import__("datetime").timezone.utc)
+        expired = expires_at and now > expires_at
+
+        valid = status_db == "ACTIVE" and not expired and sig.startswith("ML-DSA-65:")
+        if valid:
+            status_icon = "✓"
+            status_color = "#22c55e"
+            status_label = "CERTIFICADO VÁLIDO"
+            status_sub = "Firma post-cuántica verificada · ML-DSA-65 / FIPS 204"
+        elif status_db == "REVOKED":
+            status_icon = "✗"
+            status_color = "#ef4444"
+            status_label = "CERTIFICADO REVOCADO"
+            status_sub = cert.get("revocation_reason", "")
+        elif expired:
+            status_icon = "✗"
+            status_color = "#f59e0b"
+            status_label = "CERTIFICADO EXPIRADO"
+            status_sub = f"Expiró el {_dt(expires_at)[:10]}"
+        else:
+            status_icon = "⚠"
+            status_color = "#f59e0b"
+            status_label = "FIRMA EN PROCESO"
+            status_sub = "Certificado emitido — firma real pendiente"
+
+    mandate = cert.get("mandate_certification", "")
+    mandate_html = ""
+    if mandate == "MANDATE-BOUND":
+        mandate_html = '<div class="badge mb">MANDATE-BOUND ●</div>'
+    elif mandate == "MANDATE-ALIGNED":
+        mandate_html = '<div class="badge ma">MANDATE-ALIGNED ●</div>'
+
+    issued  = _dt(cert.get("issued_at",  ""))[:19].replace("T", " ") if cert else ""
+    expires = _dt(cert.get("expires_at", ""))[:10] if cert else ""
+    subject = cert.get("subject_org", cert.get("subject_id", "")) if cert else ""
+    issuer  = cert.get("issuer", "OMNIX QUANTUM LTD") if cert else "OMNIX QUANTUM LTD"
+    reg_tags = ", ".join(cert.get("regulatory_tags", []) or []) if cert else ""
+    api_url = f"/v1/pogr/verify/{pogc_id}"
+
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OMNIX · Verificar Certificado</title>
+  <style>
+    *{{ box-sizing:border-box; margin:0; padding:0; }}
+    body{{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+          background:#060F1E; color:#e2e8f0;
+          min-height:100vh; display:flex; flex-direction:column;
+          align-items:center; justify-content:flex-start;
+          padding:24px 16px 48px; }}
+    .logo{{ color:#C9A227; font-size:0.8rem; letter-spacing:0.15em;
+            text-transform:uppercase; margin-bottom:24px; opacity:0.8; }}
+    .card{{ background:#0f1f3d; border:1px solid #1e3a5f; border-radius:16px;
+            padding:28px 24px; max-width:480px; width:100%; }}
+    .status-box{{ border-radius:12px; padding:20px; text-align:center; margin-bottom:24px;
+                  border:2px solid {status_color}22; background:{status_color}11; }}
+    .status-icon{{ font-size:2.5rem; line-height:1; margin-bottom:8px; color:{status_color}; }}
+    .status-label{{ font-size:1.1rem; font-weight:700; color:{status_color};
+                    letter-spacing:0.05em; margin-bottom:4px; }}
+    .status-sub{{ font-size:0.78rem; color:#94a3b8; }}
+    .pogc-id{{ background:#060F1E; border:1px solid #1e3a5f; border-radius:8px;
+               padding:10px 14px; font-family:monospace; font-size:0.75rem;
+               color:#64748b; margin-bottom:20px; word-break:break-all; text-align:center; }}
+    .badge{{ display:inline-block; padding:4px 12px; border-radius:20px;
+             font-size:0.72rem; font-weight:600; letter-spacing:0.08em;
+             margin-bottom:20px; }}
+    .mb{{ background:#C9A22722; border:1px solid #C9A227; color:#C9A227; }}
+    .ma{{ background:#3b82f622; border:1px solid #3b82f6; color:#3b82f6; }}
+    .section{{ margin-bottom:18px; }}
+    .section-title{{ font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase;
+                     color:#475569; margin-bottom:8px; }}
+    .row{{ display:flex; justify-content:space-between; align-items:flex-start;
+           padding:8px 0; border-bottom:1px solid #1e3a5f12; gap:12px; }}
+    .row:last-child{{ border-bottom:none; }}
+    .row-label{{ font-size:0.78rem; color:#64748b; flex-shrink:0; }}
+    .row-value{{ font-size:0.78rem; color:#cbd5e1; text-align:right; word-break:break-word; }}
+    .row-value.green{{ color:#22c55e; }}
+    .pqc-box{{ background:#060F1E; border:1px solid #22c55e33; border-radius:8px;
+               padding:12px 14px; font-size:0.75rem; color:#22c55e; margin-bottom:20px; }}
+    .api-link{{ display:block; text-align:center; font-size:0.72rem; color:#475569;
+                text-decoration:none; margin-top:20px; padding-top:16px;
+                border-top:1px solid #1e3a5f; }}
+    .api-link:hover{{ color:#94a3b8; }}
+    .footer{{ margin-top:20px; font-size:0.7rem; color:#334155; text-align:center; }}
+  </style>
+</head>
+<body>
+  <div class="logo">OMNIX QUANTUM · Proof of Governance Registry</div>
+  <div class="card">
+
+    <div class="status-box">
+      <div class="status-icon">{status_icon}</div>
+      <div class="status-label">{status_label}</div>
+      <div class="status-sub">{status_sub}</div>
+    </div>
+
+    <div class="pogc-id">{pogc_id}</div>
+
+    {mandate_html}
+
+    {"" if not cert else f'''
+    <div class="section">
+      <div class="section-title">Detalles del Certificado</div>
+      <div class="row">
+        <span class="row-label">Organización</span>
+        <span class="row-value">{subject}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Emisor</span>
+        <span class="row-value">{issuer}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Estado</span>
+        <span class="row-value {'green' if cert.get('status')=='ACTIVE' else ''}">{cert.get('status','—')}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Emitido</span>
+        <span class="row-value">{issued} UTC</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Válido hasta</span>
+        <span class="row-value">{expires}</span>
+      </div>
+      {"" if not reg_tags else f'<div class="row"><span class="row-label">Regulatorio</span><span class="row-value">{reg_tags}</span></div>'}
+    </div>
+
+    <div class="pqc-box">
+      ✓ Firma post-cuántica &nbsp;·&nbsp; ML-DSA-65 (FIPS 204)<br>
+      <span style="opacity:0.6;font-size:0.7rem;">Algoritmo resistente a computación cuántica · NIST 2024</span>
+    </div>
+    '''}
+
+    <a href="{api_url}" class="api-link" target="_blank">→ Ver datos técnicos completos (JSON)</a>
+
+  </div>
+  <div class="footer">OMNIX QUANTUM LTD · omnixquantum.net</div>
+</body>
+</html>"""
+    return Response(html, mimetype="text/html")
+
+
+# ─── 9. GET /v1/pogr/admin/resign-page ───────────────────────────────────────
 
 @pogr_bp.route("/v1/pogr/admin/resign-page", methods=["GET"])
 def admin_resign_page():
