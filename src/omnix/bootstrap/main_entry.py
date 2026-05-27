@@ -233,6 +233,8 @@ async def run_telegram_bot_legacy(services: dict):
     Usa Application.run_polling() nativo de python-telegram-bot v20+
     para máxima concurrencia y escalabilidad.
     """
+    import signal
+
     try:
         from omnix_services.telegram_service import EnterpriseTelegramBot
         from omnix_config import env_config
@@ -251,6 +253,21 @@ async def run_telegram_bot_legacy(services: dict):
         bot = EnterpriseTelegramBot()
         print("[BOT] Step 3/5 — Bot instance created", flush=True)
 
+        loop = asyncio.get_event_loop()
+
+        def _sigterm_handler():
+            logger.info("🛑 [SIGTERM] Received — iniciando shutdown graceful del bot...")
+            print("[BOT] SIGTERM received — stopping polling gracefully", flush=True)
+            bot.is_running = False
+            asyncio.ensure_future(bot.stop_async(), loop=loop)
+
+        try:
+            loop.add_signal_handler(signal.SIGTERM, _sigterm_handler)
+            loop.add_signal_handler(signal.SIGINT, _sigterm_handler)
+            logger.info("✅ [SIGTERM] Handler registrado — shutdown graceful habilitado")
+        except (NotImplementedError, RuntimeError) as sig_err:
+            logger.warning(f"⚠️ No se pudo registrar signal handler: {sig_err}")
+
         print("[BOT] Step 4/5 — Calling start_polling()...", flush=True)
         logger.info("Starting Telegram bot (async native mode)...")
         await bot.start_polling()
@@ -265,6 +282,8 @@ async def run_telegram_bot_legacy(services: dict):
 
 async def run_telegram_bot_v7(services: dict):
     """Run the Telegram bot using V7.0 TelegramBotAdapter."""
+    import signal
+
     container = services.get('container')
     
     if not container:
@@ -275,6 +294,23 @@ async def run_telegram_bot_v7(services: dict):
     
     if telegram_adapter:
         verification_runner = await start_verification_server_task()
+
+        bot = getattr(telegram_adapter, 'enterprise_bot', None) or getattr(telegram_adapter, '_bot', None)
+        if bot is not None:
+            loop = asyncio.get_event_loop()
+
+            def _sigterm_handler_v7():
+                logger.info("🛑 [SIGTERM-V7] Received — iniciando shutdown graceful del bot...")
+                print("[BOT-V7] SIGTERM received — stopping polling gracefully", flush=True)
+                bot.is_running = False
+                asyncio.ensure_future(bot.stop_async(), loop=loop)
+
+            try:
+                loop.add_signal_handler(signal.SIGTERM, _sigterm_handler_v7)
+                loop.add_signal_handler(signal.SIGINT, _sigterm_handler_v7)
+                logger.info("✅ [SIGTERM-V7] Handler registrado — shutdown graceful habilitado")
+            except (NotImplementedError, RuntimeError) as sig_err:
+                logger.warning(f"⚠️ No se pudo registrar signal handler V7: {sig_err}")
         
         logger.info("Starting Telegram bot (V7.0 mode)...")
         # NOTE: Do NOT call telegram_adapter.start() separately.
