@@ -793,7 +793,99 @@ def registry_listing():
     })
 
 
-# ─── 8. POST /v1/pogr/admin/resign/<pogc_id> ─────────────────────────────────
+# ─── 8. GET /v1/pogr/admin/resign-page ───────────────────────────────────────
+
+@pogr_bp.route("/v1/pogr/admin/resign-page", methods=["GET"])
+def admin_resign_page():
+    """One-tap admin page to re-sign POGC-GENESIS with real ML-DSA-65."""
+    token = hashlib.sha3_256(b"POGR-RESIGN:POGC-GENESIS-E071CC96").hexdigest()
+    sk_configured = bool(os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64"))
+    status_color  = "#22c55e" if sk_configured else "#ef4444"
+    status_text   = "Clave PQC lista en servidor" if sk_configured else "ERROR: Clave PQC no configurada en Railway"
+
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OMNIX — Re-firma GENESIS</title>
+  <style>
+    body {{ font-family: monospace; background: #060F1E; color: #e2e8f0;
+           display: flex; flex-direction: column; align-items: center;
+           justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }}
+    .card {{ background: #0f1f3d; border: 1px solid #C9A227; border-radius: 12px;
+             padding: 28px; max-width: 440px; width: 100%; text-align: center; }}
+    h1 {{ color: #C9A227; font-size: 1.1rem; margin: 0 0 6px; }}
+    .sub {{ color: #64748b; font-size: 0.75rem; margin-bottom: 20px; }}
+    .status {{ padding: 8px 12px; border-radius: 6px; font-size: 0.8rem;
+               background: {status_color}22; border: 1px solid {status_color};
+               color: {status_color}; margin-bottom: 20px; }}
+    .cert-id {{ background: #1e3a5f; padding: 10px; border-radius: 6px;
+                font-size: 0.75rem; color: #94a3b8; margin-bottom: 20px; word-break: break-all; }}
+    button {{ background: #C9A227; color: #060F1E; border: none; border-radius: 8px;
+              padding: 16px 32px; font-size: 1rem; font-weight: bold; cursor: pointer;
+              width: 100%; font-family: monospace; }}
+    button:hover {{ background: #b8911f; }}
+    button:disabled {{ background: #475569; cursor: not-allowed; }}
+    #result {{ margin-top: 20px; padding: 14px; border-radius: 8px; font-size: 0.8rem;
+               display: none; word-break: break-all; text-align: left; }}
+    .ok {{ background: #052e16; border: 1px solid #22c55e; color: #22c55e; }}
+    .fail {{ background: #2d0a0a; border: 1px solid #ef4444; color: #ef4444; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>OMNIX QUANTUM — PoGR Admin</h1>
+    <p class="sub">Re-firma POGC-GENESIS con ML-DSA-65 real (FIPS 204)</p>
+    <div class="status">{status_text}</div>
+    <div class="cert-id">POGC-GENESIS-E071CC96</div>
+    <button id="btn" onclick="resign()" {"disabled" if not sk_configured else ""}>
+      {"FIRMAR CON ML-DSA-65" if sk_configured else "CLAVE NO DISPONIBLE"}
+    </button>
+    <div id="result"></div>
+  </div>
+  <script>
+    async function resign() {{
+      const btn = document.getElementById('btn');
+      const res = document.getElementById('result');
+      btn.disabled = true;
+      btn.textContent = 'Firmando...';
+      res.style.display = 'none';
+      try {{
+        const r = await fetch('/v1/pogr/admin/resign/POGC-GENESIS-E071CC96', {{
+          method: 'POST',
+          headers: {{ 'X-Admin-Resign-Token': '{token}' }}
+        }});
+        const data = await r.json();
+        if (r.ok) {{
+          res.className = 'ok';
+          res.innerHTML = '✓ FIRMA REAL APLICADA<br><br>' +
+            'Algoritmo: ' + data.new_signature_algorithm + '<br>' +
+            'Bytes: ' + data.new_signature_bytes + '<br><br>' +
+            '<a href="/v1/pogr/verify/POGC-GENESIS-E071CC96" style="color:#22c55e">→ Verificar ahora</a>';
+          btn.textContent = '✓ FIRMADO';
+        }} else {{
+          res.className = 'fail';
+          res.innerHTML = '✗ Error: ' + JSON.stringify(data);
+          btn.disabled = false;
+          btn.textContent = 'REINTENTAR';
+        }}
+        res.style.display = 'block';
+      }} catch(e) {{
+        res.className = 'fail';
+        res.innerHTML = '✗ ' + e.message;
+        res.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'REINTENTAR';
+      }}
+    }}
+  </script>
+</body>
+</html>"""
+    return Response(html, mimetype="text/html")
+
+
+# ─── 9. POST /v1/pogr/admin/resign/<pogc_id> ─────────────────────────────────
 
 @pogr_bp.route("/v1/pogr/admin/resign/<pogc_id>", methods=["POST"])
 def admin_resign(pogc_id: str):
