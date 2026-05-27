@@ -1019,6 +1019,13 @@ class ConversationalAI:
     ✅ Modular y escalable
     """
     def __init__(self):
+        # Siempre inicializar atributos legacy — necesarios como fallback de emergencia
+        self.model_name = "gemini-2.0-flash"
+        self.conversation_history = {}
+        self.user_preferences = {}
+        self.market_context = {}
+        self.intelligence_level = "ULTRA_COMPETITIVE_ENTERPRISE"
+
         # Si sistema enterprise disponible, usarlo
         if OMNIX_ENTERPRISE_AVAILABLE:
             logger.info("🚀 Inicializando ConversationalAI con ENTERPRISE backend")
@@ -1027,18 +1034,14 @@ class ConversationalAI:
         else:
             logger.info("✅ Sistema IA Directo Activado - Gemini 2.0 Flash + GPT-4o")
             self.using_enterprise = False
-            # Modo directo con APIs
-            self.model_name = "gemini-2.0-flash"
-            self.conversation_history = {}
-            self.user_preferences = {}
-            self.market_context = {}
-            self.intelligence_level = "ULTRA_COMPETITIVE_ENTERPRISE"
-            # Initialize legacy AI clients for fallback
-            self._init_legacy_clients()
-    
+
+        # SIEMPRE inicializar clientes legacy como fallback de emergencia
+        # (crítico: si enterprise falla en runtime, el fallback legacy necesita gemini_client)
+        self._init_legacy_clients()
+
     def _init_legacy_clients(self):
-        """Initialize legacy AI clients if enterprise not available"""
-        if not self.using_enterprise:
+        """Initialize legacy AI clients — always available as emergency fallback"""
+        if True:  # always run (was: if not self.using_enterprise)
             try:
                 _openai_disabled = os.environ.get('OMNIX_DISABLE_OPENAI', 'false').lower() == 'true'
                 if not _openai_disabled and OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
