@@ -81,15 +81,15 @@ python generate_ontology.py
 
 **Contents:**
 - 60+ canonical OMNIX terms with exact definitions
-- All 125 invariant codes with ADR source
-- All 194 ADR IDs and titles
+- All 169 invariant codes with ADR source
+- All 199 ADR IDs and titles
 - Non-existent terms list (known hallucination targets)
 - Hallucination type guide (Types 1/2/3)
 
 **Acceptance criteria:**
-- `ontology.json` contains `"invariants"` key with ≥ 125 entries
+- `ontology.json` contains `"invariants"` key with ≥ 169 entries
 - `ontology.json` contains `"canonical_terms"` key with ≥ 60 entries
-- `ontology.json` contains `"adrs"` key with ≥ 194 entries
+- `ontology.json` contains `"adrs"` key with ≥ 199 entries
 - `ontology.json` is valid JSON
 
 **Gate 4 dependency:** Phase 5 (evaluation) Gate 4 cannot run without `ontology.json`. Phases 2 and 3 (fine-tuning) can run in parallel.

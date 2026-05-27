@@ -472,7 +472,7 @@ POST   /v1/govern/session/{id}/close      — Close session + issue final CTCHC 
 GET    /v1/govern/session/{id}/status     — Session status + compliance summary
 GET    /v1/govern/sessions                — List active sessions
 POST   /v1/govern/verify                  — Offline-verify any OGR artifact
-GET    /v1/govern/compliance/{id}         — Compliance report (106 invariants)
+GET    /v1/govern/compliance/{id}         — Compliance report (169 invariants)
 GET    /v1/govern/manifest                — API capabilities manifest
 ```
 
@@ -482,7 +482,7 @@ GET    /v1/govern/manifest                — API capabilities manifest
 3. CCS → AGVP anticipatory veto loop — ningún competidor tiene veto conductual proactivo
 4. Offline-verifiable CTCHC seal — verificación forense sin llamar a OMNIX
 5. receipt-bound BAR — link criptográfico output→governance_receipt
-6. 106 invariantes formales cubiertos por sesión
+6. 169 invariantes formales cubiertos por sesión
 
 **DB Table:** `atf_ogr_sessions`
 
@@ -495,7 +495,7 @@ GET    /v1/govern/manifest                — API capabilities manifest
 | Documento | Archivo | Alcance |
 |---|---|---|
 | **OMNIX Governance API** | `docs/adr/ADR-176-omnix-governance-api-product.md` | Definición del producto comercial. RegTech SaaS. 4 tiers (VERIFIER/BUILDER/PROFESSIONAL/ENTERPRISE). Pricing: free → $500 → $2,000 → custom. Legal positioning: NOT financial advice. Endpoints REST, SDKs Python + Node.js. OMNIX-PRODUCT-GOV-API-001 |
-| **OMNIX Governance Runtime** | `docs/integration/OMNIX_GOVERNANCE_RUNTIME.md` | Integration product premium — ATF L1–L6 stack completo en API de sesión única. 9 endpoints REST. Comparación CLARIXO/MTCP. 6 diferenciadores únicos. 106 invariantes. compliance_tier: ATF-BEV-Compliant. |
+| **OMNIX Governance Runtime** | `docs/integration/OMNIX_GOVERNANCE_RUNTIME.md` | Integration product premium — ATF L1–L6 stack completo en API de sesión única. 9 endpoints REST. Comparación CLARIXO/MTCP. 6 diferenciadores únicos. 169 invariantes. compliance_tier: ATF-BEV-Compliant. |
 
 **Páginas React:** `omnix_web/src/pages/GovernanceAPIPage.tsx` · Ruta: `/governance-api`
 

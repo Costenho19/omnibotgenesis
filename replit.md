@@ -155,7 +155,7 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
 ## OMNIX Governance Intelligence (OGI) — ADR-193 + ADR-195
 
 **El primer modelo de IA entrenado exclusivamente en un protocolo de gobernanza formal.**
-OGI = Llama-3.x fine-tuned sobre 194 ADRs + 6 RFCs + 125 invariantes + 13 categorías de corpus.
+OGI = Llama-3.x fine-tuned sobre 199 ADRs + 6 RFCs + 169 invariantes + 28 familias de invariantes.
 Slot en el SAL (ADR-190): **OGI → Groq → Mistral → Gemini → OpenAI → Anthropic**
 
 | Artefacto | Archivo |

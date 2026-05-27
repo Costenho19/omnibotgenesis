@@ -185,7 +185,7 @@ export default function InstitutionalBriefPage() {
               From human-signed delegation to immutable forensic archive — at the exact moment execution occurs.
             </p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {['67 Active Invariants', '9 Invariant Families', '4 Published RFCs', '184 ADRs', 'ML-DSA-65 · FIPS 204'].map(t => (
+              {['169 Active Invariants', '28 Invariant Families', '6 Published RFCs', '199 ADRs', 'ML-DSA-65 · FIPS 204'].map(t => (
                 <span key={t} style={{
                   fontSize: 10, fontWeight: 600, color: GOLD,
                   background: `${GOLD}12`, border: `1px solid ${GOLD}28`,
@@ -449,7 +449,7 @@ export default function InstitutionalBriefPage() {
             OMNIX QUANTUM LTD · United Kingdom · omnixquantum.com
           </div>
           <div style={{ fontSize: 11, color: SLATE, fontFamily: 'monospace' }}>
-            RFC-ATF-1/2/3/4 · 67 invariants · 184 ADRs · GOVERNANCE_BASELINE-2026-Q2-001
+            RFC-ATF-1/2/3/4/5/6 · 169 invariants · 199 ADRs · GOVERNANCE_BASELINE-2026-Q2-001
           </div>
         </div>
 

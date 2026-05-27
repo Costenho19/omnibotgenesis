@@ -1,6 +1,17 @@
 # FRONTEND_INTEGRITY_REPORT.md
 ## OMNIX QUANTUM — Frontend & Website Integrity Audit
 **Date:** 2026-05-27 | **Method:** Static analysis of React pages, TSX scan
+**Last Updated:** 2026-05-27 — Correction pass
+
+---
+
+## CORRECTION LOG — 2026-05-27
+
+| Finding | Status | Evidence |
+|---|---|---|
+| **FE-001** (GovernanceFlowPage "184" ADR count) | ✅ **FIXED** (prior pass) | Updated to `'199'` in `GovernanceFlowPage.tsx`. |
+| **FE-002** (OGI system prompt stale counts propagating to frontend) | ✅ **FIXED** | `prompt_templates.py` MASTER_SYSTEM_PROMPT updated to ADR-199 / 169 invariants / 28 families (5 occurrences). JSONL corpus updated (803+99+120). Frontend pages: `InstitutionalBriefPage.tsx` ("169 Active Invariants · 28 Invariant Families · 6 Published RFCs · 199 ADRs") and `ReviewerStartPage.tsx` ("169 invariants · 28 families · 199 ADRs · 6 RFCs") updated. |
+| Remaining open FE findings | ⏳ OPEN | PDF export / video runtime verification not addressed. |
 
 ---
 

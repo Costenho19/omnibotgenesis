@@ -1,6 +1,17 @@
 # GOVERNANCE_CONTRADICTIONS_REPORT.md
 ## OMNIX QUANTUM — Governance Correctness & Contradictions Audit
 **Date:** 2026-05-27 | **Method:** Invariant cross-reference + protocol trace
+**Last Updated:** 2026-05-27 — Correction pass
+
+---
+
+## CORRECTION LOG — 2026-05-27
+
+| Finding | Status | Evidence |
+|---|---|---|
+| **GOV-001** (BEV-INV-015 BAR PQC) | ✅ **FIXED** | `sign_message` wired in `BAREngine.create_bar` + `CTCHCEngine.seal_chain`. ML-DSA-65 verified end-to-end. BEV-INV-015 now satisfied. |
+| **GOV-003** (OGI stale invariant counts) | ✅ **FIXED** | JSONL corpus (803+99+120 examples) updated to 199 ADRs / 169 invariants / 28 families. |
+| GOV-002, GOV-004, GOV-005 | ⏳ OPEN | Not addressed in this pass. |
 
 ---
 
@@ -11,13 +22,13 @@
 ---
 
 ## GOV-001 — BEV-INV-015 Violation: BAR Records Issued Without PQC Signature
-- **Severity:** CRITICAL
+- **Severity:** CRITICAL → ✅ **FIXED 2026-05-27**
 - **Invariant Violated:** BEV-INV-015 (BAR must carry a valid PQC signature)
-- **File:** `omnix_core/bev/behavioral_anchor_record.py:266`
-- **Description:** BEV-INV-015 requires that every Behavioral Anchor Record (BAR) is PQC-signed with ML-DSA-65 before persistence. In practice, `PostQuantumSecurity.sign_receipt()` does not exist — the call fails and BAR records are stored with `pqc_signature = None`. This is a systematic invariant violation on every governance session.
-- **State Created:** Governance sessions appear complete. BAR records exist in DB. CTCHC chain is valid. But the individual turn attestations lack signatures. An offline verifier checking BEV-INV-015 will reject every session.
-- **Contradiction:** The system simultaneously: (a) issues PoGC certificates that claim "PQC-attested behavioral chain" and (b) stores BAR records with null signatures.
-- **Remediation:** Fix `sign_receipt` → correct method name. Verify full signing path end-to-end.
+- **File:** `omnix_core/bev/behavioral_anchor_record.py:266` (also `coherence_hash_chain.py`)
+- **Fix Applied:** Replaced non-existent `.sign_receipt()` call with `.sign_message(payload_bytes, sk_bytes)` + base64 encoding. Applied to both `BAREngine.create_bar` and `CTCHCEngine.seal_chain`.
+- **Invariant Status:** BEV-INV-015 now satisfied. Every future BAR record will carry a valid ML-DSA-65 PQC signature before persistence. CTCHC seal is also PQC-signed.
+- **Verification:** `PostQuantumSecurity.sign_message` confirmed present and working. Sig length: 3309B (ML-DSA-65). `sign_receipt` confirmed absent from both source files (grep verified).
+- **Note on PoGC contradiction:** Resolved — PoGC certificates can now accurately claim "PQC-attested behavioral chain."
 
 ---
 

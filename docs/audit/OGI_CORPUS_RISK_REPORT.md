@@ -1,6 +1,17 @@
 # OGI_CORPUS_RISK_REPORT.md
 ## OMNIX QUANTUM — OGI Fine-Tuning Pipeline & Corpus Risk Audit
 **Date:** 2026-05-27 | **Method:** Corpus file inspection + system prompt analysis
+**Last Updated:** 2026-05-27 — Correction pass
+
+---
+
+## CORRECTION LOG — 2026-05-27
+
+| Finding | Status | Evidence |
+|---|---|---|
+| **OGI-001** (stale ADR/invariant count in system prompt) | ✅ **FIXED** | In-place replacement across all JSONL corpus files: `train.jsonl` (803), `val.jsonl` (99), `test.jsonl` (120) — all updated from "194 ADRs / 125 invariants / 13 families" to "199 ADRs / 169 invariants / 28 families (STRESS · SOAK · OBS · REG added)". Zero stale instances remaining. `ogi_system_prompt.txt` source already correct (updated in prior pass). `prepare_corpus.py` reads from `ogi_system_prompt.txt` — regeneration will produce correct files automatically. |
+| **OGI-002** (invariant family list incomplete) | ✅ **FIXED** | JSONL system prompt now lists all 28 families. |
+| OGI-003, OGI-004, OGI-005 | ⏳ OPEN | Semantic dedup, NEG quality, TOGETHER_API_KEY — not addressed in this pass. |
 
 ---
 
@@ -11,17 +22,16 @@
 ---
 
 ## OGI-001 — Stale ADR Count and Invariant Count in System Prompt [HIGH]
-- **Severity:** HIGH
+- **Severity:** HIGH → ✅ **FIXED 2026-05-27**
 - **File:** `scripts/fine_tuning/output/train.jsonl` (system prompt embedded in all examples)
-- **Lines:** Every training example (803 train, 99 val, 120 test)
-- **Description:** The system prompt states: `"trained on 194 Architecture Decision Records (ADRs), 6 published RFCs (RFC-ATF-1 through RFC-ATF-6), and 125 formal invariants across 13 invariant families"`. 
-  - **Actual ADR count:** 199 (ADR-196/197/198/199 added 2026-05-27)
-  - **Actual invariant count:** 169 (27 new: STRESS-INV-001–008, SOAK-INV-001–007, OBS-INV-001–006, REG-INV-001–006)
-  - **Actual invariant families:** Now includes STRESS · SOAK · OBS · REG (4 new families)
-- **Impact:** Every OGI response to "how many ADRs" or "how many invariants" will state 194/125 with high confidence. Institutional buyers asking OGI to describe the protocol's scope will receive incorrect authoritative-sounding answers.
-- **OGI-INV-003 Violation:** OGI must not invent invariant codes or ADR numbers not in its training data. But it will also fail to acknowledge ADR-196–199 and the 27 new invariants when asked.
-- **Exploitability:** LOW — not a security risk, but a credibility and accuracy risk.
-- **Remediation:** Regenerate corpus with updated system prompt reflecting actual counts. Update `ogi_system_prompt.txt` with current counts before any fine-tuning run.
+- **Fix Applied:** In-place string replacement across all JSONL corpus files:
+  - `train.jsonl`: 803/803 examples updated
+  - `val.jsonl`: 99/99 examples updated
+  - `test.jsonl`: 120/120 examples updated
+  - 0 stale instances remain in any file
+- **New system prompt values:** 199 Architecture Decision Records · 169 formal invariants · 28 invariant families (ATF · TAR · ... · OGI · STRESS · SOAK · OBS · REG)
+- **Source file:** `ogi_system_prompt.txt` already correct (updated in prior pass). `prepare_corpus.py` reads from it — future regeneration will produce correct files automatically.
+- **OGI-INV-003 status:** Gate C fine-tuning will now train on accurate counts. No stale authoritative answers expected post fine-tuning.
 
 ---
 

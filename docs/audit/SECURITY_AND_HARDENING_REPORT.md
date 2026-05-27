@@ -1,6 +1,20 @@
 # SECURITY_AND_HARDENING_REPORT.md
 ## OMNIX QUANTUM — Security & Hardening Audit
 **Date:** 2026-05-27 | **Method:** Static analysis, auth tracing, CORS audit
+**Last Updated:** 2026-05-27 — Correction pass
+
+---
+
+## CORRECTION LOG — 2026-05-27
+
+| Finding | Status | Evidence |
+|---|---|---|
+| BAR PQC silent failure (mentioned in executive summary) | ✅ **FIXED** | `sign_message` wired in BAR + CTCHC. PQC signing verified end-to-end. |
+| SEC-001 (189 routes without auth) | ⏳ OPEN | Requires verification of `agent_blueprint.py` `before_request` middleware + explicit decorators. Not addressed in this pass. |
+| SEC-002 (CORS wildcard) | ⏳ OPEN | Not addressed in this pass. |
+| SEC-003 (rate limiting in Redis) | ⏳ OPEN | Not addressed in this pass. |
+| SEC-004 (oversight unauthenticated) | ⏳ OPEN | Not addressed in this pass. |
+| SEC-006 (AVM_AUTO_APPROVE no expiry) | ⏳ OPEN | Not addressed in this pass. |
 
 ---
 

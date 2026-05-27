@@ -2,6 +2,17 @@
 ## OMNIX QUANTUM — Zero-Assumption Implementation Gap Audit
 **Date:** 2026-05-27 | **Auditor:** Autonomous — zero-assumption sweep
 **Scope:** omnix_core/ · omnix_services/ · omnix_web/api/ · omnix_web/src/
+**Last Updated:** 2026-05-27 — Correction pass
+
+---
+
+## CORRECTION LOG — 2026-05-27
+
+| Finding | Status | Evidence |
+|---|---|---|
+| OGI stale corpus (line 13) | ✅ **FIXED** | 803+99+120 JSONL examples updated to 199 ADRs / 169 invariants. |
+| Stale ADR/invariant counts across codebase | ✅ **FIXED** | 11 files corrected: InstitutionalBriefPage, ReviewerStartPage, prompt_templates.py (5 places), ADR-193, ADR-195, OGI_SPEC, OGI_ONEPAGER, ARCHITECTURE_INDEX (3 places), replit.md. |
+| GAP-001 through GAP-010 | ⏳ OPEN | Not addressed in this pass. |
 
 ---
 

@@ -1,6 +1,16 @@
 # HIDDEN_FAILURES_REPORT.md
 ## OMNIX QUANTUM — Hidden Failures & Silent Risk Audit
 **Date:** 2026-05-27 | **Method:** Static analysis + runtime trace
+**Last Updated:** 2026-05-27 — Correction pass
+
+---
+
+## CORRECTION LOG — 2026-05-27
+
+| Finding | Status | Evidence |
+|---|---|---|
+| **HIDDEN-001** (BAR PQC signing) | ✅ **FIXED** | `sign_receipt` → `sign_message(payload_bytes, sk_bytes)` in `behavioral_anchor_record.py`. Runtime-verified: ML-DSA-65, sig=3309B, verify OK, tamper detected. Source: `BAREngine.create_bar` + `CTCHCEngine.seal_chain` both confirmed using `sign_message`. `sign_receipt` confirmed absent. |
+| HIDDEN-002 through HIDDEN-011 | ⏳ OPEN | Not addressed in this pass. See individual findings below. |
 
 ---
 
@@ -11,14 +21,11 @@ This report documents **11 hidden failure modes** that do not surface as crashes
 ---
 
 ## HIDDEN-001 — BAR PQC Signing Uses Wrong Method Name (Silent Non-Signing)
-- **Severity:** CRITICAL
+- **Severity:** CRITICAL → ✅ **FIXED 2026-05-27**
 - **File:** `omnix_core/bev/behavioral_anchor_record.py`
-- **Line:** ~266
-- **Description:** `[BAR] PQC signing failed (non-blocking): 'PostQuantumSecurity' object has no attribute 'sign_receipt'`. The BAR layer calls `.sign_receipt()` on a `PostQuantumSecurity` instance, but this method does not exist. The exception is caught and logged as WARNING. BAR records are persisted with `pqc_signature = None`. This happens on **every single BAR record** in the current codebase.
-- **Why Hidden:** The governance runtime does not fail or HALT on BAR signing failure. Receipts are issued. The signed chain appears valid — but individual turn attestations lack PQC signatures.
-- **Detection:** Log: `[BAR] PQC signing failed (non-blocking)` appears in every governance session. Reproduced in all stress test runs.
-- **Impact:** Every BAR record ever issued is unsigned. Forensic auditors verifying individual turn attestations will find them unsigned. This is a systematic failure, not an edge case.
-- **Remediation:** Inspect `PostQuantumSecurity` API. The correct method is likely `.sign_data(content)` or `.sign_governance_receipt(payload)`. Fix the call and make BAR signing fail-closed.
+- **Fix:** Replaced `.sign_receipt()` (non-existent) with `.sign_message(payload_bytes, sk_bytes)` + `base64.b64encode(sig_raw).decode()`. Same fix applied to `CTCHCEngine.seal_chain` in `coherence_hash_chain.py`.
+- **Verification:** Runtime test confirmed — `PostQuantumSecurity.generate_keypair_signature()` → sign → verify → OK. Signature length: 3309 bytes (ML-DSA-65 nominal). Tampered payload: verify returns False. Env-var path (base64 Railway secret → decode → sign → verify): OK. `sign_receipt` confirmed absent from both source files.
+- **BEV-INV-015 status:** ✅ Now satisfied — every future BAR persisted will carry a valid ML-DSA-65 PQC signature.
 
 ---
 

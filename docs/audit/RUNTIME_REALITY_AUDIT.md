@@ -1,6 +1,17 @@
 # RUNTIME_REALITY_AUDIT.md
 ## OMNIX QUANTUM — Runtime Execution Reality Audit
 **Date:** 2026-05-27 | **Method:** Static trace + dynamic test verification
+**Last Updated:** 2026-05-27 — Correction pass
+
+---
+
+## CORRECTION LOG — 2026-05-27
+
+| Finding | Status | Evidence |
+|---|---|---|
+| BAR/CTCHC PQC signing (related: HIDDEN-001/GOV-001) | ✅ **FIXED** | `BAREngine.create_bar` + `CTCHCEngine.seal_chain` now use `sign_message`. Runtime-verified: 3309B ML-DSA-65 sig, tamper detection OK. |
+| RUNTIME-001 (AGVP TESTING stub) | ⏳ OPEN | No change in this pass. Requires adding key-presence guard in `anticipatory_governance_veto.py:99–108`. |
+| RUNTIME-002 through RUNTIME-004 | ⏳ OPEN | Not addressed in this pass. |
 
 ---
 

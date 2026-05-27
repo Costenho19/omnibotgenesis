@@ -222,7 +222,7 @@ export default function ReviewerStartPage() {
           fontSize: 11, color: SLATE, fontFamily: 'monospace',
         }}>
           <span>OMNIX QUANTUM LTD · omnixquantum.com</span>
-          <span>67 invariants · 9 families · 184 ADRs · 4 RFCs published</span>
+          <span>169 invariants · 28 families · 199 ADRs · 6 RFCs published</span>
         </div>
       </div>
     </div>

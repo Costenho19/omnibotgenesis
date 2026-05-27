@@ -21,7 +21,7 @@ When your governance infrastructure is more sophisticated than the model interpr
 
 **OMNIX Governance Intelligence (OGI)** — the world's first AI model fine-tuned exclusively on a formal AI governance protocol corpus.
 
-OGI is not a RAG system. It is not a chatbot with documents attached. It is a fine-tuned domain expert with 194 ADRs, 6 published RFCs, 125 formal invariants, and 13 corpus categories baked directly into its weights.
+OGI is not a RAG system. It is not a chatbot with documents attached. It is a fine-tuned domain expert with 199 ADRs, 6 published RFCs, 169 formal invariants across 28 invariant families baked directly into its weights.
 
 OGI knows the OMNIX protocol the way a senior engineer knows it — natively, precisely, without hallucination.
 

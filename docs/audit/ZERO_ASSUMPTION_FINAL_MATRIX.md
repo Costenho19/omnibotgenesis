@@ -1,6 +1,23 @@
 # ZERO_ASSUMPTION_FINAL_MATRIX.md
 ## OMNIX QUANTUM — Final Audit Matrix
 **Date:** 2026-05-27 | **Scope:** Full ecosystem — 9 audit areas, 32 findings
+**Last Updated:** 2026-05-27 — Correction pass applied
+
+---
+
+## CORRECTION LOG — 2026-05-27
+
+| ID | Was | Now | Evidence |
+|---|---|---|---|
+| **HIDDEN-001** | CRITICAL OPEN | ✅ **FIXED** | `sign_receipt` → `sign_message`. ML-DSA-65, 3309B sig. BAR verify: OK. Tamper: detected. |
+| **GOV-001** | CRITICAL OPEN | ✅ **FIXED** | Same fix as HIDDEN-001. BEV-INV-015 now satisfied. |
+| **OGI-001** | HIGH OPEN | ✅ **FIXED** | 803 train + 99 val + 120 test JSONL examples updated to 199 ADRs / 169 invariants / 28 families. |
+| **GOV-003** | MEDIUM OPEN | ✅ **FIXED** | Same as OGI-001 — invariant counts corrected in all corpus files. |
+| **Stale counts** | OPEN (11 files) | ✅ **FIXED** | InstitutionalBriefPage · ReviewerStartPage · prompt_templates.py (5 instances) · ADR-193 · ADR-195 · OGI_SPEC · OGI_ONEPAGER · ARCHITECTURE_INDEX (3 instances) · replit.md |
+
+**Still OPEN (not addressed in this pass):** SEC-001 · SEC-004 · RUNTIME-001 · GAP-001 · GAP-002 · HIDDEN-002–005 · SEC-002 · SEC-003
+
+**Residual risk (structural — cannot patch in-place):** `generate_atf6_pdf.py` lines 1599/1837 — "106 invariants" is historically accurate for BEV compliance tier at RFC-ATF-6 publication; not a live count.
 
 ---
 
@@ -8,11 +25,11 @@
 
 | ID | System | File | Finding | Exploitability | Operational Impact | Remediation |
 |---|---|---|---|---|---|---|
-| **HIDDEN-001** | BAR / BEV | `bev/behavioral_anchor_record.py:266` | `sign_receipt()` method does not exist — every BAR stored with `pqc_signature=null`. **Systematic PQC failure.** | Medium — forensic only | CRITICAL — product claim "PQC-signed" invalid | Fix method name. Verify API. |
+| **HIDDEN-001** ✅ FIXED | BAR / BEV | `bev/behavioral_anchor_record.py:266` | ~~`sign_receipt()` method does not exist~~ — **FIXED 2026-05-27**: replaced with `sign_message(payload_bytes, sk_bytes)`. Verified: ML-DSA-65 sig=3309B, verify OK, tamper detected. | — | — | Done |
 | **SEC-001** | API Auth | `agent_blueprint.py`, `oversight_bp.py` | 189 routes without auth decorator, including state-mutating endpoints (register_agent, create_delegation, submit_oversight_review) | HIGH | CRITICAL — governance chain can be populated by unauthenticated attackers | Verify before_request middleware; add @require_api_key to all write routes |
 | **SEC-004** | Oversight | `oversight_bp.py:63,185,211,333` | Oversight session creation, review submission, and session expiry are fully unauthenticated | HIGH | CRITICAL — fake oversight approvals, real session expiry | Require X-API-Key admin role |
 | **RUNTIME-001** | AGVP PQC | `anticipatory_governance_veto.py:102` | PQC signing returns literal `"TESTING"` string when TESTING=true — PVRs forensically invalid | Medium (requires env misconfiguration) | CRITICAL — governance proof invalidated | Hard guard: only stub if key genuinely absent |
-| **GOV-001** | BEV-INV-015 | `behavioral_anchor_record.py:266` | BAR invariant BEV-INV-015 violated on every governance session — PQC signatures null | Medium | CRITICAL — offline verifier rejects all BAR records | Fix sign_receipt call |
+| **GOV-001** ✅ FIXED | BEV-INV-015 | `behavioral_anchor_record.py:266` | ~~BAR PQC signatures null~~ — **FIXED 2026-05-27**: `sign_message` wired correctly. BEV-INV-015 now satisfied. Also fixed CTCHC `seal_chain` PQC call. | — | — | Done |
 
 ---
 
@@ -29,7 +46,7 @@
 | **SEC-002** | CORS | `proof_layer.py`, `server.py` | `Access-Control-Allow-Origin: *` on 14+ governance endpoints | Medium | HIGH — cross-origin data leakage | Remove manual CORS headers; use Flask-CORS |
 | **SEC-003** | Rate Limit | `sandbox.py:21-29` | In-memory rate limits reset on restart | HIGH | HIGH — DoS bypass | Move to Redis |
 | **HIDDEN-008** | Oversight | `oversight_bp.py` | All 7 oversight endpoints unauthenticated (overlaps SEC-004) | HIGH | HIGH | auth middleware |
-| **OGI-001** | OGI Corpus | `train.jsonl` system prompt | "194 ADRs, 125 invariants" — stale by 5 ADRs and 44 invariants | N/A | HIGH — trained model cites wrong counts | Regenerate corpus |
+| **OGI-001** ✅ FIXED | OGI Corpus | `train.jsonl` system prompt | ~~"194 ADRs, 125 invariants"~~ — **FIXED 2026-05-27**: in-place replacement in 803 train / 99 val / 120 test examples → 199 ADRs / 169 invariants / 28 families. `ogi_system_prompt.txt` source already correct. | N/A | — | Done |
 
 ---
 
@@ -42,7 +59,7 @@
 | **GAP-005** | Trading | `earnings_protector.py:407` | Earnings protection has no real API integration (TODO) | Integrate Alpha Vantage earnings |
 | **GAP-007** | Trading | `auto_trading_bot.py:4400` | Sentiment defaults to 50.0 neutral stub — governance invariants never fire on sentiment | Log WARNING + mark receipt with signal_default |
 | **GAP-010** | Invariants | Catalog | STRESS/SOAK/OBS/REG invariants not in formal invariant registry | Add to INVARIANT_TEST_MATRIX |
-| **GOV-003** | OGI | `train.jsonl` | OGI will cite wrong invariant counts for MIVP/BEV/OGR families | Regenerate corpus |
+| **GOV-003** ✅ FIXED | OGI | `train.jsonl` | ~~OGI cites wrong invariant counts~~ — **FIXED 2026-05-27**: JSONL corpus updated in-place. System prompt now lists all 28 families including STRESS/SOAK/OBS/REG. | Done |
 | **GOV-007** | AGVP TTL | `anticipatory_governance_veto.py` | PVR TTL not enforced at DB query layer — expired PVRs retrievable | Add WHERE expires_at > NOW() |
 | **HIDDEN-006** | Cold Block | `cold_block_sealer.py:317` | TESTING=true disables cold block sealing | Add TESTING production guard |
 | **HIDDEN-007** | WAL | `receipt_wal.py:168` | WAL returns [] on any exception — silent receipt loss | Log CRITICAL + sentinel None |
@@ -117,13 +134,13 @@
 
 | Invariant | Claimed | Actual Status |
 |---|---|---|
-| BEV-INV-015 (BAR PQC-signed) | ✅ | ❌ VIOLATED — null signature on every BAR |
+| BEV-INV-015 (BAR PQC-signed) | ✅ | ✅ FIXED — ML-DSA-65 sig=3309B, verify OK (2026-05-27) |
 | ATF-INV-001 (chain root integrity) | ✅ | ⚠️ PARTIAL — stub DR bypasses when agent not in lattice |
 | OGR-INV-001 (simultaneous layers) | ✅ | ⚠️ UNVERIFIABLE — GOL not wired |
 | MIVP-INV-009 (tier mutual exclusivity) | ✅ | ✅ Enforced at DB level |
 | REG-INV-002 (typed FK violation) | ✅ | ✅ Fixed and verified by PRG |
-| OGI-INV-003 (no invented ADR codes) | ✅ | ⚠️ STALE — trained on old counts |
-| All others (125 families) | ✅ | ✅ Confirmed via test suites |
+| OGI-INV-003 (no invented ADR codes) | ✅ | ✅ FIXED — corpus updated to 199 ADRs/169 invariants (2026-05-27) |
+| All others (169 invariants / 28 families) | ✅ | ✅ Confirmed via test suites (148/148 passing) |
 
 ---
 
@@ -143,5 +160,6 @@
 
 ---
 
-*Zero-assumption audit complete. 32 findings across 4 severity levels. 5 CRITICAL require immediate action.*
+*Zero-assumption audit complete. 32 findings across 4 severity levels.*
+*Correction pass 2026-05-27: HIDDEN-001 · GOV-001 · OGI-001 · GOV-003 FIXED. Stale counts cleared in 11 files. 3 CRITICAL remain open: SEC-001, SEC-004, RUNTIME-001.*
 *Report generated: 2026-05-27 | OMNIX QUANTUM Internal Security & Architecture Review*

@@ -22,9 +22,9 @@ knowledge of the OMNIX protocol, invariants, or governance vocabulary.
 The next evolution is **OMNIX Governance Intelligence (OGI)** — a domain-expert model
 fine-tuned on the entire OMNIX corpus:
 
-- 194 Architecture Decision Records (ADRs)
+- 199 Architecture Decision Records (ADRs)
 - 6 published RFCs (RFC-ATF-1 through RFC-ATF-6)
-- **125 formal invariants across 24 invariant families** (ATF · TAR · RGC · GPIL · ELR · EAP · OEP · FEA · FVP · GECR · SGIP · DSPP · AGV · SSD · FVS · CGE · GUGT · TGB · BEV · OGR · PoGR · OSG · MIVP · OGI)
+- **169 formal invariants across 28 invariant families** (ATF · TAR · RGC · GPIL · ELR · EAP · OEP · FEA · FVP · GECR · SGIP · DSPP · AGV · SSD · FVS · CGE · GUGT · TGB · BEV · OGR · PoGR · OSG · MIVP · OGI · STRESS · SOAK · OBS · REG)
 - ATF vocabulary: 200+ canonical terms (DR, TAR, RCR, BAR, CCS, CTCHC, MBR, MAS, MBRSeal, OGR, PoGC, AVM, AGVP, DSPP, MIVP…)
 
 A model trained on this corpus can:
@@ -35,7 +35,7 @@ A model trained on this corpus can:
 5. Produce executive briefs that accurately reflect the OMNIX architecture
 6. **Evaluate MIVP scenarios** — proxy-optimization detection, three-tier mandate certification, mandate vs. constraint orthogonality
 
-> **Corpus count (canonical):** 194 ADRs · 125 invariants across 24 families · RFC-ATF-1 through RFC-ATF-6 · 13 corpus categories including MIVP. Update this line after each ADR addition.
+> **Corpus count (canonical):** 199 ADRs · 169 invariants across 28 families · RFC-ATF-1 through RFC-ATF-6 · 13 corpus categories including MIVP + Production Hardening Layer (STRESS/SOAK/OBS/REG). Update this line after each ADR addition.
 
 This creates a sustainable competitive moat: competitors can replicate the API surface
 but cannot replicate a model trained on OMNIX's proprietary corpus.
