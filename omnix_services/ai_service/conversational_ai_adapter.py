@@ -1040,10 +1040,13 @@ class ConversationalAI:
         """Initialize legacy AI clients if enterprise not available"""
         if not self.using_enterprise:
             try:
-                if OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
+                _openai_disabled = os.environ.get('OMNIX_DISABLE_OPENAI', 'false').lower() == 'true'
+                if not _openai_disabled and OPENAI_AVAILABLE and os.environ.get('OPENAI_API_KEY'):
                     self.openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
                     logger.info("✅ OpenAI GPT-4o inicializado correctamente")
-                
+                elif _openai_disabled:
+                    logger.info("ℹ️  OpenAI deshabilitado via OMNIX_DISABLE_OPENAI=true (legacy path)")
+
                 if GEMINI_AVAILABLE and os.environ.get('GEMINI_API_KEY'):
                     if GEMINI_SDK_VERSION == 'new':
                         self.gemini_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
@@ -2123,47 +2126,45 @@ class ConversationalAI:
         if hasattr(self, 'gemini_client') and self.gemini_client:
             try:
                 logger.info("✅ Usando GEMINI en modo legacy")
-                
-                # Detectar SDK (nuevo vs clásico)
-                if hasattr(self.gemini_client, 'models'):
-                    # Nuevo SDK (google.genai.Client)
-                    try:
-                        from google.genai import types as _genai_types
-                        _cfg = _genai_types.GenerateContentConfig(
-                            temperature=0.7,
-                            max_output_tokens=2000,
-                            top_p=0.95,
-                        )
-                        response = self.gemini_client.models.generate_content(
-                            model='gemini-2.0-flash',
-                            contents=system_prompt,
-                            config=_cfg
-                        )
-                    except Exception:
-                        response = self.gemini_client.models.generate_content(
-                            model='gemini-2.0-flash',
-                            contents=system_prompt
-                        )
-                    # Extracción segura — response.text lanza ValueError si bloqueado
-                    try:
-                        response_text = response.text
-                    except Exception:
-                        if response.candidates and response.candidates[0].content.parts:
-                            response_text = response.candidates[0].content.parts[0].text
-                        else:
-                            fr = response.candidates[0].finish_reason if response.candidates else 'NO_CANDIDATES'
-                            raise ValueError(f"Gemini respuesta bloqueada/vacía — finish_reason: {fr}")
-                else:
-                    # SDK clásico (google.generativeai)
-                    response = self.gemini_client.generate_content(system_prompt)
-                    try:
-                        response_text = response.text
-                    except Exception:
-                        if response.candidates and response.candidates[0].content.parts:
-                            response_text = response.candidates[0].content.parts[0].text
-                        else:
-                            fr = response.candidates[0].finish_reason if response.candidates else 'NO_CANDIDATES'
-                            raise ValueError(f"Gemini respuesta bloqueada/vacía — finish_reason: {fr}")
+
+                def _call_gemini_sync():
+                    """Llama Gemini sincrónicamente — ejecutar via run_in_executor para no bloquear el loop."""
+                    if hasattr(self.gemini_client, 'models'):
+                        try:
+                            from google.genai import types as _genai_types
+                            _cfg = _genai_types.GenerateContentConfig(
+                                temperature=0.7,
+                                max_output_tokens=2000,
+                                top_p=0.95,
+                            )
+                            return self.gemini_client.models.generate_content(
+                                model='gemini-2.0-flash',
+                                contents=system_prompt,
+                                config=_cfg
+                            )
+                        except Exception:
+                            return self.gemini_client.models.generate_content(
+                                model='gemini-2.0-flash',
+                                contents=system_prompt
+                            )
+                    else:
+                        return self.gemini_client.generate_content(system_prompt)
+
+                _loop = asyncio.get_event_loop()
+                response = await asyncio.wait_for(
+                    _loop.run_in_executor(None, _call_gemini_sync),
+                    timeout=25.0
+                )
+
+                # Extracción segura del texto — aplica a nuevo SDK y legacy
+                try:
+                    response_text = response.text
+                except Exception:
+                    if response.candidates and response.candidates[0].content.parts:
+                        response_text = response.candidates[0].content.parts[0].text
+                    else:
+                        fr = response.candidates[0].finish_reason if response.candidates else 'NO_CANDIDATES'
+                        raise ValueError(f"Gemini respuesta bloqueada/vacía — finish_reason: {fr}")
                 
                 if not response_text or not response_text.strip():
                     raise ValueError("Gemini devolvió texto vacío")
