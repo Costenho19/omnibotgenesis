@@ -288,7 +288,7 @@ Three ADRs formalizing the BEV layer: BAR (ADR-181), CCS (ADR-182), CTCHC (ADR-1
 
 **Filed:** May 2026 · **Status:** Accepted
 
-MIVP adds per-session mandate binding (MBR) and per-turn alignment scoring (MAS) with three-tier certification: MANDATE-BOUND · MANDATE-ALIGNED · UNCERTIFIED. Adds 9 invariants (MIVP-INV-001–009). Dedicated test suite `tests/test_mivp.py` pending (all 9 currently Structural).
+MIVP adds per-session mandate binding (MBR) and per-turn alignment scoring (MAS) with three-tier certification: MANDATE-BOUND · MANDATE-ALIGNED · UNCERTIFIED. Adds 9 invariants (MIVP-INV-001–009). Dedicated test suite `tests/test_mivp.py` **complete — 49 tests, 49 PASS, 0 FAIL (May 27 2026)**. All 9 invariants promoted from Structural to Direct coverage. INVARIANT_TEST_MATRIX rev.7.
 
 ---
 
