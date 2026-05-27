@@ -1172,7 +1172,7 @@ class ConversationalAI:
                 # Enterprise falló completamente — intentar legacy (Gemini/GPT-4)
                 logger.warning("⚠️ [ASYNC] Enterprise path exhausted — trying legacy AI generation")
                 try:
-                    legacy_response = self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system)
+                    legacy_response = self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system, diagnostic_mode=diagnostic_mode)
                     if legacy_response and legacy_response != self._fallback_response():
                         return post_process_response(legacy_response)
                 except Exception as _leg_exc:
@@ -1180,7 +1180,7 @@ class ConversationalAI:
                 return self._fallback_response()
             else:
                 logger.warning("⚠️ Using legacy AI generation")
-                return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system))
+                return post_process_response(self._legacy_generate_response(user_message, user_name, chat_id, user_id, trading_system, diagnostic_mode=diagnostic_mode))
         except RateLimitExceeded as e:
             logger.warning(f"⚠️ Rate limit exceeded: {e}")
             import re as _re
@@ -1970,7 +1970,7 @@ class ConversationalAI:
                 'formatted_for_prompt': f'[Error loading investor data: {str(e)}]'
             }
     
-    def _legacy_generate_response(self, user_message, user_name, chat_id, user_id, trading_system=None):
+    def _legacy_generate_response(self, user_message, user_name, chat_id, user_id, trading_system=None, diagnostic_mode=False):
         """Legacy AI generation - GEMINI PRIMERO con CONSULTA KRAKEN REAL
         FIX Nov 29, 2025: Usar trading_system parámetro en lugar de global
         """

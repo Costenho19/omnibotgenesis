@@ -6,6 +6,7 @@ Extraído de main.py para arquitectura limpia y mantenible
 
 import logging
 import os
+import re
 import time
 import asyncio
 import threading
