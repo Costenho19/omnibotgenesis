@@ -1,0 +1,467 @@
+{
+  "package_id": "OMNIX-EP-76A900F4A33640BC",
+  "package_version": "1.0.0",
+  "omnix_version": "2.6.0",
+  "generated_at": "2026-05-27T19:15:42.536272+00:00",
+  "generated_by": "OMNIX QUANTUM LTD \u2014 scripts/generate_route_evidence_package.py",
+  "scenario": {
+    "name": "QuantumBank AI Trading Desk",
+    "agent": "OMNIX-AGENT-QUANT-001",
+    "action": "Authorize $2,000,000 capital reallocation under RISK-MANDATE-2026-Q2",
+    "domain": "capital_markets"
+  },
+  "ta14_chain_map": {
+    "Reality": "1_source_state \u2014 source_state_hash",
+    "Record": "2_record \u2014 DelegationReceipt (ATFDR-*) \u2014 PQC-signed",
+    "Continuity": "3_continuity \u2014 RCR continuity record \u2014 CES score \u2014 PQC-signed",
+    "Admissibility": "4_admissibility \u2014 TemporalAdmissibilityRecord (ATFTAR-*) \u2014 PQC-signed",
+    "Binding": "5_binding \u2014 binding_record \u2014 authority basis accepted \u2014 PQC-signed",
+    "Commit": "6_commit \u2014 locked scope \u2014 execution_reachable flag \u2014 PQC-signed",
+    "Execution": "7_execution \u2014 BAR (behavioral output) + CTCHC (turn chain) \u2014 PQC-signed",
+    "Outcome": "8_outcome \u2014 PoGC (proof certificate) + outcome_receipt \u2014 PQC-signed"
+  },
+  "pqc": {
+    "algorithm": "ML-DSA-65 (Dilithium-3, FIPS 204)",
+    "standard": "NIST FIPS 204",
+    "security_level": "NIST Level 3",
+    "public_key_b64": "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",
+    "note": "This public key is embedded for offline verification. All PQC signatures in this package were produced with the corresponding private key. Use verify_evidence_package.py to confirm every signature independently."
+  },
+  "routes": {
+    "route_a_refusal": {
+      "route": "A",
+      "label": "HARD REFUSAL \u2014 structurally impossible execution under exhausted authority",
+      "ta14_verdict": "REFUSAL PROVEN \u2014 execution structurally blocked at admissibility gate",
+      "chain_steps": {
+        "1_source_state": {
+          "request_id": "REQ-932AED5D8A31",
+          "actor": "OMNIX-AGENT-QUANT-001",
+          "delegated_by": "HUMAN-OPERATOR-HN-001",
+          "action_requested": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+          "domain": "capital_markets",
+          "market_context": {
+            "instrument": "EM-EQ-BASKET-2026-Q2",
+            "amount_usd": 2000000,
+            "risk_class": "HIGH",
+            "mandate_ref": "RISK-MANDATE-2026-Q2"
+          },
+          "policy_constraints": {
+            "max_single_allocation_usd": 2000000,
+            "allowed_asset_classes": [
+              "bonds",
+              "equities",
+              "cash"
+            ],
+            "require_dual_approval": false,
+            "risk_ceiling": "HIGH"
+          },
+          "system_version": "OMNIX-2.6.0",
+          "captured_at": "2026-05-27T19:15:32.056057+00:00",
+          "source_state_hash": "f1f48bba3a78aeb40aeeb3311d979c9260957536cc834b26a01d1b4cf0499649"
+        },
+        "2_record": {
+          "delegation_id": "ATFDR-80A8E5145C924F4A",
+          "delegator_id": "HUMAN-OPERATOR-HN-001",
+          "delegate_id": "OMNIX-AGENT-QUANT-001",
+          "task_scope": {
+            "action": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+            "domain": "capital_markets",
+            "max_amount_usd": 2000000,
+            "mandate_ref": "RISK-MANDATE-2026-Q2"
+          },
+          "authority_budget_delegator": 0.0,
+          "authority_budget_granted": 0.0,
+          "parent_delegation_id": null,
+          "chain_root_id": "ATFDR-80A8E5145C924F4A",
+          "delegation_depth": 1,
+          "delegator_public_key": "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",
+          "content_hash": "52c245a4c1505b88c1f43c74f11b86bc99fcd75b1fccbbf6f36e8cb7f0691083",
+          "posture_state_hash": "29879c2e87171ad64ca96f9684b18940c1c4790a30e2ca3d9ff51411b76be282",
+          "pqc_signature": "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",
+          "pqc_algorithm": "Dilithium-3 (ML-DSA-65)",
+          "expires_at": "2026-05-27T23:15:32.057638+00:00",
+          "status": "ACTIVE",
+          "created_at": "2026-05-27T19:15:32.057802+00:00",
+          "metadata": {
+            "route": "A-REFUSAL",
+            "scenario": "exhausted_budget"
+          }
+        },
+        "3_continuity": {
+          "posture_id": "RCR-A-E459ACBEA0D6",
+          "delegation_id": "ATFDR-80A8E5145C924F4A",
+          "authority_budget": 0.0,
+          "budget_health_pct": 0.0,
+          "temporal_health_pct": 100.0,
+          "context_fidelity_pct": 100.0,
+          "integrity_score_pct": 100.0,
+          "ces_score": 0.0,
+          "ces_band": "HALT",
+          "drift_detected": false,
+          "authority_exhausted": true,
+          "captured_at": "2026-05-27T19:15:33.190898+00:00",
+          "posture_hash": "0952c9131a41344023384e887df459cbb251d4c3c8112512227daca2e554772d"
+        },
+        "4_admissibility": {
+          "tar_id": "ATFTAR-64495F309A1344C3",
+          "delegation_id": "ATFDR-80A8E5145C924F4A",
+          "agent_id": "OMNIX-AGENT-QUANT-001",
+          "execution_ref": null,
+          "execution_ns": 1779909333191011645,
+          "execution_ts": "2026-05-27T19:15:33.191012+00:00",
+          "dr_status_at_admission": "ACTIVE",
+          "dr_expires_at": "2026-05-27T23:15:32.057638+00:00",
+          "authority_budget": 0.0,
+          "domain": "capital_markets",
+          "task_action": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+          "admission_status": "ADMITTED",
+          "rejection_reason": null,
+          "content_hash": "780687541226fc880f61e2a226a1a9c8a0c549b85db98eb1b64f4d226eed077e",
+          "pqc_signature": "+qd+eGOIF5grokoSKunKhnNy/oLXK5RPeDPuQQ01RSGkx5kmsTmsnIxOSeNvaKT6XuvQ95kCMyfoKF6B6z8sBQVzj3MrJBu3L3xiZUAQFVUPJ8ONgZKR8uBQwFTlAJANElBg0cFkyLm/0sZET2E8tuzgj0p7cgtqCB/3N3QPA1s5ysP77Db/jk9BVikc6l/8+I2qeAobHm9st2lbT3gU+Mb45mkZhVIri8ujAV+SpVjgy/D5HQvMggiDDm0WU45DWQhVgU4O5P+o0sL+R6pN4gHH9jYd6Hdu3xAHEEdgjMGu1AbldEcrmwcMP54yNP7jYK+9XWzQlRe5CwU9YjYxvKLVm+fgCApiJnmAZqIl2OWu+vN+JyG0SDK3kAB7591eQY8rSbtSGdWYa2ijbkNkpewEDXskhHXhQIhGagXJ7cBsQcYQwcdI3Gj5mqAaeuOzwtIYUl79Qvh+uSSQRsb3kZDmzfhwpiAYwdZIgldiXdehhrWaQLV3Cv89vb7YHQdKawOH71o3WUnUdLf5OuRwjFJWuSYknQWMAGmQpJM7dIwtqNlwlHl2b+RIQD3MeCK6TLpUKB8a6YGTVxFeI85FS+C5wkbYf8wpIyJQhL0SlYFFtR28/cvNlTKu4SEI22JoNbZ6A8SheO7SBE78IwgjmGbrhGYiu+42Ve8dYhzfHVCEw3DO2tV32Vk49FRseXqYoF4ZbEOBxgeyUYYifgPpOH06CA48yYe2SRJPUoU1tcn2MKrHa4X7PDVbBc1XsovZ7ve9c40LGjTikM45nDewnNLDGw0/ELLMqC26girDvBhUIbqIeEujPV82JbDz6B8fE1iFNnh/H1gOH8IgnUJDDa+XxMuLbAa4QfXiM6sT9m6qZ7sQuw6aKUKqu0i53vfXaFQuz0D4kWhJQ3MemS3mQuyyQ3RmFXpnQg00AwpLpCnBwMbicDLxfTTa+a+HuCI2YGo3Q8RCtN/o2HP7QcDSTWzQ/ejBczhIRG4oQWZSJgvOpQVLy2K70/mpxlPLW14q+q3sy8aA/4fgW6yp5eke2kR41ysftH1jW9683F0pZ3iiyeFuO0XTanRVbQCUd2frjdUO3u/zxQ2RBTLeUbp28CZj5IKXrMHOTUkUllLG7lgKC6EoN/eq4BE51Vs/zN9nzB7e/LsZrXWHW+ozACCV5nXpc2Vy1l4YUZD9LetQngf/bTGxIvoYAraNuxsDyK4mGxyBwAs5YOakymiOSa6HxalhZUFO6blOO1qThoDzyoeCTKenL78sAEOKYLVKi9TEDBBTHEgIlIdljx6GhaOWLAonfjXIlj+qMHsxLszqB/rzJor5GG9GRhP8QPZAq33oJ2//s6XTdVMKcGaVag6gxluvzYAx5endzHp/zEtwv3fY6DLwG1GVuvFdYNIfq/JusBlQyCFh+l5RZB+LO6B91+6kIo/se4HZ1GOAQ5v2TIjD7yyWhCSnph1XT/GVDQFKXjKkc0mtzjtgwt1li/GZUe59JrA3tCDQLvUJaaLbIdNBsspeY/JeMm9j3MerohediQji+v1tto7lKcKNRa7zkAsYbfi9Esi+EyP/AwCVZK/z65CXKk0l6nVwKnjBYHd7t+Lm9JtJCAONOEOqRPub8PtEDlBxV8iAVyx714czpioje3AoOK/cUWWDP0csqZnVrKAmq3zQCyiRu1yWZ5ipIK/HgL4uVHT7otxlyBUi+6QIk80v2dsF3kPHbgWiMR608wuDN9g6AeqXhHcNOhlUWS2dp/lJMYqXv254rTnP8LOlgsDlRKucaj6H/HKesjDqfwpI0YE9WPiknFWVkTHuJjAkUANHh5FjSGeywcNWwEHJ78v1VBuRXScoScoQZJNZWNhR2nS4j+aeMmPb2gk0gI0FxtHJAvTeI1RK0znP25VJoi8o5l+vydsBRYZwcT3tZOGUpHg2rXMn4+XYT3n8w15yKqNphinRphCbGhPMjZetHrmmBuY0kRD5Lpt6YkCNA8yH3SDwV9BdORF0cvGlIMpckr0wLiIxcM21x6jfO7eh0WmqnXc9jFDfBJH+LIARtPaIoGW7nbke/4JJ2IaaJnasvrqPAqimw5APOjI3viOf/4MG8BuFr0YbZkFYkeWuUOMvcI+vaJ0wuaeqbcZQMplMp7tFPi9ip1aU8b5D96L/3M0952BuiDnzOa0HwJha7vvlaW88eLayZFdb/uCqV9fjY5kGhEXszuifI2wQyrI78i4dUESJEDXsKZjIkMo6nGmTbEHhIQf+uMTwDwSr0fFrEtRcDrOy9KgFnzlfhijP/G1NSSZq2wuyDlof4l5JJbmbacZ3FUdkNlhW+hxb4nOYVPmC8SBNzaU2WJ1D49//zPBuV3nN3OHL2nMr3cGFVQf3a3hL38073WrLYikbA4nvZ1qILFhnBn9eIU5F9zq57/f+9+KUOGFg1RMgu0alciZZE6gJKqOzpfzVe/wEjvG1JlT9lGqO+yWkR8vKj/FwZur2XwtstVba3VqDeyGs1uS+RlawGXbk5IxHqr61bSnknK3wvBD9mqn+WGTi3TQ+EpAVWoYBOJ6Frfkihd0gQtpu9FKq+BW9OWQ3PNfgi60Nyirj2NJfeEReiNKPAhxI1lu4ZSKCP0adJpoW6ZwDsDfvd+aEE1MB2Ac3I1I2alZQUyRqRghlsJXxbSAnDmw0OONrcwqiKGz+3pigkfD46qsla2uZh/l+NiCgVszKZldPhLIsZHjnhALlTDZMrS5IZDWj21f4zf+fVunDtBiMCCKhd8fop0QU8R9mrjb4xIlEaAwbYtVMpE/adglqmlqXsaPIRDQoN6PKTt/T0pQE0Uzx5PBpXe8kDS1Pmy2VZpuHUNvut67YyqxtL4IbIxKxuikucFQ509NQoDAuu4AvCxTZ4jP1MfFbHjdURwxBFC3rnrEtpN6A60fVkT2G4LVXOAdKrISCDJ8D95KvMnB2UQH0I8ETbj/H6pzcaG7xQPoIs/CrN+YYoW4aCNnX0xvlzovBCp8bIpDUXtoPAosCCdg2dPJPYozKk72EfwwXnSIlVZyGUTvXNqbjvxBB4mKmnuSYUw//5agBNeKNRLhl+m75mV7eXstSoRuWD5jGD/hp+aRAcBt6lZy+7arOjhnoqkW74F3yhhexNOoygyCDChKbmfEN8c3genIUK7aj9QFp20IkIBZMXEZOh2fTYCy4GPlv4AuYD2cmQT6xoL/WXRiu12vX1PGUPOqeTKvZ1k2ZxrsX+grgGuEuRsT6qr2FHRFiqNhMoQ5JRYodSKEnLJNMpH6kGX1F3OrCBWZ034f1Bo4K5kgRRx3s85fnZpKcUnQ9nDWEK+DoG1kDU88sNiJOoItFPVE8y65ytBlHN2CD/gi6aPvaYjGWIdVGoXk3S4WKJsa9o7mM5Xf8NhhAfKbhi0loPaj+8elsQyPmxUOjhVuE++YBHo3SKUa5Qw7fUVQhN6gGzlYcqnAhmgjjT4nuqif7gTUuhx0x17UciSKYOHJR2YBq9Q/qG6d5hOla4uY54ESAFE2Fg29HmoXykTEQJbRGMTM9q007pEHc2Mogr6gw1v/IOpQmR0FZbweDw36jqInOd8QmEouqcvnQxR6EKkIbUArC+5/KLGOA3ViYKcELx614q/kW8ozLkGvp2W9m6YIRNoU3CQvuLcInml2OV6XRpkc4Dc6rroWgjVGJGHBqxK75EwCbUn9i5+hRpYWUt1rxh8ZYH2SZiibBiKarZ0grTIOqeAbeGPPORCHkAETna+KSKv+iH5xwBer1sBZ3l1OdK2ABrkKEh31SiZrPFyHr+zzU/INYoF7fh6YkWikqJIrCrFFdVcNqz9IjUr+byRo70d6IZtyZxvKiAGssNMz2v0EtMsUnTwUB9AOxFdXz2jdjN0Ws+7qYBJqHYQasCWK5fkgR344Rt3Qc3TWHxjwlf6XJ56gWZlAH+BqxMTJcb/iUMIcs8Iug+T2n+LgZOFs2k4uQ1KBoBJuVJYISAbxz/5/WP/xwLYxVs5HBr7sbGsQZx0/Tqn7gpWOT2XKYQPqNXUjo7VIBQQY2PqswXGRW7iPLH4TSd8CdoEyXwi7qVloHfjHWQy/AOr2KGvpEpMEoS9UuOjl3UQqLlMB1R4telIXLaYp3MyBuL16C4YuRJb5Z/r55ElwY7exkT/Mph5UQNI0baf1DfJgiQMjuZLYJpwPvxivSf7ZjQYjdqxmhHRXOGtTOjgut2W/rF6KUbJyjqkLV1u9tGrM6mBcYZqgEVhrfW43/c+UHUognnEhrwIQhUoVWJWNnMlMAHgYZOp1PtXvdekkiXXpkpEMGY4DOjAUPcTCaT3Y+E6YyBt53xcrKcxG0O3o+uJ0TSnWY0QkaKDZQeIqc+glsfYGC1QwdR5Oq0AUKIS3+BCEsLWFmhIeaqsMAAAAAAAAAAAAAAAAABQ4UGh8q",
+          "pqc_algorithm": "Dilithium-3 (ML-DSA-65)",
+          "chain_root_id": "ATFDR-80A8E5145C924F4A",
+          "issued_at": "2026-05-27T19:15:33.191012+00:00",
+          "metadata": {
+            "route": "A-REFUSAL"
+          }
+        },
+        "5_binding": {
+          "binding_id": "BIND-A-9D926A38FAA5",
+          "delegation_id": "ATFDR-80A8E5145C924F4A",
+          "tar_id": "ATFTAR-64495F309A1344C3",
+          "binding_status": "REFUSED",
+          "refusal_reason": "Authority budget exhausted (0.0) \u2014 ATF-INV-001",
+          "binding_ts": "2026-05-27T19:15:34.119728+00:00",
+          "binding_hash": "ad08f3c8609b71dc276be27edccfdc6bab3c066785c6741ac6299aacba1fd95f"
+        },
+        "6_commit": {
+          "commit_id": "COMMIT-A-ED776864209F",
+          "commit_status": "BLOCKED",
+          "blocked_reason": "Binding refused \u2014 no authority basis accepted",
+          "locked_scope": null,
+          "execution_reachable": false,
+          "commit_ts": "2026-05-27T19:15:34.119910+00:00"
+        },
+        "7_execution": {
+          "receipt_id": "REFUSAL-AF7435703D4947E5",
+          "type": "HARD_REFUSAL",
+          "agent_id": "OMNIX-AGENT-QUANT-001",
+          "action_attempted": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+          "rejection_reason": "Authority budget exhausted (0.0) \u2014 ATF-INV-001",
+          "chain_root_id": "ATFDR-80A8E5145C924F4A",
+          "issued_at": "2026-05-27T19:15:34.119985+00:00",
+          "omnix_invariant": "No receipt issued \u2014 no action admitted",
+          "content_hash": "b4a0a75176e7cea4c885cfaef0c222c4a1776dabc50697f85e282745d6b62562",
+          "pqc_signature": "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",
+          "pqc_algorithm": "ML-DSA-65"
+        },
+        "8_outcome": {
+          "outcome_id": "OUT-A-098E1FD3D43A",
+          "outcome_type": "HARD_REFUSAL",
+          "execution_occurred": false,
+          "what_happened": "Agent action blocked at admissibility gate \u2014 authority budget exhausted",
+          "what_was_blocked": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+          "what_remained_impossible": "No capital allocation, no commitment, no execution path opened. The governance receipt was never issued. Invariant: no receipt \u2192 no action admitted.",
+          "verifiable_artifacts": {
+            "delegation_receipt_id": "ATFDR-80A8E5145C924F4A",
+            "tar_id": "ATFTAR-64495F309A1344C3",
+            "refusal_receipt_id": "REFUSAL-AF7435703D4947E5"
+          },
+          "outcome_ts": "2026-05-27T19:15:34.120476+00:00",
+          "outcome_hash": "b390bbce1663db956c9313ea6175e37445e728903b287c18bf3462a7582840aa"
+        }
+      }
+    },
+    "route_b_admission": {
+      "route": "B",
+      "label": "FULL ADMISSION \u2014 execution admitted only when every chain link is complete",
+      "ta14_verdict": "ADMISSION PROVEN \u2014 complete authority chain from source state to outcome",
+      "chain_steps": {
+        "1_source_state": {
+          "request_id": "REQ-E007F876DB56",
+          "session_id": "SESSION-73F1B5778F9D43E5",
+          "actor": "OMNIX-AGENT-QUANT-001",
+          "delegated_by": "HUMAN-OPERATOR-HN-001",
+          "action_requested": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+          "domain": "capital_markets",
+          "market_context": {
+            "instrument": "EM-EQ-BASKET-2026-Q2",
+            "amount_usd": 2000000,
+            "risk_class": "HIGH",
+            "mandate_ref": "RISK-MANDATE-2026-Q2",
+            "portfolio_nav": 50000000,
+            "allocation_pct": 4.0
+          },
+          "policy_constraints": {
+            "max_single_allocation_usd": 2000000,
+            "allowed_asset_classes": [
+              "bonds",
+              "equities",
+              "cash"
+            ],
+            "require_dual_approval": false,
+            "risk_ceiling": "HIGH",
+            "max_output_length": 2000
+          },
+          "agent_posture": {
+            "agent_version": "QUANT-001-v2.4.1",
+            "trust_tier": "TIER-1",
+            "prior_violations": 0,
+            "last_reauth": "2026-05-27T18:15:34.133203+00:00"
+          },
+          "system_version": "OMNIX-2.6.0",
+          "captured_at": "2026-05-27T19:15:34.133217+00:00",
+          "source_state_hash": "f1f106fed21080d3d2c8e32a0ab3ea3ff3195879cd967d04747d93ce7a4d2cfb"
+        },
+        "2_record": {
+          "delegation_id": "ATFDR-3FF448B71465401E",
+          "delegator_id": "HUMAN-OPERATOR-HN-001",
+          "delegate_id": "OMNIX-AGENT-QUANT-001",
+          "task_scope": {
+            "action": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+            "domain": "capital_markets",
+            "max_amount_usd": 2000000,
+            "mandate_ref": "RISK-MANDATE-2026-Q2",
+            "allowed_instruments": [
+              "EM-EQ-BASKET-2026-Q2"
+            ],
+            "risk_ceiling": "HIGH"
+          },
+          "authority_budget_delegator": 100.0,
+          "authority_budget_granted": 75.0,
+          "parent_delegation_id": null,
+          "chain_root_id": "ATFDR-3FF448B71465401E",
+          "delegation_depth": 1,
+          "delegator_public_key": "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",
+          "content_hash": "0c4bec59459510a6168df511b1c30659725e323e060e1707be513ae6fc8f9228",
+          "posture_state_hash": "c089d8ebe4e0b72af84e26393f77f95b7b3dc1220dc5d7a14f18b10f62156246",
+          "pqc_signature": "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",
+          "pqc_algorithm": "Dilithium-3 (ML-DSA-65)",
+          "expires_at": "2026-05-27T23:15:34.133289+00:00",
+          "status": "ACTIVE",
+          "created_at": "2026-05-27T19:15:34.133377+00:00",
+          "metadata": {
+            "route": "B-ADMISSION",
+            "scenario": "full_chain"
+          }
+        },
+        "3_continuity": {
+          "rcr_id": "ATFRCR-7583ED1BD5BA4E73",
+          "delegation_id": "ATFDR-3FF448B71465401E",
+          "chain_root_id": "ATFDR-3FF448B71465401E",
+          "agent_id": "OMNIX-AGENT-QUANT-001",
+          "ces_components": {
+            "T_temporal_health_pct": 99.99,
+            "B_budget_health_pct": 75.0,
+            "D_context_fidelity_pct": 100.0,
+            "I_integrity_score_pct": 100.0,
+            "formula": "CES = (T\u00d70.30)+(B\u00d70.30)+(D\u00d70.20)+(I\u00d70.20)"
+          },
+          "ces_score": 92.5,
+          "ces_band": "NOMINAL",
+          "authority_fragmented": false,
+          "afg_ok": true,
+          "issued_at": "2026-05-27T19:15:35.085544+00:00",
+          "rcr_hash": "37dbd060a9076e114f6e43a2c02d61db70ea469de5703f60eeb6d292af2836ec",
+          "pqc_signature": "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",
+          "pqc_algorithm": "ML-DSA-65"
+        },
+        "4_admissibility": {
+          "tar_id": "ATFTAR-B22C96B0309D4D60",
+          "delegation_id": "ATFDR-3FF448B71465401E",
+          "agent_id": "OMNIX-AGENT-QUANT-001",
+          "execution_ref": "SESSION-73F1B5778F9D43E5",
+          "execution_ns": 1779909335086412156,
+          "execution_ts": "2026-05-27T19:15:35.086413+00:00",
+          "dr_status_at_admission": "ACTIVE",
+          "dr_expires_at": "2026-05-27T23:15:34.133289+00:00",
+          "authority_budget": 75.0,
+          "domain": "capital_markets",
+          "task_action": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+          "admission_status": "ADMITTED",
+          "rejection_reason": null,
+          "content_hash": "d647419d032d2313306546e565903eb28e5583abd0b1ba9c15952021bfcce7af",
+          "pqc_signature": "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",
+          "pqc_algorithm": "Dilithium-3 (ML-DSA-65)",
+          "chain_root_id": "ATFDR-3FF448B71465401E",
+          "issued_at": "2026-05-27T19:15:35.086413+00:00",
+          "metadata": {
+            "route": "B-ADMISSION"
+          }
+        },
+        "5_binding": {
+          "binding_id": "BIND-B-2100CA7F1E1D",
+          "delegation_id": "ATFDR-3FF448B71465401E",
+          "tar_id": "ATFTAR-B22C96B0309D4D60",
+          "agent_id": "OMNIX-AGENT-QUANT-001",
+          "binding_status": "ACCEPTED",
+          "authority_basis": "DR ATFDR-3FF448B71465401E \u2014 budget=75.0, depth=1, human_root=ATFDR-3FF448B71465401E",
+          "route_scope": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+          "binding_ts": "2026-05-27T19:15:36.027491+00:00",
+          "binding_hash": "5fd5b9d78b01ac4e12254d608d321c5cf6fedad6db3c3308c7231246fc5f5dd0",
+          "pqc_signature": "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",
+          "pqc_algorithm": "ML-DSA-65"
+        },
+        "6_commit": {
+          "commit_id": "COMMIT-B-B10853CB26F1",
+          "binding_id": "BIND-B-2100CA7F1E1D",
+          "commit_status": "LOCKED",
+          "locked_scope": {
+            "action": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+            "instrument": "EM-EQ-BASKET-2026-Q2",
+            "amount_usd": 2000000,
+            "direction": "BUY",
+            "source_asset": "investment-grade-bonds",
+            "mandate_ref": "RISK-MANDATE-2026-Q2",
+            "risk_ceiling": "HIGH",
+            "execution_ttl_s": 30
+          },
+          "execution_reachable": true,
+          "commit_ts": "2026-05-27T19:15:36.028065+00:00",
+          "commit_hash": "5d72fe059a44a284c9a130f3d06617dcca4792630d56f6e9727d3e94db1fc436",
+          "pqc_signature": "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",
+          "pqc_algorithm": "ML-DSA-65"
+        },
+        "7_execution": {
+          "bar": {
+            "bar_id": "BAR-4280F7F56D03460F",
+            "session_id": "SESSION-73F1B5778F9D43E5",
+            "agent_id": "OMNIX-AGENT-QUANT-001",
+            "turn_index": 0,
+            "output_hash": "b61024160719c6b2be0c0d20f0f1a282863b58f72c1748965b733b6ce4dfeafb",
+            "output_preview": "EXECUTION CONFIRMED \u2014 Capital reallocation authorized under RISK-MANDATE-2026-Q2. Reallocating USD 2,000,000 from investment-grade bonds portfolio to EM-EQ-BASKET-2026-Q2. Allocation represents 4.00% of portfolio NAV (USD 50,000,000). Risk ceiling: HIGH. D",
+            "governing_receipt_id": "ATFDR-3FF448B71465401E",
+            "constraint_set_hash": "06f3546b9d4edbe92897ffb8d8d6ec792a45aaf132c5169ab4b99dc3ba21a875",
+            "atf_layer": "BEV-L6",
+            "content_hash": "ff2532b03d37e80c373d2f8f538c464bf63b665849408a28efa255778b5e6d14",
+            "bar_status": "VALID",
+            "halt_reason": null,
+            "pqc_signature": "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",
+            "pqc_algorithm": "ML-DSA-65",
+            "created_at": "2026-05-27T19:15:36.958096+00:00",
+            "metadata": {
+              "route": "B-ADMISSION",
+              "commit_id": "COMMIT-B-B10853CB26F1"
+            }
+          },
+          "ctchc_links": [
+            {
+              "link_id": "LINK-26E26716274F",
+              "session_id": "SESSION-73F1B5778F9D43E5",
+              "turn_index": 0,
+              "prev_link_hash": "19bc58152f2e263669664f48365076b53b6c251836a459ec621910baa300b64a",
+              "turn_hash": "bae5fca752997c96f9b7237c03c3434d567a3eb0c60ca677c88c16d1c83c4424",
+              "governing_receipt_id": "ATFDR-3FF448B71465401E",
+              "chain_link_hash": "a22d07f7a511ffa2694d278a562a5afd982d551ba3977fe87050b450d940a338",
+              "created_at": "2026-05-27T19:15:37.891939+00:00",
+              "metadata": {}
+            }
+          ],
+          "ctchc_sealed": {
+            "chain_id": "CTCHC-DEFED3846B8544C0",
+            "session_id": "SESSION-73F1B5778F9D43E5",
+            "governing_receipt_id": "ATFDR-3FF448B71465401E",
+            "genesis_hash": "19bc58152f2e263669664f48365076b53b6c251836a459ec621910baa300b64a",
+            "current_tip_hash": "a22d07f7a511ffa2694d278a562a5afd982d551ba3977fe87050b450d940a338",
+            "turn_count": 1,
+            "is_sealed": true,
+            "seal_hash": "b74f4b4a4dc276ae0bf70ea7aab356a47110db1c9d33319ac4dcf674b678a207",
+            "seal_pqc_signature": "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",
+            "seal_pqc_algorithm": "ML-DSA-65",
+            "initialized_at": "2026-05-27 19:15:36.028896+00:00",
+            "sealed_at": "2026-05-27T19:15:41.604507+00:00",
+            "links": []
+          }
+        },
+        "8_outcome": {
+          "proof_of_governance_certificate": {
+            "pogc_id": "POGC-5619CB321C0D4E5E",
+            "session_id": "SESSION-73F1B5778F9D43E5",
+            "agent_id": "OMNIX-AGENT-QUANT-001",
+            "governing_receipt_id": "ATFDR-3FF448B71465401E",
+            "delegation_chain_root": "ATFDR-3FF448B71465401E",
+            "tar_id": "ATFTAR-B22C96B0309D4D60",
+            "tar_status": "ADMITTED",
+            "bar_id": "BAR-4280F7F56D03460F",
+            "bar_status": "VALID",
+            "ctchc_chain_id": "CTCHC-DEFED3846B8544C0",
+            "ctchc_seal_hash": "b74f4b4a4dc276ae0bf70ea7aab356a47110db1c9d33319ac4dcf674b678a207",
+            "ctchc_turn_count": 1,
+            "mandate_certification": "MANDATE-BOUND",
+            "pqc_algorithm": "ML-DSA-65",
+            "issued_at": "2026-05-27T19:15:42.535179+00:00",
+            "standard": "RFC-ATF-6 (ADR-181/182/183/186)",
+            "verifier_scope": "Verifier can independently confirm: (1) DR signature with embedded public key, (2) TAR signature with same key, (3) BAR content_hash integrity, (4) CTCHC seal_hash covers all links in order, (5) POGC content_hash. Governance policy parameters: docs/standards/",
+            "content_hash": "251cd50ebedf5c3fe4e47b31e31c8a6a2585655a0150c3ed4739372b240f048b",
+            "pqc_signature": "dk3hMvd9lDcsxMXgVYB5Xv8+vV++EEZ0QGg9GG/RK1lgiNfvseb4UQHY+8CDw2H6mRFOC6erhfAR3vgGkHaywEdJhc9XHAW2o4FZ/cWHgFBQASPN2aNGp0b7kJHMEJT1rgqq+49KZdQVKH81WmEWSqdu0RglbZuupPj0AbPMHSSZwrrABUOJ+gYtINOgSpPJyV8loz55Bp8fE50kEYLXVXX9N3Qj9DbvwfWdqpaLpTISRD7kEBJieh3ql1UY7jVZ/rxPjPLWgxyzkpiEMOfXgECUtSy9yOWzVnqi3uEh4IY2vyqBVcXfRxKFrMABOQTYapTl74RU4MMHnLIzCSGKGnGSc+3/XzXWepJTR+8j1gMspnAeyLCseisXEXoHQx3DLZRalWVP5/NtvUmbVuFW3qucIIYMhvczmpO1N5xhcA4UKGGPeRhOo1k7LaeLtPOcdlV6UQ7zrjgPDvIini5n8nDPQym5Amstw/cWmMAYXkwmBXp5gxbl6Vomlkxwk/6BX5+lEToTwFOkdrKRYWUq6EmD0mDhCohnqthIcJ6j+lVx9Dtd+vQ44wVmQ1jMec7fbiretaliDBvy1FSkaA5hpOQamizKibZ2LLviesKE3j1g9s1h2/Z22hY8JsWQsjjG43PFmReSHV0dVKw6oah/LH1fA+wCfQBwm+ogOQzIuPB7x9QSD0uad63jrcZnwQN02FSLulvXd01F/CK/xNy+lZ23mOmByfizQLY6SWdlAK0x352STqVNnDvOjSFyPE4uAC/mqouL+oH/gPOzPZPl3dUXKV5PwYn1oDq4w95jiTgQ7RhEvtiWKRoX1bWi+olqU6zyNxhGfWP/q5/zNJnDNRd4qFRrSseA0DVdHE8r23AGo4AfQ9X8Fk73ANeDwzPmobBydtYzsBJilzYfqgYh/OuA56P+eO+T4jgbRCQqEXTGF3ZomtnAHrVFDWGXC6IxolO8SOlSlNdXYbjdP537miYKUr8XXlAlH03RR2WoJXfRnTjgbv++3isVoJj0Bk2yZvZyuhnJOhn8UdwenI5uknyMS2lul00aUgJfaFM7p9IFpmw7HJJVS1nI2465w3PUVtfYYQJ43xXyTrUa5eDGFikrfLxIocPA6fwwpLvtbYgQMMQ60fxhkttT8nNsaxmn4tnNzY8BTd0ZX6jZ7fbTpYwmddh4jcpNRkONiXdc3xgt7AvB/rsiAhXPJlmvKBcvT1/zh9I+HoUdZOJID/CMbug1aL5ngI3StZPwUR92ZhF2UgWc1RzDa6MYqdlx7cN1SkD5NYprmK7uWOYyy28qvM6YPqAnEJryreo6RHl1k2SKGeApXbMToPH+9epWmZEUsDF8gQ0j1dyBxe3x89IrO7L8K/P/sLrEVmsxwIdaymDKXlX14Ax1fo5GvunbvRvVIl5qtnn12ZjQuzp7mjeciqodhBHsG6cqZPTo2Z8l/vPvxEFExzkYuspAMHo8uqbv61DV/dB2dvq5aQQdS9nVXKs4bekG3h54d8lAxlgHBsmmR5hL0HD8VYBxNoP/Hu0hY7HeXUKG5ubbfK0n1vnktW6IROfEvXuDMtY3wWhZfePFP+cI2cQZXv5rnBorGzTtt+7T7sHDC2UufCFzzPQqnEIxs5f7adPxtSkhHKmdywdxpphgW14cZBUojWu+JqztXZiVBEIkOE3A8+UXRrWUny+hDxfqeUdpgNJrLHlo0dWMW4A3WiTTHkrQOXWYB5M3gWwM18atxfySpdcwqWflZ0mVNTnvIk3SsSzOE23dRX6UtCBEE+N1pFJabCWF9OIxXA3D2O1v5siQUtpzZ2u8QVe+SOLOjG33zjXbBIEf9Un/6TkmfhdWxI8/bQUZ1QCJ3g1pjEowKSg8iWnmfwnSfx4mayxWj0iL4rl4MRbhBy2VeCiDEd1FPeJqcPdgtiCLjxhYkG09QQkbEkQtWZXiA+dsUlvfkFOQ3usvwBe9lQliBEhMlzcx9fKJRwjVvQVXgUpiSEj2KMo60utKdjXl42IU/efj7J5F9CVnmKytyrA8d+v8Z2RmAaGS/dkQ8GH+8wzmxKpQ5b6xfP9QN+PxDjxl9whwPAkICJzmpXw3pFqWNYhwcfAbpvwIIjF90iEu9iptG6vydkoM0LxaOC0aoe7ZmjQLnxGUA9r7hCjIfR541Fz8irxslXDoJGA5coxVhkoRDP9BnCHFUbfnpdgUesW8QVmX+tEUqCK7+2zG1+t2sitQ+ke7nHIdj5VVjX/I4R/BnNCxzb7ULm7l6CECTVv1219Gn7Lg41RjSMZnNZ3OveDEXzZFCkfsbCAJb2PsbpHNEYPgl1XvJxfY+nudsNjpAOGxmkYP2M70K6zxBFMpqXv4SJYD2UCXPREVzFuqcYc6bToteICesy7HOC5u63BJ9I89xYqx/0IaG7S0SaniXTwt3NsrfaXDc/ckXSLsLfvbeV6vrQYH531XgjTiPNpaOZLAe9rUc/0cf8W636/cvoiEeYKLzVr3ziOU3I4BhPFueDbJNh1Z4nR9G3OUfmkbQKxsYncuwSH4MpdRDWxBFpiTTcrvl0PdiDg8G63sKsIVwblk0ppjb0KNj/XCNUD5SshuyfOusFwAdUN2XGTQ7yAJIVAGirCV0R0D9dYrvEbqpw1x8H8yAnnAatfuzgyqxtDsstAX65tACs3017/QzOA21S37uyJp/3o1eO0tEBhEmj6hcEf4guP6VPxX5cAxMvceeKy8n339bGbfRYlJDt/kHZzRM3HmsZAkBVpjYBdGy8AzDUqvZ0tfLxkP8SJH48QR8l3/IrqOlIqK/L/0w99ooMnZ8KcMkx6tjbOvHNjxvMLzZdd3PaZw69aLZqbGcXomQGreGtnmTNIBJeMb1dDCIj2DvhkIoXpm4fYD26PO0ututcriqzijETXC+T7O36F7bg+m9Dbo7dIGXaoe2+1t4NMyUBI8wZtkeZN7xOvW7zqiHM6jY9tZBv+5xkTWFyxyY5AffbsBwrd80fiX0lc6ST7Klq/N1LeT0BmHyczspIej1YcTz5zi/068oTilbzMF0ZYG6ymUORKuF+szYVEdf8qXP704OOBvxxjIoCUHZdMD3lSHOCjn3vbY7hXfnM7bQQdrz8H0PF0qPoVRtiYXgmZDGern7FBSkyU7h/UsWzx834S8AKznsWVHqJdnTnQn1cd9WxlnTugWKPgoH2LdaWbRst93Dnsj8+F6wUc7mLe1uKk29ysTPG0GWakzPLCUJ1IVMDVkD5AikjfQ77tTUD0M8UDJGxDmGroWwUBKUu7RV9EpQmYwmLOMTl2Lw++ZZaVXFTXkNh7dO/uPH09AsOWDnWXj97RP6P9AXkEbr8yeN8yy9VOoBPxyaAew91X2y+Vxnj7dGkLckFD1qoJ6ipPztP6Uhtr0HoSmP2gw/pMSUIBE6aCxkFdAH4LJM2IUHe3yN6m/Afyuntgo3UJOtdM+v4t12IGMvrYiGnIhvOBP2HTkagaYJ5t/Ocw4kSQF7J1w2PyyZw9YE50EX5GYhrJ+7ydCSWFh32jmMbp7k+IF5wtaAqTl4M0xbK1dLfIqTSCi6MKUT2H3lo+bgRXylexUw2ubg57W6FvTq4z0ewV4F/RBZ9uaYbto/8LzyqGijFhjLVcW5tu0j4Hni4K0QXGMTNiXfXJZihcUui0g9IAsaKMgjjT3qXQXrePbAaC40WXIVaDjPtGACOz5KuEsoxtv0gsKYucxwrTqVNIdJZmJut39T8Cp7lKeGHdAHxAHLrWE20eshGWIhNor2+a+1xYqS4O3SwS9Nqlkondw1Q+7duO/Ldu62XRIJ02FzJMVx8XHHmcEGql9cQ/AD8xtuEQ/YY47TTARUzOVolGRMnhC2DdnTLZbpBTryzDEbTjdrKNgxzUYkP3uTsCtu/H366bn7SsktXOlWpXXsAH3dzk2yyEPLM7wlrn2XSbkyLdLSJzI0IfIJyfk5PvOdt2QZ0j+8/dzxEmuv+3t2Kz2A68ZeENIe3pXHiWeyvNjCjNsOg/0glbDzFp+9uPN6vPnYKWNyyozfWD9LG1nbib75pyPY0htaqvsrfgj39xN43xvmw2pGg+KfJbxul4ByvxBw9Jtq9jqUZOY6/9vbDgaH50gb9kkv1OxIX7UGe2LQU+JCq1YFB+J6wlLhXbZjLIGyMYVBQFHBnnLi4H3/ItHVBm9nGYY/e0VbXVRcjbkz+XPJbZaFiL6fNM4vj9qXSQhQyEAmzgaln4/Fd2SfEplMXGvpNdsvT9ypN+CAVC0P23EZ+qXymBVVhQQtSHBDvcI2HzYr4ZJ1GPXJle/wgs6ksu6/cGHDXjQTrzMpAWypI0cBoks3xLGTQYlkAMHFh86SE5YX5nR4fw1kJ259yg+U+gWk9ETKjBGWWfE8gR2y9TgAAAAAAAAAAAAAAAAAAAAAAAADBEVGCAl"
+          },
+          "outcome_receipt": {
+            "receipt_id": "OUTCOME-E927107EF3CB48EA",
+            "type": "ADMISSION_OUTCOME",
+            "session_id": "SESSION-73F1B5778F9D43E5",
+            "agent_id": "OMNIX-AGENT-QUANT-001",
+            "action_executed": "Authorize $2,000,000 reallocation: investment-grade bonds \u2192 EM equities (RISK-MANDATE-2026-Q2)",
+            "execution_result": "ADMITTED \u2014 USD 2,000,000 reallocation executed within mandate bounds",
+            "linked_artifacts": {
+              "delegation_receipt_id": "ATFDR-3FF448B71465401E",
+              "temporal_admissibility_id": "ATFTAR-B22C96B0309D4D60",
+              "behavioral_anchor_id": "BAR-4280F7F56D03460F",
+              "coherence_chain_seal": "b74f4b4a4dc276ae0bf70ea7aab356a47110db1c9d33319ac4dcf674b678a207",
+              "proof_of_governance_cert": "POGC-5619CB321C0D4E5E"
+            },
+            "issued_at": "2026-05-27T19:15:42.535705+00:00",
+            "verifier_scope": "Cryptographic integrity of all signatures verifiable offline via verify_evidence_package.py using the embedded public key. Governance policy parameters at: docs/standards/RFC-ATF-1.md through RFC-ATF-6.md",
+            "content_hash": "f66d9d5f304be8cafa2a090b95234781a397d7c692aefd0b39d9d8afb965533d",
+            "pqc_signature": "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",
+            "pqc_algorithm": "ML-DSA-65"
+          }
+        }
+      }
+    }
+  },
+  "invariants_demonstrated": [
+    "ATF-INV-001: Authority never expands through delegation (MAR enforced at DR issuance)",
+    "ATF-INV-002: Every DR is PQC-signed by the delegator",
+    "ATF-INV-005: Receipts are immutable once issued (content_hash)",
+    "TAR-INV-001: TAR issued synchronously at admission time",
+    "TAR-INV-002: execution_ns captured by time.time_ns() at this call",
+    "TAR-INV-003: Expired or exhausted DRs produce admission_status=REJECTED",
+    "RGC-INV-001: Every RCR anchored to a valid TAR",
+    "RGC-INV-002: CES computed from real-time values only",
+    "BEV-INV-001: Every governed turn produces a BAR before output is delivered",
+    "BEV-INV-002: BAR content_hash covers output_hash + governing_receipt_id + turn_index",
+    "BEV-INV-004: BAR PQC signature verifiable offline without calling OMNIX",
+    "BEV-INV-010: CTCHC initialized before first BAR",
+    "BEV-INV-011: Each CTCHC link = H(prev || turn_hash || governing_receipt_id)",
+    "BEV-INV-013: Seal hash covers complete chain (first\u2192last link)",
+    "BEV-INV-014: CTCHC seal is PQC-signed (ML-DSA-65) before OEP export"
+  ],
+  "verification_instructions": {
+    "offline_verification": "python scripts/verify_evidence_package.py omnix_evidence_package_20260527_191542.json",
+    "what_is_verified": [
+      "DR content_hash integrity (SHA-256 of all fields)",
+      "DR PQC signature (Dilithium-3 over content_hash)",
+      "TAR content_hash integrity",
+      "TAR PQC signature",
+      "RCR hash integrity",
+      "RCR PQC signature",
+      "Binding record hash + PQC signature",
+      "Commit record hash + PQC signature",
+      "BAR content_hash (SHA3-256 covering output_hash + receipt_id + turn_index)",
+      "BAR PQC signature",
+      "CTCHC link-by-link hash chain integrity",
+      "CTCHC seal_hash covers all links in order",
+      "CTCHC seal PQC signature",
+      "PoGC content_hash integrity",
+      "PoGC PQC signature",
+      "Refusal receipt hash + PQC signature (Route A)",
+      "Outcome receipt hash + PQC signature (Route B)"
+    ],
+    "verifier_scope_limits": [
+      "This verifier confirms cryptographic integrity and hash chain consistency.",
+      "It does NOT verify governance policy parameters (mandate values, risk ceilings) \u2014 those require docs/standards/.",
+      "It does NOT verify external market data referenced in source_state.",
+      "It DOES confirm that the public key in this package produces valid signatures for all artifacts."
+    ]
+  }
+}

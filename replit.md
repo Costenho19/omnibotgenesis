@@ -49,7 +49,7 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
   - `omnix_core/bev/` — Behavioral Execution Verification: BAR · CCS · CTCHC (RFC-ATF-6, ADR-181/182/183)
   - `omnix_core/govern/` — OGR Orchestrator: `governance_runtime.py` — 6-layer session lifecycle (ADR-184)
   - `omnix_core/observability/` — GOL: `metrics.py` — governance-native metrics layer, zero external deps (ADR-198)
-- `/docs/adr/` — **136 archivos ADR, último numerado ADR-199**. Fuente de verdad de arquitectura
+- `/docs/adr/` — **137 archivos ADR, último numerado ADR-200**. Fuente de verdad de arquitectura
 - `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (publicado) · RFC-ATF-3 (publicado) · RFC-ATF-4 (publicado) · RFC-ATF-5 (pendiente publicación Zenodo)
 - `/docs/integration/` — `OMNIX_GOVERNANCE_RUNTIME.md` · `GETTING_STARTED.md` — integration product docs
 - `/sdk/` — Python SDK · Node.js SDK
@@ -189,6 +189,25 @@ El "SSL para decisiones de agentes de IA" — verificable offline, firmado PQC, 
 **DB table:** `pogr_certificates` (auto-created en Railway)  
 **Implementación pendiente:** ADR-187 (endpoints `/v1/pogr/*`) · React page `/proof-of-governance`  
 **Go-to-market:** primer PoGC emitido antes del 1 julio 2026 — 32 días antes del EU AI Act enforcement
+
+---
+
+## Route-Complete Evidence Package (RCEP) — ADR-200
+
+**Package de evidencia dual-ruta para revisiones TA-14 (Butler et al.) — offline, sin acceso a la plataforma.**
+Prueba simultáneamente que la ejecución es imposible bajo autoridad inválida (Ruta A) y admitida bajo autoridad válida (Ruta B).
+
+| Artefacto | Archivo |
+|---|---|
+| ADR-200 (spec) | `docs/adr/ADR-200-route-complete-evidence-package.md` |
+| Generator | `scripts/generate_route_evidence_package.py` |
+| Standalone verifier | `scripts/verify_evidence_package.py` |
+| Packages generados | `evidence_packages/` |
+
+**Resultado verificado:** 52/52 checks PASS · 0 FAIL en packages frescos  
+**PQC:** Dilithium-3 ML-DSA-65 (FIPS 204) — keypair efímero por package, public key embebida  
+**Uso:** `python scripts/verify_evidence_package.py evidence_packages/<package>.json`  
+**6 invariantes RCEP-INV-001–006** · Canonicalization Profile Registry documentado en ADR-200 §4
 
 ---
 

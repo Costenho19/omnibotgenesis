@@ -7,7 +7,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **199 total**. Últimos: ADR-195 (OGI Gate C) · ADR-196 (SVP) · ADR-197 (SRP) · ADR-198 (GOL) · **ADR-199 (PRG — Psycopg v3 Regression Guard)**
+- **ADRs:** `docs/adr/` — **200 total**. Últimos: ADR-197 (SRP) · ADR-198 (GOL) · ADR-199 (PRG — Psycopg v3 Regression Guard) · **ADR-200 (RCEP — Route-Complete Evidence Package)**
 - **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **169 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + FVS×3 + CGE×7 + GUGT×6 + TGB×5 + BEV×18 + OGR×1 + PoGR×6 + OSG×6 + **MIVP×9** + **OGI×10** + **SVP×8** + **SRP×7** + **GOL×6** + **PRG×6**) — RFC-ATF-5 (Cognitive Governance Layer) · RFC-ATF-6 (BEV) · PoGR (ADR-186) · OSG (ADR-188) · MIVP (ADR-194) · OGI (ADR-193) · **Production Hardening Layer** (ADR-196/197/198/199 — 2026-05-27)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
@@ -28,6 +28,20 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 | Documento | Archivo | Audiencia |
 |---|---|---|
 | **Auditor Offline Verification Guide** | `docs/guides/AUDITOR_OFFLINE_VERIFICATION_GUIDE.md` | External auditors · Regulators · Legal counsel — How to verify ATF evidence offline without platform access. Step-by-step: OEP package anatomy, platform key cross-reference (HTTP/DNS/Zenodo), CLI verifier execution, receipt interpretation, regulatory checklist (14 points), common auditor Q&A. OMNIX-GUIDE-AUDITOR-OFV-2026-05 |
+
+---
+
+## Route-Complete Evidence Package (RCEP) — ADR-200
+
+| Artefacto | Archivo | Alcance |
+|---|---|---|
+| **ADR-200** | `docs/adr/ADR-200-route-complete-evidence-package.md` | Spec completa: 8-step TA-14 chain · 6 invariantes RCEP-INV-001–006 · Canonicalization Profile Registry §4 · CTCHC genesis continuity approach · verifier scope limits |
+| **Generator** | `scripts/generate_route_evidence_package.py` | Genera package dual-ruta ~82KB con keypair Dilithium-3 efímero embebido |
+| **Standalone Verifier** | `scripts/verify_evidence_package.py` | 52 checks · 0 runtime dependencies · exit 0=PASS / 1=FAIL · escribe verification report JSON |
+| **Packages** | `evidence_packages/` | Output directory — packages generados on-demand para TA-14 y revisores institucionales |
+
+**Verified:** 52/52 PASS · 0 FAIL en packages frescos (2026-05-27)  
+**Uso:** `python scripts/verify_evidence_package.py evidence_packages/<package>.json`
 
 ---
 

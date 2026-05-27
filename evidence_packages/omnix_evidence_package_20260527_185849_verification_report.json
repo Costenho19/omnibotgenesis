@@ -1,0 +1,323 @@
+{
+  "package_id": "OMNIX-EP-01F89287761B4D62",
+  "verified_at": "2026-05-27T19:14:08.247470+00:00",
+  "total_checks": 52,
+  "passed": 52,
+  "failed": 0,
+  "skipped": 0,
+  "verdict": "PASS",
+  "checks": [
+    {
+      "id": "A.SS.HASH",
+      "label": "Source state \u2014 hash integrity",
+      "status": "PASS",
+      "detail": "stored=095ad2997d86312d... expected=095ad2997d86312d..."
+    },
+    {
+      "id": "A.DR.MAR",
+      "label": "DR ATFDR-334BE33B33C842 \u2014 MAR invariant (granted\u2264delegator)",
+      "status": "PASS",
+      "detail": "granted=0.0 delegator=0.0"
+    },
+    {
+      "id": "A.DR.HASH",
+      "label": "DR ATFDR-334BE33B33C842 \u2014 content_hash integrity",
+      "status": "PASS",
+      "detail": "stored=c822f6c5a298bbfd... expected=c822f6c5a298bbfd..."
+    },
+    {
+      "id": "A.DR.SIG",
+      "label": "DR ATFDR-334BE33B33C842 \u2014 PQC signature (ML-DSA-65)",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "A.RCR.HASH",
+      "label": "Continuity posture \u2014 hash integrity",
+      "status": "PASS",
+      "detail": "ces_score=0.0 band=HALT"
+    },
+    {
+      "id": "A.TAR.HASH",
+      "label": "TAR ATFTAR-ABDE433DE48D4 \u2014 content_hash integrity",
+      "status": "PASS",
+      "detail": "stored=bebd2d8d86b19176... expected=bebd2d8d86b19176..."
+    },
+    {
+      "id": "A.TAR.STATUS",
+      "label": "TAR ATFTAR-ABDE433DE48D4 \u2014 admission_status present",
+      "status": "PASS",
+      "detail": "status=ADMITTED"
+    },
+    {
+      "id": "A.TAR.NS",
+      "label": "TAR ATFTAR-ABDE433DE48D4 \u2014 execution_ns captured",
+      "status": "PASS",
+      "detail": "execution_ns=1779908319821067362"
+    },
+    {
+      "id": "A.TAR.SIG",
+      "label": "TAR ATFTAR-ABDE433DE48D4 \u2014 PQC signature",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "A.BIND.HASH",
+      "label": "Binding record \u2014 hash integrity",
+      "status": "PASS",
+      "detail": "status=REFUSED"
+    },
+    {
+      "id": "A.BIND.STATUS",
+      "label": "Binding record \u2014 status=REFUSED",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "A.COMMIT.BLOCKED",
+      "label": "Commit \u2014 execution_reachable=False",
+      "status": "PASS",
+      "detail": "status=BLOCKED"
+    },
+    {
+      "id": "A.REFUSAL.HASH",
+      "label": "Refusal receipt REFUSAL-8049C236F3AA \u2014 content_hash integrity",
+      "status": "PASS",
+      "detail": "stored=10b7e157f3957770... expected=10b7e157f3957770..."
+    },
+    {
+      "id": "A.REFUSAL.SIG",
+      "label": "Refusal receipt REFUSAL-8049C236F3AA \u2014 PQC signature",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "A.REFUSAL.TYPE",
+      "label": "Refusal receipt \u2014 type=HARD_REFUSAL",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "A.OUTCOME.EXEC",
+      "label": "Outcome \u2014 execution_occurred=False",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "A.OUTCOME.BLOCK",
+      "label": "Outcome \u2014 what_remained_impossible populated",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.SS.HASH",
+      "label": "Source state \u2014 hash integrity",
+      "status": "PASS",
+      "detail": "stored=868a6a568c0a4305... expected=868a6a568c0a4305..."
+    },
+    {
+      "id": "B.DR.MAR",
+      "label": "DR ATFDR-376EC0BF484E46 \u2014 MAR invariant (granted\u2264delegator)",
+      "status": "PASS",
+      "detail": "granted=75.0 delegator=100.0"
+    },
+    {
+      "id": "B.DR.HASH",
+      "label": "DR ATFDR-376EC0BF484E46 \u2014 content_hash integrity",
+      "status": "PASS",
+      "detail": "stored=3c457aa27a9d595f... expected=3c457aa27a9d595f..."
+    },
+    {
+      "id": "B.DR.SIG",
+      "label": "DR ATFDR-376EC0BF484E46 \u2014 PQC signature (ML-DSA-65)",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.RCR.HASH",
+      "label": "RCR \u2014 hash integrity",
+      "status": "PASS",
+      "detail": "ces=92.5 band=NOMINAL"
+    },
+    {
+      "id": "B.RCR.SIG",
+      "label": "RCR \u2014 PQC signature",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.TAR.HASH",
+      "label": "TAR ATFTAR-D6C205D954F14 \u2014 content_hash integrity",
+      "status": "PASS",
+      "detail": "stored=1bb79eabdd989b44... expected=1bb79eabdd989b44..."
+    },
+    {
+      "id": "B.TAR.STATUS",
+      "label": "TAR ATFTAR-D6C205D954F14 \u2014 admission_status present",
+      "status": "PASS",
+      "detail": "status=ADMITTED"
+    },
+    {
+      "id": "B.TAR.NS",
+      "label": "TAR ATFTAR-D6C205D954F14 \u2014 execution_ns captured",
+      "status": "PASS",
+      "detail": "execution_ns=1779908321917538308"
+    },
+    {
+      "id": "B.TAR.SIG",
+      "label": "TAR ATFTAR-D6C205D954F14 \u2014 PQC signature",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.TAR.ADMITTED",
+      "label": "TAR \u2014 admission_status=ADMITTED",
+      "status": "PASS",
+      "detail": "status=ADMITTED"
+    },
+    {
+      "id": "B.BIND.HASH",
+      "label": "Binding record \u2014 hash integrity",
+      "status": "PASS",
+      "detail": "status=ACCEPTED"
+    },
+    {
+      "id": "B.BIND.STATUS",
+      "label": "Binding record \u2014 status=ACCEPTED",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.BIND.SIG",
+      "label": "Binding record \u2014 PQC signature",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.COMMIT.LOCKED",
+      "label": "Commit \u2014 status=LOCKED",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.COMMIT.SCOPE",
+      "label": "Commit \u2014 locked_scope present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.COMMIT.REACHABLE",
+      "label": "Commit \u2014 execution_reachable=True",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.COMMIT.HASH",
+      "label": "Commit record \u2014 commit_hash integrity",
+      "status": "PASS",
+      "detail": "stored=b15ae5336c2e429a... expected=b15ae5336c2e429a..."
+    },
+    {
+      "id": "B.COMMIT.SIG",
+      "label": "Commit record \u2014 PQC signature",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.BAR.HASH",
+      "label": "BAR BAR-09811CE16D474641 \u2014 content_hash (BEV-INV-002)",
+      "status": "PASS",
+      "detail": "stored=8012584967ef7dbc... expected=8012584967ef7dbc..."
+    },
+    {
+      "id": "B.BAR.STATUS",
+      "label": "BAR BAR-09811CE16D474641 \u2014 bar_status valid",
+      "status": "PASS",
+      "detail": "status=VALID"
+    },
+    {
+      "id": "B.BAR.OUTPUT",
+      "label": "BAR BAR-09811CE16D474641 \u2014 output_hash present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.BAR.SIG",
+      "label": "BAR BAR-09811CE16D474641 \u2014 PQC signature (BEV-INV-004)",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.CTCHC.GENESIS",
+      "label": "CTCHC CTCHC-4B4225BF8B \u2014 genesis anchored to governing receipt (BEV-INV-010)",
+      "status": "PASS",
+      "detail": "receipt_anchored=True chain_starts_at_genesis=True"
+    },
+    {
+      "id": "B.CTCHC.RECEIPT",
+      "label": "CTCHC \u2014 governing_receipt_id consistent (BEV-INV-018)",
+      "status": "PASS",
+      "detail": "links checked: 1"
+    },
+    {
+      "id": "B.CTCHC.CHAIN",
+      "label": "CTCHC \u2014 link-by-link hash chain integrity (BEV-INV-011)",
+      "status": "PASS",
+      "detail": "links verified: 1"
+    },
+    {
+      "id": "B.CTCHC.SEAL_HASH",
+      "label": "CTCHC \u2014 seal_hash covers complete chain (BEV-INV-013)",
+      "status": "PASS",
+      "detail": "stored=aa933da42e532507... expected=aa933da42e532507..."
+    },
+    {
+      "id": "B.CTCHC.SIG",
+      "label": "CTCHC \u2014 seal PQC signature (BEV-INV-014)",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.CTCHC.SEALED",
+      "label": "CTCHC \u2014 is_sealed=True",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.POGC.HASH",
+      "label": "PoGC POGC-C062E761C7F4484 \u2014 content_hash integrity",
+      "status": "PASS",
+      "detail": "stored=fa496f5cac85b898... expected=fa496f5cac85b898..."
+    },
+    {
+      "id": "B.POGC.MANDATE",
+      "label": "PoGC POGC-C062E761C7F4484 \u2014 mandate_certification present",
+      "status": "PASS",
+      "detail": "certification=MANDATE-BOUND"
+    },
+    {
+      "id": "B.POGC.SIG",
+      "label": "PoGC POGC-C062E761C7F4484 \u2014 PQC signature",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.OUTCOME.HASH",
+      "label": "Outcome receipt OUTCOME-54BD7077E920 \u2014 content_hash integrity",
+      "status": "PASS",
+      "detail": "stored=83162c19fde024f8... expected=83162c19fde024f8..."
+    },
+    {
+      "id": "B.OUTCOME.SIG",
+      "label": "Outcome receipt OUTCOME-54BD7077E920 \u2014 PQC signature",
+      "status": "PASS",
+      "detail": "OK"
+    },
+    {
+      "id": "B.OUTCOME.EXEC",
+      "label": "Outcome receipt \u2014 type=ADMISSION_OUTCOME",
+      "status": "PASS",
+      "detail": ""
+    }
+  ]
+}
