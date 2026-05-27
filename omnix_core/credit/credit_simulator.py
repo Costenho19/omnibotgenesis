@@ -569,7 +569,7 @@ async def run_credit_simulation_engine():
             cycle_num += 1
             try:
                 await run_credit_simulation_cycle(cycle_num, conn)
-            except psycopg2.OperationalError:
+            except psycopg.OperationalError:
                 logger.warning("[CreditSim] DB connection lost, reconnecting...")
                 try:
                     conn.close()

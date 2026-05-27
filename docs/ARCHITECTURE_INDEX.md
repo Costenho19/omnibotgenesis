@@ -7,8 +7,8 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## ADRs y Baseline
 
-- **ADRs:** `docs/adr/` — **194 total**. Últimos: ADR-191 · ADR-192 · ADR-193 · **ADR-194 (MIVP — Mandate Integrity Verification Protocol)**
-- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **143 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + FVS×3 + CGE×7 + GUGT×6 + TGB×5 + BEV×18 + OGR×1 + PoGR×6 + OSG×6 + **MIVP×9** + **OGI×10**) — RFC-ATF-5 (Cognitive Governance Layer — PENDING DOI) · RFC-ATF-6 (BEV) · PoGR (ADR-186) · OSG (ADR-188) · MIVP (ADR-194) · OGI (ADR-193)
+- **ADRs:** `docs/adr/` — **199 total**. Últimos: ADR-195 (OGI Gate C) · ADR-196 (SVP) · ADR-197 (SRP) · ADR-198 (GOL) · **ADR-199 (PRG — Psycopg v3 Regression Guard)**
+- **Governance Baseline:** `docs/GOVERNANCE_BASELINE.md` — OMNIX-BASELINE-2026-Q2-001 · 11 invariants (baseline) · 151 ADRs · Architecture Freeze · **169 invariantes totales activos** (ATF×6+TAR×1 + RGC×8 + GPIL×3 + ELR×4 + EAP×7 + OEP×6 + FEA×5 + FVP×1 + GECR×6 + SGIP×4 + DSPP×7 + AGVP×6 + SSD×3 + FVS×3 + CGE×7 + GUGT×6 + TGB×5 + BEV×18 + OGR×1 + PoGR×6 + OSG×6 + **MIVP×9** + **OGI×10** + **SVP×8** + **SRP×7** + **GOL×6** + **PRG×6**) — RFC-ATF-5 (Cognitive Governance Layer) · RFC-ATF-6 (BEV) · PoGR (ADR-186) · OSG (ADR-188) · MIVP (ADR-194) · OGI (ADR-193) · **Production Hardening Layer** (ADR-196/197/198/199 — 2026-05-27)
 - **Full Architecture:** `docs/current/ARCHITECTURE.md`
 - **Runtime Authority Matrix:** `docs/AUTHORITY_MATRIX.md` — ADR-146
 
@@ -68,6 +68,7 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 | Módulo | Archivo | ADR |
 |---|---|---|
+| **Governance Observability Layer** | `omnix_core/observability/metrics.py` | **ADR-198** — `GovernanceMetricsRegistry` singleton · `LatencyHistogram` · `GovernancePhaseTimer` · `MetricsSnapshot` · OBS-INV-001–006 · phase-granular latency (BAR/CCS/CTCHC/MIVP/DB_WRITE) · zero external deps |
 | Unified Decision Control Layer | `omnix_core/governance/unified_control_layer.py` | ADR-138 |
 | Dilithium-3 PQC signing | `omnix_core/security/pqc_security.py` | — |
 | Governance Replay Engine | `omnix_core/simulation/governance_replay.py` | ADR-145, ADR-149 |
@@ -500,6 +501,28 @@ GET    /v1/govern/manifest                — API capabilities manifest
 
 ---
 
+## Production Hardening Layer (ADR-196/197/198/199) — 2026-05-27
+
+Post-migration infrastructure hardening after psycopg2→psycopg v3 (93 files).
+**27 new invariants across 4 families.** First governance-native hardening layer in the market.
+
+| Sistema | Archivo | ADR | Invariantes | Diferenciador |
+|---|---|---|---|---|
+| **Stress Validation Protocol (SVP)** | `tests/test_stress.py` | ADR-196 | STRESS-INV-001–008 | Governance-aware load test — verifica chain_genesis_hash, HALT persistence, throughput SLO, typed reconnect errors. Mock + live DB. |
+| **Soak Reliability Protocol (SRP)** | `tests/soak/soak_runner.py` | ADR-197 | SOAK-INV-001–007 | Long-run monitor (horas/días): MemoryLeakMonitor, DeadlockWatchdog, StaleSessionScanner, OrphanRecordScanner (BAR/CCS/CTCHC/MAS). Hash-chained checkpoint log. |
+| **Governance Observability Layer (GOL)** | `omnix_core/observability/metrics.py` | ADR-198 | OBS-INV-001–006 | First governance-native metrics layer. Phase histograms per ATF layer. MANDATE-BOUND/ALIGNED/UNCERTIFIED en cada snapshot. Zero external deps. |
+| **Psycopg v3 Regression Guard (PRG)** | `tests/test_regression_psycopg.py` | ADR-199 | REG-INV-001–006 | 26 tests permanentes. AST scan de imports + exception catches. Protege dict_row, FK violation, pool exhaustion, no psycopg2 en producción. |
+
+**Bugs de producción encontrados y corregidos por el PRG:**
+- `omnix_core/evidence/receipt_archival.py` — docstring mencionaba psycopg2 (REG-INV-003)
+- `omnix_core/credit/credit_simulator.py` — `except psycopg2.OperationalError` → `psycopg.OperationalError` (REG-INV-003 real)
+- `omnix_services/database_service/database_service.py` — `save_conversation` usando string matching en lugar de `psycopg.errors.ForeignKeyViolation` tipado (REG-INV-002)
+
+**Soak log:** `tests/soak/soak_log.jsonl` — append-only, hash-chained (SOAK-INV-007)  
+**Stress log:** `tests/soak/stress_log.jsonl` — append-only, hash-chained (STRESS-INV-008)
+
+---
+
 ## Scripts de Verificación
 
 | Script | Uso |
@@ -508,3 +531,4 @@ GET    /v1/govern/manifest                — API capabilities manifest
 | `scripts/atf_deep_audit.py` | ATF differentiator audit (55 checks) |
 | `omnix_web/public/omnix_verify.py` | Verifier público offline |
 | `omnix_web/public/omnix_atf_verify.py` | ATF CLI verifier offline |
+| `tests/soak/soak_runner.py` | SRP soak runner — `--mode mock-sprint \| overnight \| continuous` |

@@ -118,7 +118,7 @@ def _now_iso() -> str:
 
 def _serialize_receipt(row: Dict) -> Dict:
     """
-    Normalize a receipt row (from psycopg2 or dict) to a JSON-serializable dict.
+    Normalize a receipt row (from psycopg dict_row or plain dict) to a JSON-serializable dict.
     Datetime objects → ISO strings.  JSONB that arrived as dict stays as dict.
     """
     out: Dict = {}

@@ -48,7 +48,8 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
   - `omnix_core/agents/atf/` — Agent Trust Fabric: DR · TAR · DTR · RCR · AFG · RC
   - `omnix_core/bev/` — Behavioral Execution Verification: BAR · CCS · CTCHC (RFC-ATF-6, ADR-181/182/183)
   - `omnix_core/govern/` — OGR Orchestrator: `governance_runtime.py` — 6-layer session lifecycle (ADR-184)
-- `/docs/adr/` — **132 archivos ADR, último numerado ADR-195**. Fuente de verdad de arquitectura
+  - `omnix_core/observability/` — GOL: `metrics.py` — governance-native metrics layer, zero external deps (ADR-198)
+- `/docs/adr/` — **136 archivos ADR, último numerado ADR-199**. Fuente de verdad de arquitectura
 - `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (publicado) · RFC-ATF-3 (publicado) · RFC-ATF-4 (publicado) · RFC-ATF-5 (pendiente publicación Zenodo)
 - `/docs/integration/` — `OMNIX_GOVERNANCE_RUNTIME.md` · `GETTING_STARTED.md` — integration product docs
 - `/sdk/` — Python SDK · Node.js SDK
@@ -198,7 +199,7 @@ El "SSL para decisiones de agentes de IA" — verificable offline, firmado PQC, 
 - **Excepción:** `/terminal` y `/classic` son dashboards operacionales internos en Jinja2. No aplica la regla React.
 - **PQC-first:** Todos los receipts de gobernanza se firman con Dilithium-3.
 - **ATF stack (L1–L4):** Identity (AIR) → Delegation (DR) → Temporal (TAR) → Runtime Continuity (RCR). Cada capa extiende sin reemplazar la anterior.
-- **125 invariantes totales:** ATF-INV-001–006 (RFC-ATF-1) + RGC-INV-001–008 (RFC-ATF-2) + GPIL-INV-001–003 + ELR-INV-001–004 + EAP-INV-001–007 + OEP-INV-001–006 + FEA-INV-001–005 + FVP-INV-007 (RFC-ATF-3) + GECR-INV-001–006 + SGIP-INV-001–004 + DSPP-INV-001–007 (ADR-173) + AGV-INV-001–006 (ADR-174) + SSD-INV-001–003 (ADR-175) + FVS-INV-001–003 (ADR-177) + **CGE-INV-001–007** (ADR-178) + **GUGT-INV-001–006** (ADR-179) + **TGB-INV-001–005** (ADR-180) — RFC-ATF-5 Cognitive Governance Layer + **BEV-INV-001–018** (ADR-181/182/183) — RFC-ATF-6 Behavioral Execution Verification Layer + **OGR-INV-001** (ADR-184) — OMNIX Governance Runtime simultaneous-layer invariant + **MIVP-INV-001–009** (ADR-194) — Mandate Integrity Verification Protocol: proxy-optimization detection + tres niveles de certificación de mandato (MANDATE-BOUND · MANDATE-ALIGNED · UNCERTIFIED) + **OGI-INV-001–010** (ADR-193) — OGI Fine-Tuning Pipeline: corpus integrity + model evaluation gates. BEV breakdown: BAR 001–004+015–016 · CCS 005–009+017 · CTCHC 010–014+018 · MIVP 001–009 · OGI 001–010.
+- **169 invariantes totales:** ATF-INV-001–006 (RFC-ATF-1) + RGC-INV-001–008 (RFC-ATF-2) + GPIL-INV-001–003 + ELR-INV-001–004 + EAP-INV-001–007 + OEP-INV-001–006 + FEA-INV-001–005 + FVP-INV-007 (RFC-ATF-3) + GECR-INV-001–006 + SGIP-INV-001–004 + DSPP-INV-001–007 (ADR-173) + AGV-INV-001–006 (ADR-174) + SSD-INV-001–003 (ADR-175) + FVS-INV-001–003 (ADR-177) + **CGE-INV-001–007** (ADR-178) + **GUGT-INV-001–006** (ADR-179) + **TGB-INV-001–005** (ADR-180) — RFC-ATF-5 Cognitive Governance Layer + **BEV-INV-001–018** (ADR-181/182/183) — RFC-ATF-6 Behavioral Execution Verification Layer + **OGR-INV-001** (ADR-184) — OMNIX Governance Runtime simultaneous-layer invariant + **MIVP-INV-001–009** (ADR-194) — Mandate Integrity Verification Protocol: proxy-optimization detection + tres niveles de certificación de mandato (MANDATE-BOUND · MANDATE-ALIGNED · UNCERTIFIED) + **OGI-INV-001–010** (ADR-193) — OGI Fine-Tuning Pipeline: corpus integrity + model evaluation gates + **STRESS-INV-001–008** (ADR-196) + **SOAK-INV-001–007** (ADR-197) + **OBS-INV-001–006** (ADR-198) + **REG-INV-001–006** (ADR-199) — Production Hardening Layer. BEV breakdown: BAR 001–004+015–016 · CCS 005–009+017 · CTCHC 010–014+018 · MIVP 001–009 · OGI 001–010.
 
 ---
 

@@ -3039,24 +3039,16 @@ class DatabaseServiceEnterprise:
                     VALUES (%s, %s, %s, %s)
                 ''', (user_id, user_message, ai_response, language))
                 conn.commit()
-            except Exception as insert_err:
-                err_str = str(insert_err).lower()
-                if 'foreign key' in err_str or 'violates' in err_str:
-                    # User not in users table yet — create and retry
-                    logger.warning(f"⚠️ save_conversation FK violation for {user_id} — creating user and retrying")
-                    conn.rollback()
-                    cursor.execute('''
-                        INSERT INTO users (user_id, username, first_name, language_code, created_at)
-                        VALUES (%s, %s, %s, 'es', CURRENT_TIMESTAMP)
-                        ON CONFLICT (user_id) DO NOTHING
-                    ''', (user_id, f"user_{user_id}", "Usuario"))
-                    cursor.execute('''
-                        INSERT INTO conversations (user_id, user_message, ai_response, language)
-                        VALUES (%s, %s, %s, %s)
-                    ''', (user_id, user_message, ai_response, language))
-                    conn.commit()
-                else:
-                    raise
+            except psycopg.errors.ForeignKeyViolation:
+                # REG-INV-002 (ADR-199): typed FK violation — user row missing, create and retry
+                logger.warning(f"⚠️ save_conversation FK violation for {user_id} — creating user and retrying")
+                conn.rollback()
+                self.ensure_user_exists(user_id, username=f"user_{user_id}", first_name="Usuario")
+                cursor.execute('''
+                    INSERT INTO conversations (user_id, user_message, ai_response, language)
+                    VALUES (%s, %s, %s, %s)
+                ''', (user_id, user_message, ai_response, language))
+                conn.commit()
             cursor.close()
             conn.close()
             
