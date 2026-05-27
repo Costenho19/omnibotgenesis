@@ -791,3 +791,112 @@ def registry_listing():
         "offset":       offset,
         "certificates": [{k: _dt(v) for k, v in dict(r).items()} for r in rows],
     })
+
+
+# ─── 8. POST /v1/pogr/admin/resign/<pogc_id> ─────────────────────────────────
+
+@pogr_bp.route("/v1/pogr/admin/resign/<pogc_id>", methods=["POST"])
+def admin_resign(pogc_id: str):
+    """
+    Admin-only: re-sign a certificate with the real ML-DSA-65 key.
+
+    This endpoint exists to upgrade STUB signatures to real PQC signatures
+    when the signing key was not available at issuance time.
+
+    Requires header:
+        X-Admin-Resign-Token: <sha3-256 of 'POGR-RESIGN:' + pogc_id>
+
+    Only works when OMNIX_SIGNING_SECRET_KEY_B64 is configured in the
+    server environment (i.e. Railway production).
+    """
+    _ensure_tables()
+
+    # ── Verify admin token ──────────────────────────────────────────────────
+    expected_token = hashlib.sha3_256(
+        f"POGR-RESIGN:{pogc_id}".encode()
+    ).hexdigest()
+    provided_token = request.headers.get("X-Admin-Resign-Token", "").strip()
+
+    if not provided_token or provided_token != expected_token:
+        logger.warning(f"[PoGR] admin_resign: invalid token for {pogc_id}")
+        return _err("Invalid or missing X-Admin-Resign-Token", 403)
+
+    # ── Check signing key is available ─────────────────────────────────────
+    sk_b64 = os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64")
+    if not sk_b64:
+        return _err("OMNIX_SIGNING_SECRET_KEY_B64 not configured — run this on Railway", 503)
+
+    # ── Load existing certificate ───────────────────────────────────────────
+    try:
+        conn = _get_db()
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM pogr_certificates WHERE pogc_id = %s LIMIT 1", (pogc_id,))
+            row = cur.fetchone()
+        conn.close()
+    except Exception as exc:
+        logger.error(f"[PoGR] admin_resign DB read error: {exc}")
+        return jsonify({"error": "Registry unavailable"}), 503
+
+    if not row:
+        return _err(f"Certificate '{pogc_id}' not found", 404)
+
+    cert = dict(row)
+    old_sig = cert.get("pqc_signature", "")
+
+    # ── Build canonical fields (same as at issuance) ───────────────────────
+    def _dt(v):
+        return v.isoformat() if hasattr(v, "isoformat") else v
+
+    canonical = _canonical_fields({
+        **cert,
+        "issued_at":  _dt(cert["issued_at"]),
+        "expires_at": _dt(cert["expires_at"]),
+    })
+
+    # ── Sign with real ML-DSA-65 (pypqc / dilithium3) ─────────────────────
+    payload = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
+    try:
+        import base64
+        from pqc.sign import dilithium3
+        sk = base64.b64decode(sk_b64)
+        sig_bytes = dilithium3.sign(payload, sk)
+        new_signature = "ML-DSA-65:" + sig_bytes.hex()
+    except Exception as exc:
+        logger.error(f"[PoGR] admin_resign PQC signing failed: {exc}")
+        return jsonify({"error": f"PQC signing failed: {exc}"}), 500
+
+    # Recompute content hash with same canonical fields
+    new_content_hash = _content_hash(canonical)
+
+    # ── Update pqc_signature in DB ─────────────────────────────────────────
+    try:
+        conn = _get_db()
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE pogr_certificates
+                    SET pqc_signature  = %s,
+                        content_hash   = %s,
+                        pqc_algorithm  = 'ml-dsa-65'
+                    WHERE pogc_id = %s
+                """, (new_signature, new_content_hash, pogc_id))
+        conn.close()
+    except Exception as exc:
+        logger.error(f"[PoGR] admin_resign DB write error: {exc}")
+        return jsonify({"error": "Failed to update signature in registry"}), 500
+
+    logger.info(
+        f"[PoGR] admin_resign: {pogc_id} re-signed with ML-DSA-65 "
+        f"(old_prefix={old_sig[:20]}, new_len={len(sig_bytes)} bytes)"
+    )
+
+    return jsonify({
+        "status":            "resigned",
+        "pogc_id":           pogc_id,
+        "old_signature_prefix": old_sig[:30] + "...",
+        "new_signature_algorithm": "ML-DSA-65",
+        "new_signature_bytes": len(sig_bytes),
+        "content_hash":      new_content_hash,
+        "verify_url":        f"{os.environ.get('OMNIX_WEB_URL', 'https://omnixquantum.net')}/v1/pogr/verify/{pogc_id}",
+        "note":              "Certificate now carries real ML-DSA-65 post-quantum signature (FIPS 204)",
+    })
