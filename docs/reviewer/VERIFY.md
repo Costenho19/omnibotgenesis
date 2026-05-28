@@ -1,7 +1,20 @@
 # VERIFY.md — OMNIX-RTE-001 Verification Commands
 
 All commands run from the package root directory.
-Requirements: Python 3.9+ — no external dependencies.
+
+**Requirements:** Python 3.9+ · `pip install pqc`
+
+---
+
+## Prerequisites
+
+```
+pip install pqc
+```
+
+Installs Dilithium-3 (ML-DSA-65) signature verification.
+Without it, the 26 PQC signature checks are SKIPPED (not FAILED).
+All 75 structural and hash integrity checks run regardless.
 
 ---
 

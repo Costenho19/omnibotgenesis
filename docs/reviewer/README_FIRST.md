@@ -25,20 +25,24 @@ verification procedure. The verifier requires no OMNIX platform access.
 
 ## Verification time: under 2 minutes
 
-**Requirements:** Python 3.9+ (standard library only — no pip install required)
+**Requirements:** Python 3.9+
 
 ```
+pip install pqc        # Dilithium-3 PQC verification (one-time, ~5 seconds)
 python verify.py
 ```
 
-Expected output:
+Expected output with `pqc` installed (101 checks, 0 failures):
 
 ```
-TOTAL CHECKS : 101
-PASSED        : 101
-FAILED        : 0
-VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed
+  TOTAL CHECKS : 101
+  PASSED        : 101
+  FAILED        : 0
+  VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed
 ```
+
+Without `pip install pqc`: the 26 PQC signature checks are SKIPPED (not FAILED).
+All 75 structural and hash integrity checks run and pass regardless.
 
 See `VERIFY.md` for targeted verification commands and expected outputs.
 
@@ -49,12 +53,12 @@ See `VERIFY.md` for targeted verification commands and expected outputs.
 **Proof of Governance Certificate**
 
 ```
-ID:        POGC-F1DC0218E5204875
-Tier:      MANDATE-BOUND
-PQC:       ML-DSA-65 (Dilithium-3, FIPS 204)
+ID:         POGC-F1DC0218E5204875
+Tier:       MANDATE-BOUND
+PQC:        ML-DSA-65 (Dilithium-3, FIPS 204)
 Settlement: USD 50,000,000
-SWIFT ref: MT202-2CAA8C200950
-XRPL tx:   XRPL-8F7967D6A3A04ECC8C27CD0C
+SWIFT ref:  MT202-2CAA8C200950
+XRPL tx:    XRPL-8F7967D6A3A04ECC8C27CD0C
 ```
 
 This certificate is embedded in the package and PQC-signed with the ephemeral
@@ -70,10 +74,10 @@ OMNIX-RTE-001-REVIEWER/
 ├── README_FIRST.md       — this file
 ├── VERIFY.md             — verification commands and expected outputs
 ├── QUICKSTART.md         — step-by-step for first-time reviewers
-├── verify.py             — standalone verifier (stdlib only)
-├── evidence/
-│   ├── OMNIX-RTE-001_*.json   — complete evidence package (194 KB)
-│   └── OMNIX-RTE-001_*.pdf    — institutional document (15 pages)
+├── verify.py             — standalone verifier (Python 3.9+, pip install pqc)
+└── evidence/
+    ├── OMNIX-RTE-001_*.json   — complete evidence package (194 KB)
+    └── OMNIX-RTE-001_*.pdf    — institutional document (15 pages)
 ```
 
 ---

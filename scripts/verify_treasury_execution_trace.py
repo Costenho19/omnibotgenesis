@@ -63,6 +63,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import glob
 import hashlib
 import json
 import os
@@ -71,6 +72,39 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Expected total checks when verifier runs in FULL mode against an RTE-001 package.
+# Used by consistency audits and CI pipelines.
+EXPECTED_TOTAL_CHECKS = 101
+
+
+def _auto_detect_package() -> Optional[str]:
+    """
+    Locate an OMNIX-RTE-001 JSON package automatically.
+    Search order:
+      1. <script_dir>/evidence/OMNIX-RTE-001_*.json   — reviewer package layout
+         (verify.py sits alongside evidence/ in the package root)
+      2. <script_dir>/../evidence_packages/OMNIX-RTE-001_*.json — repo layout
+         (verify_treasury_execution_trace.py sits in scripts/, evidence_packages/ is at repo root)
+    Returns the most recent match, or None.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates: List[str] = []
+    for pattern in [
+        # Reviewer package layout: evidence/ is a sibling of verify.py
+        os.path.join(script_dir, "evidence", "OMNIX-RTE-001_*.json"),
+        # Repo layout: evidence_packages/ is at repo root, script is in scripts/
+        os.path.join(script_dir, "..", "evidence_packages", "OMNIX-RTE-001_*.json"),
+    ]:
+        candidates.extend(sorted(glob.glob(os.path.normpath(pattern))))
+    # Deduplicate while preserving order
+    seen: set = set()
+    unique = []
+    for c in candidates:
+        if c not in seen:
+            seen.add(c)
+            unique.append(c)
+    return unique[-1] if unique else None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -131,10 +165,14 @@ class VerificationReport:
         print(f"  TOTAL CHECKS : {total}")
         print(f"  {colour}PASSED{reset}        : {self.passed}")
         print(f"  \033[31mFAILED\033[0m        : {self.failed}")
-        print(f"  \033[90mSKIPPED\033[0m       : {self.skipped} (artefact unsigned or absent)")
+        skip_note = " (pip install pqc to enable)" if self.skipped > 0 else ""
+        print(f"  \033[90mSKIPPED\033[0m       : {self.skipped}{skip_note}")
         print("─" * 65)
-        if all_ok:
+        if all_ok and self.skipped == 0:
             print(f"  {colour}VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed{reset}")
+        elif all_ok and self.skipped > 0:
+            print(f"  {colour}VERDICT: STRUCTURAL + HASH CHECKS PASS{reset}")
+            print(f"  \033[90m         {self.skipped} PQC signature check(s) skipped — install pqc: pip install pqc{reset}")
         else:
             print(f"  \033[31mVERDICT: {self.failed} VERIFICATION(S) FAILED — package integrity compromised\033[0m")
         print("═" * 65)
@@ -159,25 +197,64 @@ class VerificationReport:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _load_pqc(pk_b64: str):
-    """Load PQC verifier from embedded public key. No private key needed."""
+    """
+    Load PQC verifier from embedded public key. No private key needed.
+
+    Import priority:
+      1. pqc  PyPI library  (pip install pqc) — available to external reviewers
+      2. omnix_core internal wrapper            — available inside the OMNIX repo
+    Returns (verifier_obj, pk_bytes) or (None, error_message).
+    """
+    pk_bytes = base64.b64decode(pk_b64)
+
+    # — Priority 1: pqc PyPI library (standalone, no OMNIX dependency) —
+    try:
+        from pqc.sign import dilithium3 as _dil3
+
+        class _PyPIVerifier:
+            """Thin wrapper so the rest of the verifier sees a uniform interface."""
+            pqc_enabled = True
+
+            def verify_signature(self, sig_bytes: bytes, msg_bytes: bytes, pk: bytes) -> bool:
+                try:
+                    _dil3.verify(sig_bytes, msg_bytes, pk)
+                    return True
+                except Exception:
+                    return False
+
+        return _PyPIVerifier(), pk_bytes
+    except ImportError:
+        pass
+
+    # — Priority 2: omnix_core internal (repo environment) —
     try:
         from omnix_core.security.pqc_security import PostQuantumSecurity
-        pqc = PostQuantumSecurity()
-        if not pqc.pqc_enabled:
+        pqc_obj = PostQuantumSecurity()
+        if not pqc_obj.pqc_enabled:
             return None, "PQC not available (pypqc not installed)"
-        pk_bytes = base64.b64decode(pk_b64)
-        return pqc, pk_bytes
-    except Exception as e:
-        return None, str(e)
+        return pqc_obj, pk_bytes
+    except Exception:
+        pass
+
+    return None, "PQC library not found — install with: pip install pqc"
+
+
+# Sentinel returned by _verify_sig* when the PQC library is absent.
+# Callers check `ok is _PQC_SKIP` to distinguish "library missing" from a real failure.
+_PQC_SKIP = None
 
 
 def _verify_sig(pqc, pk_bytes: bytes, payload: Dict,
-                sig_b64: Optional[str], compact: bool = True) -> Tuple[bool, str]:
-    """Verify a PQC signature against a JSON payload."""
+                sig_b64: Optional[str], compact: bool = True) -> Tuple[Optional[bool], str]:
+    """
+    Verify a PQC signature against a JSON payload.
+    Returns (True, '') on success, (False, reason) on failure,
+    or (None, hint) when PQC library is not installed — callers must treat None as SKIP.
+    """
     if not sig_b64:
         return False, "signature absent"
     if pqc is None:
-        return False, "PQC not available"
+        return _PQC_SKIP, "PQC not available — install with: pip install pqc"
     try:
         sep       = (",", ":") if compact else (", ", ": ")
         raw       = json.dumps(payload, sort_keys=True, separators=sep).encode("utf-8")
@@ -189,12 +266,15 @@ def _verify_sig(pqc, pk_bytes: bytes, payload: Dict,
 
 
 def _verify_sig_bytes(pqc, pk_bytes: bytes, raw_bytes: bytes,
-                      sig_b64: Optional[str]) -> Tuple[bool, str]:
-    """Verify a PQC signature against raw bytes (for DR/TAR which sign content_hash directly)."""
+                      sig_b64: Optional[str]) -> Tuple[Optional[bool], str]:
+    """
+    Verify a PQC signature against raw bytes (DR/TAR sign content_hash directly).
+    Returns (None, hint) when PQC library is not installed — callers must treat None as SKIP.
+    """
     if not sig_b64:
         return False, "signature absent"
     if pqc is None:
-        return False, "PQC not available"
+        return _PQC_SKIP, "PQC not available — install with: pip install pqc"
     try:
         sig_bytes = base64.b64decode(sig_b64)
         ok        = pqc.verify_signature(sig_bytes, raw_bytes, pk_bytes)
@@ -204,12 +284,15 @@ def _verify_sig_bytes(pqc, pk_bytes: bytes, raw_bytes: bytes,
 
 
 def _verify_sig_default(pqc, pk_bytes: bytes, payload: Dict,
-                        sig_b64: Optional[str]) -> Tuple[bool, str]:
-    """Verify a PQC signature with default separators (BAREngine / CTCHCEngine profile)."""
+                        sig_b64: Optional[str]) -> Tuple[Optional[bool], str]:
+    """
+    Verify a PQC signature with default separators (BAREngine / CTCHCEngine profile).
+    Returns (None, hint) when PQC library is not installed — callers must treat None as SKIP.
+    """
     if not sig_b64:
         return False, "signature absent"
     if pqc is None:
-        return False, "PQC not available"
+        return _PQC_SKIP, "PQC not available — install with: pip install pqc"
     try:
         raw       = json.dumps(payload, sort_keys=True).encode("utf-8")
         sig_bytes = base64.b64decode(sig_b64)
@@ -217,6 +300,18 @@ def _verify_sig_default(pqc, pk_bytes: bytes, payload: Dict,
         return ok, "" if ok else "signature mismatch"
     except Exception as e:
         return False, str(e)
+
+
+def _add_sig(report: "VerificationReport", check_id: str, label: str,
+             ok: Optional[bool], detail: str, path: str = "") -> None:
+    """
+    Wrapper for report.add for PQC signature checks.
+    Converts the None sentinel (PQC library absent) into a proper SKIP entry.
+    """
+    if ok is _PQC_SKIP:
+        report.add(check_id, label, False, detail, skip=True, path=path)
+    else:
+        report.add(check_id, label, bool(ok), detail, path=path)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -255,7 +350,7 @@ def _check_dr(report: VerificationReport, dr: Dict, pqc, pk_bytes: bytes, path: 
     # DelegationReceiptEngine signs content_hash.encode("utf-8") directly — not a JSON payload
     raw_ch = actual.encode("utf-8")
     ok, detail = _verify_sig_bytes(pqc, pk_bytes, raw_ch, dr.get("pqc_signature"))
-    report.add(f"DR-{path[:3]}-SIG", "DR PQC signature (ML-DSA-65)", ok, detail, path=path)
+    _add_sig(report, f"DR-{path[:3]}-SIG", "DR PQC signature (ML-DSA-65)", ok, detail, path=path)
 
 
 def _check_tar(report: VerificationReport, tar: Dict, pqc, pk_bytes: bytes, path: str) -> None:
@@ -269,7 +364,7 @@ def _check_tar(report: VerificationReport, tar: Dict, pqc, pk_bytes: bytes, path
     # TemporalAuthorityEngine signs content_hash.encode("utf-8") directly — not a JSON payload
     raw_ch = actual.encode("utf-8")
     ok, detail = _verify_sig_bytes(pqc, pk_bytes, raw_ch, tar.get("pqc_signature"))
-    report.add(f"TAR-{path[:3]}-SIG", "TAR PQC signature (ML-DSA-65)", ok, detail, path=path)
+    _add_sig(report, f"TAR-{path[:3]}-SIG", "TAR PQC signature (ML-DSA-65)", ok, detail, path=path)
 
 
 def _check_rcr(report: VerificationReport, rcr: Dict, pqc, pk_bytes: bytes, path: str) -> None:
@@ -282,7 +377,7 @@ def _check_rcr(report: VerificationReport, rcr: Dict, pqc, pk_bytes: bytes, path
 
     sig_payload = {"rcr_id": rcr.get("rcr_id"), "rcr_hash": actual}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, rcr.get("pqc_signature"), compact=True)
-    report.add(f"RCR-{path[:3]}-SIG", "RCR PQC signature", ok, detail, path=path)
+    _add_sig(report, f"RCR-{path[:3]}-SIG", "RCR PQC signature", ok, detail, path=path)
 
 
 def _check_mbr(report: VerificationReport, mbr: Dict, pqc, pk_bytes: bytes, path: str) -> None:
@@ -294,7 +389,7 @@ def _check_mbr(report: VerificationReport, mbr: Dict, pqc, pk_bytes: bytes, path
 
     sig_payload = {"mbr_id": mbr.get("mbr_id"), "mbr_content_hash": actual, "issued_at": mbr.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, mbr.get("pqc_signature"), compact=True)
-    report.add(f"MBR-{path[:3]}-SIG", "MBR PQC signature (MIVP-INV-001)", ok, detail, path=path)
+    _add_sig(report, f"MBR-{path[:3]}-SIG", "MBR PQC signature (MIVP-INV-001)", ok, detail, path=path)
 
 
 def _check_mas(report: VerificationReport, mas: Dict, pqc, pk_bytes: bytes, path: str) -> None:
@@ -306,7 +401,7 @@ def _check_mas(report: VerificationReport, mas: Dict, pqc, pk_bytes: bytes, path
 
     sig_payload = {"mas_id": mas.get("mas_id"), "mas_content_hash": actual, "issued_at": mas.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, mas.get("pqc_signature"), compact=True)
-    report.add(f"MAS-{path[:3]}-SIG", "MAS PQC signature (MIVP-INV-003)", ok, detail, path=path)
+    _add_sig(report, f"MAS-{path[:3]}-SIG", "MAS PQC signature (MIVP-INV-003)", ok, detail, path=path)
 
 
 def _check_mbr_seal(report: VerificationReport, seal: Dict, pqc, pk_bytes: bytes, path: str) -> None:
@@ -318,7 +413,7 @@ def _check_mbr_seal(report: VerificationReport, seal: Dict, pqc, pk_bytes: bytes
 
     sig_payload = {"seal_id": seal.get("seal_id"), "seal_content_hash": actual, "issued_at": seal.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, seal.get("pqc_signature"), compact=True)
-    report.add(f"SEAL-{path[:3]}-SIG", "MBR Seal PQC signature (MIVP-INV-007)", ok, detail, path=path)
+    _add_sig(report, f"SEAL-{path[:3]}-SIG", "MBR Seal PQC signature (MIVP-INV-007)", ok, detail, path=path)
 
     # Semantic check: dangerous path → UNCERTIFIED, admissible → MANDATE-BOUND
     tier = seal.get("certification_tier", "")
@@ -360,7 +455,7 @@ def _check_cat(report: VerificationReport, cat: Dict, cfrs: List[Dict],
 
     sig_payload = {"cat_id": cat.get("cat_id"), "cat_content_hash": actual_hash, "issued_at": cat.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, cat.get("pqc_signature"), compact=True)
-    report.add(f"CAT-{path[:3]}-SIG", "CAT PQC signature (CGE-INV-007)", ok, detail, path=path)
+    _add_sig(report, f"CAT-{path[:3]}-SIG", "CAT PQC signature (CGE-INV-007)", ok, detail, path=path)
 
 
 def _check_osg_vr(report: VerificationReport, vr: Dict, expected_verdict: str,
@@ -373,7 +468,7 @@ def _check_osg_vr(report: VerificationReport, vr: Dict, expected_verdict: str,
 
     sig_payload = {"vr_id": vr.get("vr_id"), "vr_content_hash": actual_hash, "issued_at": vr.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, vr.get("pqc_signature"), compact=True)
-    report.add(f"OSG-{path[:3]}-SIG", "OSG VR PQC signature", ok, detail, path=path)
+    _add_sig(report, f"OSG-{path[:3]}-SIG", "OSG VR PQC signature", ok, detail, path=path)
 
     # Verdict semantic
     verdict = vr.get("verdict", "")
@@ -410,8 +505,8 @@ def _check_bar(report: VerificationReport, bar: Dict, pqc, pk_bytes: bytes, path
         "created_at":            bar.get("created_at"),
     }
     ok, detail = _verify_sig_default(pqc, pk_bytes, sig_payload, bar.get("pqc_signature"))
-    report.add(f"BAR-{path[:3]}-SIG", "BAR PQC signature (BEV-INV-004, default sep)",
-               ok, detail, path=path)
+    _add_sig(report, f"BAR-{path[:3]}-SIG", "BAR PQC signature (BEV-INV-004, default sep)",
+             ok, detail, path=path)
 
 
 def _check_ctchc(report: VerificationReport, links: List[Dict], sealed: Dict,
@@ -466,8 +561,8 @@ def _check_ctchc(report: VerificationReport, links: List[Dict], sealed: Dict,
     }
     ok, detail = _verify_sig_default(pqc, pk_bytes, seal_sig_payload,
                                      sealed.get("seal_pqc_signature"))
-    report.add(f"CHC-{path[:3]}-SIG", "CTCHC seal PQC signature (BEV-INV-014, default sep)",
-               ok, detail, path=path)
+    _add_sig(report, f"CHC-{path[:3]}-SIG", "CTCHC seal PQC signature (BEV-INV-014, default sep)",
+             ok, detail, path=path)
 
 
 def _check_pogc(report: VerificationReport, pogc: Dict, pqc, pk_bytes: bytes) -> None:
@@ -479,7 +574,7 @@ def _check_pogc(report: VerificationReport, pogc: Dict, pqc, pk_bytes: bytes) ->
 
     sig_payload = {"pogc_id": pogc.get("pogc_id"), "content_hash": actual, "issued_at": pogc.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, pogc.get("pqc_signature"), compact=True)
-    report.add("POGC-SIG", "PoGC PQC signature (ML-DSA-65, PoGR-INV-003)", ok, detail, path="ADMISSIBLE")
+    _add_sig(report, "POGC-SIG", "PoGC PQC signature (ML-DSA-65, PoGR-INV-003)", ok, detail, path="ADMISSIBLE")
 
     # Mandate certification
     tier = pogc.get("mandate_certification", "")
@@ -496,7 +591,7 @@ def _check_tcs(report: VerificationReport, tcs: Dict, pqc, pk_bytes: bytes, path
 
     sig_payload = {"tcs_id": tcs.get("tcs_id"), "tcs_hash": actual, "issued_at": tcs.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, tcs.get("pqc_signature"), compact=True)
-    report.add(f"TCS-{path[:3]}-SIG", "TCS PQC signature", ok, detail, path=path)
+    _add_sig(report, f"TCS-{path[:3]}-SIG", "TCS PQC signature", ok, detail, path=path)
 
     # Regulatory context present
     report.add(f"TCS-{path[:3]}-REG", "TCS regulatory_context present (TGB-INV-001)",
@@ -511,7 +606,7 @@ def _check_refusal(report: VerificationReport, receipt: Dict, pqc, pk_bytes: byt
 
     sig_payload = {"receipt_id": receipt.get("receipt_id"), "content_hash": actual, "issued_at": receipt.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, receipt.get("pqc_signature"), compact=True)
-    report.add("REF-SIG", "Refusal receipt PQC signature", ok, detail, path="DANGEROUS")
+    _add_sig(report, "REF-SIG", "Refusal receipt PQC signature", ok, detail, path="DANGEROUS")
 
     # Type and settlement block
     report.add("REF-TYPE", "Refusal receipt type=HARD_REFUSAL",
@@ -530,7 +625,7 @@ def _check_outcome(report: VerificationReport, receipt: Dict, pqc, pk_bytes: byt
 
     sig_payload = {"receipt_id": receipt.get("receipt_id"), "content_hash": actual, "issued_at": receipt.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, receipt.get("pqc_signature"), compact=True)
-    report.add("OUT-SIG", "Outcome receipt PQC signature", ok, detail, path="ADMISSIBLE")
+    _add_sig(report, "OUT-SIG", "Outcome receipt PQC signature", ok, detail, path="ADMISSIBLE")
 
     report.add("OUT-TYPE", "Outcome receipt type=ADMISSION_OUTCOME",
                receipt.get("type") == "ADMISSION_OUTCOME", path="ADMISSIBLE")
@@ -549,7 +644,7 @@ def _check_replay(report: VerificationReport, proof: Dict, pqc, pk_bytes: bytes,
 
     sig_payload = {"proof_id": proof.get("proof_id"), "proof_content_hash": actual, "issued_at": proof.get("issued_at")}
     ok, detail  = _verify_sig(pqc, pk_bytes, sig_payload, proof.get("pqc_signature"), compact=True)
-    report.add(f"RPL-{path[:3]}-SIG", "Replay proof PQC signature", ok, detail, path=path)
+    _add_sig(report, f"RPL-{path[:3]}-SIG", "Replay proof PQC signature", ok, detail, path=path)
 
     report.add(f"RPL-{path[:3]}-STATUS", f"Replay proof terminal_status={expected_status}",
                proof.get("terminal_status") == expected_status,
@@ -744,7 +839,11 @@ def main() -> int:
         description="OMNIX-RTE-001 Offline Evidence Package Verifier",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("package", help="Path to OMNIX-RTE-001 JSON package")
+    parser.add_argument(
+        "package", nargs="?", default=None,
+        help="Path to OMNIX-RTE-001 JSON package "
+             "(optional — auto-detected from evidence/ if omitted)"
+    )
     parser.add_argument("--verify-authority",      action="store_true", help="Verify DR + MBR (both paths)")
     parser.add_argument("--verify-continuity",     action="store_true", help="Verify RCR + MAS (both paths)")
     parser.add_argument("--verify-counterfactual", action="store_true", help="Verify CGE CAT + CFRs (both paths)")
@@ -773,12 +872,30 @@ def main() -> int:
         if args.verify_replay:         flags.append("replay")
         mode = "+".join(flags).upper()
 
+    # Resolve package path — auto-detect when not provided
+    pkg_path = args.package
+    if pkg_path is None:
+        pkg_path = _auto_detect_package()
+        if pkg_path is None:
+            print(
+                "\n[ERROR] No package path given and no OMNIX-RTE-001_*.json found "
+                "in evidence/ or evidence_packages/",
+                file=sys.stderr,
+            )
+            print(
+                "        Usage: python verify.py <package.json>  "
+                "or place the JSON in evidence/",
+                file=sys.stderr,
+            )
+            return 2
+        print(f"[INFO]  Auto-detected package: {os.path.basename(pkg_path)}")
+
     # Load package
-    if not os.path.exists(args.package):
-        print(f"\n[ERROR] Package file not found: {args.package}", file=sys.stderr)
+    if not os.path.exists(pkg_path):
+        print(f"\n[ERROR] Package file not found: {pkg_path}", file=sys.stderr)
         return 2
     try:
-        with open(args.package, encoding="utf-8") as f:
+        with open(pkg_path, encoding="utf-8") as f:
             pkg = json.load(f)
     except Exception as e:
         print(f"\n[ERROR] Failed to parse package: {e}", file=sys.stderr)
@@ -798,7 +915,7 @@ def main() -> int:
     print("  RFC-ATF-1 through RFC-ATF-6 · ADR-201")
     print("=" * 65)
     print(f"  Package:  {package_id}")
-    print(f"  File:     {args.package}")
+    print(f"  File:     {pkg_path}")
     print(f"  Mode:     {mode}")
     print(f"  Generated:{pkg.get('generated_at', 'unknown')}")
     print(f"  Scenario: {pkg.get('scenario', {}).get('name', 'unknown')}")
@@ -808,8 +925,9 @@ def main() -> int:
     pk_b64     = pkg.get("pqc", {}).get("public_key_b64", "")
     pqc, pk_or_err = _load_pqc(pk_b64)
     if pqc is None:
-        print(f"\n[WARN] PQC unavailable: {pk_or_err}")
-        print("       All signature checks will be marked SKIP.")
+        print(f"\n[WARN] PQC library not found: {pk_or_err}")
+        print("       Signature checks will be SKIPPED — structural and hash checks proceed normally.")
+        print("       To enable full verification:  pip install pqc")
         pk_bytes = None
     else:
         pk_bytes = pk_or_err

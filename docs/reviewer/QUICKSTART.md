@@ -4,13 +4,27 @@ This is the fastest path from download to verified result.
 
 ---
 
+## Step 0 — Install the PQC verification library (one-time)
+
+```
+pip install pqc
+```
+
+This installs the Dilithium-3 (ML-DSA-65) verification library.
+It takes approximately 5 seconds and has no other dependencies.
+
+Without this step, the 26 PQC signature checks are SKIPPED rather than FAILED.
+The 75 structural and hash integrity checks run regardless.
+
+---
+
 ## Step 1 — Confirm Python version
 
 ```
 python --version
 ```
 
-Any version >= 3.9 works. No pip install. No virtual environment. No dependencies.
+Any version >= 3.9 works.
 
 ---
 
@@ -23,7 +37,7 @@ python verify.py
 This runs 101 checks across both execution paths (dangerous and admissible).
 It takes approximately 3-5 seconds.
 
-You should see:
+With `pqc` installed you should see:
 
 ```
   TOTAL CHECKS : 101
@@ -52,6 +66,8 @@ Key checks:
 - Refusal type = `HARD_REFUSAL`
 - CTCHC sealed in HALTED state (BEV-INV-013)
 
+Expected: `25 / 25 PASS`
+
 ---
 
 ## Step 4 — Verify the settlement (admissible path)
@@ -68,6 +84,8 @@ Key checks:
 - PoGC `POGC-F1DC0218E5204875` = `MANDATE-BOUND`
 - Settlement amount = USD 50,000,000
 - OSG verdict = `APPROVED`
+
+Expected: `33 / 33 PASS`
 
 ---
 
@@ -109,9 +127,10 @@ covering all artifacts, both paths, and the verification report.
 | Admissible execution forensically sealed | Proven cryptographically |
 | PoGC issued for admissible settlement | POGC-F1DC0218E5204875 |
 | PQC algorithm | ML-DSA-65 (Dilithium-3, FIPS 204) |
-| External dependencies required | None |
+| External infrastructure required | None |
 | Network access required | None |
 | OMNIX platform access required | None |
+| Python dependency | `pip install pqc` (PQC signatures only) |
 
 ---
 
