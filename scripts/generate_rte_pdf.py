@@ -53,15 +53,15 @@ from fpdf import FPDF
 
 C_BG_PAGE       = (252, 252, 252)
 C_DARK          = (18,  18,  22)
-C_HEADER_BAR    = (24,  24,  32)
-C_ACCENT        = (60,  90, 180)
-C_ACCENT_DARK   = (30,  50, 130)
+C_HEADER_BAR    = (5,   13,  24)
+C_ACCENT        = (201, 162, 39)
+C_ACCENT_DARK   = (140, 108, 20)
 C_DANGER        = (180, 32,  32)
 C_DANGER_LIGHT  = (255, 240, 240)
 C_ADMIT         = (25, 140,  60)
 C_ADMIT_LIGHT   = (235, 255, 240)
 C_NEUTRAL       = (80,  80,  90)
-C_RULE          = (200, 200, 210)
+C_RULE          = (30,  48,  80)
 C_CELL_DARK     = (232, 234, 240)
 C_CELL_ALT      = (245, 246, 250)
 C_MONO_BG       = (238, 240, 248)
@@ -296,61 +296,85 @@ def _usd(n) -> str:
 
 def page_cover(pdf: RtePDF, pkg: Dict) -> None:
     pdf.add_page()
-    # Full dark background top band
+    # Full dark background — entire page
     pdf.set_fill_color(*C_HEADER_BAR)
-    pdf.rect(0, 0, PAGE_W, 75, "F")
+    pdf.rect(0, 0, PAGE_W, PAGE_H, "F")
 
-    pdf.set_y(10)
-    pdf.set_font("Helvetica", "B", 9)
-    pdf.set_text_color(140, 148, 180)
-    pdf.cell(0, 7, "OMNIX QUANTUM LTD", align="C")
-    pdf.ln(8)
+    # Gold accent top bar
+    pdf.set_fill_color(*C_ACCENT)
+    pdf.rect(0, 0, PAGE_W, 2.5, "F")
 
-    pdf.set_font("Helvetica", "B", 18)
+    # OMNIX logo
+    _logo = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "omnix_web", "public", "logo_nobg.png"
+    )
+    if os.path.exists(_logo):
+        logo_w = 28
+        pdf.image(_logo, x=(PAGE_W - logo_w) / 2, y=10, w=logo_w)
+        pdf.set_y(42)
+    else:
+        pdf.set_y(16)
+
+    pdf.set_font("Helvetica", "B", 8)
+    pdf.set_text_color(*C_ACCENT)
+    pdf.cell(0, 6, "OMNIX QUANTUM LTD", align="C")
+    pdf.ln(7)
+
+    pdf.set_font("Helvetica", "B", 20)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(0, 12, "OMNIX-RTE-001", align="C")
+    pdf.cell(0, 13, "OMNIX-RTE-001", align="C")
     pdf.ln(11)
 
     pdf.set_font("Helvetica", "", 9)
-    pdf.set_text_color(170, 178, 210)
+    pdf.set_text_color(200, 210, 230)
     pdf.cell(0, 7, "Runtime Treasury Execution Trace", align="C")
-    pdf.ln(6)
-    pdf.set_font("Helvetica", "", 7.5)
-    pdf.set_text_color(120, 128, 165)
+    pdf.ln(5)
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_text_color(140, 155, 185)
     pdf.cell(0, 5, "ADR-201  ·  RFC-ATF-1 through RFC-ATF-6", align="C")
+    pdf.ln(10)
+
+    # Gold divider line
+    pdf.set_draw_color(*C_ACCENT)
+    pdf.line(MARGIN_L + 20, pdf.get_y(), PAGE_W - MARGIN_R - 20, pdf.get_y())
+    pdf.ln(8)
+
+    pdf.set_text_color(*C_DARK)
+
+    # Scenario box — semi-dark card on dark background
+    scenario = pkg.get("scenario", {})
+    pdf.set_y(100)
+    pdf.set_fill_color(12, 24, 48)
+    pdf.rect(MARGIN_L, pdf.get_y(), CONTENT_W, 36, "F")
+    # Gold left accent bar
+    pdf.set_fill_color(*C_ACCENT)
+    pdf.rect(MARGIN_L, pdf.get_y(), 2.5, 36, "F")
+    pdf.set_y(pdf.get_y() + 4)
+    pdf.set_font("Helvetica", "B", 6.5)
+    pdf.set_text_color(*C_ACCENT)
+    pdf.cell(0, 5, "SCENARIO", align="C")
+    pdf.ln(5)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 7, "Autonomous Treasury Approval -- Cross-border Liquidity Release", align="C")
+    pdf.ln(6)
+    pdf.set_font("Helvetica", "", 8)
+    pdf.set_text_color(180, 195, 225)
+    pdf.cell(0, 5, f"USD 50,000,000  -  SWIFT MT202 / XRPL RLUSD", align="C")
+    pdf.ln(5)
+    pdf.set_font("Helvetica", "", 6.5)
+    pdf.set_text_color(120, 140, 175)
+    pdf.cell(0, 4, f"Package: {pkg.get('package_id', '-')}", align="C")
     pdf.ln(14)
 
-    pdf.set_text_color(*C_DARK)
-
-    # Scenario box
-    scenario = pkg.get("scenario", {})
-    pdf.set_y(84)
-    pdf.set_fill_color(*C_CELL_DARK)
-    pdf.rect(MARGIN_L, pdf.get_y(), CONTENT_W, 34, "F")
-    pdf.set_y(pdf.get_y() + 4)
+    # Two-column summary header
     pdf.set_font("Helvetica", "B", 7)
-    pdf.set_text_color(*C_ACCENT_DARK)
-    pdf.cell(0, 5, "SCENARIO", align="C")
-    pdf.ln(6)
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.set_text_color(*C_DARK)
-    pdf.cell(0, 7, "Autonomous Treasury Approval — Cross-border Liquidity Release", align="C")
-    pdf.ln(7)
-    pdf.set_font("Helvetica", "", 8.5)
-    pdf.set_text_color(*C_NEUTRAL)
-    pdf.cell(0, 6, f"USD 50,000,000  ·  SWIFT MT202  /  XRPL RLUSD", align="C")
-    pdf.ln(6)
-    pdf.set_font("Helvetica", "", 7)
-    pdf.cell(0, 5, f"Package: {pkg.get('package_id', '—')}", align="C")
-    pdf.ln(12)
-
-    # Two-column summary
-    pdf.set_font("Helvetica", "B", 7.5)
-    pdf.set_text_color(*C_ACCENT_DARK)
+    pdf.set_text_color(*C_ACCENT)
     pdf.cell(0, 5, "DUAL-PATH RESULT SUMMARY", align="C")
     pdf.ln(8)
 
-    # Dangerous box
+    # Path columns
     x0 = MARGIN_L
     y0 = pdf.get_y()
     col_w = (CONTENT_W - 6) / 2
@@ -366,73 +390,76 @@ def page_cover(pdf: RtePDF, pkg: Dict) -> None:
     pdf.rect(x0 + col_w + 6, y0, col_w, 6, "F")
     pdf.set_xy(x0 + col_w + 6, y0)
     pdf.cell(col_w, 6, "  PATH ADMISSIBLE", fill=False)
-    pdf.set_text_color(*C_DARK)
     pdf.ln(7)
 
-    # Dangerous details
     dan = pkg["paths"]["path_dangerous"]
     adm = pkg["paths"]["path_admissible"]
-    dan_sum = dan.get("summary", {})
-    adm_sum = adm.get("summary", {})
     dan_dr  = dan["steps"]["2_authority"]["delegation_receipt"]
     adm_dr  = adm["steps"]["2_authority"]["delegation_receipt"]
 
-    def _col_kv(x, y, pairs):
+    def _col_kv(x, y, pairs, bg_color):
         for k, v, bold in pairs:
+            pdf.set_fill_color(*bg_color)
             pdf.set_xy(x, y)
             pdf.set_font("Helvetica", "B", 6)
-            pdf.set_text_color(*C_NEUTRAL)
-            pdf.cell(30, 4, k)
+            pdf.set_text_color(160, 175, 210)
+            pdf.cell(30, 4.5, k, fill=True)
             pdf.set_font("Helvetica", "B" if bold else "", 6)
-            pdf.set_text_color(*C_DARK)
-            pdf.cell(col_w - 30, 4, v)
+            pdf.set_text_color(230, 235, 245)
+            pdf.cell(col_w - 30, 4.5, v, fill=True)
             y += 5
         return y
 
     y_now = pdf.get_y()
-    pdf.set_fill_color(*C_DANGER_LIGHT)
+    _bg_dan = (30, 10, 10)
+    _bg_adm = (8,  30, 16)
+    pdf.set_fill_color(*_bg_dan)
     pdf.rect(x0, y_now, col_w, 30, "F")
-    pdf.set_fill_color(*C_ADMIT_LIGHT)
+    pdf.set_fill_color(*_bg_adm)
     pdf.rect(x0 + col_w + 6, y_now, col_w, 30, "F")
 
     dan_pairs = [
-        ("Result",   "HALT  →  OSG REJECTED",    True),
-        ("Budget",   f"{dan_dr.get('authority_budget_granted',0):.0f}% (drift −58%)", False),
-        ("CES",      f"{dan['steps']['3_runtime']['continuity_record'].get('ces_score',0):.1f} — CRITICAL", False),
-        ("MAS",      f"{dan['steps']['3_runtime']['mandate_alignment_score'].get('alignment_score',0):.2f} — HALT", False),
+        ("Result",    "HALT  ->  OSG REJECTED",    True),
+        ("Budget",    f"{dan_dr.get('authority_budget_granted',0):.0f}% (drift -58%)", False),
+        ("CES",       f"{dan['steps']['3_runtime']['continuity_record'].get('ces_score',0):.1f} CRITICAL", False),
+        ("MAS",       f"{dan['steps']['3_runtime']['mandate_alignment_score'].get('alignment_score',0):.2f} HALT", False),
         ("Settlement","BLOCKED", True),
     ]
     adm_pairs = [
-        ("Result",   "ADMITTED  →  OSG APPROVED", True),
-        ("Budget",   f"{adm_dr.get('authority_budget_granted',0):.0f}% (recertified)", False),
-        ("CES",      f"{adm['steps']['3_runtime']['continuity_record'].get('ces_score',0):.1f} — NOMINAL", False),
-        ("MAS",      f"{adm['steps']['3_runtime']['mandate_alignment_score'].get('alignment_score',0):.2f} — ALIGNED", False),
+        ("Result",    "ADMITTED  ->  OSG APPROVED", True),
+        ("Budget",    f"{adm_dr.get('authority_budget_granted',0):.0f}% (recertified)", False),
+        ("CES",       f"{adm['steps']['3_runtime']['continuity_record'].get('ces_score',0):.1f} NOMINAL", False),
+        ("MAS",       f"{adm['steps']['3_runtime']['mandate_alignment_score'].get('alignment_score',0):.2f} ALIGNED", False),
         ("Settlement","RELEASED  USD 50,000,000", True),
     ]
-    _col_kv(x0 + 2, y_now + 2, dan_pairs)
-    _col_kv(x0 + col_w + 8, y_now + 2, adm_pairs)
+    _col_kv(x0 + 2, y_now + 2, dan_pairs, _bg_dan)
+    _col_kv(x0 + col_w + 8, y_now + 2, adm_pairs, _bg_adm)
     pdf.set_y(y_now + 33)
 
-    pdf.spacer(8)
-    # Metadata footer
-    pdf.rule()
+    pdf.spacer(10)
+    # Gold divider
+    pdf.set_draw_color(*C_ACCENT)
+    pdf.line(MARGIN_L, pdf.get_y(), PAGE_W - MARGIN_R, pdf.get_y())
+    pdf.spacer(5)
+
+    # Metadata footer — light text on dark bg
     meta_pairs = [
         ("Generated",     _fmt_iso(pkg.get("generated_at", ""))),
         ("PQC Algorithm", pkg.get("pqc", {}).get("algorithm", "ML-DSA-65")),
         ("Invariants",    f"{len(pkg.get('invariants_demonstrated', []))} demonstrated"),
-        ("Standard",      "RFC-ATF-1 through RFC-ATF-6  ·  ADR-201  ·  FIPS 204"),
+        ("Standard",      "RFC-ATF-1 through RFC-ATF-6  -  ADR-201  -  FIPS 204"),
     ]
     for k, v in meta_pairs:
         pdf.set_font("Helvetica", "B", 6.5)
-        pdf.set_text_color(*C_NEUTRAL)
+        pdf.set_text_color(*C_ACCENT)
         pdf.set_x(MARGIN_L)
         pdf.cell(40, 5, k)
         pdf.set_font("Helvetica", "", 6.5)
-        pdf.set_text_color(*C_DARK)
+        pdf.set_text_color(200, 210, 230)
         pdf.cell(0, 5, v)
         pdf.ln(5)
 
-    pdf.spacer(8)
+    pdf.spacer(5)
     # PK fingerprint
     pk_b64 = pkg.get("pqc", {}).get("public_key_b64", "")
     if pk_b64:
@@ -440,15 +467,19 @@ def page_cover(pdf: RtePDF, pkg: Dict) -> None:
             pk_bytes = base64.b64decode(pk_b64)
             fp = hashlib.sha256(pk_bytes).hexdigest().upper()
             pdf.set_font("Helvetica", "B", 6)
-            pdf.set_text_color(*C_NEUTRAL)
+            pdf.set_text_color(*C_ACCENT)
             pdf.set_x(MARGIN_L)
             pdf.cell(40, 4, "PQC Public Key SHA-256")
             pdf.set_font("Courier", "", 6)
-            pdf.set_text_color(*C_DARK)
-            pdf.cell(0, 4, fp[:48] + "…")
+            pdf.set_text_color(180, 195, 225)
+            pdf.cell(0, 4, fp[:48] + "...")
             pdf.ln(5)
         except Exception:
             pass
+
+    # Gold bottom bar
+    pdf.set_fill_color(*C_ACCENT)
+    pdf.rect(0, PAGE_H - 2.5, PAGE_W, 2.5, "F")
 
 
 def page_scenario(pdf: RtePDF, pkg: Dict) -> None:
