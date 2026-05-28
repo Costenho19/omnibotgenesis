@@ -743,3 +743,9 @@ id = "jVz3agETevwA2tnen-VmW"
 uri = "file://evidence_packages/OMNIX-RTE-001-REVIEWER_20260528_085038.zip"
 type = "unspecified"
 title = "OMNIX-RTE-001 v1.1.0 — Reviewer Package (ZIP para enviar)"
+
+[[outputs]]
+id = "dyIo4icPFJIBltaODUHfL"
+uri = "file://evidence_packages/OMNIX-RTE-001_REVIEWER_EMAILS_20260528.pdf"
+type = "pdf"
+title = "Emails Gregory + Anamulla — OMNIX-RTE-001 v1.1.0"
