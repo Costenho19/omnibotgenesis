@@ -1,14 +1,14 @@
 {
-  "snapshot_id": "AVM-935270FC4C",
-  "parameter_version": "1.935270fc4c",
+  "snapshot_id": "AVM-8C0BC04AFB",
+  "parameter_version": "1.8c0bc04afb",
   "domain": "medical_ai",
   "baseline_signals": {
-    "risk_exposure": 72.24,
-    "signal_coherence": 71.53,
-    "logic_consistency": 64.13,
-    "probability_score": 74.76,
-    "stress_resilience": 51.14,
-    "trend_persistence": 43.71
+    "risk_exposure": 31.52,
+    "signal_coherence": 69.94,
+    "logic_consistency": 54.67,
+    "probability_score": 72.78,
+    "stress_resilience": 58.02,
+    "trend_persistence": 50.48
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -17,8 +17,8 @@
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_23.5"
+    "prev_drift_11.2"
   ],
-  "calibrated_at": "2026-05-25T18:54:27.518156+00:00",
-  "calibrated_at_epoch": 1779735267.518156
+  "calibrated_at": "2026-05-28T19:17:23.435147+00:00",
+  "calibrated_at_epoch": 1779995843.435147
 }
