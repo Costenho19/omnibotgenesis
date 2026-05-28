@@ -119,6 +119,35 @@ def _sign_default(pqc, payload: Dict, sk_bytes: bytes) -> Optional[str]:
     sig = pqc.sign_message(raw, sk_bytes)
     return base64.b64encode(sig).decode() if sig else None
 
+def _sign_raw(pqc, raw_bytes: bytes, sk_bytes: bytes) -> Optional[str]:
+    """Sign raw bytes directly — DR/TAR sign content_hash.encode() not a JSON wrapper."""
+    sig = pqc.sign_message(raw_bytes, sk_bytes)
+    return base64.b64encode(sig).decode() if sig else None
+
+
+def _enrich_dr_with_session(pqc, sk_bytes: bytes, dr_dict: Dict, session_id: str) -> Dict:
+    """
+    Bind a DR to a specific session_id and recompute content_hash + PQC signature.
+
+    A09 fix (ADR-201 §7.1): without this binding, an adversary can swap the DR from
+    the dangerous path into the admissible path (or vice versa) and still pass 101/101
+    checks because the DR hash is self-consistent.  Embedding session_id in the hashed
+    payload makes cross-path substitution detectable.
+
+    Canonicalization: SHA-256 compact separators, excluding content_hash /
+    pqc_signature / pqc_algorithm — identical to DelegationReceiptEngine profile
+    (ADR-200 §4.1).  The PQC signature is produced over content_hash.encode("utf-8")
+    directly, matching the engine convention.
+    """
+    dr_dict = dict(dr_dict)
+    dr_dict["session_id"] = session_id
+    canon = {k: v for k, v in dr_dict.items()
+             if k not in ("content_hash", "pqc_signature", "pqc_algorithm")}
+    new_hash = _sha256(json.dumps(canon, sort_keys=True, separators=(",", ":")))
+    dr_dict["content_hash"]   = new_hash
+    dr_dict["pqc_signature"]  = _sign_raw(pqc, new_hash.encode("utf-8"), sk_bytes)
+    return dr_dict
+
 def _hex_id(prefix: str, n: int = 16) -> str:
     return f"{prefix}-{uuid.uuid4().hex[:n].upper()}"
 
@@ -163,10 +192,15 @@ def _build_tcs(pqc, sk_bytes: bytes, context_ref: str, regulatory_epoch: str) ->
 
 def _build_mbr(pqc, sk_bytes: bytes, session_id: str, agent_id: str,
                mandate_objective: str, proxy_guards: List[str],
-               mas_halt_threshold: float, mas_warning_threshold: float) -> Dict:
+               mas_halt_threshold: float, mas_warning_threshold: float,
+               dr_id: Optional[str] = None) -> Dict:
     """
     MandateBindingRecord — MIVP-INV-001: issued before Turn 1.
     Frozen declaration of intent. PQC-signed at session open.
+
+    A09 fix (ADR-201 §7.1): dr_id field binds this MBR to a specific DR.
+    The verifier cross-checks MBR.dr_id == DR.delegation_id — a DR transplanted
+    from another path will have a different delegation_id, failing this check.
     """
     mbr_id        = _hex_id("MBR")
     issued_at     = _now_iso()
@@ -182,6 +216,8 @@ def _build_mbr(pqc, sk_bytes: bytes, session_id: str, agent_id: str,
         "issued_at":             issued_at,
         "mivp_version":          "1.0.0",
     }
+    if dr_id is not None:
+        canonical["dr_id"] = dr_id
     canonical["mbr_content_hash"] = _sha3(json.dumps(canonical, sort_keys=True))
     sig = _sign_compact(
         pqc,
@@ -280,7 +316,13 @@ def _build_cfr(cfr_index: int, fork_label: str, fork_description: str,
                would_have_executed: bool, counterfactual_outcome: str,
                fragility_score: float, selected: bool,
                blocking_invariant: Optional[str] = None) -> Dict:
-    return {
+    """
+    A08 fix (ADR-201 §7.2): each CFR now carries cfr_content_hash = SHA3-256 of its
+    own fields.  The CAT cfr_root_hash is computed from (cfr_id, cfr_content_hash)
+    pairs rather than bare cfr_ids, so swapping or mutating CFR content invalidates
+    the CAT root hash without any change to cfr_id.
+    """
+    cfr = {
         "cfr_id":                _hex_id("CFR"),
         "cfr_index":             cfr_index,
         "fork_label":            fork_label,
@@ -292,6 +334,8 @@ def _build_cfr(cfr_index: int, fork_label: str, fork_description: str,
         "blocking_invariant":    blocking_invariant,
         "evaluated_at":          _now_iso(),
     }
+    cfr["cfr_content_hash"] = _sha3(json.dumps(cfr, sort_keys=True))
+    return cfr
 
 
 def _build_cat(pqc, sk_bytes: bytes, session_id: str, cfrs: List[Dict],
@@ -302,7 +346,13 @@ def _build_cat(pqc, sk_bytes: bytes, session_id: str, cfrs: List[Dict],
     """
     cat_id    = _hex_id("CAT")
     issued_at = _now_iso()
-    cfr_root  = _sha3(json.dumps([c["cfr_id"] for c in cfrs], sort_keys=True))
+    # A08 fix: root covers (cfr_id, cfr_content_hash) pairs sorted by cfr_index,
+    # not bare cfr_ids — mutating any CFR field now invalidates the CAT root hash.
+    cfr_entries = [
+        {"cfr_id": c["cfr_id"], "cfr_content_hash": c["cfr_content_hash"]}
+        for c in sorted(cfrs, key=lambda x: x["cfr_index"])
+    ]
+    cfr_root  = _sha3(json.dumps(cfr_entries, sort_keys=True))
     canonical = {
         "cat_id":              cat_id,
         "session_id":          session_id,
@@ -586,10 +636,13 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         expires_at=expires_at,
         metadata={"path": "DANGEROUS", "drift_cause": "accumulated_budget_depletion"},
     )
+    # A09 fix: bind DR to this session — cross-path DR substitution now detectable
+    dr_dict = _enrich_dr_with_session(pqc, sk_bytes, dr.to_dict(), SESSION_ID)
     print(f"      DR: {dr.delegation_id}")
     print(f"      budget: {dr.authority_budget_granted}/{dr.authority_budget_delegator} (MAR: -{dr.authority_reduction_pct():.1f}%)")
     print(f"      expires_at: {expires_at} (TTL: ~22 min — near expiry)")
     print(f"      pqc_signed: {dr.pqc_signature is not None}")
+    print(f"      session_binding: {SESSION_ID[:20]}... (A09 fix)")
 
     mbr = _build_mbr(
         pqc, sk_bytes,
@@ -603,6 +656,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         ],
         mas_halt_threshold=0.30,
         mas_warning_threshold=0.65,
+        dr_id=dr.delegation_id,
     )
     print(f"      MBR: {mbr['mbr_id']} — MIVP activated (MIVP-INV-001)")
     print(f"      halt_threshold={mbr['mas_halt_threshold']} | warning_threshold={mbr['mas_warning_threshold']}")
@@ -842,7 +896,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         "steps": {
             "1_source_state":    source_state,
             "2_authority": {
-                "delegation_receipt":     dr.to_dict(),
+                "delegation_receipt":     dr_dict,
                 "mandate_binding_record": mbr,
             },
             "3_runtime": {
@@ -998,10 +1052,13 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         expires_at=expires_at,
         metadata={"path": "ADMISSIBLE", "recertification": "true", "dual_approval_ref": "DUAL-APPROVAL-TXN-2026-Q2-0047"},
     )
+    # A09 fix: bind DR to this session — cross-path DR substitution now detectable
+    dr_dict = _enrich_dr_with_session(pqc, sk_bytes, dr.to_dict(), SESSION_ID)
     print(f"      DR: {dr.delegation_id}")
     print(f"      budget: {dr.authority_budget_granted}/{dr.authority_budget_delegator} (MAR: -{dr.authority_reduction_pct():.1f}%)")
     print(f"      expires_at: {expires_at} (TTL: 4h — fresh)")
     print(f"      pqc_signed: {dr.pqc_signature is not None}")
+    print(f"      session_binding: {SESSION_ID[:20]}... (A09 fix)")
 
     mbr = _build_mbr(
         pqc, sk_bytes,
@@ -1015,6 +1072,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         ],
         mas_halt_threshold=0.30,
         mas_warning_threshold=0.65,
+        dr_id=dr.delegation_id,
     )
     print(f"      MBR: {mbr['mbr_id']} — MIVP activated (MIVP-INV-001)")
 
@@ -1332,7 +1390,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         "steps": {
             "1_source_state":    source_state,
             "2_authority": {
-                "delegation_receipt":     dr.to_dict(),
+                "delegation_receipt":     dr_dict,
                 "mandate_binding_record": mbr,
             },
             "3_runtime": {
@@ -1409,7 +1467,7 @@ def main() -> str:
     package = {
         "package_id":      package_id,
         "package_type":    "OMNIX-RTE-001",
-        "package_version": "1.0.0",
+        "package_version": "1.1.0",
         "omnix_version":   "2.6.0",
         "adr_reference":   "ADR-201",
         "generated_at":    _now_iso(),

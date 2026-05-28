@@ -156,9 +156,27 @@ The CLI verifier transforms the document from a paper into a falsifiable artefac
 
 ---
 
+## §7 — Hardening Layer (v1.1.0) — ADR-202
+
+After generating v1.0.0, a 15-attack adversarial simulation was conducted. 4 bypasses
+were found and fully remediated in v1.1.0. The hardening is documented in ADR-202.
+
+| Finding | Severity | Remediation | New checks |
+|---|---|---|---|
+| A09 — Cross-path DR injection | CRITICAL | `session_id` embedded in DR hash; MBR binds `dr_id`; verifier checks DR-SESS + MBR-DRID | +4 |
+| A08 — CFR content mutation | HIGH | Each CFR gets `cfr_content_hash`; CAT root covers content hashes | +2 |
+| A07 — No TTL enforcement | HIGH | Verifier emits TTL WARNING if DR elapsed (non-blocking) | +2 |
+| source_state hash unverified | MEDIUM | Verifier checks `source_state_hash` per path | +2 |
+
+**Check count:** 101 (v1.0.0) → **111 (v1.1.0)**  
+**New invariants:** RTE-INV-009 (DR session binding) · RTE-INV-010 (MBR dr_id) · RTE-INV-011 (CFR content hash) · RTE-INV-012 (source_state hash)
+
+---
+
 ## Related ADRs
 
 - ADR-200 — Route-Complete Evidence Package (RCEP) — predecessor
+- ADR-202 — OMNIX-RTE-001 Hardening Layer — adversarial remediation
 - ADR-184 — OMNIX Governance Runtime (OGR) — session lifecycle
 - ADR-186/187 — Proof of Governance Registry (PoGR/PoGC)
 - ADR-188 — Operational Settlement Gate (OSG)

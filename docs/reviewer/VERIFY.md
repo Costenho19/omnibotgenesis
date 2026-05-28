@@ -18,7 +18,7 @@ All 75 structural and hash integrity checks run regardless.
 
 ---
 
-## Full verification (101 checks)
+## Full verification (111 checks)
 
 ```
 python verify.py
@@ -27,8 +27,8 @@ python verify.py
 Expected output:
 
 ```
-  TOTAL CHECKS : 101
-  PASSED        : 101
+  TOTAL CHECKS : 111
+  PASSED        : 111
   FAILED        : 0
   SKIPPED       : 0
   VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed
@@ -148,7 +148,7 @@ The verifier is scoped to cryptographic and structural integrity only:
 - It does NOT access the OMNIX platform, network, or any external service
 - It does NOT require the OMNIX private key — only the embedded public key
 
-If all 101 checks pass, the package has not been altered since generation,
+If all 111 checks pass, the package has not been altered since generation,
 all PQC signatures are valid, and the structural invariants are satisfied.
 
 ---

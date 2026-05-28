@@ -122,7 +122,7 @@ def build_package(json_path: str, pdf_path: str) -> str:
     print("  Verification commands (after unzip):")
     print()
     print("    cd OMNIX-RTE-001-REVIEWER")
-    print("    python verify.py                    # 101 / 101 PASS")
+    print("    python verify.py                    # 111 / 111 PASS")
     print("    python verify.py --verify-halt      #  25 /  25 PASS")
     print("    python verify.py --verify-settlement#  33 /  33 PASS")
     print()

@@ -75,7 +75,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Expected total checks when verifier runs in FULL mode against an RTE-001 package.
 # Used by consistency audits and CI pipelines.
-EXPECTED_TOTAL_CHECKS = 101
+EXPECTED_TOTAL_CHECKS = 111
 
 
 def _auto_detect_package() -> Optional[str]:
@@ -119,6 +119,7 @@ class VerificationReport:
         self.passed  = 0
         self.failed  = 0
         self.skipped = 0
+        self.warned  = 0
 
     def add(self, check_id: str, label: str, passed: bool,
             detail: str = "", skip: bool = False, path: str = "") -> None:
@@ -145,13 +146,31 @@ class VerificationReport:
         detail_str = f"\n      → {detail}" if detail and not passed else ""
         print(f"  {colour}{icon} [{check_id}] {path_tag}{label}{reset}{detail_str}")
 
+    def warn(self, check_id: str, label: str, detail: str = "", path: str = "") -> None:
+        """
+        Record a WARNING check — not a PASS and not a FAIL.  The check is counted
+        in the total but does not affect the PASS/FAIL verdict.  Used for TTL expiry
+        warnings: the package is still cryptographically valid but the reviewer
+        should note that the DR has elapsed since package generation (A07 fix).
+        """
+        path_tag = f"[{path}] " if path else ""
+        self.checks.append({
+            "id": check_id, "label": label, "status": "WARN",
+            "detail": detail, "path": path,
+        })
+        self.warned += 1
+        colour = "\033[33m"
+        reset  = "\033[0m"
+        detail_str = f"\n      → {detail}" if detail else ""
+        print(f"  {colour}⚠ [{check_id}] {path_tag}{label}{reset}{detail_str}")
+
     def section(self, title: str) -> None:
         print(f"\n  {'─'*60}")
         print(f"  {title}")
         print(f"  {'─'*60}")
 
     def summary(self) -> bool:
-        total  = self.passed + self.failed + self.skipped
+        total  = self.passed + self.failed + self.skipped + self.warned
         all_ok = self.failed == 0
         colour = "\033[32m" if all_ok else "\033[31m"
         reset  = "\033[0m"
@@ -167,9 +186,13 @@ class VerificationReport:
         print(f"  \033[31mFAILED\033[0m        : {self.failed}")
         skip_note = " (pip install pqc to enable)" if self.skipped > 0 else ""
         print(f"  \033[90mSKIPPED\033[0m       : {self.skipped}{skip_note}")
+        if self.warned > 0:
+            print(f"  \033[33mWARNINGS\033[0m      : {self.warned} (non-blocking — see DR-TTL checks)")
         print("─" * 65)
-        if all_ok and self.skipped == 0:
+        if all_ok and self.skipped == 0 and self.warned == 0:
             print(f"  {colour}VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed{reset}")
+        elif all_ok and self.skipped == 0 and self.warned > 0:
+            print(f"  {colour}VERDICT: ALL VERIFICATIONS PASS — {self.warned} non-blocking warning(s){reset}")
         elif all_ok and self.skipped > 0:
             print(f"  {colour}VERDICT: STRUCTURAL + HASH CHECKS PASS{reset}")
             print(f"  \033[90m         {self.skipped} PQC signature check(s) skipped — install pqc: pip install pqc{reset}")
@@ -183,10 +206,11 @@ class VerificationReport:
             "package_id":   self.package_id,
             "target_mode":  self.target_mode,
             "verified_at":  datetime.now(timezone.utc).isoformat(),
-            "total_checks": self.passed + self.failed + self.skipped,
+            "total_checks": self.passed + self.failed + self.skipped + self.warned,
             "passed":       self.passed,
             "failed":       self.failed,
             "skipped":      self.skipped,
+            "warned":       self.warned,
             "verdict":      "PASS" if self.failed == 0 else "FAIL",
             "checks":       self.checks,
         }
@@ -429,13 +453,38 @@ def _check_mbr_seal(report: VerificationReport, seal: Dict, pqc, pk_bytes: bytes
 
 def _check_cat(report: VerificationReport, cat: Dict, cfrs: List[Dict],
                pqc, pk_bytes: bytes, path: str) -> None:
-    """CAT: content_hash + CFR root hash covers all CFR IDs (CGE-INV-002)."""
-    # CFR root hash
-    expected_root = _sha3(json.dumps([c["cfr_id"] for c in cfrs], sort_keys=True))
+    """
+    CAT: content_hash + CFR root hash (A08 fix) + per-CFR content hash.
+
+    A08 fix: cfr_root_hash now covers (cfr_id, cfr_content_hash) pairs sorted by
+    cfr_index — not bare cfr_ids.  An adversary mutating CFR content will change
+    cfr_content_hash, which changes cfr_root_hash, which invalidates the CAT
+    content_hash and the CAT PQC signature.
+    """
+    # A08 fix: root hash from (cfr_id, cfr_content_hash) pairs sorted by cfr_index
+    cfr_entries   = [
+        {"cfr_id": c["cfr_id"], "cfr_content_hash": c.get("cfr_content_hash", "")}
+        for c in sorted(cfrs, key=lambda x: x.get("cfr_index", 0))
+    ]
+    expected_root = _sha3(json.dumps(cfr_entries, sort_keys=True))
     actual_root   = cat.get("cfr_root_hash", "")
-    report.add(f"CAT-{path[:3]}-ROOT", "CAT cfr_root_hash covers all CFR IDs (CGE-INV-002)",
+    report.add(f"CAT-{path[:3]}-ROOT",
+               "CAT cfr_root_hash covers (cfr_id, cfr_content_hash) pairs (CGE-INV-002, A08 fix)",
                expected_root == actual_root,
                f"expected={expected_root[:20]}... got={actual_root[:20]}...", path=path)
+
+    # A08 fix: verify cfr_content_hash for every CFR record
+    cfr_hashes_ok = True
+    for cfr in cfrs:
+        # cfr_content_hash = SHA3-256 of the CFR dict excluding cfr_content_hash itself
+        base = {k: v for k, v in cfr.items() if k != "cfr_content_hash"}
+        expected_cfr_hash = _sha3(json.dumps(base, sort_keys=True))
+        if cfr.get("cfr_content_hash", "") != expected_cfr_hash:
+            cfr_hashes_ok = False
+            break
+    report.add(f"CAT-{path[:3]}-CFRHASH",
+               f"All {len(cfrs)} CFR content_hashes valid (A08 fix — content tampering detectable)",
+               cfr_hashes_ok, path=path)
 
     # CFR count
     report.add(f"CAT-{path[:3]}-COUNT", f"CAT cfr_count ≥ 3 (RTE-INV-005, got {cat.get('cfr_count', 0)})",
@@ -635,6 +684,27 @@ def _check_outcome(report: VerificationReport, receipt: Dict, pqc, pk_bytes: byt
                bool(receipt.get("settlement_reference")), path="ADMISSIBLE")
 
 
+def _check_source_state(report: VerificationReport, ss: Dict, path: str) -> None:
+    """
+    Verify source_state_hash = SHA3-256(all fields except source_state_hash).
+
+    This check ensures the source state (treasury request, policy constraints,
+    authority context, TCS) has not been tampered with after hash computation.
+    A tampered source_state would allow false claim of request parameters
+    (e.g. changing risk_class or approved counterparty list).
+    """
+    actual   = ss.get("source_state_hash", "")
+    base     = {k: v for k, v in ss.items() if k != "source_state_hash"}
+    expected = _sha3(json.dumps(base, sort_keys=True))
+    report.add(
+        f"SRC-{path[:3]}-HASH",
+        "source_state_hash integrity (SHA3-256 of all fields excl. hash itself)",
+        expected == actual,
+        f"expected={expected[:20]}... got={actual[:20]}...",
+        path=path,
+    )
+
+
 def _check_replay(report: VerificationReport, proof: Dict, pqc, pk_bytes: bytes,
                   path: str, expected_status: str) -> None:
     expected = _hash_default(proof, exclude=["proof_content_hash", "pqc_signature", "pqc_algorithm"])
@@ -659,11 +729,13 @@ def _check_replay(report: VerificationReport, proof: Dict, pqc, pk_bytes: bytes,
 # ─────────────────────────────────────────────────────────────────────────────
 
 def verify_authority(report: VerificationReport, pkg: Dict, pqc, pk_bytes: bytes) -> None:
-    report.section("AUTHORITY — DR + MBR (both paths)")
+    report.section("AUTHORITY — DR + MBR + source_state (both paths)")
     for path_key, path_label in [("path_dangerous", "DANGEROUS"), ("path_admissible", "ADMISSIBLE")]:
-        p = pkg["paths"][path_key]
-        dr = p["steps"]["2_authority"]["delegation_receipt"]
+        p   = pkg["paths"][path_key]
+        dr  = p["steps"]["2_authority"]["delegation_receipt"]
         mbr = p["steps"]["2_authority"]["mandate_binding_record"]
+        ss  = p["steps"]["1_source_state"]
+
         _check_dr(report, dr, pqc, pk_bytes, path_label)
         _check_mbr(report, mbr, pqc, pk_bytes, path_label)
 
@@ -672,6 +744,62 @@ def verify_authority(report: VerificationReport, pkg: Dict, pqc, pk_bytes: bytes
         bd = dr.get("authority_budget_delegator", -1)
         report.add(f"DR-{path_label[:3]}-MAR", f"DR MAR: budget_granted({bg}) ≤ budget_delegator({bd}) (ATF-INV-001)",
                    bg <= bd, path=path_label)
+
+        # A09 fix: DR.session_id must match source_state.session_id
+        # A DR transplanted from another path has a different session_id embedded in its
+        # content_hash — the hash check above will already fail, but this semantic check
+        # makes the violation human-readable in the report.
+        dr_session  = dr.get("session_id", "")
+        src_session = ss.get("session_id", "")
+        report.add(
+            f"DR-{path_label[:3]}-SESS",
+            "DR.session_id == source_state.session_id (A09 fix — cross-path substitution detectable)",
+            bool(dr_session) and dr_session == src_session,
+            f"dr_session={dr_session[:20] if dr_session else 'MISSING'}... src_session={src_session[:20] if src_session else 'MISSING'}...",
+            path=path_label,
+        )
+
+        # A09 fix: MBR.dr_id must match DR.delegation_id
+        mbr_dr_id = mbr.get("dr_id", "")
+        dr_del_id = dr.get("delegation_id", "")
+        report.add(
+            f"MBR-{path_label[:3]}-DRID",
+            "MBR.dr_id == DR.delegation_id (A09 fix — MBR bound to specific DR)",
+            bool(mbr_dr_id) and mbr_dr_id == dr_del_id,
+            f"mbr.dr_id={mbr_dr_id[:20] if mbr_dr_id else 'MISSING'}... dr.delegation_id={dr_del_id[:20] if dr_del_id else 'MISSING'}...",
+            path=path_label,
+        )
+
+        # source_state integrity (hash fix)
+        _check_source_state(report, ss, path_label)
+
+        # A07 fix: TTL warning — DR may have elapsed since package was generated.
+        # This is non-blocking (WARN not FAIL): the PQC signature is still valid,
+        # but the reviewer should note that the DR's TTL has elapsed.
+        generated_at = pkg.get("generated_at", "")
+        expires_at   = dr.get("expires_at", "")
+        if generated_at and expires_at:
+            try:
+                gen_dt = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+                exp_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+                now_dt = datetime.now(timezone.utc)
+                if now_dt > exp_dt:
+                    report.warn(
+                        f"DR-{path_label[:3]}-TTL",
+                        f"DR expired at {expires_at} — signature valid but TTL elapsed (A07 advisory)",
+                        f"Generated: {generated_at} | Expired: {expires_at} | Now: {now_dt.isoformat()}",
+                        path=path_label,
+                    )
+                else:
+                    report.add(
+                        f"DR-{path_label[:3]}-TTL",
+                        f"DR TTL valid — expires {expires_at} (A07 check)",
+                        True,
+                        path=path_label,
+                    )
+            except (ValueError, TypeError):
+                report.add(f"DR-{path_label[:3]}-TTL", "DR TTL — unable to parse timestamps",
+                           False, f"generated_at={generated_at} expires_at={expires_at}", path=path_label)
 
 
 def verify_continuity(report: VerificationReport, pkg: Dict, pqc, pk_bytes: bytes) -> None:

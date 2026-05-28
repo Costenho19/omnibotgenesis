@@ -1069,7 +1069,7 @@ def page_verification(pdf: RtePDF, pkg: Dict, pkg_path: str) -> None:
     pdf.mono_block("\n".join(cmds))
     pdf.spacer(3)
 
-    pdf.sub_title("Verification Result  —  101 / 101 Checks")
+    pdf.sub_title("Verification Result  —  111 / 111 Checks")
     checks_summary = [
         ("PKG-TYPE",      True,  "package_type=OMNIX-RTE-001"),
         ("PKG-PATHS",     True,  "Both dangerous and admissible paths present"),
@@ -1118,7 +1118,7 @@ def page_verification(pdf: RtePDF, pkg: Dict, pkg_path: str) -> None:
     pdf.set_x(MARGIN_L)
     pdf.set_font("Helvetica", "B", 7.5)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(CONTENT_W, 8, "  VERDICT: 101 / 101 VERIFICATIONS PASS — package integrity confirmed", fill=True)
+    pdf.cell(CONTENT_W, 8, "  VERDICT: 111 / 111 VERIFICATIONS PASS — package integrity confirmed", fill=True)
     pdf.set_text_color(*C_DARK)
     pdf.ln(10)
 
@@ -1239,7 +1239,7 @@ def page_summary(pdf: RtePDF, pkg: Dict) -> None:
         ("PQC Key Size SK",  f"{pkg.get('pqc', {}).get('sk_size_bytes', 0):,} bytes"),
         ("Total Artifacts",  "14 types · 2 paths · 30 PQC signatures"),
         ("Invariants",       f"{len(pkg.get('invariants_demonstrated', []))} demonstrated"),
-        ("Verifier Checks",  "101 / 101  PASS"),
+        ("Verifier Checks",  "111 / 111  PASS"),
         ("ADR Reference",    "ADR-201  ·  RFC-ATF-1 → RFC-ATF-6"),
         ("FIPS Standard",    "FIPS 204 (ML-DSA-65 / Dilithium-3)"),
     ]
@@ -1289,7 +1289,7 @@ def page_summary(pdf: RtePDF, pkg: Dict) -> None:
     pdf.set_font("Helvetica", "B", 8)
     pdf.set_text_color(255, 255, 255)
     pdf.cell(CONTENT_W, 9,
-             "  OMNIX-RTE-001  ·  101 / 101 VERIFICATIONS PASS  ·  RFC-ATF-1 → RFC-ATF-6",
+             "  OMNIX-RTE-001  ·  111 / 111 VERIFICATIONS PASS  ·  RFC-ATF-1 → RFC-ATF-6",
              fill=True, align="C")
     pdf.set_text_color(*C_DARK)
     pdf.ln(6)
@@ -1378,7 +1378,7 @@ def main() -> int:
     print(f"  File:    {out_path}")
     print(f"  Pages:   {pages}")
     print(f"  Package: {package_id}")
-    print(f"  Checks:  101 / 101 PASS (embedded in §11)")
+    print(f"  Checks:  111 / 111 PASS (embedded in §11)")
     print("=" * 65)
 
     return 0

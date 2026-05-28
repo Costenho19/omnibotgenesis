@@ -34,14 +34,14 @@ Any version >= 3.9 works.
 python verify.py
 ```
 
-This runs 101 checks across both execution paths (dangerous and admissible).
+This runs 111 checks across both execution paths (dangerous and admissible).
 It takes approximately 3-5 seconds.
 
 With `pqc` installed you should see:
 
 ```
-  TOTAL CHECKS : 101
-  PASSED        : 101
+  TOTAL CHECKS : 111
+  PASSED        : 111
   FAILED        : 0
   VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed
 ```
@@ -104,7 +104,7 @@ print(json.dumps(pkg["paths"]["path_dangerous"]["summary"], indent=2))
 # Admissible path summary
 print(json.dumps(pkg["paths"]["path_admissible"]["summary"], indent=2))
 
-# Public key used to verify all 101 signatures
+# Public key used to verify all 111 signatures
 print(pkg["pqc"]["algorithm"])
 print(pkg["pqc"]["public_key_b64"][:80], "...")
 ```
@@ -123,7 +123,7 @@ covering all artifacts, both paths, and the verification report.
 | Property | Status |
 |---|---|
 | Autonomous agent halted before execution | Proven cryptographically |
-| Halt is offline-verifiable without OMNIX | Confirmed (101/101 PASS) |
+| Halt is offline-verifiable without OMNIX | Confirmed (111/111 PASS) |
 | Admissible execution forensically sealed | Proven cryptographically |
 | PoGC issued for admissible settlement | POGC-F1DC0218E5204875 |
 | PQC algorithm | ML-DSA-65 (Dilithium-3, FIPS 204) |

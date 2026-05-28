@@ -32,11 +32,11 @@ pip install pqc        # Dilithium-3 PQC verification (one-time, ~5 seconds)
 python verify.py
 ```
 
-Expected output with `pqc` installed (101 checks, 0 failures):
+Expected output with `pqc` installed (111 checks, 0 failures):
 
 ```
-  TOTAL CHECKS : 101
-  PASSED        : 101
+  TOTAL CHECKS : 111
+  PASSED        : 111
   FAILED        : 0
   VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed
 ```

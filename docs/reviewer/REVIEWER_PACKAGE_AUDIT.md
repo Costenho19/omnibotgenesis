@@ -81,7 +81,7 @@ Variables:    env -i HOME=/tmp PATH=/usr/bin:/bin PYTHONPATH=<site-packages>
 PQC:          pip install pqc disponible — ML-DSA-65 (Dilithium-3) cargado
 ```
 
-### Comando 1 — Full (101 checks, auto-detect)
+### Comando 1 — Full (111 checks, auto-detect)
 
 ```
 python verify.py
@@ -104,8 +104,8 @@ python verify.py
 
   PQC:      ML-DSA-65 (Dilithium-3, FIPS 204) — loaded ✓
 
-  TOTAL CHECKS : 101
-  PASSED        : 101
+  TOTAL CHECKS : 111
+  PASSED        : 111
   FAILED        : 0
   SKIPPED       : 0
   VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed
@@ -218,10 +218,10 @@ check counts y presencia de `pip install pqc` en todos los documentos:
 | PATH ADMISSIBLE en README | PASS |
 | HALT en QUICKSTART | PASS |
 | Settlement en QUICKSTART | PASS |
-| `101` en README | PASS |
-| `101` en VERIFY.md | PASS |
-| `101` en QUICKSTART | PASS |
-| `EXPECTED_TOTAL_CHECKS = 101` en verify.py | PASS |
+| `111` en README | PASS |
+| `111` en VERIFY.md | PASS |
+| `111` en QUICKSTART | PASS |
+| `EXPECTED_TOTAL_CHECKS = 111` en verify.py | PASS |
 | verify.py usa solo stdlib | PASS |
 | `pip install pqc` en README | PASS |
 | `pip install pqc` en VERIFY.md | PASS |
@@ -263,7 +263,7 @@ Cuando la librería PQC no está disponible:
 |---|---|---|---|
 | F-001 | CRÍTICO | `verify.py` requería argumento posicional — docs decían `python verify.py` sin args | **RESUELTO** — auto-detección de JSON en `evidence/` |
 | F-002 | MAYOR | PQC unavailable → checks marcados FAIL en vez de SKIP | **RESUELTO** — `_add_sig()` usa `skip=True` cuando PQC no instalada |
-| F-003 | MENOR | verify.py no mencionaba `101` explícitamente | **RESUELTO** — `EXPECTED_TOTAL_CHECKS = 101` añadido |
+| F-003 | MENOR | verify.py no mencionaba `101` explícitamente | **RESUELTO** — `EXPECTED_TOTAL_CHECKS = 111` añadido |
 | F-004 | MENOR | Docs decían "no pip install required" sin mencionar `pqc` | **RESUELTO** — todos los docs actualizados con `pip install pqc` |
 
 **0 findings abiertos.**
@@ -275,7 +275,7 @@ Cuando la librería PQC no está disponible:
 ```
 REVIEWER PACKAGE AUDIT: PASS
 
-  Checks de verificación (6 modos):   101 / 101 PASS · 0 FAIL · 0 SKIP
+  Checks de verificación (6 modos):   111 / 111 PASS · 0 FAIL · 0 SKIP
   Consistencia interna (docs vs JSON):  22 / 22 PASS · 0 FAIL
   Escaneo de secretos:                  CLEAN
   Dependencias externas inesperadas:    NINGUNA
