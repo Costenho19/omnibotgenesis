@@ -761,3 +761,9 @@ id = "oY-gaRNvr3C6LJ1yjfm-o"
 uri = "file://evidence_packages/OMNIX-RTE-001_VERIFICATION_GUIDE_20260528.pdf"
 type = "pdf"
 title = "1. PDF — Verification Guide (enviar primero)"
+
+[[outputs]]
+id = "V-0FXevh_IYE0CasoN1PK"
+uri = "file://evidence_packages/OMNIX-RTE-001_PACKAGE_20260528.pdf"
+type = "pdf"
+title = "2. PDF — Package completo RTE-001 v1.1.0"
