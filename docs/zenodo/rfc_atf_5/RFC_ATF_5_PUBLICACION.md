@@ -48,7 +48,7 @@ and Temporal Governance Bridge
 | RFC-ATF-2 | https://doi.org/10.5281/zenodo.20241344 | https://doi.org/10.6084/m9.figshare.32308095 |
 | RFC-ATF-3 | https://doi.org/10.5281/zenodo.20247342 | https://doi.org/10.6084/m9.figshare.32308119 |
 | RFC-ATF-4 | https://doi.org/10.5281/zenodo.20368895 | https://doi.org/10.6084/m9.figshare.32394192 |
-| RFC-ATF-5 | https://doi.org/10.5281/zenodo.20391721 | pendiente Figshare |
+| RFC-ATF-5 | https://doi.org/10.5281/zenodo.20391721 | https://doi.org/10.6084/m9.figshare.32446785 |
 
 ---
 
@@ -56,7 +56,7 @@ and Temporal Governance Bridge
 
 - [ ] Verificar que https://doi.org/10.5281/zenodo.20391721 resuelve y está en estado Published
 - [ ] Confirmar que Zenodo eliminó el registro v1 (20391722) — respuesta esperada en 1-2 días
-- [ ] Publicar también en Figshare para tener el segundo DOI (como los RFC-ATF-1 a 4)
+- [x] Publicado en Figshare — DOI: https://doi.org/10.6084/m9.figshare.32446785
 
 ---
 
