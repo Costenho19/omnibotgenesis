@@ -755,3 +755,9 @@ id = "MSc2_xerg0QZJebrxaeMi"
 uri = "file://evidence_packages/OMNIX-RTE-001_REVIEWER_EMAILS_v2_20260528.pdf"
 type = "pdf"
 title = "Emails Gregory + Anamulla — v2 corregido"
+
+[[outputs]]
+id = "oY-gaRNvr3C6LJ1yjfm-o"
+uri = "file://evidence_packages/OMNIX-RTE-001_VERIFICATION_GUIDE_20260528.pdf"
+type = "pdf"
+title = "OMNIX-RTE-001 v1.1.0 — Verification Guide (para enviar)"
