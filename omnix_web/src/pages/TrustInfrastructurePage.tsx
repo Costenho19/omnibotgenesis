@@ -194,7 +194,7 @@ export default function TrustInfrastructurePage() {
               </h1>
               <p style={{ margin: 0, fontSize: 15, color: MUTED, maxWidth: 600, lineHeight: 1.6 }}>
                 Cryptographic evidence custody backed by ML-DSA-65 post-quantum signatures.
-                47 enforced invariants across 9 families. Full offline verifiability. Independent of any OMNIX runtime.
+                169 enforced invariants across 28 families. Full offline verifiability. Independent of any OMNIX runtime.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -212,7 +212,7 @@ export default function TrustInfrastructurePage() {
           {/* Metric strip */}
           <div style={{ display: 'flex', gap: 40, marginTop: 32, paddingTop: 28, borderTop: `1px solid rgba(255,255,255,0.05)`, flexWrap: 'wrap' }}>
             {[
-              { label: 'Invariants enforced', value: '67', sub: '9 families · 4 RFCs' },
+              { label: 'Invariants enforced', value: '169', sub: '28 families · 6 RFCs' },
               { label: 'PQC Algorithm', value: 'ML-DSA-65', sub: 'FIPS 204 · NIST Level 3' },
               { label: 'Verification planes', value: '3', sub: 'Browser · Server · Offline' },
               { label: 'Offline verifiable', value: 'Yes', sub: 'OEP + CLI verifier' },
@@ -546,11 +546,11 @@ export default function TrustInfrastructurePage() {
 
         {/* ── Section 6: Invariant Reference ── */}
         <div style={{ marginBottom: 56 }}>
-          <SectionHeader label="Invariant Reference" adr="67 invariants · 9 families · RFC-ATF-1/2/3/4" />
+          <SectionHeader label="Invariant Reference" adr="169 invariants · 28 families · RFC-ATF-1/2/3/4/5/6" />
 
           {/* Category filter */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-            {['ALL', 'ATF', 'RGC', 'EAP', 'FVP', 'OEP', 'FEA', 'TAR', 'GPIL', 'ELR', 'GECR'].map(cat => (
+            {['ALL', 'ATF', 'RGC', 'EAP', 'FVP', 'OEP', 'FEA', 'TAR', 'GPIL', 'ELR', 'GECR', 'BEV', 'MIVP', 'CGE', 'GUGT', 'TGB', 'OGR', 'OGI', 'RCEP'].map(cat => (
               <button key={cat} onClick={() => setActiveInvCat(cat)}
                 style={{
                   padding: '5px 14px', borderRadius: 6, border: `1px solid ${activeInvCat === cat ? (CAT_COLOR[cat] || GOLD) : 'rgba(255,255,255,0.08)'}`,

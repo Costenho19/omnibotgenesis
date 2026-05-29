@@ -28,20 +28,20 @@ const timeline = [
   },
   {
     year: 'Apr 2026',
-    event: 'Technical whitepaper + 171 ADRs',
+    event: 'Technical whitepaper + 202 ADRs',
     detail: 'Full architecture documented: 11-checkpoint pipeline, AVM, LLM isolation, Execution Integrity Layer.',
     color: '#f59e0b',
   },
   {
     year: 'May 2026',
     event: 'Governance baseline',
-    detail: 'GOVERNANCE_BASELINE-2026-Q2-001: 47 formal invariants, 171 ADRs, 184+ tests. Architecture freeze.',
+    detail: 'GOVERNANCE_BASELINE-2026-Q2-001: 169 formal invariants, 202 ADRs, 184+ tests. Architecture freeze.',
     color: '#06b6d4',
   },
   {
     year: 'May 2026',
     event: 'RFC-ATF-3 + GECR formalized',
-    detail: 'RFC-ATF-3: 26 invariants across 6 families (GPIL, ELR, EAP, OEP, FEA, FVP) — PQC forensic verification. ADR-157 rev.2 + ADR-170 add 7 further invariants. Cumulative total: 47 invariants across 9 families. Published on Zenodo + Figshare.',
+    detail: 'RFC-ATF-1/2/3/4/5/6 published. Cumulative total: 169 invariants across 28 families. Published on Zenodo + Figshare.',
     color: '#a855f7',
   },
 ]
@@ -67,7 +67,7 @@ const principles = [
   },
   {
     title: 'Architecture first, product second',
-    body: '171 ADRs document every design decision with context, alternatives, and consequences. No function in OMNIX exists without its architectural justification on record.',
+    body: '202 ADRs document every design decision with context, alternatives, and consequences. No function in OMNIX exists without its architectural justification on record.',
     icon: '△',
     color: '#6366f1',
   },
@@ -511,7 +511,7 @@ export default function AboutPage() {
             OMNIX QUANTUM · United Kingdom · Founded 2025
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
-            171 ADRs · 184+ tests · GOVERNANCE_BASELINE-2026-Q2-001
+            202 ADRs · 184+ tests · GOVERNANCE_BASELINE-2026-Q2-001
           </div>
         </div>
       </div>
