@@ -436,7 +436,7 @@ export default function PitchDeck() {
             {[
               { icon: '🔐', title: 'Post-Quantum Cryptography', desc: 'NIST-standardized CRYSTALS-Dilithium & CRYSTALS-Kyber. Every governance receipt is quantum-resistant and independently verifiable.', badge: 'NIST Standard' },
               { icon: '⚡', title: 'Real-Time Pipeline', desc: 'All 11 checkpoints complete in <50ms. Monte Carlo simulations, regime detection, coherence scoring — before any execution.', badge: '<50ms' },
-              { icon: '🧱', title: '171 ADRs Published', desc: 'Architecture Decision Records document every design choice, algorithm, and governance rule. Full auditability for regulators.', badge: 'Auditable' },
+              { icon: '🧱', title: '202 ADRs Published', desc: 'Architecture Decision Records document every design choice, algorithm, and governance rule. Full auditability for regulators.', badge: 'Auditable' },
               { icon: '🌐', title: 'Domain-Agnostic Core', desc: 'Same 11-checkpoint pipeline instantiated for any decision domain. Adding a new vertical requires no changes to the core engine.', badge: 'Extensible' },
               { icon: '📊', title: 'Published Research', desc: 'Peer-validated methodology with DOI. Terra/LUNA forensic reconstruction demonstrates retrospective accuracy with real historical data.', badge: 'DOI Published' },
               { icon: '🔗', title: 'REST API + Webhooks', desc: 'Integrate into any existing decision infrastructure in hours. No need to replace current systems — OMNIX operates as a governance proxy.', badge: 'API-First' },

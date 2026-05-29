@@ -1216,7 +1216,7 @@ export default function ForensicOperationsDemoPage() {
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
             <Badge>PROTOCOL DEMOS</Badge>
             <Badge color={CYAN}>RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3</Badge>
-            <Badge color={GREEN}>47 INVARIANTS</Badge>
+            <Badge color={GREEN}>169 INVARIANTS</Badge>
           </div>
           <h1 style={{ margin: '0 0 12px', fontSize: 32, fontWeight: 800, color: TEXT, lineHeight: 1.2 }}>
             Forensic Operations — Protocol Simulation

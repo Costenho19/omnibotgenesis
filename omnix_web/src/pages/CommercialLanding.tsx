@@ -1549,7 +1549,7 @@ export default function CommercialLanding() {
               </div>
               <h3 className="text-white font-semibold text-sm mb-2 leading-snug">OMNIX Quantum: Decision Governance Infrastructure — Technical Whitepaper v1.5</h3>
               <p className="text-muted text-xs">Harold Nunes · OMNIX QUANTUM LTD · 2026</p>
-              <p className="text-[#C9A227]/60 text-xs mt-2">SSRN 6507559 · Zenodo 10.5281/zenodo.19375792 · 47 invariants · 171 ADRs</p>
+              <p className="text-[#C9A227]/60 text-xs mt-2">SSRN 6507559 · Zenodo 10.5281/zenodo.19375792 · 169 invariants · 202 ADRs</p>
             </a>
 
             {/* Production Dataset */}

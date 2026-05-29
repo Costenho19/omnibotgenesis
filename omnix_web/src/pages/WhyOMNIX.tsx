@@ -458,7 +458,7 @@ export default function WhyOMNIX() {
             <span style={{ color: '#475569' }}>GOVERNANCE_BASELINE-2026-Q2-001</span>
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
-            Dilithium-3 (ML-DSA-65) · PQC-First · 171 ADRs
+            Dilithium-3 (ML-DSA-65) · PQC-First · 202 ADRs
           </div>
         </div>
       </div>

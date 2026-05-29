@@ -737,7 +737,7 @@ export default function GovernanceFlowPage() {
                 padding: '3px 10px', borderRadius: 2, letterSpacing: '0.10em', textDecoration: 'none',
               }}>{r.l} · DOI ↗</a>
             ))}
-            {['169 INVARIANTS · 28 FAMILIES', '199 ADRs', 'ML-DSA-65 · FIPS 204', 'OMNIX-WALK-001'].map(b => (
+            {['169 INVARIANTS · 28 FAMILIES', '202 ADRs', 'ML-DSA-65 · FIPS 204', 'OMNIX-WALK-001'].map(b => (
               <span key={b} style={{ fontFamily: 'monospace', fontSize: 9, color: C.subtle, background: `rgba(255,255,255,0.03)`, border: `1px solid ${C.dim}50`, padding: '3px 10px', borderRadius: 2, letterSpacing: '0.08em' }}>{b}</span>
             ))}
           </div>

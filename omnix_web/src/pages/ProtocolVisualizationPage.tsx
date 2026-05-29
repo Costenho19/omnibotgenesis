@@ -793,8 +793,8 @@ export default function ProtocolVisualizationPage() {
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
             {[
-              { label: '171 ADRs', color: C.gold },
-              { label: '47 invariants', color: C.cyan },
+              { label: '202 ADRs', color: C.gold },
+              { label: '169 invariants', color: C.cyan },
               { label: 'ML-DSA-65 (FIPS 204)', color: C.purple },
               { label: 'Offline verifiable', color: C.green },
             ].map(({ label, color }) => <Pill key={label} label={label} color={color} />)}

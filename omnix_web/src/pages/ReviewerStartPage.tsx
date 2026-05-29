@@ -29,7 +29,7 @@ const STEPS = [
     tag: 'START HERE',
     tagColor: GOLD,
     desc: 'The full protocol brief. Problem, architecture, RFC stack, conformance baseline, and offline verification. Designed for institutional reviewers.',
-    what: ['What OMNIX ATF is', 'The governance lifecycle in full', 'RFC-ATF-1/2/3 with DOIs', '47 invariants · 9 families · 171 ADRs'],
+    what: ['What OMNIX ATF is', 'The governance lifecycle in full', 'RFC-ATF-1/2/3 with DOIs', '169 invariants · 28 families · 202 ADRs'],
   },
   {
     n: '02',
@@ -73,7 +73,7 @@ const STEPS = [
     tag: '5 DIAGRAMS',
     tagColor: GREEN,
     desc: 'Technical architecture. Five diagrams covering the runtime legitimacy stack, execution chain, sovereign divergence, authority degradation, and evidence custody.',
-    what: ['171 ADRs · 47 invariants', 'Six-layer governance architecture', 'ML-DSA-65 · FIPS 204 · NIST Level 3', 'ADR-156 through ADR-171'],
+    what: ['202 ADRs · 169 invariants', 'Six-layer governance architecture', 'ML-DSA-65 · FIPS 204 · NIST Level 3', 'ADR-156 through ADR-202'],
   },
   {
     n: '06',
@@ -222,7 +222,7 @@ export default function ReviewerStartPage() {
           fontSize: 11, color: SLATE, fontFamily: 'monospace',
         }}>
           <span>OMNIX QUANTUM LTD · omnixquantum.com</span>
-          <span>169 invariants · 28 families · 199 ADRs · 6 RFCs published</span>
+          <span>169 invariants · 28 families · 202 ADRs · 6 RFCs published</span>
         </div>
       </div>
     </div>

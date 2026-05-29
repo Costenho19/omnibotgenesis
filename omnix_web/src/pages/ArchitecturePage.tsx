@@ -303,7 +303,7 @@ export default function ArchitecturePage() {
               OMNIX-BASELINE-2026-Q2-001
             </span>
             <span className="text-[10px] font-mono px-2 py-1 rounded border" style={{background:'rgba(99,102,241,0.08)',borderColor:'rgba(99,102,241,0.25)',color:'#a5b4fc'}}>
-              {DIAGRAMS.length} diagrams · 171 ADRs
+              {DIAGRAMS.length} diagrams · 202 ADRs
             </span>
           </div>
         </div>

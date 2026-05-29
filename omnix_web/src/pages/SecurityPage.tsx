@@ -465,7 +465,7 @@ export default function SecurityPage() {
             OMNIX QUANTUM · Dilithium-3 (ML-DSA-65) · NIST FIPS 204
           </div>
           <div style={{ fontSize: 12, color: '#334155' }}>
-            6 security layers · 171 ADRs · In production since Nov 2025
+            6 security layers · 202 ADRs · In production since Nov 2025
           </div>
         </div>
       </div>

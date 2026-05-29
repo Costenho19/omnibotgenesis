@@ -57,7 +57,7 @@ export function Scene7() {
           animate={phase >= 4 ? { opacity: 1 } : { opacity: 0 }}
           transition={{ duration: 2 }}
         >
-          RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · 47 invariants · 171 ADRs
+          RFC-ATF-1 · RFC-ATF-2 · RFC-ATF-3 · 169 invariants · 202 ADRs
         </motion.div>
       </div>
     </motion.div>

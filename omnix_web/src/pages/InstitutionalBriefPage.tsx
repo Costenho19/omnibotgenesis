@@ -185,7 +185,7 @@ export default function InstitutionalBriefPage() {
               From human-signed delegation to immutable forensic archive — at the exact moment execution occurs.
             </p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {['169 Active Invariants', '28 Invariant Families', '6 Published RFCs', '199 ADRs', 'ML-DSA-65 · FIPS 204'].map(t => (
+              {['169 Active Invariants', '28 Invariant Families', '6 Published RFCs', '202 ADRs', 'ML-DSA-65 · FIPS 204'].map(t => (
                 <span key={t} style={{
                   fontSize: 10, fontWeight: 600, color: GOLD,
                   background: `${GOLD}12`, border: `1px solid ${GOLD}28`,
@@ -340,9 +340,9 @@ export default function InstitutionalBriefPage() {
         <Section label="CONFORMANCE BASELINE · GOVERNANCE_BASELINE-2026-Q2-001">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: BORDER, borderRadius: 10, overflow: 'hidden' }}>
             {[
-              { value: '47', label: 'Active Invariants', sub: 'across 9 families', color: GOLD },
-              { value: '9', label: 'Invariant Families', sub: 'ATF/RGC/GPIL/EAP/OEP/FEA/FVP/ELR/GECR', color: CYAN },
-              { value: '171', label: 'Architecture Decisions', sub: 'ADR-001 through ADR-171', color: PURPLE },
+              { value: '169', label: 'Active Invariants', sub: 'across 28 families', color: GOLD },
+              { value: '28', label: 'Invariant Families', sub: 'ATF/RGC/BEV/MIVP/CGE/GUGT/TGB/OGR/OGI/RCEP', color: CYAN },
+              { value: '202', label: 'Architecture Decisions', sub: 'ADR-001 through ADR-202', color: PURPLE },
               { value: 'Yes', label: 'Offline Verifiable', sub: 'OEP + CLI verifier · no OMNIX needed', color: GREEN },
             ].map(s => (
               <div key={s.label} style={{ background: NAVY2, padding: '24px 20px', textAlign: 'center' }}>
@@ -449,7 +449,7 @@ export default function InstitutionalBriefPage() {
             OMNIX QUANTUM LTD · United Kingdom · omnixquantum.com
           </div>
           <div style={{ fontSize: 11, color: SLATE, fontFamily: 'monospace' }}>
-            RFC-ATF-1/2/3/4/5/6 · 169 invariants · 199 ADRs · GOVERNANCE_BASELINE-2026-Q2-001
+            RFC-ATF-1/2/3/4/5/6 · 169 invariants · 202 ADRs · GOVERNANCE_BASELINE-2026-Q2-001
           </div>
         </div>
 
