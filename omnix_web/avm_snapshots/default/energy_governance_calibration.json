@@ -2,15 +2,13 @@
   "snapshot_id": "AVM-DAC3C9783A",
   "parameter_version": "1.dac3c9783a",
   "domain": "energy_governance",
-  "calibrated_at": "2026-05-29T17:59:17.910951+00:00",
-  "calibrated_at_epoch": 1780077557.910951,
   "baseline_signals": {
-    "probability_score": 54.94,
     "risk_exposure": 38.76,
     "signal_coherence": 60.54,
-    "trend_persistence": 78.29,
+    "logic_consistency": 79.62,
+    "probability_score": 54.94,
     "stress_resilience": 91.2,
-    "logic_consistency": 79.62
+    "trend_persistence": 78.29
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
@@ -20,5 +18,7 @@
     "AUTO_RECALIBRATION",
     "interval_72h",
     "prev_drift_22.2"
-  ]
+  ],
+  "calibrated_at": "2026-05-29T17:59:17.910951+00:00",
+  "calibrated_at_epoch": 1780077557.910951
 }
