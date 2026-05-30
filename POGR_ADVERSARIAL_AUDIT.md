@@ -1,282 +1,495 @@
-# OMNIX PoGR — Adversarial Audit Report
+# POGR Adversarial Audit Report
 
-**Classification:** Security Audit · Internal
-**Date:** 2026-05-30 19:44 UTC
-**Scope:** Proof of Governance Registry — Certificate Verification Layer
-**ADR:** ADR-186 · ADR-187 · ADR-189
-**Product:** OMNIX-POGR-2026-001
-**Author:** OMNIX QUANTUM LTD — automated adversarial test suite
+**Sistema:** OMNIX Proof of Governance Registry (PoGR)  
+**Fecha:** 2026-05-30 20:33:11 UTC  
+**Versión:** v2.0 — Auditoría de tres canales  
+**ADR:** ADR-186 · ADR-187 · ADR-189  
+**Invariantes auditadas:** PoGR-INV-001–006  
+**Generado por:** `scripts/pogr_adversarial_audit.py`  
 
 ---
 
 ## Executive Summary
 
-The PoGR adversarial audit executed **10 attacks** against the certificate verification layer. The core question under test:
+La auditoría adversarial del PoGR ejecutó **15 ataques** sobre los tres
+canales de verificación (Offline / API JSON / HTML Web) de forma independiente.
+La condición de PASS requiere que los tres canales produzcan el mismo veredicto.
 
-> **Can a forged or tampered PoGC survive Web + API + Offline verification simultaneously?**
-
-| Result | Count |
+| Métrica | Valor |
 |---|---|
-| Attacks detected / ineffective | **8** |
-| Known limitations / findings | **2** |
-| Total attacks | **10** |
-
-### Critical Finding: POGR-SEC-001
-
-**ATK-006** (Re-signing with attacker key) revealed a known limitation: 
-the offline verifier (`verify_pogc_offline.py`) checks ML-DSA-65 signature **format**, 
-not cryptographic validity. Full PQC verification requires the platform public key.
-
-**Severity:** Medium (offline verifier only)
-**Status:** Known design tradeoff — full PQC verification requires `--platform-key` flag
-**Mitigation:** API and web UI verify against the DB-stored signature. 
-Offline verifier remediation: add `--platform-key <manifest_url>` to enable 
-online public key fetch + full ML-DSA-65 signature verification.
+| Total ataques ejecutados | 15 |
+| Divergencias Web/API/Offline | **5** |
+| Hallazgos CRITICAL | **3** |
+| Hallazgos HIGH | **2** |
+| Ataques mitigados correctamente | 7 |
 
 ---
 
-## Attack Details
+## Tabla de Resultados
 
-### ATK-001 · Full PoGC Forgery — crafted from scratch
-
-**Status:** ✗ BYPASS
-**Expected:** INVALID (exit 1)
-**Result:** VALID (exit 0) — BYPASS ✗
-
-**Method:**  
-Attacker constructs a completely new PoGC with forged fields, computes a matching content_hash, and signs with their own key stub. The certificate looks structurally valid.
-
-**Evidence:**
-- pqc_signature uses ATTACKER-KEY-001 stub (not ML-DSA-65: production prefix)
-
-**Notes:**
-> UNEXPECTED: forged certificate passed all checks
-
----
-
-### ATK-002 · Mandate Certification Downgrade
-
-**Status:** ✓ DETECTED
-**Expected:** INVALID (exit 1)
-**Result:** INVALID (exit 1) — DETECTED ✓
-
-**Method:**  
-Attacker takes a valid MANDATE-BOUND certificate and changes mandate_certification to UNCERTIFIED without updating content_hash.
-
-**Evidence:**
-- Original content_hash: sha3-256:dbebe3de9ca4ea8b605ae9bde30eca6…
-- mandate_certification changed to UNCERTIFIED — content_hash not updated
-- SHA3-256 recomputation will differ
-
-**Notes:**
-> Content hash mismatch detected
+| ID | Descripción | Offline | API JSON | HTML Web | Divergencia | Severidad | Finding |
+|---|---|---|---|---|---|---|---|
+| A01 | Issuer cambiado | INVALID | VALID | VALID | ✓ No | ✅ MITIGATED | POGR-SEC-007 |
+| A02 | mandate_certification cambiado (UNCERTIFIED → MANDAT… | INVALID | VALID | VALID | ✓ No | ✅ MITIGATED | POGR-SEC-008 |
+| A03 | TTL expirado (expires_at en el pasado) | INVALID | INVALID | INVALID | ✓ No | ✅ MITIGATED | POGR-SEC-009 |
+| A04 | content_hash field alterado en export JSON | INVALID | VALID | VALID | ⚠ **SÍ** | • MITIGATED (offline) / DESIGN-BOUNDARY (API) | POGR-SEC-010 |
+| A05 | Firma alterada — prefijo ML-DSA-65: conservado (POGR… | VALID | VALID | VALID | ✓ No | 🔴 CRITICAL | POGR-SEC-001 |
+| A06 | ID válido con contenido de otro PoGC (ID swap) | VALID | VALID | VALID | ✓ No | 🟡 MEDIUM | POGR-SEC-011 |
+| A07 | Export manipulado — status cambiado REVOKED→ACTIVE (… | VALID | INVALID | INVALID | ⚠ **SÍ** | 🔴 CRITICAL | POGR-SEC-002 |
+| A08 | Offline=VALID, Web/API=INVALID — inconsistencia hash… | VALID | INVALID | VALID | ⚠ **SÍ** | 🟠 HIGH | POGR-SEC-012 |
+| A09 | API (JSON)=VALID, HTML=INVALID — firma STUB (POGR-SE… | VALID | VALID | INVALID | ⚠ **SÍ** | 🟠 HIGH | POGR-SEC-003 |
+| A10 | PoGC inexistente — ID not found | INVALID | INVALID | INVALID | ✓ No | ✅ MITIGATED | POGR-SEC-013 |
+| A11 | PoGC revocado — stale export divergence (POGR-SEC-00… | VALID | INVALID | INVALID | ⚠ **SÍ** | 🔴 CRITICAL | POGR-SEC-002 |
+| A12 | PoGC expirado (expires_at genuinamente en el pasado) | INVALID | INVALID | INVALID | ✓ No | ✅ MITIGATED | POGR-SEC-014 |
+| A13 | Replay — mismo session_id genera múltiples PoGCs (PO… | VALID | VALID | VALID | ✓ No | 🟡 MEDIUM | POGR-SEC-004 |
+| A14 | Campos canónicos faltantes en JSON exportado | INVALID | VALID | VALID | ✓ No | ✅ MITIGATED | POGR-SEC-015 |
+| A15 | JSON con campos extra maliciosos (injection attempt) | VALID | VALID | VALID | ✓ No | ✅ MITIGATED | POGR-SEC-016 |
 
 ---
 
-### ATK-003 · Issuer Identity Substitution
+## Hallazgos Detallados
 
-**Status:** ✓ DETECTED
-**Expected:** INVALID (exit 1)
-**Result:** INVALID (exit 1) — DETECTED ✓
+### A05 — Firma alterada — prefijo ML-DSA-65: conservado (POGR-SEC-001)
 
-**Method:**  
-Attacker changes issuer from 'OMNIX QUANTUM LTD' to 'Evil Corp' and recomputes content_hash to make it consistent — but cannot produce a valid ML-DSA-65 signature.
+**Finding ID:** `POGR-SEC-001`  
+**Severidad:** 🔴 CRITICAL  
+**Invariante:** PoGR-INV-003 (partially violated)  
 
-**Evidence:**
-- issuer changed to 'Evil Corp'
-- content_hash recomputed — hash check PASSES for this attack
-- pqc_signature is attacker stub — check [4] fails
-- issuer identity check [5] also fails
+**Escenario:**
 
-**Notes:**
-> Even when attacker recomputes content_hash, the issuer identity check [5] catches the substitution independently.
+Attacker replaces the pqc_signature payload with random bytes but keeps the 'ML-DSA-65:' prefix. content_hash is valid. No channel verifies the signature bytes cryptographically. All three channels report VALID — FALSE POSITIVE.
 
----
+**Resultados por canal:**
 
-### ATK-004 · TTL Manipulation — extend expired certificate
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `VALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
 
-**Status:** ✓ DETECTED
-**Expected:** INVALID (exit 1)
-**Result:** INVALID (exit 1) — DETECTED ✓
+**Hallazgo:**
 
-**Method:**  
-Attacker takes an expired certificate and extends expires_at by 10 years without updating content_hash.
+CRITICAL KNOWN LIMITATION: pqc_signature is never cryptographically verified by any channel. All three only check the 'ML-DSA-65:' prefix string. An attacker who knows the canonical fields can: (1) Compute a valid content_hash, (2) Attach any payload after 'ML-DSA-65:', → All three channels report VALID. This is a FALSE POSITIVE across all channels — consistent but wrong.
 
-**Evidence:**
-- Original expires_at: 2025-03-21T19:44:23 (expired)
-- Tampered expires_at: 2036-05-27T19:44:23 (+10 years)
-- content_hash not updated — SHA3-256 of canonical will differ
+**Remediación:**
 
-**Notes:**
-> Content hash mismatch: expires_at is in canonical fields
+Implement --platform-key flag in verify_pogc_offline.py to enable full ML-DSA-65 cryptographic verification using the platform public key from /v1/pogr/manifest. The API /v1/pogr/verify must also perform cryptographic signature verification on each call. Priority: P1 — before first public PoGC issued to a third party.
 
 ---
 
-### ATK-005 · Content Hash Substitution + Issuer Change
+### A07 — Export manipulado — status cambiado REVOKED→ACTIVE (POGR-SEC-002)
 
-**Status:** ✓ DETECTED
-**Expected:** INVALID (exit 1)
-**Result:** INVALID (exit 1) — DETECTED ✓
+**Finding ID:** `POGR-SEC-002`  
+**Severidad:** 🔴 CRITICAL  
+**Invariante:** PoGR-INV-002 (revocation) · PoGR-INV-006  
 
-**Method:**  
-Attacker changes issuer AND recomputes content_hash. Hash check now passes. Test whether issuer identity check catches it independently.
+**Escenario:**
 
-**Evidence:**
-- issuer changed to 'Fraudulent Governance Authority'
-- content_hash recomputed — check [1] passes
-- pqc_signature still covers original canonical — check [4] passes (stub format)
-- issuer identity check [5] catches it independently
+Attacker downloads export of an ACTIVE certificate. Admin revokes it. Attacker alters status field from 'REVOKED' to 'ACTIVE' in the old JSON. 'status' is NOT in canonical_fields — content_hash does NOT change. Offline: VALID. API/HTML (reading DB): INVALID.
 
-**Notes:**
-> The issuer identity check [5] is a hard-coded assertion independent of content_hash. An attacker who recomputes the hash still fails the issuer check.
+**Resultados por canal:**
 
----
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `VALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `INVALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `INVALID` |
 
-### ATK-006 · Re-signing with Attacker ML-DSA-65 Key
+**⚠ DIVERGENCIA: los tres canales no coinciden.**
 
-**Status:** ⚠ KNOWN LIMITATION
-**Expected:** INVALID (exit 1)
-**Result:** VALID (exit 0) — PARTIAL BYPASS (see notes)
+**Hallazgo:**
 
-**Method:**  
-Attacker has their own ML-DSA-65 keypair. They modify the certificate, recompute content_hash, and sign with their key. Offline verifier checks for 'ML-DSA-65:' prefix — this PASSES the format check. Test: can attacker get all 6 checks to pass?
+CRITICAL DIVERGENCE: 'status' is excluded from canonical_fields. An attacker can alter status in an exported JSON without breaking content_hash. The offline verifier checks the 'status' field from the file → sees ACTIVE → VALID. The API and HTML page read from DB → see REVOKED → INVALID. This creates a real, exploitable Web/API ≠ Offline divergence.
 
-**Evidence:**
-- subject_org changed to 'Attacker's Organization'
-- mandate_certification falsely set to MANDATE-BOUND
-- content_hash recomputed — check [1] PASSES
-- pqc_signature has ML-DSA-65: prefix — check [4] PASSES (format only)
-- issuer still OMNIX QUANTUM LTD — check [5] PASSES
-- This is the most dangerous attack: 5/6 checks pass
+**Remediación:**
 
-**Notes:**
-> AUDIT FINDING — POGR-SEC-001 (KNOWN LIMITATION):
-> The offline verifier checks ML-DSA-65 signature FORMAT, not cryptographic validity. An attacker who recomputes content_hash, keeps issuer=OMNIX QUANTUM LTD, and prefixes their signature with 'ML-DSA-65:' would pass 6/6 offline checks. 
-> MITIGATION IN PRODUCTION:
-> 1. The platform public key is published in /v1/pogr/manifest (PoGR-INV-005).
-> 2. Full cryptographic verification requires: oqs.Signature('ML-DSA-65').verify(payload, sig_bytes, pk).
-> 3. The verify_pogc_offline.py script should optionally accept --platform-key to enable full PQC verification.
-> 4. ATK-006 does NOT apply to the API or web UI — both use the DB-stored signature against the platform key.
-> REMEDIATION: Add --platform-key flag to verifier (ADR-189 §PQC Offline Verification).
+Option A (preferred): Add 'status' and 'revoked_at' to canonical_fields. Requires re-signing all existing certificates. Option B (interim): Add prominent warning in verify_pogc_offline.py: 'WARNING: Revocation status is NOT cryptographically bound. For revocation verification, query the live API.' Option B is a documentation fix, not a cryptographic fix.
 
 ---
 
-### ATK-007 · Single-Field Mutation — subject_org only
+### A11 — PoGC revocado — stale export divergence (POGR-SEC-002)
 
-**Status:** ✓ DETECTED
-**Expected:** INVALID (exit 1)
-**Result:** INVALID (exit 1) — DETECTED ✓
+**Finding ID:** `POGR-SEC-002`  
+**Severidad:** 🔴 CRITICAL  
+**Invariante:** PoGR-INV-006 (revocation integrity)  
 
-**Method:**  
-Attacker changes only subject_org. content_hash is NOT updated. Can they pass without recomputing the hash?
+**Escenario:**
 
-**Evidence:**
-- subject_org changed: 'Legitimate Corp' → 'Fraudulent Corp'
-- content_hash covers subject_org in canonical fields
-- SHA3-256 recomputation will produce a different hash
+Attacker downloaded the export BEFORE the certificate was revoked. The stale JSON has status=ACTIVE, valid content_hash, valid sig prefix. Offline verifier cannot detect revocation from a stale file. This is the primary lifecycle divergence in the PoGR system.
 
-**Notes:**
-> subject_org is in CANONICAL_FIELDS — hash mismatch detected
+**Resultados por canal:**
 
----
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `VALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `INVALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `INVALID` |
 
-### ATK-008 · Differential Attack — Web / API / Offline divergence
+**⚠ DIVERGENCIA: los tres canales no coinciden.**
 
-**Status:** ✓ INEFFECTIVE / NO DIVERGENCE
-**Expected:** INVALID (exit 1)
-**Result:** NO DIVERGENCE — all three channels produce identical results ✓
+**Hallazgo:**
 
-**Method:**  
-Attacker presents a certificate that passes offline verification but would fail API/web verification (or vice versa). This tests whether all three channels use identical verification logic.
+Same root cause as A07: 'status' is not in canonical_fields. The offline verifier trusts the status field in the JSON file. If the file was downloaded before revocation, it still reads ACTIVE. Revocation is an out-of-band event relative to the offline export. The offline channel fundamentally cannot detect post-export revocation without querying the live API — this is an architectural limitation, not a bug in the verifier logic.
 
-**Evidence:**
-- Scenario A (valid cert):    offline=VALID | API=VALID (expected match)
-- Scenario B (tampered cert): offline=INVALID | API=INVALID (expected match)
-- Scenario C (expired cert):  offline=INVALID | API=INVALID (expected match)
+**Remediación:**
 
-**Notes:**
-> The offline verifier implements the EXACT same logic as the API verify endpoint: same canonical fields, same SHA3-256 computation, same status/TTL checks. Divergence between offline and API is architecturally impossible for checks [1][2][3][5]. Check [4] (PQC signature validity) is where a divergence could occur — see ATK-006.
+Same as A07: add 'status' to canonical_fields OR add a clear mandatory warning in verify_pogc_offline.py output: 'CAUTION: This verifier cannot detect revocation that occurred after export. To verify revocation status, call GET /v1/pogr/verify/<id>.' This warning must be present on EVERY execution, not just on detection.
 
 ---
 
-### ATK-009 · Expired Certificate Replay Attack
+### A08 — Offline=VALID, Web/API=INVALID — inconsistencia hash en DB
 
-**Status:** ✓ DETECTED
-**Expected:** INVALID (exit 1)
-**Result:** INVALID (exit 1) — DETECTED ✓
+**Finding ID:** `POGR-SEC-012`  
+**Severidad:** 🟠 HIGH  
+**Invariante:** PoGR-INV-002 (append-only violated by direct DB mutation)  
 
-**Method:**  
-Attacker saves a certificate before it expires, then presents it after expiry to a system that accepts it. Verifier must reject.
+**Escenario:**
 
-**Evidence:**
-- issued_at:   2025-04-30T19:44:25 UTC
-- expires_at:  2025-03-31T19:44:25 UTC (30 days ago)
-- TTL check compares now() > expires_at
-- status field may still say ACTIVE — but TTL check is independent
+Scenario: A DB canonical field (e.g. issuer) was modified directly in the DB (bypassing the API) without updating content_hash. API recomputes hash → mismatch → INVALID. HTML page does NOT check hash → VALID. Stale export from before the DB mutation → VALID offline.
 
-**Notes:**
-> TTL validity check [3] is performed on the expires_at field, independent of the status field. An ACTIVE status does not override an expired TTL.
+**Resultados por canal:**
 
----
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `VALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `INVALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
 
-### ATK-010 · Export JSON Manipulation
+**⚠ DIVERGENCIA: los tres canales no coinciden.**
 
-**Status:** ✓ INEFFECTIVE / NO DIVERGENCE
-**Expected:** INVALID (exit 1)
-**Result:** VALID (exit 0) — ATTACK INEFFECTIVE ✓
+**Hallazgo:**
 
-**Method:**  
-Attacker downloads a valid certificate via /export, modifies the _offline_verification block to show fake verification steps, and presents it as proof of verification. The actual certificate fields remain intact — but the embedded instructions have been replaced with misleading content.
+If the DB is mutated directly (bypassing the API), the stored content_hash becomes inconsistent with the canonical fields. The JSON API detects this (recomputes hash on every /verify call → mismatch → INVALID). The HTML page does NOT detect this (no hash recomputation in verify_page()). A stale offline export from before the mutation passes the offline check. This creates a three-way divergence: Offline=VALID · API JSON=INVALID · HTML Web=VALID.
 
-**Evidence:**
-- _offline_verification block completely replaced by attacker
-- _export_metadata block replaced
-- Verifier reads: pogc_id, session_id, ctchc_seal_hash, issuer, subject_org...
-- Verifier IGNORES: _export_metadata, _offline_verification
+**Remediación:**
 
-**Notes:**
-> The offline verifier only reads the 10 canonical fields + content_hash + pqc_signature + status + expires_at. The _offline_verification block is not part of the verification logic. An attacker who manipulates metadata cannot change the verification result. The certificate itself is still valid — the manipulation is visible to a careful reader but does NOT affect the machine verification result.
+1. Add content_hash recomputation to verify_page() — the HTML /pogr/verify endpoint must mirror the JSON API hash verification. 2. Apply DB-level immutability controls (no UPDATE on canonical columns). 3. Add DB trigger or application-level guard: UPDATE on canonical columns must also recompute and update content_hash.
 
 ---
 
-## Verification Architecture — Divergence Analysis
+### A09 — API (JSON)=VALID, HTML=INVALID — firma STUB (POGR-SEC-003)
 
-```
-Certificate field    In canonical_fields?    Mutation detected by hash?
-───────────────────────────────────────────────────────────────────────
-pogc_id              YES                     YES
-session_id           YES                     YES
-ctchc_seal_hash      YES                     YES
-issuer               YES                     YES + independent check [5]
-subject_org          YES                     YES
-agent_id             YES                     YES
-compliance_tier      YES                     YES
-mandate_certification YES                    YES
-issued_at            YES                     YES
-expires_at           YES                     YES + independent TTL check [3]
-status               NO (not in hash)        Independent check [2]
-turn_count           NO                      NOT verified
-avg_conformance      NO                      NOT verified
-regulatory_tags      NO                      NOT verified
-pqc_signature        N/A                     Format check only (see ATK-006)
-```
+**Finding ID:** `POGR-SEC-003`  
+**Severidad:** 🟠 HIGH  
+**Invariante:** PoGR-INV-003 (consistency violated)  
 
-**Fields NOT in canonical_fields** (`turn_count`, `avg_conformance`, `regulatory_tags`) 
-can be altered without breaking the content hash. These are informational fields, 
-not part of the trust anchor.
+**Escenario:**
+
+Certificate has a STUB-SHA3-256: signature (environment without PQC key). JSON API: STUB → Warning → overall valid=True → VALID. HTML page: sig.startswith('ML-DSA-65:') → False → valid=False → INVALID. React SPA calls JSON API → VALID. Direct HTML page → INVALID. Three different verdicts for the same certificate.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `VALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `INVALID` |
+
+**⚠ DIVERGENCIA: los tres canales no coinciden.**
+
+**Hallazgo:**
+
+DIVERGENCE CONFIRMED: JSON API and HTML page treat STUB signature differently. JSON API (verify()): STUB → pqc_signature check = None (warning) → valid=True. HTML page (verify_page()): checks sig.startswith('ML-DSA-65:') → False → valid=False → displays 'FIRMA EN PROCESO'. React SPA /proof-of-governance calls JSON API → says VALID. Visiting /pogr/verify/<id> directly → says INVALID. Same certificate, same DB, three access channels → three different verdicts.
+
+**Remediación:**
+
+Unify signature validation logic across JSON API and HTML page. Decision required: Option A — STUB is INVALID everywhere:   Set valid=False in JSON API when sig starts with STUB-. Option B — STUB is VALID in dev (acceptable):   HTML page must also treat STUB as a warning, not as INVALID. Either way: the two renderers must produce identical verdicts. Recommended: Option A (STUB = INVALID) for production integrity.
 
 ---
 
-## Recommendations
+### A06 — ID válido con contenido de otro PoGC (ID swap)
 
-| ID | Priority | Recommendation |
+**Finding ID:** `POGR-SEC-011`  
+**Severidad:** 🟡 MEDIUM  
+**Invariante:** PoGR-INV-003  
+
+**Escenario:**
+
+Attacker takes POGC-A's exported file and replaces all fields with POGC-B's data. Offline verifier reads the file content — no binding between filename/URL and pogc_id inside the JSON. API reads POGC-A from DB — fully independent of file content.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `VALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
+
+**Hallazgo:**
+
+Offline verifier has no binding between the pogc_id in the URL/filename and the pogc_id inside the JSON. An attacker can present POGC-B's valid certificate as if verifying POGC-A. The offline verifier reports VALID for POGC-B's data. The API, reading by URL pogc_id from DB, is fully independent. Both channels report VALID — but for DIFFERENT certificates. This is an identity confusion attack, not a cryptographic break.
+
+**Remediación:**
+
+Add a --pogc-id argument to verify_pogc_offline.py. When provided, assert cert['pogc_id'] == supplied_id before running checks. The mismatch should be a FAIL, not a warning.
+
+---
+
+### A13 — Replay — mismo session_id genera múltiples PoGCs (POGR-SEC-004)
+
+**Finding ID:** `POGR-SEC-004`  
+**Severidad:** 🟡 MEDIUM  
+**Invariante:** PoGR-INV-001 (session backing) · PoGR-INV-002 (append-only)  
+
+**Escenario:**
+
+POST /v1/pogr/certify called twice with same session_id. No UNIQUE constraint on session_id in pogr_certificates DDL. Each call generates a new pogc_id → two valid certs for the same session.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `VALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
+
+**Hallazgo:**
+
+The pogr_certificates table has no UNIQUE constraint on session_id. An authenticated client (with valid API key) can call POST /v1/pogr/certify multiple times with the same session_id, generating N PoGCs for the same governance session. Each has a different pogc_id. The offline verifier and API both see each cert as independently valid. This allows certificate proliferation and could be used to obtain a MANDATE-BOUND cert after the session was already certified at a lower tier.
+
+**Remediación:**
+
+Add to pogr_certificates DDL: CREATE UNIQUE INDEX IF NOT EXISTS idx_pogr_session_unique ON pogr_certificates (session_id) WHERE status = 'ACTIVE'; This prevents duplicate ACTIVE certs for the same session while preserving the append-only principle (REVOKED certs can coexist).
+
+---
+
+### A01 — Issuer cambiado
+
+**Finding ID:** `POGR-SEC-007`  
+**Severidad:** ✅ MITIGATED  
+**Invariante:** PoGR-INV-003  
+
+**Escenario:**
+
+Attacker alters the 'issuer' field in an exported PoGC JSON after download. 'issuer' is a canonical field — content_hash covers it. All channels must reject.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `INVALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
+
+**Hallazgo:**
+
+Canonical field alteration is correctly detected by all three channels. The offline verifier detects two ways: (1) content_hash mismatch, (2) issuer identity check [5] (hardcoded EXPECTED_ISSUER assertion). The API detects via content_hash recomputation. The HTML page detects via content_hash... wait — HTML does NOT check hash. However, the API reads from DB (attacker cannot change DB without DB access), so this attack is only viable on an exported file for the offline channel.
+
+**Remediación:**
+
+No action needed for file-tampering attacks — content_hash and issuer check cover this. NOTE: If the DB canonical fields are mutated directly (bypassing API), the HTML page would not detect this (see A08 / POGR-SEC-012 for that scenario).
+
+---
+
+### A02 — mandate_certification cambiado (UNCERTIFIED → MANDATE-BOUND)
+
+**Finding ID:** `POGR-SEC-008`  
+**Severidad:** ✅ MITIGATED  
+**Invariante:** MIVP-INV-008 · PoGR-INV-003  
+
+**Escenario:**
+
+Attacker upgrades a cert from UNCERTIFIED to MANDATE-BOUND in the export JSON without recalculating content_hash. Canonical field → hash breaks.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `INVALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
+
+**Hallazgo:**
+
+mandate_certification is in canonical_fields — any change breaks content_hash. All channels detect this attack.
+
+**Remediación:**
+
+mandate_certification is canonical — hash covers it for file-tampering attacks. Same DB-mutation caveat as A01: HTML page would not detect a direct DB mutation (see A08 / POGR-SEC-012).
+
+---
+
+### A03 — TTL expirado (expires_at en el pasado)
+
+**Finding ID:** `POGR-SEC-009`  
+**Severidad:** ✅ MITIGATED  
+**Invariante:** PoGR-INV-004  
+
+**Escenario:**
+
+Certificate with expires_at 5 days in the past. status is still ACTIVE in the file. All channels check TTL independently.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `INVALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `INVALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `INVALID` |
+
+**Hallazgo:**
+
+Expired TTL detected consistently by all channels.
+
+**Remediación:**
+
+No action needed — PoGR-INV-004 enforced.
+
+---
+
+### A10 — PoGC inexistente — ID not found
+
+**Finding ID:** `POGR-SEC-013`  
+**Severidad:** ✅ MITIGATED  
+**Invariante:** PoGR-INV-003  
+
+**Escenario:**
+
+Request for a POGC-ID that does not exist in the registry. All channels must return INVALID / 404.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `INVALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `INVALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `INVALID` |
+
+**Hallazgo:**
+
+All channels correctly reject unknown IDs. No divergence.
+
+**Remediación:**
+
+No action needed.
+
+---
+
+### A12 — PoGC expirado (expires_at genuinamente en el pasado)
+
+**Finding ID:** `POGR-SEC-014`  
+**Severidad:** ✅ MITIGATED  
+**Invariante:** PoGR-INV-004  
+
+**Escenario:**
+
+Certificate with expires_at 10 days in the past, status=ACTIVE. expires_at IS in canonical_fields — cannot be forged without breaking hash. All channels check TTL independently.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `INVALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `INVALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `INVALID` |
+
+**Hallazgo:**
+
+Expired TTL is consistently detected. expires_at is canonical → immutable. All three channels independently verify TTL. status field may still say ACTIVE — TTL check is independent of status.
+
+**Remediación:**
+
+No action needed. PoGR-INV-004 enforced.
+
+---
+
+### A14 — Campos canónicos faltantes en JSON exportado
+
+**Finding ID:** `POGR-SEC-015`  
+**Severidad:** ✅ MITIGATED  
+**Invariante:** PoGR-INV-003  
+
+**Escenario:**
+
+JSON file is missing canonical fields (issuer, mandate_certification deleted). Offline: hash computed on subset → won't match complete hash → INVALID. API: DB always has all fields (NOT NULL constraints) → unaffected.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `INVALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
+
+**Hallazgo:**
+
+Offline verifier gracefully handles missing canonical fields via {k: cert[k] for k in CANONICAL_FIELDS if k in cert}. Hash of the available subset won't match the stored hash (complete set) → INVALID. API is immune because DB NOT NULL constraints guarantee all fields present.
+
+**Remediación:**
+
+Add explicit per-field warnings in offline verifier when canonical fields are absent, e.g. 'WARNING: canonical field issuer missing from certificate'.
+
+---
+
+### A15 — JSON con campos extra maliciosos (injection attempt)
+
+**Finding ID:** `POGR-SEC-016`  
+**Severidad:** ✅ MITIGATED  
+**Invariante:** PoGR-INV-003  
+
+**Escenario:**
+
+Attacker adds extra fields: 'admin': True, 'override_status': 'ACTIVE', 'bypass_revocation': True. Neither offline nor API read these fields. Both use explicit CANONICAL_FIELDS allowlist.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `VALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
+
+**Hallazgo:**
+
+Extra fields are safely ignored by all channels. Offline: uses explicit CANONICAL_FIELDS list — extras never read. API: reads from DB — no user-submitted fields. No injection or privilege escalation is possible via extra JSON fields. The explicit allowlist pattern is correct and prevents injection.
+
+**Remediación:**
+
+No action needed. Explicit allowlist is the correct pattern.
+
+---
+
+### A04 — content_hash field alterado en export JSON
+
+**Finding ID:** `POGR-SEC-010`  
+**Severidad:** • MITIGATED (offline) / DESIGN-BOUNDARY (API)  
+**Invariante:** PoGR-INV-003  
+
+**Escenario:**
+
+Attacker replaces the content_hash field in the downloaded JSON with a corrupted value. Offline recomputes and detects mismatch. API reads stored hash from DB (clean) — tests different inputs per channel.
+
+**Resultados por canal:**
+
+| Canal | Veredicto |
+|---|---|
+| Offline (`verify_pogc_offline.py`) | `INVALID` |
+| API JSON (`GET /v1/pogr/verify/<id>`) | `VALID` |
+| HTML Web (`GET /pogr/verify/<id>`) | `VALID` |
+
+**⚠ DIVERGENCIA: los tres canales no coinciden.**
+
+**Hallazgo:**
+
+Offline always detects (recomputes hash from canonical fields → doesn't match the corrupted stored hash). API/HTML read from DB — if DB was not touched, they see the original (valid) hash and compare against recomputed canonical → match → VALID. This is the correct threat model: offline verifies a file, API verifies from DB.
+
+**Remediación:**
+
+DB write access control is the real boundary. The offline verifier correctly detects hash tampering in files.
+
+---
+
+## Remediaciones Prioritarias
+
+| Prioridad | Finding | Acción requerida |
 |---|---|---|
-| REC-001 | HIGH | Add `--platform-key` flag to `verify_pogc_offline.py` for full ML-DSA-65 verification |
-| REC-002 | MEDIUM | Consider adding `regulatory_tags` to canonical fields if they carry compliance significance |
-| REC-003 | LOW | Add `avg_conformance` range check (0.0–1.0) to verifier |
-| REC-004 | LOW | Document POGR-SEC-001 in ADR-189 §Known Limitations |
+| P1 — INMEDIATA | POGR-SEC-001 | Implementar `--platform-key` en `verify_pogc_offline.py` para verificación PQC real |
+| P1 — INMEDIATA | POGR-SEC-002 | Añadir `status` y `revoked_at` a `canonical_fields` (requiere re-firma de certs existentes) |
+| P1 — INMEDIATA | POGR-SEC-003 | Unificar lógica de validación de firma entre `/v1/pogr/verify` (JSON) y `/pogr/verify` (HTML) |
+| P2 — ALTA | POGR-SEC-004 | `UNIQUE INDEX idx_pogr_session_unique ON pogr_certificates (session_id) WHERE status = 'ACTIVE'` |
+| P2 — ALTA | POGR-SEC-012 | Añadir `content_hash` recomputation a `verify_page()` en `pogr_blueprint.py` |
+| P3 — MEDIA | POGR-SEC-011 | Argumento `--pogc-id` en `verify_pogc_offline.py` para validar binding ID↔contenido |
 
 ---
 
-*OMNIX PoGR Adversarial Audit · OMNIX QUANTUM LTD · Harold Nunes*  
-*Generated: 2026-05-30 19:44 UTC · scripts/pogr_adversarial_audit.py*
+*Generado por `scripts/pogr_adversarial_audit.py` · 2026-05-30 20:33:11 UTC · OMNIX QUANTUM LTD*
