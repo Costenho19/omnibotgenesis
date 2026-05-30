@@ -943,7 +943,14 @@ def revoke(pogc_id: str):
     try:
         conn = _get_db()
         with conn.cursor() as cur:
-            cur.execute("SELECT subject_org_id, status FROM pogr_certificates WHERE pogc_id = %s LIMIT 1", (pogc_id,))
+            cur.execute("""
+                SELECT subject_org_id, status, canonical_version,
+                       pogc_id, session_id, ctchc_seal_hash,
+                       issuer, subject_org, agent_id,
+                       compliance_tier, mandate_certification,
+                       issued_at, expires_at
+                FROM pogr_certificates WHERE pogc_id = %s LIMIT 1
+            """, (pogc_id,))
             row = cur.fetchone()
         if not row:
             conn.close()
@@ -958,16 +965,45 @@ def revoke(pogc_id: str):
             return _err(f"Certificate is already {row['status']}", 409)
 
         now = datetime.now(timezone.utc)
+        canon_version = int(row.get("canonical_version") or 1)
+
+        # ADR-205: for v2 certs, re-sign under the new REVOKED state so that
+        # content_hash remains consistent with the canonical fields after revocation.
+        # Offline exports of the revoked cert will then verify correctly as REVOKED.
+        new_hash: Optional[str] = None
+        new_sig:  Optional[str] = None
+        if canon_version >= 2:
+            raw_revoked = {**dict(row),
+                           "issued_at":  _dt_iso(row.get("issued_at")),
+                           "expires_at": _dt_iso(row.get("expires_at")),
+                           "revoked_at": now,
+                           "status":     "REVOKED"}
+            new_canonical = _canonical_fields(raw_revoked, version=2)
+            new_hash = _content_hash(new_canonical)
+            new_sig  = _sign_certificate(new_canonical)
+
         with conn:
             with conn.cursor() as cur:
-                cur.execute("""
-                    UPDATE pogr_certificates
-                    SET status = 'REVOKED',
-                        revoked_at = %s,
-                        revocation_reason = %s,
-                        revocation_proof = %s
-                    WHERE pogc_id = %s
-                """, (now, reason, proof, pogc_id))
+                if canon_version >= 2 and new_hash:
+                    cur.execute("""
+                        UPDATE pogr_certificates
+                        SET status = 'REVOKED',
+                            revoked_at = %s,
+                            revocation_reason = %s,
+                            revocation_proof = %s,
+                            content_hash = %s,
+                            pqc_signature = %s
+                        WHERE pogc_id = %s
+                    """, (now, reason, proof, new_hash, new_sig, pogc_id))
+                else:
+                    cur.execute("""
+                        UPDATE pogr_certificates
+                        SET status = 'REVOKED',
+                            revoked_at = %s,
+                            revocation_reason = %s,
+                            revocation_proof = %s
+                        WHERE pogc_id = %s
+                    """, (now, reason, proof, pogc_id))
         conn.close()
     except Exception as exc:
         logger.error(f"[PoGR] revoke error: {exc}")
