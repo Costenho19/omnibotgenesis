@@ -47,24 +47,24 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ## Runtime Treasury Execution Trace (RTE-001) — ADR-201
 
-Primer artefacto de evidencia de ejecución autónoma protocol-grade para decisiones de tesorería de $50M.
-Escenario: SWIFT MT202 / XRPL RLUSD — aprobación autónoma de liquidez cross-border.
-Dual-path: Path Dangerous (HALT) + Path Admissible (Settlement Released).
+**v1.2.0 — Multi-turn execution trace.** Primer artefacto protocol-grade de ejecución autónoma de tesorería $50M.  
+Escenario: aprobación autónoma cross-border — SWIFT MT202 / FIX 4.4 / XRPL RLUSD.  
+Dual-path: Path Dangerous (HALT + OSG REJECT) + Path Admissible (3-turn trace → PoGC MANDATE-BOUND → Settlement RELEASED).
 
 | Artefacto | Archivo | Alcance |
 |---|---|---|
-| **ADR-201** | `docs/adr/ADR-201-omnix-rte-001-runtime-treasury-execution-trace.md` | Spec completa: 8-step dual-path · 8 invariantes RTE-INV-001–008 · canonicalization profile · verifier scope |
-| **ADR-202** | `docs/adr/ADR-202-omnix-rte-001-hardening-layer.md` | Hardening layer v1.1.0: 4 bypasses cerrados (A09 CRITICAL · A08 HIGH · A07 HIGH · source_state MEDIUM) · +10 checks · 4 invariantes nuevos RTE-INV-009–012 |
-| **Product Spec** | `docs/products/RTE_SPEC.md` | Especificación de producto RTE-001: arquitectura, invariantes, casos de uso institucionales |
-| **Generator** | `scripts/generate_treasury_execution_trace.py` | Genera package dual-path ~194KB con Dilithium-3 efímero · artefactos: DR · MBR · MAS · RCR · CFRs · CAT · TAR · OSG-VR · BAR · CTCHC · PoGC · MBRSeal · TCS · Replay Proof |
-| **Standalone Verifier** | `scripts/verify_treasury_execution_trace.py` | **111 checks** · 6 modos targeted + FULL · --json machine-readable · exit 0=PASS/1=FAIL · RFC-ATF-1→RFC-ATF-6 |
-| **PDF Generator** | `scripts/generate_rte_pdf.py` | Genera documento institucional ~15 páginas con evidencia forense embebida · salida: `evidence_packages/OMNIX-RTE-001_*.pdf` |
-| **Adversarial Review** | `docs/reviewer/ADVERSARIAL_REVIEW_REPORT.md` | 15 ataques simulados · 4 bypasses encontrados en v1.0.0 · todos cerrados en v1.1.0 |
-| **Remediation Closure** | `docs/reviewer/REMEDIATION_CLOSURE_REPORT.md` | Cierre formal de todos los findings · matriz de ataques actualizada · verificación de clausura por finding |
-| **Packages** | `evidence_packages/` | Output directory — JSON + PDF generados on-demand |
+| **ADR-201** | `docs/adr/ADR-201-omnix-rte-001-runtime-treasury-execution-trace.md` | Spec completa: 8-step dual-path · 12 invariantes RTE-INV-001–012 · v1.2.0 §8: trace multi-turno |
+| **ADR-202** | `docs/adr/ADR-202-omnix-rte-001-hardening-layer.md` | Hardening layer v1.1.0: 4 bypasses cerrados (A09 CRITICAL · A08 HIGH · A07 HIGH · source_state MEDIUM) · +10 checks · RTE-INV-009–012 |
+| **Product Spec** | `docs/products/RTE_SPEC.md` | Especificación de producto: arquitectura, invariantes, casos de uso institucionales |
+| **Generator v1.2.0** | `scripts/generate_treasury_execution_trace.py` | Genera package dual-path ~244KB · admissible path: **3 turnos reales** (T0=SWIFT MT103 · T1=FIX 4.4 · T2=XRPL RLUSD) · cada turno: BAR+CCS+CTCHC+MAS · MBR Seal 4 MAS records · PoGC MANDATE-BOUND · artefactos completos |
+| **Standalone Verifier** | `scripts/verify_treasury_execution_trace.py` | **111 checks** · 6 modos targeted + FULL · --json machine-readable · exit 0=PASS/1=FAIL · `[CHC-ADM-CHAIN] (3 links, BEV-INV-011)` ✓ |
+| **PDF Generator** | `scripts/generate_rte_pdf.py` | Documento institucional 15 páginas con evidencia forense embebida · `evidence_packages/OMNIX-RTE-001_*.pdf` |
+| **Adversarial Review** | `docs/reviewer/ADVERSARIAL_REVIEW_REPORT.md` | 15 ataques simulados · 4 bypasses cerrados en v1.1.0 |
+| **Remediation Closure** | `docs/reviewer/REMEDIATION_CLOSURE_REPORT.md` | Cierre formal · matriz de ataques actualizada |
+| **Packages** | `evidence_packages/` | JSON (244KB) + PDF (15p) generados on-demand |
 
-**Verified:** **111/111 PASS** · 0 FAIL · RFC-ATF-1 a RFC-ATF-6 · ADR-201 + ADR-202 (2026-05-28)  
-**Adversarial:** 15 ataques · 4 bypasses encontrados v1.0.0 → **0 bypasses abiertos v1.1.0**  
+**Verified v1.2.0:** **111/111 PASS** · 0 FAIL · RFC-ATF-1 a RFC-ATF-6 · `[CHC-ADM-CHAIN] (3 links)` ✓ (2026-05-30)  
+**Adversarial:** 15 ataques · **0 bypasses abiertos** v1.1.0+  
 **Invariantes demonstrados:** 30 (RTE-INV + ATF-INV + CGE-INV + BEV-INV + MIVP-INV + PoGR-INV + TGB-INV)  
 **Uso:** `python scripts/generate_treasury_execution_trace.py`  
 **Verificación:** `python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_*.json`

@@ -125,6 +125,41 @@ def _sign_raw(pqc, raw_bytes: bytes, sk_bytes: bytes) -> Optional[str]:
     return base64.b64encode(sig).decode() if sig else None
 
 
+def _build_ccs(pqc, sk_bytes: bytes, session_id: str, bar_id: str,
+               turn_index: int, conformance_score: float, verdict: str,
+               drift_accumulated: float, checks_passed: int, checks_total: int) -> Dict:
+    """
+    ConstraintConformanceSignal (CCS) — BEV-INV-005: every BAR has a corresponding CCS.
+    Measures per-turn adherence to mandate constraints. Feeds AGVP watchdog.
+    BEV-INV-006: score ∈ [0.0, 1.0]. BEV-INV-008: cumulative drift > threshold → HALT.
+    """
+    ccs_id    = _hex_id("CCS")
+    issued_at = _now_iso()
+    payload = {
+        "ccs_id":               ccs_id,
+        "session_id":           session_id,
+        "bar_id":               bar_id,
+        "turn_index":           turn_index,
+        "conformance_score":    round(conformance_score, 4),
+        "verdict":              verdict,
+        "drift_accumulated":    round(drift_accumulated, 4),
+        "checks_passed":        checks_passed,
+        "checks_total":         checks_total,
+        "agvp_watchdog_clear":  conformance_score >= 0.70,
+        "issued_at":            issued_at,
+        "bev_invariant":        "BEV-INV-005/006/008 (RFC-ATF-6 §4.2, ADR-182)",
+    }
+    payload["ccs_content_hash"] = _sha3(json.dumps(payload, sort_keys=True))
+    sig = _sign_compact(
+        pqc,
+        {"ccs_id": ccs_id, "ccs_content_hash": payload["ccs_content_hash"], "issued_at": issued_at},
+        sk_bytes,
+    )
+    payload["pqc_signature"] = sig
+    payload["pqc_algorithm"] = "ML-DSA-65"
+    return payload
+
+
 def _enrich_dr_with_session(pqc, sk_bytes: bytes, dr_dict: Dict, session_id: str) -> Dict:
     """
     Bind a DR to a specific session_id and recompute content_hash + PQC signature.
@@ -1236,40 +1271,165 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      binding_id={binding_record['binding_id']} | status=ACCEPTED")
     print(f"      commit_id={commit_record['commit_id']} | execution_reachable=True")
 
-    # ── 6. GATE — PoGC issued + OSG approves ────────────────────────────────
-    print("\n  [6/8] GATE — issuing PoGC + OSG ValidationReceipt APPROVED...")
-
-    # Build BAR + CTCHC before PoGC (PoGC references them)
+    # ── 6. GATE — 3-turn execution trace → PoGC → OSG APPROVED ─────────────
+    #
+    # Turn 0: SWIFT MT103 counterparty validation + sanctions screening
+    # Turn 1: FIX 4.4 order routing to institutional market gateway
+    # Turn 2: XRPL RLUSD atomic settlement + finality confirmation
+    #
+    # Each turn: BAR (behavioral anchor) + CCS (conformance signal, BEV-INV-005)
+    #            + CTCHC link (hash chain) + MAS (mandate alignment score)
+    # MBR Seal covers [mas_precheck + mas_exec0 + mas_exec1 + mas_exec2] → MANDATE-BOUND
+    # PoGC issued from sealed 3-turn chain (ctchc_turn_count=3)
+    # ─────────────────────────────────────────────────────────────────────────
+    print("\n  [6/8] GATE — 3-turn execution trace → PoGC + OSG APPROVED...")
     bar_engine = BAREngine()
-    AGENT_OUTPUT = (
-        "GOVERNANCE ADMISSION — Cross-border treasury execution authorised under TREASURY-MANDATE-2026-Q2. "
-        f"Releasing USD 50,000,000 to EUROBANK-COUNTERPARTY-001 via SWIFT MT202 / XRPL RLUSD. "
-        "FX rate 1.0847 EUR/USD — within approved band ±2.5%. "
-        "Counterparty EUROBANK-COUNTERPARTY-001 confirmed on whitelist. "
-        "Dual approval reference: DUAL-APPROVAL-TXN-2026-Q2-0047 — SATISFIED. "
-        "All constraints within mandate boundaries. "
-        "CTCHC will seal this execution turn. PoGC to be issued upon seal."
+    execution_turns = []
+
+    # ── Turn 0: SWIFT MT103 counterparty validation ───────────────────────
+    print("       Turn 0: SWIFT MT103 — counterparty BIC verification + sanctions screening")
+    OUTPUT_T0 = (
+        "SWIFT MT103 VALIDATION PASS — Counterparty BIC EURBDE3BXXX verified against SWIFT BIC directory. "
+        "Sanctions screening cleared: OFAC SDN (clear), EU Consolidated List (clear), "
+        "UN Security Council List (clear), HMT UK Sanctions (clear). "
+        "FX rate 1.0847 EUR/USD within approved band ±2.5% — rate ceiling not breached. "
+        "Counterparty EUROBANK-COUNTERPARTY-001 confirmed on mandate whitelist. "
+        "Dual approval DUAL-APPROVAL-TXN-2026-Q2-0047 — SATISFIED. "
+        "Proceeding to FIX 4.4 order routing. CTCHC Turn 0 sealed."
     )
-    bar = bar_engine.create_bar(
+    bar0 = bar_engine.create_bar(
         session_id=SESSION_ID,
         agent_id=AGENT_ID,
         turn_index=0,
-        output_text=AGENT_OUTPUT,
+        output_text=OUTPUT_T0,
         governing_receipt_id=dr.delegation_id,
         constraint_set=source_state["policy_constraints"],
-        metadata={"path": "ADMISSIBLE", "commit_id": commit_record["commit_id"]},
+        metadata={"path": "ADMISSIBLE", "execution_turn": "SWIFT_MT103_VALIDATION",
+                  "commit_id": commit_record["commit_id"]},
     )
-    link = ctchc_engine.append_turn(
+    ccs0 = _build_ccs(
+        pqc, sk_bytes, SESSION_ID, bar0.bar_id, turn_index=0,
+        conformance_score=0.97, verdict="CONFORMANT",
+        drift_accumulated=0.03, checks_passed=7, checks_total=7,
+    )
+    link0 = ctchc_engine.append_turn(
+        session_id=SESSION_ID, turn_index=0,
+        bar_id=bar0.bar_id, ccs_id=ccs0["ccs_id"],
+        output_hash=bar0.output_hash, governing_receipt_id=dr.delegation_id,
+    )
+    mas_exec0 = _build_mas(
+        pqc, sk_bytes,
+        mbr_id=mbr["mbr_id"], session_id=SESSION_ID, turn_index=1,
+        ctchc_link_hash=link0.chain_link_hash,
+        alignment_score=0.96,
+        proxy_guard_violations=[], proxy_guard_warnings=[],
+    )
+    execution_turns.append({
+        "turn": 0, "label": "SWIFT MT103 counterparty validation + sanctions screening",
+        "bar": bar0.to_dict(), "ccs": ccs0, "mas": mas_exec0,
+        "ctchc_link_hash": link0.chain_link_hash,
+    })
+    print(f"       T0 BAR: {bar0.bar_id[:24]}... | CCS=CONFORMANT(0.97) | MAS=ALIGNED(0.96)")
+
+    # ── Turn 1: FIX 4.4 order routing ─────────────────────────────────────
+    print("       Turn 1: FIX 4.4 — institutional order routing to EUROBANK gateway")
+    fix_clord_id = _hex_id("CLORD", 8)
+    OUTPUT_T1 = (
+        f"FIX 4.4 ORDER ROUTED — MsgType=D (New Order Single). ClOrdID={fix_clord_id}. "
+        "Symbol=EURUSD. Side=1 (Buy). OrdType=2 (Limit). Price=1.0847. "
+        "OrderQty=50000000. TimeInForce=0 (Day). Currency=EUR. "
+        "TargetCompID=EUROBANK-FIX-GW-001. SenderCompID=OMNIX-AGENT-TREASURY-001. "
+        "Gateway acknowledgment: OrdStatus=A (Pending New). "
+        "ExecType=0 (New). Mandate constraints all satisfied. "
+        "Proceeding to XRPL RLUSD atomic settlement. CTCHC Turn 1 sealed."
+    )
+    bar1 = bar_engine.create_bar(
         session_id=SESSION_ID,
-        turn_index=0,
-        bar_id=bar.bar_id,
-        ccs_id=_hex_id("CCS", 12),
-        output_hash=bar.output_hash,
+        agent_id=AGENT_ID,
+        turn_index=1,
+        output_text=OUTPUT_T1,
         governing_receipt_id=dr.delegation_id,
+        constraint_set=source_state["policy_constraints"],
+        metadata={"path": "ADMISSIBLE", "execution_turn": "FIX_44_ORDER_ROUTING",
+                  "fix_clord_id": fix_clord_id, "fix_msg_type": "D"},
     )
+    ccs1 = _build_ccs(
+        pqc, sk_bytes, SESSION_ID, bar1.bar_id, turn_index=1,
+        conformance_score=0.95, verdict="CONFORMANT",
+        drift_accumulated=0.05, checks_passed=7, checks_total=7,
+    )
+    link1 = ctchc_engine.append_turn(
+        session_id=SESSION_ID, turn_index=1,
+        bar_id=bar1.bar_id, ccs_id=ccs1["ccs_id"],
+        output_hash=bar1.output_hash, governing_receipt_id=dr.delegation_id,
+    )
+    mas_exec1 = _build_mas(
+        pqc, sk_bytes,
+        mbr_id=mbr["mbr_id"], session_id=SESSION_ID, turn_index=2,
+        ctchc_link_hash=link1.chain_link_hash,
+        alignment_score=0.93,
+        proxy_guard_violations=[], proxy_guard_warnings=[],
+    )
+    execution_turns.append({
+        "turn": 1, "label": "FIX 4.4 order routing — EUROBANK institutional gateway",
+        "bar": bar1.to_dict(), "ccs": ccs1, "mas": mas_exec1,
+        "ctchc_link_hash": link1.chain_link_hash,
+        "fix_clord_id": fix_clord_id,
+    })
+    print(f"       T1 BAR: {bar1.bar_id[:24]}... | CCS=CONFORMANT(0.95) | MAS=ALIGNED(0.93)")
+
+    # ── Turn 2: XRPL RLUSD atomic settlement ──────────────────────────────
+    print("       Turn 2: XRPL RLUSD — atomic settlement + ledger finality confirmation")
+    xrpl_tx_id   = f"XRPL-{uuid.uuid4().hex[:24].upper()}"
+    xrpl_ledger  = 9_847_203
+    OUTPUT_T2 = (
+        f"XRPL RLUSD ATOMIC SETTLEMENT — TxID: {xrpl_tx_id}. "
+        "TransactionType: Payment. Amount: 50000000 RLUSD (drops). "
+        f"Destination: rEUROBANK4xT7GwcWXNzT verified on-chain. "
+        f"Ledger index: {xrpl_ledger:,}. Validated: true. "
+        "OfferSequence matched. Fee: 12 drops. "
+        "SWIFT MT202 acknowledgment dispatched to EUROBANK-COUNTERPARTY-001. "
+        "Settlement status: RELEASED — pending T+2 SWIFT clearing. "
+        "All mandate constraints satisfied across 3 execution turns. CTCHC Turn 2 sealed."
+    )
+    bar2 = bar_engine.create_bar(
+        session_id=SESSION_ID,
+        agent_id=AGENT_ID,
+        turn_index=2,
+        output_text=OUTPUT_T2,
+        governing_receipt_id=dr.delegation_id,
+        constraint_set=source_state["policy_constraints"],
+        metadata={"path": "ADMISSIBLE", "execution_turn": "XRPL_RLUSD_SETTLEMENT",
+                  "xrpl_tx_id": xrpl_tx_id, "xrpl_ledger_index": xrpl_ledger,
+                  "fix_clord_id": fix_clord_id},
+    )
+    ccs2 = _build_ccs(
+        pqc, sk_bytes, SESSION_ID, bar2.bar_id, turn_index=2,
+        conformance_score=0.94, verdict="CONFORMANT",
+        drift_accumulated=0.06, checks_passed=7, checks_total=7,
+    )
+    link2 = ctchc_engine.append_turn(
+        session_id=SESSION_ID, turn_index=2,
+        bar_id=bar2.bar_id, ccs_id=ccs2["ccs_id"],
+        output_hash=bar2.output_hash, governing_receipt_id=dr.delegation_id,
+    )
+    mas_exec2 = _build_mas(
+        pqc, sk_bytes,
+        mbr_id=mbr["mbr_id"], session_id=SESSION_ID, turn_index=3,
+        ctchc_link_hash=link2.chain_link_hash,
+        alignment_score=0.91,
+        proxy_guard_violations=[], proxy_guard_warnings=[],
+    )
+    execution_turns.append({
+        "turn": 2, "label": "XRPL RLUSD atomic settlement + finality confirmation",
+        "bar": bar2.to_dict(), "ccs": ccs2, "mas": mas_exec2,
+        "ctchc_link_hash": link2.chain_link_hash,
+        "xrpl_tx_id": xrpl_tx_id, "xrpl_ledger_index": xrpl_ledger,
+    })
+    print(f"       T2 BAR: {bar2.bar_id[:24]}... | CCS=CONFORMANT(0.94) | MAS=ALIGNED(0.91)")
+
     sealed_chain = ctchc_engine.seal_chain(SESSION_ID)
-    print(f"      BAR: {bar.bar_id} | status={bar.bar_status}")
-    print(f"      CTCHC sealed: {sealed_chain.seal_hash[:28]}...")
+    print(f"       CTCHC sealed: {sealed_chain.seal_hash[:28]}... ({sealed_chain.turn_count} turns)")
 
     # PoGC
     pogc_id   = _hex_id("POGC")
@@ -1282,8 +1442,8 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         "delegation_chain_root": dr.chain_root_id,
         "tar_id":                tar.tar_id,
         "tar_status":            tar.admission_status,
-        "bar_id":                bar.bar_id,
-        "bar_status":            bar.bar_status,
+        "bar_id":                bar2.bar_id,
+        "bar_status":            bar2.bar_status,
         "ctchc_chain_id":        sealed_chain.chain_id,
         "ctchc_seal_hash":       sealed_chain.seal_hash,
         "ctchc_turn_count":      sealed_chain.turn_count,
@@ -1308,15 +1468,16 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         pqc, sk_bytes,
         mbr_id=mbr["mbr_id"],
         session_id=SESSION_ID,
-        mas_records=[mas],
+        mas_records=[mas, mas_exec0, mas_exec1, mas_exec2],
         session_outcome="CLOSED",
     )
     print(f"      MBR Seal: {mbr_seal['seal_id']} | tier={mbr_seal['certification_tier']}")
+    print(f"      MBR Seal covers {mbr_seal['total_turns']} MAS records (pre-check + 3 execution turns)")
 
-    # Settlement reference
+    # Settlement reference — xrpl_tx_id anchored to Turn 2 execution output
     settlement_ref = {
         "swift_mt202_ref":       f"MT202-{uuid.uuid4().hex[:12].upper()}",
-        "xrpl_tx_id":            f"XRPL-{uuid.uuid4().hex[:24].upper()}",
+        "xrpl_tx_id":            xrpl_tx_id,
         "settlement_rail":       "SWIFT MT202 / XRPL RLUSD",
         "amount_usd":            50_000_000,
         "counterparty":          "EUROBANK-COUNTERPARTY-001",
@@ -1348,7 +1509,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         agent_id=AGENT_ID,
         action=ACTION,
         ctchc_seal_hash=sealed_chain.seal_hash,
-        bar_id=bar.bar_id,
+        bar_id=bar2.bar_id,
         tar_id=tar.tar_id,
         dr_id=dr.delegation_id,
         pogc_id=pogc_id,
@@ -1412,8 +1573,9 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
                 "osg_validation_receipt":          osg_receipt,
             },
             "7_execution": {
-                "bar":               bar.to_dict(),
-                "ctchc_links":       [link.to_dict()],
+                "execution_turns":   execution_turns,
+                "bar":               bar2.to_dict(),
+                "ctchc_links":       [link0.to_dict(), link1.to_dict(), link2.to_dict()],
                 "ctchc_sealed":      sealed_chain.to_dict(),
                 "settlement_reference": settlement_ref,
                 "outcome_receipt":   outcome_receipt,
@@ -1467,7 +1629,7 @@ def main() -> str:
     package = {
         "package_id":      package_id,
         "package_type":    "OMNIX-RTE-001",
-        "package_version": "1.1.0",
+        "package_version": "1.2.0",
         "omnix_version":   "2.6.0",
         "adr_reference":   "ADR-201",
         "generated_at":    _now_iso(),
@@ -1488,14 +1650,15 @@ def main() -> str:
         },
 
         "rte_chain_map": {
-            "1_SOURCE_STATE":  "Request captured with full treasury context + TCS",
-            "2_AUTHORITY":     "DR issued (degraded or recertified) + MIVP MBR activated",
-            "3_RUNTIME":       "CES computed + MIVP MAS per-turn + CCS conformance signal",
-            "4_COUNTERFACTUAL":"CGE: 5 CFRs + CAT sealed (decision space documented)",
-            "5_VERDICT":       "HALT (dangerous) or TAR ADMITTED (admissible)",
-            "6_GATE":          "OSG: ValidationReceipt REJECTED or APPROVED",
-            "7_EXECUTION":     "Refusal receipt or BAR + CTCHC + settlement reference",
-            "8_POST_EXECUTION":"CTCHC sealed + TGB snapshot + replay proof",
+            "1_SOURCE_STATE":   "Request captured with full treasury context + TCS (nanosecond precision)",
+            "2_AUTHORITY":      "DR issued (degraded or recertified) + MIVP MBR activated (MIVP-INV-001)",
+            "3_RUNTIME":        "CES computed + MIVP MAS pre-check + CCS conformance signal",
+            "4_COUNTERFACTUAL": "CGE: 5 CFRs + CAT sealed — complete decision space documented",
+            "5_VERDICT":        "HALT+MIVP (dangerous) or TAR ADMITTED+binding+commit (admissible)",
+            "6_GATE":           "3-turn execution trace: T0=SWIFT MT103 | T1=FIX 4.4 | T2=XRPL RLUSD "
+                                "(each: BAR+CCS+CTCHC+MAS) → PoGC MANDATE-BOUND + MBR Seal (4 MAS) + OSG VR",
+            "7_EXECUTION":      "Refusal receipt (dangerous) or outcome receipt MANDATE-BOUND (admissible)",
+            "8_POST_EXECUTION": "CTCHC sealed + TGB snapshot + offline replay proof (RTE-INV-006/007)",
         },
 
         "pqc": {

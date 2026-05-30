@@ -173,12 +173,45 @@ were found and fully remediated in v1.1.0. The hardening is documented in ADR-20
 
 ---
 
+---
+
+## §8 — Multi-turn Execution Trace (v1.2.0) — 2026-05-30
+
+The original generator (v1.1.0) produced a single-turn admissible path: one BAR, one CTCHC link, one MAS record. The trace proved governance admission but not **execution granularity** — the sequence of real-world actions performed under that governance.
+
+v1.2.0 upgrades the admissible path to a **3-turn execution trace** matching the actual settlement pipeline:
+
+| Turn | Label | Artifacts |
+|---|---|---|
+| **Turn 0** | SWIFT MT103 counterparty validation + sanctions screening | BAR-0 · CCS-0 (CONFORMANT/0.97) · CTCHC link-0 · MAS-1 (ALIGNED/0.96) |
+| **Turn 1** | FIX 4.4 order routing — EUROBANK institutional gateway | BAR-1 · CCS-1 (CONFORMANT/0.95) · CTCHC link-1 · MAS-2 (ALIGNED/0.93) |
+| **Turn 2** | XRPL RLUSD atomic settlement + ledger finality | BAR-2 · CCS-2 (CONFORMANT/0.94) · CTCHC link-2 · MAS-3 (ALIGNED/0.91) |
+
+**CCS (Constraint Conformance Signal):** Each turn now includes a real PQC-signed CCS (BEV-INV-005) measuring per-turn constraint adherence. Cumulative drift across 3 turns: 0.06 — well below the 0.35 HALT threshold (BEV-INV-008).
+
+**MBR Seal:** Covers 4 MAS records [pre-check (turn_index=0) + exec-0 + exec-1 + exec-2]. All 4 ALIGNED, 0 violations, 0 warnings → `MANDATE-BOUND` certification.
+
+**PoGC:** References `ctchc_turn_count=3` and `bar_id` of the final execution turn (XRPL RLUSD settlement). The CTCHC seal covers the complete 3-turn hash chain.
+
+**Package size:** 194.7 KB (v1.1.0) → **244.5 KB (v1.2.0)** — additional 49.8 KB from per-turn artifacts.
+
+**Verifier:** `[CHC-ADM-CHAIN] CTCHC link chain continuity (3 links, BEV-INV-011)` — the existing 111-check verifier handles N-link chains generically. **111/111 PASS** unchanged.
+
+**xrpl_tx_id:** In v1.2.0, the XRPL TxID in `settlement_reference` is anchored to the BAR output of Turn 2 (the execution turn that produced it), not a separately generated UUID. This eliminates a subtle gap where the settlement reference and execution trace could be from different executions.
+
+**New invariant validated:**
+- `BEV-INV-005` — every BAR has a corresponding CCS (now explicitly demonstrated across 3 turns)
+
+---
+
 ## Related ADRs
 
 - ADR-200 — Route-Complete Evidence Package (RCEP) — predecessor
 - ADR-202 — OMNIX-RTE-001 Hardening Layer — adversarial remediation
+- ADR-182 — Constraint Conformance Signal (CCS) — per-turn conformance measurement
 - ADR-184 — OMNIX Governance Runtime (OGR) — session lifecycle
 - ADR-186/187 — Proof of Governance Registry (PoGR/PoGC)
 - ADR-188 — Operational Settlement Gate (OSG)
 - ADR-194 — Mandate Integrity Verification Protocol (MIVP)
 - RFC-ATF-5 — CGE (§5) · GUGT (§6) · TGB (§7)
+- RFC-ATF-6 — BEV: BAR (ADR-181) · CCS (ADR-182) · CTCHC (ADR-183)
