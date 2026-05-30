@@ -62,9 +62,10 @@ Escenario: aprobación autónoma cross-border — SWIFT MT103 / FIX 4.4 / XRPL R
 | **Generator v1.4.0** | `scripts/generate_treasury_execution_trace.py` | Package triple-path ~494KB · **Step 0 GCFR**: IAD+SAR+MFR+CPS+FPS sellados · **Path C**: Turn 0=PASS · Turn 1=WARNING · Turn 2=HALT · CTCHC HALTED · OSG REJECTED |
 | **Standalone Verifier** | `scripts/verify_treasury_execution_trace.py` | **187 checks** · 8 modos verify + FULL · **5 IAEP reports** · `--verify-intake` · `--intake-report` · `--treasury-protocol` · `--mandate-timeline` · `--chain-custody` · `--check-version` · `--json` |
 | **PDF Generator** | `scripts/generate_rte_pdf.py` | Documento institucional 15 páginas con evidencia forense embebida · `evidence_packages/OMNIX-RTE-001_*.pdf` |
+| **Executive Verification Package** | `scripts/generate_executive_verification_package.py` | **5-page PDF** para CEOs · Reguladores · Inversores · Enterprise — sin jerga técnica · §1 Cover + What It Proves · §2 Three Scenarios · §3 Independent Verification Guide · §4 Verification Results · §5 PoGC · `evidence_packages/OMNIX-RTE-001_EVP_*.pdf` |
 | **Adversarial Review** | `docs/reviewer/ADVERSARIAL_REVIEW_REPORT.md` | 15 ataques simulados · 4 bypasses cerrados en v1.1.0 |
 | **Remediation Closure** | `docs/reviewer/REMEDIATION_CLOSURE_REPORT.md` | Cierre formal · matriz de ataques actualizada |
-| **Packages** | `evidence_packages/` | JSON (~494KB) + PDF (15p) generados on-demand |
+| **Packages** | `evidence_packages/` | JSON (~494KB) + PDF técnico (15p) + **EVP ejecutivo (5p)** generados on-demand |
 
 **Verified v1.4.0:** **187/187 PASS** · 0 FAIL · RFC-ATF-1 a RFC-ATF-6 · IPFL GCFR verificado ✓ (2026-05-30)  
 **Adversarial:** 15 ataques · **0 bypasses abiertos** v1.1.0+  

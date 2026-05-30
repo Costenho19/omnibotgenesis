@@ -785,3 +785,9 @@ id = "j2gdhq2Enf0uKP4Z3K0V_"
 uri = "file://evidence_packages/POGC-EXT-VERISIGIL_20260530.zip"
 type = "unspecified"
 title = "POGC-EXT-VERISIGIL — PDF + JSON (ZIP para Raheem)"
+
+[[outputs]]
+id = "P50t8PMgezV7i0JybgFC7"
+uri = "file://evidence_packages/OMNIX-RTE-001_EVP_20260530_231200.pdf"
+type = "pdf"
+title = "OMNIX-RTE-001 — Executive Verification Package"

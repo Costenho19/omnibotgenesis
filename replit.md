@@ -53,6 +53,13 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
 - `/docs/standards/` — RFC-ATF-1 (publicado) · RFC-ATF-2 (publicado) · RFC-ATF-3 (publicado) · RFC-ATF-4 (publicado) · RFC-ATF-5 (pendiente publicación Zenodo)
 - `/docs/integration/` — `OMNIX_GOVERNANCE_RUNTIME.md` · `GETTING_STARTED.md` — integration product docs
 - `/sdk/` — Python SDK · Node.js SDK
+- `/scripts/` — Generadores y verificadores de evidencia
+  - `generate_treasury_execution_trace.py` — Generator RTE-001 v1.4.0 (triple-path + IPFL GCFR)
+  - `verify_treasury_execution_trace.py` — Verifier standalone 187 checks · `--verify-intake` · `--intake-report`
+  - `generate_rte_pdf.py` — PDF técnico institucional 15 páginas (forense)
+  - `generate_executive_verification_package.py` — **EVP: PDF ejecutivo 5 páginas** para CEOs · Reguladores · Inversores · Enterprise (sin jerga técnica)
+  - `generate_route_evidence_package.py` / `verify_evidence_package.py` — RCEP dual-ruta (ADR-200)
+- `/evidence_packages/` — Paquetes generados: JSON (~494KB) · PDF técnico · **EVP ejecutivo**
 
 ---
 
