@@ -778,4 +778,10 @@ title = "POGC-EXT-A7F3C2B1D9E4F508 — VeriSigil AI · Primer PoGC Externo"
 id = "BbKMPxfS4SPAfTLO55M4H"
 uri = "file://evidence_packages/POGC-EXT-A7F3C2B1D9E4F508_20260530_040316.json"
 type = "unspecified"
-title = "POGC-EXT-A7F3C2B1D9E4F508 — JSON verificable"
+title = "POGC-EXT-A7F3C2B1D9E4F508 — JSON (toca Open, luego descargar desde el navegador)"
+
+[[outputs]]
+id = "j2gdhq2Enf0uKP4Z3K0V_"
+uri = "file://evidence_packages/POGC-EXT-VERISIGIL_20260530.zip"
+type = "unspecified"
+title = "POGC-EXT-VERISIGIL — PDF + JSON (ZIP para Raheem)"
