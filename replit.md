@@ -187,7 +187,7 @@ El "SSL para decisiones de agentes de IA" — verificable offline, firmado PQC, 
 **Nuevo artifact class:** `PoG Certificate (PoGC)` · ID: `POGC-{HEX16}` · PQC-signed ML-DSA-65  
 **6 invariantes:** PoGR-INV-001–006 (append-only · zero-trust verify · TTL explícito · 3-channel trust anchor · issuer-only revocation)  
 **DB table:** `pogr_certificates` (auto-created en Railway)  
-**Implementación pendiente:** ADR-187 (endpoints `/v1/pogr/*`) · React page `/proof-of-governance`  
+**Implementado:** ADR-187 (endpoints `/v1/pogr/*` en `omnix_web/api/pogr_blueprint.py`) · React pages `/proof-of-governance` + `/pogr/verify/:id` · Primer PoGC emitido: POGC-GENESIS-E071CC96 (2026-05-26)  
 **Go-to-market:** primer PoGC emitido antes del 1 julio 2026 — 32 días antes del EU AI Act enforcement
 
 ---
