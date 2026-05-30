@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-OMNIX Proof of Governance — Offline Certificate Verifier
-ADR-189 · PoGR-INV-003 · OMNIX-POGR-2026-001
+OMNIX Proof of Governance — Offline Certificate Verifier v2.0
+ADR-186 · ADR-189 · ADR-205 · PoGR-INV-003 · OMNIX-POGR-2026-001
 
 Verify any PoG Certificate entirely offline — no OMNIX account,
 no API key, no network access beyond the initial download.
@@ -13,27 +13,36 @@ Usage:
     # Verify a previously downloaded certificate file:
     python verify_pogc_offline.py --file certificate.json
 
+    # Full PQC cryptographic verification (pass platform public key):
+    python verify_pogc_offline.py --file cert.json --platform-key <base64>
+
     # Download only (save for later offline verification):
     python verify_pogc_offline.py POGC-A3F2B1C4D5E6F7A8 --download-only
 
-    # Use a custom registry endpoint (default: omnixquantum.net):
-    python verify_pogc_offline.py POGC-... --endpoint https://your-omnix-instance.com
+    # Machine-readable JSON output:
+    python verify_pogc_offline.py --file cert.json --json
 
 Requirements:
-    Python 3.8+  — no external dependencies required for core verification.
-    (urllib and hashlib are standard library.)
+    Python 3.8+  — no external dependencies for core verification (hash + status).
+    oqs-python   — OPTIONAL, required for ML-DSA-65 PQC cryptographic verification:
+                   pip install oqs-python
 
 What this verifier checks:
     [1] Content hash integrity  — SHA3-256 over canonical fields matches stored hash
-    [2] Certificate status      — ACTIVE / EXPIRED / REVOKED
+    [2] Certificate status      — ACTIVE / EXPIRED / REVOKED (v2: cryptographically bound)
     [3] TTL validity            — certificate has not expired
-    [4] PQC signature presence  — ML-DSA-65 (FIPS 204) signature is present
+    [4] PQC signature           — ML-DSA-65 (FIPS 204) cryptographic verification
+                                  (requires oqs-python + platform public key)
     [5] Issuer identity         — certificate was issued by OMNIX QUANTUM LTD
     [6] Mandate certification   — MANDATE-BOUND | MANDATE-ALIGNED | UNCERTIFIED
+    [7] Canonical version       — v1 warning / v2 full status binding
+
+ADR-205 — canonical_version 2: status + revoked_at are cryptographically bound.
+           canonical_version 1: status is NOT bound — always verify live for revocation.
 
 Exit codes:
-    0 — All checks passed. Certificate is VALID.
-    1 — One or more checks failed. Certificate is INVALID or WARNING.
+    0 — All hard checks passed. Certificate is VALID (warnings possible).
+    1 — One or more checks failed. Certificate is INVALID.
     2 — Usage error or download failure.
 
 OMNIX QUANTUM LTD — Harold Nunes — May 2026
@@ -41,26 +50,30 @@ OMNIX QUANTUM LTD — Harold Nunes — May 2026
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import sys
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 DEFAULT_ENDPOINT  = "https://omnixquantum.net"
-CANONICAL_FIELDS  = [
+EXPECTED_ISSUER   = "OMNIX QUANTUM LTD"
+VERSION           = "2.0.0"
+ADR_REF           = "ADR-186 · ADR-189 · ADR-205"
+
+# ADR-205: v1 legacy fields (10), v2 includes status + revoked_at (12)
+CANONICAL_V1 = [
     "pogc_id", "session_id", "ctchc_seal_hash",
     "issuer", "subject_org", "agent_id",
     "compliance_tier", "mandate_certification",
     "issued_at", "expires_at",
 ]
-EXPECTED_ISSUER   = "OMNIX QUANTUM LTD"
-VERSION           = "1.0.0"
-ADR_REF           = "ADR-186 · ADR-187 · ADR-189"
+CANONICAL_V2 = CANONICAL_V1 + ["status", "revoked_at"]
 
 # ── ANSI colours (disabled on Windows or when not a TTY) ──────────────────────
 
@@ -73,40 +86,135 @@ _USE_COLOUR = _colour_supported()
 def _c(code: str, text: str) -> str:
     return f"\033[{code}m{text}\033[0m" if _USE_COLOUR else text
 
-GREEN  = lambda t: _c("32", t)
-RED    = lambda t: _c("31", t)
-YELLOW = lambda t: _c("33", t)
-CYAN   = lambda t: _c("36", t)
-BOLD   = lambda t: _c("1",  t)
-DIM    = lambda t: _c("2",  t)
+GREEN  = lambda t: _c("32",   t)
+RED    = lambda t: _c("31",   t)
+YELLOW = lambda t: _c("33",   t)
+CYAN   = lambda t: _c("36",   t)
+BOLD   = lambda t: _c("1",    t)
+DIM    = lambda t: _c("2",    t)
 GOLD   = lambda t: _c("33;1", t)
 
 # ── Core verification ──────────────────────────────────────────────────────────
 
-def _compute_content_hash(cert: Dict[str, Any]) -> str:
+def _detect_canonical_version(cert: Dict[str, Any]) -> int:
+    """
+    Detect canonical schema version from the certificate.
+    ADR-205: canonical_version 2 includes status + revoked_at in the hash.
+    """
+    # Explicit field in cert (new certs from v1.1+ server)
+    v = cert.get("canonical_version") or cert.get(
+        "_offline_verification", {}).get("canonical_version")
+    if v is not None:
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            pass
+    return 1  # safe default: treat as legacy v1
+
+
+def _compute_content_hash(cert: Dict[str, Any], version: int) -> str:
     """
     Recompute SHA3-256 over the canonical fields subset.
-    This is the authoritative integrity check — any tampering
-    with the core fields will produce a different hash.
+    Uses the correct field set for the given canonical_version.
+    ADR-205.
     """
-    canonical = {k: cert[k] for k in CANONICAL_FIELDS if k in cert}
+    fields = CANONICAL_V2 if version >= 2 else CANONICAL_V1
+    canonical: Dict[str, Any] = {}
+    for k in fields:
+        val = cert.get(k)
+        # Normalise: datetimes are already strings in exported JSON
+        canonical[k] = val
     payload = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
     return "sha3-256:" + hashlib.sha3_256(payload).hexdigest()
 
 
-def verify_certificate(cert: Dict[str, Any]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
+def _verify_pqc_signature(
+    cert: Dict[str, Any],
+    canonical: Dict[str, Any],
+    platform_key_b64: Optional[str],
+) -> Tuple[Optional[bool], str]:
     """
-    Run all offline verification checks against a certificate dict.
+    Verify the ML-DSA-65 signature cryptographically.
+    ADR-205 — POGR-SEC-001 fix.
+
+    platform_key_b64 priority:
+      1. --platform-key argument (explicit override)
+      2. _offline_verification.platform_public_key_b64 (embedded in export)
+      3. Not available → warning
 
     Returns:
-        (overall_valid: bool, checks: list of (label, passed, detail))
+        (True,  "✓ ML-DSA-65 signature cryptographically verified (FIPS 204)")
+        (False, "✗ ML-DSA-65 signature INVALID — <reason>")
+        (None,  "⚠ <warning>")  — warning, not a hard failure
     """
-    checks: List[Tuple[str, bool, str]] = []
+    sig_str = cert.get("pqc_signature", "")
+
+    if not sig_str:
+        return (False, "PQC signature absent")
+
+    if sig_str.startswith("STUB-"):
+        return (None,
+                "Signature is a development stub — not production ML-DSA-65. "
+                "Re-sign with OMNIX_SIGNING_SECRET_KEY_B64 in production.")
+
+    if not sig_str.startswith("ML-DSA-65:"):
+        return (None, f"Signature format unrecognised: {sig_str[:30]}…")
+
+    # Resolve platform public key
+    pk_b64 = platform_key_b64
+    if not pk_b64:
+        pk_b64 = (cert.get("_offline_verification") or {}).get("platform_public_key_b64")
+
+    if not pk_b64:
+        return (None,
+                "Platform public key not provided — PQC cryptographic verification skipped.\n"
+                "  Hash integrity is still enforced.\n"
+                "  For full cryptographic verification:\n"
+                "    python verify_pogc_offline.py --file cert.json --platform-key <base64>\n"
+                "  Or use a cert exported from a production server (includes embedded key).")
+
+    # Attempt oqs import
+    try:
+        from oqs import Signature as OQSSig  # type: ignore
+    except ImportError:
+        return (None,
+                "oqs-python not installed — PQC cryptographic verification skipped.\n"
+                "  Install: pip install oqs-python\n"
+                "  Hash integrity is still enforced.")
+
+    try:
+        pk_bytes  = base64.b64decode(pk_b64)
+        payload   = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
+        sig_bytes = bytes.fromhex(sig_str.removeprefix("ML-DSA-65:"))
+        verifier  = OQSSig("ML-DSA-65")
+        verifier.verify(payload, sig_bytes, pk_bytes)
+        return (True, "ML-DSA-65 signature cryptographically verified (FIPS 204 / NIST 2024)")
+    except Exception as exc:
+        return (False, f"ML-DSA-65 signature INVALID — {exc}")
+
+
+def verify_certificate(
+    cert: Dict[str, Any],
+    platform_key_b64: Optional[str] = None,
+) -> Tuple[bool, List[Tuple[str, Optional[bool], str]]]:
+    """
+    Run all offline verification checks against a certificate dict.
+    ADR-205: canonical_version-aware, PQC cryptographic verification.
+
+    Returns:
+        (overall_valid: bool,
+         checks: list of (label, passed, detail))
+         passed: True = OK, False = FAIL, None = WARNING
+    """
+    checks: List[Tuple[str, Optional[bool], str]] = []
     now = datetime.now(timezone.utc)
+
+    # Detect canonical schema version (ADR-205)
+    canon_version = _detect_canonical_version(cert)
 
     # ── [1] Content hash integrity ─────────────────────────────────────────
     stored_hash   = cert.get("content_hash", "")
-    computed_hash = _compute_content_hash(cert)
+    computed_hash = _compute_content_hash(cert, canon_version)
     hash_ok       = stored_hash == computed_hash
 
     if hash_ok:
@@ -117,27 +225,31 @@ def verify_certificate(cert: Dict[str, Any]) -> Tuple[bool, List[Tuple[str, bool
                         f"MISMATCH\n"
                         f"  Stored:   {stored_hash}\n"
                         f"  Expected: {computed_hash}\n"
-                        f"  → One or more canonical fields have been altered."))
+                        f"  → One or more canonical fields have been altered "
+                        f"(canonical_version={canon_version})."))
 
     # ── [2] Certificate status ─────────────────────────────────────────────
-    status = cert.get("status", "UNKNOWN")
+    status    = cert.get("status", "UNKNOWN")
     status_ok = status == "ACTIVE"
+
     if status == "ACTIVE":
-        checks.append(("Certificate status", True, "ACTIVE"))
+        checks.append(("Certificate status", True,
+                        f"ACTIVE (canonical_version={canon_version})"))
     elif status == "REVOKED":
         reason = cert.get("revocation_reason") or "no reason provided"
-        checks.append(("Certificate status", False, f"REVOKED — {reason}"))
+        checks.append(("Certificate status", False,
+                        f"REVOKED — {reason}"))
     elif status == "EXPIRED":
         checks.append(("Certificate status", False, "EXPIRED"))
     else:
-        checks.append(("Certificate status", False, f"UNKNOWN status: {status}"))
+        checks.append(("Certificate status", False,
+                        f"UNKNOWN status: {status}"))
 
     # ── [3] TTL validity ───────────────────────────────────────────────────
     expires_str = cert.get("expires_at", "")
     ttl_ok      = False
     try:
-        # Handle both 'Z' suffix and '+00:00'
-        expires_str_n = expires_str.replace("Z", "+00:00")
+        expires_str_n = str(expires_str).replace("Z", "+00:00")
         expires_at    = datetime.fromisoformat(expires_str_n)
         if expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
@@ -153,19 +265,13 @@ def verify_certificate(cert: Dict[str, Any]) -> Tuple[bool, List[Tuple[str, bool
     except Exception as exc:
         checks.append(("TTL validity", False, f"Cannot parse expires_at: {exc}"))
 
-    # ── [4] PQC signature presence ────────────────────────────────────────
-    sig = cert.get("pqc_signature", "")
-    if sig.startswith("ML-DSA-65:"):
-        checks.append(("PQC signature (ML-DSA-65)", True,
-                        "Present — ML-DSA-65 (FIPS 204 / NIST 2024)"))
-    elif sig.startswith("STUB-"):
-        checks.append(("PQC signature (ML-DSA-65)", None,  # None = warning
-                        "Development stub — not production ML-DSA-65"))
-    elif sig:
-        checks.append(("PQC signature (ML-DSA-65)", None,
-                        f"Unrecognised format: {sig[:30]}…"))
-    else:
-        checks.append(("PQC signature (ML-DSA-65)", False, "ABSENT"))
+    # ── [4] PQC signature (ML-DSA-65 cryptographic) ───────────────────────
+    # Build canonical dict for signature verification (same as issuance)
+    fields = CANONICAL_V2 if canon_version >= 2 else CANONICAL_V1
+    canonical = {k: cert.get(k) for k in fields}
+
+    pqc_ok, pqc_msg = _verify_pqc_signature(cert, canonical, platform_key_b64)
+    checks.append(("PQC signature (ML-DSA-65)", pqc_ok, pqc_msg))
 
     # ── [5] Issuer identity ───────────────────────────────────────────────
     issuer    = cert.get("issuer", "")
@@ -186,8 +292,21 @@ def verify_certificate(cert: Dict[str, Any]) -> Tuple[bool, List[Tuple[str, bool
         checks.append(("Mandate certification", None,
                         "UNCERTIFIED — mandate verification not performed"))
 
+    # ── [7] Canonical version status binding (ADR-205) ────────────────────
+    if canon_version >= 2:
+        checks.append(("Canonical schema version", True,
+                        "v2 — status and revoked_at are cryptographically bound "
+                        "to the content_hash and ML-DSA-65 signature"))
+    else:
+        checks.append(("Canonical schema version", None,
+                        f"v{canon_version} (legacy) — fields 'status' and 'revoked_at' are NOT "
+                        f"cryptographically bound to this certificate's hash or signature.\n"
+                        f"  SECURITY: A revoked certificate's exported file still shows ACTIVE.\n"
+                        f"  Always verify revocation in real-time at:\n"
+                        f"  {DEFAULT_ENDPOINT}/v1/pogr/verify/{cert.get('pogc_id', '<id>')}"))
+
     # ── Overall result ────────────────────────────────────────────────────
-    # Fail = any check where passed is explicitly False (not None/warning)
+    # FAIL = any check with passed=False; warnings (None) are non-blocking.
     overall_valid = all(passed is not False for _, passed, _ in checks)
 
     return overall_valid, checks
@@ -198,6 +317,7 @@ def verify_certificate(cert: Dict[str, Any]) -> Tuple[bool, List[Tuple[str, bool
 def download_certificate(pogc_id: str, endpoint: str) -> Dict[str, Any]:
     """
     Download a certificate from the public PoGR API.
+    Uses /v1/pogr/certificate/<id> (full JSON with export metadata).
     PoGR-INV-003: no authentication required.
     """
     url = f"{endpoint.rstrip('/')}/v1/pogr/certificate/{pogc_id}"
@@ -213,8 +333,7 @@ def download_certificate(pogc_id: str, endpoint: str) -> Dict[str, Any]:
             if resp.status != 200:
                 raise SystemExit(
                     f"{RED('Error')}: Registry returned HTTP {resp.status} for {pogc_id}")
-            data = json.loads(resp.read().decode())
-            return data
+            return json.loads(resp.read().decode())
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
             raise SystemExit(
@@ -237,28 +356,35 @@ def _print_banner():
 
 
 def _print_cert_summary(cert: Dict[str, Any]):
-    pogc_id   = cert.get("pogc_id", "—")
-    org       = cert.get("subject_org", "—")
-    issued    = cert.get("issued_at", "—")[:19].replace("T", " ")
-    expires   = cert.get("expires_at", "—")[:10]
-    tier      = cert.get("compliance_tier", "—")
-    mandate   = cert.get("mandate_certification", "UNCERTIFIED")
-    turns     = cert.get("turn_count", "—")
-    alg       = (cert.get("pqc_algorithm") or "ml-dsa-65").upper()
+    pogc_id       = cert.get("pogc_id", "—")
+    org           = cert.get("subject_org", "—")
+    issued        = str(cert.get("issued_at", "—"))[:19].replace("T", " ")
+    expires       = str(cert.get("expires_at", "—"))[:10]
+    tier          = cert.get("compliance_tier", "—")
+    mandate       = cert.get("mandate_certification", "UNCERTIFIED")
+    turns         = cert.get("turn_count", "—")
+    alg           = (cert.get("pqc_algorithm") or "ml-dsa-65").upper()
+    canon_version = _detect_canonical_version(cert)
+    has_pk        = bool(
+        (cert.get("_offline_verification") or {}).get("platform_public_key_b64"))
 
     print(BOLD("  Certificate"))
-    print(f"  {'ID':<22}  {CYAN(pogc_id)}")
-    print(f"  {'Organization':<22}  {org}")
-    print(f"  {'Compliance tier':<22}  {tier}")
-    print(f"  {'Mandate certification':<22}  {GOLD(mandate) if mandate != 'UNCERTIFIED' else DIM(mandate)}")
-    print(f"  {'Session turns':<22}  {turns}")
-    print(f"  {'Algorithm':<22}  {alg} · FIPS 204")
-    print(f"  {'Issued':<22}  {issued} UTC")
-    print(f"  {'Expires':<22}  {expires}")
+    print(f"  {'ID':<24}  {CYAN(pogc_id)}")
+    print(f"  {'Organization':<24}  {org}")
+    print(f"  {'Compliance tier':<24}  {tier}")
+    print(f"  {'Mandate certification':<24}  "
+          f"{GOLD(mandate) if mandate != 'UNCERTIFIED' else DIM(mandate)}")
+    print(f"  {'Session turns':<24}  {turns}")
+    print(f"  {'Algorithm':<24}  {alg} · FIPS 204")
+    print(f"  {'Canonical version':<24}  "
+          f"{'v' + str(canon_version) + ' (' + ('status bound ✓' if canon_version >= 2 else 'status NOT bound ⚠') + ')'}")
+    print(f"  {'Platform key embedded':<24}  {'Yes ✓' if has_pk else 'No (pass --platform-key for PQC verify)'}")
+    print(f"  {'Issued':<24}  {issued} UTC")
+    print(f"  {'Expires':<24}  {expires}")
     print()
 
 
-def _print_checks(checks: List[Tuple[str, bool, str]]):
+def _print_checks(checks: List[Tuple[str, Optional[bool], str]]):
     print(BOLD("  Verification Checks"))
     for label, passed, detail in checks:
         if passed is True:
@@ -279,19 +405,19 @@ def _print_checks(checks: List[Tuple[str, bool, str]]):
 
 def _print_verdict(valid: bool, pogc_id: str):
     if valid:
-        print("  " + "─" * 56)
+        print("  " + "─" * 58)
         print()
         print(f"  {GREEN(BOLD('✅  CERTIFICATE VALID'))}")
         print(f"  {DIM('This governance certificate passed all offline verification checks.')}")
         print(f"  {DIM('The AI session it references was governed correctly.')}")
     else:
-        print("  " + "─" * 56)
+        print("  " + "─" * 58)
         print()
         print(f"  {RED(BOLD('❌  CERTIFICATE INVALID'))}")
         print(f"  {DIM('One or more verification checks failed — see details above.')}")
     print()
-    print(f"  {DIM('Verified at')} {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC")
-    print(f"  {DIM('Public URL')} {DEFAULT_ENDPOINT}/pogr/verify/{pogc_id}")
+    print(f"  {DIM('Verified at')}  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC")
+    print(f"  {DIM('Public URL')}   {DEFAULT_ENDPOINT}/pogr/verify/{pogc_id}")
     print()
 
 
@@ -301,16 +427,23 @@ def main():
     parser = argparse.ArgumentParser(
         prog="verify_pogc_offline.py",
         description=(
-            "OMNIX Proof of Governance — Offline Certificate Verifier.\n"
+            "OMNIX Proof of Governance — Offline Certificate Verifier v2.0.\n"
             "Verify any PoGC with no OMNIX account, no API key, no trust.\n"
-            "PoGR-INV-003 · ADR-189 · OMNIX QUANTUM LTD"
+            "ADR-205: canonical_version 2 binds status+revoked_at to the signature.\n"
+            "PoGR-INV-003 · ADR-186 · ADR-189 · ADR-205 · OMNIX QUANTUM LTD"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  python verify_pogc_offline.py POGC-A3F2B1C4D5E6F7A8\n"
-            "  python verify_pogc_offline.py --file certificate.json\n"
-            "  python verify_pogc_offline.py POGC-... --download-only\n"
+            "  # Download and verify (hash only):\n"
+            "  python verify_pogc_offline.py POGC-A3F2B1C4D5E6F7A8\n\n"
+            "  # Verify saved file with full PQC cryptographic check:\n"
+            "  python verify_pogc_offline.py --file certificate.json --platform-key <base64>\n\n"
+            "  # Export from server (includes embedded key) then verify:\n"
+            "  curl https://omnixquantum.net/v1/pogr/certificate/POGC-.../export > cert.json\n"
+            "  python verify_pogc_offline.py --file cert.json\n\n"
+            "  # Machine-readable JSON output:\n"
+            "  python verify_pogc_offline.py --file cert.json --json\n"
         )
     )
     parser.add_argument(
@@ -319,11 +452,19 @@ def main():
     )
     parser.add_argument(
         "--file", "-f", metavar="PATH",
-        help="Path to a previously downloaded certificate JSON file"
+        help="Path to a previously downloaded / exported certificate JSON file"
     )
     parser.add_argument(
         "--endpoint", metavar="URL", default=DEFAULT_ENDPOINT,
         help=f"Registry API base URL (default: {DEFAULT_ENDPOINT})"
+    )
+    parser.add_argument(
+        "--platform-key", metavar="BASE64",
+        help=(
+            "Base64-encoded ML-DSA-65 platform public key for PQC cryptographic verification. "
+            "Obtain from: GET /v1/pogr/manifest (platform_key.configured field) or "
+            "from the _offline_verification.platform_public_key_b64 field in an exported cert."
+        )
     )
     parser.add_argument(
         "--download-only", action="store_true",
@@ -335,7 +476,7 @@ def main():
     )
     parser.add_argument(
         "--json", action="store_true",
-        help="Output results as machine-readable JSON"
+        help="Output results as machine-readable JSON (exit 0=valid, 1=invalid)"
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {VERSION}"
@@ -362,7 +503,6 @@ def main():
         pogc_id = args.pogc_id
         cert    = download_certificate(pogc_id, args.endpoint)
 
-        # Save if requested
         out_path = args.output or (f"{pogc_id}.json" if args.download_only else None)
         if out_path:
             with open(out_path, "w") as fh:
@@ -375,18 +515,21 @@ def main():
             sys.exit(0)
 
     # ── Verify ────────────────────────────────────────────────────────────
-    valid, checks = verify_certificate(cert)
+    platform_key_b64 = args.platform_key or None
+    valid, checks = verify_certificate(cert, platform_key_b64=platform_key_b64)
 
     if args.json:
         result = {
-            "valid":    valid,
-            "pogc_id":  pogc_id,
-            "checks":   [
+            "valid":      valid,
+            "pogc_id":    pogc_id,
+            "canonical_version": _detect_canonical_version(cert),
+            "checks":     [
                 {"label": lbl, "passed": p, "detail": det}
                 for lbl, p, det in checks
             ],
-            "verified_at": datetime.now(timezone.utc).isoformat(),
-            "verifier":    f"OMNIX OfflineVerifier/{VERSION}",
+            "verified_at":   datetime.now(timezone.utc).isoformat(),
+            "verifier":      f"OMNIX-OfflineVerifier/{VERSION}",
+            "adr_ref":       ADR_REF,
         }
         print(json.dumps(result, indent=2))
     else:

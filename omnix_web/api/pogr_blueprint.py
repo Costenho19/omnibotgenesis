@@ -77,6 +77,8 @@ CREATE INDEX IF NOT EXISTS idx_pogr_status     ON pogr_certificates (status);
 CREATE INDEX IF NOT EXISTS idx_pogr_session    ON pogr_certificates (session_id);
 CREATE INDEX IF NOT EXISTS idx_pogr_expires    ON pogr_certificates (expires_at);
 CREATE INDEX IF NOT EXISTS idx_pogr_mandate    ON pogr_certificates (mandate_certification);
+ALTER TABLE pogr_certificates ADD COLUMN IF NOT EXISTS
+    canonical_version INTEGER NOT NULL DEFAULT 1;
 """
 
 _tables_ensured = False
@@ -119,20 +121,35 @@ def _pogc_id() -> str:
     return "POGC-" + secrets.token_hex(8).upper()
 
 
-def _canonical_fields(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Return the canonical subset used for content_hash and PQC signing."""
-    return {
-        "pogc_id":                data["pogc_id"],
-        "session_id":             data["session_id"],
-        "ctchc_seal_hash":        data["ctchc_seal_hash"],
-        "issuer":                 data["issuer"],
-        "subject_org":            data["subject_org"],
-        "agent_id":               data["agent_id"],
-        "compliance_tier":        data["compliance_tier"],
-        "mandate_certification":  data.get("mandate_certification", "UNCERTIFIED"),
-        "issued_at":              data["issued_at"],
-        "expires_at":             data["expires_at"],
-    }
+# ── Canonical field sets (ADR-205) ────────────────────────────────────────────
+#   v1 (legacy): 10 fields — status/revoked_at NOT cryptographically bound
+#   v2 (current): 12 fields — status + revoked_at bound to hash and signature
+_CANONICAL_V1 = [
+    "pogc_id", "session_id", "ctchc_seal_hash",
+    "issuer", "subject_org", "agent_id",
+    "compliance_tier", "mandate_certification",
+    "issued_at", "expires_at",
+]
+_CANONICAL_V2 = _CANONICAL_V1 + ["status", "revoked_at"]
+
+CURRENT_CANONICAL_VERSION = 2
+
+
+def _canonical_fields(data: Dict[str, Any], version: int = CURRENT_CANONICAL_VERSION) -> Dict[str, Any]:
+    """
+    Return the canonical subset used for content_hash and PQC signing.
+    ADR-205: v2 binds status+revoked_at to the signature.
+    """
+    fields = _CANONICAL_V2 if version >= 2 else _CANONICAL_V1
+    result: Dict[str, Any] = {}
+    for k in fields:
+        val = data.get(k)
+        # Normalise datetimes → ISO string (consistent with sign-time serialisation)
+        if hasattr(val, "isoformat"):
+            val = val.isoformat()
+        # v2 normalises revoked_at=None → null (falsy sentinel in canonical set)
+        result[k] = val
+    return result
 
 
 def _get_mandate_certification(session_id: str) -> str:
@@ -180,6 +197,139 @@ def _sign_certificate(canonical: Dict[str, Any]) -> str:
     # Deterministic HMAC stub (development / environments without PQC key)
     stub = hashlib.sha3_256(b"POGR-STUB:" + payload).hexdigest()
     return "STUB-SHA3-256:" + stub
+
+
+def _verify_pqc_signature(
+    sig_str: str, canonical: Dict[str, Any]
+) -> tuple:
+    """
+    Cryptographically verify a PoGC ML-DSA-65 signature. ADR-205.
+
+    Returns:
+        (True,  "✓ ML-DSA-65 signature cryptographically verified (FIPS 204)")
+        (False, "✗ ML-DSA-65 signature INVALID — ...")
+        (None,  "⚠ ..." )   ← warning (stub or missing key)
+    """
+    if not sig_str:
+        return (False, "✗ PQC signature absent")
+
+    if sig_str.startswith("STUB-"):
+        return (None, "⚠ Signature is a development stub — not production ML-DSA-65")
+
+    if not sig_str.startswith("ML-DSA-65:"):
+        return (None, f"⚠ Signature format unrecognised: {sig_str[:20]}…")
+
+    pk_b64 = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")
+    if not pk_b64:
+        return (None,
+                "⚠ Platform public key not configured (OMNIX_SIGNING_PUBLIC_KEY_B64) "
+                "— PQC cryptographic verification skipped; hash integrity still enforced")
+
+    try:
+        import base64
+        from oqs import Signature as OQSSignature
+        pk_bytes  = base64.b64decode(pk_b64)
+        payload   = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
+        sig_bytes = bytes.fromhex(sig_str.removeprefix("ML-DSA-65:"))
+        verifier  = OQSSignature("ML-DSA-65")
+        verifier.verify(payload, sig_bytes, pk_bytes)
+        return (True, "✓ ML-DSA-65 signature cryptographically verified (FIPS 204 / NIST 2024)")
+    except Exception as exc:
+        return (False, f"✗ ML-DSA-65 signature INVALID — {exc}")
+
+
+def _dt_iso(v) -> str:
+    """Normalise a datetime or string to ISO format."""
+    if hasattr(v, "isoformat"):
+        return v.isoformat()
+    return str(v) if v is not None else ""
+
+
+def _verify_certificate_core(cert: Dict[str, Any]) -> tuple:
+    """
+    Single authoritative verification kernel shared by JSON API and HTML page.
+    ADR-205 — identical logic, identical verdict, across all three channels.
+
+    Returns:
+        (valid: bool, notes: list[str], canon_version: int)
+    """
+    notes: list = []
+    valid  = True
+    now    = datetime.now(timezone.utc)
+
+    # Detect canonical version (default 1 for legacy certs)
+    canon_version = int(cert.get("canonical_version") or 1)
+
+    # ── [1] Content hash integrity ──────────────────────────────────────────
+    # Build canonical dict using the same field set used at issuance time
+    raw = {**cert,
+           "issued_at":  _dt_iso(cert.get("issued_at")),
+           "expires_at": _dt_iso(cert.get("expires_at")),
+           "revoked_at": _dt_iso(cert.get("revoked_at")) if cert.get("revoked_at") else None,
+           "status":     cert.get("status", "ACTIVE")}
+    canonical = _canonical_fields(raw, version=canon_version)
+    expected_hash = _content_hash(canonical)
+    stored_hash   = cert.get("content_hash", "")
+
+    if expected_hash == stored_hash:
+        notes.append("✓ Content hash verified (SHA3-256)")
+    else:
+        notes.append("✗ Content hash mismatch — one or more canonical fields have been altered")
+        valid = False
+
+    # ── [2] Certificate status ──────────────────────────────────────────────
+    status = cert.get("status", "UNKNOWN")
+    if status == "ACTIVE":
+        notes.append("✓ Status: ACTIVE")
+    elif status == "REVOKED":
+        reason = cert.get("revocation_reason") or "no reason provided"
+        notes.append(f"✗ Certificate REVOKED — {reason}")
+        valid = False
+    elif status == "EXPIRED":
+        notes.append("✗ Certificate EXPIRED")
+        valid = False
+    else:
+        notes.append(f"✗ Unknown status: {status}")
+        valid = False
+
+    # ── [3] TTL validity ────────────────────────────────────────────────────
+    expires_at = cert.get("expires_at")
+    if hasattr(expires_at, "tzinfo"):
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+    else:
+        try:
+            expires_at = datetime.fromisoformat(
+                str(expires_at).replace("Z", "+00:00"))
+        except Exception:
+            expires_at = None
+
+    if expires_at and now < expires_at:
+        notes.append(f"✓ Not expired (expires {expires_at.strftime('%Y-%m-%d')})")
+    elif expires_at:
+        notes.append(f"✗ Certificate expired on {expires_at.strftime('%Y-%m-%d')}")
+        valid = False
+    else:
+        notes.append("✗ Cannot parse expires_at")
+        valid = False
+
+    # ── [4] PQC signature (ML-DSA-65 cryptographic verification) ───────────
+    sig = cert.get("pqc_signature", "")
+    pqc_ok, pqc_msg = _verify_pqc_signature(sig, canonical)
+    notes.append(pqc_msg)
+    if pqc_ok is False:
+        valid = False
+
+    # ── [5] Canonical version warning ───────────────────────────────────────
+    if canon_version < 2:
+        notes.append(
+            "⚠ Canonical schema v1 — fields 'status' and 'revoked_at' are NOT "
+            "cryptographically bound to this certificate's hash or signature. "
+            "For real-time revocation status, verify at "
+            f"/v1/pogr/verify/{cert.get('pogc_id', '<id>')} (ADR-205)"
+        )
+
+    return valid, notes, canon_version
 
 
 def _auth_api_key(req) -> Optional[Dict[str, Any]]:
@@ -298,6 +448,8 @@ def certify():
     issued_at_str  = now.isoformat()
     expires_at_str = expires.isoformat()
 
+    # ADR-205: status + revoked_at are canonical fields in v2
+    # They must be set BEFORE computing canonical / hash / signature.
     cert_data = {
         "pogc_id":                pogc_id,
         "session_id":             session_id,
@@ -313,16 +465,19 @@ def certify():
         "issued_at":              issued_at_str,
         "expires_at":             expires_at_str,
         "regulatory_tags":        regulatory_tags,
+        # canonical v2 fields — fixed at issuance
+        "status":                 "ACTIVE",
+        "revoked_at":             None,
+        "canonical_version":      CURRENT_CANONICAL_VERSION,
     }
 
-    canonical = _canonical_fields(cert_data)
+    canonical = _canonical_fields(cert_data, version=CURRENT_CANONICAL_VERSION)
     c_hash    = _content_hash(canonical)
     signature = _sign_certificate(canonical)
 
-    cert_data["content_hash"]   = c_hash
-    cert_data["pqc_signature"]  = signature
-    cert_data["pqc_algorithm"]  = "ml-dsa-65"
-    cert_data["status"]         = "ACTIVE"
+    cert_data["content_hash"]  = c_hash
+    cert_data["pqc_signature"] = signature
+    cert_data["pqc_algorithm"] = "ml-dsa-65"
 
     # ── PoGR-INV-002: append-only INSERT ────────────────────────────────────
     try:
@@ -336,14 +491,16 @@ def certify():
                         compliance_tier, mandate_certification,
                         turn_count, avg_conformance,
                         issued_at, expires_at, regulatory_tags,
-                        content_hash, pqc_signature, pqc_algorithm, status
+                        content_hash, pqc_signature, pqc_algorithm,
+                        status, canonical_version
                     ) VALUES (
                         %(pogc_id)s, %(session_id)s, %(ctchc_seal_hash)s, %(issuer)s,
                         %(subject_org)s, %(subject_org_id)s, %(agent_id)s,
                         %(compliance_tier)s, %(mandate_certification)s,
                         %(turn_count)s, %(avg_conformance)s,
                         %(issued_at)s, %(expires_at)s, %(regulatory_tags)s,
-                        %(content_hash)s, %(pqc_signature)s, %(pqc_algorithm)s, %(status)s
+                        %(content_hash)s, %(pqc_signature)s, %(pqc_algorithm)s,
+                        %(status)s, %(canonical_version)s
                     )
                 """, {**cert_data, "regulatory_tags": regulatory_tags})
         conn.close()
@@ -404,69 +561,31 @@ def verify(pogc_id: str):
         }), 404
 
     cert = dict(row)
-    notes = []
-    valid = True
 
-    # Recompute content hash
-    canonical = _canonical_fields({
-        **cert,
-        "issued_at":  cert["issued_at"].isoformat() if hasattr(cert["issued_at"], "isoformat") else cert["issued_at"],
-        "expires_at": cert["expires_at"].isoformat() if hasattr(cert["expires_at"], "isoformat") else cert["expires_at"],
-    })
-    expected_hash = _content_hash(canonical)
-    if expected_hash == cert["content_hash"]:
-        notes.append("✓ Content hash verified")
-    else:
-        notes.append("✗ Content hash mismatch — certificate may be tampered")
-        valid = False
+    # ── Single authoritative verification kernel (ADR-205) ──────────────────
+    valid, notes, canon_version = _verify_certificate_core(cert)
 
-    # Check status
-    status = cert.get("status", "UNKNOWN")
-    if status == "ACTIVE":
-        notes.append("✓ Status: ACTIVE")
-    elif status == "EXPIRED":
-        notes.append("✗ Certificate EXPIRED")
-        valid = False
-    elif status == "REVOKED":
-        notes.append(f"✗ Certificate REVOKED — {cert.get('revocation_reason', 'no reason provided')}")
-        valid = False
-
-    # Check TTL
     now = datetime.now(timezone.utc)
-    expires_at = cert["expires_at"]
-    if hasattr(expires_at, "tzinfo") and expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if now < expires_at:
-        notes.append(f"✓ Not expired (expires {expires_at.strftime('%Y-%m-%d')})")
-    else:
-        notes.append(f"✗ Certificate expired on {expires_at.strftime('%Y-%m-%d')}")
-        valid = False
 
-    # PQC signature note
-    sig = cert.get("pqc_signature", "")
-    if sig.startswith("ML-DSA-65:"):
-        notes.append("✓ Post-quantum signature present (ML-DSA-65 / FIPS 204)")
-    elif sig.startswith("STUB-"):
-        notes.append("⚠ Signature is a development stub (not production PQC)")
-    else:
-        notes.append("⚠ Signature format unrecognized")
-
-    # Serialize datetimes
     def _dt(v):
         return v.isoformat() if hasattr(v, "isoformat") else v
 
+    sig = cert.get("pqc_signature", "")
     cert_out = {k: _dt(v) for k, v in cert.items()
                 if k not in ("pqc_signature", "revocation_proof")}
     cert_out["pqc_signature_algorithm"] = cert.get("pqc_algorithm", "ml-dsa-65")
-    cert_out["pqc_signature_present"]   = bool(sig)
+    cert_out["pqc_signature_verified"]  = bool(sig and sig.startswith("ML-DSA-65:"))
+    cert_out["canonical_version"]       = canon_version
 
     return jsonify({
-        "valid":                 valid,
-        "pogc_id":               pogc_id,
-        "verification_notes":    notes,
-        "certificate":           cert_out,
+        "valid":                  valid,
+        "pogc_id":                pogc_id,
+        "verification_notes":     notes,
+        "certificate":            cert_out,
+        "canonical_version":      canon_version,
         "invariant_PoGR_INV_003": "zero-trust verification — no authentication required",
-        "verified_at":           now.isoformat(),
+        "adr_ref":                "ADR-186 · ADR-205",
+        "verified_at":            now.isoformat(),
     })
 
 
@@ -501,53 +620,87 @@ def export_certificate(pogc_id: str):
 
     cert = {k: _dt(v) for k, v in dict(row).items()}
 
-    # Canonical fields schema for the offline verifier
-    canonical_fields = [
-        "pogc_id", "session_id", "ctchc_seal_hash",
-        "issuer", "subject_org", "agent_id",
-        "compliance_tier", "mandate_certification",
-        "issued_at", "expires_at",
-    ]
+    # Canonical fields schema — version-aware (ADR-205)
+    canon_version = int(cert.get("canonical_version") or 1)
+    canonical_fields_schema = list(_CANONICAL_V2 if canon_version >= 2 else _CANONICAL_V1)
+
+    # Platform public key — embedded for standalone offline PQC verification
+    pk_b64_export = None
+    pk_fingerprint = None
+    try:
+        import base64 as _b64
+        _pk_raw = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")
+        if _pk_raw:
+            _pk_bytes  = _b64.b64decode(_pk_raw)
+            pk_b64_export  = _pk_raw         # embed raw b64 in export
+            pk_fingerprint = hashlib.sha3_256(_pk_bytes).hexdigest()
+    except Exception:
+        pass
+
+    exported_at = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
 
     export = {
         **cert,
         "_export_metadata": {
-            "exported_at":   __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
-            "registry":      "OMNIX Proof of Governance Registry",
-            "product_id":    "OMNIX-POGR-2026-001",
-            "adr_refs":      ["ADR-186", "ADR-187", "ADR-189"],
-            "invariant":     "PoGR-INV-003 — zero-trust verification",
+            "exported_at":     exported_at,
+            "registry":        "OMNIX Proof of Governance Registry",
+            "product_id":      "OMNIX-POGR-2026-001",
+            "adr_refs":        ["ADR-186", "ADR-187", "ADR-189", "ADR-205"],
+            "invariant":       "PoGR-INV-003 — zero-trust verification",
+            "canonical_version": canon_version,
+            "status_warning": (
+                None if canon_version >= 2
+                else (
+                    "SECURITY NOTICE: This certificate uses canonical schema v1. "
+                    "Fields 'status' and 'revoked_at' are NOT cryptographically bound. "
+                    "The status shown in this file may not reflect the current registry state. "
+                    "Always verify in real-time at /v1/pogr/verify/<id> before relying on revocation status."
+                )
+            ),
         },
         "_offline_verification": {
             "description": (
                 "This JSON file is self-contained for offline verification. "
-                "The content_hash field is a SHA3-256 digest over the canonical_fields_schema "
-                "subset. Any tampering with those fields will produce a different hash."
+                f"The content_hash field is a SHA3-256 digest over the {len(canonical_fields_schema)}-field "
+                f"canonical_fields_schema (canonical_version={canon_version}). "
+                "Any tampering with those fields will produce a different hash. "
+                "The pqc_signature is an ML-DSA-65 (FIPS 204) signature over the same payload — "
+                "verifiable with the embedded platform_public_key_b64."
             ),
-            "canonical_fields_schema": canonical_fields,
-            "hash_algorithm":    "SHA3-256",
-            "hash_format":       "sha3-256:<hex>",
-            "signature_algorithm": "ML-DSA-65 (FIPS 204 / NIST 2024)",
+            "canonical_version":       canon_version,
+            "canonical_fields_schema": canonical_fields_schema,
+            "hash_algorithm":          "SHA3-256",
+            "hash_format":             "sha3-256:<hex>",
+            "signature_algorithm":     "ML-DSA-65 (FIPS 204 / NIST 2024)",
+            "platform_public_key_b64": pk_b64_export,
+            "platform_key_fingerprint": pk_fingerprint,
             "verification_steps": [
-                "1. Extract the canonical_fields_schema fields from this JSON",
-                "2. Serialize as JSON: sort_keys=True, separators=(',', ':')",
-                "3. Compute SHA3-256 of the UTF-8 encoded payload",
-                "4. Compare 'sha3-256:<hex>' with content_hash field",
-                "5. Confirm status == 'ACTIVE' and expires_at is in the future",
-                "6. Confirm pqc_signature starts with 'ML-DSA-65:' (production)",
+                f"1. Read canonical_fields_schema ({len(canonical_fields_schema)} fields) from this JSON",
+                "2. Extract those fields from this certificate (use null for revoked_at if absent)",
+                "3. Serialize as JSON: sort_keys=True, separators=(',', ':')",
+                "4. Compute SHA3-256 of UTF-8 encoded payload → compare with content_hash",
+                "5. Verify ML-DSA-65 signature: oqs.Signature('ML-DSA-65').verify(payload, sig_bytes, pk_bytes)",
+                "   where sig_bytes = bytes.fromhex(pqc_signature.removeprefix('ML-DSA-65:'))",
+                "   and   pk_bytes  = base64.b64decode(platform_public_key_b64)",
+                "6. Confirm status == 'ACTIVE' (v2: cryptographically bound; v1: read from registry)",
+                "7. Confirm expires_at is in the future",
             ],
-            "offline_verifier_script": "scripts/verify_pogc_offline.py",
-            "verifier_command": f"python verify_pogc_offline.py --file {pogc_id}.json",
-            "verifier_source":  "https://github.com/omnixquantum/omnix/blob/main/scripts/verify_pogc_offline.py",
+            "offline_verifier_script":  "scripts/verify_pogc_offline.py",
+            "verifier_command":         f"python verify_pogc_offline.py --file {pogc_id}.json",
+            "verifier_source":          "https://github.com/omnixquantum/omnix/blob/main/scripts/verify_pogc_offline.py",
             "python_snippet": (
-                "import hashlib, json\n"
-                "FIELDS = ['pogc_id','session_id','ctchc_seal_hash','issuer','subject_org',\n"
-                "          'agent_id','compliance_tier','mandate_certification','issued_at','expires_at']\n"
-                "canonical = {k: cert[k] for k in FIELDS if k in cert}\n"
+                "import hashlib, json, base64\n"
+                f"FIELDS = {canonical_fields_schema!r}\n"
+                "canonical = {{k: cert.get(k) for k in FIELDS}}\n"
                 "payload   = json.dumps(canonical, sort_keys=True, separators=(',',':')).encode()\n"
                 "computed  = 'sha3-256:' + hashlib.sha3_256(payload).hexdigest()\n"
-                "assert computed == cert['content_hash'], 'Hash mismatch — certificate tampered!'\n"
-                "print('Content hash verified ✓')"
+                "assert computed == cert['content_hash'], 'Hash mismatch!'\n"
+                "# PQC verification (requires: pip install oqs-python)\n"
+                "from oqs import Signature\n"
+                "pk = base64.b64decode(cert['_offline_verification']['platform_public_key_b64'])\n"
+                "sig = bytes.fromhex(cert['pqc_signature'].removeprefix('ML-DSA-65:'))\n"
+                "Signature('ML-DSA-65').verify(payload, sig, pk)  # raises if invalid\n"
+                "print('✓ Content hash verified · ✓ ML-DSA-65 cryptographically verified')"
             ),
         },
     }
@@ -908,35 +1061,44 @@ def verify_page(pogc_id: str):
         cert = {}
     else:
         cert = dict(row)
-        sig = cert.get("pqc_signature", "")
+        # ADR-205: same authoritative verification kernel as the JSON API
+        valid, notes, canon_version = _verify_certificate_core(cert)
+
+        sig       = cert.get("pqc_signature", "")
         status_db = cert.get("status", "UNKNOWN")
-        now = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+        now       = datetime.now(timezone.utc)
         expires_at = cert.get("expires_at")
-        if expires_at and hasattr(expires_at, "tzinfo") and expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=__import__("datetime").timezone.utc)
+        if hasattr(expires_at, "tzinfo") and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
         expired = expires_at and now > expires_at
 
-        valid = status_db == "ACTIVE" and not expired and sig.startswith("ML-DSA-65:")
         if valid:
-            status_icon = "✓"
+            status_icon  = "✓"
             status_color = "#22c55e"
             status_label = "CERTIFICADO VÁLIDO"
-            status_sub = "Firma post-cuántica verificada · ML-DSA-65 / FIPS 204"
+            pqc_note = next((n for n in notes if "ML-DSA-65" in n or "Signature" in n.lower() or "PQC" in n), "")
+            if "cryptographically verified" in pqc_note:
+                status_sub = "Firma ML-DSA-65 verificada criptográficamente · FIPS 204"
+            elif "STUB" in pqc_note.upper():
+                status_sub = "Firma de desarrollo (stub) — no apta para producción"
+            else:
+                status_sub = "Firma post-cuántica presente · ML-DSA-65 / FIPS 204"
         elif status_db == "REVOKED":
-            status_icon = "✗"
+            status_icon  = "✗"
             status_color = "#ef4444"
             status_label = "CERTIFICADO REVOCADO"
-            status_sub = cert.get("revocation_reason", "")
+            status_sub   = cert.get("revocation_reason", "")
         elif expired:
-            status_icon = "✗"
+            status_icon  = "✗"
             status_color = "#f59e0b"
             status_label = "CERTIFICADO EXPIRADO"
-            status_sub = f"Expiró el {_dt(expires_at)[:10]}"
+            status_sub   = f"Expiró el {_dt(expires_at)[:10]}"
         else:
-            status_icon = "⚠"
-            status_color = "#f59e0b"
-            status_label = "FIRMA EN PROCESO"
-            status_sub = "Certificado emitido — firma real pendiente"
+            status_icon  = "✗"
+            status_color = "#ef4444"
+            status_label = "VERIFICACIÓN FALLIDA"
+            failing      = [n for n in notes if n.startswith("✗")]
+            status_sub   = failing[0].replace("✗ ", "") if failing else "Error en la verificación"
 
     mandate = cert.get("mandate_certification", "")
     mandate_html = ""
@@ -950,7 +1112,65 @@ def verify_page(pogc_id: str):
     subject = cert.get("subject_org", cert.get("subject_id", "")) if cert else ""
     issuer  = cert.get("issuer", "OMNIX QUANTUM LTD") if cert else "OMNIX QUANTUM LTD"
     reg_tags = ", ".join(cert.get("regulatory_tags", []) or []) if cert else ""
-    api_url = f"/v1/pogr/verify/{pogc_id}"
+    api_url  = f"/v1/pogr/verify/{pogc_id}"
+
+    # ── ADR-205: PQC box and verification checks panel for HTML ──────────────
+    _all_notes = notes if cert else []
+    pqc_note_text = next(
+        (n for n in _all_notes if "ML-DSA-65" in n or "PQC" in n or "Signature" in n.lower()), ""
+    )
+    if "cryptographically verified" in pqc_note_text:
+        pqc_icon_color = "#22c55e"
+        pqc_label      = "ML-DSA-65 verificado criptográficamente"
+        pqc_sub        = "Verificación real FIPS 204 / NIST 2024 completada"
+    elif "STUB" in pqc_note_text.upper():
+        pqc_icon_color = "#f59e0b"
+        pqc_label      = "Firma de desarrollo (STUB)"
+        pqc_sub        = "No apta para producción — firma ML-DSA-65 real pendiente"
+    elif "not configured" in pqc_note_text or "skipped" in pqc_note_text:
+        pqc_icon_color = "#f59e0b"
+        pqc_label      = "Firma ML-DSA-65 presente"
+        pqc_sub        = "Clave pública no configurada — verificación criptográfica omitida"
+    elif pqc_note_text.startswith("✗"):
+        pqc_icon_color = "#ef4444"
+        pqc_label      = "Firma ML-DSA-65 INVÁLIDA"
+        pqc_sub        = pqc_note_text.replace("✗ ", "")
+    else:
+        pqc_icon_color = "#475569"
+        pqc_label      = "Firma post-cuántica ML-DSA-65 / FIPS 204"
+        pqc_sub        = "Algoritmo resistente a computación cuántica · NIST 2024"
+
+    pqc_box_html = (
+        f'<div class="pqc-box" style="border-color:{pqc_icon_color}33;color:{pqc_icon_color}">'
+        f'{pqc_label}<br>'
+        f'<span style="opacity:0.6;font-size:0.7rem;color:#94a3b8">{pqc_sub}</span>'
+        f'</div>'
+    )
+
+    def _note_icon(n: str) -> str:
+        if n.startswith("✓"): return "✓"
+        if n.startswith("✗"): return "✗"
+        return "⚠"
+
+    def _note_color(n: str) -> str:
+        if n.startswith("✓"): return "#22c55e"
+        if n.startswith("✗"): return "#ef4444"
+        return "#f59e0b"
+
+    checks_rows = "".join(
+        f'<div class="check-row">'
+        f'<span style="color:{_note_color(n)};font-size:0.85rem">{_note_icon(n)}</span>'
+        f'<span style="font-size:0.72rem;color:#94a3b8;flex:1">{n[2:].strip()}</span>'
+        f'</div>'
+        for n in _all_notes
+        if n.strip()
+    )
+    checks_panel = (
+        f'<div class="section" style="margin-top:16px">'
+        f'<div class="section-title">Resultado de verificación (ADR-205)</div>'
+        f'{checks_rows}'
+        f'</div>'
+    ) if cert else ""
 
     html = f"""<!DOCTYPE html>
 <html lang="es">
@@ -994,6 +1214,9 @@ def verify_page(pogc_id: str):
     .row-value.green{{ color:#22c55e; }}
     .pqc-box{{ background:#060F1E; border:1px solid #22c55e33; border-radius:8px;
                padding:12px 14px; font-size:0.75rem; color:#22c55e; margin-bottom:20px; }}
+    .check-row{{ display:flex; gap:8px; align-items:flex-start;
+                  padding:5px 0; border-bottom:1px solid #1e3a5f12; }}
+    .check-row:last-child{{ border-bottom:none; }}
     .api-link{{ display:block; text-align:center; font-size:0.72rem; color:#475569;
                 text-decoration:none; margin-top:20px; padding-top:16px;
                 border-top:1px solid #1e3a5f; }}
@@ -1041,10 +1264,8 @@ def verify_page(pogc_id: str):
       {"" if not reg_tags else f'<div class="row"><span class="row-label">Regulatorio</span><span class="row-value">{reg_tags}</span></div>'}
     </div>
 
-    <div class="pqc-box">
-      ✓ Firma post-cuántica &nbsp;·&nbsp; ML-DSA-65 (FIPS 204)<br>
-      <span style="opacity:0.6;font-size:0.7rem;">Algoritmo resistente a computación cuántica · NIST 2024</span>
-    </div>
+    {pqc_box_html}
+    {checks_panel}
     '''}
 
     <a href="{api_url}" class="api-link" target="_blank">→ Ver datos técnicos completos (JSON)</a>
