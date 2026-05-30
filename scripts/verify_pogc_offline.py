@@ -436,18 +436,39 @@ def _print_checks(checks: List[Tuple[str, Optional[bool], str]]):
     print()
 
 
-def _print_verdict(valid: bool, pogc_id: str):
-    if valid:
-        print("  " + "─" * 58)
-        print()
-        print(f"  {GREEN(BOLD('✅  CERTIFICATE VALID'))}")
-        print(f"  {DIM('This governance certificate passed all offline verification checks.')}")
-        print(f"  {DIM('The AI session it references was governed correctly.')}")
+def _print_verdict(valid: bool, pogc_id: str,
+                   checks: Optional[List[Tuple[str, Optional[bool], str]]] = None):
+    passed   = sum(1 for _, p, _ in checks if p is True)     if checks else 0
+    warnings = sum(1 for _, p, _ in checks if p is None)     if checks else 0
+    failed   = sum(1 for _, p, _ in checks if p is False)    if checks else 0
+    total    = len(checks)                                    if checks else 0
+
+    # Determine overall status label (matches Harold's spec)
+    if failed > 0:
+        status_label  = RED("INVALID")
+        verdict_label = RED(BOLD("✗  CERTIFICATE INVALID"))
+        verdict_note  = DIM("One or more verification checks failed — see details above.")
+    elif warnings > 0:
+        status_label  = YELLOW("WARNING")
+        verdict_label = YELLOW(BOLD("⚠  CERTIFICATE WARNING"))
+        verdict_note  = DIM("Certificate is authentic but contains non-blocking conditions.")
     else:
-        print("  " + "─" * 58)
-        print()
-        print(f"  {RED(BOLD('❌  CERTIFICATE INVALID'))}")
-        print(f"  {DIM('One or more verification checks failed — see details above.')}")
+        status_label  = GREEN("VALID")
+        verdict_label = GREEN(BOLD("✅  CERTIFICATE VALID"))
+        verdict_note  = DIM("This governance certificate passed all offline verification checks.")
+
+    print("  " + "─" * 58)
+    print()
+    print(f"  STATUS        :  {status_label}")
+    print()
+    print(f"  TOTAL CHECKS  :  {total}")
+    print(f"  PASSED        :  {GREEN(str(passed))}")
+    if warnings:
+        print(f"  WARNINGS      :  {YELLOW(str(warnings))}")
+    print(f"  FAILED        :  {RED(str(failed)) if failed else DIM('0')}")
+    print()
+    print(f"  {verdict_label}")
+    print(f"  {verdict_note}")
     print()
     print(f"  {DIM('Verified at')}  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC")
     print(f"  {DIM('Public URL')}   {DEFAULT_ENDPOINT}/pogr/verify/{pogc_id}")
@@ -569,7 +590,7 @@ def main():
         _print_banner()
         _print_cert_summary(cert)
         _print_checks(checks)
-        _print_verdict(valid, pogc_id)
+        _print_verdict(valid, pogc_id, checks)
 
     sys.exit(0 if valid else 1)
 

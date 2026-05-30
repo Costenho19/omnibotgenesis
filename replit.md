@@ -59,7 +59,9 @@ Empresa: OMNIX QUANTUM LTD (UK) · Fundador: Harold Nunes.
   - `generate_rte_pdf.py` — PDF técnico institucional 15 páginas (forense)
   - `generate_executive_verification_package.py` — **EVP: PDF ejecutivo 5 páginas** para CEOs · Reguladores · Inversores · Enterprise (sin jerga técnica)
   - `generate_route_evidence_package.py` / `verify_evidence_package.py` — RCEP dual-ruta (ADR-200)
+  - `verify_pogc_offline.py` — **PoGR offline verifier v2.0** — 7 checks · SHA3-256 + ML-DSA-65 · zero OMNIX deps · `--file` `--json` `--platform-key`
 - `/evidence_packages/` — Paquetes generados: JSON (~494KB) · PDF técnico · **EVP ejecutivo**
+- `docs/INDEPENDENT_VERIFIER_GUIDE.md` — **Guía de una página** para terceros — sin cuenta OMNIX, sin API key — `pip install oqs-python` + comando + output esperado
 
 ---
 

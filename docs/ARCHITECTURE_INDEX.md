@@ -303,6 +303,8 @@ El "SSL para decisiones de agentes" — verificable offline, firmado PQC, append
 | **ADR-205** | `docs/adr/ADR-205-pogr-security-hardening-layer.md` | **PoGR Security Hardening:** C1 CANONICAL_V2 (status+revoked_at) · C2 `_verify_pqc_signature()` oqs real · C3 `_verify_certificate_core()` unificado API+HTML · C4 `revoke()` re-firma bajo REVOKED · Audit v3.0: **0 CRITICAL · 0 HIGH** |
 | **Product Spec** | `docs/products/POG_REGISTRY_SPEC.md` | Especificación B2B completa — diferenciadores · comparación · tiers · Go-To-Market EU AI Act · integración con OGR |
 | **One-Pager** | `docs/products/POG_ONEPAGER.md` | One-pager ejecutivo para LinkedIn, inversores y partners estratégicos |
+| **Offline Verifier** | `scripts/verify_pogc_offline.py` | **v2.0** — Standalone verifier sin dependencias OMNIX · 7 checks · SHA3-256 + ML-DSA-65 · ANSI colors · `--file` `--json` `--platform-key` `--download-only` · exit 0=VALID/WARN · exit 1=INVALID |
+| **Independent Verifier Guide** | `docs/INDEPENDENT_VERIFIER_GUIDE.md` | **Una página** para terceros: reguladores · auditores · courts · enterprise. Sin cuenta OMNIX, sin API key. pip install oqs-python + comando + output esperado + interpretación |
 
 **Invariantes PoGR-INV-001–006:**
 - **PoGR-INV-001** — Todo certificate está respaldado por una OGR session sellada y PQC-signed
@@ -319,7 +321,7 @@ El "SSL para decisiones de agentes" — verificable offline, firmado PQC, append
 - Embeddable badge SVG
 - DB table: `pogr_certificates`
 
-**API endpoints (ADR-187 — implementación pendiente):**
+**API endpoints (ADR-187 — implementado en `omnix_web/api/pogr_blueprint.py`):**
 
 | Endpoint | Auth | Descripción |
 |---|---|---|
@@ -335,8 +337,12 @@ El "SSL para decisiones de agentes" — verificable offline, firmado PQC, append
 OMNIX Governance API (ADR-176)
     └── OMNIX Governance Runtime / OGR (ADR-184)
             └── Proof of Governance Registry / PoGR (ADR-186)
-                    └── /proof-of-governance (React SPA — pendiente)
+                    ├── /proof-of-governance         (React SPA — compilado ✓)
+                    ├── /pogr/verify/:id             (React SPA — compilado ✓)
+                    └── scripts/verify_pogc_offline.py  (Standalone offline — v2.0 ✓)
 ```
+
+**Primer PoGC emitido:** POGC-GENESIS-E071CC96 (2026-05-26) · MANDATE-BOUND · ML-DSA-65 · ACTIVE
 
 **Regulatory alignment:** EU AI Act Art. 9/13/17 · NIST AI RMF · UAE CRAE · MiFID-II · SOC-2-AI
 
