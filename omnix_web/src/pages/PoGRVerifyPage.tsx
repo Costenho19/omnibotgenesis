@@ -197,7 +197,7 @@ function RegTag({ tag }: { tag: string }) {
 // ── Valid certificate display ─────────────────────────────────────────────────
 function ValidCertDisplay({ result }: { result: VerifyResult }) {
   const cert = result.certificate
-  const pageUrl = `${window.location.origin}/verify/${cert.pogc_id}`
+  const pageUrl = `${window.location.origin}/pogr/verify/${cert.pogc_id}`
   const isActive = cert.status === 'ACTIVE'
   const statusColor = isActive ? GREEN : cert.status === 'EXPIRED' ? AMBER : RED
 
@@ -388,6 +388,100 @@ function ValidCertDisplay({ result }: { result: VerifyResult }) {
         </div>
       </div>
 
+      {/* ── Offline verification ── */}
+      <div style={{
+        background: NAVY2, border: `1px solid ${GOLD_BORDER}`,
+        borderRadius: 12, padding: 24,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <span style={{ fontSize: 18 }}>🔬</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Verify Offline</div>
+            <div style={{ fontSize: 11, color: SLATE, marginTop: 2 }}>
+              Download this certificate and verify it with zero network access — no OMNIX, no API, no trust.
+            </div>
+          </div>
+        </div>
+
+        {/* Download + script command */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
+          <a
+            href={`${API}/v1/pogr/certificate/${cert.pogc_id}/export`}
+            download={`${cert.pogc_id}.json`}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 7,
+              background: GOLD_DIM, border: `1px solid ${GOLD_BORDER}`,
+              color: GOLD, borderRadius: 7, padding: '9px 18px',
+              fontSize: 12, fontFamily: 'monospace', fontWeight: 700,
+              textDecoration: 'none', transition: 'all 0.15s',
+            }}
+          >
+            ⬇ Download Certificate JSON
+          </a>
+          <CopyButton
+            text={`python verify_pogc_offline.py --file ${cert.pogc_id}.json`}
+            label="Copy verify command"
+          />
+        </div>
+
+        {/* Step-by-step */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            ['1', 'Download', `Click "Download Certificate JSON" above → saves ${cert.pogc_id}.json`],
+            ['2', 'Get verifier', 'Download verify_pogc_offline.py — standard library only, no dependencies'],
+            ['3', 'Run offline', `python verify_pogc_offline.py --file ${cert.pogc_id}.json`],
+            ['4', 'Same result', 'All checks pass — content hash, status, TTL, PQC signature, issuer'],
+          ].map(([num, title, desc]) => (
+            <div key={num} style={{
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+              background: NAVY3, borderRadius: 8, padding: '10px 14px',
+            }}>
+              <span style={{
+                flexShrink: 0, width: 22, height: 22,
+                background: GOLD_DIM, border: `1px solid ${GOLD_BORDER}`,
+                borderRadius: '50%', display: 'flex', alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 10, fontFamily: 'monospace', color: GOLD, fontWeight: 700,
+              }}>{num}</span>
+              <div>
+                <span style={{ fontSize: 12, color: TEXT, fontWeight: 600 }}>{title} </span>
+                <span style={{ fontSize: 11, color: MUTED, fontFamily: 'monospace' }}>{desc}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Python snippet */}
+        <div style={{
+          marginTop: 16, background: '#050d1a',
+          border: `1px solid rgba(201,162,39,0.12)`,
+          borderRadius: 8, padding: '14px 16px',
+        }}>
+          <div style={{ fontSize: 10, color: SLATE, fontFamily: 'monospace', marginBottom: 8 }}>
+            PYTHON SNIPPET — self-contained hash verification (no dependencies)
+          </div>
+          <pre style={{
+            fontFamily: 'monospace', fontSize: 11, color: '#86efac',
+            margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7,
+          }}>{`import hashlib, json
+
+FIELDS = ['pogc_id','session_id','ctchc_seal_hash','issuer','subject_org',
+          'agent_id','compliance_tier','mandate_certification','issued_at','expires_at']
+
+cert      = json.load(open('${cert.pogc_id}.json'))
+canonical = {k: cert[k] for k in FIELDS if k in cert}
+payload   = json.dumps(canonical, sort_keys=True, separators=(',',':')).encode()
+computed  = 'sha3-256:' + hashlib.sha3_256(payload).hexdigest()
+
+assert computed == cert['content_hash'], 'Hash mismatch — certificate tampered!'
+print('✓ Content hash verified —', computed[:40], '…')`}</pre>
+        </div>
+
+        <div style={{ marginTop: 12, fontSize: 10, color: SLATE, fontFamily: 'monospace' }}>
+          PoGR-INV-003 — Verification requires zero OMNIX access · ADR-186 §Offline Verification
+        </div>
+      </div>
+
       {/* ── Verified timestamp ── */}
       <div style={{ fontSize: 10, color: SLATE, textAlign: 'center', fontFamily: 'monospace' }}>
         Verified {result.verified_at ? new Date(result.verified_at).toUTCString() : '—'} · PoGR-INV-003 · Zero-trust verification
@@ -530,7 +624,7 @@ export default function PoGRVerifyPage() {
 
   function handleSearch(id: string) {
     fetchedRef.current = null
-    navigate(`/verify/${encodeURIComponent(id)}`)
+    navigate(`/pogr/verify/${encodeURIComponent(id)}`)
     doVerify(id)
   }
 

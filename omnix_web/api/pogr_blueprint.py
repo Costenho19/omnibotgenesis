@@ -191,9 +191,9 @@ def _auth_api_key(req) -> Optional[Dict[str, Any]]:
         conn = _get_db()
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT client_id, name, active
+                SELECT client_id, name, is_active
                 FROM b2b_clients
-                WHERE api_key = %s AND active = TRUE
+                WHERE api_key = %s AND is_active = TRUE
                 LIMIT 1
             """, (key,))
             row = cur.fetchone()
@@ -468,6 +468,94 @@ def verify(pogc_id: str):
         "invariant_PoGR_INV_003": "zero-trust verification — no authentication required",
         "verified_at":           now.isoformat(),
     })
+
+
+# ─── 2b. GET /v1/pogr/certificate/<pogc_id>/export ───────────────────────────
+
+@pogr_bp.route("/v1/pogr/certificate/<pogc_id>/export", methods=["GET"])
+def export_certificate(pogc_id: str):
+    """
+    Export full certificate JSON with offline verification metadata.
+    PoGR-INV-003: no authentication required.
+
+    Returns the certificate augmented with:
+      - offline_verification: instructions + canonical_fields_schema + verifier_script
+      - The content_hash, pqc_algorithm, and all fields needed to run
+        scripts/verify_pogc_offline.py independently.
+    """
+    _ensure_tables()
+    try:
+        conn = _get_db()
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM pogr_certificates WHERE pogc_id = %s LIMIT 1", (pogc_id,))
+            row = cur.fetchone()
+        conn.close()
+    except Exception as exc:
+        return jsonify({"error": "Registry unavailable"}), 503
+
+    if not row:
+        return jsonify({"error": "Certificate not found", "pogc_id": pogc_id}), 404
+
+    def _dt(v):
+        return v.isoformat() if hasattr(v, "isoformat") else v
+
+    cert = {k: _dt(v) for k, v in dict(row).items()}
+
+    # Canonical fields schema for the offline verifier
+    canonical_fields = [
+        "pogc_id", "session_id", "ctchc_seal_hash",
+        "issuer", "subject_org", "agent_id",
+        "compliance_tier", "mandate_certification",
+        "issued_at", "expires_at",
+    ]
+
+    export = {
+        **cert,
+        "_export_metadata": {
+            "exported_at":   __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
+            "registry":      "OMNIX Proof of Governance Registry",
+            "product_id":    "OMNIX-POGR-2026-001",
+            "adr_refs":      ["ADR-186", "ADR-187", "ADR-189"],
+            "invariant":     "PoGR-INV-003 — zero-trust verification",
+        },
+        "_offline_verification": {
+            "description": (
+                "This JSON file is self-contained for offline verification. "
+                "The content_hash field is a SHA3-256 digest over the canonical_fields_schema "
+                "subset. Any tampering with those fields will produce a different hash."
+            ),
+            "canonical_fields_schema": canonical_fields,
+            "hash_algorithm":    "SHA3-256",
+            "hash_format":       "sha3-256:<hex>",
+            "signature_algorithm": "ML-DSA-65 (FIPS 204 / NIST 2024)",
+            "verification_steps": [
+                "1. Extract the canonical_fields_schema fields from this JSON",
+                "2. Serialize as JSON: sort_keys=True, separators=(',', ':')",
+                "3. Compute SHA3-256 of the UTF-8 encoded payload",
+                "4. Compare 'sha3-256:<hex>' with content_hash field",
+                "5. Confirm status == 'ACTIVE' and expires_at is in the future",
+                "6. Confirm pqc_signature starts with 'ML-DSA-65:' (production)",
+            ],
+            "offline_verifier_script": "scripts/verify_pogc_offline.py",
+            "verifier_command": f"python verify_pogc_offline.py --file {pogc_id}.json",
+            "verifier_source":  "https://github.com/omnixquantum/omnix/blob/main/scripts/verify_pogc_offline.py",
+            "python_snippet": (
+                "import hashlib, json\n"
+                "FIELDS = ['pogc_id','session_id','ctchc_seal_hash','issuer','subject_org',\n"
+                "          'agent_id','compliance_tier','mandate_certification','issued_at','expires_at']\n"
+                "canonical = {k: cert[k] for k in FIELDS if k in cert}\n"
+                "payload   = json.dumps(canonical, sort_keys=True, separators=(',',':')).encode()\n"
+                "computed  = 'sha3-256:' + hashlib.sha3_256(payload).hexdigest()\n"
+                "assert computed == cert['content_hash'], 'Hash mismatch — certificate tampered!'\n"
+                "print('Content hash verified ✓')"
+            ),
+        },
+    }
+
+    resp = jsonify(export)
+    resp.headers["Content-Disposition"] = f'attachment; filename="{pogc_id}.json"'
+    resp.headers["Content-Type"]        = "application/json"
+    return resp
 
 
 # ─── 3. GET /v1/pogr/certificate/<pogc_id> ───────────────────────────────────
