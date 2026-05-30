@@ -767,3 +767,15 @@ id = "V-0FXevh_IYE0CasoN1PK"
 uri = "file://evidence_packages/OMNIX-RTE-001_PACKAGE_20260528.pdf"
 type = "pdf"
 title = "OMNIX-RTE-001 Package — 15 páginas"
+
+[[outputs]]
+id = "tEGCJA-eOceSU2HIcsKa1"
+uri = "file://evidence_packages/POGC-EXT-A7F3C2B1D9E4F508_20260530_040316.pdf"
+type = "pdf"
+title = "POGC-EXT-A7F3C2B1D9E4F508 — VeriSigil AI · Primer PoGC Externo"
+
+[[outputs]]
+id = "BbKMPxfS4SPAfTLO55M4H"
+uri = "file://evidence_packages/POGC-EXT-A7F3C2B1D9E4F508_20260530_040316.json"
+type = "unspecified"
+title = "POGC-EXT-A7F3C2B1D9E4F508 — JSON verificable"

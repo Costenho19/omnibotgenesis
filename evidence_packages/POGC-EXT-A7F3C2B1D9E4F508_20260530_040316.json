@@ -1,0 +1,75 @@
+{
+  "pogc_id": "POGC-EXT-A7F3C2B1D9E4F508",
+  "certificate_class": "EXTERNAL",
+  "version": "1.0",
+  "issuer": "OMNIX QUANTUM LTD",
+  "issuer_protocol": "OMNIX PoGR \u2014 ADR-186/187",
+  "issuer_rfcs": [
+    "RFC-ATF-1",
+    "RFC-ATF-2",
+    "RFC-ATF-3",
+    "RFC-ATF-4",
+    "RFC-ATF-5",
+    "RFC-ATF-6"
+  ],
+  "subject_org": "VeriSigil AI",
+  "subject_org_id": "verisigil-ai-001",
+  "subject_system": "Constitutional Execution Substrate",
+  "agent_id": "financial-agent-1780111266",
+  "agent_type": "financial-execution-agent",
+  "agent_instance": "live-production",
+  "governance_decision": {
+    "action": "wire_transfer",
+    "amount_usd": 250000,
+    "currency": "USD",
+    "outcome": "DENY",
+    "reason": "Amount exceeds autonomous limit for CRITICAL consequence",
+    "consequence_class": "CRITICAL",
+    "decision_date": "2026-05-30"
+  },
+  "governance_outcome": "DENY",
+  "evidence_hash": "586b996f53da83652b2690b4117a4830d4bde3c22c7737085c40f5ee86a4ac3a",
+  "evidence_bundle": "bundle-482df2c4f1d9",
+  "evidence_algorithm": "SHA-256",
+  "external_protocol": {
+    "name": "VGS-ELI: Execution Legitimacy Infrastructure",
+    "version": "1.0.0",
+    "doi": "10.5281/zenodo.20451306",
+    "url": "https://doi.org/10.5281/zenodo.20451306",
+    "invariants": [
+      "VGS-ELI-INV-001",
+      "VGS-ELI-INV-008"
+    ],
+    "inv_001_desc": "Pre-Execution Admissibility \u2014 authority resolved before action",
+    "inv_008_desc": "Causality Preserved \u2014 decision trace is causally complete"
+  },
+  "regulatory_mapping": {
+    "EU_AI_Act_Art_11": "Technical documentation \u2014 governance decision record",
+    "NIST_AU_2": "Audit Events \u2014 machine-readable governance evidence",
+    "ISO_42001_Art_9_1": "Monitoring, measurement, analysis and evaluation"
+  },
+  "compliance_tier": "EXT-VGS-ELI-Compliant",
+  "mandate_certification": "MANDATE-BOUND",
+  "enforcement_model": "Structural DENY \u2014 no bypass path admitted",
+  "boundary_type": "Pre-execution admissibility gate",
+  "issued_at": "2026-05-30T21:00:00+00:00",
+  "expires_at": "2027-05-30T21:00:00+00:00",
+  "status": "ACTIVE",
+  "pqc_algorithm": "stub-sha3-256",
+  "fips_standard": "FIPS 204 / NIST ML-DSA",
+  "content_hash": "sha3-256:b48673ddb6d7c95767d38507f8c87d7ee8c157ea7daa0f070c79145795652802",
+  "pqc_signature": "STUB-SHA3-256:8930fe331ec441218a522c3dc50d75c4c244f747812cef527908e899fd7f7174",
+  "canonical_fields_hashed": [
+    "pogc_id",
+    "certificate_class",
+    "issuer",
+    "subject_org",
+    "agent_id",
+    "governance_outcome",
+    "evidence_hash",
+    "compliance_tier",
+    "mandate_certification",
+    "issued_at",
+    "expires_at"
+  ]
+}
