@@ -45,31 +45,34 @@ Referencia interna para agentes y desarrolladores. Actualizar al añadir nuevos 
 
 ---
 
-## Runtime Treasury Execution Trace (RTE-001) — ADR-201
+## Runtime Treasury Execution Trace (RTE-001) — ADR-201/202/203/204
 
-**v1.3.0 — Triple-path execution trace.** Primer artefacto protocol-grade de ejecución autónoma de tesorería $50M.  
+**v1.4.0 — Triple-path + IPFL Governance Contract.** Primer artefacto protocol-grade de ejecución autónoma de tesorería $50M con Governance Contract pre-ejecución sellado PQC.  
 Escenario: aprobación autónoma cross-border — SWIFT MT103 / FIX 4.4 / XRPL RLUSD.  
-**Tres rutas:** Path A — Dangerous (HALT + OSG REJECT) · Path B — Admissible (3-turn trace → PoGC MANDATE-BOUND → Settlement RELEASED) · **Path C — Interrupted (Turn 0 ✓, Turn 1 ⚠ MAS=0.61, Turn 2 🛑 HALT MAS=0.28 → CTCHC HALTED → OSG REJECTED → PoGC NOT ISSUED)**
+**Tres rutas:** Path A — Dangerous (HALT + OSG REJECT) · Path B — Admissible (3-turn trace → PoGC MANDATE-BOUND → Settlement RELEASED) · **Path C — Interrupted (Turn 0 ✓, Turn 1 ⚠ MAS=0.61, Turn 2 🛑 HALT MAS=0.28 → CTCHC HALTED → OSG REJECTED → PoGC NOT ISSUED)**  
+**Step 0 — GCFR:** IAD · SAR · MFR · CPS · FPS sellados con ML-DSA-65 antes de Turn 0 (Dr. Otani gap — ADR-204)
 
 | Artefacto | Archivo | Alcance |
 |---|---|---|
-| **ADR-201** | `docs/adr/ADR-201-omnix-rte-001-runtime-treasury-execution-trace.md` | Spec completa: 8-step triple-path · **15 invariantes RTE-INV-001–015** · §8: trace multi-turno · **§9: Path C Interrupted** |
-| **ADR-202** | `docs/adr/ADR-202-omnix-rte-001-hardening-layer.md` | Hardening layer v1.1.0: 4 bypasses cerrados (A09 CRITICAL · A08 HIGH · A07 HIGH · source_state MEDIUM) · +10 checks · RTE-INV-009–012 |
-| **ADR-203** | `docs/adr/ADR-203-rte-001-institutional-artifact-extraction-protocol.md` | **IAEP** — Institutional Artifact Extraction Protocol: 4 premium reporting commands · TPER · MIT · CoCC · VCA · COMPAT-INV-001 |
+| **ADR-201** | `docs/adr/ADR-201-omnix-rte-001-runtime-treasury-execution-trace.md` | Spec completa: **9-step** triple-path · **15 invariantes RTE-INV-001–015** · §8: trace multi-turno · §9: Path C Interrupted · **§10: IPFL v1.4.0** |
+| **ADR-202** | `docs/adr/ADR-202-omnix-rte-001-hardening-layer.md` | Hardening layer: 4 bypasses cerrados (A09 CRITICAL · A08 HIGH · A07 HIGH · source_state MEDIUM) · +10 checks · RTE-INV-009–012 |
+| **ADR-203** | `docs/adr/ADR-203-rte-001-institutional-artifact-extraction-protocol.md` | **IAEP** — 5 premium reporting commands · TPER · MIT · CoCC · VCA · **IFR** · COMPAT-INV-001 |
+| **ADR-204** | `docs/adr/ADR-204-rte-001-intake-predicate-formation-layer.md` | **IPFL** — Governance Contract Formation Record (GCFR): IAD·SAR·MFR·CPS·FPS · 8 invariantes IPFL-INV-001–008 · +36 checks · v1.4.0 |
 | **Product Spec** | `docs/products/RTE_SPEC.md` | Especificación de producto: arquitectura, invariantes, casos de uso institucionales |
-| **Generator v1.3.0** | `scripts/generate_treasury_execution_trace.py` | Genera package triple-path ~370KB · **Path C**: DR válido · CES NOMINAL · Turn 0=PASS · Turn 1=WARNING(MAS=0.61) · Turn 2=HALT(MAS=0.28<0.30) · CTCHC HALTED · MBR Seal UNCERTIFIED · OSG REJECTED · PoGC absent |
-| **Standalone Verifier** | `scripts/verify_treasury_execution_trace.py` | **148 checks** · 7 modos verify + FULL · **4 IAEP reports** (ADR-203): `--treasury-protocol` · `--mandate-timeline` · `--chain-custody` · `--check-version` · `--json` · exit 0=PASS/1=FAIL |
+| **Generator v1.4.0** | `scripts/generate_treasury_execution_trace.py` | Package triple-path ~494KB · **Step 0 GCFR**: IAD+SAR+MFR+CPS+FPS sellados · **Path C**: Turn 0=PASS · Turn 1=WARNING · Turn 2=HALT · CTCHC HALTED · OSG REJECTED |
+| **Standalone Verifier** | `scripts/verify_treasury_execution_trace.py` | **187 checks** · 8 modos verify + FULL · **5 IAEP reports** · `--verify-intake` · `--intake-report` · `--treasury-protocol` · `--mandate-timeline` · `--chain-custody` · `--check-version` · `--json` |
 | **PDF Generator** | `scripts/generate_rte_pdf.py` | Documento institucional 15 páginas con evidencia forense embebida · `evidence_packages/OMNIX-RTE-001_*.pdf` |
 | **Adversarial Review** | `docs/reviewer/ADVERSARIAL_REVIEW_REPORT.md` | 15 ataques simulados · 4 bypasses cerrados en v1.1.0 |
 | **Remediation Closure** | `docs/reviewer/REMEDIATION_CLOSURE_REPORT.md` | Cierre formal · matriz de ataques actualizada |
-| **Packages** | `evidence_packages/` | JSON (~370KB) + PDF (15p) generados on-demand |
+| **Packages** | `evidence_packages/` | JSON (~494KB) + PDF (15p) generados on-demand |
 
-**Verified v1.3.0:** **148/148 PASS** · 0 FAIL · RFC-ATF-1 a RFC-ATF-6 · Path C HALT verificado ✓ (2026-05-30)  
+**Verified v1.4.0:** **187/187 PASS** · 0 FAIL · RFC-ATF-1 a RFC-ATF-6 · IPFL GCFR verificado ✓ (2026-05-30)  
 **Adversarial:** 15 ataques · **0 bypasses abiertos** v1.1.0+  
-**Invariantes demonstrados:** 37 (RTE-INV-001–015 + ATF-INV + CGE-INV + BEV-INV-001/005/007 + MIVP-INV-001/003/004/005/007/008/009 + PoGR-INV + TGB-INV)  
+**Invariantes demonstrados:** 46 (RTE-INV-001–015 + **IPFL-INV-001–008** + ATF-INV + CGE-INV + BEV-INV + MIVP-INV + PoGR-INV + TGB-INV)  
 **Uso:** `python scripts/generate_treasury_execution_trace.py`  
-**Verificación:** `python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_*.json`  
-**Path C solo:** `python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_*.json --verify-interrupted`  
+**Verificación completa:** `python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_*.json`  
+**Solo IPFL:** `python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_*.json --verify-intake`  
+**Intake Report (Dr. Otani):** `python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_*.json --intake-report`  
 **IAEP reports:** `python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_*.json --treasury-protocol --mandate-timeline --chain-custody --check-version`
 
 ---

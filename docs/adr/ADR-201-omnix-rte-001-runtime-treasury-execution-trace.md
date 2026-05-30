@@ -50,9 +50,9 @@ The OMNIX-RTE-001 proves two simultaneous propositions:
 
 The dangerous path must be more impressive than the admissible path. Any system can show an approval. No system shows a HALT with a verifiable reason chain, append-only evidence, and an OSG hard reject that prevented settlement.
 
-### Eight-step trace structure (both paths)
+### Nine-step trace structure (all paths) — v1.4.0
 
-Each path follows the same 8-step TA-14 chain:
+Each path follows the same 9-step TA-14 chain (Step 0 added in v1.4.0 — ADR-204 IPFL):
 
 ```
 1. SOURCE_STATE      — request captured with full treasury context
@@ -253,11 +253,35 @@ En Turn 2, el stack de gobernanza ejecuta la secuencia de terminación:
 | PoGC + Settlement | INT-POGC-ABSENT + INT-SETTLE-BLOCKED (2) |
 | Replay proof | HASH+SIG+STATUS+OFFLINE (4) |
 
-**Total:** `EXPECTED_TOTAL_CHECKS = 111 (v1.2.0) + 37 (Path C) = 148`
+**Total:** `EXPECTED_TOTAL_CHECKS = 148 (v1.3.0) + 39 (IPFL Step 0: 36 verify_intake + 3 PKG-INTAKE structural) = 187 (v1.4.0)`
 
 ### Package size
 
-v1.2.0 (244.5 KB) → **v1.3.0 (≈370 KB)** — Path C añade ~125 KB (3 BARs + 3 CCS + 3 MAS + CTCHC + MBR Seal + OSG + replay proof + halt receipt + TCS + CGE).
+v1.3.0 (≈370 KB) → **v1.4.0 (≈494 KB)** — IPFL añade ~124 KB (3 GCFRs × 5 predicados + IDS seal por path).
+
+---
+
+## §10 — Intake and Predicate Formation Layer (v1.4.0) — 2026-05-30
+
+v1.4.0 añade **Step 0 — GCFR (Governance Contract Formation Record)** como primer paso del trace, respondiendo a la observación de Dr. Masayuki Otani de que el artefacto público mostraba trace+verification pero no la capa de intake+predicate formation.
+
+El **GCFR** sella cinco predicados pre-ejecución con ML-DSA-65:
+
+| Predicado | ID | IPFL-INV |
+|---|---|---|
+| Intake Authority Declaration | IAD | INV-001 |
+| Scope Authorization Record | SAR | INV-002 |
+| Mandate Formation Record | MFR | INV-003/004 |
+| Counterparty Predicate Set | CPS | INV-005 |
+| Freshness Predicate Set | FPS | INV-006 |
+
+**IDS Seal:** `SHA3-256(iad_hash ‖ "|" ‖ sar_hash ‖ "|" ‖ mfr_hash ‖ "|" ‖ cps_hash ‖ "|" ‖ fps_hash)` — PQC-signed. Alteración de cualquier predicado rompe el seal, detectable offline (IPFL-INV-007/008).
+
+**Nuevos checks:** `verify_intake()` — 12 × 3 paths = **36 checks** + 3 PKG-INTAKE estructurales = **39 checks totales** (STRUCT + GCFR-COMP + GCFR-HASH + GCFR-SIG + 5 predicate hashes + XREF-MAND + XREF-PROXY + XREF-RAIL × 3 paths, más PKG-INTAKE-DNG/ADM/INT en verify_package_structure()).
+
+**Nuevo comando IAEP:** `--verify-intake` (verificación) · `--intake-report` (IAEP-RPT-005 — Intake Formation Report).
+
+Spec completa: **ADR-204** — `docs/adr/ADR-204-rte-001-intake-predicate-formation-layer.md`
 
 ---
 
@@ -265,6 +289,8 @@ v1.2.0 (244.5 KB) → **v1.3.0 (≈370 KB)** — Path C añade ~125 KB (3 BARs +
 
 - ADR-200 — Route-Complete Evidence Package (RCEP) — predecessor
 - ADR-202 — OMNIX-RTE-001 Hardening Layer — adversarial remediation
+- ADR-203 — Institutional Artifact Extraction Protocol (IAEP) — 5 premium reports
+- ADR-204 — Intake and Predicate Formation Layer (IPFL) — Governance Contract Formation
 - ADR-182 — Constraint Conformance Signal (CCS) — per-turn conformance measurement
 - ADR-184 — OMNIX Governance Runtime (OGR) — session lifecycle
 - ADR-186/187 — Proof of Governance Registry (PoGR/PoGC)

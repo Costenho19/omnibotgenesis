@@ -554,6 +554,276 @@ def _build_replay_proof(pqc, sk_bytes: bytes, session_id: str, path_label: str,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  Intake and Predicate Formation Layer (IPFL) — ADR-204
+#  Governance Contract Formation Record (GCFR) — Step 0, before all execution
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _build_iad(pqc, sk_bytes: bytes, agent_id: str, human_authority: str,
+               authority_type: str, authority_budget_pct: float,
+               delegation_depth_limit: int, authority_constraints: List[str],
+               path_label: str) -> Dict:
+    """
+    Intake Authority Declaration (IAD) — IPFL §2.1.
+    Declares who can act and under what authority limits — formed BEFORE execution.
+    IPFL-INV-001: IAD sealed before 1_source_state (Step 0 of 9-step trace).
+    """
+    iad_id    = _hex_id("IAD")
+    formed_at = _now_iso()
+    payload = {
+        "iad_id":                   iad_id,
+        "agent_id":                 agent_id,
+        "human_authority":          human_authority,
+        "authority_type":           authority_type,
+        "authority_budget_pct":     authority_budget_pct,
+        "delegation_depth_limit":   delegation_depth_limit,
+        "authority_constraints":    sorted(authority_constraints),
+        "path_label":               path_label,
+        "formed_at":                formed_at,
+        "ipfl_reference":           "IPFL §2.1 (ADR-204)",
+    }
+    payload["iad_content_hash"] = _sha3(json.dumps(payload, sort_keys=True))
+    sig = _sign_compact(
+        pqc,
+        {"iad_id": iad_id, "iad_content_hash": payload["iad_content_hash"], "formed_at": formed_at},
+        sk_bytes,
+    )
+    payload["pqc_signature"] = sig
+    payload["pqc_algorithm"] = "ML-DSA-65"
+    return payload
+
+
+def _build_sar(pqc, sk_bytes: bytes, agent_id: str, domain: str,
+               permitted_actions: List[str], excluded_actions: List[str],
+               max_amount_usd: int, approved_rails: List[str]) -> Dict:
+    """
+    Scope Authorization Record (SAR) — IPFL §2.2.
+    Delimits what the agent may do and is explicitly excluded from doing.
+    IPFL-INV-002: SAR.approved_rails must match DR.task_scope.approved_rails.
+    """
+    sar_id    = _hex_id("SAR")
+    formed_at = _now_iso()
+    payload = {
+        "sar_id":                sar_id,
+        "agent_id":              agent_id,
+        "domain":                domain,
+        "permitted_actions":     sorted(permitted_actions),
+        "excluded_actions":      sorted(excluded_actions),
+        "max_amount_usd":        max_amount_usd,
+        "approved_rails":        sorted(approved_rails),
+        "require_dual_approval": True,
+        "formed_at":             formed_at,
+        "ipfl_reference":        "IPFL §2.2 (ADR-204)",
+    }
+    payload["sar_content_hash"] = _sha3(json.dumps(payload, sort_keys=True))
+    sig = _sign_compact(
+        pqc,
+        {"sar_id": sar_id, "sar_content_hash": payload["sar_content_hash"], "formed_at": formed_at},
+        sk_bytes,
+    )
+    payload["pqc_signature"] = sig
+    payload["pqc_algorithm"] = "ML-DSA-65"
+    return payload
+
+
+def _build_mfr(pqc, sk_bytes: bytes, session_id: str, mandate_ref: str,
+               mandate_objective: str, mandate_prohibitions: List[str],
+               halt_threshold: float, warning_threshold: float) -> Dict:
+    """
+    Mandate Formation Record (MFR) — IPFL §2.3.
+    Canonical mandate declaration before it is bound as MBR.
+    IPFL-INV-003: MFR.mandate_objective_hash == MBR.mandate_objective_hash.
+    IPFL-INV-004: MBR.proxy_guards ⊆ MFR.mandate_prohibitions.
+    """
+    mfr_id         = _hex_id("MFR")
+    formed_at      = _now_iso()
+    objective_hash = _sha3(mandate_objective)
+    payload = {
+        "mfr_id":                  mfr_id,
+        "session_id":              session_id,
+        "mandate_ref":             mandate_ref,
+        "mandate_objective":       mandate_objective,
+        "mandate_objective_hash":  objective_hash,
+        "mandate_prohibitions":    sorted(mandate_prohibitions),
+        "halt_threshold":          halt_threshold,
+        "warning_threshold":       warning_threshold,
+        "formed_at":               formed_at,
+        "ipfl_reference":          "IPFL §2.3 (ADR-204)",
+    }
+    payload["mfr_content_hash"] = _sha3(json.dumps(payload, sort_keys=True))
+    sig = _sign_compact(
+        pqc,
+        {"mfr_id": mfr_id, "mfr_content_hash": payload["mfr_content_hash"], "formed_at": formed_at},
+        sk_bytes,
+    )
+    payload["pqc_signature"] = sig
+    payload["pqc_algorithm"] = "ML-DSA-65"
+    return payload
+
+
+def _build_cps(pqc, sk_bytes: bytes, counterparty_whitelist: List[str],
+               bic_registry: Dict[str, str], sanctions_checks: Dict[str, str],
+               fx_rate_band_pct: float, max_single_transaction_usd: int,
+               dual_approval_authorities: List[str]) -> Dict:
+    """
+    Counterparty Predicate Set (CPS) — IPFL §2.4.
+    Pre-verified counterparty constraints: whitelist, BIC registry, sanctions.
+    IPFL-INV-005: All sanctions_checks must record CLEAR before execution.
+    """
+    cps_id    = _hex_id("CPS")
+    formed_at = _now_iso()
+    all_clear = all(v == "CLEAR" for v in sanctions_checks.values())
+    payload = {
+        "cps_id":                       cps_id,
+        "counterparty_whitelist":       sorted(counterparty_whitelist),
+        "bic_registry":                 bic_registry,
+        "sanctions_checks":             sanctions_checks,
+        "sanctions_all_clear":          all_clear,
+        "fx_rate_band_pct":             fx_rate_band_pct,
+        "max_single_transaction_usd":   max_single_transaction_usd,
+        "dual_approval_authorities":    sorted(dual_approval_authorities),
+        "require_dual_approval":        True,
+        "formed_at":                    formed_at,
+        "ipfl_reference":               "IPFL §2.4 (ADR-204)",
+    }
+    payload["cps_predicate_hash"] = _sha3(json.dumps(payload, sort_keys=True))
+    sig = _sign_compact(
+        pqc,
+        {"cps_id": cps_id, "cps_predicate_hash": payload["cps_predicate_hash"], "formed_at": formed_at},
+        sk_bytes,
+    )
+    payload["pqc_signature"] = sig
+    payload["pqc_algorithm"] = "ML-DSA-65"
+    return payload
+
+
+def _build_fps(pqc, sk_bytes: bytes, mandate_ref: str, max_ttl_seconds: int,
+               tar_validity_window_hours: int, regulatory_epoch: str,
+               mandate_ref_expiry: str) -> Dict:
+    """
+    Freshness Predicate Set (FPS) — IPFL §2.5.
+    Defines validity windows, TTL rules, and regulatory epoch at contract formation.
+    IPFL-INV-006: FPS.max_ttl_seconds must be > 0 and consistently applied to DR TTL.
+    """
+    fps_id    = _hex_id("FPS")
+    formed_at = _now_iso()
+    payload = {
+        "fps_id":                       fps_id,
+        "mandate_ref":                  mandate_ref,
+        "mandate_ref_expiry":           mandate_ref_expiry,
+        "max_ttl_seconds":              max_ttl_seconds,
+        "tar_validity_window_hours":    tar_validity_window_hours,
+        "staleness_threshold_seconds":  3600,
+        "regulatory_epoch":             regulatory_epoch,
+        "regulatory_enforcement_date":  "2026-08-01",
+        "freshness_check_passed":       True,
+        "formed_at":                    formed_at,
+        "ipfl_reference":               "IPFL §2.5 (ADR-204)",
+    }
+    payload["fps_freshness_hash"] = _sha3(json.dumps(payload, sort_keys=True))
+    sig = _sign_compact(
+        pqc,
+        {"fps_id": fps_id, "fps_freshness_hash": payload["fps_freshness_hash"], "formed_at": formed_at},
+        sk_bytes,
+    )
+    payload["pqc_signature"] = sig
+    payload["pqc_algorithm"] = "ML-DSA-65"
+    return payload
+
+
+def _build_gcfr(pqc, sk_bytes: bytes, session_id: str, path_label: str,
+                iad: Dict, sar: Dict, mfr: Dict, cps: Dict, fps: Dict) -> Dict:
+    """
+    Governance Contract Formation Record (GCFR) — IPFL §2.6.
+    Assembles the 5 intake predicates into a sealed, PQC-signed Governance Contract.
+    Step 0 of the 9-step RTE-001 trace (ADR-204) — formed before source_state capture.
+
+    Seal formula (ADR-204 §4, canonical):
+        seal_hash = SHA3-256(iad_hash ‖ "|" ‖ sar_hash ‖ "|" ‖ mfr_hash ‖ "|" ‖ cps_hash ‖ "|" ‖ fps_hash)
+
+    IPFL-INV-007: GCFR seal covers ALL 5 component hashes.
+    IPFL-INV-008: GCFR formed before 1_source_state.
+    """
+    gcfr_id          = _hex_id("GCFR")
+    ids_id           = _hex_id("IDS")
+    formed_at        = _now_iso()
+    component_hashes = [
+        iad["iad_content_hash"],
+        sar["sar_content_hash"],
+        mfr["mfr_content_hash"],
+        cps["cps_predicate_hash"],
+        fps["fps_freshness_hash"],
+    ]
+    seal_hash = _sha3("|".join(component_hashes))
+    sig = _sign_compact(
+        pqc,
+        {"ids_id": ids_id, "seal_hash": seal_hash, "formed_at": formed_at},
+        sk_bytes,
+    )
+    return {
+        "gcfr_id":       gcfr_id,
+        "session_id":    session_id,
+        "formed_at":     formed_at,
+        "path":          path_label,
+        "ipfl_version":  "1.0.0",
+        "adr_reference": "ADR-204",
+        "components": {
+            "intake_authority_declaration": iad,
+            "scope_authorization_record":   sar,
+            "mandate_formation_record":     mfr,
+            "counterparty_predicate_set":   cps,
+            "freshness_predicate_set":      fps,
+        },
+        "component_hashes": component_hashes,
+        "intake_seal": {
+            "ids_id":        ids_id,
+            "seal_hash":     seal_hash,
+            "pqc_signature": sig,
+            "pqc_algorithm": "ML-DSA-65",
+            "formed_at":     formed_at,
+            "note": (
+                "GCFR sealed before Turn 0. Covers IAD·SAR·MFR·CPS·FPS. "
+                "Any predicate alteration breaks this seal (IPFL-INV-007/008)."
+            ),
+        },
+    }
+
+
+# Shared constants for all 3 path GCFR builds
+_IPFL_PERMITTED_ACTIONS = [
+    "counterparty_bic_validation",
+    "sanctions_screening",
+    "fx_rate_check",
+    "order_routing_fix44",
+    "xrpl_payment_preparation",
+    "dual_approval_confirmation",
+]
+_IPFL_EXCLUDED_ACTIONS = [
+    "authority_self_escalation",
+    "counterparty_whitelist_bypass",
+    "dual_approval_bypass",
+    "settlement_without_mandate_verification",
+]
+_IPFL_SANCTIONS = {
+    "OFAC_SDN":              "CLEAR",
+    "EU_CONSOLIDATED_LIST":  "CLEAR",
+    "UN_SANCTIONS":          "CLEAR",
+}
+_IPFL_BIC_REGISTRY = {
+    "EUROBANK-COUNTERPARTY-001": "EURBDE3BXXX",
+    "CLEARING-HOUSE-EU-001":     "CLRHEU2XXXX",
+}
+_IPFL_DUAL_APPROVAL = ["CFO-OPERATOR-HN-001", "TREASURY-BOARD-QUORUM"]
+_IPFL_PROHIBITIONS = [
+    "Do not bypass dual-approval when counterparty is pre-approved",
+    "Do not optimise for transaction speed at the expense of counterparty verification",
+    "Do not treat settlement confirmation as mandate completion",
+    "No bypass of counterparty whitelist",
+    "No settlement-confirmation as mandate proxy",
+    "No speed-over-verification optimisation",
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  PATH DANGEROUS — authority drift → HALT → refusal → OSG reject
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -595,7 +865,69 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     )
 
     # ── 1. SOURCE STATE + TCS ─────────────────────────────────────────────────
-    print("\n  [1/8] SOURCE STATE — capturing treasury request + TCS...")
+    # ── 0. INTAKE — Governance Contract Formation (IPFL ADR-204) ──────────────
+    print("\n  [0/9] INTAKE — forming Governance Contract (GCFR) before execution...")
+    gcfr = _build_gcfr(
+        pqc, sk_bytes,
+        session_id=SESSION_ID,
+        path_label="DANGEROUS",
+        iad=_build_iad(
+            pqc, sk_bytes,
+            agent_id=AGENT_ID,
+            human_authority=HUMAN_OPERATOR,
+            authority_type="DELEGATED_DEGRADED",
+            authority_budget_pct=42.0,
+            delegation_depth_limit=1,
+            authority_constraints=[
+                "Approved rails: SWIFT MT202, XRPL RLUSD",
+                "Max single transaction: USD 50,000,000",
+                "No bypass of counterparty whitelist",
+                "Require dual approval before settlement",
+            ],
+            path_label="DANGEROUS",
+        ),
+        sar=_build_sar(
+            pqc, sk_bytes,
+            agent_id=AGENT_ID,
+            domain=DOMAIN,
+            permitted_actions=_IPFL_PERMITTED_ACTIONS,
+            excluded_actions=_IPFL_EXCLUDED_ACTIONS,
+            max_amount_usd=50_000_000,
+            approved_rails=["SWIFT MT202", "XRPL RLUSD"],
+        ),
+        mfr=_build_mfr(
+            pqc, sk_bytes,
+            session_id=SESSION_ID,
+            mandate_ref="TREASURY-MANDATE-2026-Q2",
+            mandate_objective=MANDATE_OBJ,
+            mandate_prohibitions=_IPFL_PROHIBITIONS,
+            halt_threshold=0.30,
+            warning_threshold=0.65,
+        ),
+        cps=_build_cps(
+            pqc, sk_bytes,
+            counterparty_whitelist=["CLEARING-HOUSE-EU-001", "EUROBANK-COUNTERPARTY-001"],
+            bic_registry=_IPFL_BIC_REGISTRY,
+            sanctions_checks=_IPFL_SANCTIONS,
+            fx_rate_band_pct=2.5,
+            max_single_transaction_usd=50_000_000,
+            dual_approval_authorities=_IPFL_DUAL_APPROVAL,
+        ),
+        fps=_build_fps(
+            pqc, sk_bytes,
+            mandate_ref="TREASURY-MANDATE-2026-Q2",
+            max_ttl_seconds=79200,
+            tar_validity_window_hours=22,
+            regulatory_epoch="EU-AI-ACT-PRE-ENFORCEMENT-2026",
+            mandate_ref_expiry="2026-06-30",
+        ),
+    )
+    print(f"      GCFR:  {gcfr['gcfr_id']}")
+    print(f"      IDS:   {gcfr['intake_seal']['seal_hash'][:28]}...")
+    print(f"      IAD:   authority_budget={gcfr['components']['intake_authority_declaration']['authority_budget_pct']}% (DEGRADED — drift origin)")
+    print(f"      PQC:   ML-DSA-65 sealed ✓  (5 predicates: IAD·SAR·MFR·CPS·FPS)")
+
+    print("\n  [1/9] SOURCE STATE — capturing treasury request + TCS...")
     tcs = _build_tcs(
         pqc, sk_bytes,
         context_ref="TREASURY-MANDATE-2026-Q2",
@@ -649,7 +981,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      authority_drift: budget after drift = {source_state['authority_context']['budget_after_drift']}%")
 
     # ── 2. AUTHORITY — DR with degraded budget + MBR activated ───────────────
-    print("\n  [2/8] AUTHORITY — issuing degraded DR + activating MIVP MBR...")
+    print("\n  [2/9] AUTHORITY — issuing degraded DR + activating MIVP MBR...")
     dr_engine  = DelegationReceiptEngine(db_url=None)
     expires_at = (datetime.now(timezone.utc) + timedelta(minutes=22)).isoformat()
     dr = dr_engine.create_delegation(
@@ -697,7 +1029,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      halt_threshold={mbr['mas_halt_threshold']} | warning_threshold={mbr['mas_warning_threshold']}")
 
     # ── 3. RUNTIME — CES degraded + MIVP MAS critical ────────────────────────
-    print("\n  [3/8] RUNTIME — CES degraded + MIVP detects mandate misalignment...")
+    print("\n  [3/9] RUNTIME — CES degraded + MIVP detects mandate misalignment...")
     expires_dt  = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
     now_dt      = datetime.now(timezone.utc)
     dr_lifetime = 4 * 3600
@@ -763,7 +1095,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      violations={len(mas['proxy_guard_violations'])} | warnings={len(mas['proxy_guard_warnings'])}")
 
     # ── 4. COUNTERFACTUAL — CGE 5 CFRs + CAT ────────────────────────────────
-    print("\n  [4/8] COUNTERFACTUAL — CGE computing 5 alternative paths...")
+    print("\n  [4/9] COUNTERFACTUAL — CGE computing 5 alternative paths...")
     cfrs = [
         _build_cfr(0, "SELECTED: Dangerous path (actual)",
                    "Proceed with degraded authority budget (42%) and critical CES",
@@ -809,7 +1141,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         print(f"      {icon} [{cfr['cfr_index']}] {cfr['fork_label'][:55]}{blocked}")
 
     # ── 5. VERDICT — TAR rejects ─────────────────────────────────────────────
-    print("\n  [5/8] VERDICT — TAR evaluation (expecting REJECTED)...")
+    print("\n  [5/9] VERDICT — TAR evaluation (expecting REJECTED)...")
     tar_engine = TemporalAuthorityEngine(db_url=None)
     tar = tar_engine.admit_execution(
         delegation_receipt=dr,
@@ -831,7 +1163,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     ]
 
     # ── 6. GATE — OSG rejects independently ──────────────────────────────────
-    print("\n  [6/8] GATE — OSG ValidationReceipt (expecting REJECTED — fail-closed)...")
+    print("\n  [6/9] GATE — OSG ValidationReceipt (expecting REJECTED — fail-closed)...")
     osg_receipt = _build_osg_receipt(
         pqc, sk_bytes,
         session_id=SESSION_ID,
@@ -849,7 +1181,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      USD 50,000,000 settlement: BLOCKED at OSG gate (independently of HALT)")
 
     # ── 7. EXECUTION — refusal receipt (PQC-signed, append-only) ─────────────
-    print("\n  [7/8] EXECUTION — issuing PQC-signed refusal receipt...")
+    print("\n  [7/9] EXECUTION — issuing PQC-signed refusal receipt...")
     mbr_seal = _build_mbr_seal(
         pqc, sk_bytes,
         mbr_id=mbr["mbr_id"],
@@ -900,7 +1232,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      CTCHC sealed in HALTED state: {sealed_chain.seal_hash[:28]}...")
 
     # ── 8. POST-EXECUTION — forensic replay proof ────────────────────────────
-    print("\n  [8/8] POST-HALT — sealing forensic replay proof...")
+    print("\n  [8/9] POST-HALT — sealing forensic replay proof...")
     tcs_post = _build_tcs(
         pqc, sk_bytes,
         context_ref=f"POST-HALT-{SESSION_ID}",
@@ -929,6 +1261,7 @@ def run_path_dangerous(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         "label":       "HALT — authority drift + mandate misalignment → OSG reject → forensic seal",
         "rte_verdict": "HALT PROVEN — execution structurally blocked at runtime evaluation",
         "steps": {
+            "0_intake":          gcfr,
             "1_source_state":    source_state,
             "2_authority": {
                 "delegation_receipt":     dr_dict,
@@ -1007,7 +1340,70 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     )
 
     # ── 1. SOURCE STATE + TCS ─────────────────────────────────────────────────
-    print("\n  [1/8] SOURCE STATE — capturing recertified treasury request + TCS...")
+    # ── 0. INTAKE — Governance Contract Formation (IPFL ADR-204) ──────────────
+    print("\n  [0/9] INTAKE — forming Governance Contract (GCFR) before execution...")
+    gcfr = _build_gcfr(
+        pqc, sk_bytes,
+        session_id=SESSION_ID,
+        path_label="ADMISSIBLE",
+        iad=_build_iad(
+            pqc, sk_bytes,
+            agent_id=AGENT_ID,
+            human_authority=HUMAN_OPERATOR,
+            authority_type="DELEGATED_RECERTIFIED",
+            authority_budget_pct=88.0,
+            delegation_depth_limit=1,
+            authority_constraints=[
+                "Approved rails: SWIFT MT202, XRPL RLUSD",
+                "Dual approval ref: DUAL-APPROVAL-TXN-2026-Q2-0047",
+                "Max single transaction: USD 50,000,000",
+                "No bypass of counterparty whitelist",
+                "Require dual approval before settlement",
+            ],
+            path_label="ADMISSIBLE",
+        ),
+        sar=_build_sar(
+            pqc, sk_bytes,
+            agent_id=AGENT_ID,
+            domain=DOMAIN,
+            permitted_actions=_IPFL_PERMITTED_ACTIONS,
+            excluded_actions=_IPFL_EXCLUDED_ACTIONS,
+            max_amount_usd=50_000_000,
+            approved_rails=["SWIFT MT202", "XRPL RLUSD"],
+        ),
+        mfr=_build_mfr(
+            pqc, sk_bytes,
+            session_id=SESSION_ID,
+            mandate_ref="TREASURY-MANDATE-2026-Q2",
+            mandate_objective=MANDATE_OBJ,
+            mandate_prohibitions=_IPFL_PROHIBITIONS,
+            halt_threshold=0.30,
+            warning_threshold=0.65,
+        ),
+        cps=_build_cps(
+            pqc, sk_bytes,
+            counterparty_whitelist=["CLEARING-HOUSE-EU-001", "EUROBANK-COUNTERPARTY-001"],
+            bic_registry=_IPFL_BIC_REGISTRY,
+            sanctions_checks=_IPFL_SANCTIONS,
+            fx_rate_band_pct=2.5,
+            max_single_transaction_usd=50_000_000,
+            dual_approval_authorities=_IPFL_DUAL_APPROVAL,
+        ),
+        fps=_build_fps(
+            pqc, sk_bytes,
+            mandate_ref="TREASURY-MANDATE-2026-Q2",
+            max_ttl_seconds=14400,
+            tar_validity_window_hours=4,
+            regulatory_epoch="EU-AI-ACT-PRE-ENFORCEMENT-2026",
+            mandate_ref_expiry="2026-06-30",
+        ),
+    )
+    print(f"      GCFR:  {gcfr['gcfr_id']}")
+    print(f"      IDS:   {gcfr['intake_seal']['seal_hash'][:28]}...")
+    print(f"      IAD:   authority_budget={gcfr['components']['intake_authority_declaration']['authority_budget_pct']}% (RECERTIFIED)")
+    print(f"      PQC:   ML-DSA-65 sealed ✓  (5 predicates: IAD·SAR·MFR·CPS·FPS)")
+
+    print("\n  [1/9] SOURCE STATE — capturing recertified treasury request + TCS...")
     tcs = _build_tcs(
         pqc, sk_bytes,
         context_ref="TREASURY-MANDATE-2026-Q2-RECERTIFIED",
@@ -1063,7 +1459,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      authority: RECERTIFIED | dual_approval: SATISFIED")
 
     # ── 2. AUTHORITY — recertified DR + MBR ──────────────────────────────────
-    print("\n  [2/8] AUTHORITY — issuing recertified DR + activating MIVP MBR...")
+    print("\n  [2/9] AUTHORITY — issuing recertified DR + activating MIVP MBR...")
     dr_engine  = DelegationReceiptEngine(db_url=None)
     expires_at = (datetime.now(timezone.utc) + timedelta(hours=4)).isoformat()
     dr = dr_engine.create_delegation(
@@ -1112,7 +1508,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      MBR: {mbr['mbr_id']} — MIVP activated (MIVP-INV-001)")
 
     # ── 3. RUNTIME — CES NOMINAL + MIVP ALIGNED ───────────────────────────────
-    print("\n  [3/8] RUNTIME — CES NOMINAL + MIVP mandate aligned...")
+    print("\n  [3/9] RUNTIME — CES NOMINAL + MIVP mandate aligned...")
     expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
     now_dt     = datetime.now(timezone.utc)
     dr_lifetime = 4 * 3600
@@ -1170,7 +1566,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      MIVP MAS: {mas['mas_id']} | score={mas['alignment_score']} | verdict={mas['verdict']}")
 
     # ── 4. COUNTERFACTUAL — CGE 5 CFRs + CAT ────────────────────────────────
-    print("\n  [4/8] COUNTERFACTUAL — CGE computing 5 alternative paths...")
+    print("\n  [4/9] COUNTERFACTUAL — CGE computing 5 alternative paths...")
     cfrs = [
         _build_cfr(0, "SELECTED: Admissible path (actual)",
                    "Execute with recertified budget=88% and CES=NOMINAL",
@@ -1211,7 +1607,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         print(f"      {icon} [{cfr['cfr_index']}] {cfr['fork_label'][:60]} (fragility={cfr['fragility_score']})")
 
     # ── 5. VERDICT — TAR admits ──────────────────────────────────────────────
-    print("\n  [5/8] VERDICT — TAR evaluation (expecting ADMITTED)...")
+    print("\n  [5/9] VERDICT — TAR evaluation (expecting ADMITTED)...")
     tar_engine = TemporalAuthorityEngine(db_url=None)
     tar = tar_engine.admit_execution(
         delegation_receipt=dr,
@@ -1282,7 +1678,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     # MBR Seal covers [mas_precheck + mas_exec0 + mas_exec1 + mas_exec2] → MANDATE-BOUND
     # PoGC issued from sealed 3-turn chain (ctchc_turn_count=3)
     # ─────────────────────────────────────────────────────────────────────────
-    print("\n  [6/8] GATE — 3-turn execution trace → PoGC + OSG APPROVED...")
+    print("\n  [6/9] GATE — 3-turn execution trace → PoGC + OSG APPROVED...")
     bar_engine = BAREngine()
     execution_turns = []
 
@@ -1502,7 +1898,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      USD 50,000,000 settlement: RELEASED — T+2 clearing")
 
     # ── 7. EXECUTION — outcome receipt ──────────────────────────────────────
-    print("\n  [7/8] EXECUTION — issuing PQC-signed outcome receipt...")
+    print("\n  [7/9] EXECUTION — issuing PQC-signed outcome receipt...")
     outcome_receipt = _build_outcome_receipt(
         pqc, sk_bytes,
         session_id=SESSION_ID,
@@ -1520,7 +1916,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      mandate_certification: MANDATE-BOUND | pqc_signed={outcome_receipt['pqc_signature'] is not None}")
 
     # ── 8. POST-EXECUTION — TCS + replay proof ───────────────────────────────
-    print("\n  [8/8] POST-EXECUTION — sealing TGB snapshot + replay proof...")
+    print("\n  [8/9] POST-EXECUTION — sealing TGB snapshot + replay proof...")
     tcs_post = _build_tcs(
         pqc, sk_bytes,
         context_ref=f"POST-EXECUTION-{SESSION_ID}",
@@ -1549,6 +1945,7 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         "label":       "ADMITTED — recertified authority + mandate alignment → PoGC → settlement released",
         "rte_verdict": "ADMISSION PROVEN — complete authority chain from source state to settled outcome",
         "steps": {
+            "0_intake":          gcfr,
             "1_source_state":    source_state,
             "2_authority": {
                 "delegation_receipt":     dr_dict,
@@ -1657,7 +2054,69 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     )
 
     # ── 1. SOURCE STATE + TCS ─────────────────────────────────────────────────
-    print("\n  [1/8] SOURCE STATE — capturing treasury request (path INTERRUPTED) + TCS...")
+    # ── 0. INTAKE — Governance Contract Formation (IPFL ADR-204) ──────────────
+    print("\n  [0/9] INTAKE — forming Governance Contract (GCFR) before execution...")
+    gcfr = _build_gcfr(
+        pqc, sk_bytes,
+        session_id=SESSION_ID,
+        path_label="INTERRUPTED",
+        iad=_build_iad(
+            pqc, sk_bytes,
+            agent_id=AGENT_ID,
+            human_authority=HUMAN_OPERATOR,
+            authority_type="DELEGATED_VALID",
+            authority_budget_pct=88.0,
+            delegation_depth_limit=1,
+            authority_constraints=[
+                "Approved rails: SWIFT MT202, XRPL RLUSD",
+                "Max single transaction: USD 50,000,000",
+                "No bypass of counterparty whitelist",
+                "Require dual approval before settlement",
+            ],
+            path_label="INTERRUPTED",
+        ),
+        sar=_build_sar(
+            pqc, sk_bytes,
+            agent_id=AGENT_ID,
+            domain=DOMAIN,
+            permitted_actions=_IPFL_PERMITTED_ACTIONS,
+            excluded_actions=_IPFL_EXCLUDED_ACTIONS,
+            max_amount_usd=50_000_000,
+            approved_rails=["SWIFT MT202", "XRPL RLUSD"],
+        ),
+        mfr=_build_mfr(
+            pqc, sk_bytes,
+            session_id=SESSION_ID,
+            mandate_ref="TREASURY-MANDATE-2026-Q2",
+            mandate_objective=MANDATE_OBJ,
+            mandate_prohibitions=_IPFL_PROHIBITIONS,
+            halt_threshold=0.30,
+            warning_threshold=0.65,
+        ),
+        cps=_build_cps(
+            pqc, sk_bytes,
+            counterparty_whitelist=["CLEARING-HOUSE-EU-001", "EUROBANK-COUNTERPARTY-001"],
+            bic_registry=_IPFL_BIC_REGISTRY,
+            sanctions_checks=_IPFL_SANCTIONS,
+            fx_rate_band_pct=2.5,
+            max_single_transaction_usd=50_000_000,
+            dual_approval_authorities=_IPFL_DUAL_APPROVAL,
+        ),
+        fps=_build_fps(
+            pqc, sk_bytes,
+            mandate_ref="TREASURY-MANDATE-2026-Q2",
+            max_ttl_seconds=14400,
+            tar_validity_window_hours=4,
+            regulatory_epoch="EU-AI-ACT-PRE-ENFORCEMENT-2026",
+            mandate_ref_expiry="2026-06-30",
+        ),
+    )
+    print(f"      GCFR:  {gcfr['gcfr_id']}")
+    print(f"      IDS:   {gcfr['intake_seal']['seal_hash'][:28]}...")
+    print(f"      IAD:   authority_budget={gcfr['components']['intake_authority_declaration']['authority_budget_pct']}% (VALID — mid-chain collapse, not authority failure)")
+    print(f"      PQC:   ML-DSA-65 sealed ✓  (5 predicates: IAD·SAR·MFR·CPS·FPS)")
+
+    print("\n  [1/9] SOURCE STATE — capturing treasury request (path INTERRUPTED) + TCS...")
     tcs = _build_tcs(
         pqc, sk_bytes,
         context_ref="TREASURY-MANDATE-2026-Q2-INTERRUPTED",
@@ -1714,7 +2173,7 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      authority: VALID | DR fresh | dual_approval: SATISFIED")
 
     # ── 2. AUTHORITY — fresh DR (full budget, TTL=4h) + MBR ──────────────────
-    print("\n  [2/8] AUTHORITY — issuing fresh DR (TTL=4h, budget=88%) + MIVP MBR...")
+    print("\n  [2/9] AUTHORITY — issuing fresh DR (TTL=4h, budget=88%) + MIVP MBR...")
     dr_engine  = DelegationReceiptEngine(db_url=None)
     expires_at = (datetime.now(timezone.utc) + timedelta(hours=4)).isoformat()
     dr = dr_engine.create_delegation(
@@ -1766,7 +2225,7 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      halt_threshold=0.30 | warning_threshold=0.65")
 
     # ── 3. RUNTIME — CES NOMINAL pre-execution ────────────────────────────────
-    print("\n  [3/8] RUNTIME — CES NOMINAL (system healthy, execution cleared pre-check)...")
+    print("\n  [3/9] RUNTIME — CES NOMINAL (system healthy, execution cleared pre-check)...")
     expires_dt  = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
     now_dt      = datetime.now(timezone.utc)
     dr_lifetime = 4 * 3600
@@ -1829,7 +2288,7 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      ✓ Pre-execution: all nominal — mandate monitoring armed for per-turn evaluation")
 
     # ── 4. COUNTERFACTUAL — CGE 5 CFRs + CAT ─────────────────────────────────
-    print("\n  [4/8] COUNTERFACTUAL — CGE computing 5 alternatives for interrupted scenario...")
+    print("\n  [4/9] COUNTERFACTUAL — CGE computing 5 alternatives for interrupted scenario...")
     cfrs = [
         _build_cfr(
             0, "SELECTED: Interrupted execution (actual)",
@@ -1894,7 +2353,7 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
         print(f"      {icon} [{cfr['cfr_index']}] {cfr['fork_label'][:58]}{bi}")
 
     # ── 5. VERDICT — TAR ADMITS (authority valid; HALT will come during execution) ──
-    print("\n  [5/8] VERDICT — TAR evaluation (DR fresh → ADMITTED; MIVP watchdog armed)...")
+    print("\n  [5/9] VERDICT — TAR evaluation (DR fresh → ADMITTED; MIVP watchdog armed)...")
     tar_engine = TemporalAuthorityEngine(db_url=None)
     tar = tar_engine.admit_execution(
         delegation_receipt=dr,
@@ -1970,7 +2429,7 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     # Turn 2 MAS=0.28 < halt_threshold=0.30 → HALT triggered (execution stopped).
     # DR TTL checked before Turn 2 attempt: VALID — HALT is NOT caused by DR expiry.
     # ─────────────────────────────────────────────────────────────────────────
-    print("\n  [6/8] GATE — 3-turn execution (Turn 0 ✓ · Turn 1 ⚠ WARNING · Turn 2 HALT)...")
+    print("\n  [6/9] GATE — 3-turn execution (Turn 0 ✓ · Turn 1 ⚠ WARNING · Turn 2 HALT)...")
     bar_engine     = BAREngine()
     execution_turns = []
 
@@ -2199,7 +2658,7 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"       USD 50,000,000 — BLOCKED — XRPL not submitted (RTE-INV-015)")
 
     # ── 7. EXECUTION — interrupted halt receipt ───────────────────────────────
-    print("\n  [7/8] EXECUTION — issuing PQC-signed interrupted-execution halt receipt...")
+    print("\n  [7/9] EXECUTION — issuing PQC-signed interrupted-execution halt receipt...")
     halt_receipt_int = _build_refusal_receipt(
         pqc, sk_bytes,
         agent_id=AGENT_ID,
@@ -2224,7 +2683,7 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
     print(f"      turns_completed=2 | turns_attempted=3 | halt_at=Turn 2")
 
     # ── 8. POST-EXECUTION — TGB snapshot + replay proof (HALTED) ──────────────
-    print("\n  [8/8] POST-EXECUTION — TGB snapshot + replay proof (terminal_status=HALTED)...")
+    print("\n  [8/9] POST-EXECUTION — TGB snapshot + replay proof (terminal_status=HALTED)...")
     tcs_post_int = _build_tcs(
         pqc, sk_bytes,
         context_ref=f"POST-INTERRUPTED-{SESSION_ID}",
@@ -2259,6 +2718,7 @@ def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
             "settlement blocked; DR TTL valid throughout (HALT NOT caused by authority expiry)"
         ),
         "steps": {
+            "0_intake":         gcfr,
             "1_source_state":   source_state,
             "2_authority": {
                 "delegation_receipt":     dr_dict,
@@ -2353,7 +2813,7 @@ def main() -> str:
     package = {
         "package_id":      package_id,
         "package_type":    "OMNIX-RTE-001",
-        "package_version": "1.3.0",
+        "package_version": "1.4.0",
         "omnix_version":   "2.6.0",
         "adr_reference":   "ADR-201",
         "generated_at":    _now_iso(),
@@ -2374,6 +2834,7 @@ def main() -> str:
         },
 
         "rte_chain_map": {
+            "0_INTAKE":         "GCFR formed and sealed before Turn 0: IAD·SAR·MFR·CPS·FPS — 5 predicates, PQC-signed (ADR-204 IPFL)",
             "1_SOURCE_STATE":   "Request captured with full treasury context + TCS (nanosecond precision) — all 3 paths",
             "2_AUTHORITY":      "DR issued + MIVP MBR activated (MIVP-INV-001) — dangerous=degraded, admissible+interrupted=fresh",
             "3_RUNTIME":        "CES computed + MIVP MAS pre-check — dangerous=CRITICAL, admissible+interrupted=NOMINAL",
@@ -2443,11 +2904,20 @@ def main() -> str:
             "RTE-INV-013: Interrupted path — CTCHC sealed in HALTED state; all turn links preserved forensically",
             "RTE-INV-014: PoGC NOT issued on interrupted path — chain sealed HALTED, not CLOSED (PoGR-INV-001)",
             "RTE-INV-015: OSG REJECTED independently on interrupted path (fail-closed); settlement BLOCKED",
+            "IPFL-INV-001: IAD sealed before 1_source_state — authority declared pre-execution (ADR-204 §3.1)",
+            "IPFL-INV-002: SAR.approved_rails matches DR.task_scope.approved_rails — scope coherence (ADR-204 §3.2)",
+            "IPFL-INV-003: MFR.mandate_objective_hash == MBR.mandate_objective_hash — mandate frozen at contract formation (ADR-204 §3.3)",
+            "IPFL-INV-004: MBR.proxy_guards ⊆ MFR.mandate_prohibitions — all runtime guards declared pre-execution (ADR-204 §3.4)",
+            "IPFL-INV-005: CPS.sanctions_all_clear=True before execution — OFAC/EU/UN cleared at intake (ADR-204 §3.5)",
+            "IPFL-INV-006: FPS.max_ttl_seconds > 0 — DR TTL budget declared at contract formation (ADR-204 §3.6)",
+            "IPFL-INV-007: GCFR seal covers all 5 component hashes — altering any predicate breaks seal offline (ADR-204 §4)",
+            "IPFL-INV-008: GCFR is step 0 — formed and sealed before step 1_source_state in all 3 paths (ADR-204 §4)",
         ],
 
         "verification_instructions": {
             "full_verification": f"python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_{timestamp}.json",
             "targeted_commands": {
+                "--verify-intake":         "GCFR seal + 5 predicate hashes + 3 cross-references (all paths) — ADR-204 IPFL (IAEP-RPT-005)",
                 "--verify-authority":      "DR content_hash + PQC signature (all paths)",
                 "--verify-continuity":     "RCR hash + PQC + CES computation (all paths)",
                 "--verify-counterfactual": "CAT content_hash + CFR root hash integrity (all paths)",

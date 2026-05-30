@@ -1,13 +1,14 @@
 """
 OMNIX QUANTUM — Runtime Treasury Execution Trace Verifier
 =========================================================
-OMNIX-RTE-001 · ADR-201 · RFC-ATF-1 through RFC-ATF-6
+OMNIX-RTE-001 · ADR-201 through ADR-204 · RFC-ATF-1 through RFC-ATF-6
 
 Verifies every cryptographic artefact in an OMNIX-RTE-001 package
 WITHOUT calling the OMNIX runtime. All verification is performed
 offline using only the public key embedded in the package.
 
-Verification commands (add to check count — EXPECTED_TOTAL_CHECKS = 148):
+Verification commands (add to check count — EXPECTED_TOTAL_CHECKS = 187):
+  --verify-intake         GCFR seal + 5 predicate hashes + 3 XREF (all paths) — ADR-204 IPFL (+36 verify_intake + 3 PKG-INTAKE structural = +39)
   --verify-authority      DR content_hash + PQC signature (all paths)
   --verify-continuity     RCR hash + PQC + MBR + MAS (all paths)
   --verify-counterfactual CAT content_hash + CFR root hash (all paths)
@@ -90,7 +91,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Expected total checks when verifier runs in FULL mode against an RTE-001 package.
 # Used by consistency audits and CI pipelines.
-EXPECTED_TOTAL_CHECKS = 148
+EXPECTED_TOTAL_CHECKS = 187
 
 
 def _auto_detect_package() -> Optional[str]:
@@ -743,6 +744,180 @@ def _check_replay(report: VerificationReport, proof: Dict, pqc, pk_bytes: bytes,
 #  Targeted verification suites
 # ─────────────────────────────────────────────────────────────────────────────
 
+def verify_intake(report: VerificationReport, pkg: Dict, pqc, pk_bytes: bytes) -> None:
+    """
+    Verify the Intake and Predicate Formation Layer (IPFL) — ADR-204.
+    12 checks × 3 paths = 36 checks total.
+
+    Per path:
+      INT-{P}-STRUCT    — 0_intake present with required keys
+      INT-{P}-GCFR-COMP — component_hashes has exactly 5 entries
+      INT-{P}-GCFR-HASH — seal recomputation: SHA3("|".join(component_hashes))
+      INT-{P}-GCFR-SIG  — IDS PQC signature over {ids_id, seal_hash, formed_at}
+      INT-{P}-IAD-HASH  — IAD iad_content_hash valid
+      INT-{P}-SAR-HASH  — SAR sar_content_hash valid
+      INT-{P}-MFR-HASH  — MFR mfr_content_hash valid
+      INT-{P}-CPS-HASH  — CPS cps_predicate_hash valid
+      INT-{P}-FPS-HASH  — FPS fps_freshness_hash valid
+      INT-{P}-XREF-MAND — MFR.mandate_objective_hash == MBR.mandate_objective_hash (IPFL-INV-003)
+      INT-{P}-XREF-PROXY— MBR.proxy_guards descriptions ⊆ MFR.mandate_prohibitions (IPFL-INV-004)
+      INT-{P}-XREF-RAIL — SAR.approved_rails == DR.task_scope.approved_rails (IPFL-INV-002)
+    """
+    report.section("INTAKE — GCFR + 5 predicates + cross-references (ADR-204 IPFL) — all 3 paths")
+
+    _GCFR_REQUIRED = {"gcfr_id", "session_id", "components", "component_hashes", "intake_seal"}
+    _COMP_KEYS     = [
+        ("intake_authority_declaration", "iad_content_hash",  "iad_content_hash",  "iad_id"),
+        ("scope_authorization_record",   "sar_content_hash",  "sar_content_hash",  "sar_id"),
+        ("mandate_formation_record",     "mfr_content_hash",  "mfr_content_hash",  "mfr_id"),
+        ("counterparty_predicate_set",   "cps_predicate_hash","cps_predicate_hash","cps_id"),
+        ("freshness_predicate_set",      "fps_freshness_hash","fps_freshness_hash","fps_id"),
+    ]
+    _HASH_EXCLUDES = {
+        "intake_authority_declaration": {"iad_content_hash", "pqc_signature", "pqc_algorithm"},
+        "scope_authorization_record":   {"sar_content_hash", "pqc_signature", "pqc_algorithm"},
+        "mandate_formation_record":     {"mfr_content_hash", "pqc_signature", "pqc_algorithm"},
+        "counterparty_predicate_set":   {"cps_predicate_hash","pqc_signature", "pqc_algorithm"},
+        "freshness_predicate_set":      {"fps_freshness_hash","pqc_signature", "pqc_algorithm"},
+    }
+    _SHORT_LABELS  = {
+        "intake_authority_declaration": "IAD",
+        "scope_authorization_record":   "SAR",
+        "mandate_formation_record":     "MFR",
+        "counterparty_predicate_set":   "CPS",
+        "freshness_predicate_set":      "FPS",
+    }
+
+    for path_key, path_label in [
+        ("path_dangerous",  "DANGEROUS"),
+        ("path_admissible", "ADMISSIBLE"),
+        ("path_interrupted","INTERRUPTED"),
+    ]:
+        P = path_label[:3]
+        p = pkg.get("paths", {}).get(path_key, {})
+
+        # ── STRUCT ─────────────────────────────────────────────────────────────
+        intake = p.get("steps", {}).get("0_intake", None)
+        ok_struct = (
+            intake is not None and
+            isinstance(intake, dict) and
+            _GCFR_REQUIRED.issubset(intake.keys())
+        )
+        missing = (_GCFR_REQUIRED - set(intake.keys())) if intake else _GCFR_REQUIRED
+        report.add(
+            f"INT-{P}-STRUCT",
+            f"0_intake present in steps with required keys (IPFL-INV-008)",
+            ok_struct,
+            f"missing={missing}" if not ok_struct else "",
+            path=path_label,
+        )
+        if not ok_struct:
+            for _ in range(11):
+                report.add(
+                    f"INT-{P}-SKIP",
+                    "Skipped — 0_intake missing or malformed",
+                    False, path=path_label,
+                )
+            continue
+
+        comp_hashes  = intake.get("component_hashes", [])
+        intake_seal  = intake.get("intake_seal", {})
+        components   = intake.get("components", {})
+
+        # ── GCFR-COMP ──────────────────────────────────────────────────────────
+        report.add(
+            f"INT-{P}-GCFR-COMP",
+            "GCFR component_hashes has exactly 5 entries (IAD·SAR·MFR·CPS·FPS)",
+            len(comp_hashes) == 5,
+            f"len={len(comp_hashes)}",
+            path=path_label,
+        )
+
+        # ── GCFR-HASH ──────────────────────────────────────────────────────────
+        expected_seal = _sha3("|".join(comp_hashes))
+        actual_seal   = intake_seal.get("seal_hash", "")
+        report.add(
+            f"INT-{P}-GCFR-HASH",
+            "GCFR seal_hash = SHA3-256(iad_hash|sar_hash|mfr_hash|cps_hash|fps_hash) (IPFL-INV-007)",
+            expected_seal == actual_seal,
+            f"expected={expected_seal[:20]}... got={actual_seal[:20]}..." if expected_seal != actual_seal else "",
+            path=path_label,
+        )
+
+        # ── GCFR-SIG ───────────────────────────────────────────────────────────
+        seal_sig_payload = {
+            "ids_id":     intake_seal.get("ids_id"),
+            "seal_hash":  intake_seal.get("seal_hash"),
+            "formed_at":  intake_seal.get("formed_at"),
+        }
+        ok_sig, detail_sig = _verify_sig(pqc, pk_bytes, seal_sig_payload,
+                                         intake_seal.get("pqc_signature"), compact=True)
+        _add_sig(report, f"INT-{P}-GCFR-SIG",
+                 "GCFR intake_seal PQC signature (ML-DSA-65) — contract sealed before Turn 0",
+                 ok_sig, detail_sig, path=path_label)
+
+        # ── Per-predicate hash verification ────────────────────────────────────
+        for comp_key, hash_field, _hash_label, _id_field in _COMP_KEYS:
+            label = _SHORT_LABELS[comp_key]
+            comp  = components.get(comp_key, {})
+            excl  = _HASH_EXCLUDES[comp_key]
+            payload_for_hash = {k: v for k, v in comp.items() if k not in excl}
+            expected_hash    = _sha3(json.dumps(payload_for_hash, sort_keys=True))
+            actual_hash      = comp.get(hash_field, "")
+            ok_hash = expected_hash == actual_hash
+            report.add(
+                f"INT-{P}-{label}-HASH",
+                f"{label} {hash_field} recomputed correctly (IPFL-INV-00{list(_SHORT_LABELS.values()).index(label)+1})",
+                ok_hash,
+                f"expected={expected_hash[:20]}... got={actual_hash[:20]}..." if not ok_hash else "",
+                path=path_label,
+            )
+
+        # ── Cross-references ───────────────────────────────────────────────────
+        mfr = components.get("mandate_formation_record", {})
+        mbr_step = p.get("steps", {}).get("2_authority", {}).get("mandate_binding_record", {})
+        dr_step  = p.get("steps", {}).get("2_authority", {}).get("delegation_receipt", {})
+
+        # XREF-MAND: MFR.mandate_objective_hash == MBR.mandate_objective_hash
+        mfr_obj_hash = mfr.get("mandate_objective_hash", "")
+        mbr_obj_hash = mbr_step.get("mandate_objective_hash", "")
+        report.add(
+            f"INT-{P}-XREF-MAND",
+            "MFR.mandate_objective_hash == MBR.mandate_objective_hash (IPFL-INV-003)",
+            bool(mfr_obj_hash) and mfr_obj_hash == mbr_obj_hash,
+            f"mfr={mfr_obj_hash[:20] if mfr_obj_hash else 'MISSING'}... mbr={mbr_obj_hash[:20] if mbr_obj_hash else 'MISSING'}...",
+            path=path_label,
+        )
+
+        # XREF-PROXY: MBR.proxy_guards descriptions ⊆ MFR.mandate_prohibitions
+        mfr_prohibitions = set(mfr.get("mandate_prohibitions", []))
+        raw_guards = mbr_step.get("proxy_guards", [])
+        if raw_guards and isinstance(raw_guards[0], dict):
+            guard_descs = {g.get("description", "") for g in raw_guards}
+        else:
+            guard_descs = set(raw_guards)
+        missing_guards = guard_descs - mfr_prohibitions
+        report.add(
+            f"INT-{P}-XREF-PROXY",
+            "MBR.proxy_guard descriptions ⊆ MFR.mandate_prohibitions (IPFL-INV-004)",
+            len(missing_guards) == 0,
+            f"missing={missing_guards}" if missing_guards else "",
+            path=path_label,
+        )
+
+        # XREF-RAIL: SAR.approved_rails == DR.task_scope.approved_rails
+        sar = components.get("scope_authorization_record", {})
+        sar_rails = sorted(sar.get("approved_rails", []))
+        dr_rails  = sorted(dr_step.get("task_scope", {}).get("approved_rails", []))
+        report.add(
+            f"INT-{P}-XREF-RAIL",
+            "SAR.approved_rails == DR.task_scope.approved_rails (IPFL-INV-002)",
+            sar_rails == dr_rails,
+            f"sar={sar_rails} dr={dr_rails}" if sar_rails != dr_rails else "",
+            path=path_label,
+        )
+
+
 def verify_authority(report: VerificationReport, pkg: Dict, pqc, pk_bytes: bytes) -> None:
     report.section("AUTHORITY — DR + MBR + source_state (both paths)")
     for path_key, path_label in [("path_dangerous", "DANGEROUS"), ("path_admissible", "ADMISSIBLE")]:
@@ -1175,15 +1350,23 @@ def verify_package_structure(report: VerificationReport, pkg: Dict) -> None:
                bool(pkg.get("pqc", {}).get("public_key_b64")))
     report.add("PKG-INV",    f"Package declares ≥20 invariants ({len(pkg.get('invariants_demonstrated', []))} found)",
                len(pkg.get("invariants_demonstrated", [])) >= 20)
-    report.add("PKG-CHAIN",  "Package has rte_chain_map with 8 steps",
-               len(pkg.get("rte_chain_map", {})) == 8)
+    report.add("PKG-CHAIN",  "Package has rte_chain_map with 9 steps (v1.4.0: step 0_INTAKE added — ADR-204)",
+               len(pkg.get("rte_chain_map", {})) == 9)
+    for path_key, path_label in [("path_dangerous", "DNG"), ("path_admissible", "ADM"), ("path_interrupted", "INT")]:
+        has_intake = "0_intake" in pkg.get("paths", {}).get(path_key, {}).get("steps", {})
+        report.add(
+            f"PKG-INTAKE-{path_label}",
+            f"Path {path_label} contains 0_intake step (IPFL-INV-008 — GCFR before source_state)",
+            has_intake,
+            path=path_label,
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Institutional Artifact Extraction Protocol (IAEP) — ADR-203
 #  Four premium reporting commands — standalone, institutional-grade output.
 #  These commands produce formatted artifact reports. They do NOT add to the
-#  verification check count (EXPECTED_TOTAL_CHECKS = 148 is unchanged).
+#  verification check count (EXPECTED_TOTAL_CHECKS = 187 is unchanged).
 #
 #  Commands:
 #    --treasury-protocol  Treasury Protocol Execution Report (TPER) IAEP-RPT-001
@@ -1645,7 +1828,8 @@ def report_version_compatibility(pkg: Dict, pkg_path: str) -> None:
         ("v1.0.0", "A+B",   "~74",  "Baseline — single dual-path package",            False),
         ("v1.1.0", "A+B",   "~74",  "MBR/MAS/CTCHC added to existing paths",          False),
         ("v1.2.0", "A+B",   "111",  "+37 checks on existing paths (explicit MAS/CTCHC)", False),
-        ("v1.3.0", "A+B+C", "148",  "+37 checks for Path C (interrupted execution)",   True),
+        ("v1.3.0", "A+B+C", "148",  "+37 checks for Path C (interrupted execution)",   False),
+        ("v1.4.0", "A+B+C", "184",  "+36 checks GCFR+IPFL intake layer (ADR-204)",     True),
     ]
 
     for ver, paths_str, n_checks, added, is_current in compat_rows:
@@ -1670,8 +1854,112 @@ def report_version_compatibility(pkg: Dict, pkg_path: str) -> None:
     print("═" * 70)
     print("  END — Version Compatibility Attestation (VCA)")
     print(f"  {datetime.now(timezone.utc).isoformat()}")
-    print(f"  Verifier: OMNIX-RTE-001 · ADR-201/202 · COMPAT-INV-001")
+    print(f"  Verifier: OMNIX-RTE-001 · ADR-201/202/203/204 · COMPAT-INV-001")
     print("═" * 70)
+
+
+def report_intake_formation(pkg: Dict) -> None:
+    """
+    --intake-report  (IAEP-RPT-005, ADR-203 §2.5 / ADR-204)
+
+    Intake Formation Report (IFR).
+
+    Presents the Governance Contract Formation Record (GCFR) for all 3 paths
+    with per-predicate summary: IAD authority level, SAR scope, MFR mandate
+    objective hash, CPS sanctions verdict, FPS freshness window.
+
+    This report directly addresses Dr. Masayuki Otani's observation that the
+    public artefact shows trace+verification but not the intake+predicate
+    formation layer. The GCFR makes explicit what was pre-declared before
+    any execution began — the Governance Contract formed at Step 0.
+
+    IPFL-INV-001–008 (ADR-204) · IAEP-RPT-005 · RTE-001 v1.4.0
+    """
+    G, Y, R, RST = "\033[32m", "\033[33m", "\033[31m", "\033[0m"
+
+    print()
+    print("═" * 72)
+    print("  OMNIX-RTE-001 — Intake Formation Report (IFR)")
+    print("  IAEP-RPT-005 · ADR-204 §2 · IPFL-INV-001–008 · v1.4.0")
+    print("═" * 72)
+    print(f"  Package:     {pkg.get('package_id', '—')}")
+    print(f"  Scenario:    {pkg.get('scenario', {}).get('name', '—')}")
+    print(f"  Amount:      USD {pkg.get('scenario', {}).get('amount_usd', 0):,}")
+    print(f"  Generated:   {pkg.get('generated_at', '—')}")
+    print()
+    print("  «The Governance Contract is formed at Step 0 — before any source")
+    print("   state capture, before any authority check, before any execution.")
+    print("   The GCFR seals all five intake predicates with ML-DSA-65 PQC.")
+    print("   No execution is admitted without a sealed Governance Contract.»")
+    print(f"  {'─'*70}")
+
+    for path_key, path_label, path_desc, auth_note in [
+        ("path_dangerous",  "DANGEROUS",   "Authority drift → HALT",              "42% budget (DEGRADED)"),
+        ("path_admissible", "ADMISSIBLE",  "Recertified → 3-turn execution → PoGC","88% budget (RECERTIFIED)"),
+        ("path_interrupted","INTERRUPTED", "Valid authority → mid-chain HALT",     "88% budget (VALID)"),
+    ]:
+        p      = pkg.get("paths", {}).get(path_key, {})
+        intake = p.get("steps", {}).get("0_intake", {})
+        comp   = intake.get("components", {})
+        seal   = intake.get("intake_seal", {})
+        iad    = comp.get("intake_authority_declaration", {})
+        sar    = comp.get("scope_authorization_record", {})
+        mfr    = comp.get("mandate_formation_record", {})
+        cps    = comp.get("counterparty_predicate_set", {})
+        fps    = comp.get("freshness_predicate_set", {})
+
+        print()
+        print(f"  ┌─ PATH: {path_label} — {path_desc}")
+        print(f"  │  GCFR ID:    {intake.get('gcfr_id', '—')}")
+        print(f"  │  Formed at:  {intake.get('formed_at', '—')}")
+        print(f"  │  IDS seal:   {seal.get('seal_hash', '')[:40]}...")
+        print(f"  │  PQC:        {seal.get('pqc_algorithm', '—')} ({'signed' if seal.get('pqc_signature') else 'MISSING'})")
+        print(f"  │")
+        print(f"  │  [IAD] Intake Authority Declaration  — IPFL §2.1 (IPFL-INV-001)")
+        print(f"  │        Agent:          {iad.get('agent_id', '—')}")
+        print(f"  │        Authority:      {iad.get('human_authority', '—')}")
+        print(f"  │        Type:           {iad.get('authority_type', '—')}")
+        print(f"  │        Budget:         {auth_note}")
+        print(f"  │        Depth limit:    {iad.get('delegation_depth_limit', '—')}")
+        print(f"  │")
+        print(f"  │  [SAR] Scope Authorization Record   — IPFL §2.2 (IPFL-INV-002)")
+        print(f"  │        Domain:         {sar.get('domain', '—')}")
+        print(f"  │        Max amount:     USD {sar.get('max_amount_usd', 0):,}")
+        print(f"  │        Approved rails: {', '.join(sar.get('approved_rails', []))}")
+        print(f"  │        Permitted:      {len(sar.get('permitted_actions', []))} actions")
+        print(f"  │        Excluded:       {len(sar.get('excluded_actions', []))} actions")
+        print(f"  │")
+        print(f"  │  [MFR] Mandate Formation Record     — IPFL §2.3 (IPFL-INV-003/004)")
+        print(f"  │        Mandate ref:    {mfr.get('mandate_ref', '—')}")
+        obj_hash = mfr.get("mandate_objective_hash", "")
+        print(f"  │        Objective hash: {obj_hash[:40] + '...' if obj_hash else '—'}")
+        print(f"  │        Prohibitions:   {len(mfr.get('mandate_prohibitions', []))} proxy guards pre-declared")
+        print(f"  │        HALT threshold: {mfr.get('halt_threshold', '—')}")
+        print(f"  │")
+        print(f"  │  [CPS] Counterparty Predicate Set   — IPFL §2.4 (IPFL-INV-005)")
+        print(f"  │        Whitelist:      {len(cps.get('counterparty_whitelist', []))} counterparties")
+        sanctions = cps.get("sanctions_checks", {})
+        sanctions_status = f"{G}ALL CLEAR{RST}" if cps.get("sanctions_all_clear") else f"{R}ALERT{RST}"
+        print(f"  │        Sanctions:      {sanctions_status} ({', '.join(sanctions.keys())})")
+        print(f"  │        FX band:        ±{cps.get('fx_rate_band_pct', '—')}%")
+        print(f"  │")
+        print(f"  │  [FPS] Freshness Predicate Set      — IPFL §2.5 (IPFL-INV-006)")
+        print(f"  │        Max TTL:        {fps.get('max_ttl_seconds', 0):,}s ({fps.get('tar_validity_window_hours', '—')}h window)")
+        print(f"  │        Reg. epoch:     {fps.get('regulatory_epoch', '—')}")
+        print(f"  │        Mandate expiry: {fps.get('mandate_ref_expiry', '—')}")
+        print(f"  │        Fresh check:    {G+'PASSED'+RST if fps.get('freshness_check_passed') else R+'FAILED'+RST}")
+        print(f"  └{'─'*69}")
+
+    print()
+    print(f"  Component hashes (ADR-204 §4 canonical seal formula):")
+    print(f"  seal_hash = SHA3-256(iad_hash | sar_hash | mfr_hash | cps_hash | fps_hash)")
+    print(f"  Alteration of any predicate = seal breaks = detectable offline (IPFL-INV-007)")
+    print()
+    print("═" * 72)
+    print("  END — Intake Formation Report (IFR)")
+    print(f"  {datetime.now(timezone.utc).isoformat()}")
+    print(f"  Verifier: OMNIX-RTE-001 v1.4.0 · ADR-204 · IPFL-INV-001–008")
+    print("═" * 72)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1688,6 +1976,8 @@ def main() -> int:
         help="Path to OMNIX-RTE-001 JSON package "
              "(optional — auto-detected from evidence/ if omitted)"
     )
+    parser.add_argument("--verify-intake",         action="store_true",
+                        help="Verify GCFR seal + 5 predicate hashes + 3 cross-refs (all paths) — ADR-204 IPFL v1.4.0 (+36 checks)")
     parser.add_argument("--verify-authority",      action="store_true", help="Verify DR + MBR (all paths)")
     parser.add_argument("--verify-continuity",     action="store_true", help="Verify RCR + MAS (all paths)")
     parser.add_argument("--verify-counterfactual", action="store_true", help="Verify CGE CAT + CFRs (all paths)")
@@ -1698,7 +1988,7 @@ def main() -> int:
                         help="Verify interrupted path: Turn-by-turn BAR+CCS+MAS, HALT at Turn 2, "
                              "CTCHC HALTED, MBR Seal UNCERTIFIED, OSG REJECTED, PoGC absent (v1.3.0+)")
     parser.add_argument("--json",                  action="store_true", help="Output machine-readable JSON report")
-    # ── IAEP report commands (ADR-203) — standalone institutional artifact extraction ──
+    # ── IAEP report commands (ADR-203 + ADR-204) — standalone institutional artifact extraction ──
     parser.add_argument("--treasury-protocol", action="store_true",
                         help="Treasury Protocol Execution Report: per-turn SWIFT/FIX/XRPL breakdown "
                              "(IAEP-RPT-001, ADR-203 §2.1)")
@@ -1711,17 +2001,20 @@ def main() -> int:
     parser.add_argument("--check-version",     action="store_true",
                         help="Version Compatibility Attestation: formal backward-compatibility proof "
                              "(IAEP-RPT-004, ADR-203 §2.4)")
+    parser.add_argument("--intake-report",     action="store_true",
+                        help="Intake Formation Report: GCFR per-path with IAD·SAR·MFR·CPS·FPS summary — "
+                             "addresses Dr. Otani gap (IAEP-RPT-005, ADR-204)")
     args = parser.parse_args()
 
     # Determine mode
     targeted = any([
-        args.verify_authority, args.verify_continuity, args.verify_counterfactual,
-        args.verify_halt, args.verify_settlement, args.verify_replay,
-        args.verify_interrupted,
+        args.verify_intake, args.verify_authority, args.verify_continuity,
+        args.verify_counterfactual, args.verify_halt, args.verify_settlement,
+        args.verify_replay, args.verify_interrupted,
     ])
     any_reports = any([
         args.treasury_protocol, args.mandate_timeline,
-        args.chain_custody, args.check_version,
+        args.chain_custody, args.check_version, args.intake_report,
     ])
     run_all = not targeted and not any_reports
 
@@ -1729,6 +2022,7 @@ def main() -> int:
         mode = "FULL"
     else:
         flags = []
+        if args.verify_intake:         flags.append("intake")
         if args.verify_authority:      flags.append("authority")
         if args.verify_continuity:     flags.append("continuity")
         if args.verify_counterfactual: flags.append("counterfactual")
@@ -1805,6 +2099,9 @@ def main() -> int:
     verify_package_structure(report, pkg)
 
     # Run targeted or all suites
+    if run_all or args.verify_intake:
+        verify_intake(report, pkg, pqc, pk_bytes)
+
     if run_all or args.verify_authority:
         verify_authority(report, pkg, pqc, pk_bytes)
 
@@ -1845,6 +2142,8 @@ def main() -> int:
         report_chain_custody(pkg)
     if args.check_version:
         report_version_compatibility(pkg, pkg_path)
+    if args.intake_report:
+        report_intake_formation(pkg)
 
     return 0 if all_ok else 1
 
