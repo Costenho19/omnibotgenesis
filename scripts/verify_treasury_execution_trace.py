@@ -8,12 +8,14 @@ WITHOUT calling the OMNIX runtime. All verification is performed
 offline using only the public key embedded in the package.
 
 Targeted commands:
-  --verify-authority      DR content_hash + PQC signature (both paths)
-  --verify-continuity     RCR hash + PQC + MBR + MAS (both paths)
-  --verify-counterfactual CAT content_hash + CFR root hash (both paths)
+  --verify-authority      DR content_hash + PQC signature (all paths)
+  --verify-continuity     RCR hash + PQC + MBR + MAS (all paths)
+  --verify-counterfactual CAT content_hash + CFR root hash (all paths)
   --verify-halt           Dangerous path: refusal receipt + OSG REJECTED + CTCHC HALTED
   --verify-settlement     Admissible path: PoGC + MBR Seal + OSG APPROVED + outcome receipt
-  --verify-replay         Both paths: replay proof + CTCHC seal continuity
+  --verify-replay         All paths: replay proof + CTCHC seal continuity
+  --verify-interrupted    Interrupted path: Turn-by-turn BAR+CCS+MAS, HALT at Turn 2,
+                          CTCHC HALTED, MBR Seal UNCERTIFIED, OSG REJECTED, PoGC absent
   (default: all of the above)
 
 Canonicalization Profile (ADR-200 §4 + ADR-201):
@@ -39,6 +41,7 @@ Verifier scope limits:
   ✗ Does NOT require OMNIX runtime, database, or network access
   ✓ DOES confirm embedded public key produces valid signatures for ALL artefacts
   ✓ DOES confirm dangerous path HALTED and admissible path CLOSED
+  ✓ DOES confirm interrupted path HALTED at Turn 2 (valid DR, mandate collapse)
 
 Usage:
   python scripts/verify_treasury_execution_trace.py <package.json>
@@ -75,7 +78,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Expected total checks when verifier runs in FULL mode against an RTE-001 package.
 # Used by consistency audits and CI pipelines.
-EXPECTED_TOTAL_CHECKS = 111
+EXPECTED_TOTAL_CHECKS = 148
 
 
 def _auto_detect_package() -> Optional[str]:
@@ -941,6 +944,210 @@ def verify_replay(report: VerificationReport, pkg: Dict, pqc, pk_bytes: bytes) -
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  Interrupted path verification (v1.3.0) — Path C
+# ─────────────────────────────────────────────────────────────────────────────
+
+def verify_interrupted(report: VerificationReport, pkg: Dict, pqc, pk_bytes: bytes) -> None:
+    """
+    Path C (v1.3.0) — Interrupted Execution verifier.
+
+    Verifies that under VALID authority (fresh DR, NOMINAL CES), execution that
+    was correctly admitted by the TAR was interrupted mid-chain at Turn 2 when
+    the MIVP mandate alignment score collapsed below halt_threshold=0.30.
+
+    Checks (36 total):
+      CTCHC integrity (4) + HALTED terminal state (1)
+      Per-turn BAR hash+sig+status: T0=VALID (3), T1=VALID (3), T2=HALT_TRIGGERED (3)
+      MAS per-turn: T1 hash+sig+WARNING (3), T2 hash+sig+HALT+score<0.30 (4)
+      CCS Turn 2: CRITICAL + agvp_watchdog_clear=False (2)
+      MBR Seal: hash+sig+UNCERTIFIED (3)
+      OSG: hash+sig+REJECTED (≥3)
+      INT-STRUCT (1) + INT-POGC-ABSENT (1) + INT-SETTLE-BLOCKED (1)
+      Replay proof: hash+sig+status+offline (4)
+
+    ADR: ADR-201 §9 · RTE-INV-013/014/015
+    RFC: RFC-ATF-6 (BEV-INV-005/007) · MIVP-INV-004/005/009 · PoGR-INV-001
+    """
+    report.section("INTERRUPTED — Path C: Turn 0 ✓ Turn 1 ⚠ Turn 2 HALT (RTE-INV-013/014/015)")
+
+    # ── Structural: path_interrupted present ──────────────────────────────────
+    pi = pkg.get("paths", {}).get("path_interrupted")
+    report.add("INT-STRUCT", "path_interrupted present in package (v1.3.0+, RTE-INV-001)",
+               pi is not None)
+    if pi is None:
+        return
+
+    gate   = pi["steps"]["6_gate"]
+    exec_  = pi["steps"]["7_execution"]
+    post   = pi["steps"]["8_post_execution"]
+    turns  = gate.get("execution_turns", [])
+
+    def _turn(idx: int) -> Dict:
+        return next((t for t in turns if t.get("turn") == idx), {})
+
+    t0 = _turn(0)
+    t1 = _turn(1)
+    t2 = _turn(2)
+
+    # ── CTCHC: 3-link chain integrity + HALTED seal ───────────────────────────
+    links  = exec_.get("ctchc_links", [])
+    sealed = exec_.get("ctchc_sealed", {})
+    _check_ctchc(report, links, sealed, pqc, pk_bytes, "INTERRUPTED")
+
+    terminal = sealed.get("terminal_state", "")
+    report.add("CHC-INT-HALTED",
+               "CTCHC terminal_state=HALTED — chain sealed on mandate collapse (RTE-INV-013)",
+               terminal == "HALTED", f"got={terminal!r}", path="INTERRUPTED")
+
+    # ── Turn 0 BAR: hash + sig + status=VALID ─────────────────────────────────
+    bar_t0 = t0.get("bar", {})
+    _fields_t0 = {k: bar_t0.get(k) for k in [
+        "session_id", "agent_id", "turn_index", "output_hash",
+        "governing_receipt_id", "constraint_set_hash"
+    ]}
+    exp_t0 = _sha3(json.dumps(_fields_t0, sort_keys=True))
+    act_t0 = bar_t0.get("content_hash", "")
+    report.add("BAR-INT-T0-HASH", "Turn 0 BAR content_hash (BEV-INV-002, SHA3-256 6-field)",
+               exp_t0 == act_t0, f"exp={exp_t0[:18]}... got={act_t0[:18]}...", path="INTERRUPTED")
+    sp_t0 = {
+        "bar_id":               bar_t0.get("bar_id"),
+        "content_hash":         act_t0,
+        "governing_receipt_id": bar_t0.get("governing_receipt_id"),
+        "created_at":           bar_t0.get("created_at"),
+    }
+    ok_t0, d_t0 = _verify_sig_default(pqc, pk_bytes, sp_t0, bar_t0.get("pqc_signature"))
+    _add_sig(report, "BAR-INT-T0-SIG", "Turn 0 BAR PQC signature (BEV-INV-004, default sep)",
+             ok_t0, d_t0, path="INTERRUPTED")
+    report.add("BAR-INT-T0-STATUS",
+               "Turn 0 BAR status=VALID (SWIFT MT103 PASS)",
+               bar_t0.get("bar_status", "VALID") == "VALID",
+               f"bar_status={bar_t0.get('bar_status','absent→VALID')}", path="INTERRUPTED")
+
+    # ── Turn 1 BAR: hash + sig + status=VALID ─────────────────────────────────
+    bar_t1 = t1.get("bar", {})
+    _fields_t1 = {k: bar_t1.get(k) for k in [
+        "session_id", "agent_id", "turn_index", "output_hash",
+        "governing_receipt_id", "constraint_set_hash"
+    ]}
+    exp_t1 = _sha3(json.dumps(_fields_t1, sort_keys=True))
+    act_t1 = bar_t1.get("content_hash", "")
+    report.add("BAR-INT-T1-HASH", "Turn 1 BAR content_hash (BEV-INV-002, SHA3-256 6-field)",
+               exp_t1 == act_t1, f"exp={exp_t1[:18]}... got={act_t1[:18]}...", path="INTERRUPTED")
+    sp_t1 = {
+        "bar_id":               bar_t1.get("bar_id"),
+        "content_hash":         act_t1,
+        "governing_receipt_id": bar_t1.get("governing_receipt_id"),
+        "created_at":           bar_t1.get("created_at"),
+    }
+    ok_t1, d_t1 = _verify_sig_default(pqc, pk_bytes, sp_t1, bar_t1.get("pqc_signature"))
+    _add_sig(report, "BAR-INT-T1-SIG", "Turn 1 BAR PQC signature (BEV-INV-004, default sep)",
+             ok_t1, d_t1, path="INTERRUPTED")
+    report.add("BAR-INT-T1-STATUS",
+               "Turn 1 BAR status=VALID (FIX 4.4 routed — MAS WARNING captured separately)",
+               bar_t1.get("bar_status", "VALID") == "VALID",
+               f"bar_status={bar_t1.get('bar_status','absent→VALID')}", path="INTERRUPTED")
+
+    # ── Turn 2 BAR: hash + sig + status=HALT_TRIGGERED ────────────────────────
+    bar_t2 = exec_.get("bar", {})
+    _fields_t2 = {k: bar_t2.get(k) for k in [
+        "session_id", "agent_id", "turn_index", "output_hash",
+        "governing_receipt_id", "constraint_set_hash"
+    ]}
+    exp_t2 = _sha3(json.dumps(_fields_t2, sort_keys=True))
+    act_t2 = bar_t2.get("content_hash", "")
+    report.add("BAR-INT-T2-HASH", "Turn 2 BAR content_hash (BEV-INV-002, SHA3-256 6-field)",
+               exp_t2 == act_t2, f"exp={exp_t2[:18]}... got={act_t2[:18]}...", path="INTERRUPTED")
+    sp_t2 = {
+        "bar_id":               bar_t2.get("bar_id"),
+        "content_hash":         act_t2,
+        "governing_receipt_id": bar_t2.get("governing_receipt_id"),
+        "created_at":           bar_t2.get("created_at"),
+    }
+    ok_t2, d_t2 = _verify_sig_default(pqc, pk_bytes, sp_t2, bar_t2.get("pqc_signature"))
+    _add_sig(report, "BAR-INT-T2-SIG", "Turn 2 BAR PQC signature (BEV-INV-004, default sep)",
+             ok_t2, d_t2, path="INTERRUPTED")
+    status_t2 = bar_t2.get("bar_status", "")
+    report.add("BAR-INT-T2-HALT",
+               "Turn 2 BAR status=HALT_TRIGGERED (MIVP-INV-005, RTE-INV-013)",
+               status_t2 == "HALT_TRIGGERED", f"got={status_t2!r}", path="INTERRUPTED")
+
+    # ── MAS Turn 1: hash + sig + verdict=WARNING ──────────────────────────────
+    mas_t1 = t1.get("mas", {})
+    exp_m1  = _hash_default(mas_t1, exclude=["mas_content_hash", "pqc_signature", "pqc_algorithm"])
+    act_m1  = mas_t1.get("mas_content_hash", "")
+    report.add("MAS-INT-T1-HASH", "Turn 1 MAS content_hash integrity",
+               exp_m1 == act_m1, f"exp={exp_m1[:18]}... got={act_m1[:18]}...", path="INTERRUPTED")
+    sp_m1   = {"mas_id": mas_t1.get("mas_id"), "mas_content_hash": act_m1, "issued_at": mas_t1.get("issued_at")}
+    ok_m1, dm1 = _verify_sig(pqc, pk_bytes, sp_m1, mas_t1.get("pqc_signature"), compact=True)
+    _add_sig(report, "MAS-INT-T1-SIG", "Turn 1 MAS PQC signature (MIVP-INV-003, compact)",
+             ok_m1, dm1, path="INTERRUPTED")
+    verdict_m1 = mas_t1.get("verdict", "")
+    score_m1   = mas_t1.get("alignment_score", 1.0)
+    report.add("MAS-INT-T1-WARN",
+               f"Turn 1 MAS verdict=WARNING — score={score_m1} < warn_threshold=0.65 (MIVP-INV-004)",
+               verdict_m1 == "WARNING",
+               f"verdict={verdict_m1!r} score={score_m1}", path="INTERRUPTED")
+
+    # ── MAS Turn 2: hash + sig + verdict=HALT + score < halt_threshold ────────
+    mas_t2 = t2.get("mas", {})
+    exp_m2  = _hash_default(mas_t2, exclude=["mas_content_hash", "pqc_signature", "pqc_algorithm"])
+    act_m2  = mas_t2.get("mas_content_hash", "")
+    report.add("MAS-INT-T2-HASH", "Turn 2 MAS content_hash integrity",
+               exp_m2 == act_m2, f"exp={exp_m2[:18]}... got={act_m2[:18]}...", path="INTERRUPTED")
+    sp_m2   = {"mas_id": mas_t2.get("mas_id"), "mas_content_hash": act_m2, "issued_at": mas_t2.get("issued_at")}
+    ok_m2, dm2 = _verify_sig(pqc, pk_bytes, sp_m2, mas_t2.get("pqc_signature"), compact=True)
+    _add_sig(report, "MAS-INT-T2-SIG", "Turn 2 MAS PQC signature (MIVP-INV-003, compact)",
+             ok_m2, dm2, path="INTERRUPTED")
+    verdict_m2 = mas_t2.get("verdict", "")
+    score_m2   = mas_t2.get("alignment_score", 1.0)
+    report.add("MAS-INT-T2-HALT",
+               f"Turn 2 MAS verdict=HALT (MIVP-INV-005, score={score_m2}, threshold=0.30)",
+               verdict_m2 == "HALT",
+               f"verdict={verdict_m2!r}", path="INTERRUPTED")
+    report.add("MAS-INT-T2-SCORE",
+               f"Turn 2 MAS score={score_m2} < halt_threshold=0.30 (MIVP-INV-005)",
+               score_m2 < 0.30,
+               f"score={score_m2}", path="INTERRUPTED")
+
+    # ── CCS Turn 2: CRITICAL verdict + AGVP watchdog triggered ───────────────
+    ccs_t2      = t2.get("ccs", {})
+    ccs_verdict = ccs_t2.get("verdict", "")
+    report.add("CCS-INT-T2-CRIT",
+               f"Turn 2 CCS verdict=CRITICAL — drift=0.42 > 0.35 halt threshold (BEV-INV-007)",
+               ccs_verdict == "CRITICAL", f"verdict={ccs_verdict!r}", path="INTERRUPTED")
+    agvp_clear = ccs_t2.get("agvp_watchdog_clear", True)
+    report.add("CCS-INT-T2-AGVP",
+               "Turn 2 CCS agvp_watchdog_clear=False — AGVP watchdog TRIGGERED (BEV-INV-007)",
+               agvp_clear is False, f"agvp_watchdog_clear={agvp_clear}", path="INTERRUPTED")
+
+    # ── MBR Seal: UNCERTIFIED (1 proxy-guard violation at Turn 2) ────────────
+    mbr_seal = gate.get("mbr_seal", {})
+    _check_mbr_seal(report, mbr_seal, pqc, pk_bytes, "INTERRUPTED")
+    tier = mbr_seal.get("certification_tier", "")
+    report.add("SEAL-INT-TIER",
+               "MBR Seal tier=UNCERTIFIED (1 violation → MIVP-INV-009 three-tier)",
+               tier == "UNCERTIFIED", f"got={tier!r}", path="INTERRUPTED")
+
+    # ── OSG: REJECTED fail-closed (no PoGC presented) ────────────────────────
+    osg_vr = gate.get("osg_validation_receipt", {})
+    _check_osg_vr(report, osg_vr, "REJECTED", pqc, pk_bytes, "INTERRUPTED")
+
+    # ── PoGC absent + settlement BLOCKED ─────────────────────────────────────
+    pogc_issued = gate.get("pogc_issued", True)
+    report.add("INT-POGC-ABSENT",
+               "PoGC NOT issued on interrupted path — HALTED chain ≠ CLOSED (PoGR-INV-001 + RTE-INV-014)",
+               pogc_issued is False, f"pogc_issued={pogc_issued}", path="INTERRUPTED")
+    summary = pi.get("summary", {})
+    report.add("INT-SETTLE-BLOCKED",
+               "settlement_released=False — USD 50,000,000 NOT released (RTE-INV-015)",
+               summary.get("settlement_released") is False, path="INTERRUPTED")
+
+    # ── Replay proof: HALTED ──────────────────────────────────────────────────
+    proof = post.get("replay_proof", {})
+    _check_replay(report, proof, pqc, pk_bytes, "INTERRUPTED", "HALTED")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  Package-level structural checks
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -948,8 +1155,10 @@ def verify_package_structure(report: VerificationReport, pkg: Dict) -> None:
     report.section("PACKAGE STRUCTURE — RTE-INV-001")
     report.add("PKG-TYPE",   "package_type=OMNIX-RTE-001",
                pkg.get("package_type") == "OMNIX-RTE-001")
-    report.add("PKG-PATHS",  "Package contains both dangerous and admissible paths (RTE-INV-001)",
-               "path_dangerous" in pkg.get("paths", {}) and "path_admissible" in pkg.get("paths", {}))
+    report.add("PKG-PATHS",  "Package contains dangerous, admissible, and interrupted paths (v1.3.0 RTE-INV-001)",
+               "path_dangerous"  in pkg.get("paths", {}) and
+               "path_admissible" in pkg.get("paths", {}) and
+               "path_interrupted" in pkg.get("paths", {}))
     report.add("PKG-PQC",    "Package contains embedded public_key_b64",
                bool(pkg.get("pqc", {}).get("public_key_b64")))
     report.add("PKG-INV",    f"Package declares ≥20 invariants ({len(pkg.get('invariants_demonstrated', []))} found)",
@@ -972,12 +1181,15 @@ def main() -> int:
         help="Path to OMNIX-RTE-001 JSON package "
              "(optional — auto-detected from evidence/ if omitted)"
     )
-    parser.add_argument("--verify-authority",      action="store_true", help="Verify DR + MBR (both paths)")
-    parser.add_argument("--verify-continuity",     action="store_true", help="Verify RCR + MAS (both paths)")
-    parser.add_argument("--verify-counterfactual", action="store_true", help="Verify CGE CAT + CFRs (both paths)")
+    parser.add_argument("--verify-authority",      action="store_true", help="Verify DR + MBR (all paths)")
+    parser.add_argument("--verify-continuity",     action="store_true", help="Verify RCR + MAS (all paths)")
+    parser.add_argument("--verify-counterfactual", action="store_true", help="Verify CGE CAT + CFRs (all paths)")
     parser.add_argument("--verify-halt",           action="store_true", help="Verify dangerous path HALT chain")
     parser.add_argument("--verify-settlement",     action="store_true", help="Verify admissible path settlement")
-    parser.add_argument("--verify-replay",         action="store_true", help="Verify replay proofs + TCS (both paths)")
+    parser.add_argument("--verify-replay",         action="store_true", help="Verify replay proofs + TCS (all paths)")
+    parser.add_argument("--verify-interrupted",    action="store_true",
+                        help="Verify interrupted path: Turn-by-turn BAR+CCS+MAS, HALT at Turn 2, "
+                             "CTCHC HALTED, MBR Seal UNCERTIFIED, OSG REJECTED, PoGC absent (v1.3.0+)")
     parser.add_argument("--json",                  action="store_true", help="Output machine-readable JSON report")
     args = parser.parse_args()
 
@@ -985,6 +1197,7 @@ def main() -> int:
     targeted = any([
         args.verify_authority, args.verify_continuity, args.verify_counterfactual,
         args.verify_halt, args.verify_settlement, args.verify_replay,
+        args.verify_interrupted,
     ])
     run_all = not targeted
 
@@ -998,6 +1211,7 @@ def main() -> int:
         if args.verify_halt:           flags.append("halt")
         if args.verify_settlement:     flags.append("settlement")
         if args.verify_replay:         flags.append("replay")
+        if args.verify_interrupted:    flags.append("interrupted")
         mode = "+".join(flags).upper()
 
     # Resolve package path — auto-detect when not provided
@@ -1084,6 +1298,9 @@ def main() -> int:
 
     if run_all or args.verify_replay:
         verify_replay(report, pkg, pqc, pk_bytes)
+
+    if run_all or args.verify_interrupted:
+        verify_interrupted(report, pkg, pqc, pk_bytes)
 
     # Summary
     all_ok = report.summary()

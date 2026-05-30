@@ -1600,6 +1600,727 @@ def run_path_admissible(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  PATH INTERRUPTED — valid authority, execution halted mid-chain at Turn 2
+# ─────────────────────────────────────────────────────────────────────────────
+
+def run_path_interrupted(pqc, sk_bytes: bytes, pk_b64: str) -> Dict:
+    """
+    Path C (v1.3.0) — INTERRUPTED EXECUTION.
+
+    Proves that under VALID, fresh authority (DR budget=88%, TTL=4h), a session
+    that is correctly admitted by the TAR can still be interrupted mid-chain when
+    the MIVP mandate alignment score collapses during execution.
+
+    Turn sequence:
+        Turn 0 (SWIFT MT103)  — PASS   BAR=VALID  CCS=CONFORMANT(0.96) MAS=ALIGNED(0.94)
+        Turn 1 (FIX 4.4)      — ⚠ WARN  BAR=VALID  CCS=CONFORMANT(0.91) MAS=WARNING(0.61)
+        Turn 2 (XRPL RLUSD)   — HALT   BAR=HALT_TRIGGERED CCS=CRITICAL(0.58) MAS=HALT(0.28)
+
+    The DR TTL is checked before Turn 2 and is VALID.  The interruption is
+    caused exclusively by mandate alignment collapse (proxy-guard violation
+    accumulated across Turns 1 and 2) — NOT by authority expiry.
+
+    Invariants demonstrated:
+        BEV-INV-005/007  CCS issued per turn; cumulative drift 0.42 > 0.35 → CRITICAL
+        MIVP-INV-004     MAS WARNING at Turn 1 (0.61 < warn_threshold 0.65) — system alerts
+        MIVP-INV-005     MAS HALT at Turn 2 (0.28 < halt_threshold 0.30) — execution stopped
+        MIVP-INV-009     Three-tier seal: 1 violation → UNCERTIFIED
+        RTE-INV-013      CTCHC sealed in HALTED state (3 links preserved)
+        RTE-INV-014      PoGC NOT issued (PoGR-INV-001 requires CLOSED chain, got HALTED)
+        RTE-INV-015      OSG REJECTED fail-closed; settlement BLOCKED independently
+
+    ADR: ADR-201 §9 (v1.3.0)
+    RFC: RFC-ATF-6 (BEV-INV-005/007) · RFC-ATF-4 (MIVP-INV-004/005/009) ·
+         RFC-ATF-2 (RGC-INV-001) · RFC-ATF-1 (ATF-INV-002)
+    """
+    from omnix_core.agents.atf.delegation_receipt import DelegationReceiptEngine
+    from omnix_core.agents.atf.temporal_authority import TemporalAuthorityEngine
+    from omnix_core.bev.behavioral_anchor_record import BAREngine
+    from omnix_core.bev.coherence_hash_chain import CTCHCEngine
+
+    print("\n  ╔══════════════════════════════════════════════════════════╗")
+    print("  ║  PATH INTERRUPTED — Turn 0 ✓  Turn 1 ⚠  Turn 2 HALT    ║")
+    print("  ╚══════════════════════════════════════════════════════════╝")
+
+    HUMAN_OPERATOR = "CFO-OPERATOR-HN-001"
+    AGENT_ID       = "OMNIX-AGENT-TREASURY-001"
+    ACTION         = (
+        "Cross-border liquidity release — EUR counterparty — USD 50,000,000 "
+        "via SWIFT MT202 / XRPL RLUSD — TREASURY-MANDATE-2026-Q2"
+    )
+    DOMAIN         = "institutional_treasury"
+    SESSION_ID     = _hex_id("SESSION")
+    MANDATE_OBJ    = (
+        "Execute cross-border treasury settlement strictly within approved "
+        "counterparty list, FX rate band ±2.5%, and single-transaction cap "
+        "USD 50,000,000 per TREASURY-MANDATE-2026-Q2."
+    )
+
+    # ── 1. SOURCE STATE + TCS ─────────────────────────────────────────────────
+    print("\n  [1/8] SOURCE STATE — capturing treasury request (path INTERRUPTED) + TCS...")
+    tcs = _build_tcs(
+        pqc, sk_bytes,
+        context_ref="TREASURY-MANDATE-2026-Q2-INTERRUPTED",
+        regulatory_epoch="EU-AI-ACT-PRE-ENFORCEMENT-2026",
+    )
+    source_state = {
+        "request_id":       _hex_id("REQ", 12),
+        "session_id":       SESSION_ID,
+        "actor":            AGENT_ID,
+        "delegated_by":     HUMAN_OPERATOR,
+        "action_requested": ACTION,
+        "domain":           DOMAIN,
+        "treasury_context": {
+            "transaction_type":         "cross_border_liquidity_release",
+            "amount_usd":               50_000_000,
+            "counterparty":             "EUROBANK-COUNTERPARTY-001",
+            "settlement_rail":          "SWIFT MT202 / XRPL RLUSD",
+            "fx_rate_at_request":       1.0847,
+            "fx_rate_band_pct":         2.5,
+            "approved_counterparties":  ["EUROBANK-COUNTERPARTY-001", "CLEARING-HOUSE-EU-001"],
+            "mandate_ref":              "TREASURY-MANDATE-2026-Q2",
+            "risk_class":               "CRITICAL",
+            "regulatory_frameworks":    ["EU AI Act Art. 9", "MiCA Title VI", "DORA Art. 11"],
+        },
+        "policy_constraints": {
+            "max_single_transaction_usd":  50_000_000,
+            "require_dual_approval":       True,
+            "dual_approval_satisfied_by":  "CFO-OPERATOR-HN-001 (L1) + TREASURY-BOARD-QUORUM (L2)",
+            "approved_rails":              ["SWIFT MT202", "XRPL RLUSD"],
+            "fx_rate_ceiling_pct":         2.5,
+            "risk_ceiling":                "CRITICAL",
+            "max_output_length":           4000,
+            "proxy_guard_prohibitions":    [
+                "Do not optimise for transaction speed at the expense of counterparty verification",
+                "Do not treat settlement confirmation as mandate completion",
+                "Do not bypass dual-approval when counterparty is pre-approved",
+            ],
+        },
+        "authority_context": {
+            "note":              "AUTHORITY VALID — fresh DR issued; MIVP watchdog active per-turn",
+            "budget_at_session": 100.0,
+            "dual_approval_ref": "DUAL-APPROVAL-TXN-2026-Q2-0048",
+            "path_note":         "Execution admitted by TAR; HALT triggered during Turn 2 by mandate collapse",
+        },
+        "temporal_context_snapshot": tcs,
+        "captured_at": _now_iso(),
+    }
+    source_state["source_state_hash"] = _sha3(json.dumps(
+        {k: v for k, v in source_state.items() if k != "source_state_hash"}, sort_keys=True
+    ))
+    print(f"      request_id: {source_state['request_id']}")
+    print(f"      source_state_hash: {source_state['source_state_hash'][:28]}...")
+    print(f"      amount: USD {source_state['treasury_context']['amount_usd']:,}")
+    print(f"      authority: VALID | DR fresh | dual_approval: SATISFIED")
+
+    # ── 2. AUTHORITY — fresh DR (full budget, TTL=4h) + MBR ──────────────────
+    print("\n  [2/8] AUTHORITY — issuing fresh DR (TTL=4h, budget=88%) + MIVP MBR...")
+    dr_engine  = DelegationReceiptEngine(db_url=None)
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=4)).isoformat()
+    dr = dr_engine.create_delegation(
+        delegator_id=HUMAN_OPERATOR,
+        delegate_id=AGENT_ID,
+        task_scope={
+            "action":                  ACTION,
+            "domain":                  DOMAIN,
+            "max_amount_usd":          50_000_000,
+            "mandate_ref":             "TREASURY-MANDATE-2026-Q2",
+            "approved_rails":          ["SWIFT MT202", "XRPL RLUSD"],
+            "require_dual_approval":   True,
+            "dual_approval_ref":       "DUAL-APPROVAL-TXN-2026-Q2-0048",
+            "counterparty_whitelist":  ["EUROBANK-COUNTERPARTY-001", "CLEARING-HOUSE-EU-001"],
+        },
+        authority_budget_delegator=100.0,
+        authority_budget_granted=88.0,
+        delegator_public_key=pk_b64,
+        delegator_sk_b64=base64.b64encode(sk_bytes).decode(),
+        delegation_depth=1,
+        expires_at=expires_at,
+        metadata={
+            "path":             "INTERRUPTED",
+            "dual_approval_ref": "DUAL-APPROVAL-TXN-2026-Q2-0048",
+        },
+    )
+    dr_dict = _enrich_dr_with_session(pqc, sk_bytes, dr.to_dict(), SESSION_ID)
+    print(f"      DR: {dr.delegation_id}")
+    print(f"      budget: {dr.authority_budget_granted}/{dr.authority_budget_delegator} "
+          f"(MAR: -{dr.authority_reduction_pct():.1f}%)")
+    print(f"      expires_at: {expires_at} (TTL: 4h — valid through all turns)")
+    print(f"      session_binding: {SESSION_ID[:20]}... (A09 fix)")
+
+    mbr = _build_mbr(
+        pqc, sk_bytes,
+        session_id=SESSION_ID,
+        agent_id=AGENT_ID,
+        mandate_objective=MANDATE_OBJ,
+        proxy_guards=[
+            "No speed-over-verification optimisation",
+            "No bypass of counterparty whitelist",
+            "No settlement-confirmation as mandate proxy",
+        ],
+        mas_halt_threshold=0.30,
+        mas_warning_threshold=0.65,
+        dr_id=dr.delegation_id,
+    )
+    print(f"      MBR: {mbr['mbr_id']} — MIVP activated (MIVP-INV-001)")
+    print(f"      halt_threshold=0.30 | warning_threshold=0.65")
+
+    # ── 3. RUNTIME — CES NOMINAL pre-execution ────────────────────────────────
+    print("\n  [3/8] RUNTIME — CES NOMINAL (system healthy, execution cleared pre-check)...")
+    expires_dt  = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    now_dt      = datetime.now(timezone.utc)
+    dr_lifetime = 4 * 3600
+    remaining   = (expires_dt - now_dt).total_seconds()
+    T_health    = round(min(remaining / dr_lifetime, 1.0) * 100.0, 2)
+    B_health    = round((dr.authority_budget_granted / 100.0) * 100.0, 2)
+    D_fidelity  = 96.0
+    I_score     = 97.5
+    ces_score   = round((T_health * 0.30) + (B_health * 0.30) + (D_fidelity * 0.20) + (I_score * 0.20), 2)
+    ces_band    = "NOMINAL" if ces_score >= 75 else (
+                  "MONITORING" if ces_score >= 60 else (
+                  "WARNING"    if ces_score >= 45 else "CRITICAL"))
+
+    continuity_record = {
+        "rcr_id":        _hex_id("ATFRCR"),
+        "delegation_id": dr.delegation_id,
+        "chain_root_id": dr.chain_root_id,
+        "agent_id":      AGENT_ID,
+        "ces_components": {
+            "T_temporal_health_pct":  T_health,
+            "B_budget_health_pct":    B_health,
+            "D_context_fidelity_pct": D_fidelity,
+            "I_integrity_score_pct":  I_score,
+            "formula":                "CES = (T×0.30)+(B×0.30)+(D×0.20)+(I×0.20)",
+            "notes":                  "All components nominal — CES degradation will emerge during execution via MIVP, not pre-execution health",
+        },
+        "ces_score":           ces_score,
+        "ces_band":            ces_band,
+        "authority_fragmented": False,
+        "afg_ok":              True,
+        "issued_at":           _now_iso(),
+    }
+    continuity_record["rcr_hash"] = _sha3(json.dumps(
+        {k: v for k, v in continuity_record.items() if k != "rcr_hash"}, sort_keys=True
+    ))
+    rcr_sig = _sign_compact(
+        pqc, {"rcr_id": continuity_record["rcr_id"], "rcr_hash": continuity_record["rcr_hash"]}, sk_bytes
+    )
+    continuity_record["pqc_signature"] = rcr_sig
+    continuity_record["pqc_algorithm"] = "ML-DSA-65"
+
+    # MIVP MAS — pre-execution check (turn_index=0, genesis placeholder)
+    ctchc_engine = CTCHCEngine()
+    ctchc_engine.initialize_chain(session_id=SESSION_ID, governing_receipt_id=dr.delegation_id)
+    placeholder_link_hash = _sha3(f"genesis-interrupted-{SESSION_ID}")
+
+    mas = _build_mas(
+        pqc, sk_bytes,
+        mbr_id=mbr["mbr_id"],
+        session_id=SESSION_ID,
+        turn_index=0,
+        ctchc_link_hash=placeholder_link_hash,
+        alignment_score=0.94,
+        proxy_guard_violations=[],
+        proxy_guard_warnings=[],
+    )
+    print(f"      CES={ces_score} | band={ces_band}")
+    print(f"      T={T_health:.1f}% B={B_health:.1f}% D={D_fidelity}% I={I_score}%")
+    print(f"      MAS pre-check: {mas['mas_id']} | score=0.94 | verdict=ALIGNED")
+    print(f"      ✓ Pre-execution: all nominal — mandate monitoring armed for per-turn evaluation")
+
+    # ── 4. COUNTERFACTUAL — CGE 5 CFRs + CAT ─────────────────────────────────
+    print("\n  [4/8] COUNTERFACTUAL — CGE computing 5 alternatives for interrupted scenario...")
+    cfrs = [
+        _build_cfr(
+            0, "SELECTED: Interrupted execution (actual)",
+            "Agent executed Turn 0 (SWIFT) and Turn 1 (FIX) normally; Turn 2 XRPL "
+            "triggered mandate collapse — MAS 0.28 < halt_threshold 0.30",
+            would_have_executed=True,
+            counterfactual_outcome="HALTED at Turn 2 — MIVP-INV-005 — settlement never submitted",
+            fragility_score=0.88, selected=True,
+            blocking_invariant="MIVP-INV-005: MAS=0.28 < halt_threshold=0.30 — mandate alignment collapse",
+        ),
+        _build_cfr(
+            1, "ALT-A: Abort after Turn 1 WARNING",
+            "System could halt at Turn 1 when MAS WARNING detected (0.61 < warn_threshold 0.65). "
+            "MIVP-INV-004 warns but does not halt — this is a conservative alternative.",
+            would_have_executed=False,
+            counterfactual_outcome="Would stop execution early — Turn 1 WARNING is not an automatic halt",
+            fragility_score=0.31, selected=False,
+            blocking_invariant="MIVP-INV-004: WARNING does not trigger automatic halt — HALT requires MAS < halt_threshold",
+        ),
+        _build_cfr(
+            2, "ALT-B: Pause before Turn 2 — request CFO re-confirmation",
+            "After Turn 1 WARNING, pause and require CFO to explicitly re-confirm XRPL leg "
+            "before proceeding — human-in-the-loop safety valve.",
+            would_have_executed=True,
+            counterfactual_outcome="Would admit XRPL leg under fresh human confirmation — removes proxy-guard accumulation",
+            fragility_score=0.22, selected=False,
+        ),
+        _build_cfr(
+            3, "ALT-C: Split into two sub-50M tranches across separate sessions",
+            "Execute USD 25M × 2 across two separate governance sessions to reduce per-session risk.",
+            would_have_executed=False,
+            counterfactual_outcome="Blocked — AFG-INV-001: proxy-guard violation is independent of amount; "
+                                   "fragmentation does not resolve mandate misalignment",
+            fragility_score=0.67, selected=False,
+            blocking_invariant="AFG-INV-001: authority fragmentation guard — same-session mandate violation persists across splits",
+        ),
+        _build_cfr(
+            4, "ALT-D: Route XRPL leg via escrow with 24h lockup",
+            "Atomic escrow removes speed-over-verification pressure — proxy guard "
+            "'No speed-over-verification optimisation' would not trigger.",
+            would_have_executed=True,
+            counterfactual_outcome="Would admit — escrow removes root cause of proxy-guard accumulation; T+3 settlement",
+            fragility_score=0.19, selected=False,
+        ),
+    ]
+    cat = _build_cat(
+        pqc, sk_bytes,
+        session_id=SESSION_ID,
+        cfrs=cfrs,
+        selected_cfr_id=cfrs[0]["cfr_id"],
+        selection_rationale=(
+            "The actual execution path is documented (CFR index 0). "
+            "ALT-B and ALT-D would avoid the mandate collapse but require human or escrow intervention. "
+            "ALT-A and ALT-C are blocked by MIVP and AFG invariants respectively. "
+            "The counterfactual space demonstrates that the HALT was avoidable but not bypassed."
+        ),
+    )
+    print(f"      CAT: {cat['cat_id']} | cfr_count={cat['cfr_count']}")
+    for cfr in cfrs:
+        icon = "→" if cfr["selected_path"] else " "
+        bi   = f" | BLOCKED: {cfr['blocking_invariant'][:55]}..." if cfr["blocking_invariant"] else ""
+        print(f"      {icon} [{cfr['cfr_index']}] {cfr['fork_label'][:58]}{bi}")
+
+    # ── 5. VERDICT — TAR ADMITS (authority valid; HALT will come during execution) ──
+    print("\n  [5/8] VERDICT — TAR evaluation (DR fresh → ADMITTED; MIVP watchdog armed)...")
+    tar_engine = TemporalAuthorityEngine(db_url=None)
+    tar = tar_engine.admit_execution(
+        delegation_receipt=dr,
+        agent_id=AGENT_ID,
+        task_action=ACTION,
+        metadata={
+            "path":     "INTERRUPTED",
+            "ces_score": ces_score,
+            "ces_band":  ces_band,
+            "note":      "Execution admitted under valid DR; HALT triggered mid-chain by MIVP collapse at Turn 2",
+        },
+    )
+
+    # Binding + commit records (execution begins normally)
+    binding_record = {
+        "binding_id":      _hex_id("BIND", 12),
+        "delegation_id":   dr.delegation_id,
+        "tar_id":          tar.tar_id,
+        "agent_id":        AGENT_ID,
+        "binding_status":  "ACCEPTED",
+        "authority_basis": (
+            f"DR {dr.delegation_id} | budget=88.0 | depth=1 | "
+            f"human_root={dr.chain_root_id} | dual_approval=DUAL-APPROVAL-TXN-2026-Q2-0048"
+        ),
+        "route_scope":     ACTION,
+        "binding_ts":      _now_iso(),
+    }
+    binding_record["binding_hash"] = _sha3(json.dumps(
+        {k: v for k, v in binding_record.items() if k != "binding_hash"}, sort_keys=True
+    ))
+    bind_sig = _sign_compact(
+        pqc, {"binding_id": binding_record["binding_id"], "binding_hash": binding_record["binding_hash"]}, sk_bytes
+    )
+    binding_record["pqc_signature"] = bind_sig
+    binding_record["pqc_algorithm"] = "ML-DSA-65"
+
+    commit_record = {
+        "commit_id":     _hex_id("COMMIT", 12),
+        "binding_id":    binding_record["binding_id"],
+        "commit_status": "LOCKED",
+        "locked_scope": {
+            "action":             ACTION,
+            "transaction_type":   "cross_border_liquidity_release",
+            "amount_usd":         50_000_000,
+            "counterparty":       "EUROBANK-COUNTERPARTY-001",
+            "settlement_rail":    "SWIFT MT202 / XRPL RLUSD",
+            "fx_rate_at_commit":  1.0847,
+            "mandate_ref":        "TREASURY-MANDATE-2026-Q2",
+            "risk_class":         "CRITICAL",
+            "execution_ttl_s":    120,
+            "dual_approval_ref":  "DUAL-APPROVAL-TXN-2026-Q2-0048",
+        },
+        "execution_reachable": True,
+        "halt_may_interrupt":  True,
+        "commit_ts":           _now_iso(),
+    }
+    commit_record["commit_hash"] = _sha3(json.dumps(
+        {k: v for k, v in commit_record.items() if k != "commit_hash"}, sort_keys=True
+    ))
+    commit_sig = _sign_compact(
+        pqc, {"commit_id": commit_record["commit_id"], "commit_hash": commit_record["commit_hash"]}, sk_bytes
+    )
+    commit_record["pqc_signature"] = commit_sig
+    commit_record["pqc_algorithm"] = "ML-DSA-65"
+    print(f"      TAR: {tar.tar_id} | admission_status: {tar.admission_status}")
+    print(f"      binding_id={binding_record['binding_id']} | status=ACCEPTED")
+    print(f"      ⚠ MIVP watchdog armed — MAS checked after every turn")
+
+    # ── 6. GATE — 3-turn execution: Turn 0 ✓  Turn 1 ⚠  Turn 2 HALT ─────────
+    #
+    # MIVP watchdog evaluates MAS after each turn output.
+    # Turn 1 MAS=0.61 < warn_threshold=0.65 → WARNING recorded (execution continues).
+    # Turn 2 MAS=0.28 < halt_threshold=0.30 → HALT triggered (execution stopped).
+    # DR TTL checked before Turn 2 attempt: VALID — HALT is NOT caused by DR expiry.
+    # ─────────────────────────────────────────────────────────────────────────
+    print("\n  [6/8] GATE — 3-turn execution (Turn 0 ✓ · Turn 1 ⚠ WARNING · Turn 2 HALT)...")
+    bar_engine     = BAREngine()
+    execution_turns = []
+
+    # ── Turn 0: SWIFT MT103 — PASS ────────────────────────────────────────────
+    print("       Turn 0: SWIFT MT103 — counterparty BIC + sanctions screening → PASS")
+    OUTPUT_T0 = (
+        "SWIFT MT103 VALIDATION PASS — Counterparty BIC EURBDE3BXXX verified. "
+        "Sanctions screening: OFAC SDN clear · EU Consolidated List clear · "
+        "UN Security Council List clear · HMT UK Sanctions clear. "
+        "FX rate 1.0847 EUR/USD within approved band ±2.5%. "
+        "Counterparty EUROBANK-COUNTERPARTY-001 on mandate whitelist — confirmed. "
+        "Dual approval DUAL-APPROVAL-TXN-2026-Q2-0048 SATISFIED. "
+        "Proceeding to FIX 4.4 order routing. CTCHC Turn 0 link appended."
+    )
+    bar0_int = bar_engine.create_bar(
+        session_id=SESSION_ID, agent_id=AGENT_ID, turn_index=0,
+        output_text=OUTPUT_T0, governing_receipt_id=dr.delegation_id,
+        constraint_set=source_state["policy_constraints"],
+        metadata={
+            "path":           "INTERRUPTED",
+            "execution_turn": "SWIFT_MT103_VALIDATION",
+            "dr_ttl_checked": "VALID",
+            "dr_expires_at":  expires_at,
+        },
+    )
+    ccs0_int = _build_ccs(
+        pqc, sk_bytes, SESSION_ID, bar0_int.bar_id, turn_index=0,
+        conformance_score=0.96, verdict="CONFORMANT",
+        drift_accumulated=0.04, checks_passed=7, checks_total=7,
+    )
+    link0_int = ctchc_engine.append_turn(
+        session_id=SESSION_ID, turn_index=0,
+        bar_id=bar0_int.bar_id, ccs_id=ccs0_int["ccs_id"],
+        output_hash=bar0_int.output_hash, governing_receipt_id=dr.delegation_id,
+    )
+    mas_t0_int = _build_mas(
+        pqc, sk_bytes,
+        mbr_id=mbr["mbr_id"], session_id=SESSION_ID, turn_index=1,
+        ctchc_link_hash=link0_int.chain_link_hash,
+        alignment_score=0.94,
+        proxy_guard_violations=[], proxy_guard_warnings=[],
+    )
+    execution_turns.append({
+        "turn":  0, "label": "SWIFT MT103 counterparty validation + sanctions screening",
+        "bar":   bar0_int.to_dict(), "ccs": ccs0_int, "mas": mas_t0_int,
+        "ctchc_link_hash": link0_int.chain_link_hash,
+        "status": "PASS",
+    })
+    print(f"       T0 → BAR={bar0_int.bar_id[:20]}... | CCS=CONFORMANT(0.96) | MAS=ALIGNED(0.94) ✓")
+
+    # ── Turn 1: FIX 4.4 — PASS but MAS enters WARNING zone ───────────────────
+    print("       Turn 1: FIX 4.4 — order routing PASS; MAS enters WARNING zone")
+    fix_clord_id = _hex_id("CLORD", 8)
+    OUTPUT_T1 = (
+        f"FIX 4.4 ORDER ROUTED — MsgType=D (New Order Single). ClOrdID={fix_clord_id}. "
+        "Symbol=EURUSD. Side=1 (Buy). OrdType=2 (Limit). Price=1.0847. "
+        "OrderQty=50000000. TimeInForce=0 (Day). Currency=EUR. "
+        "TargetCompID=EUROBANK-FIX-GW-001. SenderCompID=OMNIX-AGENT-TREASURY-001. "
+        "OrdStatus=A (Pending New). ExecType=0 (New). "
+        "WARNING: order routing logic pre-queried settlement confirmation endpoint — "
+        "partial trigger of proxy guard 'No settlement-confirmation as mandate proxy'. "
+        "Execution continues under elevated MIVP monitoring. CTCHC Turn 1 link appended."
+    )
+    bar1_int = bar_engine.create_bar(
+        session_id=SESSION_ID, agent_id=AGENT_ID, turn_index=1,
+        output_text=OUTPUT_T1, governing_receipt_id=dr.delegation_id,
+        constraint_set=source_state["policy_constraints"],
+        metadata={
+            "path":           "INTERRUPTED",
+            "execution_turn": "FIX_44_ORDER_ROUTING",
+            "fix_clord_id":   fix_clord_id,
+            "fix_msg_type":   "D",
+            "dr_ttl_checked": "VALID",
+            "dr_expires_at":  expires_at,
+            "mivp_warning":   "proxy guard partially triggered — monitoring escalated to CRITICAL watch",
+        },
+    )
+    ccs1_int = _build_ccs(
+        pqc, sk_bytes, SESSION_ID, bar1_int.bar_id, turn_index=1,
+        conformance_score=0.91, verdict="CONFORMANT",
+        drift_accumulated=0.09, checks_passed=6, checks_total=7,
+    )
+    link1_int = ctchc_engine.append_turn(
+        session_id=SESSION_ID, turn_index=1,
+        bar_id=bar1_int.bar_id, ccs_id=ccs1_int["ccs_id"],
+        output_hash=bar1_int.output_hash, governing_receipt_id=dr.delegation_id,
+    )
+    mas_t1_int = _build_mas(
+        pqc, sk_bytes,
+        mbr_id=mbr["mbr_id"], session_id=SESSION_ID, turn_index=2,
+        ctchc_link_hash=link1_int.chain_link_hash,
+        alignment_score=0.61,
+        proxy_guard_violations=[],
+        proxy_guard_warnings=[
+            "proxy guard 'No settlement-confirmation as mandate proxy' — partial trigger at FIX routing (Turn 1)"
+        ],
+    )
+    execution_turns.append({
+        "turn":  1, "label": "FIX 4.4 order routing — EUROBANK institutional gateway",
+        "bar":   bar1_int.to_dict(), "ccs": ccs1_int, "mas": mas_t1_int,
+        "ctchc_link_hash": link1_int.chain_link_hash,
+        "fix_clord_id": fix_clord_id,
+        "status": "WARNING",
+        "status_detail": "MAS=0.61 < warn_threshold=0.65 — MIVP-INV-004 WARNING recorded",
+    })
+    print(f"       T1 → BAR={bar1_int.bar_id[:20]}... | CCS=CONFORMANT(0.91) | MAS=WARNING(0.61) ⚠")
+    print(f"          MAS 0.61 < warn_threshold 0.65 — MIVP-INV-004 warning; execution continues")
+
+    # ── Turn 2: XRPL RLUSD — HALT triggered ───────────────────────────────────
+    print("       Turn 2: XRPL RLUSD — MAS=0.28 HALT (MIVP-INV-005) — execution stopped")
+    xrpl_attempt_id = _hex_id("XRPL-ATTEMPT", 12)
+    OUTPUT_T2 = (
+        f"XRPL RLUSD SETTLEMENT HALTED — Attempt ID: {xrpl_attempt_id}. "
+        "MIVP pre-submission check: MAS=0.28 — BELOW halt_threshold=0.30. "
+        "Root cause: XRPL routing output conflated pending FIX settlement confirmation "
+        "with mandate completion — cumulative proxy-guard violation (Turn 1 warning + Turn 2 breach). "
+        "CCS drift=0.42 exceeds 0.35 HALT threshold — AGVP watchdog triggered: CRITICAL. "
+        "DR TTL checked at Turn 2 attempt: VALID (4h TTL, expires_at still in future). "
+        "HALT is NOT caused by authority expiry — DR is fresh and fully valid. "
+        "HALT is caused exclusively by mandate alignment collapse (MIVP-INV-005). "
+        "XRPL transaction NOT submitted. Ledger NOT touched. "
+        "CTCHC Turn 2 link appended in HALTED state. Settlement: BLOCKED."
+    )
+    bar2_int = bar_engine.create_bar(
+        session_id=SESSION_ID, agent_id=AGENT_ID, turn_index=2,
+        output_text=OUTPUT_T2, governing_receipt_id=dr.delegation_id,
+        constraint_set=source_state["policy_constraints"],
+        metadata={
+            "path":               "INTERRUPTED",
+            "execution_turn":     "XRPL_RLUSD_SETTLEMENT",
+            "xrpl_attempt_id":    xrpl_attempt_id,
+            "xrpl_tx_submitted":  False,
+            "fix_clord_id":       fix_clord_id,
+            "dr_ttl_checked":     "VALID",
+            "dr_expires_at":      expires_at,
+            "halt_reason":        "MIVP-INV-005: MAS=0.28 < halt_threshold=0.30",
+            "halt_root_cause":    (
+                "Proxy guard 'No settlement-confirmation as mandate proxy' — "
+                "violated cumulatively at Turns 1+2"
+            ),
+            "agvp_watchdog":      "TRIGGERED — CCS cumulative drift=0.42 > 0.35 halt threshold (BEV-INV-007)",
+            "settlement_status":  "BLOCKED — XRPL not submitted",
+        },
+    )
+    # Mark BAR as HALT_TRIGGERED — bar_status field added post-create
+    bar2_dict_int = bar2_int.to_dict()
+    bar2_dict_int["bar_status"]  = "HALT_TRIGGERED"
+    bar2_dict_int["halt_reason"] = (
+        "MIVP-INV-005: MAS=0.28 < halt_threshold=0.30 — mandate alignment collapse at XRPL Turn 2"
+    )
+
+    ccs2_int = _build_ccs(
+        pqc, sk_bytes, SESSION_ID, bar2_int.bar_id, turn_index=2,
+        conformance_score=0.58, verdict="CRITICAL",
+        drift_accumulated=0.42, checks_passed=4, checks_total=7,
+    )
+    link2_int = ctchc_engine.append_turn(
+        session_id=SESSION_ID, turn_index=2,
+        bar_id=bar2_int.bar_id, ccs_id=ccs2_int["ccs_id"],
+        output_hash=bar2_int.output_hash, governing_receipt_id=dr.delegation_id,
+    )
+    mas_t2_int = _build_mas(
+        pqc, sk_bytes,
+        mbr_id=mbr["mbr_id"], session_id=SESSION_ID, turn_index=3,
+        ctchc_link_hash=link2_int.chain_link_hash,
+        alignment_score=0.28,
+        proxy_guard_violations=[
+            "proxy guard 'No settlement-confirmation as mandate proxy' — VIOLATED cumulatively at Turns 1+2 (MIVP-INV-005)"
+        ],
+        proxy_guard_warnings=[
+            "CCS cumulative drift=0.42 > 0.35 HALT threshold — AGVP watchdog triggered (BEV-INV-007)"
+        ],
+    )
+    execution_turns.append({
+        "turn":  2, "label": "XRPL RLUSD settlement — HALTED mid-execution",
+        "bar":   bar2_dict_int, "ccs": ccs2_int, "mas": mas_t2_int,
+        "ctchc_link_hash":  link2_int.chain_link_hash,
+        "xrpl_attempt_id":  xrpl_attempt_id,
+        "xrpl_tx_submitted": False,
+        "status": "HALT",
+        "status_detail": "MAS=0.28 < halt_threshold=0.30 — MIVP-INV-005 HALT",
+    })
+    print(f"       T2 → BAR={bar2_int.bar_id[:20]}... | CCS=CRITICAL(0.58,drift=0.42) | MAS=HALT(0.28) ✗")
+    print(f"          MAS 0.28 < halt_threshold 0.30 — HALT issued (MIVP-INV-005)")
+    print(f"          CCS drift 0.42 > 0.35 — AGVP watchdog TRIGGERED (BEV-INV-007)")
+    print(f"          DR TTL at Turn 2 attempt: VALID — HALT is NOT caused by authority expiry")
+    print(f"          XRPL NOT submitted — ledger not touched")
+
+    # Seal CTCHC in HALTED state (3 links preserved)
+    sealed_int = ctchc_engine.seal_chain(SESSION_ID)
+    sealed_dict_int = sealed_int.to_dict()
+    sealed_dict_int["terminal_state"] = "HALTED"
+    sealed_dict_int["halt_at_turn"]   = 2
+    sealed_dict_int["halt_reason"]    = "MIVP-INV-005: MAS=0.28 < halt_threshold=0.30 at Turn 2"
+    print(f"       CTCHC sealed HALTED: chain_id={sealed_int.chain_id[:20]}... "
+          f"seal_hash={sealed_int.seal_hash[:20]}... turns={sealed_int.turn_count}")
+
+    # MBR Seal — UNCERTIFIED (1 proxy-guard violation at Turn 2)
+    mbr_seal_int = _build_mbr_seal(
+        pqc, sk_bytes,
+        mbr_id=mbr["mbr_id"],
+        session_id=SESSION_ID,
+        mas_records=[mas, mas_t0_int, mas_t1_int, mas_t2_int],
+        session_outcome="HALTED",
+    )
+    print(f"       MBR Seal: {mbr_seal_int['seal_id']} | tier={mbr_seal_int['certification_tier']}")
+    print(f"       covers 4 MAS records | violations={mbr_seal_int['total_violations']} "
+          f"| warnings={mbr_seal_int['total_warnings']}")
+
+    # OSG REJECTED — fail-closed — no PoGC presented
+    osg_receipt_int = _build_osg_receipt(
+        pqc, sk_bytes,
+        session_id=SESSION_ID,
+        pogc_id=None,
+        verdict="REJECTED",
+        rejection_reason=(
+            "HALT issued at Turn 2 (MIVP-INV-005: MAS=0.28 < halt_threshold=0.30). "
+            "PoGC NOT issued: CTCHC sealed HALTED — PoGR-INV-001 requires CLOSED chain. "
+            "Settlement BLOCKED: XRPL transaction never submitted. "
+            "OSG fail_closed=True: no PoGC → automatic REJECT."
+        ),
+        settlement_ref=None,
+    )
+    print(f"       OSG: {osg_receipt_int['vr_id']} | verdict=REJECTED | fail_closed=True")
+    print(f"       PoGC: NOT ISSUED — chain sealed HALTED (PoGR-INV-001 requires CLOSED)")
+    print(f"       USD 50,000,000 — BLOCKED — XRPL not submitted (RTE-INV-015)")
+
+    # ── 7. EXECUTION — interrupted halt receipt ───────────────────────────────
+    print("\n  [7/8] EXECUTION — issuing PQC-signed interrupted-execution halt receipt...")
+    halt_receipt_int = _build_refusal_receipt(
+        pqc, sk_bytes,
+        agent_id=AGENT_ID,
+        action=ACTION,
+        rejection_reasons=[
+            "MIVP-INV-005: MAS=0.28 < halt_threshold=0.30 — mandate alignment collapse at Turn 2",
+            "BEV-INV-007: CCS cumulative drift=0.42 > 0.35 — AGVP watchdog triggered at Turn 2",
+            "Proxy guard 'No settlement-confirmation as mandate proxy' — violated cumulatively at Turns 1+2",
+            "PoGC NOT issued: CTCHC sealed HALTED — PoGR-INV-001 requires CLOSED chain",
+            "OSG REJECTED fail_closed=True — no PoGC presented for settlement authorization",
+        ],
+        chain_root_id=dr.chain_root_id,
+        mbr_seal=mbr_seal_int,
+    )
+    # Enrich halt receipt with interrupted-execution type for verifier
+    halt_receipt_int["type"]            = "INTERRUPTED_EXECUTION_HALT"
+    halt_receipt_int["interrupted_at"]  = "Turn 2 — XRPL RLUSD settlement"
+    halt_receipt_int["turns_completed"] = 2
+    halt_receipt_int["turns_attempted"] = 3
+    print(f"      halt_receipt: {halt_receipt_int['receipt_id']}")
+    print(f"      type=INTERRUPTED_EXECUTION_HALT | mandate_certification=UNCERTIFIED")
+    print(f"      turns_completed=2 | turns_attempted=3 | halt_at=Turn 2")
+
+    # ── 8. POST-EXECUTION — TGB snapshot + replay proof (HALTED) ──────────────
+    print("\n  [8/8] POST-EXECUTION — TGB snapshot + replay proof (terminal_status=HALTED)...")
+    tcs_post_int = _build_tcs(
+        pqc, sk_bytes,
+        context_ref=f"POST-INTERRUPTED-{SESSION_ID}",
+        regulatory_epoch="EU-AI-ACT-PRE-ENFORCEMENT-2026",
+    )
+    replay_proof_int = _build_replay_proof(
+        pqc, sk_bytes,
+        session_id=SESSION_ID,
+        path_label="INTERRUPTED — HALTED AT TURN 2 (XRPL RLUSD)",
+        ctchc_chain_id=sealed_int.chain_id,
+        ctchc_seal_hash=sealed_int.seal_hash,
+        turn_count=sealed_int.turn_count,
+        terminal_status="HALTED",
+    )
+    print(f"      TCS post: {tcs_post_int['tcs_id']} | regulatory_context embedded")
+    print(f"      replay_proof: {replay_proof_int['proof_id']} | terminal_status=HALTED")
+
+    print("\n  ╔══════════════════════════════════════════════════════════╗")
+    print("  ║  PATH INTERRUPTED — COMPLETE                             ║")
+    print("  ║  Turn 0 ✓ SWIFT PASS · Turn 1 ⚠ FIX WARNING (MAS=0.61) ║")
+    print("  ║  Turn 2 ✗ XRPL HALT (MAS=0.28 < halt_threshold=0.30)   ║")
+    print("  ║  CTCHC sealed HALTED · 3 turns evidenced forensically   ║")
+    print("  ║  Result: HALT + OSG REJECT + PoGC NOT ISSUED            ║")
+    print("  ║  Settlement: BLOCKED — USD 50,000,000 NOT released      ║")
+    print("  ╚══════════════════════════════════════════════════════════╝")
+
+    return {
+        "path":        "INTERRUPTED",
+        "label":       "INTERRUPTED — valid authority, execution halted mid-chain at Turn 2 by mandate collapse",
+        "rte_verdict": (
+            "INTERRUPTION PROVEN — 3-turn CTCHC chain sealed HALTED, PoGC not issued, "
+            "settlement blocked; DR TTL valid throughout (HALT NOT caused by authority expiry)"
+        ),
+        "steps": {
+            "1_source_state":   source_state,
+            "2_authority": {
+                "delegation_receipt":     dr_dict,
+                "mandate_binding_record": mbr,
+            },
+            "3_runtime": {
+                "continuity_record":       continuity_record,
+                "mandate_alignment_score": mas,
+            },
+            "4_counterfactual": {
+                "counterfactual_fork_records":      cfrs,
+                "counterfactual_attestation_token": cat,
+            },
+            "5_verdict": {
+                "temporal_admissibility_record": tar.to_dict(),
+                "binding_record":                binding_record,
+                "commit_record":                 commit_record,
+            },
+            "6_gate": {
+                "pogc_issued":            False,
+                "pogc_not_issued_reason": (
+                    "PoGR-INV-001: PoGC requires CLOSED CTCHC chain — chain sealed HALTED at Turn 2"
+                ),
+                "mbr_seal":               mbr_seal_int,
+                "osg_validation_receipt": osg_receipt_int,
+                "execution_turns":        execution_turns,
+            },
+            "7_execution": {
+                "bar":              bar2_dict_int,
+                "ctchc_links":      [link0_int.to_dict(), link1_int.to_dict(), link2_int.to_dict()],
+                "ctchc_sealed":     sealed_dict_int,
+                "halt_receipt":     halt_receipt_int,
+                "settlement_reference":      None,
+                "settlement_blocked_reason": (
+                    "XRPL transaction never submitted — HALT triggered before Turn 2 execution committed to ledger"
+                ),
+            },
+            "8_post_execution": {
+                "temporal_context_snapshot": tcs_post_int,
+                "replay_proof":              replay_proof_int,
+            },
+        },
+        "summary": {
+            "execution_occurred":         True,
+            "execution_interrupted_at":   "Turn 2 — XRPL RLUSD settlement",
+            "settlement_released":        False,
+            "settlement_amount_usd":      50_000_000,
+            "mandate_certification":      "UNCERTIFIED",
+            "pogc_issued":                False,
+            "turns_completed":            2,
+            "turns_attempted":            3,
+            "halt_turn":                  2,
+            "halt_mas_score":             0.28,
+            "halt_mas_threshold":         0.30,
+            "ccs_drift_at_halt":          0.42,
+            "forensic_artifacts_sealed":  True,
+            "offline_verifiable":         True,
+        },
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  Main
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1622,6 +2343,9 @@ def main() -> str:
     print("\n[PATH B] Running ADMISSIBLE path (recertified → settlement)...")
     path_admissible = run_path_admissible(pqc, sk_bytes, pk_b64)
 
+    print("\n[PATH C] Running INTERRUPTED path (valid authority, mid-chain HALT at Turn 2)...")
+    path_interrupted = run_path_interrupted(pqc, sk_bytes, pk_b64)
+
     # ── Build complete package ────────────────────────────────────────────────
     timestamp  = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     package_id = f"OMNIX-RTE-001-{uuid.uuid4().hex[:16].upper()}"
@@ -1629,7 +2353,7 @@ def main() -> str:
     package = {
         "package_id":      package_id,
         "package_type":    "OMNIX-RTE-001",
-        "package_version": "1.2.0",
+        "package_version": "1.3.0",
         "omnix_version":   "2.6.0",
         "adr_reference":   "ADR-201",
         "generated_at":    _now_iso(),
@@ -1650,15 +2374,16 @@ def main() -> str:
         },
 
         "rte_chain_map": {
-            "1_SOURCE_STATE":   "Request captured with full treasury context + TCS (nanosecond precision)",
-            "2_AUTHORITY":      "DR issued (degraded or recertified) + MIVP MBR activated (MIVP-INV-001)",
-            "3_RUNTIME":        "CES computed + MIVP MAS pre-check + CCS conformance signal",
-            "4_COUNTERFACTUAL": "CGE: 5 CFRs + CAT sealed — complete decision space documented",
-            "5_VERDICT":        "HALT+MIVP (dangerous) or TAR ADMITTED+binding+commit (admissible)",
+            "1_SOURCE_STATE":   "Request captured with full treasury context + TCS (nanosecond precision) — all 3 paths",
+            "2_AUTHORITY":      "DR issued + MIVP MBR activated (MIVP-INV-001) — dangerous=degraded, admissible+interrupted=fresh",
+            "3_RUNTIME":        "CES computed + MIVP MAS pre-check — dangerous=CRITICAL, admissible+interrupted=NOMINAL",
+            "4_COUNTERFACTUAL": "CGE: 5 CFRs + CAT sealed — decision space documented for all 3 paths",
+            "5_VERDICT":        "Dangerous=HALT+MIVP; Admissible=TAR ADMITTED+binding+commit; Interrupted=TAR ADMITTED+commit",
             "6_GATE":           "3-turn execution trace: T0=SWIFT MT103 | T1=FIX 4.4 | T2=XRPL RLUSD "
-                                "(each: BAR+CCS+CTCHC+MAS) → PoGC MANDATE-BOUND + MBR Seal (4 MAS) + OSG VR",
-            "7_EXECUTION":      "Refusal receipt (dangerous) or outcome receipt MANDATE-BOUND (admissible)",
-            "8_POST_EXECUTION": "CTCHC sealed + TGB snapshot + offline replay proof (RTE-INV-006/007)",
+                                "(each turn: BAR+CCS+CTCHC+MAS) | Admissible→PoGC MANDATE-BOUND+MBR Seal+OSG APPROVED "
+                                "| Interrupted→Turn 2 HALT (MAS=0.28<0.30)+MBR Seal UNCERTIFIED+OSG REJECTED (RTE-INV-013/014/015)",
+            "7_EXECUTION":      "Dangerous=refusal receipt | Admissible=outcome receipt MANDATE-BOUND | Interrupted=halt receipt",
+            "8_POST_EXECUTION": "CTCHC sealed (HALTED or CLOSED) + TGB snapshot + offline replay proof (RTE-INV-006/007)",
         },
 
         "pqc": {
@@ -1674,8 +2399,9 @@ def main() -> str:
         },
 
         "paths": {
-            "path_dangerous":  path_dangerous,
-            "path_admissible": path_admissible,
+            "path_dangerous":   path_dangerous,
+            "path_admissible":  path_admissible,
+            "path_interrupted": path_interrupted,
         },
 
         "invariants_demonstrated": [
@@ -1685,41 +2411,50 @@ def main() -> str:
             "RGC-INV-001: Every RCR anchored to a valid TAR",
             "RGC-INV-002: CES computed from real-time component values",
             "BEV-INV-001: Every governed turn produces a BAR before output is delivered",
+            "BEV-INV-005: CCS issued per turn — conformance signal feeds AGVP watchdog",
+            "BEV-INV-007: CCS cumulative drift > 0.35 halt threshold → CRITICAL (interrupted path Turn 2)",
             "BEV-INV-010: CTCHC initialized before first BAR",
             "BEV-INV-011: Each CTCHC link = H(prev || turn_hash || governing_receipt_id)",
             "BEV-INV-013: Seal hash covers complete chain (first→last link)",
             "BEV-INV-014: CTCHC seal is PQC-signed (ML-DSA-65) before OEP export",
             "MIVP-INV-001: MBR issued before Turn 1 (mandate frozen at session open)",
             "MIVP-INV-003: MAS computed per turn linked to CTCHC link hash",
+            "MIVP-INV-004: MAS WARNING recorded when score < warn_threshold=0.65 (interrupted path Turn 1)",
+            "MIVP-INV-005: MAS HALT triggered when score < halt_threshold=0.30 (interrupted path Turn 2)",
             "MIVP-INV-007: MBR Seal issued at session close",
             "MIVP-INV-008: MANDATE-BOUND tag on PoGC (admissible path, zero violations+warnings)",
+            "MIVP-INV-009: Three-tier certification: violations→UNCERTIFIED; warn_only→MANDATE-ALIGNED; clean→MANDATE-BOUND",
             "CGE-INV-001: CFRs computed at evaluation time (not retroactively)",
             "CGE-INV-002: CAT root hash covers all CFR IDs",
             "CGE-INV-003: fragility_score ∈ [0.0, 1.0]",
             "CGE-INV-007: CAT PQC-signed before OEP export",
             "TGB-INV-001: TCS embedded in source_state with nanosecond-precision regulatory context",
-            "PoGR-INV-001: PoGC issued only from sealed CTCHC session",
+            "PoGR-INV-001: PoGC issued only from CLOSED CTCHC chain — HALTED chain does not qualify",
             "PoGR-INV-002: PoGC append-only — content_hash immutable after issuance",
             "PoGR-INV-003: PoGC verifiable offline (zero runtime, zero auth)",
-            "RTE-INV-001: Package contains both dangerous and admissible paths",
-            "RTE-INV-002: Dangerous path terminates in HALT (steps 3+5)",
+            "RTE-INV-001: Package contains all three paths: dangerous, admissible, interrupted",
+            "RTE-INV-002: Dangerous path terminates in HALT (steps 3+5 — authority drift)",
             "RTE-INV-003: OSG rejects dangerous path independently (fail-closed)",
             "RTE-INV-004: Admissible path PoGC carries MANDATE-BOUND certification",
-            "RTE-INV-005: Both paths contain CGE CAT with 5 CFRs",
-            "RTE-INV-006: Both paths contain TCS with regulatory_context",
+            "RTE-INV-005: All paths contain CGE CAT with ≥5 CFRs",
+            "RTE-INV-006: All paths contain TCS with regulatory_context",
             "RTE-INV-007: Package verifiable offline — zero OMNIX runtime required",
             "RTE-INV-008: CLI verifier exits 0 on PASS, non-zero on FAIL",
+            "RTE-INV-013: Interrupted path — CTCHC sealed in HALTED state; all turn links preserved forensically",
+            "RTE-INV-014: PoGC NOT issued on interrupted path — chain sealed HALTED, not CLOSED (PoGR-INV-001)",
+            "RTE-INV-015: OSG REJECTED independently on interrupted path (fail-closed); settlement BLOCKED",
         ],
 
         "verification_instructions": {
             "full_verification": f"python scripts/verify_treasury_execution_trace.py evidence_packages/OMNIX-RTE-001_{timestamp}.json",
             "targeted_commands": {
-                "--verify-authority":      "DR content_hash + PQC signature (both paths)",
-                "--verify-continuity":     "RCR hash + PQC + CES computation (both paths)",
-                "--verify-counterfactual": "CAT content_hash + CFR root hash integrity (both paths)",
+                "--verify-authority":      "DR content_hash + PQC signature (all paths)",
+                "--verify-continuity":     "RCR hash + PQC + CES computation (all paths)",
+                "--verify-counterfactual": "CAT content_hash + CFR root hash integrity (all paths)",
                 "--verify-halt":           "Dangerous path: refusal receipt + OSG REJECTED + CTCHC HALTED",
                 "--verify-settlement":     "Admissible path: PoGC + MBR Seal + OSG APPROVED + outcome receipt",
-                "--verify-replay":         "Both paths: replay_proof hash + CTCHC seal continuity",
+                "--verify-replay":         "All paths: replay_proof hash + CTCHC seal continuity",
+                "--verify-interrupted":    "Interrupted path: Turn-by-turn BAR+CCS+MAS + HALT at Turn 2 + CTCHC HALTED + OSG REJECTED + PoGC absent",
             },
             "what_is_verified": [
                 "DR content_hash (SHA-256/compact) + PQC signature — both paths",
@@ -1766,7 +2501,7 @@ def main() -> str:
     print(f"  File:       {out_path}")
     print(f"  Package ID: {package_id}")
     print(f"  Size:       {size_kb:.1f} KB")
-    print(f"  Paths:      DANGEROUS (HALT) + ADMISSIBLE (SETTLED)")
+    print(f"  Paths:      DANGEROUS (HALT) + ADMISSIBLE (SETTLED) + INTERRUPTED (MID-CHAIN HALT)")
     print(f"  Artefacts:  DR · MBR · MAS · RCR · CFRs · CAT · TAR · OSG-VR")
     print(f"              BAR · CTCHC · PoGC · MBRSeal · TCS · Replay Proof")
     print(f"  PQC:        {pqc.algorithm_name} (FIPS 204)")

@@ -204,6 +204,63 @@ v1.2.0 upgrades the admissible path to a **3-turn execution trace** matching the
 
 ---
 
+## §9 — Interrupted Execution Path (v1.3.0) — 2026-05-30
+
+v1.3.0 añade **Path C — Interrupted Execution**: el caso en que la autoridad es válida (DR fresco, CES NOMINAL), el TAR admite la solicitud, y la ejecución comienza correctamente — pero es interrumpida a mitad de cadena cuando el MIVP detecta colapso de alineamiento de mandato.
+
+Este es el escenario más sofisticado de los tres: demuestra que OMNIX **no depende de un gate único de admisión**, sino que mantiene monitoreo continuo turno a turno durante la ejecución.
+
+### Evolución turno a turno
+
+| Turn | Label | CCS | MAS | Resultado |
+|---|---|---|---|---|
+| **Turn 0** | SWIFT MT103 contraparty + sanctions screening | CONFORMANT / 0.96 (drift=0.04) | ALIGNED / 0.94 | ✓ PASS |
+| **Turn 1** | FIX 4.4 routing — gateway institucional | CONFORMANT / 0.91 (drift=0.09) | **WARNING / 0.61 < 0.65** | ⚠ WARNING |
+| **Turn 2** | XRPL RLUSD atomic settlement | **CRITICAL / 0.58 (drift=0.42 > 0.35)** | **HALT / 0.28 < 0.30** | 🛑 HALT |
+
+### Invariantes de terminación correcta
+
+En Turn 2, el stack de gobernanza ejecuta la secuencia de terminación:
+1. **MIVP HALT** — `alignment_score=0.28 < halt_threshold=0.30` → proxy-guard violation registrada
+2. **BAR** — `bar_status=HALT_TRIGGERED` emitido (el output es registrado forense, no entregado)
+3. **CTCHC sellado** — `terminal_state=HALTED` (3 links forenses completos, cadena íntegra)
+4. **MBR Seal** — `certification_tier=UNCERTIFIED` (1 violation, MIVP-INV-009 three-tier)
+5. **OSG REJECTED** — fail-closed independiente; settlement BLOCKED (RTE-INV-015)
+6. **PoGC NO emitido** — cadena HALTED no califica como CLOSED (PoGR-INV-001 + RTE-INV-014)
+
+### Nuevas invariantes (RTE-INV-013/014/015)
+
+| Invariante | Enunciado |
+|---|---|
+| **RTE-INV-013** | En el path interrumpido, la CTCHC se sella en estado HALTED y todos los turn links quedan preservados forense-mente en la cadena. |
+| **RTE-INV-014** | El PoGC NO se emite en el path interrumpido — la cadena sellada como HALTED no califica como CLOSED (PoGR-INV-001). |
+| **RTE-INV-015** | El OSG rechaza independientemente (fail-closed) en el path interrumpido; el settlement USD 50,000,000 queda BLOCKED. |
+
+### Impacto en el verifier
+
+`verify_interrupted()` — 36 checks nuevos:
+
+| Grupo | Checks |
+|---|---|
+| Estructural | INT-STRUCT (1) |
+| CTCHC integridad | CHC-INT-GENESIS · CHC-INT-CHAIN · CHC-INT-SEAL · CHC-INT-SIG (4) + CHC-INT-HALTED (1) |
+| BAR por turno (T0/T1/T2) | HASH+SIG+STATUS × 3 (9) |
+| MAS T1 | HASH+SIG+WARNING (3) |
+| MAS T2 | HASH+SIG+HALT+SCORE<0.30 (4) |
+| CCS T2 | CRITICAL+AGVP (2) |
+| MBR Seal | HASH+SIG+UNCERTIFIED (3) |
+| OSG | HASH+SIG+REJECTED+FAILCLOSED (4) |
+| PoGC + Settlement | INT-POGC-ABSENT + INT-SETTLE-BLOCKED (2) |
+| Replay proof | HASH+SIG+STATUS+OFFLINE (4) |
+
+**Total:** `EXPECTED_TOTAL_CHECKS = 111 (v1.2.0) + 37 (Path C) = 148`
+
+### Package size
+
+v1.2.0 (244.5 KB) → **v1.3.0 (≈370 KB)** — Path C añade ~125 KB (3 BARs + 3 CCS + 3 MAS + CTCHC + MBR Seal + OSG + replay proof + halt receipt + TCS + CGE).
+
+---
+
 ## Related ADRs
 
 - ADR-200 — Route-Complete Evidence Package (RCEP) — predecessor
