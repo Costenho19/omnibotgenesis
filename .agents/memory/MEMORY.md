@@ -12,3 +12,4 @@
 - [Production Hardening Layer](production-hardening.md) — ADR-196/197/198/199: SVP+SRP+GOL+PRG. GovernanceRuntime API: record_turn/close_session toman session_id str, NO el objeto OGRSession. CTCHC seal requiere DB — wrap try/except en mock mode. MemoryLeakMonitor tiene warmup 60s.
 - [RCEP Canonicalization Profile](rcep-canonicalization.md) — ADR-200. DR/TAR: SHA-256+compact. All others: SHA3-256+default. BAR/CTCHC sigs: default sep. All _sign_payload sigs: compact sep. CTCHC genesis: chain continuity check (not timestamp re-derivation). 52/52 checks pass.
 - [RTE-001 Verifier Sig Patterns](rte-001-verifier.md) — ADR-201/202. Sig patterns + hardening. 111/111 pass. 4 bypasses cerrados: DR session binding + MBR dr_id + CFR content_hash + source_state hash.
+- [Primer PoGC Externo](primer-pogc-externo.md) — POGC-EXT-A7F3C2B1D9E4F508 emitido 2026-05-30 a VeriSigil AI. Primera CA externa del PoGR. Clase EXTERNAL. Script standalone en scripts/generate_verisigil_pogc.py.
