@@ -760,10 +760,10 @@ title = "Emails Gregory + Anamulla — v2 corregido"
 id = "oY-gaRNvr3C6LJ1yjfm-o"
 uri = "file://evidence_packages/OMNIX-RTE-001_VERIFICATION_GUIDE_20260528.pdf"
 type = "pdf"
-title = "3. PDF — Guía de Verificación (4 páginas)"
+title = "OMNIX-RTE-001 Verification Guide — 4 páginas"
 
 [[outputs]]
 id = "V-0FXevh_IYE0CasoN1PK"
 uri = "file://evidence_packages/OMNIX-RTE-001_PACKAGE_20260528.pdf"
 type = "pdf"
-title = "2. PDF — Documento Institucional (15 páginas)"
+title = "OMNIX-RTE-001 Package — 15 páginas"
