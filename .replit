@@ -140,6 +140,9 @@ OMNIX_ANTI_REPLAY_MODE = "strict"
 
 [userenv.development]
 
+[userenv.production]
+OMNIX_PQC_VERIFY_FAIL_CLOSED = "true"
+
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 120000
