@@ -228,10 +228,22 @@ async def start_verification_server_task():
 
 
 async def run_telegram_bot_legacy(services: dict):
-    """Run the Telegram bot using EnterpriseTelegramBot (100% async nativo).
-    
-    Usa Application.run_polling() nativo de python-telegram-bot v20+
-    para máxima concurrencia y escalabilidad.
+    """Run the Telegram bot using EnterpriseTelegramBot.
+
+    Selects WEBHOOK or POLLING mode automatically at startup:
+
+    WEBHOOK mode (Railway production):
+        Set TELEGRAM_WEBHOOK_URL to the public URL of this Railway service
+        (e.g. "https://omnix-bot.up.railway.app") and optionally
+        TELEGRAM_WEBHOOK_SECRET to a 32+ char random string.
+        Telegram POSTs updates to {URL}/telegram/webhook — no polling race,
+        zero "Conflict: terminated by other getUpdates" errors, immune to
+        Railway deploy overlaps where old and new instances coexist briefly.
+
+    POLLING mode (local development / fallback):
+        No TELEGRAM_WEBHOOK_URL set → classic long-polling.  Simple, no
+        extra infra, but triggers Conflict errors whenever Railway restarts
+        the service with more than one instance running simultaneously.
     """
     import signal
 
@@ -243,11 +255,28 @@ async def run_telegram_bot_legacy(services: dict):
         token = env_config.get_required('TELEGRAM_BOT_TOKEN')
         print(f"[BOT] Step 1/5 — Token OK ({len(token)} chars)", flush=True)
 
-        print("[BOT] Step 2/5 — Starting verification server...", flush=True)
-        verification_runner = await asyncio.wait_for(
-            start_verification_server_task(), timeout=15.0
-        )
-        print("[BOT] Step 2/5 — Verification server done", flush=True)
+        # ── Detect mode from environment ──────────────────────────────────────
+        webhook_url    = os.environ.get("TELEGRAM_WEBHOOK_URL", "").strip()
+        webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "").strip()
+        port           = int(os.environ.get("PORT", "8080"))
+        use_webhook    = bool(webhook_url)
+
+        if use_webhook:
+            # WEBHOOK — Railway $PORT is consumed by the Telegram webhook server;
+            # skip the internal verification server to avoid port conflict.
+            print(
+                f"[BOT] Step 2/5 — WEBHOOK mode detected "
+                f"(TELEGRAM_WEBHOOK_URL={webhook_url}) "
+                f"— verification server SKIPPED (port {port} reserved for Telegram)",
+                flush=True,
+            )
+        else:
+            print("[BOT] Step 2/5 — POLLING mode — starting verification server...", flush=True)
+            try:
+                await asyncio.wait_for(start_verification_server_task(), timeout=15.0)
+                print("[BOT] Step 2/5 — Verification server done", flush=True)
+            except Exception as vs_err:
+                print(f"[BOT] Step 2/5 — Verification server failed (non-fatal): {vs_err}", flush=True)
 
         print("[BOT] Step 3/5 — Instantiating EnterpriseTelegramBot...", flush=True)
         bot = EnterpriseTelegramBot()
@@ -257,7 +286,7 @@ async def run_telegram_bot_legacy(services: dict):
 
         def _sigterm_handler():
             logger.info("🛑 [SIGTERM] Received — iniciando shutdown graceful del bot...")
-            print("[BOT] SIGTERM received — stopping polling gracefully", flush=True)
+            print("[BOT] SIGTERM received — stopping bot gracefully", flush=True)
             bot.is_running = False
             asyncio.ensure_future(bot.stop_async(), loop=loop)
 
@@ -268,10 +297,24 @@ async def run_telegram_bot_legacy(services: dict):
         except (NotImplementedError, RuntimeError) as sig_err:
             logger.warning(f"⚠️ No se pudo registrar signal handler: {sig_err}")
 
-        print("[BOT] Step 4/5 — Calling start_polling()...", flush=True)
-        logger.info("Starting Telegram bot (async native mode)...")
-        await bot.start_polling()
-        print("[BOT] Step 4/5 — start_polling() returned", flush=True)
+        if use_webhook:
+            print(
+                f"[BOT] Step 4/5 — WEBHOOK mode: "
+                f"{webhook_url}/telegram/webhook on port {port}",
+                flush=True,
+            )
+            logger.info("Starting Telegram bot (WEBHOOK mode — zero-conflict Railway deploys)...")
+            await bot.start_webhook(
+                webhook_url=webhook_url,
+                secret_token=webhook_secret,
+                port=port,
+            )
+        else:
+            print("[BOT] Step 4/5 — POLLING mode: calling start_polling()...", flush=True)
+            logger.info("Starting Telegram bot (async native POLLING mode)...")
+            await bot.start_polling()
+
+        print("[BOT] Step 4/5 — Bot returned from main loop", flush=True)
 
     except Exception as exc:
         import traceback
@@ -281,19 +324,36 @@ async def run_telegram_bot_legacy(services: dict):
 
 
 async def run_telegram_bot_v7(services: dict):
-    """Run the Telegram bot using V7.0 TelegramBotAdapter."""
+    """Run the Telegram bot using V7.0 TelegramBotAdapter.
+
+    Inherits the same WEBHOOK / POLLING mode selection as the legacy path:
+    set TELEGRAM_WEBHOOK_URL to enable webhook mode (recommended for Railway).
+    """
     import signal
 
     container = services.get('container')
-    
+
     if not container:
         logger.error("Container not available, falling back to legacy")
         return await run_telegram_bot_legacy(services)
-    
+
     telegram_adapter = container.telegram_adapter
-    
+
     if telegram_adapter:
-        verification_runner = await start_verification_server_task()
+        # ── Detect mode from environment ──────────────────────────────────
+        webhook_url    = os.environ.get("TELEGRAM_WEBHOOK_URL", "").strip()
+        webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "").strip()
+        port           = int(os.environ.get("PORT", "8080"))
+        use_webhook    = bool(webhook_url)
+
+        if use_webhook:
+            logger.info(
+                "[BOT-V7] WEBHOOK mode — %s/telegram/webhook on port %d",
+                webhook_url, port,
+            )
+        else:
+            # Only start verification server in polling mode (same port logic)
+            await start_verification_server_task()
 
         bot = getattr(telegram_adapter, 'enterprise_bot', None) or getattr(telegram_adapter, '_bot', None)
         if bot is not None:
@@ -301,7 +361,7 @@ async def run_telegram_bot_v7(services: dict):
 
             def _sigterm_handler_v7():
                 logger.info("🛑 [SIGTERM-V7] Received — iniciando shutdown graceful del bot...")
-                print("[BOT-V7] SIGTERM received — stopping polling gracefully", flush=True)
+                print("[BOT-V7] SIGTERM received — stopping bot gracefully", flush=True)
                 bot.is_running = False
                 asyncio.ensure_future(bot.stop_async(), loop=loop)
 
@@ -311,13 +371,19 @@ async def run_telegram_bot_v7(services: dict):
                 logger.info("✅ [SIGTERM-V7] Handler registrado — shutdown graceful habilitado")
             except (NotImplementedError, RuntimeError) as sig_err:
                 logger.warning(f"⚠️ No se pudo registrar signal handler V7: {sig_err}")
-        
-        logger.info("Starting Telegram bot (V7.0 mode)...")
+
+        logger.info("Starting Telegram bot (V7.0 mode — %s)...", "WEBHOOK" if use_webhook else "POLLING")
         # NOTE: Do NOT call telegram_adapter.start() separately.
-        # run_polling() delegates to enterprise_bot.start_polling() which
-        # handles its own initialization, handler registration, and polling.
-        # Calling start() first would initialize the Application twice.
-        await telegram_adapter.run_polling()
+        # run_polling/run_webhook delegate to enterprise_bot methods which
+        # handle initialization and handler registration internally.
+        if use_webhook:
+            await telegram_adapter.run_webhook(
+                webhook_url=webhook_url,
+                secret_token=webhook_secret,
+                port=port,
+            )
+        else:
+            await telegram_adapter.run_polling()
     else:
         logger.warning("TelegramBotAdapter not available, falling back to legacy")
         return await run_telegram_bot_legacy(services)

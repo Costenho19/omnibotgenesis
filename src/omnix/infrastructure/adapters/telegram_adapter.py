@@ -507,6 +507,56 @@ class TelegramBotAdapter:
                 except Exception as cleanup_error:
                     logger.warning(f"TelegramBotAdapter: cleanup error: {cleanup_error}")
     
+    async def run_webhook(
+        self,
+        webhook_url: str,
+        secret_token: str = "",
+        port: int = 8080,
+    ) -> None:
+        """Run the bot in webhook mode — zero Conflict errors on Railway deploys.
+
+        Delegates to enterprise_bot.start_webhook(), which registers the webhook
+        with Telegram and binds an aiohttp server on 0.0.0.0:$PORT.
+
+        Args:
+            webhook_url:  Public HTTPS base URL, e.g. "https://omnix-bot.up.railway.app".
+                          Set via TELEGRAM_WEBHOOK_URL env var.
+            secret_token: 32+ char random string for Telegram → service auth.
+                          Set via TELEGRAM_WEBHOOK_SECRET env var.
+            port:         Port to listen on (matches Railway $PORT).
+        """
+        if not self._is_initialized or self._bot is None:
+            logger.error("TelegramBotAdapter: Cannot run_webhook — bot not initialized")
+            return
+
+        if self._is_running:
+            logger.warning("TelegramBotAdapter: run_webhook already active, ignoring duplicate call")
+            return
+
+        try:
+            if hasattr(self._bot, 'start_webhook'):
+                logger.info(
+                    "TelegramBotAdapter: Starting via enterprise_bot.start_webhook() "
+                    "— webhook mode, zero-conflict Railway deploys"
+                )
+                self._is_running = True
+                await self._bot.start_webhook(
+                    webhook_url=webhook_url,
+                    secret_token=secret_token,
+                    port=port,
+                )
+            else:
+                logger.error("TelegramBotAdapter: start_webhook not available on bot instance")
+        except asyncio.CancelledError:
+            logger.info("TelegramBotAdapter: Webhook cancelled")
+        except Exception as e:
+            logger.error(f"TelegramBotAdapter: run_webhook error: {e}")
+            self._track_error()
+            raise
+        finally:
+            self._is_running = False
+            logger.info("TelegramBotAdapter: Webhook stopped")
+
     def health_check(self) -> Dict[str, Any]:
         """
         Get bot health status and telemetry.

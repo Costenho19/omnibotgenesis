@@ -6419,6 +6419,141 @@ Trades: {balance['total_trades']}"""
             traceback.print_exc()
             return False
 
+    async def start_webhook(
+        self,
+        webhook_url: str,
+        secret_token: str = "",
+        listen: str = "0.0.0.0",
+        port: int = 8080,
+    ) -> bool:
+        """Start bot in WEBHOOK mode — zero Conflict errors on Railway deploys.
+
+        In polling mode two Railway instances fight over the same token with
+        "Conflict: terminated by other getUpdates request".  In webhook mode
+        Telegram PUSHES updates to our HTTPS URL — there is no polling race,
+        so any number of instances can coexist without coordination.
+
+        Architecture:
+            Telegram → HTTPS POST {webhook_url}/telegram/webhook
+                     → python-telegram-bot updater (aiohttp internal)
+                     → application handlers (commands, messages, callbacks)
+
+        Args:
+            webhook_url:   Public HTTPS base URL of this Railway service,
+                           e.g. "https://omnix-bot.up.railway.app"
+                           Set via TELEGRAM_WEBHOOK_URL env var.
+            secret_token:  Random 32+ char string to validate that POST
+                           requests originate from Telegram (not from
+                           arbitrary internet traffic).
+                           Set via TELEGRAM_WEBHOOK_SECRET env var.
+            listen:        Interface to bind the internal aiohttp server.
+                           Always "0.0.0.0" in Railway containers.
+            port:          Port to listen on — must match Railway $PORT.
+
+        Returns:
+            True on clean shutdown, False on fatal error.
+        """
+        try:
+            if not self.application:
+                logger.error("❌ Application not initialized — cannot start webhook")
+                return False
+
+            url_path        = "/telegram/webhook"
+            full_webhook_url = f"{webhook_url.rstrip('/')}{url_path}"
+
+            logger.info("🔗 [WEBHOOK] Starting Telegram bot in WEBHOOK mode")
+            logger.info("   URL  : %s", full_webhook_url)
+            logger.info("   Bind : %s:%d", listen, port)
+            logger.info("   Auth : %s", "✅ secret_token configured" if secret_token else "⚠️  no secret_token (set TELEGRAM_WEBHOOK_SECRET)")
+
+            # ── Error handler — identical coverage to polling mode ────────────
+            async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+                from telegram.error import (
+                    TimedOut, NetworkError, RetryAfter, Forbidden, BadRequest, Conflict
+                )
+                err      = context.error
+                err_name = type(err).__name__
+                if isinstance(err, (TimedOut, NetworkError)):
+                    logger.warning("⚠️ [Webhook] Red recuperable (%s): %s", err_name, err)
+                    return
+                if isinstance(err, RetryAfter):
+                    logger.warning("⚠️ [Webhook] RetryAfter %ds", err.retry_after)
+                    return
+                if isinstance(err, Forbidden):
+                    logger.warning("⚠️ [Webhook] Bot bloqueado por usuario: %s", err)
+                    return
+                if isinstance(err, BadRequest):
+                    logger.warning("⚠️ [Webhook] BadRequest: %s", err)
+                    return
+                if isinstance(err, Conflict):
+                    # Should never happen in webhook mode — log loudly if it does
+                    logger.error("🔴 [Webhook] Conflict detectado (inesperado en webhook mode): %s", err)
+                    return
+                if 'PoolTimeout' in err_name or 'pool' in str(err).lower():
+                    logger.warning("⚠️ [Webhook] PoolTimeout: %s", err)
+                    return
+                logger.error("🔴 [Webhook] Error inesperado (%s): %s", err_name, err)
+                if update:
+                    logger.error("   Update: %s", update)
+
+            self.application.add_error_handler(error_handler)
+
+            # ── Initialize application ────────────────────────────────────────
+            await self.application.initialize()
+            await self.application.start()
+            self.is_running = True
+
+            # ── Register webhook with Telegram and bind local aiohttp server ──
+            await self.application.updater.start_webhook(
+                listen=listen,
+                port=port,
+                url_path=url_path,
+                webhook_url=full_webhook_url,
+                secret_token=secret_token if secret_token else None,
+                drop_pending_updates=True,
+                allowed_updates=Update.ALL_TYPES,
+            )
+
+            logger.info("✅ [WEBHOOK] Bot %s WEBHOOK MODE activo", VERSION_BANNER)
+            logger.info("   🔗 Telegram pushes → %s", full_webhook_url)
+            logger.info("   🛡️  Zero-conflict: inmune a overlaps de deploy en Railway")
+            logger.info("   ♾️   Escala a réplicas ilimitadas sin coordinación")
+
+            # ── Restore auto-trading sessions ─────────────────────────────────
+            if self.auto_trading:
+                try:
+                    restored = self.auto_trading.check_and_restore_auto_trading()
+                    if restored:
+                        logger.info("🤖 Auto-Trading RESTAURADO — loop de trading activo")
+                    else:
+                        logger.info("📊 Auto-Trading: no hay sesiones activas para restaurar")
+                except Exception as at_err:
+                    logger.warning("⚠️ Error restaurando auto-trading: %s", at_err)
+
+            # ── Main keep-alive loop ──────────────────────────────────────────
+            try:
+                while self.is_running:
+                    await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                logger.info("🛑 [Webhook] Keep-alive loop cancelado")
+
+            # ── Graceful shutdown ─────────────────────────────────────────────
+            try:
+                await self.application.updater.stop()
+                await self.application.stop()
+                await self.application.shutdown()
+                logger.info("✅ [Webhook] Shutdown completo")
+            except Exception as sd_err:
+                logger.warning("⚠️ [Webhook] Shutdown error (no crítico): %s", sd_err)
+
+            return True
+
+        except Exception as e:
+            logger.error("❌ [Webhook] Fatal error en start_webhook: %s", e)
+            import traceback
+            traceback.print_exc()
+            return False
+
     async def stop_async(self):
         """Detener bot async de forma graceful."""
         logger.info("🛑 Deteniendo bot Telegram...")
