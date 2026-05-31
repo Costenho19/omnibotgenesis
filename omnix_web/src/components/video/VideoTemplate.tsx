@@ -8,12 +8,12 @@ import { Scene5 } from './video_scenes/Scene5';
 import { Scene6 } from './video_scenes/Scene6';
 
 const SCENE_DURATIONS = {
-  s1: 9000,
-  s2: 18000,
-  s3: 18000,
-  s4: 18000,
-  s5: 15000,
-  s6: 18000
+  s1: 6000,
+  s2: 10000,
+  s3: 10000,
+  s4: 10000,
+  s5: 9000,
+  s6: 12000
 };
 
 export default function VideoTemplate() {
@@ -21,30 +21,49 @@ export default function VideoTemplate() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#050508] font-display text-[#F8F8FF]">
-      
-      {/* Persistent Video Background */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
-        <video 
-          src={`${import.meta.env.BASE_URL}videos/bg_abstract.mp4`} 
-          autoPlay 
-          muted 
-          loop 
-          playsInline
-          className="w-full h-full object-cover"
-        />
-      </div>
 
-      {/* Persistent Vertical Amber Line Motif */}
-      <motion.div
-        className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#D4A843] z-50 origin-top"
-        animate={{
-          scaleY: [0.1, 0.4, 1, 0.6, 0.8, 1][currentScene % 6],
-          opacity: [1, 0.8, 1, 0.9, 0.7, 1][currentScene % 6],
-          filter: ['blur(0px)', 'blur(2px)', 'blur(0px)', 'blur(1px)', 'blur(0px)', 'blur(0px)'][currentScene % 6]
+      {/* Grid overlay — subtle precision feel */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(212,168,67,1) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,1) 1px, transparent 1px)',
+          backgroundSize: '80px 80px'
         }}
-        transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
       />
 
+      {/* Amber accent line — left edge */}
+      <motion.div
+        className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#D4A843] z-50 origin-top"
+        animate={{
+          scaleY: [0.15, 0.5, 1, 0.7, 0.85, 1][currentScene % 6],
+          opacity: [1, 0.9, 1, 0.95, 0.8, 1][currentScene % 6],
+        }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+      />
+
+      {/* Persistent logo — top left */}
+      <motion.div
+        className="absolute top-5 left-8 z-50 flex items-center gap-3"
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <img
+          src={`${import.meta.env.BASE_URL}logo_nobg.png`}
+          alt="OMNIX QUANTUM"
+          style={{
+            height: '44px',
+            width: 'auto',
+            filter: 'drop-shadow(0 0 10px rgba(212,168,67,0.35))'
+          }}
+        />
+      </motion.div>
+
+      {/* Scene counter — top right */}
+      <div className="absolute top-6 right-8 z-50 font-mono text-[0.8vw] text-white/25 tracking-widest">
+        {String(currentScene + 1).padStart(2, '0')} / 06
+      </div>
+
+      {/* Scenes */}
       <div className="absolute inset-0 z-10">
         <AnimatePresence mode="popLayout">
           {currentScene === 0 && <Scene1 key="s1" />}
