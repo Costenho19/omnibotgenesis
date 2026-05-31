@@ -2,107 +2,81 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 const ease = [0.16, 1, 0.3, 1];
+const clipReveal = {
+  initial: { clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)', opacity: 0 },
+  animate: { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)', opacity: 1 },
+};
+
+const SEALS = ['IAD', 'SAR', 'MFR', 'CPS', 'FPS'];
 
 export function Scene2() {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 500),
-      setTimeout(() => setPhase(2), 1200),
-      setTimeout(() => setPhase(3), 2000),
-      setTimeout(() => setPhase(4), 2800),
+      setTimeout(() => setPhase(1), 1000), // Subtitle
+      ...SEALS.map((_, i) => setTimeout(() => setPhase(2 + i), 2500 + i * 1200)), // Seals
+      setTimeout(() => setPhase(8), 9000), // Algorithm
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
 
   return (
     <motion.div
-      className="absolute inset-0 flex flex-col items-center justify-center"
-      initial={{ clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)' }}
-      animate={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      className="absolute inset-0 flex flex-col items-center justify-center px-[10vw]"
+      initial="initial" animate="animate" exit={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
       transition={{ duration: 0.8, ease }}
+      {...clipReveal}
     >
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(212,168,67,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,0.05) 1px, transparent 1px)',
-          backgroundSize: '4vw 4vw',
-        }}
-        animate={{ backgroundPositionY: ['0px', '4vw'] }}
-        transition={{ duration: 4, ease: 'linear', repeat: Infinity }}
-      />
+      <div className="absolute bottom-6 right-8 font-mono text-[1.2vw] text-[#94A3B8]/60 tracking-widest z-0 pointer-events-none">
+        GCFR-96D8BA6CA0FF4295
+      </div>
 
-      <div className="relative z-10 flex flex-col items-center max-w-5xl w-full">
+      <div className="relative z-10 flex flex-col items-center w-full max-w-5xl">
         <motion.h2
-          className="font-display text-[3.5vw] font-bold text-[#FFFFFF] tracking-wide text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
+          className="font-display text-[4.5vw] font-bold text-[#FFFFFF] tracking-tighter"
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease }}
         >
-          Governance Contract sealed before Turn 0
+          OMNIX Governance Contract
         </motion.h2>
 
-        <div className="flex flex-col gap-6 w-full px-[10vw]">
+        {phase >= 1 && (
           <motion.div
-            className="flex justify-between items-center border-b border-[#D4A843]/30 pb-4"
-            initial={{ opacity: 0, x: -30 }}
-            animate={phase >= 1 ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
-            transition={{ duration: 0.6, ease }}
+            className="mt-2 font-display text-[2vw] text-[#D4A843] tracking-widest uppercase font-semibold"
+            initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease }}
           >
-            <span className="font-mono text-[#94A3B8] text-[1.4vw] uppercase tracking-widest">GCFR</span>
-            <span className="font-mono text-[#D4A843] text-[1.8vw] font-bold">GCFR-F6647F8081A7433B</span>
+            Sealed before Turn 0
           </motion.div>
+        )}
 
-          <motion.div
-            className="flex justify-between items-center border-b border-[#D4A843]/30 pb-4"
-            initial={{ opacity: 0, x: -30 }}
-            animate={phase >= 2 ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
-            transition={{ duration: 0.6, ease }}
-          >
-            <span className="font-mono text-[#94A3B8] text-[1.4vw] uppercase tracking-widest">PQC</span>
-            <span className="font-mono text-[#FFFFFF] text-[1.6vw]">ML-DSA-65 · Dilithium-3 · FIPS 204</span>
-          </motion.div>
-
-          <motion.div
-            className="flex justify-between items-center border-b border-[#D4A843]/30 pb-4"
-            initial={{ opacity: 0, x: -30 }}
-            animate={phase >= 3 ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
-            transition={{ duration: 0.6, ease }}
-          >
-            <span className="font-mono text-[#94A3B8] text-[1.4vw] uppercase tracking-widest">Rules</span>
-            <span className="font-mono text-[#FFFFFF] text-[1.6vw]">5 predicates · PQC-sealed</span>
-          </motion.div>
+        <div className="flex gap-6 mt-16">
+          {SEALS.map((seal, i) => (
+            phase >= 2 + i && (
+              <motion.div
+                key={seal}
+                className="w-24 h-24 sm:w-[8vw] sm:h-[8vw] border border-[#D4A843] bg-[#D4A843]/10 rounded-sm flex items-center justify-center relative overflow-hidden"
+                initial={{ clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)', scale: 0.9 }}
+                animate={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)', scale: 1 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              >
+                <motion.div 
+                  className="absolute inset-0 bg-[#D4A843]" 
+                  initial={{ opacity: 0.5 }} animate={{ opacity: 0 }} transition={{ duration: 1 }} 
+                />
+                <span className="font-mono text-[2vw] font-bold text-[#FFFFFF] tracking-wider relative z-10">{seal}</span>
+              </motion.div>
+            )
+          ))}
         </div>
 
-        {phase >= 4 && (
+        {phase >= 8 && (
           <motion.div
-            className="absolute inset-0 pointer-events-none overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="mt-16 font-mono text-[1.6vw] text-[#E8E8E8] tracking-widest border border-white/10 px-8 py-3 bg-white/5"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }}
           >
-            <motion.div
-              className="absolute left-0 right-0 h-[2px] bg-[#D4A843] top-1/2"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.5, ease }}
-            />
-            <motion.div
-              className="absolute top-0 bottom-0 w-[2px] bg-[#D4A843] left-1/2"
-              initial={{ scaleY: 0 }}
-              animate={{ scaleY: 1 }}
-              transition={{ duration: 0.5, ease }}
-            />
-            <motion.div
-              className="absolute top-1/2 left-1/2 w-16 h-16 border-2 border-[#D4A843] rounded-sm -translate-x-1/2 -translate-y-1/2 bg-[#050508] flex items-center justify-center"
-              initial={{ scale: 0, rotate: 45 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.3 }}
-            >
-              <div className="w-8 h-8 border-2 border-[#D4A843] rounded-full" />
-            </motion.div>
+            Algorithm: <span className="text-[#D4A843]">ML-DSA-65</span> (Dilithium-3, FIPS 204)
           </motion.div>
         )}
       </div>

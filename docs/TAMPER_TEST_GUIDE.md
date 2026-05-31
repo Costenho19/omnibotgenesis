@@ -1,8 +1,25 @@
 # OMNIX QUANTUM — Independent Tamper-Test Guide
 
 **For:** External auditors, regulators, and technical reviewers  
-**Subject:** OMNIX-RTE-001 Evidence Package — cryptographic integrity verification  
+**Subject:** OMNIX-RTE-001 v1.4.0 Evidence Package — cryptographic integrity verification  
 **No OMNIX account required. No API key required. Zero trust assumptions.**
+
+---
+
+## The scenario this covers
+
+| Field | Value |
+|---|---|
+| **Scenario** | QuantumBank AI Trading Desk — USD 50,000,000 cross-border transfer |
+| **Route** | SWIFT MT202 / XRPL RLUSD |
+| **Session** | `SESSION-B9199C8CC9394304` |
+| **GCFR** | `GCFR-96D8BA6CA0FF4295` — Governance Contract sealed ML-DSA-65 before Turn 0 |
+| **Verdict** | `HALT PROVEN` |
+| **Mandate certification** | `MANDATE-BOUND` |
+| **Admission result** | `FULL ADMISSION` |
+| **PQC certificate** | `POGC-GENESIS-E071CC96` |
+| **Checks** | 187 (148 base + 36 IPFL intake + 3 PKG-INTAKE) |
+| **Regulatory coverage** | EU AI Act Art. 9/11 · MiCA Title VI · DORA Art. 11 · NIST AU-2 |
 
 ---
 
@@ -13,9 +30,10 @@ This guide lets any technically capable reviewer independently verify that:
 1. An OMNIX governance evidence package is cryptographically intact (exit code 0)
 2. Any modification to the package — even a single byte — is immediately detected (exit code 1)
 3. The detection uses **ML-DSA-65 (Dilithium-3, FIPS 204)** post-quantum signatures, not HMAC or SHA alone
+4. The HALT PROVEN verdict and MANDATE-BOUND certification cannot be silently changed
 
 The package used in this guide covers a real governance scenario:  
-**USD 50,000,000 cross-border transfer · SWIFT MT202 / XRPL RLUSD · QuantumBank AI Trading Desk**  
+**Session `SESSION-B9199C8CC9394304` · GCFR `GCFR-96D8BA6CA0FF4295` · 187 checks · exit 0 (clean) / exit 1 (tampered)**  
 Package ID: `OMNIX-RTE-001-2824C7A71045465E`
 
 ---

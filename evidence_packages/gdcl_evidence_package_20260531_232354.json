@@ -1,0 +1,493 @@
+{
+  "package_id": "OMNIX-GDCL-PKG-0D07E1E2E79C4998",
+  "package_version": "1.0.0",
+  "generator": "scripts/generate_gdcl_evidence_package.py",
+  "adr_reference": "ADR-206",
+  "generated_at": "2026-05-31T23:23:54.681514+00:00",
+  "pqc_algorithm": null,
+  "ephemeral_pk_b64": null,
+  "n_scenarios": 7,
+  "verdicts_covered": [
+    "FULL_RELIANCE",
+    "QUALIFIED_RELIANCE",
+    "LIMITED_RELIANCE",
+    "CONTESTED",
+    "REFUSED",
+    "ESCALATION",
+    "INDETERMINATE"
+  ],
+  "verifier_command": "python scripts/verify_gdcl_offline.py --file <this_file>",
+  "adversarial_command": "python scripts/gdcl_adversarial_audit.py --package <this_file>",
+  "algorithm_spec": {
+    "reference": "ADR-206 §Algorithm",
+    "property": "GDCL-INV-003 Determinism — pure function",
+    "steps": [
+      "1. If n_assessments == 0 → INDETERMINATE",
+      "2. If INCOMPATIBLE ∧ DRIFT_CRITICAL both present → ESCALATION",
+      "3. If all inputs INCOMPATIBLE → REFUSED",
+      "4. If INCOMPATIBLE ∧ (PORTABLE ∨ ACKNOWLEDGED) present → CONTESTED",
+      "5. If any DRIFT_CRITICAL present → LIMITED_RELIANCE",
+      "6. If any DRIFT_ACKNOWLEDGED present → QUALIFIED_RELIANCE",
+      "7. Otherwise → FULL_RELIANCE"
+    ]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "GDCL-SCEN-001",
+      "verdict": "FULL_RELIANCE",
+      "title": "EU-Wide Trade Finance — Aligned Jurisdictions",
+      "industry": "Trade Finance / Supply Chain",
+      "description": "A supply-chain financing platform operating across four EU member states presents governance receipts for a EUR 12M invoice-backed facility. All four originating runtimes (DE, FR, NL, ES) operate under harmonised EU Commercial Finance Regulation. Semantic drift is negligible across all ATF Core Terms — SDUs below 0.08 in every domain. Full reliance admitted.",
+      "rsa_inputs": [
+        {
+          "rsa_id": "OMNIX-RSA-F4F0DCC0D52A4B7B",
+          "receipt_id": "DR-DE-B5AD1D1A",
+          "originating_runtime": "OMNIX-RUNTIME-DE-FRANKFURT",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.03,
+          "portability_confidence": 0.97
+        },
+        {
+          "rsa_id": "OMNIX-RSA-1970D2DB24AF4396",
+          "receipt_id": "DR-FR-02CEF788",
+          "originating_runtime": "OMNIX-RUNTIME-FR-PARIS",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.05,
+          "portability_confidence": 0.95
+        },
+        {
+          "rsa_id": "OMNIX-RSA-16858A89943C4CF3",
+          "receipt_id": "DR-NL-B66678CB",
+          "originating_runtime": "OMNIX-RUNTIME-NL-AMSTERDAM",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.07,
+          "portability_confidence": 0.93
+        },
+        {
+          "rsa_id": "OMNIX-RSA-499B0799D0754B0C",
+          "receipt_id": "DR-ES-322BC36B",
+          "originating_runtime": "OMNIX-RUNTIME-ES-MADRID",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.04,
+          "portability_confidence": 0.96
+        }
+      ],
+      "gcr": {
+        "gcr_id": "OMNIX-GCR-197B7BF4038D4A39",
+        "receiving_runtime_id": "OMNIX-RUNTIME-GDCL-EVIDENCE",
+        "rsa_ids": [
+          "OMNIX-RSA-16858A89943C4CF3",
+          "OMNIX-RSA-1970D2DB24AF4396",
+          "OMNIX-RSA-499B0799D0754B0C",
+          "OMNIX-RSA-F4F0DCC0D52A4B7B"
+        ],
+        "receipt_ids": [
+          "DR-DE-B5AD1D1A",
+          "DR-ES-322BC36B",
+          "DR-FR-02CEF788",
+          "DR-NL-B66678CB"
+        ],
+        "n_assessments": 4,
+        "verdict_distribution": {
+          "SEMANTICALLY_PORTABLE": 4
+        },
+        "composite_verdict": "FULL_RELIANCE",
+        "dominant_sdu": 0.07,
+        "mean_sdu": 0.0475,
+        "min_portability_confidence": 0.93,
+        "boundary_recommendation": "All assessed receipts are semantically portable in this domain. No semantic qualification required. Proceed under full reliance.",
+        "converged_at": "2026-05-31T23:23:54.671935+00:00",
+        "created_at": "2026-05-31T23:23:54.671935+00:00",
+        "content_hash": "8357b7cdf314750c66f2e3591ff5e478c592e8a31ad2261d49f163c15455a712",
+        "pqc_signature": null,
+        "pqc_algorithm": null,
+        "public_key_b64": null
+      }
+    },
+    {
+      "scenario_id": "GDCL-SCEN-002",
+      "verdict": "QUALIFIED_RELIANCE",
+      "title": "UK-EU Post-Brexit Asset Management — Acknowledged Drift",
+      "industry": "Asset Management / UCITS",
+      "description": "A UCITS fund manager bridges governance receipts from a UK FCA-regulated runtime and two EU MiFID-II runtimes post-Brexit. The UK runtime shows DRIFT_ACKNOWLEDGED on ADMISSIBILITY and SOVEREIGNTY terms (SDU 0.24) reflecting documented divergence in eligible-asset definitions post-exit. EU runtimes remain portable. MORE_RESTRICTIVE posture (DSPP-INV-003) applies.",
+      "rsa_inputs": [
+        {
+          "rsa_id": "OMNIX-RSA-F40A3858EB614B97",
+          "receipt_id": "TAR-UK-8C84A849",
+          "originating_runtime": "OMNIX-RUNTIME-UK-LONDON",
+          "dspp_verdict": "DRIFT_ACKNOWLEDGED",
+          "aggregate_sdu": 0.24,
+          "portability_confidence": 0.76
+        },
+        {
+          "rsa_id": "OMNIX-RSA-A2293764DFE5442E",
+          "receipt_id": "TAR-EU-0857EF2D",
+          "originating_runtime": "OMNIX-RUNTIME-EU-LUXEMBOURG",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.06,
+          "portability_confidence": 0.94
+        },
+        {
+          "rsa_id": "OMNIX-RSA-3443E4DA2B5A4202",
+          "receipt_id": "TAR-IE-D8A2A912",
+          "originating_runtime": "OMNIX-RUNTIME-IE-DUBLIN",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.04,
+          "portability_confidence": 0.96
+        }
+      ],
+      "gcr": {
+        "gcr_id": "OMNIX-GCR-7445763BA11A4DA2",
+        "receiving_runtime_id": "OMNIX-RUNTIME-GDCL-EVIDENCE",
+        "rsa_ids": [
+          "OMNIX-RSA-3443E4DA2B5A4202",
+          "OMNIX-RSA-A2293764DFE5442E",
+          "OMNIX-RSA-F40A3858EB614B97"
+        ],
+        "receipt_ids": [
+          "TAR-EU-0857EF2D",
+          "TAR-IE-D8A2A912",
+          "TAR-UK-8C84A849"
+        ],
+        "n_assessments": 3,
+        "verdict_distribution": {
+          "DRIFT_ACKNOWLEDGED": 1,
+          "SEMANTICALLY_PORTABLE": 2
+        },
+        "composite_verdict": "QUALIFIED_RELIANCE",
+        "dominant_sdu": 0.24,
+        "mean_sdu": 0.1133,
+        "min_portability_confidence": 0.76,
+        "boundary_recommendation": "Moderate semantic drift detected. Apply MORE_RESTRICTIVE governing posture (DSPP-INV-003). Proceed with contextual qualification documented in this GCR.",
+        "converged_at": "2026-05-31T23:23:54.673395+00:00",
+        "created_at": "2026-05-31T23:23:54.673395+00:00",
+        "content_hash": "cf9869b51f4bf710888013e2537dc8ea548a179afd001259ab2805ca1ef9e5a6",
+        "pqc_signature": null,
+        "pqc_algorithm": null,
+        "public_key_b64": null
+      }
+    },
+    {
+      "scenario_id": "GDCL-SCEN-003",
+      "verdict": "LIMITED_RELIANCE",
+      "title": "Cross-Border Clinical AI — HIPAA/GDPR Divergence",
+      "industry": "Healthcare / Clinical Decision Support",
+      "description": "A clinical AI platform operating in a US-EU trial submits five governance receipts for a diagnostic recommendation on anonymised patient data. The US HIPAA runtime shows DRIFT_CRITICAL (SDU 0.57) on SOVEREIGNTY and ADMISSIBILITY terms relative to the GDPR receiving domain — specifically on data residency and secondary-use consent definitions. EU and Swiss sources remain portable. Operation requires explicit divergence documentation before use in any regulatory submission.",
+      "rsa_inputs": [
+        {
+          "rsa_id": "OMNIX-RSA-ADBF993F14F64E54",
+          "receipt_id": "RCR-US-1044F3D3",
+          "originating_runtime": "OMNIX-RUNTIME-US-BOSTON",
+          "dspp_verdict": "DRIFT_CRITICAL",
+          "aggregate_sdu": 0.57,
+          "portability_confidence": 0.43
+        },
+        {
+          "rsa_id": "OMNIX-RSA-035131C9FCC04A77",
+          "receipt_id": "RCR-DE-9DF81AC2",
+          "originating_runtime": "OMNIX-RUNTIME-DE-BERLIN",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.05,
+          "portability_confidence": 0.95
+        },
+        {
+          "rsa_id": "OMNIX-RSA-0F41CE7AFC51477D",
+          "receipt_id": "RCR-CH-13E5DE89",
+          "originating_runtime": "OMNIX-RUNTIME-CH-ZURICH",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.08,
+          "portability_confidence": 0.92
+        },
+        {
+          "rsa_id": "OMNIX-RSA-B2C52198D73D4995",
+          "receipt_id": "RCR-FR-0B910402",
+          "originating_runtime": "OMNIX-RUNTIME-FR-LYON",
+          "dspp_verdict": "DRIFT_ACKNOWLEDGED",
+          "aggregate_sdu": 0.18,
+          "portability_confidence": 0.82
+        },
+        {
+          "rsa_id": "OMNIX-RSA-527B178A887E41D6",
+          "receipt_id": "RCR-NL-D338CA17",
+          "originating_runtime": "OMNIX-RUNTIME-NL-AMSTERDAM",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.03,
+          "portability_confidence": 0.97
+        }
+      ],
+      "gcr": {
+        "gcr_id": "OMNIX-GCR-23E17614A2EB4D67",
+        "receiving_runtime_id": "OMNIX-RUNTIME-GDCL-EVIDENCE",
+        "rsa_ids": [
+          "OMNIX-RSA-035131C9FCC04A77",
+          "OMNIX-RSA-0F41CE7AFC51477D",
+          "OMNIX-RSA-527B178A887E41D6",
+          "OMNIX-RSA-ADBF993F14F64E54",
+          "OMNIX-RSA-B2C52198D73D4995"
+        ],
+        "receipt_ids": [
+          "RCR-CH-13E5DE89",
+          "RCR-DE-9DF81AC2",
+          "RCR-FR-0B910402",
+          "RCR-NL-D338CA17",
+          "RCR-US-1044F3D3"
+        ],
+        "n_assessments": 5,
+        "verdict_distribution": {
+          "DRIFT_CRITICAL": 1,
+          "SEMANTICALLY_PORTABLE": 3,
+          "DRIFT_ACKNOWLEDGED": 1
+        },
+        "composite_verdict": "LIMITED_RELIANCE",
+        "dominant_sdu": 0.57,
+        "mean_sdu": 0.182,
+        "min_portability_confidence": 0.43,
+        "boundary_recommendation": "Significant semantic divergence (DRIFT_CRITICAL) in at least one source. Document divergence before relying on this in any regulatory context. Human review RECOMMENDED before commitment.",
+        "converged_at": "2026-05-31T23:23:54.674880+00:00",
+        "created_at": "2026-05-31T23:23:54.674880+00:00",
+        "content_hash": "883f206e8ffe154693223d3bb64c46e5ab958ca6e3a19c5876b23f9961835091",
+        "pqc_signature": null,
+        "pqc_algorithm": null,
+        "public_key_b64": null
+      }
+    },
+    {
+      "scenario_id": "GDCL-SCEN-004",
+      "verdict": "CONTESTED",
+      "title": "Sanctions Screening Conflict — OFAC vs EU Blocking Statute",
+      "industry": "Cross-Border Payments / AML-CFT",
+      "description": "A correspondent banking AI must decide whether to process a payment involving a counterparty on a US OFAC secondary-sanctions list. The US runtime flags SEMANTICALLY_INCOMPATIBLE (SDU 0.83) on LEGITIMACY and TRUST terms. The EU runtime is SEMANTICALLY_PORTABLE — the same counterparty is explicitly protected under EU Blocking Statute 2018/1100, which prohibits compliance with OFAC's extraterritorial reach. Two jurisdictions actively contradict each other. No algorithm resolves this — compliance with one violates the other. Verdict: CONTESTED.",
+      "rsa_inputs": [
+        {
+          "rsa_id": "OMNIX-RSA-1381DA2380B44FFD",
+          "receipt_id": "DR-OFAC-D9CFC9BF",
+          "originating_runtime": "OMNIX-RUNTIME-US-OFAC",
+          "dspp_verdict": "SEMANTICALLY_INCOMPATIBLE",
+          "aggregate_sdu": 0.83,
+          "portability_confidence": 0.17
+        },
+        {
+          "rsa_id": "OMNIX-RSA-0A70DE88030647B4",
+          "receipt_id": "DR-EU-BLK-3A13BA8D",
+          "originating_runtime": "OMNIX-RUNTIME-EU-BLOCKING",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.04,
+          "portability_confidence": 0.96
+        },
+        {
+          "rsa_id": "OMNIX-RSA-07D76429006D44F1",
+          "receipt_id": "DR-AML-4F9D6A64",
+          "originating_runtime": "OMNIX-RUNTIME-FATF-AML",
+          "dspp_verdict": "DRIFT_ACKNOWLEDGED",
+          "aggregate_sdu": 0.15,
+          "portability_confidence": 0.85
+        }
+      ],
+      "gcr": {
+        "gcr_id": "OMNIX-GCR-80736E343B8F4109",
+        "receiving_runtime_id": "OMNIX-RUNTIME-GDCL-EVIDENCE",
+        "rsa_ids": [
+          "OMNIX-RSA-07D76429006D44F1",
+          "OMNIX-RSA-0A70DE88030647B4",
+          "OMNIX-RSA-1381DA2380B44FFD"
+        ],
+        "receipt_ids": [
+          "DR-AML-4F9D6A64",
+          "DR-EU-BLK-3A13BA8D",
+          "DR-OFAC-D9CFC9BF"
+        ],
+        "n_assessments": 3,
+        "verdict_distribution": {
+          "SEMANTICALLY_INCOMPATIBLE": 1,
+          "SEMANTICALLY_PORTABLE": 1,
+          "DRIFT_ACKNOWLEDGED": 1
+        },
+        "composite_verdict": "CONTESTED",
+        "dominant_sdu": 0.83,
+        "mean_sdu": 0.34,
+        "min_portability_confidence": 0.17,
+        "boundary_recommendation": "Conflicting verdicts: INCOMPATIBLE source coexists with portable sources. Incompatible source cannot be dismissed. Document conflict explicitly. Do not proceed without resolving or formally acknowledging the incompatible source.",
+        "converged_at": "2026-05-31T23:23:54.676236+00:00",
+        "created_at": "2026-05-31T23:23:54.676236+00:00",
+        "content_hash": "f9e6362c35cfd6454c191beeeb5c757e3ce2e325530d4de62cb701167b7f3541",
+        "pqc_signature": null,
+        "pqc_algorithm": null,
+        "public_key_b64": null
+      }
+    },
+    {
+      "scenario_id": "GDCL-SCEN-005",
+      "verdict": "REFUSED",
+      "title": "Autonomous Weapons Decision — Full Regulatory Incompatibility",
+      "industry": "Defense AI / Autonomous Systems",
+      "description": "An autonomous targeting recommendation AI submits governance receipts from three military doctrine runtimes for a lethal-force authorisation decision. All three originating runtimes operate under distinct IHL (International Humanitarian Law) frameworks. The receiving domain (UN-aligned peacekeeping runtime) finds all three receipts SEMANTICALLY_INCOMPATIBLE — the LEGITIMACY, AUTHORITY, and SOVEREIGNTY terms diverge beyond the 0.70 SDU threshold under every IHL interpretation applicable in the receiving jurisdiction. Decision: REFUSED. No autonomous lethal-force decision may proceed.",
+      "rsa_inputs": [
+        {
+          "rsa_id": "OMNIX-RSA-96E33A60DFE54BB5",
+          "receipt_id": "DR-NATO-844814AB",
+          "originating_runtime": "OMNIX-RUNTIME-NATO-SHAPE",
+          "dspp_verdict": "SEMANTICALLY_INCOMPATIBLE",
+          "aggregate_sdu": 0.81,
+          "portability_confidence": 0.19
+        },
+        {
+          "rsa_id": "OMNIX-RSA-60956AEC5FCA4A88",
+          "receipt_id": "DR-AU-3656A945",
+          "originating_runtime": "OMNIX-RUNTIME-AU-DOCTRINE",
+          "dspp_verdict": "SEMANTICALLY_INCOMPATIBLE",
+          "aggregate_sdu": 0.76,
+          "portability_confidence": 0.24
+        },
+        {
+          "rsa_id": "OMNIX-RSA-F038059A43FC4042",
+          "receipt_id": "DR-IL-DB809DDC",
+          "originating_runtime": "OMNIX-RUNTIME-IHL-PERMISSIVE",
+          "dspp_verdict": "SEMANTICALLY_INCOMPATIBLE",
+          "aggregate_sdu": 0.91,
+          "portability_confidence": 0.09
+        }
+      ],
+      "gcr": {
+        "gcr_id": "OMNIX-GCR-C1936974257740A7",
+        "receiving_runtime_id": "OMNIX-RUNTIME-GDCL-EVIDENCE",
+        "rsa_ids": [
+          "OMNIX-RSA-60956AEC5FCA4A88",
+          "OMNIX-RSA-96E33A60DFE54BB5",
+          "OMNIX-RSA-F038059A43FC4042"
+        ],
+        "receipt_ids": [
+          "DR-AU-3656A945",
+          "DR-IL-DB809DDC",
+          "DR-NATO-844814AB"
+        ],
+        "n_assessments": 3,
+        "verdict_distribution": {
+          "SEMANTICALLY_INCOMPATIBLE": 3
+        },
+        "composite_verdict": "REFUSED",
+        "dominant_sdu": 0.91,
+        "mean_sdu": 0.8267,
+        "min_portability_confidence": 0.09,
+        "boundary_recommendation": "All sources SEMANTICALLY_INCOMPATIBLE. Operation MUST be rejected. No reliance admissible. Equivalent to HALT in OGR vocabulary.",
+        "converged_at": "2026-05-31T23:23:54.677979+00:00",
+        "created_at": "2026-05-31T23:23:54.677979+00:00",
+        "content_hash": "7ccf67c4ccab13f93b624fc86be86955aab58bff14382dab647e1bf55d42fc4d",
+        "pqc_signature": null,
+        "pqc_algorithm": null,
+        "public_key_b64": null
+      }
+    },
+    {
+      "scenario_id": "GDCL-SCEN-006",
+      "verdict": "ESCALATION",
+      "title": "QuantumBank $50M SWIFT MT202 — Conflicting + Critical Signals",
+      "industry": "Institutional Banking / Cross-Border Payments",
+      "description": "QuantumBank AI Trading Desk presents five governance receipts for a USD 50,000,000 cross-border transfer via SWIFT MT202 / XRPL RLUSD. The UK post-Brexit counterparty-risk runtime (OMNIX-RUNTIME-UK-CRE) returns SEMANTICALLY_INCOMPATIBLE (SDU 0.74) on TRUST and LEGITIMACY — the counterparty's governance record pre-dates UK equivalence withdrawal. The US Federal Reserve runtime returns DRIFT_CRITICAL (SDU 0.51) on RISK and ESCALATION terms post-SVB crisis restatements. Simultaneous INCOMPATIBLE + DRIFT_CRITICAL triggers ESCALATION. The USD 50M transfer MUST NOT proceed without named human authority sign-off. This is the scenario type GDCL was designed to surface unambiguously.",
+      "rsa_inputs": [
+        {
+          "rsa_id": "OMNIX-RSA-497BF15FBEE54E6B",
+          "receipt_id": "TAR-UK-CRE-50A96D75",
+          "originating_runtime": "OMNIX-RUNTIME-UK-CRE",
+          "dspp_verdict": "SEMANTICALLY_INCOMPATIBLE",
+          "aggregate_sdu": 0.74,
+          "portability_confidence": 0.26
+        },
+        {
+          "rsa_id": "OMNIX-RSA-DBF8E6464BA04065",
+          "receipt_id": "TAR-FED-E49EED6F",
+          "originating_runtime": "OMNIX-RUNTIME-US-FEDRES",
+          "dspp_verdict": "DRIFT_CRITICAL",
+          "aggregate_sdu": 0.51,
+          "portability_confidence": 0.49
+        },
+        {
+          "rsa_id": "OMNIX-RSA-52FA12EF14804F27",
+          "receipt_id": "TAR-ECB-B91196C2",
+          "originating_runtime": "OMNIX-RUNTIME-EU-ECB",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.06,
+          "portability_confidence": 0.94
+        },
+        {
+          "rsa_id": "OMNIX-RSA-D5254B57355A4472",
+          "receipt_id": "TAR-SWIFT-A4DA0F8A",
+          "originating_runtime": "OMNIX-RUNTIME-SWIFT-GPI",
+          "dspp_verdict": "SEMANTICALLY_PORTABLE",
+          "aggregate_sdu": 0.03,
+          "portability_confidence": 0.97
+        },
+        {
+          "rsa_id": "OMNIX-RSA-6C1BC370764E404A",
+          "receipt_id": "TAR-BIS-A8156B9D",
+          "originating_runtime": "OMNIX-RUNTIME-BIS-CPMI",
+          "dspp_verdict": "DRIFT_ACKNOWLEDGED",
+          "aggregate_sdu": 0.22,
+          "portability_confidence": 0.78
+        }
+      ],
+      "gcr": {
+        "gcr_id": "OMNIX-GCR-2826E0A4B86B44A1",
+        "receiving_runtime_id": "OMNIX-RUNTIME-GDCL-EVIDENCE",
+        "rsa_ids": [
+          "OMNIX-RSA-497BF15FBEE54E6B",
+          "OMNIX-RSA-52FA12EF14804F27",
+          "OMNIX-RSA-6C1BC370764E404A",
+          "OMNIX-RSA-D5254B57355A4472",
+          "OMNIX-RSA-DBF8E6464BA04065"
+        ],
+        "receipt_ids": [
+          "TAR-BIS-A8156B9D",
+          "TAR-ECB-B91196C2",
+          "TAR-FED-E49EED6F",
+          "TAR-SWIFT-A4DA0F8A",
+          "TAR-UK-CRE-50A96D75"
+        ],
+        "n_assessments": 5,
+        "verdict_distribution": {
+          "SEMANTICALLY_INCOMPATIBLE": 1,
+          "DRIFT_CRITICAL": 1,
+          "SEMANTICALLY_PORTABLE": 2,
+          "DRIFT_ACKNOWLEDGED": 1
+        },
+        "composite_verdict": "ESCALATION",
+        "dominant_sdu": 0.74,
+        "mean_sdu": 0.312,
+        "min_portability_confidence": 0.26,
+        "boundary_recommendation": "CRITICAL: Simultaneous INCOMPATIBLE and DRIFT_CRITICAL verdicts. Convergence cannot be resolved algorithmically. Human review is MANDATORY before any action.",
+        "converged_at": "2026-05-31T23:23:54.678997+00:00",
+        "created_at": "2026-05-31T23:23:54.678997+00:00",
+        "content_hash": "1c448a0670ce9fa72ef91b99e02710f6d4a41177613c5f535ab24b4a3b427d80",
+        "pqc_signature": null,
+        "pqc_algorithm": null,
+        "public_key_b64": null
+      }
+    },
+    {
+      "scenario_id": "GDCL-SCEN-007",
+      "verdict": "INDETERMINATE",
+      "title": "Cold-Start Governance Request — No RSA Inputs",
+      "industry": "System Boundary / Fail-Closed Governance",
+      "description": "A receiving domain requests GDCL convergence before any RSA objects have been provided — a cold-start scenario where the governance pipeline has not yet received proof objects from originating runtimes. GDCL-INV-001 requires an output for every input including empty inputs. Verdict: INDETERMINATE. Under fail-closed governance policy (GDCL-INV-006), INDETERMINATE is treated equivalently to REFUSED until RSA inputs are supplied. This is the only GDCL verdict that carries no RSA IDs — and is therefore trivially distinguishable from any forged or incomplete GCR.",
+      "rsa_inputs": [],
+      "gcr": {
+        "gcr_id": "OMNIX-GCR-C4F7F92939094A45",
+        "receiving_runtime_id": "OMNIX-RUNTIME-GDCL-EVIDENCE",
+        "rsa_ids": [],
+        "receipt_ids": [],
+        "n_assessments": 0,
+        "verdict_distribution": {},
+        "composite_verdict": "INDETERMINATE",
+        "dominant_sdu": 0.0,
+        "mean_sdu": 0.0,
+        "min_portability_confidence": 1.0,
+        "boundary_recommendation": "No RSA inputs provided. Cannot compute composite verdict. Treat as REFUSED under fail-closed governance policy.",
+        "converged_at": "2026-05-31T23:23:54.680372+00:00",
+        "created_at": "2026-05-31T23:23:54.680372+00:00",
+        "content_hash": "5fc190e271a4d35ad3ad5093c8421b356b9293f45735199eeb2332296d0ce0a0",
+        "pqc_signature": null,
+        "pqc_algorithm": null,
+        "public_key_b64": null
+      }
+    }
+  ]
+}

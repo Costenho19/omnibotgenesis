@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useVideoPlayer } from '@/lib/video';
 import { Scene1 } from './video_scenes/Scene1';
 import { Scene2 } from './video_scenes/Scene2';
@@ -9,12 +9,12 @@ import { Scene6 } from './video_scenes/Scene6';
 import { OmnixLogo } from './OmnixLogo';
 
 const SCENE_DURATIONS = {
-  problem:   3500,
-  protocol:  4000,
-  execution: 5000,
-  tamper:    4000,
-  verify:    4500,
-  trust:     5000,
+  problem:   12000,
+  protocol:  18000,
+  execution: 18000,
+  tamper:    18000,
+  verify:    12000,
+  trust:     12000,
 };
 
 const SCENES = [Scene1, Scene2, Scene3, Scene4, Scene5, Scene6];
@@ -32,20 +32,23 @@ export default function VideoTemplate() {
       {/* Persistent noise layer */}
       <div className="absolute inset-0 bg-noise pointer-events-none opacity-[0.03] z-0" />
 
-      {/* Persistent top amber progress line */}
-      <motion.div
-        className="absolute top-0 left-0 h-1 bg-[#D4A843] z-50"
-        initial={{ width: 0 }}
-        animate={{ width: '100%' }}
-        transition={{ duration: 26, ease: 'linear', repeat: Infinity }}
-      />
-
       {/* Subtle grid lines */}
       <div className="absolute inset-0 z-0 pointer-events-none flex justify-center items-center opacity-10">
-        <div className="w-full h-px bg-white absolute top-[25vh]" />
-        <div className="w-full h-px bg-white absolute top-[75vh]" />
-        <div className="h-full w-px bg-white absolute left-[25vw]" />
-        <div className="h-full w-px bg-white absolute left-[75vw]" />
+        <motion.div 
+          className="w-[200vw] h-px bg-white absolute" 
+          animate={{ y: ['-20vh', '120vh'] }} 
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+        />
+        <motion.div 
+          className="w-[200vw] h-px bg-white absolute" 
+          animate={{ y: ['120vh', '-20vh'] }} 
+          transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+        />
+        <motion.div 
+          className="h-[200vh] w-px bg-white absolute" 
+          animate={{ x: ['-20vw', '120vw'] }} 
+          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+        />
       </div>
 
       {/* Persistent OMNIX logo — hidden on Scene6 (it renders its own) */}
@@ -57,19 +60,6 @@ export default function VideoTemplate() {
       >
         <OmnixLogo size="7vw" opacity={1} />
       </motion.div>
-
-      {/* Persistent amber status dot */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{ bottom: '5vh', right: '4vw', zIndex: 50 }}
-        animate={{
-          width: currentScene === 3 ? '0.9vw' : '0.45vw',
-          height: currentScene === 3 ? '0.9vw' : '0.45vw',
-          backgroundColor: currentScene === 3 ? '#E53E3E' : '#D4A843',
-          opacity: hidePersistentLogo ? 0 : 0.7,
-        }}
-        transition={{ duration: 0.7, ease: 'easeInOut' }}
-      />
 
       {/* Scene wipe line — amber vertical sweep on scene change */}
       <motion.div
