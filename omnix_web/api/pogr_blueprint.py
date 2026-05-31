@@ -27,6 +27,7 @@ Harold Nunes — OMNIX QUANTUM LTD — May 2026
 from __future__ import annotations
 
 import hashlib
+import hmac as _hmac
 import json
 import logging
 import os
@@ -118,7 +119,7 @@ def _err(msg: str, code: int = 400):
 
 
 def _pogc_id() -> str:
-    return "POGC-" + secrets.token_hex(8).upper()
+    return "POGC-" + secrets.token_hex(16).upper()
 
 
 # ── Canonical field sets (ADR-205) ────────────────────────────────────────────
@@ -221,9 +222,27 @@ def _verify_pqc_signature(
 
     pk_b64 = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")
     if not pk_b64:
+        fail_closed = os.environ.get("OMNIX_PQC_VERIFY_FAIL_CLOSED", "false").lower() == "true"
+        if fail_closed:
+            logger.critical(
+                "[PoGR] OMNIX_SIGNING_PUBLIC_KEY_B64 missing with OMNIX_PQC_VERIFY_FAIL_CLOSED=true. "
+                "All PQC verifications will return INVALID until the key is configured."
+            )
+            return (False,
+                    "✗ PQC verification FAILED — OMNIX_SIGNING_PUBLIC_KEY_B64 not configured "
+                    "and OMNIX_PQC_VERIFY_FAIL_CLOSED=true (production mode). "
+                    "Certificate cannot be cryptographically verified.")
+        # Dev / no-key mode: warn but do not fail hard
+        if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("RAILWAY_SERVICE_NAME"):
+            logger.critical(
+                "[PoGR] OMNIX_SIGNING_PUBLIC_KEY_B64 missing in Railway environment! "
+                "PQC verification running in hash-only mode. "
+                "Set OMNIX_PQC_VERIFY_FAIL_CLOSED=true to enforce hard failure."
+            )
         return (None,
                 "⚠ Platform public key not configured (OMNIX_SIGNING_PUBLIC_KEY_B64) "
-                "— PQC cryptographic verification skipped; hash integrity still enforced")
+                "— PQC cryptographic verification skipped; hash integrity still enforced "
+                "[production: set OMNIX_PQC_VERIFY_FAIL_CLOSED=true to enforce hard failure]")
 
     try:
         import base64
@@ -1423,13 +1442,24 @@ def admin_resign(pogc_id: str):
     """
     _ensure_tables()
 
-    # ── Verify admin token ──────────────────────────────────────────────────
-    expected_token = hashlib.sha3_256(
-        f"POGR-RESIGN:{pogc_id}".encode()
+    # ── Verify admin token (HMAC with server-side secret — ADR-205 audit R-C1) ─
+    resign_secret = os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+    if not resign_secret:
+        logger.error("[PoGR] admin_resign: POGR_ADMIN_RESIGN_SECRET not configured")
+        return _err(
+            "POGR_ADMIN_RESIGN_SECRET not configured — admin operations unavailable. "
+            "Set this variable in Railway environment.",
+            503
+        )
+
+    expected_token = _hmac.new(
+        resign_secret.encode(),
+        f"POGR-RESIGN:{pogc_id}".encode(),
+        hashlib.sha3_256
     ).hexdigest()
     provided_token = request.headers.get("X-Admin-Resign-Token", "").strip()
 
-    if not provided_token or provided_token != expected_token:
+    if not provided_token or not _hmac.compare_digest(expected_token, provided_token):
         logger.warning(f"[PoGR] admin_resign: invalid token for {pogc_id}")
         return _err("Invalid or missing X-Admin-Resign-Token", 403)
 

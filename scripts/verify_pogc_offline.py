@@ -63,7 +63,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 DEFAULT_ENDPOINT  = "https://omnixquantum.net"
 EXPECTED_ISSUER   = "OMNIX QUANTUM LTD"
-VERSION           = "2.0.0"
+VERSION           = "2.1.0"
 ADR_REF           = "ADR-186 · ADR-189 · ADR-205"
 
 # ADR-205: v1 legacy fields (10), v2 includes status + revoked_at (12)
@@ -132,6 +132,8 @@ def _verify_pqc_signature(
     cert: Dict[str, Any],
     canonical: Dict[str, Any],
     platform_key_b64: Optional[str],
+    *,
+    allow_sim: bool = False,
 ) -> Tuple[Optional[bool], str]:
     """
     Verify the ML-DSA-65 signature.  ADR-205 — POGR-SEC-001.
@@ -139,20 +141,22 @@ def _verify_pqc_signature(
     Priority:
       1. Full cryptographic: oqs ML-DSA-65 verify (requires key + oqs-python)
       2. Audit-sim fallback:  SHA3-256("AUDIT-PQC-SIM-V2:" + canonical_payload)
-         – accepted with a WARNING (test/Replit environments only)
+         – accepted ONLY when allow_sim=True (explicit opt-in for test environments)
+         – DEFAULT is allow_sim=False: sim path → HARD FAIL (POGR Audit V2 R-H3)
       3. No match → HARD FAIL — cert cannot be trusted without verification
 
     Security model:
-      • Without oqs:  hash integrity (content_hash) + sim-sig check prevent field
-        tampering and trivial forgery. An attacker who knows the sim formula can
-        still forge sim certs, but production exports carry real ML-DSA-65 keys.
+      • Default (allow_sim=False): only real ML-DSA-65 verification passes.
+        A forger who knows the sim formula cannot bypass verification.
+      • With allow_sim=True (--allow-sim flag): sim-signed certs pass with WARNING.
+        Use ONLY in test/development environments. Never in production.
       • With oqs + key: full EUF-CMA security (FIPS 204 / NIST 2024).
-      • Certs with neither a valid real sig nor a valid sim sig → FAIL.
+      • Certs with neither a valid real sig nor matching sim (when allowed) → FAIL.
 
     Returns:
         (True,  "…")  — cryptographically verified
         (False, "…")  — HARD FAIL
-        (None,  "…")  — WARNING (sim mode or stub)
+        (None,  "…")  — WARNING (sim mode with allow_sim=True, or stub)
     """
     sig_str = cert.get("pqc_signature", "")
 
@@ -190,49 +194,63 @@ def _verify_pqc_signature(
                 pass  # fall through to sim check below
             except Exception as exc:
                 return (False, f"ML-DSA-65 signature INVALID — {exc}")
-        # oqs not available (no cmake / not installed) — fall through to sim check
+        # oqs not available (no cmake / not installed) — fall through
 
-    # ── Path B: Audit-sim verification (SHA3-256 protocol) ────────────────
-    # Used when: oqs unavailable (Replit / no cmake) OR no key provided.
-    # Verifies that the signature was produced by the OMNIX audit sim engine.
-    # An attacker using a different salt/formula will fail this check.
-    sig_hex       = sig_str.removeprefix("ML-DSA-65:")
-    expected_sim  = hashlib.sha3_256(b"AUDIT-PQC-SIM-V2:" + payload).hexdigest()
-
-    if sig_hex == expected_sim:
-        note = (
-            "SHA3-256 audit simulation verified — matches expected AUDIT-PQC-SIM-V2 protocol.\n"
-            "  ⚠ This is a test/audit environment signature, NOT a real ML-DSA-65 key.\n"
-            "  In production: every exported cert carries the ML-DSA-65 public key embedded\n"
-            "  in _offline_verification.platform_public_key_b64, enabling full PQC verification.\n"
-            "  For full cryptographic check: python verify_pogc_offline.py --platform-key <key>"
-        )
-        return (None, note)
+    # ── Path B: Audit-sim verification (opt-in only — POGR Audit V2 R-H3) ─
+    # Requires explicit --allow-sim flag. Disabled by default to prevent
+    # forgery in environments without oqs-python.
+    if allow_sim:
+        sig_hex      = sig_str.removeprefix("ML-DSA-65:")
+        expected_sim = hashlib.sha3_256(b"AUDIT-PQC-SIM-V2:" + payload).hexdigest()
+        if sig_hex == expected_sim:
+            note = (
+                "SHA3-256 audit simulation verified — matches AUDIT-PQC-SIM-V2 protocol.\n"
+                "  ⚠ This is a test/audit environment signature, NOT a real ML-DSA-65 key.\n"
+                "  In production: every exported cert carries the ML-DSA-65 public key\n"
+                "  embedded in _offline_verification.platform_public_key_b64.\n"
+                "  For full cryptographic check: python verify_pogc_offline.py --platform-key <key>\n"
+                "  ⚠ --allow-sim was explicitly passed — do NOT use in production contexts."
+            )
+            return (None, note)
 
     # ── Path C: No match — hard fail ──────────────────────────────────────
-    # The signature does not match the real ML-DSA-65 verification (no key/oqs)
-    # AND does not match the audit-sim protocol.
-    # This means: (a) a forged/random signature, (b) a transplanted signature,
-    # (c) a valid real ML-DSA-65 sig that cannot be verified without the key.
-    # In all cases the certificate CANNOT be trusted without a platform key.
+    # Reaches here when:
+    #   (a) oqs not available and Path A skipped, OR
+    #   (b) allow_sim=False (default) and sig may or may not match sim formula
+    #   (c) allow_sim=True but sim formula does not match
+    # In all cases: certificate cannot be cryptographically verified.
+    sim_hint = (
+        "\n  If this is a test/audit environment cert, re-run with --allow-sim."
+        if not allow_sim else ""
+    )
     return (False,
             "PQC signature UNVERIFIABLE — cannot be trusted.\n"
-            "  The signature does not match the audit-sim protocol and no platform\n"
-            "  key is available for full ML-DSA-65 verification.\n"
-            "  Possible causes: forged signature · transplanted signature · real sig\n"
-            "  that requires oqs-python + platform public key to verify.\n"
+            "  No platform key is available for ML-DSA-65 verification.\n"
+            "  Possible causes: forged signature · transplanted signature · real\n"
+            "  ML-DSA-65 sig that requires oqs-python + platform public key.\n"
             "  To verify a production cert:\n"
-            "    python verify_pogc_offline.py --file cert.json --platform-key <base64>\n"
-            "  Or download directly from the API (embedded key in _offline_verification).")
+            "    pip install oqs-python\n"
+            "    python verify_pogc_offline.py --file cert.json --platform-key <b64>\n"
+            "  Or download from the API (embedded key in _offline_verification)."
+            + sim_hint)
 
 
 def verify_certificate(
     cert: Dict[str, Any],
     platform_key_b64: Optional[str] = None,
+    *,
+    allow_sim: bool = False,
 ) -> Tuple[bool, List[Tuple[str, Optional[bool], str]]]:
     """
     Run all offline verification checks against a certificate dict.
     ADR-205: canonical_version-aware, PQC cryptographic verification.
+
+    Args:
+        cert:             Certificate dict (from export JSON or API).
+        platform_key_b64: Base64-encoded ML-DSA-65 public key for PQC verification.
+        allow_sim:        If True, accept AUDIT-PQC-SIM-V2 signatures with a WARNING.
+                          Default False — sim sigs are HARD FAIL (POGR Audit V2 R-H3).
+                          Pass True only in test/development environments.
 
     Returns:
         (overall_valid: bool,
@@ -303,7 +321,8 @@ def verify_certificate(
     fields = CANONICAL_V2 if canon_version >= 2 else CANONICAL_V1
     canonical = {k: cert.get(k) for k in fields}
 
-    pqc_ok, pqc_msg = _verify_pqc_signature(cert, canonical, platform_key_b64)
+    pqc_ok, pqc_msg = _verify_pqc_signature(cert, canonical, platform_key_b64,
+                                              allow_sim=allow_sim)
     checks.append(("PQC signature (ML-DSA-65)", pqc_ok, pqc_msg))
 
     # ── [5] Issuer identity ───────────────────────────────────────────────
@@ -331,12 +350,24 @@ def verify_certificate(
                         "v2 — status and revoked_at are cryptographically bound "
                         "to the content_hash and ML-DSA-65 signature"))
     else:
-        checks.append(("Canonical schema version", None,
-                        f"v{canon_version} (legacy) — fields 'status' and 'revoked_at' are NOT "
-                        f"cryptographically bound to this certificate's hash or signature.\n"
-                        f"  SECURITY: A revoked certificate's exported file still shows ACTIVE.\n"
-                        f"  Always verify revocation in real-time at:\n"
-                        f"  {DEFAULT_ENDPOINT}/v1/pogr/verify/{cert.get('pogc_id', '<id>')}"))
+        # v1 interim hard-fail (POGR Audit V2 R-H1):
+        # If the file explicitly shows a non-ACTIVE status on a v1 cert, that is
+        # still authoritative (even without cryptographic binding) — hard-fail.
+        if status != "ACTIVE":
+            checks.append(("Canonical schema version", False,
+                            f"v{canon_version} (legacy) — status='{status}' detected offline.\n"
+                            f"  Even without cryptographic binding, a non-ACTIVE v1 cert MUST be rejected.\n"
+                            f"  Revocation is permanently recorded in the live registry.\n"
+                            f"  Verify at: {DEFAULT_ENDPOINT}/v1/pogr/verify/{cert.get('pogc_id', '<id>')}"))
+        else:
+            checks.append(("Canonical schema version", None,
+                            f"v{canon_version} (legacy) — fields 'status' and 'revoked_at' are NOT "
+                            f"cryptographically bound to this certificate's hash or signature.\n"
+                            f"  SECURITY NOTICE (POGR Audit V2 A08): A revoked v1 certificate's\n"
+                            f"  exported file still shows status=ACTIVE in the JSON, because\n"
+                            f"  revocation cannot be detected offline for v1 certificates.\n"
+                            f"  Always verify revocation in real-time at:\n"
+                            f"  {DEFAULT_ENDPOINT}/v1/pogr/verify/{cert.get('pogc_id', '<id>')}"))
 
     # ── Overall result ────────────────────────────────────────────────────
     # FAIL = any check with passed=False; warnings (None) are non-blocking.
@@ -533,6 +564,15 @@ def main():
         help="Output results as machine-readable JSON (exit 0=valid, 1=invalid)"
     )
     parser.add_argument(
+        "--allow-sim", action="store_true", default=False,
+        help=(
+            "Accept AUDIT-PQC-SIM-V2 signatures as VALID (with WARNING). "
+            "Use ONLY in test/development environments — never in production. "
+            "By default (without this flag), sim-signed certs are rejected as INVALID. "
+            "Production certificates always carry real ML-DSA-65 signatures."
+        )
+    )
+    parser.add_argument(
         "--version", action="version", version=f"%(prog)s {VERSION}"
     )
 
@@ -570,7 +610,11 @@ def main():
 
     # ── Verify ────────────────────────────────────────────────────────────
     platform_key_b64 = args.platform_key or None
-    valid, checks = verify_certificate(cert, platform_key_b64=platform_key_b64)
+    valid, checks = verify_certificate(
+        cert,
+        platform_key_b64=platform_key_b64,
+        allow_sim=args.allow_sim,
+    )
 
     if args.json:
         result = {

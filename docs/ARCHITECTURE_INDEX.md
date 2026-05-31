@@ -67,7 +67,7 @@ Escenario: aprobación autónoma cross-border — SWIFT MT103 / FIX 4.4 / XRPL R
 | **Remediation Closure** | `docs/reviewer/REMEDIATION_CLOSURE_REPORT.md` | Cierre formal · matriz de ataques actualizada |
 | **Packages** | `evidence_packages/` | JSON (~494KB) + PDF técnico (15p) + **EVP ejecutivo (5p)** generados on-demand |
 
-**Verified v1.4.0:** **187/187 PASS** · 0 FAIL · RFC-ATF-1 a RFC-ATF-6 · IPFL GCFR verificado ✓ (2026-05-30)  
+**Verified v1.4.0:** **187/187 PASS** · 0 FAIL · RFC-ATF-1 a RFC-ATF-6 · IPFL GCFR verificado ✓ (2026-05-31)  
 **Adversarial:** 15 ataques · **0 bypasses abiertos** v1.1.0+  
 **Invariantes demonstrados:** 46 (RTE-INV-001–015 + **IPFL-INV-001–008** + ATF-INV + CGE-INV + BEV-INV + MIVP-INV + PoGR-INV + TGB-INV)  
 **Uso:** `python scripts/generate_treasury_execution_trace.py`  
