@@ -17,3 +17,4 @@
 - [Primer PoGC Externo](primer-pogc-externo.md) — POGC-EXT-A7F3C2B1D9E4F508 emitido 2026-05-30 a VeriSigil AI. Primera CA externa del PoGR. Clase EXTERNAL. Script standalone en scripts/generate_verisigil_pogc.py.
 - [PoGR Security Hardening](pogr-security-hardening.md) — ADR-205. 7 remediaciones (R-C1/R-H1/R-H2/R-H3/R-M1/R-M2/R-M3). Audit V3 2026-05-31: 19 ataques · 0 CRITICAL · 0 HIGH · 2 PARTIAL MEDIUM · PRODUCTION-READY. Pendiente Railway: POGR_ADMIN_RESIGN_SECRET + OMNIX_PQC_VERIFY_FAIL_CLOSED=true.
 - [Replit secrets vs autoscale](replit-secrets-autoscale.md) — Replit secrets NO inyectan en autoscale deploy. Usar shared env var con nombre diferente + dual-lookup en código.
+- [Replit deploy image size](replit-deploy-image-size.md) — .replit_ignore NO reduce Repl layer. Solución: rm -rf .pythonlibs/ node_modules/ + deployConfig npm ci. Workflows caen tras rm — pip reinstala core packages manual.
