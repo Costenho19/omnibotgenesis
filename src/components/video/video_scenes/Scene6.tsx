@@ -1,21 +1,23 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { OmnixLogo } from '../OmnixLogo';
 
 // S6 duration: 12000ms
-// Narrative: The trust layer. First Proof of Governance Registry in the world.
-// "The SSL for AI decisions."
+// Narrative: The trust layer. Logo OMNIX como elemento visual principal de cierre.
+// POGC-GENESIS · OMNIX QUANTUM LTD · "The SSL for AI Decisions"
 
 export function Scene6() {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 500),   // company
-      setTimeout(() => setPhase(2), 1800),  // divider
-      setTimeout(() => setPhase(3), 2800),  // POGC genesis
-      setTimeout(() => setPhase(4), 4200),  // tagline
-      setTimeout(() => setPhase(5), 6000),  // regulations
-      setTimeout(() => setPhase(6), 8000),  // CTA
+      setTimeout(() => setPhase(1), 300),   // logo grande aparece
+      setTimeout(() => setPhase(2), 2000),  // company name
+      setTimeout(() => setPhase(3), 3200),  // divider
+      setTimeout(() => setPhase(4), 4200),  // POGC genesis
+      setTimeout(() => setPhase(5), 5800),  // tagline SSL
+      setTimeout(() => setPhase(6), 7500),  // regulations
+      setTimeout(() => setPhase(7), 9500),  // CTA
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
@@ -28,18 +30,16 @@ export function Scene6() {
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
     >
-      {/* Ambient glow */}
+      {/* Ambient glow from logo */}
       <motion.div
         style={{
           position: 'absolute',
-          width: '70vw',
-          height: '70vw',
+          width: '60vw',
+          height: '60vw',
           borderRadius: '50%',
-          backgroundColor: '#D4A843',
-          filter: 'blur(120px)',
-          opacity: 0.04,
+          background: 'radial-gradient(circle, rgba(212,168,67,0.06) 0%, transparent 65%)',
         }}
-        animate={{ scale: [1, 1.08, 1], opacity: [0.04, 0.07, 0.04] }}
+        animate={{ scale: [1, 1.08, 1] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
       />
 
@@ -69,19 +69,38 @@ export function Scene6() {
         />
       ))}
 
-      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0',
+        }}
+      >
+        {/* OMNIX LOGO — elemento principal */}
+        <motion.div
+          style={{ marginBottom: '3.5vh' }}
+          initial={{ opacity: 0, scale: 0.7, y: 20 }}
+          animate={phase >= 1 ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.7, y: 20 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <OmnixLogo size="26vw" glow opacity={1} />
+        </motion.div>
+
         {/* Company name */}
-        <div style={{ overflow: 'hidden', marginBottom: '2.5vh' }}>
+        <div style={{ overflow: 'hidden', marginBottom: '1.5vh' }}>
           <motion.h1
             style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: '5.5vw',
+              fontSize: '4.5vw',
               fontWeight: 900,
               color: '#ffffff',
               letterSpacing: '0.25em',
             }}
             initial={{ y: '100%' }}
-            animate={phase >= 1 ? { y: 0 } : { y: '100%' }}
+            animate={phase >= 2 ? { y: 0 } : { y: '100%' }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             OMNIX QUANTUM LTD
@@ -90,23 +109,23 @@ export function Scene6() {
 
         {/* Amber divider */}
         <motion.div
-          style={{ width: '38vw', height: '1px', backgroundColor: '#D4A843', marginBottom: '3.5vh' }}
+          style={{ width: '38vw', height: '1px', backgroundColor: '#D4A843', marginBottom: '3vh' }}
           initial={{ scaleX: 0 }}
-          animate={phase >= 2 ? { scaleX: 1 } : { scaleX: 0 }}
+          animate={phase >= 3 ? { scaleX: 1 } : { scaleX: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         />
 
         {/* POGC genesis */}
         <motion.div
-          style={{ textAlign: 'center', marginBottom: '2vh' }}
+          style={{ textAlign: 'center', marginBottom: '2.5vh' }}
           initial={{ opacity: 0, y: 12 }}
-          animate={phase >= 3 ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          animate={phase >= 4 ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
           transition={{ duration: 0.6 }}
         >
           <p
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '1.6vw',
+              fontSize: '1.55vw',
               color: '#C8C8D0',
               letterSpacing: '0.12em',
             }}
@@ -116,7 +135,7 @@ export function Scene6() {
           <p
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '0.9vw',
+              fontSize: '0.88vw',
               color: 'rgba(200,200,208,0.35)',
               letterSpacing: '0.1em',
               marginTop: '0.6vh',
@@ -130,11 +149,11 @@ export function Scene6() {
         <motion.div
           style={{
             padding: '1.5vh 3vw',
-            border: '1px solid rgba(212,168,67,0.35)',
-            marginBottom: '3vh',
+            border: '1px solid rgba(212,168,67,0.45)',
+            marginBottom: '2.5vh',
           }}
           initial={{ opacity: 0, scale: 0.94 }}
-          animate={phase >= 4 ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.94 }}
+          animate={phase >= 5 ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.94 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
           <p
@@ -155,13 +174,13 @@ export function Scene6() {
         <motion.p
           style={{
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '1.05vw',
+            fontSize: '1.02vw',
             color: 'rgba(200,200,208,0.4)',
             letterSpacing: '0.1em',
             textAlign: 'center',
           }}
           initial={{ opacity: 0 }}
-          animate={phase >= 5 ? { opacity: 1 } : { opacity: 0 }}
+          animate={phase >= 6 ? { opacity: 1 } : { opacity: 0 }}
           transition={{ duration: 0.7 }}
         >
           EU AI Act Art. 9 &amp; 11 &nbsp;·&nbsp; MiCA Title VI &nbsp;·&nbsp; DORA Art. 11 &nbsp;·&nbsp; NIST AU-2
@@ -170,15 +189,15 @@ export function Scene6() {
 
       {/* CTA */}
       <motion.div
-        style={{ position: 'absolute', bottom: '7%', textAlign: 'center' }}
+        style={{ position: 'absolute', bottom: '6%', textAlign: 'center' }}
         initial={{ opacity: 0, y: 14 }}
-        animate={phase >= 6 ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+        animate={phase >= 7 ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       >
         <p
           style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: '1.1vw',
+            fontSize: '1.05vw',
             color: 'rgba(200,200,208,0.35)',
             letterSpacing: '0.2em',
           }}

@@ -1,21 +1,23 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { OmnixLogo } from '../OmnixLogo';
 
 // S1 duration: 15000ms
 // Narrative: Hook for someone who has never heard of OMNIX.
-// "AI just moved $50M. Alone. No trace. No accountability."
+// Logo OMNIX aparece primero como identidad, luego el problema.
 
 export function Scene1() {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 400),   // hook line 1
-      setTimeout(() => setPhase(2), 2000),  // amount
-      setTimeout(() => setPhase(3), 4500),  // descriptor
-      setTimeout(() => setPhase(4), 7000),  // "No audit trail"
-      setTimeout(() => setPhase(5), 9500),  // red question + accountability
-      setTimeout(() => setPhase(6), 12500), // OMNIX teaser
+      setTimeout(() => setPhase(1), 300),   // logo aparece grande
+      setTimeout(() => setPhase(2), 2200),  // hook line superior
+      setTimeout(() => setPhase(3), 3800),  // USD amount
+      setTimeout(() => setPhase(4), 6200),  // descriptor
+      setTimeout(() => setPhase(5), 8500),  // "No audit trail"
+      setTimeout(() => setPhase(6), 11000), // ? + accountability
+      setTimeout(() => setPhase(7), 13500), // tagline OMNIX
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
@@ -28,20 +30,43 @@ export function Scene1() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Top hook — universally legible */}
+      {/* Logo OMNIX — aparece grande, luego se achica hacia arriba */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          zIndex: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1.5vh',
+        }}
+        initial={{ top: '50%', translateY: '-50%', scale: 1.1, opacity: 0 }}
+        animate={
+          phase >= 3
+            ? { top: '12%', translateY: '0%', scale: 0.55, opacity: 0.9 }
+            : phase >= 1
+            ? { top: '50%', translateY: '-50%', scale: 1, opacity: 1 }
+            : { top: '50%', translateY: '-50%', scale: 1.1, opacity: 0 }
+        }
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <OmnixLogo size="22vw" glow />
+      </motion.div>
+
+      {/* Top hook — aparece cuando logo sube */}
       <motion.div
         className="absolute"
-        style={{ top: '18%' }}
+        style={{ top: '21%' }}
         initial={{ opacity: 0, y: -16 }}
-        animate={phase >= 1 ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
+        animate={phase >= 2 ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
         <p
           style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: '1.6vw',
+            fontSize: '1.5vw',
             fontWeight: 500,
-            color: 'rgba(200,200,208,0.55)',
+            color: 'rgba(200,200,208,0.5)',
             letterSpacing: '0.25em',
             textAlign: 'center',
           }}
@@ -63,7 +88,7 @@ export function Scene1() {
       <motion.div
         style={{ position: 'relative', zIndex: 10, marginTop: '-1vh' }}
         initial={{ opacity: 0.2, y: 20 }}
-        animate={phase >= 2 ? { opacity: 1, y: 0 } : { opacity: 0.2, y: 20 }}
+        animate={phase >= 3 ? { opacity: 1, y: 0 } : { opacity: 0.2, y: 20 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
         <h1
@@ -84,13 +109,13 @@ export function Scene1() {
       <motion.div
         style={{ position: 'relative', zIndex: 10, marginTop: '3vh' }}
         initial={{ opacity: 0 }}
-        animate={phase >= 3 ? { opacity: 1 } : { opacity: 0 }}
+        animate={phase >= 4 ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.7 }}
       >
         <p
           style={{
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '1.5vw',
+            fontSize: '1.45vw',
             color: '#C8C8D0',
             letterSpacing: '0.18em',
           }}
@@ -103,13 +128,13 @@ export function Scene1() {
       <motion.div
         style={{ position: 'relative', zIndex: 10, marginTop: '2.5vh' }}
         initial={{ opacity: 0, y: 10 }}
-        animate={phase >= 4 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+        animate={phase >= 5 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
         transition={{ duration: 0.6 }}
       >
         <p
           style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: '1.4vw',
+            fontSize: '1.35vw',
             fontWeight: 600,
             color: 'rgba(229,62,62,0.85)',
             letterSpacing: '0.2em',
@@ -121,9 +146,16 @@ export function Scene1() {
 
       {/* ? + accountability question */}
       <motion.div
-        style={{ position: 'absolute', bottom: '22%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5vh' }}
+        style={{
+          position: 'absolute',
+          bottom: '22%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1.5vh',
+        }}
         initial={{ opacity: 0, scale: 0.8 }}
-        animate={phase >= 5 ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+        animate={phase >= 6 ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       >
         <span
@@ -153,7 +185,7 @@ export function Scene1() {
       <motion.div
         style={{ position: 'absolute', bottom: '6%' }}
         initial={{ opacity: 0 }}
-        animate={phase >= 6 ? { opacity: 1 } : { opacity: 0 }}
+        animate={phase >= 7 ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 1, ease: 'easeInOut' }}
       >
         <p

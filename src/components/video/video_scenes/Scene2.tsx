@@ -1,16 +1,17 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { OmnixLogo } from '../OmnixLogo';
 
 // S2 duration: 15000ms
 // Narrative: The OMNIX Governance Contract — sealed with ML-DSA-65 BEFORE Turn 0.
-// "Before the AI moved a single dollar, a cryptographic contract was sealed."
+// Logo OMNIX aparece como elemento de transición cuando emerge el contrato.
 
 export function Scene2() {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 500),   // headline
+      setTimeout(() => setPhase(1), 400),   // headline + logo
       setTimeout(() => setPhase(2), 1800),  // divider
       setTimeout(() => setPhase(3), 2600),  // line 1
       setTimeout(() => setPhase(4), 3600),  // line 2
@@ -18,7 +19,7 @@ export function Scene2() {
       setTimeout(() => setPhase(6), 5600),  // line 4
       setTimeout(() => setPhase(7), 6800),  // line 5
       setTimeout(() => setPhase(8), 8000),  // line 6
-      setTimeout(() => setPhase(9), 10000), // bottom statement
+      setTimeout(() => setPhase(9), 10000), // bottom statement + logo glow
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
@@ -52,48 +53,57 @@ export function Scene2() {
         transition={{ duration: 6, ease: 'linear', repeat: Infinity }}
       />
 
-      {/* Top label */}
+      {/* Top section: logo + label side by side */}
       <motion.div
         className="absolute"
-        style={{ top: '14%' }}
+        style={{ top: '10%', display: 'flex', alignItems: 'center', gap: '2vw' }}
         initial={{ opacity: 0, y: -12 }}
         animate={phase >= 1 ? { opacity: 1, y: 0 } : { opacity: 0, y: -12 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.7 }}
       >
-        <p
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: '1.1vw',
-            color: 'rgba(200,200,208,0.45)',
-            letterSpacing: '0.3em',
-            fontWeight: 600,
-          }}
-        >
-          BEFORE THE AI MOVED A SINGLE DOLLAR
-        </p>
+        <OmnixLogo size="7vw" opacity={0.9} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3vh' }}>
+          <p
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: '1vw',
+              color: 'rgba(200,200,208,0.4)',
+              letterSpacing: '0.3em',
+              fontWeight: 600,
+            }}
+          >
+            BEFORE THE AI MOVED A SINGLE DOLLAR
+          </p>
+          <div style={{ overflow: 'hidden' }}>
+            <motion.h2
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: '2.8vw',
+                fontWeight: 800,
+                letterSpacing: '0.4em',
+                color: '#D4A843',
+              }}
+              initial={{ y: '100%' }}
+              animate={phase >= 1 ? { y: 0 } : { y: '100%' }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            >
+              GOVERNANCE CONTRACT
+            </motion.h2>
+          </div>
+        </div>
       </motion.div>
-
-      {/* Headline */}
-      <div style={{ overflow: 'hidden', marginBottom: '3vh', position: 'relative', zIndex: 10 }}>
-        <motion.h2
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: '2.8vw',
-            fontWeight: 800,
-            letterSpacing: '0.4em',
-            color: '#D4A843',
-          }}
-          initial={{ y: '100%' }}
-          animate={phase >= 1 ? { y: 0 } : { y: '100%' }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        >
-          GOVERNANCE CONTRACT
-        </motion.h2>
-      </div>
 
       {/* Divider */}
       <motion.div
-        style={{ width: '58vw', height: '1px', backgroundColor: '#D4A843', marginBottom: '5vh', position: 'relative', zIndex: 10 }}
+        style={{
+          width: '58vw',
+          height: '1px',
+          backgroundColor: '#D4A843',
+          marginBottom: '5vh',
+          position: 'relative',
+          zIndex: 10,
+          marginTop: '5vh',
+        }}
         initial={{ scaleX: 0 }}
         animate={phase >= 2 ? { scaleX: 1 } : { scaleX: 0 }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
@@ -123,26 +133,27 @@ export function Scene2() {
             <span style={{ color: 'rgba(212,168,67,0.55)', minWidth: '9vw' }}>
               {line.label}:
             </span>
-            <span style={{ color: line.label === 'mandate' ? '#D4A843' : '#C8C8D0', fontWeight: line.label === 'mandate' ? 700 : 400 }}>
+            <span
+              style={{
+                color: line.label === 'mandate' ? '#D4A843' : '#C8C8D0',
+                fontWeight: line.label === 'mandate' ? 700 : 400,
+              }}
+            >
               {line.value}
             </span>
           </motion.div>
         ))}
       </div>
 
-      {/* Bottom statement */}
+      {/* Bottom statement — logo aparece con glow a los 10s (fase 9) */}
       <motion.div
-        style={{ position: 'absolute', bottom: '10%', textAlign: 'center' }}
+        style={{ position: 'absolute', bottom: '8%', display: 'flex', alignItems: 'center', gap: '2.5vw' }}
         initial={{ opacity: 0, y: 20 }}
         animate={phase >= 9 ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div
-          style={{
-            borderLeft: '3px solid #D4A843',
-            paddingLeft: '2vw',
-          }}
-        >
+        <OmnixLogo size="5.5vw" glow opacity={0.85} />
+        <div style={{ borderLeft: '3px solid #D4A843', paddingLeft: '2vw' }}>
           <p
             style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",

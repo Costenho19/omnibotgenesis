@@ -6,6 +6,7 @@ import { Scene3 } from './video_scenes/Scene3';
 import { Scene4 } from './video_scenes/Scene4';
 import { Scene5 } from './video_scenes/Scene5';
 import { Scene6 } from './video_scenes/Scene6';
+import { OmnixLogo } from './OmnixLogo';
 
 // Total: 15+15+18+15+15+12 = 90 seconds
 const SCENE_DURATIONS = {
@@ -20,40 +21,30 @@ const SCENE_DURATIONS = {
 export default function VideoTemplate() {
   const { currentScene } = useVideoPlayer({ durations: SCENE_DURATIONS });
 
+  // Scene 6 owns the logo — hide persistent badge there
+  const hidePersistentLogo = currentScene === 5;
+
   return (
     <div
       className="relative w-full h-screen overflow-hidden"
       style={{ backgroundColor: '#050508', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
     >
-      {/* Persistent wordmark */}
-      <motion.div
-        className="absolute flex flex-col"
-        style={{ top: '4.5vh', left: '4vw', zIndex: 50 }}
-        animate={{ opacity: currentScene === 5 ? 0 : 0.28, scale: 1 }}
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <span
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: '1.9vw',
-            fontWeight: 900,
-            letterSpacing: '0.25em',
-            color: '#C8C8D0',
-          }}
-        >
-          OMNIX
-        </span>
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '0.75vw',
-            letterSpacing: '0.35em',
-            color: '#C8C8D0',
-          }}
-        >
-          QUANTUM
-        </span>
-      </motion.div>
+      {/* Persistent OMNIX logo — top-right badge (all scenes except S6) */}
+      <AnimatePresence>
+        {!hidePersistentLogo && (
+          <motion.div
+            key="persistent-logo"
+            className="absolute"
+            style={{ top: '3.5vh', right: '3.5vw', zIndex: 50 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.85, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <OmnixLogo size="7vw" opacity={1} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Persistent amber dot — becomes red on tamper scene */}
       <motion.div
@@ -63,7 +54,7 @@ export default function VideoTemplate() {
           width: currentScene === 3 ? '0.9vw' : '0.45vw',
           height: currentScene === 3 ? '0.9vw' : '0.45vw',
           backgroundColor: currentScene === 3 ? '#E53E3E' : '#D4A843',
-          opacity: currentScene === 5 ? 0 : 0.7,
+          opacity: hidePersistentLogo ? 0 : 0.7,
         }}
         transition={{ duration: 0.7, ease: 'easeInOut' }}
       />
