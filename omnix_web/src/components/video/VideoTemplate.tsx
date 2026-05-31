@@ -6,61 +6,55 @@ import { Scene3 } from './video_scenes/Scene3';
 import { Scene4 } from './video_scenes/Scene4';
 import { Scene5 } from './video_scenes/Scene5';
 import { Scene6 } from './video_scenes/Scene6';
-import { Scene7 } from './video_scenes/Scene7';
 
 const SCENE_DURATIONS = {
-  problem: 8000,
-  flow: 12000,
-  ces: 10000,
-  halt: 10000,
-  evidence: 12000,
-  verify: 10000,
-  closing: 13000
+  s1: 9000,
+  s2: 18000,
+  s3: 18000,
+  s4: 18000,
+  s5: 15000,
+  s6: 18000
 };
 
 export default function VideoTemplate() {
   const { currentScene } = useVideoPlayer({ durations: SCENE_DURATIONS });
 
   return (
-    <div className="relative w-full h-screen overflow-hidden" style={{ background: 'var(--navy)' }}>
-      {/* Persistent Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(var(--navy-light) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-        
-        {/* Slow gold radial pulse */}
-        <motion.div
-          className="absolute w-[800px] h-[800px] rounded-full blur-[100px] opacity-10"
-          style={{ background: 'radial-gradient(circle, var(--gold), transparent)' }}
-          animate={{
-            x: ['-20%', '50%', '10%', '-30%', '40%', '60%', '20%', '-20%'][currentScene % 8],
-            y: ['10%', '-20%', '40%', '50%', '-10%', '30%', '60%', '10%'][currentScene % 8],
-            scale: [1, 1.2, 0.9, 1.4, 1.1, 0.8, 1.3, 1][currentScene % 8],
-          }}
-          transition={{ duration: 4, ease: "easeInOut" }}
+    <div className="relative w-full h-screen overflow-hidden bg-[#050508] font-display text-[#F8F8FF]">
+      
+      {/* Persistent Video Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+        <video 
+          src={`${import.meta.env.BASE_URL}videos/bg_abstract.mp4`} 
+          autoPlay 
+          muted 
+          loop 
+          playsInline
+          className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Persistent Top Protocol Signal Bar */}
-      <div className="absolute top-0 left-0 w-full h-[2px] bg-[var(--navy-light)] z-50">
-        <motion.div
-          className="h-full bg-[var(--gold)]"
-          animate={{
-            width: ['10%', '25%', '45%', '50%', '75%', '90%', '100%'][currentScene],
-            opacity: [0.3, 0.5, 0.7, 1, 0.6, 0.8, 0.2][currentScene]
-          }}
-          transition={{ duration: 2, ease: "easeInOut" }}
-        />
-      </div>
+      {/* Persistent Vertical Amber Line Motif */}
+      <motion.div
+        className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#D4A843] z-50 origin-top"
+        animate={{
+          scaleY: [0.1, 0.4, 1, 0.6, 0.8, 1][currentScene % 6],
+          opacity: [1, 0.8, 1, 0.9, 0.7, 1][currentScene % 6],
+          filter: ['blur(0px)', 'blur(2px)', 'blur(0px)', 'blur(1px)', 'blur(0px)', 'blur(0px)'][currentScene % 6]
+        }}
+        transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+      />
 
-      <AnimatePresence mode="popLayout">
-        {currentScene === 0 && <Scene1 key="problem" />}
-        {currentScene === 1 && <Scene2 key="flow" />}
-        {currentScene === 2 && <Scene3 key="ces" />}
-        {currentScene === 3 && <Scene4 key="halt" />}
-        {currentScene === 4 && <Scene5 key="evidence" />}
-        {currentScene === 5 && <Scene6 key="verify" />}
-        {currentScene === 6 && <Scene7 key="closing" />}
-      </AnimatePresence>
+      <div className="absolute inset-0 z-10">
+        <AnimatePresence mode="popLayout">
+          {currentScene === 0 && <Scene1 key="s1" />}
+          {currentScene === 1 && <Scene2 key="s2" />}
+          {currentScene === 2 && <Scene3 key="s3" />}
+          {currentScene === 3 && <Scene4 key="s4" />}
+          {currentScene === 4 && <Scene5 key="s5" />}
+          {currentScene === 5 && <Scene6 key="s6" />}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

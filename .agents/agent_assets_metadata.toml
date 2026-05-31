@@ -6,6 +6,18 @@ uri = "file://attached_assets/ghost_compliance_cover_linkedin.png"
 type = "image"
 title = "ghost compliance book cover linkedin"
 
+[[generated]]
+id = "EJvQTvLMEHaBTrR3_8B_T"
+uri = "file://omnix_web/public/images/crypto_seal.png"
+type = "image"
+title = "Cryptographic seal lock abstract"
+
+[[generated]]
+id = "d6kZ0_E7AiCWJC_uMEzeX"
+uri = "file://omnix_web/public/images/quantum_nodes.png"
+type = "image"
+title = "Quantum node data stream"
+
 [[outputs]]
 id = "1wSIlrHhddlnvbp3eIEHS"
 uri = "file://docs/OMNIX_Informe_Completo_Mar2026.pdf"

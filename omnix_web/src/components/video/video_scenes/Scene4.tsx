@@ -6,74 +6,79 @@ export function Scene4() {
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 800),
-      setTimeout(() => setPhase(2), 2000),
-      setTimeout(() => setPhase(3), 3500),
+      setTimeout(() => setPhase(1), 1000), // Show initial success
+      setTimeout(() => setPhase(2), 3000), // Mutate hash
+      setTimeout(() => setPhase(3), 4500), // Show fail
+      setTimeout(() => setPhase(4), 6000), // Show exit code
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
 
   return (
     <motion.div
-      className="absolute inset-0 flex flex-col items-center justify-center bg-[#020617]"
+      className="absolute inset-0 flex flex-col items-center justify-center bg-transparent"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Flash red border briefly */}
-      <motion.div
-        className="absolute inset-0 border-[4px] border-[var(--danger)] pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={phase === 1 ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      />
+      <motion.h2
+        className="absolute top-[15vh] text-[3vw] font-bold text-white text-center w-full"
+        initial={{ opacity: 0, y: -20 }}
+        animate={phase >= 1 ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }}
+        transition={{ duration: 0.8 }}
+      >
+        Tamper with one byte.<br />
+        <span className="text-[#EF4444]">The chain breaks.</span>
+      </motion.h2>
 
-      <div className="relative w-[30vh] h-[30vh] flex items-center justify-center mb-12">
-        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible">
-          <motion.polygon
-            points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5"
-            fill={phase >= 2 ? "rgba(239, 68, 68, 0.15)" : "transparent"}
-            stroke="var(--danger)"
-            strokeWidth="2"
-            initial={{ pathLength: 0, strokeDasharray: 300, strokeDashoffset: 300 }}
-            animate={phase >= 1 ? { strokeDashoffset: 0 } : { strokeDashoffset: 300 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-          />
-        </svg>
+      <div className="mt-[10vh] w-[60vw] bg-[#050508]/90 border border-white/10 rounded-lg p-8 font-mono text-[1.5vw] flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <span className="text-white">INT-ADM-GCFR-SIG</span>
+          {phase < 3 ? (
+            <span className="text-green-500">✓ PASS</span>
+          ) : (
+            <span className="text-[#EF4444]">✗ FAIL</span>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-white">INT-ADM-GCFR-HASH</span>
+          {phase < 2 ? (
+            <span className="text-green-500">✓ PASS</span>
+          ) : (
+            <motion.span 
+              className="text-[#EF4444] font-bold"
+              initial={{ scale: 1.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              ✗ FAIL
+            </motion.span>
+          )}
+        </div>
 
         <motion.div
-          className="text-[4vw] font-bold text-[var(--gold)] z-10"
-          style={{ fontFamily: 'var(--font-mono)' }}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={phase >= 2 ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          className="border-t border-white/10 pt-6 mt-2"
+          initial={{ opacity: 0 }}
+          animate={phase >= 4 ? { opacity: 1 } : { opacity: 0 }}
         >
-          HALT
+          {phase >= 4 ? (
+             <span className="text-[#EF4444] font-bold">> exit code 1</span>
+          ) : (
+             <span className="text-green-500">> exit code 0</span>
+          )}
         </motion.div>
       </div>
 
-      <div className="text-center h-[15vh]">
-        <motion.p
-          className="text-[2vw] text-[var(--danger)] font-medium mb-4 tracking-wide"
-          style={{ fontFamily: 'var(--font-display)' }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={phase >= 3 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-          transition={{ duration: 0.5 }}
-        >
-          Execution blocked. Authority chain invalid.
-        </motion.p>
-        
-        <motion.p
-          className="text-[1vw] text-[var(--muted)]"
-          style={{ fontFamily: 'var(--font-mono)' }}
-          initial={{ opacity: 0 }}
-          animate={phase >= 3 ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
-          CES: 8.33 · ATFDR-7F3A9B2C1E4D8F6A · OMNIX-BLOCK-20260518-000147
-        </motion.p>
-      </div>
+      {phase >= 3 && (
+         <motion.div
+           className="absolute inset-0 border-[4px] border-[#EF4444] pointer-events-none mix-blend-screen opacity-20"
+           initial={{ opacity: 0 }}
+           animate={{ opacity: [0, 0.4, 0] }}
+           transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+         />
+      )}
     </motion.div>
   );
 }
