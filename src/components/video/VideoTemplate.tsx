@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useVideoPlayer } from '@/lib/video';
 import { Scene1 } from './video_scenes/Scene1';
 import { Scene2 } from './video_scenes/Scene2';
@@ -8,20 +8,20 @@ import { Scene5 } from './video_scenes/Scene5';
 import { Scene6 } from './video_scenes/Scene6';
 import { OmnixLogo } from './OmnixLogo';
 
-// Total: 15+15+18+15+15+12 = 90 seconds
 const SCENE_DURATIONS = {
-  problem:   15000,
-  protocol:  15000,
-  execution: 18000,
-  tamper:    15000,
-  verify:    15000,
-  trust:     12000,
+  problem:   3500,
+  protocol:  4000,
+  execution: 5000,
+  tamper:    4000,
+  verify:    4500,
+  trust:     5000,
 };
+
+const SCENES = [Scene1, Scene2, Scene3, Scene4, Scene5, Scene6];
 
 export default function VideoTemplate() {
   const { currentScene } = useVideoPlayer({ durations: SCENE_DURATIONS });
 
-  // Scene 6 owns the logo — hide persistent badge there
   const hidePersistentLogo = currentScene === 5;
 
   return (
@@ -29,24 +29,36 @@ export default function VideoTemplate() {
       className="relative w-full h-screen overflow-hidden"
       style={{ backgroundColor: '#050508', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
     >
-      {/* Persistent OMNIX logo — top-right badge (all scenes except S6) */}
-      <AnimatePresence>
-        {!hidePersistentLogo && (
-          <motion.div
-            key="persistent-logo"
-            className="absolute"
-            style={{ top: '3.5vh', right: '3.5vw', zIndex: 50 }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 0.85, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <OmnixLogo size="7vw" opacity={1} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Persistent noise layer */}
+      <div className="absolute inset-0 bg-noise pointer-events-none opacity-[0.03] z-0" />
 
-      {/* Persistent amber dot — becomes red on tamper scene */}
+      {/* Persistent top amber progress line */}
+      <motion.div
+        className="absolute top-0 left-0 h-1 bg-[#D4A843] z-50"
+        initial={{ width: 0 }}
+        animate={{ width: '100%' }}
+        transition={{ duration: 26, ease: 'linear', repeat: Infinity }}
+      />
+
+      {/* Subtle grid lines */}
+      <div className="absolute inset-0 z-0 pointer-events-none flex justify-center items-center opacity-10">
+        <div className="w-full h-px bg-white absolute top-[25vh]" />
+        <div className="w-full h-px bg-white absolute top-[75vh]" />
+        <div className="h-full w-px bg-white absolute left-[25vw]" />
+        <div className="h-full w-px bg-white absolute left-[75vw]" />
+      </div>
+
+      {/* Persistent OMNIX logo — hidden on Scene6 (it renders its own) */}
+      <motion.div
+        className="absolute"
+        style={{ top: '3.5vh', right: '3.5vw', zIndex: 50 }}
+        animate={{ opacity: hidePersistentLogo ? 0 : 0.85, scale: hidePersistentLogo ? 0.8 : 1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <OmnixLogo size="7vw" opacity={1} />
+      </motion.div>
+
+      {/* Persistent amber status dot */}
       <motion.div
         className="absolute rounded-full"
         style={{ bottom: '5vh', right: '4vw', zIndex: 50 }}
@@ -59,33 +71,31 @@ export default function VideoTemplate() {
         transition={{ duration: 0.7, ease: 'easeInOut' }}
       />
 
-      {/* Scene counter */}
+      {/* Scene wipe line — amber vertical sweep on scene change */}
       <motion.div
-        className="absolute"
-        style={{ bottom: '5vh', left: '4vw', zIndex: 50 }}
-        animate={{ opacity: 0.2 }}
-      >
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '0.85vw',
-            color: '#C8C8D0',
-            letterSpacing: '0.2em',
-          }}
-        >
-          {String(currentScene + 1).padStart(2, '0')}&nbsp;/&nbsp;06
-        </span>
-      </motion.div>
+        key={`wipe-${currentScene}`}
+        className="absolute top-0 bottom-0 w-1 bg-[#D4A843] z-40 pointer-events-none"
+        initial={{ left: '-2%', opacity: 1 }}
+        animate={{ left: '102%', opacity: 0 }}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      />
 
-      {/* Dynamic content */}
-      <AnimatePresence mode="sync">
-        {currentScene === 0 && <Scene1 key="problem" />}
-        {currentScene === 1 && <Scene2 key="protocol" />}
-        {currentScene === 2 && <Scene3 key="execution" />}
-        {currentScene === 3 && <Scene4 key="tamper" />}
-        {currentScene === 4 && <Scene5 key="verify" />}
-        {currentScene === 5 && <Scene6 key="trust" />}
-      </AnimatePresence>
+      {/* All scenes rendered, only the active one is visible — no AnimatePresence */}
+      {SCENES.map((SceneComponent, idx) => (
+        <motion.div
+          key={idx}
+          className="absolute inset-0"
+          style={{ zIndex: currentScene === idx ? 10 : 1 }}
+          initial={false}
+          animate={{
+            opacity: currentScene === idx ? 1 : 0,
+            pointerEvents: currentScene === idx ? 'auto' : 'none',
+          }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {currentScene === idx && <SceneComponent />}
+        </motion.div>
+      ))}
     </div>
   );
 }

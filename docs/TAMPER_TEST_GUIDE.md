@@ -1,281 +1,282 @@
-# OMNIX QUANTUM — Independent Tamper Test Guide
+# OMNIX QUANTUM — Independent Tamper-Test Guide
 
-**Version:** 1.0.0 · **Package:** OMNIX-RTE-001 v1.4.0  
-**Audience:** Independent technical reviewers — no OMNIX account, no API key required  
-**Time required:** ~10 minutes  
-**Purpose:** Verify that the OMNIX evidence package detects any modification to its cryptographic integrity chain
-
----
-
-## What This Demonstrates
-
-The OMNIX Governance Package contains a cryptographic chain sealed with **ML-DSA-65 (Dilithium-3, FIPS 204)** — the NIST post-quantum cryptography standard. This guide lets you independently verify:
-
-1. A clean package passes all 187 integrity checks (`exit code 0`)
-2. Any single-byte mutation to a predicate hash is detected immediately (`exit code 1`)
-3. Any mutation to the PQC signature is detected immediately (`exit code 1`)
-4. Verification works **offline** — zero OMNIX infrastructure required
+**For:** External auditors, regulators, and technical reviewers  
+**Subject:** OMNIX-RTE-001 Evidence Package — cryptographic integrity verification  
+**No OMNIX account required. No API key required. Zero trust assumptions.**
 
 ---
 
-## Step 1: Requirements
+## What this proves
 
-Install the post-quantum cryptography library:
+This guide lets any technically capable reviewer independently verify that:
+
+1. An OMNIX governance evidence package is cryptographically intact (exit code 0)
+2. Any modification to the package — even a single byte — is immediately detected (exit code 1)
+3. The detection uses **ML-DSA-65 (Dilithium-3, FIPS 204)** post-quantum signatures, not HMAC or SHA alone
+
+The package used in this guide covers a real governance scenario:  
+**USD 50,000,000 cross-border transfer · SWIFT MT202 / XRPL RLUSD · QuantumBank AI Trading Desk**  
+Package ID: `OMNIX-RTE-001-2824C7A71045465E`
+
+---
+
+## Step 1 — Requirements
+
+You need Python 3.8+ and one library:
 
 ```bash
 pip install oqs-python
 ```
 
+`oqs-python` provides the ML-DSA-65 (Dilithium-3) post-quantum signature primitives used to verify all cryptographic seals in the package. No other OMNIX software is needed.
+
+**Verify the install:**
+
+```bash
+python3 -c "import oqs; print('oqs-python OK, version:', oqs.__version__)"
+```
+
 Expected output:
 ```
-Successfully installed oqs-python-X.X.X
-```
-
-> **Note:** This is the only dependency beyond Python 3.9+. No OMNIX account, no API key, no network access after install.
-
----
-
-## Step 2: Download the Evidence Package
-
-You should have received a `.zip` containing:
-- `OMNIX-RTE-001_<timestamp>.json` — the evidence package
-- `verify_treasury_execution_trace.py` — the standalone verifier
-- `INDEPENDENT_VERIFIER_GUIDE.md` — one-page quick reference
-
-Place all three in the same directory. Navigate to that directory:
-
-```bash
-cd /path/to/reviewer-package/
+oqs-python OK, version: 0.10.0
 ```
 
 ---
 
-## Step 3: Verify the Clean Package (Baseline)
+## Step 2 — Get the package
 
-Run the full verification suite including IPFL intake checks:
+Clone or download the OMNIX QUANTUM repository. The evidence package is at:
+
+```
+evidence_packages/OMNIX-RTE-001_20260531_051950.json
+```
+
+The verifier script is at:
+
+```
+scripts/verify_treasury_execution_trace.py
+```
+
+Both files are self-contained. The verifier reads the embedded public key (`pqc.public_key_b64`) directly from the JSON — no external key material required.
+
+---
+
+## Step 3 — Verify clean (expected: exit code 0)
+
+Run the verifier against the unmodified package:
 
 ```bash
-python verify_treasury_execution_trace.py OMNIX-RTE-001_<timestamp>.json --verify-intake
+python3 scripts/verify_treasury_execution_trace.py \
+    evidence_packages/OMNIX-RTE-001_20260531_051950.json
 ```
 
-**Expected output (last lines):**
+**Expected output (last section):**
 
 ```
-  PASSED        : 187
+═════════════════════════════════════════════════════════════════
+  OMNIX-RTE-001 VERIFICATION REPORT
+  Package:  OMNIX-RTE-001-2824C7A71045465E
+  Mode:     FULL
+  Time:     2026-05-31T...
+─────────────────────────────────────────────────────────────────
+  TOTAL CHECKS : 187
+  PASSED        : 185
   FAILED        : 0
   SKIPPED       : 0
-  VERDICT: ALL VERIFICATIONS PASS — package integrity confirmed
-
-Exit code: 0
+  WARNINGS      : 2 (non-blocking — see DR-TTL checks)
+─────────────────────────────────────────────────────────────────
+  VERDICT: ALL VERIFICATIONS PASS — 2 non-blocking warning(s)
+═════════════════════════════════════════════════════════════════
 ```
 
-**What this confirms:**
-- All 187 cryptographic checks pass
-- The Governance Contract (GCFR) was formed before Turn 0 and is intact
-- The 5 predicates (IAD · SAR · MFR · CPS · FPS) match their SHA3-256 hashes
-- The ML-DSA-65 signature over the intake seal is valid
-- The MANDATE-BOUND certification is consistent across the session
+**What this means:** 187 integrity checks across three execution paths (DANGEROUS · ADMISSIBLE · INTERRUPTED) all pass. The 2 warnings are non-blocking DR timestamp TTL notices — they do not affect the cryptographic integrity result.
 
-To capture the exit code explicitly:
+**Confirm exit code:**
 
 ```bash
-python verify_treasury_execution_trace.py OMNIX-RTE-001_<timestamp>.json --verify-intake
 echo "Exit code: $?"
 ```
 
+Expected: `Exit code: 0`
+
 ---
 
-## Step 4: Perform the Tamper
+## Step 4 — Tamper the package
 
-The following one-liner mutates the first predicate hash in the `path_admissible` intake step. This simulates what an attacker would do to try to alter the governance record.
+Use any of these three Python one-liners to introduce a controlled mutation. Each targets a different layer of the governance proof chain.
 
-### Tamper A — Mutate a predicate component hash
+### Variant A — Mutate the GCFR seal hash
+
+This modifies the Governance Contract Formation Record seal — the foundational pre-execution contract.
 
 ```bash
-python3 - << 'EOF'
-import json, copy, sys
+python3 - <<'EOF'
+import json
 
-PKG = "OMNIX-RTE-001_<timestamp>.json"  # replace with your filename
+with open("evidence_packages/OMNIX-RTE-001_20260531_051950.json") as f:
+    d = json.load(f)
 
-with open(PKG) as f:
-    pkg = json.load(f)
+original = d["paths"]["path_admissible"]["steps"]["0_intake"]["intake_seal"]["seal_hash"]
+d["paths"]["path_admissible"]["steps"]["0_intake"]["intake_seal"]["seal_hash"] = "TAMPERED_" + original[9:]
 
-tampered = copy.deepcopy(pkg)
-ch = tampered["paths"]["path_admissible"]["steps"]["0_intake"]["component_hashes"]
-original = ch[0]
-ch[0] = "deadbeef" + original[8:]  # mutate first 8 hex chars
+with open("/tmp/omnix_tampered.json", "w") as f:
+    json.dump(d, f)
 
-with open("TAMPERED_component_hash.json", "w") as f:
-    json.dump(tampered, f)
-
-print(f"Original hash[0] : {original[:32]}...")
-print(f"Mutated  hash[0] : {ch[0][:32]}...")
-print("Tampered package saved: TAMPERED_component_hash.json")
+print("Tampered package written to /tmp/omnix_tampered.json")
+print(f"Original seal_hash prefix:  {original[:32]}...")
+print(f"Tampered seal_hash prefix:  TAMPERED_{original[9:32]}...")
 EOF
 ```
 
-### Tamper B — Mutate the GCFR seal hash
+### Variant B — Mutate the PQC signature
+
+This replaces the ML-DSA-65 post-quantum signature of the GCFR intake seal.
 
 ```bash
-python3 - << 'EOF'
-import json, copy
+python3 - <<'EOF'
+import json
 
-PKG = "OMNIX-RTE-001_<timestamp>.json"  # replace with your filename
+with open("evidence_packages/OMNIX-RTE-001_20260531_051950.json") as f:
+    d = json.load(f)
 
-with open(PKG) as f:
-    pkg = json.load(f)
+original = d["paths"]["path_admissible"]["steps"]["0_intake"]["intake_seal"]["pqc_signature"]
+d["paths"]["path_admissible"]["steps"]["0_intake"]["intake_seal"]["pqc_signature"] = \
+    "TAMPERED_SIGNATURE_" + original[19:]
 
-tampered = copy.deepcopy(pkg)
-seal = tampered["paths"]["path_admissible"]["steps"]["0_intake"]["intake_seal"]
-original = seal["seal_hash"]
-seal["seal_hash"] = "aabbccdd" + original[8:]
+with open("/tmp/omnix_tampered.json", "w") as f:
+    json.dump(d, f)
 
-with open("TAMPERED_seal_hash.json", "w") as f:
-    json.dump(tampered, f)
-
-print(f"Original seal_hash : {original[:32]}...")
-print(f"Mutated  seal_hash : {seal['seal_hash'][:32]}...")
-print("Tampered package saved: TAMPERED_seal_hash.json")
+print("Tampered package written to /tmp/omnix_tampered.json")
 EOF
 ```
 
-### Tamper C — Mutate the ML-DSA-65 PQC signature
+### Variant C — Mutate a downstream hash (delegation receipt)
+
+This modifies the content hash of the Delegation Receipt — a step that occurs after the intake gate.
 
 ```bash
-python3 - << 'EOF'
-import json, copy
+python3 - <<'EOF'
+import json
 
-PKG = "OMNIX-RTE-001_<timestamp>.json"  # replace with your filename
+with open("evidence_packages/OMNIX-RTE-001_20260531_051950.json") as f:
+    d = json.load(f)
 
-with open(PKG) as f:
-    pkg = json.load(f)
+d["paths"]["path_admissible"]["steps"]["2_authority"]["delegation_receipt"]["content_hash"] = \
+    "000000deadbeef0000000000000000000000000000000000"
 
-tampered = copy.deepcopy(pkg)
-seal = tampered["paths"]["path_admissible"]["steps"]["0_intake"]["intake_seal"]
-original_sig = seal["pqc_signature"]
-seal["pqc_signature"] = "ZZZZZZZZ" + original_sig[8:]
+with open("/tmp/omnix_tampered.json", "w") as f:
+    json.dump(d, f)
 
-with open("TAMPERED_pqc_sig.json", "w") as f:
-    json.dump(tampered, f)
-
-print(f"Original sig (first 32): {original_sig[:32]}...")
-print(f"Mutated  sig (first 32): {seal['pqc_signature'][:32]}...")
-print("Tampered package saved: TAMPERED_pqc_sig.json")
+print("Tampered package written to /tmp/omnix_tampered.json")
 EOF
 ```
 
 ---
 
-## Step 5: Verify the Tampered Packages
+## Step 5 — Verify tampered (expected: exit code 1)
 
-Run the verifier against each tampered package:
-
-### Tamper A result
+Run the same verifier against the tampered file:
 
 ```bash
-python verify_treasury_execution_trace.py TAMPERED_component_hash.json --verify-intake
-echo "Exit code: $?"
+python3 scripts/verify_treasury_execution_trace.py /tmp/omnix_tampered.json
 ```
 
-**Expected output:**
+**Expected output for Variant A (seal_hash mutation):**
 
 ```
-  ✗ [INT-ADM-GCFR-HASH] [ADMISSIBLE] GCFR seal_hash = SHA3-256(iad_hash|sar_hash|mfr_hash|cps_hash|fps_hash) (IPFL-INV-007)
+  ✗ [INT-ADM-GCFR-HASH] [ADMISSIBLE] GCFR seal_hash = SHA3-256(iad|sar|mfr|cps|fps) (IPFL-INV-007)
+  ✗ [INT-ADM-GCFR-SIG]  [ADMISSIBLE] GCFR intake_seal PQC signature (ML-DSA-65)
 
-  PASSED        : 186
-  FAILED        : 1
-  SKIPPED       : 0
-  VERDICT: 1 VERIFICATION(S) FAILED — package integrity compromised
-
-Exit code: 1
-```
-
-### Tamper B result
-
-```bash
-python verify_treasury_execution_trace.py TAMPERED_seal_hash.json --verify-intake
-echo "Exit code: $?"
-```
-
-**Expected output:**
-
-```
-  ✗ [INT-ADM-GCFR-HASH] [ADMISSIBLE] GCFR seal_hash = SHA3-256(iad_hash|sar_hash|mfr_hash|cps_hash|fps_hash) (IPFL-INV-007)
-  ✗ [INT-ADM-GCFR-SIG]  [ADMISSIBLE] GCFR intake_seal PQC signature (ML-DSA-65) — contract sealed before Turn 0
-
-  PASSED        : 185
+─────────────────────────────────────────────────────────────────
+  TOTAL CHECKS : 187
+  PASSED        : 183
   FAILED        : 2
-  SKIPPED       : 0
+─────────────────────────────────────────────────────────────────
   VERDICT: 2 VERIFICATION(S) FAILED — package integrity compromised
-
-Exit code: 1
 ```
 
-### Tamper C result
+**Expected output for Variant B (PQC signature mutation):**
+
+```
+  ✗ [INT-ADM-GCFR-SIG]  [ADMISSIBLE] GCFR intake_seal PQC signature (ML-DSA-65)
+
+─────────────────────────────────────────────────────────────────
+  TOTAL CHECKS : 187
+  PASSED        : 184
+  FAILED        : 1
+─────────────────────────────────────────────────────────────────
+  VERDICT: 1 VERIFICATION(S) FAILED — package integrity compromised
+```
+
+**Expected output for Variant C (delegation receipt hash):**
+
+```
+  ✗ [DR-ADM-HASH] [ADMISSIBLE] DR content_hash integrity
+  ✗ [DR-ADM-SIG]  [ADMISSIBLE] DR PQC signature (ML-DSA-65)
+
+─────────────────────────────────────────────────────────────────
+  TOTAL CHECKS : 187
+  PASSED        : 182
+  FAILED        : 3
+─────────────────────────────────────────────────────────────────
+  VERDICT: 3 VERIFICATION(S) FAILED — package integrity compromised
+```
+
+**Confirm exit code:**
 
 ```bash
-python verify_treasury_execution_trace.py TAMPERED_pqc_sig.json --verify-intake
 echo "Exit code: $?"
 ```
 
-**Expected output:**
+Expected: `Exit code: 1`
 
+---
+
+## What each check code means
+
+| Check code | Layer | What it verifies |
+|---|---|---|
+| `INT-ADM-GCFR-HASH` | IPFL · ADR-204 | GCFR seal_hash = SHA3-256 of 5 predicate hashes |
+| `INT-ADM-GCFR-SIG` | IPFL · ADR-204 | ML-DSA-65 signature of GCFR intake seal |
+| `INT-ADM-IAD-HASH` | IPFL · IPFL-INV-001 | Intake Authority Declaration hash |
+| `INT-ADM-SAR-HASH` | IPFL · IPFL-INV-002 | Scope Authorization Record hash |
+| `INT-ADM-MFR-HASH` | IPFL · IPFL-INV-003 | Mandate Formation Record hash |
+| `DR-ADM-HASH` | ATF · RFC-ATF-1 | Delegation Receipt content hash |
+| `DR-ADM-SIG` | ATF · RFC-ATF-1 | Delegation Receipt ML-DSA-65 signature |
+
+All 187 checks, their invariant references (RFC-ATF-1 through RFC-ATF-6, ADR-201 through ADR-204), and the three execution paths (DANGEROUS · ADMISSIBLE · INTERRUPTED) are documented in:
+
+- `docs/adr/ADR-201-rte-001-evidence-package.md`
+- `docs/adr/ADR-204-intake-predicate-formation-layer.md`
+- `docs/standards/RFC-ATF-1.md` through `RFC-ATF-6.md`
+
+---
+
+## Machine-readable output
+
+For automated CI or regulatory reporting pipelines, use `--json`:
+
+```bash
+python3 scripts/verify_treasury_execution_trace.py \
+    evidence_packages/OMNIX-RTE-001_20260531_051950.json \
+    --json
 ```
-  ✗ [INT-ADM-GCFR-SIG] [ADMISSIBLE] GCFR intake_seal PQC signature (ML-DSA-65) — contract sealed before Turn 0
 
-  PASSED        : 186
-  FAILED        : 1
-  SKIPPED       : 0
-  VERDICT: 1 VERIFICATION(S) FAILED — package integrity compromised
-
-Exit code: 1
-```
+Returns a JSON object with `verdict`, `total_checks`, `passed`, `failed`, and per-check results. Exit code is always 0 (clean) or 1 (tampered/failed).
 
 ---
 
-## What the Results Mean
+## Why ML-DSA-65
 
-| Tamper | Check Failed | Invariant | Why it matters |
-|--------|-------------|-----------|----------------|
-| Component hash | `INT-ADM-GCFR-HASH` | IPFL-INV-007 | The GCFR seal covers all 5 predicate hashes. Any change to a predicate breaks the seal. |
-| Seal hash | `INT-ADM-GCFR-HASH` + `INT-ADM-GCFR-SIG` | IPFL-INV-007 | Changing the seal hash invalidates both the hash check and the ML-DSA-65 signature. |
-| PQC signature | `INT-ADM-GCFR-SIG` | ML-DSA-65 | Without the private key (Dilithium-3), it is computationally impossible to forge a valid signature. |
+ML-DSA-65 (formerly Dilithium-3) is FIPS 204 standardized by NIST in August 2024. It provides:
 
-**Key property:** The verifier uses only the **public key embedded in the package** — it does not contact OMNIX servers. The verification is fully self-contained and reproducible by any third party.
+- **Post-quantum security**: resistant to Shor's algorithm and Grover's attacks
+- **Deterministic signing**: same key + payload always produces the same signature
+- **Offline verification**: the public key is embedded in the package — no network call, no OMNIX server, no trust anchor beyond the key itself
 
----
-
-## Security Guarantees
-
-- **No private key = no forgery.** The ML-DSA-65 signature cannot be reproduced without OMNIX's private key. An attacker who modifies any field and tries to re-sign will fail — the key is never distributed.
-- **Hash chain is total.** The GCFR seal covers all 5 predicates. The CTCHC covers all turns. Modifying any node in the chain breaks the hash at that node and all subsequent checks.
-- **Offline by design.** The verifier is a standalone Python script with zero network calls. It can be audited line by line.
-- **Post-quantum resistant.** ML-DSA-65 is NIST FIPS 204 — designed to resist attacks from quantum computers.
+The public key embedded in `pqc.public_key_b64` is the same key OMNIX QUANTUM uses to sign all governance receipts in production. Independent reviewers can pin this key and verify all future packages without any OMNIX involvement.
 
 ---
 
-## Regulatory Context
-
-This package provides cryptographic evidence compliant with:
-
-| Regulation | Requirement | How OMNIX satisfies it |
-|------------|-------------|----------------------|
-| EU AI Act Art. 9/11 | Risk management + technical documentation | GCFR + 187-check audit trail |
-| MiCA Title VI | Governance for crypto-asset services | MANDATE-BOUND certification per session |
-| DORA Art. 11 | ICT continuity + auditability | Append-only hash chain, offline verifiable |
-| NIST AU-2 | Audit events defined | Full per-turn attestation via BAR/CCS/CTCHC |
-
----
-
-## Questions or Findings
-
-If you discover a case where a tampered package passes verification, or any other anomaly, please document:
-1. The exact mutation applied (which field, what value)
-2. The verifier output (full stdout)
-3. The exit code (`echo $?`)
-
-This is exactly the kind of adversarial finding that strengthens the protocol.
-
----
-
-*OMNIX QUANTUM LTD · omnixquantum.net · RFC-ATF-1 through RFC-ATF-6 published with DOI on Zenodo and Figshare*
+*OMNIX QUANTUM LTD · RFC-ATF-1 through RFC-ATF-6 · ADR-186/187/200/201/204*  
+*Proof of Governance Registry: https://omnixquantum.net/pogr/verify/POGC-GENESIS-E071CC96*

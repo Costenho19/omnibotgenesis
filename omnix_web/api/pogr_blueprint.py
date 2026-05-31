@@ -1780,3 +1780,197 @@ def admin_resign(pogc_id: str):
         "verify_url":        f"{os.environ.get('OMNIX_WEB_URL', 'https://omnixquantum.net')}/v1/pogr/verify/{pogc_id}",
         "note":              "Certificate now carries real ML-DSA-65 post-quantum signature (FIPS 204)",
     })
+
+
+# ─── 10. POST /v1/pogr/admin/import-external ─────────────────────────────────
+
+@pogr_bp.route("/v1/pogr/admin/import-external", methods=["POST"])
+def admin_import_external():
+    """
+    Admin-only: register an EXTERNAL class PoGC in the production registry and
+    immediately sign it with the real ML-DSA-65 key.
+
+    Use this to promote a certificate that was generated offline
+    (e.g. via generate_verisigil_pogc.py) into the live Railway DB,
+    making it publicly verifiable at /pogr/verify/<pogc_id>.
+
+    Idempotent: if the pogc_id already exists the endpoint returns 200 with
+    the existing record untouched (no duplicate insert, no signature change).
+
+    Security: same HMAC pattern as admin_resign.
+        Header: X-Admin-Import-Token: hmac-sha3-256(secret, 'POGR-IMPORT-EXTERNAL:' + pogc_id)
+        Secret: POGR_RESIGN_TOKEN env var (falls back to POGR_ADMIN_RESIGN_SECRET).
+
+    Required body fields:
+        pogc_id, subject_org, subject_org_id, agent_id,
+        compliance_tier, mandate_certification,
+        issued_at, expires_at,
+        session_id (use evidence bundle_id for EXTERNAL certs),
+        ctchc_seal_hash (use evidence_hash for EXTERNAL certs)
+
+    Optional body fields:
+        regulatory_tags   — defaults to ["EU-AI-ACT"]
+        turn_count        — defaults to 1
+        avg_conformance   — defaults to 1.0 for MANDATE-BOUND, 0.9 otherwise
+        extra_metadata    — stored as json in a non-canonical field (informational)
+    """
+    _ensure_tables()
+
+    # ── Auth: HMAC of (secret, 'POGR-IMPORT-EXTERNAL:' + pogc_id) ─────────
+    resign_secret = (
+        os.environ.get("POGR_RESIGN_TOKEN")
+        or os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+    )
+    if not resign_secret:
+        logger.error("[PoGR] admin_import_external: POGR_RESIGN_TOKEN not configured")
+        return _err(
+            "POGR_RESIGN_TOKEN not configured — admin operations unavailable",
+            503
+        )
+
+    body = request.get_json(silent=True) or {}
+    pogc_id = (body.get("pogc_id") or "").strip()
+    if not pogc_id:
+        return _err("pogc_id is required", 400)
+
+    expected_token = _hmac.new(
+        resign_secret.encode(),
+        f"POGR-IMPORT-EXTERNAL:{pogc_id}".encode(),
+        hashlib.sha3_256
+    ).hexdigest()
+    provided_token = request.headers.get("X-Admin-Import-Token", "").strip()
+
+    if not provided_token or not _hmac.compare_digest(expected_token, provided_token):
+        logger.warning(f"[PoGR] admin_import_external: invalid token for {pogc_id}")
+        return _err("Invalid or missing X-Admin-Import-Token", 403)
+
+    # ── Validate required body fields ─────────────────────────────────────
+    required = ["subject_org", "subject_org_id", "agent_id",
+                "compliance_tier", "mandate_certification",
+                "issued_at", "expires_at", "session_id", "ctchc_seal_hash"]
+    missing = [f for f in required if not body.get(f)]
+    if missing:
+        return _err(f"Missing required fields: {', '.join(missing)}", 400)
+
+    mandate_certification = body["mandate_certification"]
+    if mandate_certification not in ("MANDATE-BOUND", "MANDATE-ALIGNED", "UNCERTIFIED"):
+        return _err("mandate_certification must be MANDATE-BOUND, MANDATE-ALIGNED, or UNCERTIFIED", 400)
+
+    # ── Idempotency: check if already registered ──────────────────────────
+    try:
+        conn = _get_db()
+        with conn.cursor() as cur:
+            cur.execute("SELECT pogc_id, status, pqc_signature FROM pogr_certificates WHERE pogc_id = %s LIMIT 1", (pogc_id,))
+            existing = cur.fetchone()
+        conn.close()
+    except Exception as exc:
+        logger.error(f"[PoGR] admin_import_external DB read error: {exc}")
+        return jsonify({"error": "Registry unavailable"}), 503
+
+    if existing:
+        logger.info(f"[PoGR] admin_import_external: {pogc_id} already registered — idempotent return")
+        base_url = os.environ.get("OMNIX_WEB_URL", "https://omnixquantum.net")
+        return jsonify({
+            "status":       "already_registered",
+            "pogc_id":      pogc_id,
+            "cert_status":  existing["status"],
+            "verify_url":   f"{base_url}/v1/pogr/verify/{pogc_id}",
+            "public_page":  f"{base_url}/pogr/verify/{pogc_id}",
+            "note":         "Certificate already in registry — no action taken",
+        }), 200
+
+    # ── Build cert_data for canonical hashing ─────────────────────────────
+    regulatory_tags   = body.get("regulatory_tags", ["EU-AI-ACT"])
+    if not isinstance(regulatory_tags, list):
+        regulatory_tags = ["EU-AI-ACT"]
+    turn_count        = int(body.get("turn_count", 1))
+    avg_conformance   = float(body.get(
+        "avg_conformance",
+        1.0 if mandate_certification == "MANDATE-BOUND" else 0.9
+    ))
+
+    issuer_public_key = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "")
+
+    cert_data = {
+        "pogc_id":               pogc_id,
+        "session_id":            body["session_id"],
+        "ctchc_seal_hash":       body["ctchc_seal_hash"],
+        "issuer":                "OMNIX QUANTUM LTD",
+        "subject_org":           body["subject_org"],
+        "subject_org_id":        body["subject_org_id"],
+        "agent_id":              body["agent_id"],
+        "compliance_tier":       body["compliance_tier"],
+        "mandate_certification": mandate_certification,
+        "turn_count":            turn_count,
+        "avg_conformance":       avg_conformance,
+        "issued_at":             body["issued_at"],
+        "expires_at":            body["expires_at"],
+        "regulatory_tags":       regulatory_tags,
+        "status":                "ACTIVE",
+        "revoked_at":            None,
+        "canonical_version":     CURRENT_CANONICAL_VERSION,
+        "issuer_public_key":     issuer_public_key,
+    }
+
+    # ── Compute canonical hash and sign with real ML-DSA-65 ───────────────
+    sk_b64 = os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64")
+    if not sk_b64:
+        return _err("OMNIX_SIGNING_SECRET_KEY_B64 not configured — run this on Railway", 503)
+
+    canonical  = _canonical_fields(cert_data, version=CURRENT_CANONICAL_VERSION)
+    c_hash     = _content_hash(canonical)
+    signature  = _sign_certificate(canonical)
+    pqc_algo   = "ml-dsa-65"
+
+    cert_data["content_hash"]  = c_hash
+    cert_data["pqc_signature"] = signature
+    cert_data["pqc_algorithm"] = pqc_algo
+
+    # ── PoGR-INV-002: append-only INSERT ─────────────────────────────────
+    try:
+        conn = _get_db()
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO pogr_certificates (
+                        pogc_id, session_id, ctchc_seal_hash, issuer,
+                        subject_org, subject_org_id, agent_id,
+                        compliance_tier, mandate_certification,
+                        turn_count, avg_conformance,
+                        issued_at, expires_at, regulatory_tags,
+                        content_hash, pqc_signature, pqc_algorithm,
+                        status, canonical_version, issuer_public_key
+                    ) VALUES (
+                        %(pogc_id)s, %(session_id)s, %(ctchc_seal_hash)s, %(issuer)s,
+                        %(subject_org)s, %(subject_org_id)s, %(agent_id)s,
+                        %(compliance_tier)s, %(mandate_certification)s,
+                        %(turn_count)s, %(avg_conformance)s,
+                        %(issued_at)s, %(expires_at)s, %(regulatory_tags)s,
+                        %(content_hash)s, %(pqc_signature)s, %(pqc_algorithm)s,
+                        %(status)s, %(canonical_version)s, %(issuer_public_key)s
+                    )
+                """, {**cert_data, "regulatory_tags": regulatory_tags})
+        conn.close()
+    except Exception as exc:
+        logger.error(f"[PoGR] admin_import_external INSERT failed: {exc}")
+        return jsonify({"error": "Registry write failed"}), 500
+
+    logger.info(
+        f"[PoGR] admin_import_external: {pogc_id} registered "
+        f"org={body['subject_org']} mandate={mandate_certification} "
+        f"sig_algo={pqc_algo}"
+    )
+
+    base_url = os.environ.get("OMNIX_WEB_URL", "https://omnixquantum.net")
+
+    return jsonify({
+        "status":                "imported",
+        "pogc_id":               pogc_id,
+        "subject_org":           body["subject_org"],
+        "mandate_certification": mandate_certification,
+        "pqc_algorithm":         pqc_algo,
+        "content_hash":          c_hash,
+        "verify_url":            f"{base_url}/v1/pogr/verify/{pogc_id}",
+        "public_page":           f"{base_url}/pogr/verify/{pogc_id}",
+        "note":                  "Certificate registered and signed with ML-DSA-65 (FIPS 204). Publicly verifiable.",
+    }), 201

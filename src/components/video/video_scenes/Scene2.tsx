@@ -1,184 +1,111 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { OmnixLogo } from '../OmnixLogo';
 
-// S2 duration: 15000ms
-// Narrative: The OMNIX Governance Contract — sealed with ML-DSA-65 BEFORE Turn 0.
-// Logo OMNIX aparece como elemento de transición cuando emerge el contrato.
+const ease = [0.16, 1, 0.3, 1];
 
 export function Scene2() {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 400),   // headline + logo
-      setTimeout(() => setPhase(2), 1800),  // divider
-      setTimeout(() => setPhase(3), 2600),  // line 1
-      setTimeout(() => setPhase(4), 3600),  // line 2
-      setTimeout(() => setPhase(5), 4600),  // line 3
-      setTimeout(() => setPhase(6), 5600),  // line 4
-      setTimeout(() => setPhase(7), 6800),  // line 5
-      setTimeout(() => setPhase(8), 8000),  // line 6
-      setTimeout(() => setPhase(9), 10000), // bottom statement + logo glow
+      setTimeout(() => setPhase(1), 500),
+      setTimeout(() => setPhase(2), 1200),
+      setTimeout(() => setPhase(3), 2000),
+      setTimeout(() => setPhase(4), 2800),
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
 
-  const lines = [
-    { label: 'session',    value: 'SESSION-B9199C8CC9394304' },
-    { label: 'algorithm',  value: 'ML-DSA-65 (FIPS 204 · Dilithium-3)' },
-    { label: 'sealed',     value: 'BEFORE TURN 0  —  T-minus 0ms' },
-    { label: 'mandate',    value: 'MANDATE-BOUND' },
-    { label: 'checks',     value: '187 verification points' },
-    { label: 'compliance', value: 'EU AI Act Art.9 · MiCA · DORA · NIST AU-2' },
-  ];
-
   return (
     <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.7 }}
+      initial={{ clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)' }}
+      animate={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.8, ease }}
     >
-      {/* Scrolling grid background */}
       <motion.div
         className="absolute inset-0"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(212,168,67,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,0.06) 1px, transparent 1px)',
-          backgroundSize: '5vw 5vw',
+            'linear-gradient(rgba(212,168,67,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,0.05) 1px, transparent 1px)',
+          backgroundSize: '4vw 4vw',
         }}
-        animate={{ backgroundPositionY: ['0px', '80px'] }}
-        transition={{ duration: 6, ease: 'linear', repeat: Infinity }}
+        animate={{ backgroundPositionY: ['0px', '4vw'] }}
+        transition={{ duration: 4, ease: 'linear', repeat: Infinity }}
       />
 
-      {/* Top section: logo + label side by side */}
-      <motion.div
-        className="absolute"
-        style={{ top: '10%', display: 'flex', alignItems: 'center', gap: '2vw' }}
-        initial={{ opacity: 0, y: -12 }}
-        animate={phase >= 1 ? { opacity: 1, y: 0 } : { opacity: 0, y: -12 }}
-        transition={{ duration: 0.7 }}
-      >
-        <OmnixLogo size="7vw" opacity={0.9} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3vh' }}>
-          <p
-            style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: '1vw',
-              color: 'rgba(200,200,208,0.4)',
-              letterSpacing: '0.3em',
-              fontWeight: 600,
-            }}
-          >
-            BEFORE THE AI MOVED A SINGLE DOLLAR
-          </p>
-          <div style={{ overflow: 'hidden' }}>
-            <motion.h2
-              style={{
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: '2.8vw',
-                fontWeight: 800,
-                letterSpacing: '0.4em',
-                color: '#D4A843',
-              }}
-              initial={{ y: '100%' }}
-              animate={phase >= 1 ? { y: 0 } : { y: '100%' }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            >
-              GOVERNANCE CONTRACT
-            </motion.h2>
-          </div>
-        </div>
-      </motion.div>
+      <div className="relative z-10 flex flex-col items-center max-w-5xl w-full">
+        <motion.h2
+          className="font-display text-[3.5vw] font-bold text-[#FFFFFF] tracking-wide text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease }}
+        >
+          Governance Contract sealed before Turn 0
+        </motion.h2>
 
-      {/* Divider */}
-      <motion.div
-        style={{
-          width: '58vw',
-          height: '1px',
-          backgroundColor: '#D4A843',
-          marginBottom: '5vh',
-          position: 'relative',
-          zIndex: 10,
-          marginTop: '5vh',
-        }}
-        initial={{ scaleX: 0 }}
-        animate={phase >= 2 ? { scaleX: 1 } : { scaleX: 0 }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-      />
-
-      {/* Code block */}
-      <div
-        style={{
-          width: '58vw',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '1.65vw',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2vh',
-          position: 'relative',
-          zIndex: 10,
-        }}
-      >
-        {lines.map((line, i) => (
+        <div className="flex flex-col gap-6 w-full px-[10vw]">
           <motion.div
-            key={i}
-            style={{ display: 'flex', gap: '1.5vw', alignItems: 'center' }}
-            initial={{ opacity: 0, x: -20 }}
-            animate={phase >= i + 3 ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="flex justify-between items-center border-b border-[#D4A843]/30 pb-4"
+            initial={{ opacity: 0, x: -30 }}
+            animate={phase >= 1 ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
+            transition={{ duration: 0.6, ease }}
           >
-            <span style={{ color: 'rgba(212,168,67,0.55)', minWidth: '9vw' }}>
-              {line.label}:
-            </span>
-            <span
-              style={{
-                color: line.label === 'mandate' ? '#D4A843' : '#C8C8D0',
-                fontWeight: line.label === 'mandate' ? 700 : 400,
-              }}
-            >
-              {line.value}
-            </span>
+            <span className="font-mono text-[#94A3B8] text-[1.4vw] uppercase tracking-widest">GCFR</span>
+            <span className="font-mono text-[#D4A843] text-[1.8vw] font-bold">GCFR-F6647F8081A7433B</span>
           </motion.div>
-        ))}
-      </div>
 
-      {/* Bottom statement — logo aparece con glow a los 10s (fase 9) */}
-      <motion.div
-        style={{ position: 'absolute', bottom: '8%', display: 'flex', alignItems: 'center', gap: '2.5vw' }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={phase >= 9 ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <OmnixLogo size="5.5vw" glow opacity={0.85} />
-        <div style={{ borderLeft: '3px solid #D4A843', paddingLeft: '2vw' }}>
-          <p
-            style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: '1.3vw',
-              color: 'rgba(200,200,208,0.7)',
-              fontWeight: 500,
-              letterSpacing: '0.05em',
-            }}
+          <motion.div
+            className="flex justify-between items-center border-b border-[#D4A843]/30 pb-4"
+            initial={{ opacity: 0, x: -30 }}
+            animate={phase >= 2 ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
+            transition={{ duration: 0.6, ease }}
           >
-            Sealed with post-quantum cryptography.
-          </p>
-          <p
-            style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: '1.3vw',
-              color: 'rgba(200,200,208,0.7)',
-              fontWeight: 500,
-              letterSpacing: '0.05em',
-              marginTop: '0.5vh',
-            }}
+            <span className="font-mono text-[#94A3B8] text-[1.4vw] uppercase tracking-widest">PQC</span>
+            <span className="font-mono text-[#FFFFFF] text-[1.6vw]">ML-DSA-65 · Dilithium-3 · FIPS 204</span>
+          </motion.div>
+
+          <motion.div
+            className="flex justify-between items-center border-b border-[#D4A843]/30 pb-4"
+            initial={{ opacity: 0, x: -30 }}
+            animate={phase >= 3 ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
+            transition={{ duration: 0.6, ease }}
           >
-            Verifiable by anyone. Forever. Offline.
-          </p>
+            <span className="font-mono text-[#94A3B8] text-[1.4vw] uppercase tracking-widest">Rules</span>
+            <span className="font-mono text-[#FFFFFF] text-[1.6vw]">5 predicates · PQC-sealed</span>
+          </motion.div>
         </div>
-      </motion.div>
+
+        {phase >= 4 && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="absolute left-0 right-0 h-[2px] bg-[#D4A843] top-1/2"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.5, ease }}
+            />
+            <motion.div
+              className="absolute top-0 bottom-0 w-[2px] bg-[#D4A843] left-1/2"
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              transition={{ duration: 0.5, ease }}
+            />
+            <motion.div
+              className="absolute top-1/2 left-1/2 w-16 h-16 border-2 border-[#D4A843] rounded-sm -translate-x-1/2 -translate-y-1/2 bg-[#050508] flex items-center justify-center"
+              initial={{ scale: 0, rotate: 45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.3 }}
+            >
+              <div className="w-8 h-8 border-2 border-[#D4A843] rounded-full" />
+            </motion.div>
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   );
 }
