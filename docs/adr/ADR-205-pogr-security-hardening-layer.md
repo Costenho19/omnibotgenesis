@@ -231,7 +231,11 @@ Auditoría adversarial V2 (`scripts/run_pogr_adversarial_audit_v2.py` — 19 ata
 ### §6.1 — R-C1: HMAC-keyed admin_resign
 
 ```python
-resign_secret = os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+# Canonical env var for autoscale deployment (shared env var, no conflict with Replit secrets):
+resign_secret = (
+    os.environ.get("POGR_RESIGN_TOKEN")
+    or os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+)
 expected_token = hmac.new(
     resign_secret.encode(), f"POGR-RESIGN:{pogc_id}".encode(), hashlib.sha3_256
 ).hexdigest()
@@ -240,8 +244,16 @@ if not hmac.compare_digest(provided_token, expected_token):
 ```
 
 `admin_resign_page()` computa el HMAC server-side y lo inyecta en el template — el token
-nunca es derivable desde fuente. Endpoint retorna 503 si `POGR_ADMIN_RESIGN_SECRET` no está
-configurado.
+nunca es derivable desde fuente.
+
+**Variable de entorno canónica:** `POGR_RESIGN_TOKEN` (shared env var — disponible en
+Replit autoscale deploy). `POGR_ADMIN_RESIGN_SECRET` se mantiene como fallback para
+entornos dev/legacy. Si ninguna está configurada, el endpoint retorna 503.
+
+**Razón del dual-lookup (ADR-205 §6.1 addendum 2026-05-31):** Los Replit secrets no se
+inyectan automáticamente en deployments autoscale; las shared env vars sí. Para evitar
+503 en producción sin requerir acción manual de eliminación del secret existente, se usa
+`POGR_RESIGN_TOKEN` como variable canónica con fallback a `POGR_ADMIN_RESIGN_SECRET`.
 
 ### §6.2 — R-M1 Phase 2 (pendiente)
 

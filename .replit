@@ -137,6 +137,7 @@ PYTHONPATH = "/home/runner/workspace:/home/runner/workspace/omnix_web"
 VITE_RAILWAY_API_URL = "https://omnibotgenesis-production.up.railway.app"
 OMNIX_WEB_URL = "https://omnibotgenesis-production.up.railway.app"
 OMNIX_ANTI_REPLAY_MODE = "strict"
+POGR_RESIGN_TOKEN = "0c739ba82a1de6fd0bd7147e19436148ef91b5eb7787068aac3435b0da53ed9a"
 
 [userenv.development]
 

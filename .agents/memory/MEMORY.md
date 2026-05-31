@@ -16,3 +16,4 @@
 - [RTE-001 v1.4.0 IPFL](rte-001-v1.4.md) — ADR-204. Step 0 GCFR: IAD·SAR·MFR·CPS·FPS sellados ML-DSA-65. EXPECTED_TOTAL_CHECKS=187 (148+36 verify_intake+3 PKG-INTAKE). XREF-PROXY: _IPFL_PROHIBITIONS debe contener las descripciones exactas de MBR.proxy_guards. 187/187 PASS.
 - [Primer PoGC Externo](primer-pogc-externo.md) — POGC-EXT-A7F3C2B1D9E4F508 emitido 2026-05-30 a VeriSigil AI. Primera CA externa del PoGR. Clase EXTERNAL. Script standalone en scripts/generate_verisigil_pogc.py.
 - [PoGR Security Hardening](pogr-security-hardening.md) — ADR-205. 7 remediaciones (R-C1/R-H1/R-H2/R-H3/R-M1/R-M2/R-M3). Audit V3 2026-05-31: 19 ataques · 0 CRITICAL · 0 HIGH · 2 PARTIAL MEDIUM · PRODUCTION-READY. Pendiente Railway: POGR_ADMIN_RESIGN_SECRET + OMNIX_PQC_VERIFY_FAIL_CLOSED=true.
+- [Replit secrets vs autoscale](replit-secrets-autoscale.md) — Replit secrets NO inyectan en autoscale deploy. Usar shared env var con nombre diferente + dual-lookup en código.

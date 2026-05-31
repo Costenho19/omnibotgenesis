@@ -1362,7 +1362,10 @@ def admin_resign_page():
     R-C1 (POGR Audit V2): Token computed via HMAC-SHA3-256 with POGR_ADMIN_RESIGN_SECRET.
     The old derivable SHA3 formula was replaced; see ADR-205 §4.1.
     """
-    resign_secret = os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+    resign_secret = (
+        os.environ.get("POGR_RESIGN_TOKEN")
+        or os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+    )
     sk_configured = bool(os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64"))
 
     if resign_secret:
@@ -1378,10 +1381,10 @@ def admin_resign_page():
 
     if page_ready:
         status_color = "#22c55e"
-        status_text  = "Clave PQC y POGR_ADMIN_RESIGN_SECRET listos en servidor"
+        status_text  = "Clave PQC y POGR_RESIGN_TOKEN listos en servidor"
     elif sk_configured and not resign_secret:
         status_color = "#f59e0b"
-        status_text  = "ERROR: POGR_ADMIN_RESIGN_SECRET no configurado en Railway"
+        status_text  = "ERROR: POGR_RESIGN_TOKEN no configurado en entorno"
     else:
         status_color = "#ef4444"
         status_text  = "ERROR: Clave PQC (OMNIX_SIGNING_SECRET_KEY_B64) no configurada en Railway"
@@ -1487,12 +1490,17 @@ def admin_resign(pogc_id: str):
     _ensure_tables()
 
     # ── Verify admin token (HMAC with server-side secret — ADR-205 audit R-C1) ─
-    resign_secret = os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+    # POGR_RESIGN_TOKEN is the canonical shared-env-var (available in autoscale deploy).
+    # POGR_ADMIN_RESIGN_SECRET is kept as fallback for legacy / dev environments.
+    resign_secret = (
+        os.environ.get("POGR_RESIGN_TOKEN")
+        or os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+    )
     if not resign_secret:
-        logger.error("[PoGR] admin_resign: POGR_ADMIN_RESIGN_SECRET not configured")
+        logger.error("[PoGR] admin_resign: POGR_RESIGN_TOKEN not configured")
         return _err(
-            "POGR_ADMIN_RESIGN_SECRET not configured — admin operations unavailable. "
-            "Set this variable in Railway environment.",
+            "POGR_RESIGN_TOKEN not configured — admin operations unavailable. "
+            "Set POGR_RESIGN_TOKEN in the deployment environment.",
             503
         )
 
