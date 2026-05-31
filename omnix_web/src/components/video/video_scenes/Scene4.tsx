@@ -64,9 +64,9 @@ export function Scene4() {
           animate={phase >= 4 ? { opacity: 1 } : { opacity: 0 }}
         >
           {phase >= 4 ? (
-             <span className="text-[#EF4444] font-bold">> exit code 1</span>
+             <span className="text-[#EF4444] font-bold">{'>'} exit code 1</span>
           ) : (
-             <span className="text-green-500">> exit code 0</span>
+             <span className="text-green-500">{'>'} exit code 0</span>
           )}
         </motion.div>
       </div>

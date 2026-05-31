@@ -56,7 +56,7 @@ export function Scene5() {
         >
           <span className="text-[#3B82F6]">$</span> python verify.py
           <br/>
-          <span className="text-green-400 mt-2 block">> exit code 0</span>
+          <span className="text-green-400 mt-2 block">{'>'} exit code 0</span>
         </motion.div>
       </div>
     </motion.div>
