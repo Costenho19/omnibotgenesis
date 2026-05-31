@@ -1560,8 +1560,14 @@ def admin_resign_page():
             b"POGR-RESIGN:POGC-GENESIS-E071CC96",
             hashlib.sha3_256,
         ).hexdigest()
+        token_ext = _hmac.new(
+            resign_secret.encode(),
+            b"POGR-IMPORT-EXTERNAL:POGC-EXT-A7F3C2B1D9E4F508",
+            hashlib.sha3_256,
+        ).hexdigest()
     else:
         token = ""
+        token_ext = ""
 
     page_ready = sk_configured and bool(resign_secret)
 
@@ -1580,13 +1586,13 @@ def admin_resign_page():
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OMNIX — Re-firma GENESIS</title>
+  <title>OMNIX — PoGR Admin</title>
   <style>
     body {{ font-family: monospace; background: #060F1E; color: #e2e8f0;
            display: flex; flex-direction: column; align-items: center;
-           justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }}
+           justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; gap: 20px; }}
     .card {{ background: #0f1f3d; border: 1px solid #C9A227; border-radius: 12px;
-             padding: 28px; max-width: 440px; width: 100%; text-align: center; }}
+             padding: 28px; max-width: 460px; width: 100%; text-align: center; }}
     h1 {{ color: #C9A227; font-size: 1.1rem; margin: 0 0 6px; }}
     .sub {{ color: #64748b; font-size: 0.75rem; margin-bottom: 20px; }}
     .status {{ padding: 8px 12px; border-radius: 6px; font-size: 0.8rem;
@@ -1599,7 +1605,9 @@ def admin_resign_page():
               width: 100%; font-family: monospace; }}
     button:hover {{ background: #b8911f; }}
     button:disabled {{ background: #475569; cursor: not-allowed; }}
-    #result {{ margin-top: 20px; padding: 14px; border-radius: 8px; font-size: 0.8rem;
+    .btn-ext {{ background: #1d4ed8; color: #fff; margin-top: 10px; }}
+    .btn-ext:hover {{ background: #1e40af; }}
+    #result, #result-ext {{ margin-top: 20px; padding: 14px; border-radius: 8px; font-size: 0.8rem;
                display: none; word-break: break-all; text-align: left; }}
     .ok {{ background: #052e16; border: 1px solid #22c55e; color: #22c55e; }}
     .fail {{ background: #2d0a0a; border: 1px solid #ef4444; color: #ef4444; }}
@@ -1616,6 +1624,20 @@ def admin_resign_page():
     </button>
     <div id="result"></div>
   </div>
+
+  <div class="card">
+    <h1>OMNIX QUANTUM — Importar POGC Externo</h1>
+    <p class="sub">Registra POGC-EXT-A7F3C2B1D9E4F508 (VeriSigil AI) en producción y lo firma con ML-DSA-65</p>
+    <div class="status" style="background:#1d4ed822;border-color:#60a5fa;color:#60a5fa">
+      Certificado externo — primera CA cliente del PoGR
+    </div>
+    <div class="cert-id">POGC-EXT-A7F3C2B1D9E4F508 · VeriSigil AI · MANDATE-BOUND</div>
+    <button class="btn-ext" id="btn-ext" onclick="importExt()" {"disabled" if not page_ready else ""}>
+      {"IMPORTAR Y FIRMAR VERISIGIL POGC" if page_ready else "CONFIGURACIÓN INCOMPLETA"}
+    </button>
+    <div id="result-ext"></div>
+  </div>
+
   <script>
     async function resign() {{
       const btn = document.getElementById('btn');
@@ -1636,6 +1658,68 @@ def admin_resign_page():
             'Bytes: ' + data.new_signature_bytes + '<br><br>' +
             '<a href="/v1/pogr/verify/POGC-GENESIS-E071CC96" style="color:#22c55e">→ Verificar ahora</a>';
           btn.textContent = '✓ FIRMADO';
+        }} else {{
+          res.className = 'fail';
+          res.innerHTML = '✗ Error: ' + JSON.stringify(data);
+          btn.disabled = false;
+          btn.textContent = 'REINTENTAR';
+        }}
+        res.style.display = 'block';
+      }} catch(e) {{
+        res.className = 'fail';
+        res.innerHTML = '✗ ' + e.message;
+        res.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'REINTENTAR';
+      }}
+    }}
+
+    async function importExt() {{
+      const btn = document.getElementById('btn-ext');
+      const res = document.getElementById('result-ext');
+      btn.disabled = true;
+      btn.textContent = 'Importando...';
+      res.style.display = 'none';
+      const payload = {{
+        "pogc_id":               "POGC-EXT-A7F3C2B1D9E4F508",
+        "session_id":            "bundle-482df2c4f1d9",
+        "ctchc_seal_hash":       "586b996f53da83652b2690b4117a4830d4bde3c22c7737085c40f5ee86a4ac3a",
+        "issuer":                "OMNIX QUANTUM LTD",
+        "subject_org":           "VeriSigil AI",
+        "subject_org_id":        "verisigil-ai-001",
+        "agent_id":              "financial-agent-1780111266",
+        "compliance_tier":       "EXT-VGS-ELI-Compliant",
+        "mandate_certification": "MANDATE-BOUND",
+        "turn_count":            1,
+        "avg_conformance":       1.0,
+        "issued_at":             "2026-05-30T21:00:00+00:00",
+        "expires_at":            "2027-05-30T21:00:00+00:00",
+        "regulatory_tags":       ["EU-AI-ACT", "NIST-AU-2", "ISO-42001"]
+      }};
+      try {{
+        const r = await fetch('/v1/pogr/admin/import-external', {{
+          method: 'POST',
+          headers: {{
+            'Content-Type': 'application/json',
+            'X-Admin-Import-Token': '{token_ext}'
+          }},
+          body: JSON.stringify(payload)
+        }});
+        const data = await r.json();
+        if (r.ok) {{
+          const status = data.status || 'ok';
+          res.className = 'ok';
+          if (status === 'already_registered') {{
+            res.innerHTML = '✓ CERTIFICADO YA ESTABA EN EL REGISTRO — sin acción necesaria.<br><br>' +
+              '<a href="/pogr/verify/POGC-EXT-A7F3C2B1D9E4F508" style="color:#22c55e" target="_blank">→ Ver certificado de Raheem</a>';
+          }} else {{
+            res.innerHTML = '✓ IMPORTADO Y FIRMADO CON ML-DSA-65<br><br>' +
+              'Org: VeriSigil AI<br>' +
+              'Mandate: MANDATE-BOUND<br>' +
+              'Algoritmo: ' + (data.pqc_algorithm || 'ml-dsa-65') + '<br><br>' +
+              '<a href="/pogr/verify/POGC-EXT-A7F3C2B1D9E4F508" style="color:#22c55e" target="_blank">→ Ver certificado de Raheem</a>';
+          }}
+          btn.textContent = '✓ IMPORTADO';
         }} else {{
           res.className = 'fail';
           res.innerHTML = '✗ Error: ' + JSON.stringify(data);
