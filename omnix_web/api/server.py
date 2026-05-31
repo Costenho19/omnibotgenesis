@@ -7,10 +7,17 @@ import os
 import sys
 
 # ── Path bootstrap — make omnix_core importable regardless of how the server
-# is launched (Railway PYTHONPATH, Replit workflow, direct python call).
-_WORKSPACE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if _WORKSPACE_ROOT not in sys.path:
-    sys.path.insert(0, _WORKSPACE_ROOT)
+# is launched (Railway gunicorn from /app, Replit workflow, direct python call).
+# Strategy: probe dirname x2 (/app in Railway) and dirname x3 (workspace root
+# in Replit) and insert only the one that actually contains an omnix_core dir.
+# Avoids inserting "/" (Railway dirname x3) which is useless and masks pip packages.
+_API_DIR  = os.path.dirname(os.path.abspath(__file__))
+_APP_ROOT = os.path.dirname(_API_DIR)    # /app in Railway  | omnix_web/ in Replit
+_WS_ROOT  = os.path.dirname(_APP_ROOT)  # /    in Railway  | workspace root in Replit
+for _candidate in (_APP_ROOT, _WS_ROOT):
+    if os.path.isdir(os.path.join(_candidate, 'omnix_core')) and _candidate not in sys.path:
+        sys.path.insert(0, _candidate)
+        break
 
 import json
 import logging
@@ -125,6 +132,15 @@ def handle_500(e):
 
 @app.errorhandler(Exception)
 def handle_exception(e):
+    from werkzeug.exceptions import RequestedRangeNotSatisfiable
+    if isinstance(e, RequestedRangeNotSatisfiable):
+        # Browser sent a Range header beyond file size (stale cache or seek past EOF).
+        # Return proper 416 with Content-Range so browser resets and re-requests from 0.
+        resp = jsonify({'error': 'Range Not Satisfiable'})
+        resp.status_code = 416
+        resp.headers['Content-Range'] = 'bytes */*'
+        resp.headers['Accept-Ranges'] = 'bytes'
+        return resp
     logger.error("[OMNIX.API] Unhandled exception: %s: %s", type(e).__name__, e)
     return jsonify({'success': False, 'error': 'An internal server error occurred'}), 500
 
@@ -864,11 +880,11 @@ except Exception as _wh_err:
     print(f"[startup] WARNING: webhook columns check failed: {_wh_err}")
 
 try:
-    import os as _os, sys as _sys
-    _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))))
     from omnix_core.governance.oversight_surface import OversightSurfaceEngine as _OSE
     _OSE().ensure_schema()
     logger.info("[startup] OversightSurfaceEngine schema verified OK (ADR-124)")
+except ImportError:
+    logger.debug("[startup] OSE schema init skipped: omnix_core not in venv (expected in edge deployments)")
 except Exception as _ose_startup_err:
     logger.warning("[startup] OSE schema init skipped: %s", _ose_startup_err)
 
@@ -876,6 +892,8 @@ try:
     from omnix_core.governance.conditional_bind_gate import ConditionalBindGate as _CBG
     _CBG().ensure_schema()
     logger.info("[startup] ConditionalBindGate schema verified OK (ADR-135)")
+except ImportError:
+    logger.debug("[startup] CBG schema init skipped: omnix_core not in venv (expected in edge deployments)")
 except Exception as _cbg_startup_err:
     logger.warning("[startup] CBG schema init skipped: %s", _cbg_startup_err)
 
@@ -1079,12 +1097,6 @@ def _receipt_archival_loop(
     )
     _atime.sleep(warmup_minutes * 60)
 
-    _ws_root = _aos.path.dirname(
-        _aos.path.dirname(_aos.path.dirname(_aos.path.abspath(__file__)))
-    )
-    if _ws_root not in _asys.path:
-        _asys.path.insert(0, _ws_root)
-
     while True:
         try:
             from omnix_core.evidence.receipt_archival import (
@@ -1113,6 +1125,12 @@ def _receipt_archival_loop(
                     wc.get("archived", 0), wc.get("errors", 0),
                     summary.get("cold_backend", "?"),
                 )
+        except ImportError as _arch_imp:
+            _alog_.debug(
+                "[ARCHIVAL] omnix_core not importable — archival cycle skipped (%s). "
+                "Ensure omnix_core is installed in the venv or present in the app root.",
+                _arch_imp,
+            )
         except Exception as _arch_exc:
             _alog_.error(
                 "[ARCHIVAL] ❌ Error en ciclo: %s: %s",

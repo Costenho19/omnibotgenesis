@@ -4236,13 +4236,12 @@ def api_execution_integrity_status():
     No authentication required — read-only system health endpoint.
     """
     try:
-        import sys
-        import os
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
         from omnix_services.governance_service.execution_integrity import get_ebip
         ebip = get_ebip()
         status = ebip.get_system_integrity_status()
         return jsonify({'status': 'ok', 'execution_integrity': status}), 200
+    except ImportError:
+        pass  # omnix_services not deployed in this environment — structural fallback below
     except Exception as e:
         logger.warning(f"api_execution_integrity_status: {e}")
         return jsonify({
