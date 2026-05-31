@@ -1944,7 +1944,7 @@ def admin_import_external():
     try:
         conn = _get_db()
         with conn.cursor() as cur:
-            cur.execute("SELECT pogc_id, status, pqc_signature FROM pogr_certificates WHERE pogc_id = %s LIMIT 1", (pogc_id,))
+            cur.execute("SELECT * FROM pogr_certificates WHERE pogc_id = %s LIMIT 1", (pogc_id,))
             existing = cur.fetchone()
         conn.close()
     except Exception as exc:
@@ -1954,62 +1954,42 @@ def admin_import_external():
     if existing:
         base_url = os.environ.get("OMNIX_WEB_URL", "https://omnixquantum.net")
         existing_sig = existing["pqc_signature"] or ""
-        if existing_sig.startswith("STUB-") or existing_sig.startswith("STUB:"):
-            # Re-sign with real ML-DSA-65 — stub was stored on a previous attempt
-            logger.info(f"[PoGR] admin_import_external: {pogc_id} exists with STUB — upgrading to real PQC signature")
+        # Upgrade if: STUB signature, OR content_hash mismatch (corrupted by wrong canonical)
+        canonical_check  = _canonical_fields(existing, version=2)
+        expected_hash    = _content_hash(canonical_check)
+        stored_hash      = existing.get("content_hash") or ""
+        needs_resign = (
+            existing_sig.startswith("STUB-")
+            or existing_sig.startswith("STUB:")
+            or stored_hash != expected_hash
+        )
+        if needs_resign:
+            # Re-sign: STUB or content_hash mismatch from a previous broken canonical
+            logger.info(f"[PoGR] admin_import_external: {pogc_id} needs re-sign (hash_mismatch={stored_hash != expected_hash}, stub={existing_sig.startswith('STUB')})")
+            canonical        = _canonical_fields(existing, version=2)
+            new_sig          = _sign_certificate(canonical)
+            new_content_hash = _content_hash(canonical)
+            new_algo = "ml-dsa-65" if new_sig.startswith("ML-DSA-65:") else "stub-sha3-256"
             try:
                 conn2 = _get_db()
                 with conn2.cursor() as cur2:
-                    cur2.execute("SELECT * FROM pogr_certificates WHERE pogc_id = %s LIMIT 1", (pogc_id,))
-                    full_row = cur2.fetchone()
+                    cur2.execute(
+                        "UPDATE pogr_certificates SET pqc_signature = %s, pqc_algorithm = %s, content_hash = %s WHERE pogc_id = %s",
+                        (new_sig, new_algo, new_content_hash, pogc_id)
+                    )
+                conn2.commit()
                 conn2.close()
+                logger.info(f"[PoGR] admin_import_external: {pogc_id} re-signed → {new_algo}")
+                return jsonify({
+                    "status":          "stub_upgraded",
+                    "pogc_id":         pogc_id,
+                    "pqc_algorithm":   new_algo,
+                    "verify_url":      f"{base_url}/v1/pogr/verify/{pogc_id}",
+                    "public_page":     f"{base_url}/pogr/verify/{pogc_id}",
+                }), 200
             except Exception as exc:
-                logger.error(f"[PoGR] admin_import_external STUB-upgrade read error: {exc}")
-                return jsonify({"error": "Registry unavailable"}), 503
-
-            if full_row:
-                canonical_fields = {
-                    "pogc_id":               full_row["pogc_id"],
-                    "session_id":            full_row["session_id"],
-                    "ctchc_seal_hash":       full_row["ctchc_seal_hash"],
-                    "issuer":                full_row["issuer"],
-                    "subject_org":           full_row["subject_org"],
-                    "subject_org_id":        full_row["subject_org_id"],
-                    "agent_id":              full_row["agent_id"],
-                    "compliance_tier":       full_row["compliance_tier"],
-                    "mandate_certification": full_row["mandate_certification"],
-                    "turn_count":            full_row["turn_count"],
-                    "avg_conformance":       str(full_row["avg_conformance"]),
-                    "issued_at":             full_row["issued_at"].isoformat() if hasattr(full_row["issued_at"], "isoformat") else str(full_row["issued_at"]),
-                    "expires_at":            full_row["expires_at"].isoformat() if hasattr(full_row["expires_at"], "isoformat") else str(full_row["expires_at"]),
-                    "regulatory_tags":       full_row["regulatory_tags"] if isinstance(full_row["regulatory_tags"], list) else json.loads(full_row["regulatory_tags"] or "[]"),
-                    "cert_class":            full_row.get("cert_class", "EXTERNAL"),
-                    "issuer_public_key":     full_row.get("issuer_public_key", ""),
-                }
-                canonical_bytes = json.dumps(canonical_fields, sort_keys=True, separators=(",", ":")).encode()
-                content_hash_new = hashlib.sha3_256(canonical_bytes).hexdigest()
-                new_sig = _sign_payload(canonical_bytes)
-                new_algo = "ml-dsa-65" if new_sig.startswith("ML-DSA-65:") else "stub-sha3-256"
-                try:
-                    conn3 = _get_db()
-                    with conn3.cursor() as cur3:
-                        cur3.execute(
-                            "UPDATE pogr_certificates SET pqc_signature = %s, pqc_algorithm = %s, content_hash = %s WHERE pogc_id = %s",
-                            (new_sig, new_algo, content_hash_new, pogc_id)
-                        )
-                    conn3.commit()
-                    conn3.close()
-                    logger.info(f"[PoGR] admin_import_external: {pogc_id} STUB upgraded to {new_algo}")
-                    return jsonify({
-                        "status":          "stub_upgraded",
-                        "pogc_id":         pogc_id,
-                        "pqc_algorithm":   new_algo,
-                        "verify_url":      f"{base_url}/v1/pogr/verify/{pogc_id}",
-                        "public_page":     f"{base_url}/pogr/verify/{pogc_id}",
-                    }), 200
-                except Exception as exc:
-                    logger.error(f"[PoGR] admin_import_external STUB-upgrade write error: {exc}")
-                    return jsonify({"error": "Signature upgrade failed"}), 500
+                logger.error(f"[PoGR] admin_import_external re-sign write error: {exc}")
+                return jsonify({"error": "Signature upgrade failed"}), 500
 
         logger.info(f"[PoGR] admin_import_external: {pogc_id} already registered — idempotent return")
         return jsonify({
