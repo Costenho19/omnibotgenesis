@@ -388,6 +388,18 @@ def _verify_pqc_signature(
         verifier  = OQSSignature("ML-DSA-65")
         verifier.verify(payload, sig_bytes, pk_bytes)
         return (True, "✓ ML-DSA-65 signature cryptographically verified (FIPS 204 / NIST 2024)")
+    except ImportError:
+        logger.warning(
+            "[PoGR] oqs-python not installed — ML-DSA-65 signature verification skipped. "
+            "Phase 1 structural + hash integrity enforced. "
+            "Install oqs-python for full PQC cryptographic verification."
+        )
+        return (
+            None,
+            "⚠ oqs-python unavailable on this server — ML-DSA-65 cryptographic verification skipped. "
+            "Hash integrity and structural validation are enforced. "
+            "For full offline PQC verification: pip install oqs-python && python verify_pogc_offline.py",
+        )
     except Exception as exc:
         return (False, f"✗ ML-DSA-65 signature INVALID — {exc}")
 
