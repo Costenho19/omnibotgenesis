@@ -1,0 +1,35 @@
+# Replit deployment ignore — keeps the container under 8 GiB
+# These paths are excluded from the deployed image.
+
+# Python local libs — pip re-installs from requirements.txt during build
+.pythonlibs/
+
+# Node modules — only needed for the React build step (already compiled to omnix_web/dist/)
+omnix_web/node_modules/
+
+# Python bytecode cache — rebuilt automatically at runtime
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Evidence packages — large JSON/PDF artifacts not needed at runtime
+evidence_packages/
+
+# Git history — not needed in the container
+.git/
+
+# Egg / dist-info from local installs
+*.egg-info/
+dist-info/
+
+# Local agent memory and skills (internal tooling, not production)
+.local/
+
+# Development-only scripts output
+*.log
