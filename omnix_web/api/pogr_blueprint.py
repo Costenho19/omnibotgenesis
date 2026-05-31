@@ -37,6 +37,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, Optional
 
 from flask import Blueprint, jsonify, request, Response
+from api._rate_limits import pogr_limiter
 
 logger = logging.getLogger("OMNIX.API.PoGR")
 
@@ -554,10 +555,12 @@ def certify():
 # ─── 2. GET /v1/pogr/verify/<pogc_id> ────────────────────────────────────────
 
 @pogr_bp.route("/v1/pogr/verify/<pogc_id>", methods=["GET"])
+@pogr_limiter.limit("60 per minute")
 def verify(pogc_id: str):
     """
     PoGR-INV-003: Public certificate verification — zero authentication required.
     Anyone can verify any certificate with no OMNIX account.
+    Rate-limited: 60 req/min per IP (ADR-205 R-M3).
     """
     _ensure_tables()
     try:
@@ -611,10 +614,12 @@ def verify(pogc_id: str):
 # ─── 2b. GET /v1/pogr/certificate/<pogc_id>/export ───────────────────────────
 
 @pogr_bp.route("/v1/pogr/certificate/<pogc_id>/export", methods=["GET"])
+@pogr_limiter.limit("20 per minute")
 def export_certificate(pogc_id: str):
     """
     Export full certificate JSON with offline verification metadata.
     PoGR-INV-003: no authentication required.
+    Rate-limited: 20 req/min per IP (ADR-205 R-M3).
 
     Returns the certificate augmented with:
       - offline_verification: instructions + canonical_fields_schema + verifier_script
@@ -958,6 +963,23 @@ def revoke(pogc_id: str):
         return _err("revocation_reason is required")
     if not proof:
         return _err("revocation_proof is required (PoGR-INV-006: PQC-signed revocation payload)")
+
+    # R-M1 Phase 1 — Structural validation (POGR Audit V2 R-M1 · ADR-205 §6)
+    # Phase 2 (full ML-DSA-65 sig verification against issuer public key) requires
+    # DB schema addition (issuer_public_key column) — tracked in ADR-205 §6.2.
+    if len(proof) < 64:
+        return _err(
+            "revocation_proof is too short to be a valid cryptographic proof "
+            "(minimum 64 characters required — PoGR-INV-006)",
+            400,
+        )
+    if not (proof.startswith("ML-DSA-65:") or proof.startswith("{")):
+        return _err(
+            "revocation_proof must be either an ML-DSA-65 hex signature "
+            "(prefix 'ML-DSA-65:') or a JSON proof object (prefix '{'). "
+            "See ADR-186 §6 for format spec. (PoGR-INV-006)",
+            400,
+        )
 
     try:
         conn = _get_db()
@@ -1336,11 +1358,33 @@ def verify_page(pogc_id: str):
 
 @pogr_bp.route("/v1/pogr/admin/resign-page", methods=["GET"])
 def admin_resign_page():
-    """One-tap admin page to re-sign POGC-GENESIS with real ML-DSA-65."""
-    token = hashlib.sha3_256(b"POGR-RESIGN:POGC-GENESIS-E071CC96").hexdigest()
+    """One-tap admin page to re-sign POGC-GENESIS with real ML-DSA-65.
+    R-C1 (POGR Audit V2): Token computed via HMAC-SHA3-256 with POGR_ADMIN_RESIGN_SECRET.
+    The old derivable SHA3 formula was replaced; see ADR-205 §4.1.
+    """
+    resign_secret = os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
     sk_configured = bool(os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64"))
-    status_color  = "#22c55e" if sk_configured else "#ef4444"
-    status_text   = "Clave PQC lista en servidor" if sk_configured else "ERROR: Clave PQC no configurada en Railway"
+
+    if resign_secret:
+        token = _hmac.new(
+            resign_secret.encode(),
+            b"POGR-RESIGN:POGC-GENESIS-E071CC96",
+            hashlib.sha3_256,
+        ).hexdigest()
+    else:
+        token = ""
+
+    page_ready = sk_configured and bool(resign_secret)
+
+    if page_ready:
+        status_color = "#22c55e"
+        status_text  = "Clave PQC y POGR_ADMIN_RESIGN_SECRET listos en servidor"
+    elif sk_configured and not resign_secret:
+        status_color = "#f59e0b"
+        status_text  = "ERROR: POGR_ADMIN_RESIGN_SECRET no configurado en Railway"
+    else:
+        status_color = "#ef4444"
+        status_text  = "ERROR: Clave PQC (OMNIX_SIGNING_SECRET_KEY_B64) no configurada en Railway"
 
     html = f"""<!DOCTYPE html>
 <html lang="es">
@@ -1378,8 +1422,8 @@ def admin_resign_page():
     <p class="sub">Re-firma POGC-GENESIS con ML-DSA-65 real (FIPS 204)</p>
     <div class="status">{status_text}</div>
     <div class="cert-id">POGC-GENESIS-E071CC96</div>
-    <button id="btn" onclick="resign()" {"disabled" if not sk_configured else ""}>
-      {"FIRMAR CON ML-DSA-65" if sk_configured else "CLAVE NO DISPONIBLE"}
+    <button id="btn" onclick="resign()" {"disabled" if not page_ready else ""}>
+      {"FIRMAR CON ML-DSA-65" if page_ready else "CONFIGURACIÓN INCOMPLETA"}
     </button>
     <div id="result"></div>
   </div>

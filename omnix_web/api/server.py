@@ -144,8 +144,11 @@ register_sandbox_routes(app)
 # ── ADR-186/187: Proof of Governance Public Registry (PoGR) ───────────────────
 try:
     from api.pogr_blueprint import pogr_bp
+    from api._rate_limits import pogr_limiter
     app.register_blueprint(pogr_bp)
+    pogr_limiter.init_app(app)
     print("[startup] PoGR blueprint registered — /v1/pogr/certify, /v1/pogr/verify, /v1/pogr/badge, /v1/pogr/manifest, /v1/pogr/registry")
+    print("[startup] PoGR rate limiter initialised — verify: 60/min · export: 20/min (ADR-205 R-M3)")
 except Exception as _pogr_err:
     import traceback
     print(f"[startup] WARNING: PoGR blueprint failed to register: {_pogr_err}")

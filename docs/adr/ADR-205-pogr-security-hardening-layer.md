@@ -211,29 +211,86 @@ Los certs emitidos antes de ADR-205 (`canonical_version=1`) mantienen backward c
 
 ---
 
-## Post-Remediation Audit — v3.0
+## Segunda Ola de Remediaciones — ADR-205 §6 (2026-05-31)
 
-La auditoría adversarial v3.0 (`scripts/pogr_adversarial_audit.py`) re-ejecutó los
-15 ataques con las correcciones aplicadas. Resultados:
+Auditoría adversarial V2 (`scripts/run_pogr_adversarial_audit_v2.py` — 19 ataques) identificó
+4 bypasses adicionales no cubiertos por C1-C4. Implementadas remediaciones R-C1 a R-M3:
 
-| Finding | Severidad antes | Severidad ahora | Veredicto |
+| ID | Severidad | Descripción | Remediación |
 |---|---|---|---|
-| POGR-SEC-001 (A05) | 🔴 CRITICAL | ✅ MITIGATED | Firma forjada detectada — INVALID en los 3 canales |
-| POGR-SEC-002 activo (A07) | 🔴 CRITICAL | ✅ MITIGATED | status canónico — alteración → hash mismatch |
-| POGR-SEC-003 (A09) | 🟠 HIGH | ✅ MITIGATED | Kernel unificado — mismo veredicto en API y HTML |
-| POGR-SEC-012 (A08) | 🟠 HIGH | ✅ MITIGATED | HTML verifica content_hash — mutación detectada |
+| X01 | 🔴 CRITICAL | `admin_resign` token derivable: SHA3("POGR-RESIGN:"+id) hardcoded en fuente | **R-C1**: HMAC-SHA3-256 con `POGR_ADMIN_RESIGN_SECRET` |
+| X02 | 🟠 HIGH | PQC soft-fail: clave ausente → `valid=True` en API · `(False,...)` offline → divergencia | **R-H2**: `OMNIX_PQC_VERIFY_FAIL_CLOSED=true` en ambos canales |
+| X03 | 🟠 HIGH | Offline sim-forgery: `AUDIT-PQC-SIM-V2:` aceptada por defecto → forgery path abierto | **R-H3**: `--allow-sim` opt-in requerido en `verify_pogc_offline.py v2.1` |
+| X04 | 🟡 MEDIUM | `revocation_proof` no verificado — cualquier string de 1 char aceptado | **R-M1** Phase 1: validación estructural len≥64 + prefijo ML-DSA-65/JSON |
 
-**Hallazgos CRITICAL:** 0  
-**Hallazgos HIGH:** 0  
-**Divergencias críticas:** 0  
+**Remediaciones adicionales aplicadas:**
+- **R-H1** (MEDIUM): v1 cert hard-fail interim — `canonical_version=1` + `status≠ACTIVE` → check False
+- **R-M2** (MEDIUM): POGC ID entropy aumentado a 128 bits (`secrets.token_hex(16)`)
+- **R-M3** (LOW): Rate limiting Flask-Limiter: `60/min` en `/verify` · `20/min` en `/export`
 
-**Abiertos (no críticos):**
+### §6.1 — R-C1: HMAC-keyed admin_resign
 
-| Finding | Severidad | Descripción |
-|---|---|---|
-| POGR-SEC-002-ARCH (A11) | 🟡 MEDIUM | Stale pre-revocation export — arquitectónico · documentado con mandatory warning |
-| POGR-SEC-004 (A13) | 🟡 MEDIUM | Sin UNIQUE INDEX en `session_id WHERE status='ACTIVE'` |
-| POGR-SEC-011 (A06) | 🟡 MEDIUM | Sin argumento `--pogc-id` en offline verifier para binding ID↔contenido |
+```python
+resign_secret = os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+expected_token = hmac.new(
+    resign_secret.encode(), f"POGR-RESIGN:{pogc_id}".encode(), hashlib.sha3_256
+).hexdigest()
+if not hmac.compare_digest(provided_token, expected_token):
+    abort(403)
+```
+
+`admin_resign_page()` computa el HMAC server-side y lo inyecta en el template — el token
+nunca es derivable desde fuente. Endpoint retorna 503 si `POGR_ADMIN_RESIGN_SECRET` no está
+configurado.
+
+### §6.2 — R-M1 Phase 2 (pendiente)
+
+Verificación criptográfica completa de `revocation_proof` como firma ML-DSA-65 del emisor
+original requiere columna `issuer_public_key TEXT` en `pogr_certificates`. Schema change
+pendiente de Railway deployment. Tracked como work item abierto.
+
+---
+
+## Auditoría Adversarial V3 — Resultados Finales (2026-05-31)
+
+Script: `scripts/run_pogr_adversarial_audit_v3.py` — 19 ataques  
+Reporte completo: `docs/audits/pogr_v3/POGR_ADVERSARIAL_AUDIT_V3.md`
+
+| ID | Ataque | Severidad | Veredicto |
+|---|---|---|---|
+| A01 | Modify `content_hash` after tamper | HIGH | ✅ DETECTED |
+| A02 | Modify `issuer` field | HIGH | ✅ DETECTED |
+| A03 | Modify `mandate_certification` | CRITICAL | ✅ DETECTED |
+| A04 | Modify `compliance_tier` | CRITICAL | ✅ DETECTED |
+| A05 | Modify `expires_at` to far future | CRITICAL | ✅ DETECTED |
+| A06 | Replace `pqc_signature` with random hex | CRITICAL | ✅ DETECTED |
+| A07 | Replay expired certificate | MEDIUM | ✅ DETECTED |
+| A08 | Replay revoked v1 cert offline | MEDIUM | ⚠ PARTIAL (R-H1 interim) |
+| A09 | Export JSON tamper + offline verify | CRITICAL | ✅ DETECTED |
+| A10 | API vs Web inconsistency | LOW | ✅ DETECTED |
+| A11 | API vs Offline inconsistency | LOW | ✅ DETECTED |
+| A12 | Web vs Offline inconsistency | LOW | ✅ DETECTED |
+| A13 | Missing mandatory fields | HIGH | ✅ DETECTED |
+| A14 | Extra injected fields | LOW | ✅ DETECTED |
+| A15 | POGC ID collision (entropy) | MEDIUM | ✅ DETECTED |
+| X01 | admin_resign derivable token | CRITICAL | ✅ DETECTED (R-C1) |
+| X02 | API PQC soft-fail (key absent) | HIGH | ✅ DETECTED (R-H2) |
+| X03 | Offline sim-forgery default path | HIGH | ✅ DETECTED (R-H3) |
+| X04 | revocation_proof not verified | MEDIUM | ⚠ PARTIAL (R-M1 Ph1) |
+
+**Resumen:**
+
+| Métrica | Valor |
+|---|---|
+| Total ataques | 19 |
+| Detected | 17 |
+| Partial (MEDIUM) | 2 — A08, X04 |
+| Bypassed | **0** |
+| CRITICAL bypassed | **0** |
+| HIGH bypassed | **0** |
+| Web = API = Offline | **✓ Consistentes** |
+
+**Veredicto: PoGR PRODUCTION-READY — 0 CRITICAL · 0 HIGH**
 
 ---
 
@@ -241,9 +298,11 @@ La auditoría adversarial v3.0 (`scripts/pogr_adversarial_audit.py`) re-ejecutó
 
 | Archivo | Cambio |
 |---|---|
-| `omnix_web/api/pogr_blueprint.py` | C1: CANONICAL_V2 · C2: `_verify_pqc_signature()` · C3: `_verify_certificate_core()` · C4: `revoke()` re-sign |
-| `scripts/verify_pogc_offline.py` | v2.0: soporte canonical_version 1/2 · PQC real (`--platform-key`) · revocation warning |
-| `scripts/pogr_adversarial_audit.py` | v3.0: 15 ataques con kernel unificado · severidades actualizadas |
+| `omnix_web/api/pogr_blueprint.py` | C1–C4 + R-C1 + R-H2 + R-H1 + R-M1 + R-M2 + R-M3 |
+| `scripts/verify_pogc_offline.py` | v2.1.0: `--allow-sim` opt-in · R-H3 · R-H1 |
+| `omnix_web/api/_rate_limits.py` | **Nuevo** — `pogr_limiter` instancia Flask-Limiter (R-M3) |
+| `omnix_web/api/server.py` | `pogr_limiter.init_app(app)` — startup log confirmado |
+| `scripts/run_pogr_adversarial_audit_v3.py` | **Nuevo** — 19 ataques post-remediation |
 
 ---
 
