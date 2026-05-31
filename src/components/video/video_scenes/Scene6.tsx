@@ -1,62 +1,85 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
+// S6 duration: 12000ms
+// Narrative: The trust layer. First Proof of Governance Registry in the world.
+// "The SSL for AI decisions."
+
 export function Scene6() {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 500),  // company name
-      setTimeout(() => setPhase(2), 1500), // divider
-      setTimeout(() => setPhase(3), 2000), // POGC ID
-      setTimeout(() => setPhase(4), 2800), // Regulations
+      setTimeout(() => setPhase(1), 500),   // company
+      setTimeout(() => setPhase(2), 1800),  // divider
+      setTimeout(() => setPhase(3), 2800),  // POGC genesis
+      setTimeout(() => setPhase(4), 4200),  // tagline
+      setTimeout(() => setPhase(5), 6000),  // regulations
+      setTimeout(() => setPhase(6), 8000),  // CTA
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
 
   return (
-    <motion.div 
+    <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 0.5 }}
-      transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
     >
-      {/* Background pulsing circle */}
-      <motion.div 
-        className="absolute w-[80vw] h-[80vw] rounded-full bg-[#D4A843] opacity-[0.03] blur-[100px]"
-        animate={{ scale: [1, 1.1, 1], opacity: [0.03, 0.05, 0.03] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      {/* Ambient glow */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          width: '70vw',
+          height: '70vw',
+          borderRadius: '50%',
+          backgroundColor: '#D4A843',
+          filter: 'blur(120px)',
+          opacity: 0.04,
+        }}
+        animate={{ scale: [1, 1.08, 1], opacity: [0.04, 0.07, 0.04] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      {/* Floating Particles */}
-      {[...Array(20)].map((_, i) => (
+      {/* Floating particles */}
+      {Array.from({ length: 18 }).map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-[4px] h-[4px] bg-[#D4A843] rounded-full opacity-30"
+          style={{
+            position: 'absolute',
+            width: 3,
+            height: 3,
+            borderRadius: '50%',
+            backgroundColor: '#D4A843',
+          }}
           initial={{
-            x: `${Math.random() * 100}vw`,
-            y: '110vh',
-            scale: Math.random() * 2
+            x: `${Math.random() * 90 + 5}vw`,
+            y: '108vh',
+            opacity: 0.2 + Math.random() * 0.3,
           }}
-          animate={{
-            y: '-10vh',
-            x: `+=${Math.random() * 10 - 5}vw`
-          }}
+          animate={{ y: '-8vh' }}
           transition={{
-            duration: 8 + Math.random() * 5,
+            duration: 9 + Math.random() * 6,
             repeat: Infinity,
-            delay: Math.random() * 5,
-            ease: "linear"
+            delay: Math.random() * 8,
+            ease: 'linear',
           }}
         />
       ))}
 
-      <div className="relative z-10 flex flex-col items-center">
-        {/* Company Name */}
-        <div className="overflow-hidden mb-[2vh]">
-          <motion.h1 
-            className="font-display font-black text-[6vw] tracking-widest text-white"
+      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+        {/* Company name */}
+        <div style={{ overflow: 'hidden', marginBottom: '2.5vh' }}>
+          <motion.h1
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: '5.5vw',
+              fontWeight: 900,
+              color: '#ffffff',
+              letterSpacing: '0.25em',
+            }}
             initial={{ y: '100%' }}
             animate={phase >= 1 ? { y: 0 } : { y: '100%' }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -65,46 +88,103 @@ export function Scene6() {
           </motion.h1>
         </div>
 
-        {/* Divider */}
-        <motion.div 
-          className="w-[40vw] h-[1px] bg-[#D4A843]/50 mb-[4vh]"
+        {/* Amber divider */}
+        <motion.div
+          style={{ width: '38vw', height: '1px', backgroundColor: '#D4A843', marginBottom: '3.5vh' }}
           initial={{ scaleX: 0 }}
           animate={phase >= 2 ? { scaleX: 1 } : { scaleX: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         />
 
-        {/* Content */}
-        <div className="flex flex-col items-center gap-[1.5vh] text-center">
-          <motion.div
-            className="font-mono text-[1.8vw] text-[#C8C8D0]"
-            initial={{ opacity: 0, y: 10 }}
-            animate={phase >= 3 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-            transition={{ duration: 0.6 }}
+        {/* POGC genesis */}
+        <motion.div
+          style={{ textAlign: 'center', marginBottom: '2vh' }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={phase >= 3 ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ duration: 0.6 }}
+        >
+          <p
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '1.6vw',
+              color: '#C8C8D0',
+              letterSpacing: '0.12em',
+            }}
           >
             POGC-GENESIS-E071CC96
-          </motion.div>
-
-          <motion.div
-            className="font-mono text-[1.2vw] text-[#C8C8D0]/60"
-            initial={{ opacity: 0, y: 10 }}
-            animate={phase >= 4 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-            transition={{ duration: 0.6 }}
+          </p>
+          <p
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '0.9vw',
+              color: 'rgba(200,200,208,0.35)',
+              letterSpacing: '0.1em',
+              marginTop: '0.6vh',
+            }}
           >
-            EU AI Act Art. 9 · 11 · MiCA · DORA · NIST AU-2
-            <br/>
-            First Proof of Governance Registry · 2026
-          </motion.div>
-        </div>
+            First Proof of Governance Certificate · Issued 2026-05-26
+          </p>
+        </motion.div>
+
+        {/* Tagline */}
+        <motion.div
+          style={{
+            padding: '1.5vh 3vw',
+            border: '1px solid rgba(212,168,67,0.35)',
+            marginBottom: '3vh',
+          }}
+          initial={{ opacity: 0, scale: 0.94 }}
+          animate={phase >= 4 ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.94 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <p
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: '1.5vw',
+              fontWeight: 700,
+              color: '#D4A843',
+              letterSpacing: '0.12em',
+              textAlign: 'center',
+            }}
+          >
+            THE SSL FOR AI DECISIONS
+          </p>
+        </motion.div>
+
+        {/* Regulations */}
+        <motion.p
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '1.05vw',
+            color: 'rgba(200,200,208,0.4)',
+            letterSpacing: '0.1em',
+            textAlign: 'center',
+          }}
+          initial={{ opacity: 0 }}
+          animate={phase >= 5 ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.7 }}
+        >
+          EU AI Act Art. 9 &amp; 11 &nbsp;·&nbsp; MiCA Title VI &nbsp;·&nbsp; DORA Art. 11 &nbsp;·&nbsp; NIST AU-2
+        </motion.p>
       </div>
 
-      {/* URL */}
-      <motion.div 
-        className="absolute bottom-[4vh] right-[4vw] font-mono text-[1vw] text-[#C8C8D0]/40"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 3, duration: 1 }}
+      {/* CTA */}
+      <motion.div
+        style={{ position: 'absolute', bottom: '7%', textAlign: 'center' }}
+        initial={{ opacity: 0, y: 14 }}
+        animate={phase >= 6 ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       >
-        omnixquantum.com
+        <p
+          style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: '1.1vw',
+            color: 'rgba(200,200,208,0.35)',
+            letterSpacing: '0.2em',
+          }}
+        >
+          omnixquantum.com &nbsp;·&nbsp; Decision Governance Infrastructure &nbsp;·&nbsp; 2026
+        </p>
       </motion.div>
     </motion.div>
   );

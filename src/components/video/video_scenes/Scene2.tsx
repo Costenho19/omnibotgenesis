@@ -1,95 +1,173 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
+// S2 duration: 15000ms
+// Narrative: The OMNIX Governance Contract — sealed with ML-DSA-65 BEFORE Turn 0.
+// "Before the AI moved a single dollar, a cryptographic contract was sealed."
+
 export function Scene2() {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 300),  // headline clips in
-      setTimeout(() => setPhase(2), 800),  // line 1
-      setTimeout(() => setPhase(3), 1600), // line 2
-      setTimeout(() => setPhase(4), 2400), // line 3
-      setTimeout(() => setPhase(5), 3200), // line 4
+      setTimeout(() => setPhase(1), 500),   // headline
+      setTimeout(() => setPhase(2), 1800),  // divider
+      setTimeout(() => setPhase(3), 2600),  // line 1
+      setTimeout(() => setPhase(4), 3600),  // line 2
+      setTimeout(() => setPhase(5), 4600),  // line 3
+      setTimeout(() => setPhase(6), 5600),  // line 4
+      setTimeout(() => setPhase(7), 6800),  // line 5
+      setTimeout(() => setPhase(8), 8000),  // line 6
+      setTimeout(() => setPhase(9), 10000), // bottom statement
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
 
   const lines = [
-    "algorithm: ML-DSA-65 (FIPS 204)",
-    "session:   SESSION-B9199C8CC9394304",
-    "sealed:    BEFORE TURN 0",
-    "status:    MANDATE-BOUND"
+    { label: 'session',    value: 'SESSION-B9199C8CC9394304' },
+    { label: 'algorithm',  value: 'ML-DSA-65 (FIPS 204 · Dilithium-3)' },
+    { label: 'sealed',     value: 'BEFORE TURN 0  —  T-minus 0ms' },
+    { label: 'mandate',    value: 'MANDATE-BOUND' },
+    { label: 'checks',     value: '187 verification points' },
+    { label: 'compliance', value: 'EU AI Act Art.9 · MiCA · DORA · NIST AU-2' },
   ];
 
   return (
-    <motion.div 
+    <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, y: -50 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.7 }}
     >
-      {/* Background grid */}
-      <motion.div 
+      {/* Scrolling grid background */}
+      <motion.div
         className="absolute inset-0"
         style={{
-          backgroundImage: 'linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)',
-          backgroundSize: '4vw 4vw'
+          backgroundImage:
+            'linear-gradient(rgba(212,168,67,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,0.06) 1px, transparent 1px)',
+          backgroundSize: '5vw 5vw',
         }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3, y: ['0vw', '4vw'] }}
-        transition={{ duration: 5, ease: "linear", repeat: Infinity }}
+        animate={{ backgroundPositionY: ['0px', '80px'] }}
+        transition={{ duration: 6, ease: 'linear', repeat: Infinity }}
       />
 
-      {/* Headline */}
+      {/* Top label */}
       <motion.div
-        className="mb-[4vh] overflow-hidden"
+        className="absolute"
+        style={{ top: '14%' }}
+        initial={{ opacity: 0, y: -12 }}
+        animate={phase >= 1 ? { opacity: 1, y: 0 } : { opacity: 0, y: -12 }}
+        transition={{ duration: 0.6 }}
       >
-        <motion.h2 
-          className="font-display font-bold text-[3vw] tracking-[0.5em] text-[#D4A843]"
+        <p
+          style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: '1.1vw',
+            color: 'rgba(200,200,208,0.45)',
+            letterSpacing: '0.3em',
+            fontWeight: 600,
+          }}
+        >
+          BEFORE THE AI MOVED A SINGLE DOLLAR
+        </p>
+      </motion.div>
+
+      {/* Headline */}
+      <div style={{ overflow: 'hidden', marginBottom: '3vh', position: 'relative', zIndex: 10 }}>
+        <motion.h2
+          style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: '2.8vw',
+            fontWeight: 800,
+            letterSpacing: '0.4em',
+            color: '#D4A843',
+          }}
           initial={{ y: '100%' }}
           animate={phase >= 1 ? { y: 0 } : { y: '100%' }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
           GOVERNANCE CONTRACT
         </motion.h2>
-      </motion.div>
+      </div>
 
       {/* Divider */}
-      <motion.div 
-        className="w-[60vw] h-[2px] bg-[#D4A843] mb-[6vh]"
-        initial={{ scaleX: 2, opacity: 0.3 }}
-        animate={{ scaleX: 1, opacity: 1 }}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      <motion.div
+        style={{ width: '58vw', height: '1px', backgroundColor: '#D4A843', marginBottom: '5vh', position: 'relative', zIndex: 10 }}
+        initial={{ scaleX: 0 }}
+        animate={phase >= 2 ? { scaleX: 1 } : { scaleX: 0 }}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
       />
 
-      {/* Code Block */}
-      <div className="w-[60vw] font-mono text-[2vw] text-[#C8C8D0] flex flex-col gap-[2vh]">
-        {lines.map((line, i) => {
-          const linePhase = i + 2;
-          return (
-            <div key={i} className="flex relative">
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={phase >= linePhase ? { opacity: 1 } : { opacity: 0 }}
-                transition={{ duration: 0.1 }}
-              >
-                {line}
-              </motion.span>
-              
-              {/* Typewriter Cursor */}
-              {phase === linePhase && (
-                <motion.div 
-                  className="w-[1vw] h-[2.5vw] bg-[#D4A843] ml-[1vw]"
-                  animate={{ opacity: [1, 0] }}
-                  transition={{ duration: 0.2, repeat: Infinity, repeatType: 'reverse' }}
-                />
-              )}
-            </div>
-          );
-        })}
+      {/* Code block */}
+      <div
+        style={{
+          width: '58vw',
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '1.65vw',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2vh',
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
+        {lines.map((line, i) => (
+          <motion.div
+            key={i}
+            style={{ display: 'flex', gap: '1.5vw', alignItems: 'center' }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={phase >= i + 3 ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          >
+            <span style={{ color: 'rgba(212,168,67,0.55)', minWidth: '9vw' }}>
+              {line.label}:
+            </span>
+            <span style={{ color: line.label === 'mandate' ? '#D4A843' : '#C8C8D0', fontWeight: line.label === 'mandate' ? 700 : 400 }}>
+              {line.value}
+            </span>
+          </motion.div>
+        ))}
       </div>
+
+      {/* Bottom statement */}
+      <motion.div
+        style={{ position: 'absolute', bottom: '10%', textAlign: 'center' }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={phase >= 9 ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div
+          style={{
+            borderLeft: '3px solid #D4A843',
+            paddingLeft: '2vw',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: '1.3vw',
+              color: 'rgba(200,200,208,0.7)',
+              fontWeight: 500,
+              letterSpacing: '0.05em',
+            }}
+          >
+            Sealed with post-quantum cryptography.
+          </p>
+          <p
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: '1.3vw',
+              color: 'rgba(200,200,208,0.7)',
+              fontWeight: 500,
+              letterSpacing: '0.05em',
+              marginTop: '0.5vh',
+            }}
+          >
+            Verifiable by anyone. Forever. Offline.
+          </p>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }

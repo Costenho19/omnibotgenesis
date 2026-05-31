@@ -7,56 +7,86 @@ import { Scene4 } from './video_scenes/Scene4';
 import { Scene5 } from './video_scenes/Scene5';
 import { Scene6 } from './video_scenes/Scene6';
 
+// Total: 15+15+18+15+15+12 = 90 seconds
 const SCENE_DURATIONS = {
-  problem:    5000,
-  protocol:   5500,
-  execution:  6000,
-  tamper:     5000,
-  verify:     5500,
-  trust:      6000,
+  problem:   15000,
+  protocol:  15000,
+  execution: 18000,
+  tamper:    15000,
+  verify:    15000,
+  trust:     12000,
 };
 
 export default function VideoTemplate() {
   const { currentScene } = useVideoPlayer({ durations: SCENE_DURATIONS });
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-[#050508] font-display">
-      {/* Persistent Background Layer */}
-      <div className="absolute inset-0">
-        {/* Generative dark blue texture */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-screen"
-          style={{ backgroundImage: `url(${import.meta.env.BASE_URL}images/bg-texture.png)` }}
-        />
-        {/* Subtle noise */}
-        <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none" />
-      </div>
-
-      {/* Persistent Cross-Scene Elements */}
-      <motion.div 
-        className="absolute top-[5vh] left-[4vw] z-50 flex flex-col"
-        animate={{
-          scale: currentScene === 5 ? 0 : 1,
-          opacity: currentScene === 5 ? 0 : 0.3
-        }}
+    <div
+      className="relative w-full h-screen overflow-hidden"
+      style={{ backgroundColor: '#050508', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+    >
+      {/* Persistent wordmark */}
+      <motion.div
+        className="absolute flex flex-col"
+        style={{ top: '4.5vh', left: '4vw', zIndex: 50 }}
+        animate={{ opacity: currentScene === 5 ? 0 : 0.28, scale: 1 }}
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
       >
-        <span className="font-display font-black text-[2vw] tracking-widest text-[#C8C8D0]">OMNIX</span>
-        <span className="font-mono text-[0.8vw] tracking-widest text-[#C8C8D0]">QUANTUM</span>
+        <span
+          style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: '1.9vw',
+            fontWeight: 900,
+            letterSpacing: '0.25em',
+            color: '#C8C8D0',
+          }}
+        >
+          OMNIX
+        </span>
+        <span
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '0.75vw',
+            letterSpacing: '0.35em',
+            color: '#C8C8D0',
+          }}
+        >
+          QUANTUM
+        </span>
       </motion.div>
 
-      <motion.div 
-        className="absolute bottom-[5vh] right-[4vw] z-50 rounded-full"
+      {/* Persistent amber dot — becomes red on tamper scene */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{ bottom: '5vh', right: '4vw', zIndex: 50 }}
         animate={{
-          width: currentScene === 3 ? '1vw' : '0.5vw',
-          height: currentScene === 3 ? '1vw' : '0.5vw',
+          width: currentScene === 3 ? '0.9vw' : '0.45vw',
+          height: currentScene === 3 ? '0.9vw' : '0.45vw',
+          backgroundColor: currentScene === 3 ? '#E53E3E' : '#D4A843',
           opacity: currentScene === 5 ? 0 : 0.7,
-          backgroundColor: currentScene === 3 ? '#E53E3E' : '#D4A843'
         }}
-        transition={{ duration: 0.8, ease: "easeInOut" }}
+        transition={{ duration: 0.7, ease: 'easeInOut' }}
       />
 
-      {/* Dynamic Content Layer */}
+      {/* Scene counter */}
+      <motion.div
+        className="absolute"
+        style={{ bottom: '5vh', left: '4vw', zIndex: 50 }}
+        animate={{ opacity: 0.2 }}
+      >
+        <span
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '0.85vw',
+            color: '#C8C8D0',
+            letterSpacing: '0.2em',
+          }}
+        >
+          {String(currentScene + 1).padStart(2, '0')}&nbsp;/&nbsp;06
+        </span>
+      </motion.div>
+
+      {/* Dynamic content */}
       <AnimatePresence mode="sync">
         {currentScene === 0 && <Scene1 key="problem" />}
         {currentScene === 1 && <Scene2 key="protocol" />}
