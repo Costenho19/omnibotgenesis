@@ -81,6 +81,8 @@ CREATE INDEX IF NOT EXISTS idx_pogr_expires    ON pogr_certificates (expires_at)
 CREATE INDEX IF NOT EXISTS idx_pogr_mandate    ON pogr_certificates (mandate_certification);
 ALTER TABLE pogr_certificates ADD COLUMN IF NOT EXISTS
     canonical_version INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE pogr_certificates ADD COLUMN IF NOT EXISTS
+    issuer_public_key TEXT;
 """
 
 _tables_ensured = False
@@ -199,6 +201,138 @@ def _sign_certificate(canonical: Dict[str, Any]) -> str:
     # Deterministic HMAC stub (development / environments without PQC key)
     stub = hashlib.sha3_256(b"POGR-STUB:" + payload).hexdigest()
     return "STUB-SHA3-256:" + stub
+
+
+def _verify_revocation_proof_phase2(
+    proof: str,
+    pogc_id: str,
+    revocation_reason: str,
+    cert_issued_at: str,
+    issuer_public_key: str,
+) -> tuple:
+    """
+    Phase 2: Full ML-DSA-65 cryptographic verification of revocation_proof.
+    ADR-205 §6.2 · PoGR-INV-006 · POGR-SEC-014
+
+    The caller must present a proof that is an ML-DSA-65 signature over the
+    canonical revocation payload:
+        {"action":"REVOKE","issued_at":<cert_issued_at>,"pogc_id":<id>,"revocation_reason":<reason>}
+        (JSON, sort_keys=True, separators=(',',':'), UTF-8 encoded)
+
+    Anti-replay:
+        - `issued_at` ties the proof to a specific certificate issuance timestamp.
+        - `pogc_id` is globally unique — the proof cannot be replayed against another cert.
+        - The certificate status guard in revoke() ensures idempotency (ACTIVE-only).
+
+    Fail-closed policy:
+        - If issuer_public_key is present but verification fails → 403 (hard reject).
+        - If issuer_public_key is absent (legacy cert) → fallback governed by
+          OMNIX_REVOCATION_VERIFY_ALLOW_PHASE1_DEV env var (default: fail-closed).
+        - If oqs unavailable and OMNIX_PQC_VERIFY_FAIL_CLOSED=true → hard reject.
+
+    Returns:
+        (True,  "✓ …")  — Phase 2 cryptographically verified
+        (False, "✗ …")  — Hard reject — revocation must be denied
+        (None,  "⚠ …")  — Phase 1 fallback accepted (dev mode only, with warning)
+    """
+    canonical_payload = json.dumps(
+        {
+            "action":             "REVOKE",
+            "issued_at":          cert_issued_at,
+            "pogc_id":            pogc_id,
+            "revocation_reason":  revocation_reason,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+
+    if not issuer_public_key:
+        # Legacy cert — issuer_public_key not stored at issuance time.
+        allow_dev = os.environ.get(
+            "OMNIX_REVOCATION_VERIFY_ALLOW_PHASE1_DEV", "false"
+        ).lower() == "true"
+        if allow_dev:
+            logger.warning(
+                f"[PoGR] Phase 2 SKIPPED for {pogc_id} — no issuer_public_key stored "
+                "(legacy cert). OMNIX_REVOCATION_VERIFY_ALLOW_PHASE1_DEV=true. "
+                "Only Phase 1 structural validation applied. "
+                "Re-issue as canonical_version=2 to enforce Phase 2. ADR-205 §6.2."
+            )
+            return (
+                None,
+                "⚠ Phase 1 fallback — issuer_public_key absent on legacy cert. "
+                "Phase 2 skipped (OMNIX_REVOCATION_VERIFY_ALLOW_PHASE1_DEV=true). "
+                "Re-issue as v2 to enforce cryptographic revocation proof.",
+            )
+        logger.error(
+            f"[PoGR] Phase 2 BLOCKED for {pogc_id} — no issuer_public_key stored. "
+            "Set OMNIX_REVOCATION_VERIFY_ALLOW_PHASE1_DEV=true for legacy cert revocation. ADR-205 §6.2."
+        )
+        return (
+            False,
+            "✗ Phase 2 revocation blocked — issuer_public_key not stored for this certificate. "
+            "Cannot cryptographically verify revocation_proof (ADR-205 §6.2 · PoGR-INV-006). "
+            "Operator action required: set OMNIX_REVOCATION_VERIFY_ALLOW_PHASE1_DEV=true "
+            "to allow Phase 1 fallback for legacy certs, then re-issue as canonical_version=2.",
+        )
+
+    if not proof.startswith("ML-DSA-65:"):
+        return (
+            False,
+            "✗ revocation_proof must be ML-DSA-65 hex signature for Phase 2 verification. "
+            "Format: 'ML-DSA-65:<hex_signature>' (PoGR-INV-006)",
+        )
+
+    try:
+        import base64 as _b64
+        from oqs import Signature as _OQSSig
+
+        pk_bytes  = _b64.b64decode(issuer_public_key)
+        sig_hex   = proof.removeprefix("ML-DSA-65:")
+        if len(sig_hex) % 2 != 0:
+            return (
+                False,
+                "✗ revocation_proof hex string has odd length — malformed ML-DSA-65 signature (PoGR-INV-006)",
+            )
+        sig_bytes = bytes.fromhex(sig_hex)
+        verifier  = _OQSSig("ML-DSA-65")
+        verifier.verify(canonical_payload, sig_bytes, pk_bytes)
+        logger.info(
+            f"[PoGR] Phase 2 VERIFIED: {pogc_id} — revocation_proof ML-DSA-65 valid (FIPS 204)"
+        )
+        return (
+            True,
+            "✓ ML-DSA-65 revocation_proof cryptographically verified (FIPS 204 · NIST 2024 · PoGR-INV-006)",
+        )
+
+    except ImportError:
+        fail_closed = os.environ.get("OMNIX_PQC_VERIFY_FAIL_CLOSED", "false").lower() == "true"
+        if fail_closed:
+            logger.critical(
+                f"[PoGR] Phase 2 HARD FAIL for {pogc_id} — oqs-python unavailable "
+                "and OMNIX_PQC_VERIFY_FAIL_CLOSED=true. Revocation rejected."
+            )
+            return (
+                False,
+                "✗ oqs-python unavailable — ML-DSA-65 Phase 2 verification impossible. "
+                "OMNIX_PQC_VERIFY_FAIL_CLOSED=true → revocation rejected (PoGR-INV-006).",
+            )
+        logger.warning(
+            f"[PoGR] Phase 2 SKIPPED for {pogc_id} — oqs-python not installed. "
+            "Phase 1 structural validation only. Install oqs-python for production."
+        )
+        return (
+            None,
+            "⚠ oqs-python unavailable — Phase 2 ML-DSA-65 verification skipped. "
+            "Phase 1 structural validation only. Install oqs-python for production (PoGR-INV-006).",
+        )
+
+    except Exception as exc:
+        logger.error(f"[PoGR] Phase 2 verification error for {pogc_id}: {exc}")
+        return (
+            False,
+            f"✗ revocation_proof ML-DSA-65 signature INVALID — {exc} (PoGR-INV-006)",
+        )
 
 
 def _verify_pqc_signature(
@@ -470,6 +604,8 @@ def certify():
 
     # ADR-205: status + revoked_at are canonical fields in v2
     # They must be set BEFORE computing canonical / hash / signature.
+    # ADR-205 §6.2: issuer_public_key stored at issuance for Phase 2 revocation verification.
+    issuer_public_key = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "")
     cert_data = {
         "pogc_id":                pogc_id,
         "session_id":             session_id,
@@ -489,6 +625,8 @@ def certify():
         "status":                 "ACTIVE",
         "revoked_at":             None,
         "canonical_version":      CURRENT_CANONICAL_VERSION,
+        # Phase 2 revocation proof verification key (ADR-205 §6.2)
+        "issuer_public_key":      issuer_public_key,
     }
 
     canonical = _canonical_fields(cert_data, version=CURRENT_CANONICAL_VERSION)
@@ -512,7 +650,7 @@ def certify():
                         turn_count, avg_conformance,
                         issued_at, expires_at, regulatory_tags,
                         content_hash, pqc_signature, pqc_algorithm,
-                        status, canonical_version
+                        status, canonical_version, issuer_public_key
                     ) VALUES (
                         %(pogc_id)s, %(session_id)s, %(ctchc_seal_hash)s, %(issuer)s,
                         %(subject_org)s, %(subject_org_id)s, %(agent_id)s,
@@ -520,7 +658,7 @@ def certify():
                         %(turn_count)s, %(avg_conformance)s,
                         %(issued_at)s, %(expires_at)s, %(regulatory_tags)s,
                         %(content_hash)s, %(pqc_signature)s, %(pqc_algorithm)s,
-                        %(status)s, %(canonical_version)s
+                        %(status)s, %(canonical_version)s, %(issuer_public_key)s
                     )
                 """, {**cert_data, "regulatory_tags": regulatory_tags})
         conn.close()
@@ -984,12 +1122,13 @@ def revoke(pogc_id: str):
     try:
         conn = _get_db()
         with conn.cursor() as cur:
+            # ADR-205 §6.2: include issuer_public_key for Phase 2 revocation proof verification.
             cur.execute("""
                 SELECT subject_org_id, status, canonical_version,
                        pogc_id, session_id, ctchc_seal_hash,
                        issuer, subject_org, agent_id,
                        compliance_tier, mandate_certification,
-                       issued_at, expires_at
+                       issued_at, expires_at, issuer_public_key
                 FROM pogr_certificates WHERE pogc_id = %s LIMIT 1
             """, (pogc_id,))
             row = cur.fetchone()
@@ -1004,6 +1143,28 @@ def revoke(pogc_id: str):
         if row["status"] != "ACTIVE":
             conn.close()
             return _err(f"Certificate is already {row['status']}", 409)
+
+        # ── R-M1 Phase 2: ML-DSA-65 cryptographic verification of revocation_proof ──
+        # ADR-205 §6.2 · POGR-SEC-014
+        # Payload: {"action":"REVOKE","issued_at":<cert_issued_at>,"pogc_id":<id>,"revocation_reason":<reason>}
+        cert_issued_at = _dt_iso(row.get("issued_at"))
+        stored_issuer_pk = (row.get("issuer_public_key") or "").strip()
+
+        p2_ok, p2_msg = _verify_revocation_proof_phase2(
+            proof, pogc_id, reason, cert_issued_at, stored_issuer_pk
+        )
+        if p2_ok is False:
+            conn.close()
+            logger.warning(
+                f"[PoGR] Phase 2 revocation REJECTED for {pogc_id}: {p2_msg}"
+            )
+            return _err(
+                f"revocation_proof rejected — Phase 2 ML-DSA-65 verification failed "
+                f"(PoGR-INV-006 · ADR-205 §6.2): {p2_msg}",
+                403,
+            )
+        if p2_ok is None:
+            logger.warning(f"[PoGR] {pogc_id} revocation proceeding on Phase 1 only: {p2_msg}")
 
         now = datetime.now(timezone.utc)
         canon_version = int(row.get("canonical_version") or 1)
@@ -1023,6 +1184,8 @@ def revoke(pogc_id: str):
             new_hash = _content_hash(new_canonical)
             new_sig  = _sign_certificate(new_canonical)
 
+        # TOCTOU guard: UPDATE only if still ACTIVE — prevents concurrent revocation races.
+        # RETURNING pogc_id returns 0 rows if the cert was already revoked concurrently.
         with conn:
             with conn.cursor() as cur:
                 if canon_version >= 2 and new_hash:
@@ -1034,7 +1197,8 @@ def revoke(pogc_id: str):
                             revocation_proof = %s,
                             content_hash = %s,
                             pqc_signature = %s
-                        WHERE pogc_id = %s
+                        WHERE pogc_id = %s AND status = 'ACTIVE'
+                        RETURNING pogc_id
                     """, (now, reason, proof, new_hash, new_sig, pogc_id))
                 else:
                     cur.execute("""
@@ -1043,9 +1207,19 @@ def revoke(pogc_id: str):
                             revoked_at = %s,
                             revocation_reason = %s,
                             revocation_proof = %s
-                        WHERE pogc_id = %s
+                        WHERE pogc_id = %s AND status = 'ACTIVE'
+                        RETURNING pogc_id
                     """, (now, reason, proof, pogc_id))
+                updated = cur.fetchone()
         conn.close()
+
+        if not updated:
+            # Concurrent revocation race — another request already revoked this cert.
+            return _err(
+                f"Certificate '{pogc_id}' was concurrently revoked — already {row.get('status', 'REVOKED')}. "
+                "PoGR-INV-002: ledger is append-only, original revocation record preserved.",
+                409,
+            )
     except Exception as exc:
         logger.error(f"[PoGR] revoke error: {exc}")
         return jsonify({"error": "Revocation failed"}), 500

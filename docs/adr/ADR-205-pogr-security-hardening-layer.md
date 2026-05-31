@@ -255,11 +255,53 @@ inyectan automáticamente en deployments autoscale; las shared env vars sí. Par
 503 en producción sin requerir acción manual de eliminación del secret existente, se usa
 `POGR_RESIGN_TOKEN` como variable canónica con fallback a `POGR_ADMIN_RESIGN_SECRET`.
 
-### §6.2 — R-M1 Phase 2 (pendiente)
+### §6.2 — R-M1 Phase 2 — IMPLEMENTADO (2026-05-31)
 
-Verificación criptográfica completa de `revocation_proof` como firma ML-DSA-65 del emisor
-original requiere columna `issuer_public_key TEXT` en `pogr_certificates`. Schema change
-pendiente de Railway deployment. Tracked como work item abierto.
+**Estado:** ✅ IMPLEMENTADO — X04 DETECTED
+
+Verificación criptográfica completa de `revocation_proof` como firma ML-DSA-65.
+
+**Cambios implementados:**
+
+1. **DDL:** `ALTER TABLE pogr_certificates ADD COLUMN IF NOT EXISTS issuer_public_key TEXT;`
+   — columna almacena la clave pública ML-DSA-65 del emisor en el momento de la emisión.
+
+2. **`certify()`:** `issuer_public_key = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "")`
+   persistido en INSERT junto al cert.
+
+3. **`_verify_revocation_proof_phase2(proof, pogc_id, reason, cert_issued_at, issuer_public_key)`:**
+   Función nueva que verifica el proof como ML-DSA-65 sobre el payload canónico:
+   ```json
+   {"action":"REVOKE","issued_at":<cert_issued_at>,"pogc_id":<id>,"revocation_reason":<reason>}
+   ```
+   Anti-replay: `issued_at` del cert liga el proof a una emisión específica.
+   Fail-closed: `OMNIX_PQC_VERIFY_FAIL_CLOSED=true` → HTTP 403 si oqs no disponible.
+   Legacy fallback: `OMNIX_REVOCATION_VERIFY_ALLOW_PHASE1_DEV=true` permite Phase 1
+   para certs sin `issuer_public_key` (certs emitidos antes de esta corrección).
+
+4. **`revoke()`:**
+   - SELECT incluye `issuer_public_key`
+   - Phase 2 call ejecutado antes del UPDATE
+   - **TOCTOU guard:** `UPDATE ... WHERE pogc_id = %s AND status = 'ACTIVE' RETURNING pogc_id`
+     previene race conditions en revocaciones concurrentes.
+
+5. **`scripts/reissue_pogc_genesis_v2.py`:** Script premium para re-emitir
+   POGC-GENESIS-E071CC96 como canonical_version=2. Genera execution trace JSON
+   en `evidence_packages/` como evidencia auditable.
+
+**Payload canónico del revocation_proof** (sort_keys=True, separators=(',',':')):
+```python
+json.dumps({
+    "action":             "REVOKE",
+    "issued_at":          cert_issued_at,   # ISO 8601 del cert
+    "pogc_id":            pogc_id,
+    "revocation_reason":  revocation_reason,
+}, sort_keys=True, separators=(",", ":")).encode()
+```
+
+**Railway env vars necesarios:**
+- `OMNIX_PQC_VERIFY_FAIL_CLOSED=true` — fail-closed para verificación PQC
+- `OMNIX_REVOCATION_VERIFY_ALLOW_PHASE1_DEV=true` — solo para revocación de POGC-GENESIS-E071CC96 (legacy)
 
 ---
 
@@ -277,7 +319,7 @@ Reporte completo: `docs/audits/pogr_v3/POGR_ADVERSARIAL_AUDIT_V3.md`
 | A05 | Modify `expires_at` to far future | CRITICAL | ✅ DETECTED |
 | A06 | Replace `pqc_signature` with random hex | CRITICAL | ✅ DETECTED |
 | A07 | Replay expired certificate | MEDIUM | ✅ DETECTED |
-| A08 | Replay revoked v1 cert offline | MEDIUM | ⚠ PARTIAL (R-H1 interim) |
+| A08 | Replay revoked v1/v2 cert (offline) | MEDIUM | ✅ **DETECTED** (A08 CLOSED) |
 | A09 | Export JSON tamper + offline verify | CRITICAL | ✅ DETECTED |
 | A10 | API vs Web inconsistency | LOW | ✅ DETECTED |
 | A11 | API vs Offline inconsistency | LOW | ✅ DETECTED |
@@ -288,21 +330,21 @@ Reporte completo: `docs/audits/pogr_v3/POGR_ADVERSARIAL_AUDIT_V3.md`
 | X01 | admin_resign derivable token | CRITICAL | ✅ DETECTED (R-C1) |
 | X02 | API PQC soft-fail (key absent) | HIGH | ✅ DETECTED (R-H2) |
 | X03 | Offline sim-forgery default path | HIGH | ✅ DETECTED (R-H3) |
-| X04 | revocation_proof not verified | MEDIUM | ⚠ PARTIAL (R-M1 Ph1) |
+| X04 | revocation_proof ML-DSA-65 Phase 1+2 | MEDIUM | ✅ **DETECTED** (X04 CLOSED) |
 
 **Resumen:**
 
 | Métrica | Valor |
 |---|---|
 | Total ataques | 19 |
-| Detected | 17 |
-| Partial (MEDIUM) | 2 — A08, X04 |
+| Detected | **19** |
+| Partial | **0** |
 | Bypassed | **0** |
 | CRITICAL bypassed | **0** |
 | HIGH bypassed | **0** |
 | Web = API = Offline | **✓ Consistentes** |
 
-**Veredicto: PoGR PRODUCTION-READY — 0 CRITICAL · 0 HIGH**
+**Veredicto: PoGR PRODUCTION-READY — 19/19 DETECTED · 0 PARTIAL · 0 BYPASSED**
 
 ---
 

@@ -18,6 +18,12 @@ uri = "file://omnix_web/public/images/quantum_nodes.png"
 type = "image"
 title = "Quantum node data stream"
 
+[[generated]]
+id = "92IIyN_T3a7YXpUnQIJiu"
+uri = "file://public/images/bg-texture.png"
+type = "image"
+title = "Dark cold blue texture"
+
 [[outputs]]
 id = "1wSIlrHhddlnvbp3eIEHS"
 uri = "file://docs/OMNIX_Informe_Completo_Mar2026.pdf"
