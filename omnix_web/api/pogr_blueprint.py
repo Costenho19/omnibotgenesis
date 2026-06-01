@@ -1913,18 +1913,39 @@ def admin_resign(pogc_id: str):
     # Recompute content hash with same canonical fields
     new_content_hash = _content_hash(canonical)
 
-    # ── Update pqc_signature in DB ─────────────────────────────────────────
+    # ── Update DB: signature + hash + canonical_version + issuer_public_key ──
+    #
+    # CRITICAL: canonical_version MUST be updated alongside content_hash and
+    # pqc_signature to guarantee that _verify_certificate_core uses the same
+    # canonical schema that was used here for signing.  Leaving canonical_version
+    # at its old value (e.g. 1) while storing a v2-hash is the root cause of the
+    # "Content hash mismatch" failure observed for POGC-GENESIS-E071CC96.
+    #
+    # issuer_public_key MUST also be persisted so that verification always uses
+    # the key that was actually used to sign — even after a server restart that
+    # would otherwise generate a new ephemeral keypair.
+    #
+    # ADR-205 §6.3 — canonical upgrade path.
+    issuer_pk_b64 = _POGR_PK_B64  # public key paired with the sk used above
     try:
         conn = _get_db()
         with conn:
             with conn.cursor() as cur:
                 cur.execute("""
                     UPDATE pogr_certificates
-                    SET pqc_signature  = %s,
-                        content_hash   = %s,
-                        pqc_algorithm  = 'ml-dsa-65'
+                    SET pqc_signature      = %s,
+                        content_hash       = %s,
+                        pqc_algorithm      = 'ml-dsa-65',
+                        canonical_version  = %s,
+                        issuer_public_key  = %s
                     WHERE pogc_id = %s
-                """, (new_signature, new_content_hash, pogc_id))
+                """, (
+                    new_signature,
+                    new_content_hash,
+                    CURRENT_CANONICAL_VERSION,
+                    issuer_pk_b64,
+                    pogc_id,
+                ))
         conn.close()
     except Exception as exc:
         logger.error(f"[PoGR] admin_resign DB write error: {exc}")
@@ -1932,18 +1953,25 @@ def admin_resign(pogc_id: str):
 
     logger.info(
         f"[PoGR] admin_resign: {pogc_id} re-signed with ML-DSA-65 "
-        f"(old_prefix={old_sig[:20]}, new_len={len(sig_bytes)} bytes)"
+        f"(old_prefix={old_sig[:20]}, new_len={len(sig_bytes)} bytes, "
+        f"canonical_version={CURRENT_CANONICAL_VERSION})"
     )
 
     return jsonify({
-        "status":            "resigned",
-        "pogc_id":           pogc_id,
-        "old_signature_prefix": old_sig[:30] + "...",
+        "status":                  "resigned",
+        "pogc_id":                 pogc_id,
+        "old_signature_prefix":    old_sig[:30] + "...",
         "new_signature_algorithm": "ML-DSA-65",
-        "new_signature_bytes": len(sig_bytes),
-        "content_hash":      new_content_hash,
-        "verify_url":        f"{os.environ.get('OMNIX_WEB_URL', 'https://omnixquantum.net')}/v1/pogr/verify/{pogc_id}",
-        "note":              "Certificate now carries real ML-DSA-65 post-quantum signature (FIPS 204)",
+        "new_signature_bytes":     len(sig_bytes),
+        "content_hash":            new_content_hash,
+        "canonical_version":       CURRENT_CANONICAL_VERSION,
+        "issuer_public_key_set":   bool(issuer_pk_b64),
+        "verify_url":              f"{os.environ.get('OMNIX_WEB_URL', 'https://omnixquantum.net')}/v1/pogr/verify/{pogc_id}",
+        "note": (
+            "Certificate re-signed with ML-DSA-65 (FIPS 204). "
+            f"canonical_version upgraded to {CURRENT_CANONICAL_VERSION}. "
+            "issuer_public_key persisted — verification is now key-restart-safe."
+        ),
     })
 
 
