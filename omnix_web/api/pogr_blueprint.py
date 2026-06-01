@@ -355,7 +355,7 @@ def _verify_revocation_proof_phase2(
 
     try:
         import base64 as _b64
-        from oqs import Signature as _OQSSig
+        from pqc.sign import dilithium3 as _dil3_rev
 
         pk_bytes  = _b64.b64decode(issuer_public_key)
         sig_hex   = proof.removeprefix("ML-DSA-65:")
@@ -365,8 +365,8 @@ def _verify_revocation_proof_phase2(
                 "✗ revocation_proof hex string has odd length — malformed ML-DSA-65 signature (PoGR-INV-006)",
             )
         sig_bytes = bytes.fromhex(sig_hex)
-        verifier  = _OQSSig("ML-DSA-65")
-        verifier.verify(canonical_payload, sig_bytes, pk_bytes)
+        # pqc.sign API: verify(sig, msg, pk) — raises ValueError on failure
+        _dil3_rev.verify(sig_bytes, canonical_payload, pk_bytes)
         logger.info(
             f"[PoGR] Phase 2 VERIFIED: {pogc_id} — revocation_proof ML-DSA-65 valid (FIPS 204)"
         )
@@ -379,22 +379,22 @@ def _verify_revocation_proof_phase2(
         fail_closed = os.environ.get("OMNIX_PQC_VERIFY_FAIL_CLOSED", "false").lower() == "true"
         if fail_closed:
             logger.critical(
-                f"[PoGR] Phase 2 HARD FAIL for {pogc_id} — oqs-python unavailable "
+                f"[PoGR] Phase 2 HARD FAIL for {pogc_id} — pqc.sign unavailable "
                 "and OMNIX_PQC_VERIFY_FAIL_CLOSED=true. Revocation rejected."
             )
             return (
                 False,
-                "✗ oqs-python unavailable — ML-DSA-65 Phase 2 verification impossible. "
+                "✗ pqc library unavailable — ML-DSA-65 Phase 2 verification impossible. "
                 "OMNIX_PQC_VERIFY_FAIL_CLOSED=true → revocation rejected (PoGR-INV-006).",
             )
         logger.warning(
-            f"[PoGR] Phase 2 SKIPPED for {pogc_id} — oqs-python not installed. "
-            "Phase 1 structural validation only. Install oqs-python for production."
+            f"[PoGR] Phase 2 SKIPPED for {pogc_id} — pqc.sign not installed. "
+            "Phase 1 structural validation only."
         )
         return (
             None,
-            "⚠ oqs-python unavailable — Phase 2 ML-DSA-65 verification skipped. "
-            "Phase 1 structural validation only. Install oqs-python for production (PoGR-INV-006).",
+            "⚠ pqc library unavailable — Phase 2 ML-DSA-65 verification skipped. "
+            "Phase 1 structural validation only (PoGR-INV-006).",
         )
 
     except Exception as exc:
@@ -406,67 +406,72 @@ def _verify_revocation_proof_phase2(
 
 
 def _verify_pqc_signature(
-    sig_str: str, canonical: Dict[str, Any]
+    sig_str: str, canonical: Dict[str, Any],
+    issuer_public_key_b64: Optional[str] = None,
 ) -> tuple:
     """
-    Cryptographically verify a PoGC ML-DSA-65 signature. ADR-205.
+    Cryptographically verify a PoGC ML-DSA-65 signature using pqc.sign.dilithium3.
+
+    Public key priority:
+        1. issuer_public_key stored in the certificate (set at signing time)
+        2. Module-level _POGR_PK_B64 (loaded at startup from env or ephemeral)
+        3. OMNIX_SIGNING_PUBLIC_KEY_B64 env var (legacy fallback)
 
     Returns:
         (True,  "✓ ML-DSA-65 signature cryptographically verified (FIPS 204)")
         (False, "✗ ML-DSA-65 signature INVALID — ...")
         (None,  "⚠ ..." )   ← warning (stub or missing key)
+
+    ADR-205 · PoGR-INV-003
     """
     if not sig_str:
         return (False, "✗ PQC signature absent")
 
-    if sig_str.startswith("STUB-"):
+    if sig_str.startswith("STUB-") or sig_str.startswith("SHA3-256-ONLY:"):
         return (None, "⚠ Signature is a development stub — not production ML-DSA-65")
 
     if not sig_str.startswith("ML-DSA-65:"):
         return (None, f"⚠ Signature format unrecognised: {sig_str[:20]}…")
 
-    pk_b64 = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")
+    # ── Resolve the best available public key ────────────────────────────────
+    import base64 as _b64
+    pk_b64 = (
+        issuer_public_key_b64                          # preferred: stored per-cert
+        or _POGR_PK_B64                                # module-level (pqcrypto format)
+        or os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")  # legacy env fallback
+    )
+
     if not pk_b64:
         fail_closed = os.environ.get("OMNIX_PQC_VERIFY_FAIL_CLOSED", "false").lower() == "true"
         if fail_closed:
             logger.critical(
-                "[PoGR] OMNIX_SIGNING_PUBLIC_KEY_B64 missing with OMNIX_PQC_VERIFY_FAIL_CLOSED=true. "
-                "All PQC verifications will return INVALID until the key is configured."
+                "[PoGR] No PQC public key available with OMNIX_PQC_VERIFY_FAIL_CLOSED=true — "
+                "all PQC verifications will return INVALID."
             )
             return (False,
-                    "✗ PQC verification FAILED — OMNIX_SIGNING_PUBLIC_KEY_B64 not configured "
-                    "and OMNIX_PQC_VERIFY_FAIL_CLOSED=true (production mode). "
-                    "Certificate cannot be cryptographically verified.")
-        # Dev / no-key mode: warn but do not fail hard
+                    "✗ PQC verification FAILED — no public key configured "
+                    "and OMNIX_PQC_VERIFY_FAIL_CLOSED=true (production mode).")
         if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("RAILWAY_SERVICE_NAME"):
             logger.critical(
-                "[PoGR] OMNIX_SIGNING_PUBLIC_KEY_B64 missing in Railway environment! "
-                "PQC verification running in hash-only mode. "
-                "Set OMNIX_PQC_VERIFY_FAIL_CLOSED=true to enforce hard failure."
+                "[PoGR] No PQC public key available in Railway — PQC verification running in hash-only mode."
             )
         return (None,
-                "⚠ Platform public key not configured (OMNIX_SIGNING_PUBLIC_KEY_B64) "
-                "— PQC cryptographic verification skipped; hash integrity still enforced "
-                "[production: set OMNIX_PQC_VERIFY_FAIL_CLOSED=true to enforce hard failure]")
+                "⚠ Platform public key not configured "
+                "— PQC cryptographic verification skipped; hash integrity still enforced")
 
     try:
-        import base64
-        from oqs import Signature as OQSSignature
-        pk_bytes  = base64.b64decode(pk_b64)
+        from pqc.sign import dilithium3
+        pk_bytes  = _b64.b64decode(pk_b64)
         payload   = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
         sig_bytes = bytes.fromhex(sig_str.removeprefix("ML-DSA-65:"))
-        verifier  = OQSSignature("ML-DSA-65")
-        verifier.verify(payload, sig_bytes, pk_bytes)
+        # pqc.sign API: verify(sig, msg, pk) — raises ValueError on failure
+        dilithium3.verify(sig_bytes, payload, pk_bytes)
         return (True, "✓ ML-DSA-65 signature cryptographically verified (FIPS 204 / NIST 2024)")
     except ImportError:
-        logger.warning(
-            "[PoGR] oqs-python not installed — ML-DSA-65 signature verification skipped. "
-            "Phase 1 structural + hash integrity enforced. "
-            "Install oqs-python for full PQC cryptographic verification."
-        )
+        logger.warning("[PoGR] pqc.sign.dilithium3 unavailable — ML-DSA-65 verification skipped.")
         return (
             None,
-            "⚠ oqs-python unavailable on this server — ML-DSA-65 cryptographic verification skipped. "
+            "⚠ pqc library unavailable — ML-DSA-65 cryptographic verification skipped. "
             "Hash integrity and structural validation are enforced. "
             "For full offline PQC verification: pip install oqs-python && python verify_pogc_offline.py",
         )
@@ -550,8 +555,11 @@ def _verify_certificate_core(cert: Dict[str, Any]) -> tuple:
         valid = False
 
     # ── [4] PQC signature (ML-DSA-65 cryptographic verification) ───────────
+    # Pass issuer_public_key stored in the cert (set at signing time by the PoGR module).
+    # This allows verification even when the Railway env var is stale or absent.
     sig = cert.get("pqc_signature", "")
-    pqc_ok, pqc_msg = _verify_pqc_signature(sig, canonical)
+    issuer_pk_b64 = cert.get("issuer_public_key")
+    pqc_ok, pqc_msg = _verify_pqc_signature(sig, canonical, issuer_public_key_b64=issuer_pk_b64)
     notes.append(pqc_msg)
     if pqc_ok is False:
         valid = False

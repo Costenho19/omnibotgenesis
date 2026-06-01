@@ -17,8 +17,6 @@ const SCENE_DURATIONS = {
   trust:     12000,
 };
 
-const SCENES = [Scene1, Scene2, Scene3, Scene4, Scene5, Scene6];
-
 export default function VideoTemplate() {
   const { currentScene } = useVideoPlayer({ durations: SCENE_DURATIONS });
 
@@ -70,22 +68,55 @@ export default function VideoTemplate() {
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
       />
 
-      {/* All scenes rendered, only the active one is visible — no AnimatePresence */}
-      {SCENES.map((SceneComponent, idx) => (
-        <motion.div
-          key={idx}
-          className="absolute inset-0"
-          style={{ zIndex: currentScene === idx ? 10 : 1 }}
-          initial={false}
-          animate={{
-            opacity: currentScene === idx ? 1 : 0,
-            pointerEvents: currentScene === idx ? 'auto' : 'none',
-          }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        >
-          {currentScene === idx && <SceneComponent />}
-        </motion.div>
-      ))}
+      {/* Persistent amber accent line — transforms with scene */}
+      <motion.div 
+        className="absolute h-[2px] bg-[#D4A843] z-20 pointer-events-none"
+        animate={{
+          left: ['5%','60%','5%','55%','10%','35%'][currentScene],
+          width: ['25%','20%','35%','15%','30%','20%'][currentScene],
+          top: ['15%','85%','50%','75%','20%','50%'][currentScene],
+          opacity: 0.7
+        }}
+        transition={{ duration: 1.2, ease: [0.16,1,0.3,1] }}
+      />
+
+      {/* Persistent geometric shape — amber bordered square */}
+      <motion.div
+        className="absolute border border-[#D4A843]/30 z-20 pointer-events-none"
+        animate={{
+          width: ['8vw','6vw','10vw','5vw','7vw','12vw'][currentScene],
+          height: ['8vw','6vw','10vw','5vw','7vw','12vw'][currentScene],
+          left: ['75%','10%','80%','15%','70%','40%'][currentScene],
+          top: ['70%','20%','15%','60%','75%','35%'][currentScene],
+          rotate: [0,45,90,135,180,225][currentScene],
+          opacity: [0.4,0.3,0.5,0.6,0.3,0.5][currentScene],
+        }}
+        transition={{ duration: 1.4, ease: [0.16,1,0.3,1] }}
+      />
+
+      {/* Persistent radial ambient light */}
+      <motion.div
+        className="absolute rounded-full blur-[80px] pointer-events-none z-0"
+        animate={{
+          width: ['40vw','30vw','50vw','20vw','35vw','45vw'][currentScene],
+          height: ['40vw','30vw','50vw','20vw','35vw','45vw'][currentScene],
+          left: ['50%','20%','40%','70%','50%','45%'][currentScene],
+          top: ['50%','30%','60%','40%','50%','50%'][currentScene],
+          opacity: [0.04,0.06,0.03,0.08,0.05,0.07][currentScene],
+          backgroundColor: ['#D4A843','#D4A843','#22C55E','#E53E3E','#D4A843','#D4A843'][currentScene],
+        }}
+        style={{ transform: 'translate(-50%, -50%)' }}
+        transition={{ duration: 1.5, ease: [0.16,1,0.3,1] }}
+      />
+
+      <AnimatePresence mode="sync">
+        {currentScene === 0 && <Scene1 key="scene0" />}
+        {currentScene === 1 && <Scene2 key="scene1" />}
+        {currentScene === 2 && <Scene3 key="scene2" />}
+        {currentScene === 3 && <Scene4 key="scene3" />}
+        {currentScene === 4 && <Scene5 key="scene4" />}
+        {currentScene === 5 && <Scene6 key="scene5" />}
+      </AnimatePresence>
     </div>
   );
 }
