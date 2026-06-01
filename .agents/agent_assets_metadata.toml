@@ -809,3 +809,9 @@ id = "P50t8PMgezV7i0JybgFC7"
 uri = "file://evidence_packages/OMNIX-RTE-001_EVP_20260530_231200.pdf"
 type = "pdf"
 title = "OMNIX-RTE-001 — Executive Verification Package"
+
+[[outputs]]
+id = "XX_zOtoz_eYYSP1ibUkPy"
+uri = "file://docs/joint_test/OMNIX_ShieldXAI_Joint_Test_Scenario.pdf"
+type = "pdf"
+title = "OMNIX × ShieldXAI — Joint Test Scenario"
