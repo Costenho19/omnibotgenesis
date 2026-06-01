@@ -1,24 +1,24 @@
 {
-  "snapshot_id": "AVM-65C7E938F4",
-  "parameter_version": "1.65c7e938f4",
+  "snapshot_id": "AVM-58DF1C0E19",
+  "parameter_version": "1.58df1c0e19",
   "domain": "autonomous_agent",
   "baseline_signals": {
-    "risk_exposure": 41.83,
-    "signal_coherence": 42.29,
-    "logic_consistency": 27.39,
-    "probability_score": 34.84,
-    "stress_resilience": 54.93,
-    "trend_persistence": 32.05
+    "risk_exposure": 15.67,
+    "signal_coherence": 83.72,
+    "logic_consistency": 61.87,
+    "probability_score": 80.27,
+    "stress_resilience": 81.5,
+    "trend_persistence": 89.09
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 drift=39.2%>=35%",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 drift=38.4%>=35%",
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_39.2"
+    "prev_drift_38.4"
   ],
-  "calibrated_at": "2026-05-31T03:18:30.017916+00:00",
-  "calibrated_at_epoch": 1780197510.017916
+  "calibrated_at": "2026-06-01T06:27:48.851489+00:00",
+  "calibrated_at_epoch": 1780295268.851489
 }
