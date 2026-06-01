@@ -103,6 +103,27 @@ from omnix_core.agents.atf.semantic_governance import (
     SemanticTermEntry,
     UnknownTermError,
 )
+from omnix_core.agents.atf.temporal_governance_bridge import (
+    TemporalContextSnapshot,
+    RegulatoryAlignmentReceipt,
+    TemporalMigrationRecord,
+    TemporalGovernanceBridge,
+)
+from omnix_core.agents.atf.counterfactual_governance_engine import (
+    CounterfactualForkRecord,
+    CounterfactualAttestationToken,
+    CounterfactualGovernanceEngine,
+    CGEInvariantViolation,
+)
+from omnix_core.agents.atf.grand_unified_governance_theory import (
+    UniversalInvariantReceipt,
+    GrandUnifiedGovernanceEngine,
+    GUGTInvariantViolation,
+    GUGTUnsignedError,
+    validate_clause_ref,
+    UNIVERSAL_GOVERNANCE_INVARIANTS,
+    CONFORMANCE_LEVELS,
+)
 
 __all__ = [
     "AgentIdentity",
@@ -141,4 +162,22 @@ __all__ = [
     "STRImmutabilityViolation",
     "SAC_IncompleteSPV",
     "UnknownTermError",
+    # RFC-ATF-5: TGB (ADR-180)
+    "TemporalContextSnapshot",
+    "RegulatoryAlignmentReceipt",
+    "TemporalMigrationRecord",
+    "TemporalGovernanceBridge",
+    # RFC-ATF-5: CGE (ADR-178)
+    "CounterfactualForkRecord",
+    "CounterfactualAttestationToken",
+    "CounterfactualGovernanceEngine",
+    "CGEInvariantViolation",
+    # RFC-ATF-5: GUGT (ADR-179)
+    "UniversalInvariantReceipt",
+    "GrandUnifiedGovernanceEngine",
+    "GUGTInvariantViolation",
+    "GUGTUnsignedError",
+    "validate_clause_ref",
+    "UNIVERSAL_GOVERNANCE_INVARIANTS",
+    "CONFORMANCE_LEVELS",
 ]
