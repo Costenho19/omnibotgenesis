@@ -1,24 +1,24 @@
 {
-  "snapshot_id": "AVM-85D50B89D0",
-  "parameter_version": "1.85d50b89d0",
+  "snapshot_id": "AVM-025D8DC292",
+  "parameter_version": "1.025d8dc292",
   "domain": "robotics",
+  "calibrated_at": "2026-06-01T18:40:54.729945+00:00",
+  "calibrated_at_epoch": 1780339254.729945,
   "baseline_signals": {
-    "risk_exposure": 53.42,
-    "signal_coherence": 72.01,
-    "logic_consistency": 63.87,
-    "probability_score": 54.08,
-    "stress_resilience": 78.43,
-    "trend_persistence": 31.38
+    "probability_score": 73.6,
+    "risk_exposure": 12.22,
+    "signal_coherence": 85.48,
+    "trend_persistence": 75.58,
+    "stress_resilience": 48.24,
+    "logic_consistency": 86.05
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=72h>=72h",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=73h>=72h",
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_20.9"
-  ],
-  "calibrated_at": "2026-05-29T17:59:26.142001+00:00",
-  "calibrated_at_epoch": 1780077566.142001
+    "prev_drift_26.6"
+  ]
 }

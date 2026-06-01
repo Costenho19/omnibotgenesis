@@ -1,24 +1,24 @@
 {
-  "snapshot_id": "AVM-DAC3C9783A",
-  "parameter_version": "1.dac3c9783a",
+  "snapshot_id": "AVM-558AD86140",
+  "parameter_version": "1.558ad86140",
   "domain": "energy_governance",
+  "calibrated_at": "2026-06-01T18:40:46.299608+00:00",
+  "calibrated_at_epoch": 1780339246.299608,
   "baseline_signals": {
-    "risk_exposure": 38.76,
-    "signal_coherence": 60.54,
-    "logic_consistency": 79.62,
-    "probability_score": 54.94,
-    "stress_resilience": 91.2,
-    "trend_persistence": 78.29
+    "probability_score": 66.6,
+    "risk_exposure": 13.41,
+    "signal_coherence": 65.43,
+    "trend_persistence": 74.51,
+    "stress_resilience": 70.2,
+    "logic_consistency": 91.48
   },
   "checkpoint_thresholds": {},
   "drift_threshold": 35.0,
   "max_age_hours": 168.0,
-  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=72h>=72h",
+  "description": "AUTO_RECALIBRATION (ADR-120): scheduled 72h cycle \u2014 age=73h>=72h",
   "tags": [
     "AUTO_RECALIBRATION",
     "interval_72h",
-    "prev_drift_22.2"
-  ],
-  "calibrated_at": "2026-05-29T17:59:17.910951+00:00",
-  "calibrated_at_epoch": 1780077557.910951
+    "prev_drift_13.3"
+  ]
 }
