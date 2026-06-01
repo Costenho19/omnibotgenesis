@@ -184,23 +184,93 @@ def _content_hash(canonical: Dict[str, Any]) -> str:
     return "sha3-256:" + hashlib.sha3_256(payload).hexdigest()
 
 
+# ── Module-level PQC key initialization (ADR-078 / ADR-186) ──────────────────
+# One keypair per process, initialized at import time. No STUB, no SHA3-256-ONLY.
+# Uses pqc.sign.dilithium3 (FIPS 204 / ML-DSA-65).
+# Priority: persisted env-var keys (Railway) → ephemeral real ML-DSA-65 (dev).
+# Real PQC signatures always — the signing key just may not persist across restarts.
+_POGR_SK: Optional[bytes]   = None   # ML-DSA-65 secret key bytes (raw)
+_POGR_PK: Optional[bytes]   = None   # ML-DSA-65 public key bytes (raw)
+_POGR_PK_B64: Optional[str] = None   # ML-DSA-65 public key base64 (export)
+_POGR_KEY_MODE: str = "unavailable"  # persisted | ephemeral | unavailable
+
+try:
+    import base64 as _b64m
+    from pqc.sign import dilithium3 as _dil3
+
+    _sk_env = os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64", "").strip()
+    _pk_env = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "").strip()
+
+    # ── Phase 1: try persisted Railway keys ──────────────────────────────────
+    if _sk_env and _pk_env:
+        try:
+            _sk_b = _b64m.b64decode(_sk_env)
+            _pk_b = _b64m.b64decode(_pk_env)
+            # Self-test: sign a sentinel with sk, verify with pk.
+            # pqc.sign API: sign() returns signature bytes only (fixed-length, not NaCl combined).
+            # verify(sig, msg, pk) — raises ValueError on failure.
+            # Catches format mismatches (keys from older OQS library, wrong length, etc.)
+            _test_msg = b"POGR-KEY-SELFTEST"
+            _sig_st   = _dil3.sign(_test_msg, _sk_b)   # returns raw sig bytes only
+            _dil3.verify(_sig_st, _test_msg, _pk_b)     # raises on bad keypair
+            _POGR_SK       = _sk_b
+            _POGR_PK       = _pk_b
+            _POGR_PK_B64   = _pk_env
+            _POGR_KEY_MODE = "persisted"
+            logger.info("[PoGR] PQC keys loaded from env — mode=persisted algorithm=ML-DSA-65 (FIPS 204)")
+        except Exception as _key_err:
+            # Persisted keys failed (format mismatch with pqcrypto, wrong length, etc.)
+            # Fall through to ephemeral — never propagate this as a hard failure.
+            logger.warning(
+                f"[PoGR] Persisted PQC keys failed self-test ({_key_err}). "
+                "Falling back to ephemeral ML-DSA-65 keypair. "
+                "IMPORTANT: Regenerate Railway keys using pqc.sign.dilithium3.keypair() "
+                "and set OMNIX_SIGNING_SECRET_KEY_B64 + OMNIX_SIGNING_PUBLIC_KEY_B64."
+            )
+
+    # ── Phase 2: generate ephemeral keypair if persisted keys not loaded ─────
+    if _POGR_SK is None:
+        _pk_b, _sk_b   = _dil3.keypair()
+        _POGR_SK       = _sk_b
+        _POGR_PK       = _pk_b
+        _POGR_PK_B64   = _b64m.b64encode(_pk_b).decode()
+        _POGR_KEY_MODE = "ephemeral"
+        logger.warning(
+            "[PoGR] Ephemeral ML-DSA-65 keypair generated (pqcrypto / FIPS 204). "
+            "Signatures are real ML-DSA-65 but will not persist across restarts. "
+            "Set OMNIX_SIGNING_SECRET_KEY_B64 + OMNIX_SIGNING_PUBLIC_KEY_B64 in Railway."
+        )
+
+except Exception as _pqc_init_err:
+    # pqc package not installed — should never happen in production
+    logger.warning(f"[PoGR] pqc.sign.dilithium3 unavailable — PQC signing disabled: {_pqc_init_err}")
+    _POGR_KEY_MODE = "unavailable"
+
+
 def _sign_certificate(canonical: Dict[str, Any]) -> str:
-    """Sign with ML-DSA-65. Falls back to a deterministic stub if PQC unavailable."""
+    """
+    Sign certificate canonical payload with ML-DSA-65 (FIPS 204).
+
+    Uses pqc.sign.dilithium3 — persisted keys in Railway or ephemeral in dev.
+    Real PQC signature always. Falls back to SHA3-256-ONLY only if the
+    pqc package is not available (should never happen in production).
+
+    Signature format: "ML-DSA-65:<hex_signature>"
+    Verification: pqc.sign.dilithium3.verify(bytes.fromhex(sig_hex), payload, pk_bytes)
+
+    ADR-186 · ADR-187 · PoGR-INV-002
+    """
     payload = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
-    try:
-        import base64
-        sk_b64 = os.environ.get("OMNIX_SIGNING_SECRET_KEY_B64")
-        if sk_b64:
-            from oqs import Signature
-            sk = base64.b64decode(sk_b64)
-            signer = Signature("ML-DSA-65", sk)
-            sig_bytes = signer.sign(payload)
+    if _POGR_SK is not None:
+        try:
+            from pqc.sign import dilithium3
+            # pqc.sign API: sign(msg, sk) → raw signature bytes (fixed-length, not NaCl combined)
+            sig_bytes = dilithium3.sign(payload, _POGR_SK)
             return "ML-DSA-65:" + sig_bytes.hex()
-    except Exception as exc:
-        logger.warning(f"[PoGR] PQC signing unavailable, using HMAC stub: {exc}")
-    # Deterministic HMAC stub (development / environments without PQC key)
-    stub = hashlib.sha3_256(b"POGR-STUB:" + payload).hexdigest()
-    return "STUB-SHA3-256:" + stub
+        except Exception as exc:
+            logger.error(f"[PoGR] ML-DSA-65 signing failed unexpectedly: {exc}")
+    logger.warning("[PoGR] PQC unavailable — certificate has SHA3-256 integrity only (no PQC)")
+    return "SHA3-256-ONLY:" + hashlib.sha3_256(payload).hexdigest()
 
 
 def _verify_revocation_proof_phase2(
@@ -617,7 +687,8 @@ def certify():
     # ADR-205: status + revoked_at are canonical fields in v2
     # They must be set BEFORE computing canonical / hash / signature.
     # ADR-205 §6.2: issuer_public_key stored at issuance for Phase 2 revocation verification.
-    issuer_public_key = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "")
+    # Uses module-level key (persisted in Railway, ephemeral in dev) — never empty when PQC is available.
+    issuer_public_key = _POGR_PK_B64 or os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "")
     cert_data = {
         "pogc_id":                pogc_id,
         "session_id":             session_id,
@@ -959,21 +1030,23 @@ def manifest():
     """
     _ensure_tables()
 
-    # Platform public key (mirrors forensic_blueprint channel)
-    pub_key_info = {"configured": False, "fingerprint": None, "algorithm": "ml-dsa-65"}
+    # Platform public key — uses module-level key (persisted or ephemeral, always real ML-DSA-65)
+    pub_key_info = {"configured": False, "fingerprint": None, "algorithm": "ml-dsa-65",
+                    "key_mode": _POGR_KEY_MODE}
     try:
         import base64
-        pk_b64 = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")
+        pk_b64 = _POGR_PK_B64 or os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64")
         if pk_b64:
             pk_bytes = base64.b64decode(pk_b64)
             fp = hashlib.sha3_256(pk_bytes).hexdigest()
             pub_key_info = {
-                "configured":      True,
-                "fingerprint":     fp,
+                "configured":        True,
+                "fingerprint":       fp,
                 "fingerprint_short": fp[:16] + "...",
-                "algorithm":       "ml-dsa-65",
-                "fips_standard":   "FIPS 204 / ML-DSA-65",
-                "key_size_bytes":  len(pk_bytes),
+                "algorithm":         "ml-dsa-65",
+                "fips_standard":     "FIPS 204 / ML-DSA-65",
+                "key_size_bytes":    len(pk_bytes),
+                "key_mode":          _POGR_KEY_MODE,
             }
     except Exception:
         pass
@@ -2011,7 +2084,7 @@ def admin_import_external():
         1.0 if mandate_certification == "MANDATE-BOUND" else 0.9
     ))
 
-    issuer_public_key = os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "")
+    issuer_public_key = _POGR_PK_B64 or os.environ.get("OMNIX_SIGNING_PUBLIC_KEY_B64", "")
 
     cert_data = {
         "pogc_id":               pogc_id,
