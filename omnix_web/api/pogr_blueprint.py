@@ -2169,3 +2169,140 @@ def admin_import_external():
         "public_page":           f"{base_url}/pogr/verify/{pogc_id}",
         "note":                  "Certificate registered and signed with ML-DSA-65 (FIPS 204). Publicly verifiable.",
     }), 201
+
+
+# ─── Admin: Re-sign STUB certificates ────────────────────────────────────────
+
+@pogr_bp.route("/v1/pogr/admin/resign-stubs", methods=["POST"])
+def admin_resign_stubs():
+    """
+    Re-sign all certificates whose pqc_signature is a STUB (SHA3-256 fallback)
+    with the current ML-DSA-65 key loaded at module init.
+
+    Auth: X-PoGR-Admin-Secret header must match POGR_ADMIN_RESIGN_SECRET env var.
+
+    Returns a report of how many certs were re-signed, skipped, or failed.
+
+    ADR-205 R-H1 — recovery path for certificates issued before pqcrypto fix.
+    Only updates pqc_signature and issuer_public_key — content_hash is never touched.
+    """
+    _ensure_tables()
+
+    # ── Auth ─────────────────────────────────────────────────────────────────
+    secret = os.environ.get("POGR_ADMIN_RESIGN_SECRET", "")
+    if not secret:
+        return _err("POGR_ADMIN_RESIGN_SECRET not configured on this instance", 503)
+
+    provided = request.headers.get("X-PoGR-Admin-Secret", "")
+    if not _hmac.compare_digest(provided.encode(), secret.encode()):
+        logger.warning("[PoGR][admin_resign] Unauthorized resign attempt")
+        return _err("Unauthorized", 401)
+
+    # ── Check signing key available ───────────────────────────────────────────
+    if _POGR_SK is None:
+        return _err("ML-DSA-65 signing key not available on this instance — deploy fix first", 503)
+
+    # ── Find STUB certs ───────────────────────────────────────────────────────
+    STUB_PREFIXES = ("STUB-", "SHA3-256-ONLY:")
+    try:
+        conn = _get_db()
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT pogc_id, session_id, ctchc_seal_hash, issuer,
+                       subject_org, agent_id, compliance_tier,
+                       mandate_certification, issued_at, expires_at,
+                       status, revoked_at, pqc_signature, canonical_version
+                FROM pogr_certificates
+                ORDER BY issued_at ASC
+            """)
+            all_certs = [dict(r) for r in cur.fetchall()]
+        conn.close()
+    except Exception as exc:
+        logger.error(f"[PoGR][admin_resign] DB fetch failed: {exc}")
+        return _err("DB read failed", 500)
+
+    stub_certs = [
+        c for c in all_certs
+        if any(str(c.get("pqc_signature", "")).startswith(p) for p in STUB_PREFIXES)
+    ]
+
+    resigned = []
+    skipped  = []
+    failed   = []
+
+    for cert in stub_certs:
+        pogc_id = cert["pogc_id"]
+        try:
+            # Reconstruct canonical dict from stored fields (same as issuance time)
+            cert_for_canonical = {
+                "pogc_id":               cert["pogc_id"],
+                "session_id":            cert["session_id"],
+                "ctchc_seal_hash":       cert["ctchc_seal_hash"],
+                "issuer":                cert["issuer"],
+                "subject_org":           cert["subject_org"],
+                "agent_id":              cert["agent_id"],
+                "compliance_tier":       cert["compliance_tier"],
+                "mandate_certification": cert["mandate_certification"],
+                "issued_at":             cert["issued_at"],
+                "expires_at":            cert["expires_at"],
+                "status":                cert["status"],
+                "revoked_at":            cert["revoked_at"],
+            }
+            version  = cert.get("canonical_version") or 1
+            canonical = _canonical_fields(cert_for_canonical, version=version)
+            new_sig   = _sign_certificate(canonical)
+
+            if new_sig.startswith("SHA3-256-ONLY:") or new_sig.startswith("STUB-"):
+                failed.append({
+                    "pogc_id": pogc_id,
+                    "reason":  "sign() still returned non-PQC signature — key issue"
+                })
+                continue
+
+            # Update DB — only pqc_signature + issuer_public_key (content_hash untouched)
+            conn = _get_db()
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        UPDATE pogr_certificates
+                        SET pqc_signature    = %s,
+                            issuer_public_key = %s
+                        WHERE pogc_id = %s
+                    """, (new_sig, _POGR_PK_B64, pogc_id))
+            conn.close()
+
+            resigned.append({
+                "pogc_id":         pogc_id,
+                "subject_org":     cert.get("subject_org"),
+                "old_sig_prefix":  str(cert["pqc_signature"])[:30] + "...",
+                "new_sig_prefix":  new_sig[:30] + "...",
+            })
+            logger.info(f"[PoGR][admin_resign] Re-signed {pogc_id} with ML-DSA-65")
+
+        except Exception as exc:
+            logger.error(f"[PoGR][admin_resign] Failed for {pogc_id}: {exc}")
+            failed.append({"pogc_id": pogc_id, "reason": str(exc)})
+
+    # Certs that already had real ML-DSA-65 signatures
+    skipped = [
+        {"pogc_id": c["pogc_id"], "subject_org": c.get("subject_org")}
+        for c in all_certs
+        if not any(str(c.get("pqc_signature", "")).startswith(p) for p in STUB_PREFIXES)
+    ]
+
+    logger.info(
+        f"[PoGR][admin_resign] Complete — "
+        f"resigned={len(resigned)} skipped={len(skipped)} failed={len(failed)}"
+    )
+
+    return jsonify({
+        "status":          "complete",
+        "key_mode":        _POGR_KEY_MODE,
+        "resigned_count":  len(resigned),
+        "skipped_count":   len(skipped),
+        "failed_count":    len(failed),
+        "resigned":        resigned,
+        "skipped":         skipped,
+        "failed":          failed,
+        "note":            "Only pqc_signature and issuer_public_key were updated. content_hash is immutable.",
+    }), 200
